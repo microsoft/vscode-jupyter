@@ -17,6 +17,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../../constants.node';
 import * as dedent from 'dedent';
 import { IPythonExtensionChecker } from '../../../../../platform/api/types';
 import { captureScreenShot, createEventHandler } from '../../../../common';
+import * as path from '../../../../../platform/vscode-path/path';
 
 suite.only('Custom Environment Variables Provider', () => {
     let customEnvVarsProvider: CustomEnvironmentVariablesProvider;
