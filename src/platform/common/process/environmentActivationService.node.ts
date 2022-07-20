@@ -13,7 +13,7 @@ import { ExecutionResult, IProcessServiceFactory } from './types.node';
 import { GLOBAL_MEMENTO, IDisposable, IMemento, Resource } from '../types';
 import { createDeferredFromPromise, sleep } from '../utils/async';
 import { OSType } from '../utils/platform';
-import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../variables/types';
+import { EnvironmentVariables, ICustomEnvironmentVariablesProvider } from '../variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
@@ -118,7 +118,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(CurrentProcess) private currentProcess: CurrentProcess,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider,
+        @inject(ICustomEnvironmentVariablesProvider)
+        private readonly envVarsService: ICustomEnvironmentVariablesProvider,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(CondaService) private readonly condaService: CondaService,

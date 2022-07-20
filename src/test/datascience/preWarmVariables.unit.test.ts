@@ -11,7 +11,7 @@ import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { CondaService } from '../../platform/common/process/condaService.node';
 import { createDeferred } from '../../platform/common/utils/async';
-import { IEnvironmentVariablesProvider } from '../../platform/common/variables/types';
+import { ICustomEnvironmentVariablesProvider } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
@@ -43,7 +43,7 @@ suite('DataScience - PreWarm Env Vars', () => {
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         when(extensionChecker.isPythonExtensionActive).thenReturn(true);
         zmqSupported = mock<IRawNotebookSupportedService>();
-        const envVarsProvider = mock<IEnvironmentVariablesProvider>();
+        const envVarsProvider = mock<ICustomEnvironmentVariablesProvider>();
         when(envVarsProvider.getEnvironmentVariables(anything())).thenResolve();
         const workspace = mock<IWorkspaceService>();
         when(workspace.workspaceFolders).thenReturn();

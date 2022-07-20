@@ -28,14 +28,14 @@ import {
     IVSCodeNotebook
 } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
-import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../../kernels/debugger/constants';
+import { DebuggingTelemetry, pythonKernelDebugAdapter } from './constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
 import { DebugCellController } from './debugCellControllers';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
-import { assertIsDebugConfig, IpykernelCheckResult } from '../../kernels/debugger/helper';
-import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../../kernels/debugger/types';
+import { assertIsDebugConfig, IpykernelCheckResult } from './helper';
+import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from './debuggingTypes';
 import { DebuggingManagerBase } from './debuggingManagerBase';
 import { noop } from '../../platform/common/utils/misc';
 import { IControllerLoader, IControllerSelection } from '../controllers/types';

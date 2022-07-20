@@ -16,7 +16,7 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IJupyterDebugService } from './types';
+import { IJupyterDebugService } from './debuggingTypes';
 import { ICommandManager, IDebugService } from '../../platform/common/application/types';
 import { Identifiers } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';

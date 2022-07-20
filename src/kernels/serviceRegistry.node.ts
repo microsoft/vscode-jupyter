@@ -22,14 +22,10 @@ import { KernelLauncher } from './raw/launcher/kernelLauncher.node';
 import { HostRawNotebookProvider } from './raw/session/hostRawNotebookProvider.node';
 import { RawNotebookSupportedService } from './raw/session/rawNotebookSupportedService.node';
 import { IKernelLauncher, ILocalKernelFinder, IRawNotebookProvider, IRawNotebookSupportedService } from './raw/types';
-import { DebuggerVariableRegistration } from './variables/debuggerVariableRegistration.node';
-import { DebuggerVariables } from './variables/debuggerVariables';
 import { JupyterVariables } from './variables/jupyterVariables';
 import { KernelVariables } from './variables/kernelVariables';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
-import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
-import { IDebugLocationTracker, IDebugLocationTrackerFactory, IJupyterDebugService } from './debugger/types';
 import {
     IKernelDependencyService,
     IKernelFinder,
@@ -45,7 +41,6 @@ import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.node';
 import { KernelFinder } from './kernelFinder.node';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
-import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
 import { Activation } from './activation.node';
 import { PortAttributesProviders } from './port/portAttributeProvider.node';
 import { IServerConnectionType } from './jupyter/types';
@@ -87,17 +82,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSingleActivationService,
         PreWarmActivatedJupyterEnvironmentVariables
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        DebuggerVariableRegistration
-    );
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
-    serviceManager.addSingleton<IJupyterVariables>(
-        IJupyterVariables,
-        DebuggerVariables,
-        Identifiers.DEBUGGER_VARIABLES
-    );
     serviceManager.addSingleton<IKernelVariableRequester>(
         IKernelVariableRequester,
         PythonVariablesRequester,
@@ -105,11 +91,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
     serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
-    serviceManager.addSingleton<IJupyterDebugService>(
-        IJupyterDebugService,
-        MultiplexingDebugService,
-        Identifiers.MULTIPLEXING_DEBUGSERVICE
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
@@ -144,8 +125,5 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
     serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
 
-    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
-        IDebugLocationTrackerFactory
-    ]);
     serviceManager.addSingleton<IStartupCodeProvider>(IStartupCodeProvider, KernelStartupCodeProvider);
 }

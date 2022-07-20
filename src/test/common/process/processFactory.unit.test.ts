@@ -12,12 +12,12 @@ import { ProcessService } from '../../../platform/common/process/proc.node';
 import { ProcessServiceFactory } from '../../../platform/common/process/processFactory.node';
 import { IBufferDecoder, IProcessLogger } from '../../../platform/common/process/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
-import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
-import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
+import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/customEnvironmentVariablesProvider.node';
+import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 
 suite('Process - ProcessServiceFactory', () => {
     let factory: ProcessServiceFactory;
-    let envVariablesProvider: IEnvironmentVariablesProvider;
+    let envVariablesProvider: ICustomEnvironmentVariablesProvider;
     let bufferDecoder: IBufferDecoder;
     let processLogger: IProcessLogger;
     let processService: ProcessService;
@@ -25,7 +25,7 @@ suite('Process - ProcessServiceFactory', () => {
 
     setup(() => {
         bufferDecoder = mock(BufferDecoder);
-        envVariablesProvider = mock(EnvironmentVariablesProvider);
+        envVariablesProvider = mock(CustomEnvironmentVariablesProvider);
         processLogger = mock(ProcessLogger);
         when(processLogger.logProcess('', [], {})).thenReturn();
         processService = mock(ProcessService);

@@ -12,15 +12,15 @@ import {
     NotebookEditor,
     debug
 } from 'vscode';
-import { pythonIWKernelDebugAdapter } from '../../../kernels/debugger/constants';
+import { pythonIWKernelDebugAdapter } from '../../../notebooks/debugger/constants';
 import {
     IDebuggingManager,
     KernelDebugMode,
     IKernelDebugAdapterConfig,
     IDebugLocationTrackerFactory
-} from '../../../kernels/debugger/types';
+} from '../../../notebooks/debugger/debuggingTypes';
 import { IKernelProvider } from '../../../kernels/types';
-import { IpykernelCheckResult, assertIsDebugConfig } from '../../../kernels/debugger/helper';
+import { IpykernelCheckResult, assertIsDebugConfig } from '../../../notebooks/debugger/helper';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import {

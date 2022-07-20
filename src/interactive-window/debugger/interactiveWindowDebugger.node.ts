@@ -16,7 +16,7 @@ import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
 import { IKernel, isLocalConnection } from '../../kernels/types';
 import { IInteractiveWindowDebugger } from '../types';
 import { IFileGeneratedCodes } from '../editor-integration/types';
-import { IJupyterDebugService } from '../../kernels/debugger/types';
+import { IJupyterDebugService } from '../../notebooks/debugger/debuggingTypes';
 import { executeSilently } from '../../kernels/helpers';
 import { buildSourceMap } from './helper';
 

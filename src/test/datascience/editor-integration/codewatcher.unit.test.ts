@@ -43,7 +43,7 @@ import { ICodeWatcher, IGeneratedCodeStorageFactory } from '../../../interactive
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
 import { Commands, EditorContexts } from '../../../platform/common/constants';
 import { SystemVariables } from '../../../platform/common/variables/systemVariables.node';
-import { IDebugLocationTracker } from '../../../kernels/debugger/types';
+import { IDebugLocationTracker } from '../../../notebooks/debugger/debuggingTypes';
 import { noop } from '../../core';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 

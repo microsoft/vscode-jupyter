@@ -13,7 +13,7 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../pl
 import { IDisposable } from '../../../../platform/common/types';
 import { isWeb } from '../../../../platform/common/utils/misc';
 import { OSType } from '../../../../platform/common/utils/platform';
-import { IEnvironmentVariablesProvider } from '../../../../platform/common/variables/types';
+import { ICustomEnvironmentVariablesProvider } from '../../../../platform/common/variables/types';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import * as path from '../../../../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants.node';
@@ -23,7 +23,7 @@ suite('Jupyter Paths', () => {
     const disposables: IDisposable[] = [];
     let jupyterPaths: JupyterPaths;
     let platformService: IPlatformService;
-    let envVarsProvider: IEnvironmentVariablesProvider;
+    let envVarsProvider: ICustomEnvironmentVariablesProvider;
     let memento: Memento;
     let fs: IFileSystem;
     let context: ExtensionContext;
@@ -53,7 +53,7 @@ suite('Jupyter Paths', () => {
         (instance(pythonExecService) as any).then = undefined;
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonExecService));
         platformService = mock<IPlatformService>();
-        envVarsProvider = mock<IEnvironmentVariablesProvider>();
+        envVarsProvider = mock<ICustomEnvironmentVariablesProvider>();
         memento = mock<Memento>();
         fs = mock<IFileSystem>();
         context = mock<ExtensionContext>();

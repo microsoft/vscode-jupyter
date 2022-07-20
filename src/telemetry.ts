@@ -12,7 +12,7 @@ import {
     VSCodeNativeTelemetry
 } from './platform/common/constants';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './platform/telemetry/constants';
-import { DebuggingTelemetry } from './kernels/debugger/constants';
+import { DebuggingTelemetry } from './notebooks/debugger/constants';
 import { EnvironmentType } from './platform/pythonEnvironments/info';
 import { TelemetryErrorProperties, ErrorCategory } from './platform/errors/types';
 import { ExportFormat } from './notebooks/export/types';

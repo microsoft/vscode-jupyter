@@ -9,7 +9,14 @@ import { createDeferredFromPromise } from '../platform/common/utils/async';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { isArray } from '../platform/common/utils/sysTypes';
-import { traceError, traceDecoratorVerbose, traceWarning, traceVerbose } from '../platform/logging';
+import {
+    traceError,
+    traceDecoratorVerbose,
+    traceWarning,
+    traceVerbose,
+    logValue,
+    ignoreLogging
+} from '../platform/logging';
 import { TraceOptions } from '../platform/logging/types';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
@@ -55,8 +62,8 @@ export abstract class BaseKernelFinder implements IKernelFinder {
     public async rankKernels(
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
-        preferredInterpreter?: PythonEnvironment,
-        cancelToken?: CancellationToken,
+        @logValue<PythonEnvironment>('uri') preferredInterpreter?: PythonEnvironment,
+        @ignoreLogging() cancelToken?: CancellationToken,
         useCache?: 'useCache' | 'ignoreCache',
         serverId?: string
     ): Promise<KernelConnectionMetadata[] | undefined> {

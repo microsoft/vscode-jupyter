@@ -7,7 +7,7 @@ import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Event, E
 import { IDebugService } from '../../platform/common/application/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { DebugLocationTracker } from './debugLocationTracker';
-import { IDebugLocationTracker, IDebugLocationTrackerFactory } from './types';
+import { IDebugLocationTracker, IDebugLocationTrackerFactory } from './debuggingTypes';
 
 // Hook up our IDebugLocationTracker to python debugging sessions
 @injectable()

@@ -23,7 +23,7 @@ import {
     workspace
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernelConnectionSession, IKernel } from '../types';
+import { IKernelConnectionSession, IKernel } from '../../kernels/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { DebuggingTelemetry } from './constants';
 import {
@@ -32,12 +32,12 @@ import {
     IDebuggingDelegate,
     KernelDebugMode,
     IDebugInfoResponse
-} from './types';
+} from './debuggingTypes';
 import { sendTelemetryEvent } from '../../telemetry';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { assertIsDebugConfig, isShortNamePath, shortNameMatchesLongName, getMessageSourceAndHookIt } from './helper';
 import { IDisposable } from '../../platform/common/types';
-import { executeSilently } from '../helpers';
+import { executeSilently } from '../../kernels/helpers';
 import { noop } from '../../platform/common/utils/misc';
 import { IDebugService } from '../../platform/common/application/types';
 
