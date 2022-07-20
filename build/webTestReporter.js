@@ -87,7 +87,7 @@ exports.dumpTestSummary = () => {
         let indent = 0;
         let executionCount = 0;
         const skippedTests = [];
-        const passedCount = 0;
+        let passedCount = 0;
         mocha.reporters.Base.useColors = true;
         colors.enable();
         summary.forEach((output) => {
@@ -111,6 +111,7 @@ exports.dumpTestSummary = () => {
             }
             runner.emit(output.event, output, output.err);
 
+            core.info(`${output.event} ${output.title}`);
             switch (output.event) {
                 case 'pass': {
                     passedCount++;
@@ -202,9 +203,10 @@ exports.dumpTestSummary = () => {
             }
         });
 
+        core.info(`Passed: ${passedCount}, Skipped: ${skippedTests.length}`);
         if (reportWriter.failures.length) {
             core.setFailed(`${reportWriter.failures.length} tests failed.`);
-        } else if (passedCount < skippedTests) {
+        } else if (passedCount < skippedTests.length) {
             core.setFailed('Failing check, not enough passing tests or too many skipped');
         }
 
