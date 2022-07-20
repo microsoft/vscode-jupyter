@@ -107,32 +107,32 @@ suite.only('Custom Environment Variables Provider', () => {
             'onDidEnvironmentVariablesChange',
             disposables
         );
-        const pattern = new RelativePattern(Uri.file(path.dirname(envFile.fsPath)), path.basename(envFile.fsPath));
-        console.error('RegEx Pattern', pattern);
-        console.error('RegEx Pattern', pattern.baseUri);
-        console.error('RegEx Pattern', pattern.pattern);
-        const envFileWatcher = workspace.createFileSystemWatcher(pattern, false, false, false);
-        envFileWatcher.onDidChange(
-            (e) => {
-                console.error(`Change detected in ${e.fsPath}`);
-            },
-            this,
-            disposables
-        );
-        envFileWatcher.onDidCreate(
-            (e) => {
-                console.error(`Create detected in ${e.fsPath}`);
-            },
-            this,
-            disposables
-        );
-        envFileWatcher.onDidDelete(
-            (e) => {
-                console.error(`Delete detected in ${e.fsPath}`);
-            },
-            this,
-            disposables
-        );
+        // const pattern = new RelativePattern(Uri.file(path.dirname(envFile.fsPath)), path.basename(envFile.fsPath));
+        // console.error('RegEx Pattern', pattern);
+        // console.error('RegEx Pattern', pattern.baseUri);
+        // console.error('RegEx Pattern', pattern.pattern);
+        // const envFileWatcher = workspace.createFileSystemWatcher(pattern, false, false, false);
+        // envFileWatcher.onDidChange(
+        //     (e) => {
+        //         console.error(`Change detected in ${e.fsPath}`);
+        //     },
+        //     this,
+        //     disposables
+        // );
+        // envFileWatcher.onDidCreate(
+        //     (e) => {
+        //         console.error(`Create detected in ${e.fsPath}`);
+        //     },
+        //     this,
+        //     disposables
+        // );
+        // envFileWatcher.onDidDelete(
+        //     (e) => {
+        //         console.error(`Delete detected in ${e.fsPath}`);
+        //     },
+        //     this,
+        //     disposables
+        // );
         envVars = dedent`
                     VSCODE_JUPYTER_ENV_TEST_VAR1=FOO2
                     VSCODE_JUPYTER_ENV_TEST_VAR2=BAR2

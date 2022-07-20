@@ -92,8 +92,10 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
     public createFileWatcher(envFile: string, workspaceFolderUri?: Uri) {
         const key = this.getCacheKey(workspaceFolderUri, 'RunNonPythonCode');
         if (this.fileWatchers.has(key)) {
+            console.error('File watcher exists for ', envFile);
             return;
         }
+        console.error('Creating File watcher for ', envFile);
         const pattern = new RelativePattern(Uri.file(path.dirname(envFile)), path.basename(envFile));
         console.error('RegEx Pattern in code', pattern.baseUri.fsPath);
         console.error('RegEx Pattern in code', pattern.pattern);
