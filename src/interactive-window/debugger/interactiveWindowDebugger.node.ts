@@ -20,6 +20,9 @@ import { IJupyterDebugService } from '../../kernels/debugger/types';
 import { executeSilently } from '../../kernels/helpers';
 import { buildSourceMap } from './helper';
 
+/**
+ * Public API to begin debugging in the interactive window
+ */
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
     private configs: WeakMap<NotebookDocument, DebugConfiguration> = new WeakMap<

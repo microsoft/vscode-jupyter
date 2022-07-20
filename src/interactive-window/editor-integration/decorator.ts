@@ -12,6 +12,9 @@ import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../p
 import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
 import { generateCellRangesFromDocument } from './cellFactory';
 
+/**
+ * Provides the lines that show up between cells in the editor.
+ */
 @injectable()
 export class Decorator implements IExtensionSingleActivationService, IDisposable {
     private currentCellTop: vscode.TextEditorDecorationType | undefined;

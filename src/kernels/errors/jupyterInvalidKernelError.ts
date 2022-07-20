@@ -7,6 +7,9 @@ import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { KernelConnectionMetadata } from '../types';
 import { BaseKernelError } from './types';
 
+/**
+ * Thrown when kernel cannot be used
+ */
 export class JupyterInvalidKernelError extends BaseKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {
         super(

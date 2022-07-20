@@ -114,7 +114,7 @@ class JupyterKernelService implements IExportedKernelService {
             pemUsed: 'getKernelSpecifications'
         });
         await this.controllerLoader.loadControllers(refresh);
-        const items = this.controllerRegistration.values;
+        const items = this.controllerRegistration.registered;
         return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item.connection));
     }
     getActiveKernels(): { metadata: KernelConnectionMetadata; uri: Uri | undefined }[] {
@@ -160,7 +160,7 @@ class JupyterKernelService implements IExportedKernelService {
                     uri: item.uri
                 });
             });
-        this.controllerRegistration.values.forEach((item) => {
+        this.controllerRegistration.registered.forEach((item) => {
             if (item.controller.notebookType !== JupyterNotebookView) {
                 return;
             }
@@ -207,7 +207,7 @@ class JupyterKernelService implements IExportedKernelService {
         uri: Uri
     ): Promise<IKernelConnectionInfo> {
         await this.controllerLoader.loadControllers();
-        const controllers = this.controllerRegistration.values;
+        const controllers = this.controllerRegistration.registered;
         const controller = controllers.find((item) => item.connection.id === spec.id);
         if (!controller) {
             throw new Error('Not found');

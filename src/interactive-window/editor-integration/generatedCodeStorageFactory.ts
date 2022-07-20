@@ -7,6 +7,9 @@ import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { GeneratedCodeStorage } from './generatedCodeStorage';
 import { IGeneratedCodeStore, IGeneratedCodeStorageFactory } from './types';
 
+/**
+ * Creates GeneratedCodeStorages for a given notebook document.
+ */
 @injectable()
 export class GeneratedCodeStorageFactory implements IGeneratedCodeStorageFactory {
     private readonly storages = new WeakMap<NotebookDocument, IGeneratedCodeStore>();

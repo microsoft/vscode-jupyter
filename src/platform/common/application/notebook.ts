@@ -24,6 +24,7 @@ import {
     EventEmitter
 } from 'vscode';
 import { IDisposableRegistry } from '../types';
+import { sleep } from '../utils/async';
 import { testOnlyMethod } from '../utils/decorators';
 import { IApplicationEnvironment, IVSCodeNotebook } from './types';
 
@@ -112,10 +113,11 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public async closeActiveNotebooks() {
         // We could have untitled notebooks, close them by reverting changes.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const documents = new Set<NotebookDocument>();
+        const documents = new Set<NotebookDocument>(this.notebookDocuments);
         while (window.activeNotebookEditor) {
             documents.add(window.activeNotebookEditor.notebook);
             await commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+            await sleep(10);
         }
 
         // That command does not cause notebook on close to fire. Fire this for every active editor

@@ -607,6 +607,8 @@ export namespace DataScience {
         localize('DataScience.jupyterSelectURIPrompt', 'Enter the URI of the running Jupyter server');
     export const jupyterSelectURIQuickPickTitle = () =>
         localize('DataScience.jupyterSelectURIQuickPickTitle', 'Enter the URI of the running Jupyter server');
+    export const jupyterSelectURIQuickPickTitleOld = () =>
+        localize('DataScience.jupyterSelectURIQuickPickTitleOld', 'Pick how to connect to Jupyter');
     export const jupyterSelectURIQuickPickPlaceholder = () =>
         localize('DataScience.jupyterSelectURIQuickPickPlaceholder', 'Choose an option');
     export const jupyterSelectURIQuickPickCurrent = () =>
@@ -798,7 +800,7 @@ export namespace DataScience {
                 key: 'DataScience.pandasTooOldForViewingFormat',
                 comment: ["{Locked='pandas'", 'This is the name of the pandas package']
             },
-            "Python package 'pandas' is version {0}. Version 0.20 or greater is required for viewing data."
+            "Python package 'pandas' is version {0}. Version {1} or greater is required for viewing data."
         );
     export const pandasRequiredForViewing = () =>
         localize(
@@ -806,7 +808,7 @@ export namespace DataScience {
                 key: 'DataScience.pandasRequiredForViewing',
                 comment: ["{Locked='pandas'", 'This is the name of the pandas package']
             },
-            "Python package 'pandas' is required for viewing data."
+            "Python package 'pandas' version {0} (or above) is required for viewing data."
         );
     export const valuesColumn = () => localize('DataScience.valuesColumn', 'values');
     export const liveShareInvalid = () =>
@@ -1228,6 +1230,7 @@ export namespace DataScience {
     export const exportingToFormat = () => localize('DataScience.exportingToFormat', 'Exporting to {0}');
     export const kernelCategoryForJupyterSession = () =>
         localize('jupyter.kernel.category.jupyterSession', '(Remote) Jupyter Session');
+    export const kernelPrefixForRemote = () => localize('DataScience.kernelPrefixForRemote', '(Remote)');
     export const kernelCategoryForJupyterKernel = () =>
         localize({ key: 'jupyter.kernel.category.jupyterKernel', comment: ['{Locked="Kernel"}'] }, 'Jupyter Kernel');
     export const kernelCategoryForRemoteJupyterKernel = () =>
@@ -1393,6 +1396,16 @@ export namespace DataScience {
         );
     export const listOfFilesWithLinksThatMightNeedToBeRenamed = () =>
         localize('DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed', 'File(s): {0} might need to be renamed.');
+    export const failedToGetVersionOfPandas = () =>
+        localize(
+            { key: 'DataScience.failedToGetVersionOfPandas', comment: ['{Locked="Pandas"}'] },
+            'Failed to get version of Pandas to use the Data Viewer.'
+        );
+    export const failedToInstallPandas = () =>
+        localize(
+            { key: 'DataScience.failedToInstallPandas', comment: ['{Locked="Pandas"}'] },
+            'Failed to install Pandas to use the Data Viewer.'
+        );
 }
 
 export namespace Deprecated {

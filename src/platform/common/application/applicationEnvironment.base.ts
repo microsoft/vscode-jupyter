@@ -34,6 +34,10 @@ export abstract class BaseApplicationEnvironment implements IApplicationEnvironm
         // eslint-disable-next-line
         return this.packageJson.displayName;
     }
+    public get extensionVersion(): string {
+        // eslint-disable-next-line
+        return this.packageJson.version;
+    }
     /**
      * At the time of writing this API, the vscode.env.shell isn't officially released in stable version of VS Code.
      * Using this in stable version seems to throw errors in VSC with messages being displayed to the user about use of

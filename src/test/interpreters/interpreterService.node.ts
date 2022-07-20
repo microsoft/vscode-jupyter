@@ -26,6 +26,9 @@ export class InterpreterService implements IInterpreterService {
     private readonly customInterpretersPerUri = new Map<string, Uri>();
     constructor(@inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker) {}
 
+    public get refreshing() {
+        return false;
+    }
     public async getInterpreters(_resource?: Uri): Promise<PythonEnvironment[]> {
         this.validatePythonExtension();
         if (interpretersCache) {

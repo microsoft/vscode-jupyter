@@ -9,7 +9,11 @@ import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernel
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
 import { INotebookProvider, KernelConnectionMetadata } from './types';
 import { IFileSystem } from '../platform/common/platform/types';
+import { IApplicationEnvironment } from '../platform/common/application/types';
 
+/**
+ * Node version of a KernelFinder. Node has different ways to validate than web.
+ */
 @injectable()
 export class KernelFinder extends BaseKernelFinder {
     constructor(
@@ -22,7 +26,8 @@ export class KernelFinder extends BaseKernelFinder {
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
         @inject(IServerConnectionType) serverConnectionType: IServerConnectionType,
         @inject(IJupyterRemoteCachedKernelValidator)
-        protected readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator
+        protected readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
+        @inject(IApplicationEnvironment) env: IApplicationEnvironment
     ) {
         super(
             preferredRemoteFinder,
@@ -31,7 +36,8 @@ export class KernelFinder extends BaseKernelFinder {
             remoteKernelFinder,
             globalState,
             serverUriStorage,
-            serverConnectionType
+            serverConnectionType,
+            env
         );
     }
 

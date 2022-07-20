@@ -3,6 +3,9 @@
 
 import { BaseError } from '../../platform/errors/types';
 
+/**
+ * Thrown when an extension gives us an invalid handle for a Jupyter server
+ */
 export class InvalidRemoteJupyterServerUriHandleError extends BaseError {
     constructor(
         public readonly providerId: string,

@@ -64,6 +64,9 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { traceCellMessage } from './execution/helpers';
 import { KernelExecution } from './execution/kernelExecution';
 
+/**
+ * Represents an active kernel process running on the jupyter (or local) machine.
+ */
 export abstract class BaseKernel implements IBaseKernel {
     private readonly disposables: IDisposable[] = [];
     get onStatusChanged(): Event<KernelMessage.Status> {

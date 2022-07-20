@@ -46,6 +46,10 @@ import { IDebugService } from '../../platform/common/application/types';
  * https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
  * https://jupyter-client.readthedocs.io/en/stable/messaging.html#additions-to-the-dap
  */
+
+/**
+ * Base class for a debug adapter for connecting to a jupyter kernel. The DebugAdapter is responsible for translating DAP requests for a kernel.
+ */
 export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDebugAdapter, IDisposable {
     protected readonly fileToCell = new Map<string, Uri>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();

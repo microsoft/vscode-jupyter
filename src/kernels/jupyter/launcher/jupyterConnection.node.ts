@@ -25,6 +25,9 @@ import { getFilePath } from '../../../platform/common/platform/fs-paths';
 const namedRegexp = require('named-js-regexp');
 const urlMatcher = namedRegexp(RegExpValues.UrlPatternRegEx);
 
+/**
+ * When starting a local jupyter server, this object waits for the server to come up.
+ */
 export class JupyterConnectionWaiter implements IDisposable {
     private startPromise: Deferred<IJupyterConnection>;
     private launchTimeout: NodeJS.Timer | number;

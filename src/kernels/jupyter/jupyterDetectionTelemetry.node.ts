@@ -15,6 +15,9 @@ import { sendTelemetryEvent } from '../../telemetry';
 
 const JupyterDetectionTelemetrySentMementoKey = 'JupyterDetectionTelemetrySentMementoKey';
 
+/**
+ * Sends telemetry about whether or not jupyter is installed anywhere.
+ */
 @injectable()
 export class JupyterDetectionTelemetry implements IExtensionSyncActivationService {
     constructor(

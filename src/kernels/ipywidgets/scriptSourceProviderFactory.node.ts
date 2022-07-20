@@ -16,6 +16,9 @@ import { IApplicationShell } from '../../platform/common/application/types';
 import { Memento } from 'vscode';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 
+/**
+ * Returns the IWidgetScriptSourceProvider for use in a node environment
+ */
 @injectable()
 export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderFactory {
     constructor(

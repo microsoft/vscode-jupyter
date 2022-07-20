@@ -100,12 +100,12 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         if (!testJavaKernels) {
             return this.skip();
         }
-        await openNotebook(testJavaNb);
-        await waitForKernelToGetAutoSelected('java');
+        const { editor } = await openNotebook(testJavaNb);
+        await waitForKernelToGetAutoSelected(editor, 'java');
     });
     test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
-        await openNotebook(testJuliaNb);
-        await waitForKernelToGetAutoSelected('julia');
+        const { editor } = await openNotebook(testJuliaNb);
+        await waitForKernelToGetAutoSelected(editor, 'julia');
     });
     test('Automatically pick csharp kernel when opening a csharp notebook', async function () {
         // The .NET interactive CLI does not work if you do not have Jupyter installed.
@@ -116,8 +116,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         if (!pythonChecker.isPythonExtensionInstalled) {
             return this.skip();
         }
-        await openNotebook(testCSharpNb);
-        await waitForKernelToGetAutoSelected('c#');
+        const { editor } = await openNotebook(testCSharpNb);
+        await waitForKernelToGetAutoSelected(editor, 'c#');
     });
     test('New notebook will have a Julia cell if last notebook was a julia nb', async function () {
         return this.skip();
@@ -148,7 +148,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
                 .cellAt(0)
                 .document.languageId.toLowerCase()}`
         );
-        await waitForKernelToGetAutoSelected('julia');
+        await waitForKernelToGetAutoSelected(undefined, 'julia');
 
         // Lets try opening a python nb & validate that.
         await closeNotebooks();
@@ -156,16 +156,16 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         if (pythonChecker.isPythonExtensionInstalled) {
             // Now open an existing python notebook & confirm kernel is set to Python.
-            await openNotebook(testEmptyPythonNb);
-            await waitForKernelToGetAutoSelected('python');
+            const { editor } = await openNotebook(testEmptyPythonNb);
+            await waitForKernelToGetAutoSelected(editor, 'python');
         }
     });
     test('Can run a Julia notebook', async function () {
         this.timeout(60_000); // Can be slow to start Julia kernel on CI.
-        await openNotebook(testJuliaNb);
-        await waitForKernelToGetAutoSelected('julia');
+        const { editor } = await openNotebook(testJuliaNb);
+        await waitForKernelToGetAutoSelected(editor, 'julia');
         await insertCodeCell('123456', { language: 'julia', index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell = editor.notebook.cellAt(0)!;
         // Wait till execution count changes and status is success.
         await Promise.all([
             runCell(cell),
@@ -181,8 +181,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
             return this.skip();
         }
         this.timeout(30_000); // Can be slow to start csharp kernel on CI.
-        await openNotebook(testCSharpNb);
-        await waitForKernelToGetAutoSelected('c#');
+        const { editor } = await openNotebook(testCSharpNb);
+        await waitForKernelToGetAutoSelected(editor, 'c#');
         await runAllCellsInActiveNotebook();
 
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;

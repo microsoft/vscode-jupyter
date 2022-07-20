@@ -111,11 +111,11 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
         this.skip();
         const previousList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
         const encryptedStorageSpiedStore = sinon.spy(encryptedStorage, 'store');
-        await openNotebook(ipynbFile);
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        const { editor } = await openNotebook(ipynbFile);
+        await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         await deleteAllCellsAndWait();
         await insertCodeCell('print("123412341234")', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell = editor.notebook.cellAt(0)!;
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Wait for MRU to get updated & encrypted storage to get updated.
@@ -129,7 +129,7 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
 
     test('Can run against a remote kernelspec', async function () {
         await controllerLoader.loadControllers();
-        const controllers = controllerRegistration.values;
+        const controllers = controllerRegistration.registered;
 
         // Verify we have a remote kernel spec.
         assert.ok(
@@ -161,15 +161,15 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
 
     test('Remote kernels support completions', async function () {
         setIntellisenseTimeout(30000);
-        await openNotebook(ipynbFile);
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        const { editor } = await openNotebook(ipynbFile);
+        await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`
         // Cell 2 = `print(a)`
         let cell2 = nbEditor.notebook.getCells()![1]!;
         await Promise.all([
-            runAllCellsInActiveNotebook(),
+            runAllCellsInActiveNotebook(false, editor),
             waitForExecutionCompletedSuccessfully(cell2),
             waitForTextOutput(cell2, 'Hello World', 0, false)
         ]);
@@ -206,8 +206,8 @@ export async function runCellAndVerifyUpdateOfPreferredRemoteKernelId(
         PreferredRemoteKernelIdProvider
     );
 
-    await openNotebook(ipynbFile);
-    await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE, true);
+    const { editor } = await openNotebook(ipynbFile);
+    await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE, true);
     let nbEditor = window.activeNotebookEditor!;
     assert.isOk(nbEditor, 'No active notebook');
     // Cell 1 = `a = "Hello World"`
@@ -241,8 +241,8 @@ export async function reopeningNotebookUsesSameRemoteKernel(ipynbFile: Uri, serv
     // It should connect to the same live kernel. Don't force it to pick it.
     // Second cell should display the value of existing variable from previous execution.
 
-    await openNotebook(ipynbFile);
-    await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE, true, 100_000, true);
+    const { editor } = await openNotebook(ipynbFile);
+    await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE, true, 100_000, true);
     nbEditor = window.activeNotebookEditor!;
     assert.isOk(nbEditor, 'No active notebook');
 

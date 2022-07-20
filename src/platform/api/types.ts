@@ -31,6 +31,7 @@ export interface IPythonExtensionChecker {
     readonly isPythonExtensionActive: boolean;
     showPythonExtensionInstallRequiredPrompt(): Promise<void>;
     directlyInstallPythonExtension(): Promise<void>;
+    onPythonExtensionInstallationStatusChanged: Event<'installed' | 'uninstalled'>;
 }
 
 /**
@@ -156,6 +157,10 @@ export type PythonApi = {
      * @param resource
      */
     setActiveInterpreter(interpreterPath: string, resource?: Resource): Promise<void>;
+    /***
+     * Returns a promise if a refresh is going on.
+     */
+    getRefreshPromise?(): Promise<void> | undefined;
 };
 
 export type RefreshInterpretersOptions = {

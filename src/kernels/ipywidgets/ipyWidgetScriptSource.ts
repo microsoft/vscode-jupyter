@@ -17,6 +17,9 @@ import { createDeferred, Deferred } from '../../platform/common/utils/async';
 import { ScriptUriConverter } from './scriptUriConverter';
 import { ResourceMap } from '../../platform/vscode-path/map';
 
+/**
+ * Handles messages from the kernel related to setting up widgets.
+ */
 export class IPyWidgetScriptSource {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {

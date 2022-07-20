@@ -11,6 +11,9 @@ import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
 import { LocalIPyWidgetScriptManager } from './localIPyWidgetScriptManager.node';
 import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
 
+/**
+ * Determines the IPyWidgetScriptManager for use in a node environment
+ */
 @injectable()
 export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFactory {
     private readonly managers = new WeakMap<IKernel, IIPyWidgetScriptManager>();

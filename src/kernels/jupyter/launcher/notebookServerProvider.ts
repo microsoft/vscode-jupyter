@@ -25,6 +25,9 @@ import { NotSupportedInWebError } from '../../../platform/errors/notSupportedInW
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { isCancellationError } from '../../../platform/common/cancellation';
 
+/**
+ * Starts jupyter servers locally.
+ */
 const localCacheKey = 'LocalJupyterSererCacheKey';
 @injectable()
 export class NotebookServerProvider implements IJupyterServerProvider {

@@ -13,11 +13,18 @@ import {
     getKernelConnectionPath,
     getRemoteKernelSessionInformation
 } from '../../../kernels/helpers';
-import { KernelConnectionMetadata } from '../../../kernels/types';
+import { isRemoteConnection, KernelConnectionMetadata } from '../../../kernels/types';
 import { KernelFilterService } from './kernelFilterService';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../platform/common/constants';
 import { IControllerLoader, IControllerRegistration } from '../types';
+
+function getKernelLabel(metadata: KernelConnectionMetadata): string {
+    if (isRemoteConnection(metadata)) {
+        return `${DataScience.kernelPrefixForRemote()} ${getDisplayNameOrNameOfKernelConnection(metadata)}`;
+    }
+    return getDisplayNameOrNameOfKernelConnection(metadata);
+}
 
 @injectable()
 export class KernelFilterUI implements IExtensionSyncActivationService, IDisposable {
@@ -54,8 +61,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                 if (quickPickHidden) {
                     return;
                 }
-                const items = this.controllers.values
-                    .map((c) => c.connection)
+                const items = this.controllers.all
                     .filter((item) => {
                         if (duplicates.has(item.id)) {
                             return false;
@@ -65,7 +71,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                     })
                     .map((item) => {
                         return <QuickPickType>{
-                            label: getDisplayNameOrNameOfKernelConnection(item),
+                            label: getKernelLabel(item),
                             picked: !this.kernelFilter.isKernelHidden(item),
                             description: getKernelConnectionPath(item, this.workspace),
                             detail:

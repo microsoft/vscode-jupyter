@@ -10,6 +10,9 @@ import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 
+/**
+ * Allows registering a CellExecutionMessageHandler for a given execution.
+ */
 export class CellExecutionMessageHandlerService {
     private readonly disposables: IDisposable[] = [];
     private notebook?: NotebookDocument;

@@ -23,6 +23,9 @@ import {
     IServerConnectionType
 } from './types';
 
+/**
+ * Creates IJupyterConnection objects for URIs and 3rd party handles/ids.
+ */
 @injectable()
 export class JupyterConnection implements IExtensionSyncActivationService {
     private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();

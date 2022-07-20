@@ -5,6 +5,9 @@ import { injectable } from 'inversify';
 import { NotebookCell, NotebookCellOutput, NotebookDocument, workspace } from 'vscode';
 import { isJupyterNotebook } from '../../platform/common/utils';
 
+/**
+ * Tracks a cell's display id. Some messages are sent to other cells and the display id is used to identify them.
+ */
 @injectable()
 export class CellOutputDisplayIdTracker {
     private displayIdCellOutputMappingPerDocument = new WeakMap<

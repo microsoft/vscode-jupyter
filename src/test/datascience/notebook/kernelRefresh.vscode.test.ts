@@ -86,7 +86,7 @@ suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function (
         await waitForCondition(
             async () => {
                 return (
-                    controllerRegistration.values.filter(
+                    controllerRegistration.registered.filter(
                         (item) =>
                             item.controller.notebookType === JupyterNotebookView &&
                             item.connection.kind === 'startUsingPythonInterpreter' &&

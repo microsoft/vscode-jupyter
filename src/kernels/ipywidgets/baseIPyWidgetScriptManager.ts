@@ -113,6 +113,9 @@ export function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderNa
     return requireConfig;
 }
 
+/**
+ * Maps require config entries to the corresponding uri.
+ */
 export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptManager {
     protected readonly disposables: IDisposable[] = [];
     private widgetModuleMappings?: Promise<Record<string, Uri> | undefined>;

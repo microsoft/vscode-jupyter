@@ -6,6 +6,9 @@ import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { KernelConnectionMetadata } from '../types';
 import { BaseKernelError } from './types';
 
+/**
+ * Thrown when a raw kernel times out trying to connect to one of its ports.
+ */
 export class KernelConnectionTimeoutError extends BaseKernelError {
     constructor(kernelConnection: KernelConnectionMetadata) {
         super(

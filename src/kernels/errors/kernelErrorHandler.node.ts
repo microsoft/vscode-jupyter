@@ -19,6 +19,9 @@ import { JupyterKernelStartFailureOverrideReservedName } from '../../platform/in
 import { DataScienceErrorHandler } from './kernelErrorHandler';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
+/**
+ * Common code for handling errors. This one is node specific.
+ */
 @injectable()
 export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
     constructor(

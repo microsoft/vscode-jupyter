@@ -45,6 +45,11 @@ export type IWebSocketLike = {
  *
  */
 
+/**
+ * Adds send/recieve hooks to a WebSocketLike object. These are necessary for things like IPyWidgets support.
+ * @param SuperClass The class to mix into
+ * @returns
+ */
 export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperClass: T) {
     return class BaseKernelSocket extends SuperClass implements IKernelSocket {
         private receiveHooks: ((data: WebSocketWS.Data) => Promise<void>)[];

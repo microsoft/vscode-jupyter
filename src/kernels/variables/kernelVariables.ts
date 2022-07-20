@@ -44,6 +44,10 @@ interface INotebookState {
     variables: IJupyterVariable[];
 }
 
+/**
+ * Reponsible for providing variable data when connected to a kernel and not debugging
+ * (Kernels are paused while debugging so we have to use another means to query data)
+ */
 @injectable()
 export class KernelVariables implements IJupyterVariables {
     private variableRequesters = new Map<string, IKernelVariableRequester>();

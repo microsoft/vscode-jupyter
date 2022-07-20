@@ -147,14 +147,14 @@ No properties for event
 
 ## Locations Used
 
-[src/interactive-window/interactiveWindowCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts)
+[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
 ```typescript
         }
     }
 
     @captureTelemetry(Telemetry.CreateNewInteractive, undefined, false)
     private async createNewInteractiveWindow(connection?: KernelConnectionMetadata): Promise<void> {
-        await this.interactiveWindowProvider.getOrCreate(undefined, connection);
+        await this.interactiveWindowProvider?.getOrCreate(undefined, connection);
     }
 ```
 
@@ -1163,7 +1163,7 @@ No properties for event
 
 ## Locations Used
 
-[src/interactive-window/interactiveWindowCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts)
+[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
 ```typescript
         return result;
     }
@@ -1191,7 +1191,7 @@ No properties for event
 
 ## Locations Used
 
-[src/interactive-window/interactiveWindowCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts)
+[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
 ```typescript
         }
     }
@@ -1269,6 +1269,25 @@ No properties for event
 
 
  Telemetry sent when we're unable to find a KernelSpec connection for Interactive window that can be started usig Python interpreter.
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+Event can be removed. Not referenced anywhere
+
+</details>
+<details>
+  <summary>DATASCIENCE.FAILED_TO_INSTALL_PANDAS</summary>
+
+## Description
+
+
+No description provided
 
 ## Properties
 
@@ -1428,19 +1447,19 @@ No description provided
 
 ## Locations Used
 
-[src/interactive-window/interactiveWindowCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts)
+[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
 ```typescript
         return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)
     private async importNotebook(): Promise<void> {
-        const filtersKey = localize.DataScience.importDialogFilter();
+        const filtersKey = DataScience.importDialogFilter();
         const filtersObject: { [name: string]: string[] } = {};
 ```
 
 
-[src/interactive-window/interactiveWindowCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts)
+[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
 ```typescript
         }
     }
@@ -2635,6 +2654,37 @@ No description provided
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
+
+</details>
+<details>
+  <summary>DATASCIENCE.NO_ACTIVE_KERNEL_SESSION</summary>
+
+## Description
+
+
+
+
+ Useful when we need an active kernel session in order to execute commands silently.
+ Used by the dataViewerDependencyService.
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+[src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
+```typescript
+        sendTelemetryEvent(Telemetry.DataViewerUsingKernel);
+
+        if (!kernelHasSession(kernel)) {
+            sendTelemetryEvent(Telemetry.NoActiveKernelSession);
+            throw new Error('No no active kernel session.');
+        }
+
+```
 
 </details>
 <details>
@@ -4034,13 +4084,25 @@ No properties for event
 
 [src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
 ```typescript
-        @inject(IsWebExtension) private readonly isWebExtension: boolean
+        private readonly isWebExtension: boolean
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
     public selectJupyterURI(
         commandSource: SelectJupyterUriCommandSource = 'nonUser',
         existingMultiStep?: IMultiStepInput<{}>
+```
+
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
+    ) {}
+
+    @captureTelemetry(Telemetry.SelectJupyterURI)
+    @traceDecoratorError('Failed to select Jupyter Uri')
+    public selectJupyterURI(
+        commandSource: SelectJupyterUriCommandSource = 'nonUser'
 ```
 
 
@@ -4267,6 +4329,18 @@ No properties for event
     }
 ```
 
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+        return multiStep.run(this.startSelectingURI.bind(this, allowLocal), {});
+    }
+
+    @captureTelemetry(Telemetry.SetJupyterURIToLocal)
+    public async setJupyterURIToLocal(): Promise<void> {
+        await this.serverUriStorage.setUriToLocal();
+    }
+```
+
 </details>
 <details>
   <summary>DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED</summary>
@@ -4297,6 +4371,18 @@ No properties for event
         if (existingMultiStep) {
 ```
 
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+        commandSource: SelectJupyterUriCommandSource = 'nonUser'
+    ): Promise<InputFlowAction | undefined | InputStep<{}> | void> {
+        const allowLocal = commandSource !== 'nonUser';
+        sendTelemetryEvent(Telemetry.SetJupyterURIUIDisplayed, undefined, {
+            commandSource
+        });
+        const multiStep = this.multiStepFactory.create<{}>();
+```
+
 </details>
 <details>
   <summary>DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED</summary>
@@ -4322,6 +4408,18 @@ No description provided
                 azure: userURI.toLowerCase().includes('azure')
             });
         } else {
+```
+
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+        await this.serverUriStorage.setUriToRemote(userURI, connection.displayName);
+
+        // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
+        sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
+            azure: userURI.toLowerCase().includes('azure')
+        });
+    }
 ```
 
 </details>
@@ -4498,13 +4596,13 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts)
+[src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts)
 ```typescript
-                sendTelemetryEvent(Telemetry.UserInstalledPandas);
-            }
+        if (selection === Common.install()) {
+            await this._doInstall(executer, tokenSource);
         } else {
             sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
-            throw new Error(DataScience.pandasRequiredForViewing());
+            throw new Error(message);
         }
     }
 ```
@@ -4578,15 +4676,39 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts)
+[src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts)
 ```typescript
-                cancellationPromise
-            ]);
-            if (response === InstallerResponse.Installed) {
-                sendTelemetryEvent(Telemetry.UserInstalledPandas);
-            }
-        } else {
-            sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
+            cancellationPromise
+        ]);
+        if (response === InstallerResponse.Installed) {
+            sendTelemetryEvent(Telemetry.UserInstalledPandas);
+        }
+    }
+
+```
+
+
+[src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
+```typescript
+
+        try {
+            await this.execute(command, kernel);
+            sendTelemetryEvent(Telemetry.UserInstalledPandas);
+        } catch (e) {
+            sendTelemetryEvent(Telemetry.UserInstalledPandas, undefined, undefined, e);
+            throw new Error(DataScience.failedToInstallPandas());
+```
+
+
+[src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
+```typescript
+            await this.execute(command, kernel);
+            sendTelemetryEvent(Telemetry.UserInstalledPandas);
+        } catch (e) {
+            sendTelemetryEvent(Telemetry.UserInstalledPandas, undefined, undefined, e);
+            throw new Error(DataScience.failedToInstallPandas());
+        }
+    }
 ```
 
 </details>
@@ -4731,6 +4853,66 @@ No properties for event
 ## Locations Used
 
 Event can be removed. Not referenced anywhere
+
+</details>
+<details>
+  <summary>DATAVIEWER.USING_INTERPRETER</summary>
+
+## Description
+
+
+
+
+ When the Data Viewer installer is using the Python interpreter.
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+[src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts)
+```typescript
+    }
+
+    public async checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void> {
+        sendTelemetryEvent(Telemetry.DataViewerUsingInterpreter);
+
+        await this.checkOrInstall(interpreter);
+    }
+```
+
+</details>
+<details>
+  <summary>DATAVIEWER.USING_KERNEL</summary>
+
+## Description
+
+
+
+
+ When the Data Viewer installer is using the Kernel.
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+[src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
+```typescript
+    }
+
+    async checkAndInstallMissingDependencies(kernel: IKernel): Promise<void> {
+        sendTelemetryEvent(Telemetry.DataViewerUsingKernel);
+
+        if (!kernelHasSession(kernel)) {
+            sendTelemetryEvent(Telemetry.NoActiveKernelSession);
+```
 
 </details>
 <details>
@@ -5173,6 +5355,54 @@ No properties for event
 ```
 
 
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+            }
+        } catch (err) {
+            if (JupyterSelfCertsError.isSelfCertsError(err)) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return;
+```
+
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+                    return;
+                }
+            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return;
+```
+
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+        } catch (err) {
+            traceWarning('Uri verification error', err);
+            if (JupyterSelfCertsError.isSelfCertsError(err)) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return DataScience.jupyterSelfCertFailErrorMessageOnly();
+```
+
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+                    return DataScience.jupyterSelfCertFailErrorMessageOnly();
+                }
+            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return DataScience.jupyterSelfCertExpiredErrorMessageOnly();
+```
+
+
 [src/kernels/jupyter/launcher/jupyterExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterExecution.ts)
 ```typescript
 
@@ -5347,13 +5577,13 @@ No properties for event
 
 [src/kernels/jupyter/jupyterKernelService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.node.ts)
 ```typescript
-                    await this.fs.writeFile(Uri.file(kernelSpecFilePath), JSON.stringify(specModel, undefined, 2));
-                } catch (ex) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
-                    throw ex;
+                    return;
                 }
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
+                throw ex;
             }
+
 ```
 
 </details>
@@ -7516,15 +7746,15 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts)
+[src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts)
 ```typescript
-        interpreter: PythonEnvironment,
-        tokenSource: CancellationTokenSource
-    ): Promise<void> {
-        sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
-            action: 'displayed',
-            moduleName: ProductNames.get(Product.pandas)!,
-            pythonEnvType: interpreter?.envType
+        }
+    }
+
+    @captureTelemetry(Telemetry.PythonModuleInstall, {
+        action: 'displayed',
+        moduleName: ProductNames.get(Product.pandas)!
+    })
 ```
 
 </details>
@@ -8415,15 +8645,69 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts)
+[src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts)
 ```typescript
-                throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
+                const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
+                await this.promptInstall(executer, tokenSource, versionStr);
             }
-
             sendTelemetryEvent(Telemetry.PandasNotInstalled);
-            await this.installMissingDependencies(interpreter, tokenSource);
+            await this.promptInstall(executer, tokenSource);
         } finally {
             tokenSource.dispose();
+```
+
+</details>
+<details>
+  <summary>DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED</summary>
+
+## Description
+
+
+No description provided
+
+## Properties
+
+-  version: string
+
+## Locations Used
+
+[src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts)
+```typescript
+            const pandasVersion = await this.getVersion(executer, tokenSource.token);
+
+            if (Cancellation.isCanceled(tokenSource.token)) {
+                sendTelemetryEvent(Telemetry.PandasInstallCanceled);
+                return;
+            }
+
+```
+
+</details>
+<details>
+  <summary>DS_INTERNAL.SHOW_DATA_PANDAS_OK</summary>
+
+## Description
+
+
+No description provided
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+[src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts)
+```typescript
+
+            if (pandasVersion) {
+                if (pandasVersion.compare(pandasMinimumVersionSupportedByVariableViewer) > 0) {
+                    sendTelemetryEvent(Telemetry.PandasOK);
+                    return;
+                }
+                sendTelemetryEvent(Telemetry.PandasTooOld);
 ```
 
 </details>
@@ -8443,15 +8727,15 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts)
+[src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts)
 ```typescript
-                if (isVersionOfPandasSupported(pandasVersion)) {
+                    sendTelemetryEvent(Telemetry.PandasOK);
                     return;
                 }
                 sendTelemetryEvent(Telemetry.PandasTooOld);
                 // Warn user that we cannot start because pandas is too old.
                 const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
-                throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
+                await this.promptInstall(executer, tokenSource, versionStr);
 ```
 
 </details>
@@ -8895,6 +9179,18 @@ No properties for event
 ```typescript
                 }
             } else if (userURI) {
+                if (err.message.includes('Failed to fetch') && this.isWebExtension) {
+                    sendTelemetryEvent(Telemetry.FetchError, undefined, { currentTask: 'connecting' });
+                }
+                const serverId = await computeServerId(userURI);
+                await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, serverId, err));
+```
+
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+                }
+            } else {
                 if (err.message.includes('Failed to fetch') && this.isWebExtension) {
                     sendTelemetryEvent(Telemetry.FetchError, undefined, { currentTask: 'connecting' });
                 }

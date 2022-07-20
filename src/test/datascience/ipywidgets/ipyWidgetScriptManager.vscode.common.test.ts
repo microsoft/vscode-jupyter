@@ -61,8 +61,8 @@ suite('IPyWidget Script Manager', function () {
             ],
             disposables
         );
-        const notebook = await openNotebook(testWidgetNb);
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        const { notebook, editor } = await openNotebook(testWidgetNb);
+        await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         const cell = notebook.cellAt(0);
 
         // Execute cell. It should load and render the widget

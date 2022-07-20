@@ -46,6 +46,7 @@ import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { WIDGET_MIMETYPE } from '../ipywidgets/constants';
 import isObject = require('lodash/isObject');
 import { Identifiers } from '../../platform/common/constants';
+import { Lazy } from '../../platform/common/utils/lazy';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -521,7 +522,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         // Possible execution of cell has completed (the task would have been disposed).
         // This message could have come from a background thread.
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-        const task = this.execution || this.createTemporaryTask();
+        let task = new Lazy(() => this.execution || this.createTemporaryTask());
         this.clearLastUsedStreamOutput();
         traceCellMessage(this.cell, 'Append output in addToCellData');
         // If the output belongs to a widget, then add the output to that specific widget (i.e. just below the widget).
@@ -549,7 +550,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                         .handlingCommId,
                     outputToAppend: cellOutput
                 },
-                task
+                task.getValue()
             );
 
             if (result?.outputAdded) {
@@ -557,7 +558,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             }
         }
         if (outputShouldBeAppended) {
-            task?.appendOutput([cellOutput]).then(noop, noop);
+            task.getValue()?.appendOutput([cellOutput]).then(noop, noop);
         }
         this.endTemporaryTask();
     }

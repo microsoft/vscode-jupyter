@@ -17,6 +17,9 @@ import { createJupyterCellFromVSCNotebookCell } from '../execution/helpers';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
+/**
+ * Sends telemetry about cell output mime types
+ */
 @injectable()
 export class CellOutputMimeTypeTracker implements IExtensionSingleActivationService, IDisposable {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();

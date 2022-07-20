@@ -107,6 +107,9 @@ const config = {
         new webpack.IgnorePlugin({
             resourceRegExp: /^\.\/locale$/,
             contextRegExp: /moment$/
+        }),
+        new webpack.optimize.LimitChunkCountPlugin({
+            maxChunks: 1
         })
     ],
     resolve: {

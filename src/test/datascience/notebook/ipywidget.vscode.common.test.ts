@@ -70,8 +70,8 @@ suite('DataScience - VSCode Notebook - Standard', function () {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Can run a widget notebook (webview-test)', async function () {
-        const notebook = await openNotebook(testWidgetNb);
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        const { notebook, editor } = await openNotebook(testWidgetNb);
+        await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         const cell = notebook.cellAt(0);
 
         // This flag will be resolved when the widget loads
@@ -90,9 +90,9 @@ suite('DataScience - VSCode Notebook - Standard', function () {
         );
     });
     test('Can run a widget notebook twice (webview-test)', async function () {
-        let notebook = await openNotebook(testWidgetNb);
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
-        let cell = notebook.cellAt(0);
+        let open = await openNotebook(testWidgetNb);
+        await waitForKernelToGetAutoSelected(open.editor, PYTHON_LANGUAGE);
+        let cell = open.notebook.cellAt(0);
 
         // Execute cell. It should load and render the widget
         await runCell(cell);
@@ -103,9 +103,9 @@ suite('DataScience - VSCode Notebook - Standard', function () {
         // Close notebook and open again.
         await closeNotebooks();
 
-        notebook = await openNotebook(testWidgetNb);
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
-        cell = notebook.cellAt(0);
+        open = await openNotebook(testWidgetNb);
+        await waitForKernelToGetAutoSelected(open.editor, PYTHON_LANGUAGE);
+        cell = open.notebook.cellAt(0);
 
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();

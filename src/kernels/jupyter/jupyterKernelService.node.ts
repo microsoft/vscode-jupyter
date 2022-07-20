@@ -20,14 +20,11 @@ import {
 } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
-import { Resource, ReadWrite, IDisplayOptions, IConfigurationService } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
-import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
-import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
+import { Resource, ReadWrite, IDisplayOptions } from '../../platform/common/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { JupyterKernelDependencyError } from '../errors/jupyterKernelDependencyError';
-import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers';
+import { cleanEnvironment } from '../helpers';
 import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
 import {
     IJupyterKernelSpec,
@@ -40,9 +37,10 @@ import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { serializePythonEnvironment } from '../../platform/api/pythonApi';
 import { IJupyterKernelService } from './types';
 import { arePathsSame } from '../../platform/common/platform/fileUtils';
+import { KernelEnvironmentVariablesService } from '../raw/launcher/kernelEnvVarsService.node';
 
 /**
- * Responsible for registering and updating kernels
+ * Responsible for registering and updating kernels in a non ZMQ situation (kernel specs)
  *
  * @export
  * @class JupyterKernelService
@@ -52,10 +50,8 @@ export class JupyterKernelService implements IJupyterKernelService {
     constructor(
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
-        @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
-        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(KernelEnvironmentVariablesService) private readonly kernelEnvVars: KernelEnvironmentVariablesService
     ) {}
 
     /**
@@ -241,8 +237,7 @@ export class JupyterKernelService implements IJupyterKernelService {
         interpreter: PythonEnvironment,
         kernel: IJupyterKernelSpec,
         specFile: string,
-        cancelToken?: CancellationToken,
-        forceWrite?: boolean
+        cancelToken?: CancellationToken
     ) {
         const kernelSpecRootPath = await this.jupyterPaths.getKernelSpecTempRegistrationFolder();
         const specedKernel = kernel as JupyterKernelSpec;
@@ -262,11 +257,13 @@ export class JupyterKernelService implements IJupyterKernelService {
             let specModel: ReadWrite<KernelSpec.ISpecModel> = JSON.parse(
                 await this.fs.readFile(Uri.file(kernelSpecFilePath))
             );
-            let shouldUpdate = false;
+            if (Cancellation.isCanceled(cancelToken)) {
+                return;
+            }
 
             // Make sure the specmodel has an interpreter or already in the metadata or we
             // may overwrite a kernel created by the user
-            if (specModel.metadata?.interpreter || forceWrite) {
+            if (specModel.metadata?.interpreter) {
                 // Ensure we use a fully qualified path to the python interpreter in `argv`.
                 if (specModel.argv[0].toLowerCase() === 'conda') {
                     // If conda is the first word, its possible its a conda activation command.
@@ -277,47 +274,6 @@ export class JupyterKernelService implements IJupyterKernelService {
                     );
                     specModel.argv[0] = interpreter.uri.fsPath;
                 }
-                // Get the activated environment variables (as a work around for `conda run` and similar).
-                // This ensures the code runs within the context of an activated environment.
-                const interpreterEnv = await this.activationHelper
-                    .getActivatedEnvironmentVariables(resource, interpreter, true)
-                    .catch(noop)
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    .then((env) => (env || {}) as any);
-
-                // Ensure we inherit env variables from the original kernelspec file.
-                let envInKernelSpecJson =
-                    getKernelRegistrationInfo(kernel) === 'registeredByNewVersionOfExtForCustomKernelSpec'
-                        ? specModel.env || {}
-                        : {};
-
-                // Give preferences to variables in the env file (except for `PATH`).
-                envInKernelSpecJson = Object.assign({ ...interpreterEnv }, envInKernelSpecJson);
-                if (interpreterEnv['PATH']) {
-                    envInKernelSpecJson['PATH'] = interpreterEnv['PATH'];
-                }
-                if (interpreterEnv['Path']) {
-                    envInKernelSpecJson['Path'] = interpreterEnv['Path'];
-                }
-                specModel.env = Object.assign(envInKernelSpecJson, specModel.env);
-
-                // Ensure the python env folder is always at the top of the PATH, this way all executables from that env are used.
-                // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
-                // Also applies to `!java` where java could be an executable in the conda bin directory.
-                if (specModel.env) {
-                    this.envVarsService.prependPath(specModel.env as {}, path.dirname(interpreter.uri.fsPath));
-                }
-
-                // If user asks us to, set PYTHONNOUSERSITE
-                // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
-                // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
-                if (this.configService.getSettings(undefined).excludeUserSitePackages) {
-                    specModel.env.PYTHONNOUSERSITE = 'True';
-                }
-
-                if (Cancellation.isCanceled(cancelToken)) {
-                    return;
-                }
 
                 // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
                 // We'll need information such as interpreter type, display name, path, etc...
@@ -325,27 +281,28 @@ export class JupyterKernelService implements IJupyterKernelService {
                 specModel.metadata = specModel.metadata || {};
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 specModel.metadata.interpreter = interpreter as any;
-
-                // Indicate we need to write
-                shouldUpdate = true;
             }
+
+            specModel.env = await this.kernelEnvVars.getEnvironmentVariables(resource, interpreter, specedKernel);
 
             // Scrub the environment of the specmodel to make sure it has allowed values (they all must be strings)
             // See this issue here: https://github.com/microsoft/vscode-python/issues/11749
-            if (specModel.env) {
-                specModel = cleanEnvironment(specModel);
-                shouldUpdate = true;
-            }
+            specModel = cleanEnvironment(specModel);
 
             // Update the kernel.json with our new stuff.
-            if (shouldUpdate) {
-                try {
-                    await this.fs.writeFile(Uri.file(kernelSpecFilePath), JSON.stringify(specModel, undefined, 2));
-                } catch (ex) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
-                    throw ex;
+            try {
+                await this.fs.writeFile(Uri.file(kernelSpecFilePath), JSON.stringify(specModel, undefined, 2));
+            } catch (ex) {
+                if (Cancellation.isCanceled(cancelToken)) {
+                    return;
                 }
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
+                throw ex;
+            }
+
+            if (Cancellation.isCanceled(cancelToken)) {
+                return;
             }
 
             // Always update the metadata for the original kernel.

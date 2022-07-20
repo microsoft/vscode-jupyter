@@ -16,6 +16,9 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterCommands, JupyterDaemonModule } from '../../../platform/common/constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types.node';
 
+/**
+ * Launches jupyter using the current python environment.
+ */
 class InterpreterJupyterCommand implements IJupyterCommand {
     protected interpreterPromise: Promise<PythonEnvironment>;
     private pythonLauncher: Promise<IPythonExecutionService>;

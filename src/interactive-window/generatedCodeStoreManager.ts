@@ -11,6 +11,9 @@ import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
 
+/**
+ * Responsible for updating the GenerateCodeStorage when kernels reload
+ */
 @injectable()
 export class GeneratedCodeStorageManager implements IExtensionSyncActivationService {
     private readonly disposables: IDisposable[] = [];

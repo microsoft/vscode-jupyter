@@ -15,6 +15,13 @@ class TypeScriptLanguageServiceHost implements ts.LanguageServiceHost {
         this._files = files;
         this._compilerOptions = compilerOptions;
     }
+    readFile(path: string, encoding?: string | undefined): string | undefined {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return fs.readFileSync(path, { encoding } as any).toString();
+    }
+    fileExists(path: string): boolean {
+        return fs.existsSync(path);
+    }
 
     // --- language service host ---------------
 
@@ -328,23 +335,21 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
                     if (references && program) {
                         console.log(`    References:`);
                         references.forEach((r) => {
-                            if (!r.isDefinition) {
-                                const refSourceFile = program?.getSourceFile(r.fileName);
-                                if (refSourceFile) {
-                                    const refNode = findNode(refSourceFile, r.textSpan.start);
-                                    // See if this is the special 'telemetry.ts' file that forces telemetry to be type safe
-                                    if (refNode && r.fileName.endsWith('src/telemetry.ts')) {
-                                        entries.push(
-                                            generateTelemetryEntry(
-                                                program!,
-                                                host,
-                                                m.getText(sourceFile),
-                                                refNode,
-                                                refSourceFile,
-                                                references
-                                            )
-                                        );
-                                    }
+                            const refSourceFile = program?.getSourceFile(r.fileName);
+                            if (refSourceFile) {
+                                const refNode = findNode(refSourceFile, r.textSpan.start);
+                                // See if this is the special 'telemetry.ts' file that forces telemetry to be type safe
+                                if (refNode && r.fileName.endsWith('src/telemetry.ts')) {
+                                    entries.push(
+                                        generateTelemetryEntry(
+                                            program!,
+                                            host,
+                                            m.getText(sourceFile),
+                                            refNode,
+                                            refSourceFile,
+                                            references
+                                        )
+                                    );
                                 }
                             }
                             console.log(`        ${r.fileName} => ${JSON.stringify(r.textSpan)}`);

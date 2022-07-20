@@ -15,6 +15,9 @@ import { IEnvironmentActivationService } from '../../platform/interpreter/activa
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService.node';
 import { IRawNotebookSupportedService } from '../raw/types';
 
+/**
+ * Computes interpreter environment variables when starting up.
+ */
 @injectable()
 export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSingleActivationService {
     constructor(

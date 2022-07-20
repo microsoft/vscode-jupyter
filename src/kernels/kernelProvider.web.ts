@@ -19,6 +19,9 @@ import { InteractiveWindowView } from '../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { IFileSystem } from '../platform/common/platform/types';
 
+/**
+ * Web version of a kernel provider. Needed in order to create the web version of a kernel.
+ */
 @injectable()
 export class KernelProvider extends BaseCoreKernelProvider {
     constructor(

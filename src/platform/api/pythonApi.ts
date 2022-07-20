@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable class-methods-use-this */
-// eslint-disable-next-line
-/* eslint-disable consistent-return */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, Event, Uri, workspace, ExtensionMode } from 'vscode';
+import { EventEmitter, Event, Uri, workspace, ExtensionMode } from 'vscode';
 import {
     IPythonApiProvider,
     IPythonExtensionChecker,
@@ -180,7 +177,11 @@ export class PythonApiProvider implements IPythonApiProvider {
 
 @injectable()
 export class PythonExtensionChecker implements IPythonExtensionChecker {
-    private extensionChangeHandler: Disposable | undefined;
+    private previousInstallState: boolean;
+    private readonly pythonExtensionInstallationStatusChanged = new EventEmitter<'installed' | 'uninstalled'>();
+    public get onPythonExtensionInstallationStatusChanged() {
+        return this.pythonExtensionInstallationStatusChanged.event;
+    }
     /**
      * Used only for testsing
      */
@@ -189,12 +190,15 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
-        // If the python extension is not installed listen to see if anything does install it
-        if (!this.isPythonExtensionInstalled) {
-            this.extensionChangeHandler = this.extensions.onDidChange(this.extensionsChangeHandler.bind(this));
-        }
+        // Listen for the python extension being installed or uninstalled
+        this.extensions.onDidChange(this.extensionsChangeHandler.bind(this), this, this.disposables);
+
+        // Name is a bit different here as we use the isPythonExtensionInstalled property for checking the current state.
+        // This property is to see if we change it during extension actions.
+        this.previousInstallState = this.isPythonExtensionInstalled;
     }
 
     public get isPythonExtensionInstalled() {
@@ -243,15 +247,12 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     private async extensionsChangeHandler(): Promise<void> {
-        // On extension change see if python was installed, if so unhook our extension change watcher and
-        // notify the user that they might need to restart notebooks or interactive windows
-        if (this.isPythonExtensionInstalled && this.extensionChangeHandler) {
-            this.extensionChangeHandler.dispose();
-            this.extensionChangeHandler = undefined;
+        // Check to see if we changed states, if so signal
+        const newInstallState = this.isPythonExtensionInstalled;
 
-            this.appShell
-                .showInformationMessage(localize.DataScience.pythonExtensionInstalled(), localize.Common.ok())
-                .then(noop, noop);
+        if (newInstallState !== this.previousInstallState) {
+            this.pythonExtensionInstallationStatusChanged.fire(newInstallState ? 'installed' : 'uninstalled');
+            this.previousInstallState = newInstallState;
         }
     }
 }
@@ -285,6 +286,9 @@ export class InterpreterService implements IInterpreterService {
     private readonly didChangeInterpreters = new EventEmitter<void>();
     private eventHandlerAdded?: boolean;
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
+    private canFindRefreshPromise: boolean | undefined = undefined;
+    private refreshPromise: Promise<void> | undefined = undefined;
+    private api: PythonApi | undefined;
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
@@ -304,6 +308,11 @@ export class InterpreterService implements IInterpreterService {
             }
         }
         this.workspace.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders, this, disposables);
+    }
+
+    public get refreshing() {
+        const refreshPromise = this.getRefreshPromise();
+        return refreshPromise !== undefined;
     }
 
     public get onDidChangeInterpreter(): Event<void> {
@@ -333,10 +342,12 @@ export class InterpreterService implements IInterpreterService {
             if (api.refreshInterpreters) {
                 const newItems = await api.refreshInterpreters({ clearCache: false });
                 this.interpreterListCachePromise = undefined;
+                this.didChangeInterpreters.fire();
                 traceVerbose(`Refreshed Environments and got ${newItems}`);
             } else if ((api as any).refreshEnvironment) {
                 const newItems = await (api as any).refreshEnvironment({ clearCache: false });
                 this.interpreterListCachePromise = undefined;
+                this.didChangeInterpreters.fire();
                 traceVerbose(`Refreshed Environments and got ${newItems}`);
             }
         } catch (ex) {
@@ -396,6 +407,23 @@ export class InterpreterService implements IInterpreterService {
         }
     }
 
+    private async getApi(): Promise<PythonApi | undefined> {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
+        if (!this.api) {
+            this.api = await this.apiProvider.getApi();
+        }
+        return this.api;
+    }
+
+    private tryGetApi(): PythonApi | undefined {
+        if (!this.api) {
+            this.getApi().ignoreErrors();
+        }
+        return this.api;
+    }
+
     private onDidChangeWorkspaceFolders() {
         this.interpreterListCachePromise = undefined;
     }
@@ -406,11 +434,9 @@ export class InterpreterService implements IInterpreterService {
         const activeInterpreterPromise = this.getActiveInterpreter(resource);
         const all = folders
             ? await Promise.all(
-                  [...folders, undefined].map((f) =>
-                      this.apiProvider.getApi().then((api) => api.getInterpreters(f?.uri))
-                  )
+                  [...folders, undefined].map((f) => this.getApi().then((api) => api?.getInterpreters(f?.uri)))
               )
-            : await Promise.all([await this.apiProvider.getApi().then((api) => api.getInterpreters(undefined))]);
+            : await Promise.all([await this.getApi().then((api) => api?.getInterpreters(undefined))]);
         const activeInterpreter = await activeInterpreterPromise;
         // Remove dupes
         const result: PythonEnvironment[] = [];
@@ -434,17 +460,9 @@ export class InterpreterService implements IInterpreterService {
         if (this.eventHandlerAdded) {
             return;
         }
-        // Python may not be installed or active
-        if (!this.extensionChecker.isPythonExtensionInstalled) {
-            return;
-        }
-        if (!this.extensionChecker.isPythonExtensionActive) {
-            return;
-        }
-        this.apiProvider
-            .getApi()
+        this.getApi()
             .then((api) => {
-                if (!this.eventHandlerAdded) {
+                if (!this.eventHandlerAdded && api) {
                     this.eventHandlerAdded = true;
                     api.onDidChangeInterpreter(
                         () => {
@@ -466,5 +484,33 @@ export class InterpreterService implements IInterpreterService {
                 }
             })
             .catch(noop);
+    }
+    private getRefreshPromise(): Promise<void> | undefined {
+        if (this.canFindRefreshPromise === undefined) {
+            this.canFindRefreshPromise = false;
+            const api = this.tryGetApi();
+            if (!api) {
+                this.getApi()
+                    .then((a) => {
+                        this.canFindRefreshPromise = a?.getRefreshPromise !== undefined;
+                    })
+                    .ignoreErrors();
+            } else {
+                this.canFindRefreshPromise = api.getRefreshPromise !== undefined;
+            }
+        }
+        if (!this.canFindRefreshPromise) {
+            return undefined; // If API isn't supported, then just assume we're not in the middle of a refresh.
+        } else {
+            const api = this.tryGetApi();
+            const apiRefreshPromise = api?.getRefreshPromise ? api.getRefreshPromise() : undefined;
+            if (apiRefreshPromise != this.refreshPromise) {
+                this.refreshPromise = apiRefreshPromise;
+                // When we first capture the refresh promise, make sure it fires an event to
+                // refresh when done.
+                this.refreshPromise?.then(() => this.didChangeInterpreters.fire()).ignoreErrors;
+            }
+            return this.refreshPromise;
+        }
     }
 }

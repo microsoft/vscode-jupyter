@@ -31,6 +31,9 @@ import { noop } from '../../../platform/common/utils/misc';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/**
+ * Implements IRawNotebookProvider for raw kernel connections.
+ */
 @injectable()
 export class HostRawNotebookProvider implements IRawNotebookProvider {
     public get id(): string {

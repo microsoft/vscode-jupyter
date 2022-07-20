@@ -101,6 +101,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public poetryPath: string = '';
     public excludeUserSitePackages: boolean = false;
     public enableExtendedKernelCompletions: boolean = false;
+    public showOnlyOneTypeOfKernel: boolean = false;
 
     public variableTooltipFields: IVariableTooltipFields = {
         python: {
