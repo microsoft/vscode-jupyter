@@ -58,7 +58,7 @@ suite('Jupyter Paths', () => {
         fs = mock<IFileSystem>();
         context = mock<ExtensionContext>();
         when(context.extensionUri).thenReturn(extensionUri);
-        when(envVarsProvider.getEnvironmentVariables()).thenResolve(process.env);
+        when(envVarsProvider.getEnvironmentVariables(anything(), anything())).thenResolve(process.env);
         jupyterPaths = new JupyterPaths(
             instance(platformService),
             instance(envVarsProvider),

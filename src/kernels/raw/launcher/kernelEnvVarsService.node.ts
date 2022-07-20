@@ -63,7 +63,7 @@ export class KernelEnvironmentVariablesService {
 
         let [customEnvVars, interpreterEnv] = await Promise.all([
             this.customEnvVars
-                .getCustomEnvironmentVariables(resource, isPythonKernel ? 'RunPythonCode' : undefined)
+                .getCustomEnvironmentVariables(resource, isPythonKernel ? 'RunPythonCode' : 'RunNonPythonCode')
                 .catch(noop),
             interpreter
                 ? this.envActivation

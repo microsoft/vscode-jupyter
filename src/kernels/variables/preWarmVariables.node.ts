@@ -48,10 +48,10 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
             // Don't try to pre-warm variables if user has too many workspace folders opened.
             const workspaceFolderCount = this.workspace.workspaceFolders?.length ?? 0;
             if (workspaceFolderCount <= 5) {
-                this.envVarsProvider.getEnvironmentVariables(undefined).ignoreErrors();
+                this.envVarsProvider.getEnvironmentVariables(undefined, 'RunNonPythonCode').ignoreErrors();
                 this.envVarsProvider.getEnvironmentVariables(undefined, 'RunPythonCode').ignoreErrors();
                 (this.workspace.workspaceFolders || []).forEach((folder) => {
-                    this.envVarsProvider.getEnvironmentVariables(folder.uri).ignoreErrors();
+                    this.envVarsProvider.getEnvironmentVariables(folder.uri, 'RunNonPythonCode').ignoreErrors();
                     this.envVarsProvider.getEnvironmentVariables(folder.uri, 'RunPythonCode').ignoreErrors();
                 });
             }

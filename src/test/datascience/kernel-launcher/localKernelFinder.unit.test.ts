@@ -144,7 +144,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             });
             when(workspaceService.rootFolder).thenReturn(testWorkspaceFolder);
             const envVarsProvider = mock(CustomEnvironmentVariablesProvider);
-            when(envVarsProvider.getEnvironmentVariables()).thenResolve({});
+            when(envVarsProvider.getEnvironmentVariables(anything(), anything())).thenResolve({});
             const event = new EventEmitter<Uri | undefined>();
             disposables.push(event);
             when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(event.event);

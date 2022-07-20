@@ -349,7 +349,7 @@ export class JupyterPaths {
         subDir?: string
     ): Promise<Uri[]> {
         const paths = new ResourceSet();
-        const vars = await this.envVarsProvider.getEnvironmentVariables();
+        const vars = await this.envVarsProvider.getEnvironmentVariables(undefined, 'RunPythonCode');
         if (cancelToken?.isCancellationRequested) {
             return [];
         }

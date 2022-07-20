@@ -72,7 +72,7 @@ suite('Custom Environment Variables Provider', () => {
                     `;
         fs.writeFileSync(envFile.fsPath, envVars);
         createProvider();
-        const vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined);
+        const vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunNonPythonCode');
 
         assert.deepEqual(vars, {
             VSCODE_JUPYTER_ENV_TEST_VAR1: 'FOO',
@@ -86,7 +86,7 @@ suite('Custom Environment Variables Provider', () => {
                     `;
         fs.writeFileSync(envFile.fsPath, envVars);
         createProvider();
-        let vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined);
+        let vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunNonPythonCode');
 
         assert.deepEqual(vars, {
             VSCODE_JUPYTER_ENV_TEST_VAR1: 'FOO',
@@ -109,7 +109,7 @@ suite('Custom Environment Variables Provider', () => {
         await changeDetected.assertFired(5_000);
 
         // Ensure the new vars are different.
-        vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined);
+        vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunNonPythonCode');
         assert.deepEqual(vars, {
             VSCODE_JUPYTER_ENV_TEST_VAR1: 'FOO2',
             VSCODE_JUPYTER_ENV_TEST_VAR2: 'BAR2'
@@ -117,7 +117,7 @@ suite('Custom Environment Variables Provider', () => {
     });
     test('Detects creation of the .env file', async () => {
         fs.unlinkSync(envFile.fsPath);
-        let vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined);
+        let vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunNonPythonCode');
         assert.isEmpty(vars || {});
 
         // Create the .env file.
@@ -136,7 +136,7 @@ suite('Custom Environment Variables Provider', () => {
         await changeDetected.assertFired(5_000);
 
         // Ensure the new vars are different.
-        vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined);
+        vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunNonPythonCode');
         assert.deepEqual(vars, {
             VSCODE_JUPYTER_ENV_TEST_VAR1: 'FOO2',
             VSCODE_JUPYTER_ENV_TEST_VAR2: 'BAR2'
@@ -154,7 +154,7 @@ suite('Custom Environment Variables Provider', () => {
                     `;
         fs.writeFileSync(customPythonEnvFile.fsPath, pythonEnvVars);
         createProvider();
-        const vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined);
+        const vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunNonPythonCode');
         const pythonVars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunPythonCode');
 
         assert.deepEqual(vars, {

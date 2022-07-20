@@ -3,6 +3,7 @@
 
 import { Event, Uri } from 'vscode';
 import { ClassType } from '../../ioc/types';
+import { Resource } from '../types';
 
 export type EnvironmentVariables = Object & Record<string, string | undefined>;
 
@@ -59,9 +60,15 @@ export interface ICustomEnvironmentVariablesProvider {
     /**
      * Gets merged result of process.env and env variables defined in the .env file.
      */
-    getEnvironmentVariables(resource?: Uri, purpose?: 'RunPythonCode'): Promise<EnvironmentVariables>;
+    getEnvironmentVariables(
+        resource: Resource,
+        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+    ): Promise<EnvironmentVariables>;
     /**
      * Gets the env variables defined in the .env file.
      */
-    getCustomEnvironmentVariables(resource?: Uri, purpose?: 'RunPythonCode'): Promise<EnvironmentVariables | undefined>;
+    getCustomEnvironmentVariables(
+        resource: Resource,
+        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+    ): Promise<EnvironmentVariables | undefined>;
 }
