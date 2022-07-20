@@ -99,10 +99,19 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
             return;
         }
         const pattern = new RelativePattern(Uri.file(path.dirname(envFile)), path.basename(envFile));
-        const envFileWatcher = this.workspaceService.createFileSystemWatcher(pattern);
+        console.error('RegEx Pattern in code', pattern.baseUri.fsPath);
+        console.error('RegEx Pattern in code', pattern.pattern);
+        const envFileWatcher = this.workspaceService.createFileSystemWatcher(pattern, false, false, false);
         this.fileWatchers.set(key, envFileWatcher);
         if (envFileWatcher) {
-            envFileWatcher.onDidChange(() => this.onEnvironmentFileChanged(workspaceFolderUri), this, this.disposables);
+            envFileWatcher.onDidChange(
+                (e) => {
+                    traceVerbose('Environment file changed', e.fsPath);
+                    this.onEnvironmentFileChanged(workspaceFolderUri);
+                },
+                this,
+                this.disposables
+            );
             envFileWatcher.onDidCreate(() => this.onEnvironmentFileCreated(workspaceFolderUri), this, this.disposables);
             envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri), this, this.disposables);
         }

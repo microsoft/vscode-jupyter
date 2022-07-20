@@ -3,7 +3,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
-import { Uri } from 'vscode';
+import { RelativePattern, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../../../platform/common/helpers';
 import { IDisposable } from '../../../../../platform/common/types';
@@ -18,7 +18,7 @@ import * as dedent from 'dedent';
 import { IPythonExtensionChecker } from '../../../../../platform/api/types';
 import { captureScreenShot, createEventHandler } from '../../../../common';
 
-suite('Custom Environment Variables Provider', () => {
+suite.only('Custom Environment Variables Provider', () => {
     let customEnvVarsProvider: CustomEnvironmentVariablesProvider;
     let envVarsService: IEnvironmentVariablesService;
     const disposables: IDisposable[] = [];
@@ -104,6 +104,32 @@ suite('Custom Environment Variables Provider', () => {
         const changeDetected = createEventHandler(
             customEnvVarsProvider,
             'onDidEnvironmentVariablesChange',
+            disposables
+        );
+        const pattern = new RelativePattern(Uri.file(path.dirname(envFile.fsPath)), path.basename(envFile.fsPath));
+        console.error('RegEx Pattern', pattern);
+        console.error('RegEx Pattern', pattern.baseUri);
+        console.error('RegEx Pattern', pattern.pattern);
+        const envFileWatcher = workspace.createFileSystemWatcher(pattern, false, false, false);
+        envFileWatcher.onDidChange(
+            (e) => {
+                console.error(`Change detected in ${e.fsPath}`);
+            },
+            this,
+            disposables
+        );
+        envFileWatcher.onDidCreate(
+            (e) => {
+                console.error(`Create detected in ${e.fsPath}`);
+            },
+            this,
+            disposables
+        );
+        envFileWatcher.onDidDelete(
+            (e) => {
+                console.error(`Delete detected in ${e.fsPath}`);
+            },
+            this,
             disposables
         );
         envVars = dedent`
