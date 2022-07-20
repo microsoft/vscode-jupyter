@@ -19,6 +19,10 @@ import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
 import { JupyterInterpreterDependencyResponse } from '../types';
 
+/**
+ * Manages picking an interpreter that can run jupyter.
+ * This interpreter is how we start jupyter on a local machine when ZMQ doesn't work.
+ */
 @injectable()
 export class JupyterInterpreterService {
     private _selectedInterpreter?: PythonEnvironment;

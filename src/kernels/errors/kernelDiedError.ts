@@ -4,6 +4,9 @@
 import { KernelConnectionMetadata } from '../types';
 import { WrappedKernelError } from './types';
 
+/***
+ * Thrown when a kernel dies during startup
+ */
 export class KernelDiedError extends WrappedKernelError {
     constructor(
         message: string,

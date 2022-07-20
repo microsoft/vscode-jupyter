@@ -30,6 +30,11 @@ import { IDataScienceCodeLensProvider, ICodeWatcher } from './types';
 import * as urlPath from '../../platform/vscode-path/resources';
 import { IDebugLocationTracker } from '../../kernels/debugger/types';
 
+/**
+ * Implementation of the VS code CodeLensProvider that provides code lenses for the Interactive Window.
+ * Uses a CodeWatcher to get the code lenses.
+ *
+ */
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {
     private totalExecutionTimeInMs: number = 0;

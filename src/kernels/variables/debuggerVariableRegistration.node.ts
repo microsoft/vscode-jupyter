@@ -11,6 +11,9 @@ import { pythonIWKernelDebugAdapter, pythonKernelDebugAdapter } from '../debugge
 import { IJupyterDebugService } from '../debugger/types';
 import { IJupyterVariables } from './types';
 
+/**
+ * Registes a DebugAdapter for handling variable values when debugging.
+ */
 @injectable()
 export class DebuggerVariableRegistration implements IExtensionSingleActivationService, DebugAdapterTrackerFactory {
     constructor(

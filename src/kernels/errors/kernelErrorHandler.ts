@@ -58,6 +58,9 @@ import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriPro
 import { InvalidRemoteJupyterServerUriHandleError } from './invalidRemoteJupyterServerUriHandleError';
 import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from './types';
 
+/***
+ * Common code for handling errors.
+ */
 export abstract class DataScienceErrorHandler implements IDataScienceErrorHandler {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,

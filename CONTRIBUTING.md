@@ -46,12 +46,12 @@ python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --
 
 ### Incremental Build
 
-Run the `Compile` and `Compile Web Views` build Tasks from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build tasks running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
+Run the `Compile`, `Compile Web Views`, and `Compile Web Extension` build Tasks from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build tasks running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
 
 You can also compile from the command-line. For a full compile you can use:
 
 ```shell
-npx gulp prePublishNonBundle
+npx gulp prePublishNonBundleNLS
 ```
 
 For incremental builds you can use the following commands depending on your needs:
@@ -103,25 +103,14 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 
 ...this will only run the suite with the tests you care about during a test run (be sure to set the debugger to run the `Debug Unit Tests` launcher).
 
-### Running Functional Tests
-
-Functional tests are those in files with extension `.functional.test.ts`.
-These tests are similar to integration tests in scope, but are run like unit tests.
-
-You can run functional tests in a similar way to that for unit tests:
-
--   via the "Functional Tests" launch option, or
--   on the command line via `npm run test:functional`
-
 ### Running Integration Tests (with VS Code)
 
 Note: Integration tests are those in files with extension `*.vscode.test*.ts`.
 
 1. Make sure you have compiled all code (done automatically when using incremental building)
-1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
+1. Some of the tests require specific virtual environments. Run the 'src/test/datascience/setupTestEnvs.cmd` (or equivalent) to create them.
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally by using the `./requirements.txt` and `build/test-requirements.txt` files
 1. Run the tests via `npm run` or the Debugger launch options (you can "Start Without Debugging").
-1. **Note** you will be running tests under the default Python interpreter for the system.
 
 You can also run the tests from the command-line (after compiling):
 
@@ -228,28 +217,31 @@ smoothly, but it allows you to help out by noticing when a step is
 missed or to learn in case someday you become a project maintainer as
 well!
 
-### Architecture
+### Folder Structure
 
-At a high level we have a bunch of folders. Each high level is described below;
+At a high level we have a bunch of folders. Each high level is described in this wiki [page](https://github.com/microsoft/vscode-jupyter/wiki/Source-Code-Organization)
 
-- src\extension.node.ts = entry point for node extension
-- src\extension.web.ts = entry point for web extension
-- src\kernels = code related to executing jupyter kernels
-- src\notebooks = code related to vscode notebook UI
-- src\interactive-window = interactive window
-- src\platform = grab bag of utilities common to rest of code
-- src\web-views = code related to web views we create. Variable view, data viewer, and plot viewer are all here. Both extension and UI side code.
-- src\intellisense = code related to starting pylance and combining pylance completions with kernel completions
-- src\test = all test related code
-- src\telemetry = all code related to gathering and sending telemetry
-- build = build scripts and config files
-- .github = github workflows and issue templates
-- news = markdown files used to generate the next release's changelog
-- pythonFiles = python files used to do things like view data in the data viewer
-- typings = .d.ts files used to provide types for node_modules without any typings
-- types = .ts files used to provide types for node_modules
-- images = gifs and jpgs for markdown files
-- docs = generated dependency graph files (obsolete at the moment)
+### Typical workflow
+
+Here's an example of a typical workflow:
+
+1. Sync to main (get your fork's main to match vscode-jupyter's main)
+1. Create branch
+1. `npm ci`
+1. `npm run clean`
+1. Start VS code Insiders root
+1. CTRL+SHIFT+B and build `Compile Web Views` and `Compile`
+1. Make code changes
+1. Write and [run](https://github.com/microsoft/vscode-jupyter/blob/29c4be79f64df1858692321b43c3079bb77bdd69/.vscode/launch.json#L252) unit tests if appropriate
+1. Test with [`Extension`](https://github.com/microsoft/vscode-jupyter/blob/29c4be79f64df1858692321b43c3079bb77bdd69/.vscode/launch.json#L6) launch task
+1. Repeat until works in normal extension
+1. Test with [`Extension (web)`](https://github.com/microsoft/vscode-jupyter/blob/29c4be79f64df1858692321b43c3079bb77bdd69/.vscode/launch.json#L34) launch task
+1. Run [jupyter notebook server](https://github.com/microsoft/vscode-jupyter/wiki/Connecting-to-a-remote-Jupyter-server-from-vscode.dev) to use in web testing
+1. Repeat until works in web extension
+1. Write integration tests and [run](https://github.com/microsoft/vscode-jupyter/blob/29c4be79f64df1858692321b43c3079bb77bdd69/.vscode/launch.json#L216) locally.
+1. Submit PR
+1. Check PR output to make sure tests don't fail.
+1. Debug [CI test failures](https://github.com/microsoft/vscode-jupyter/wiki/Tests)
 
 ### Helping others
 

@@ -59,6 +59,9 @@ import { isInteractiveInputTab } from './helpers';
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
 export const InteractiveWindowCacheKey = 'ds_interactive_window_cache';
 
+/**
+ * Factory for InteractiveWindow
+ */
 @injectable()
 export class InteractiveWindowProvider
     implements IInteractiveWindowProvider, IEmbedNotebookEditorProvider, IAsyncDisposable

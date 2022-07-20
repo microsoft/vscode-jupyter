@@ -31,6 +31,9 @@ import { JupyterConnection } from '../../jupyterConnection';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/**
+ * Jupyter server implementation that uses the JupyterExecutionBase class to launch Jupyter.
+ */
 @injectable()
 export class HostJupyterExecution extends JupyterExecutionBase implements IJupyterExecution {
     private serverCache: ServerCache;

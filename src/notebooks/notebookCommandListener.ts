@@ -30,7 +30,6 @@ import { INotebookEditorProvider } from './types';
 import { IServiceContainer } from '../platform/ioc/types';
 import { endCellAndDisplayErrorsInCell } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
-import { getAssociatedNotebookDocument } from '../kernels/helpers';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { getNotebookMetadata } from '../platform/common/utils';
 import { KernelConnector } from './controllers/kernelConnector';
@@ -189,7 +188,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         }
         traceInfoIfCI(`Interrupt kernel command handler for ${getDisplayPath(document.uri)}`);
 
-        const kernel = this.kernelProvider.get(document.uri);
+        const kernel = this.kernelProvider.get(document);
         if (!kernel) {
             traceInfo(`Interrupt requested & no kernel.`);
             return;
@@ -206,7 +205,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         }
 
         sendTelemetryEvent(Telemetry.RestartKernelCommand);
-        const kernel = this.kernelProvider.get(document.uri);
+        const kernel = this.kernelProvider.get(document);
 
         if (kernel) {
             trackKernelResourceInformation(kernel.resourceUri, { restartKernel: true });
@@ -236,10 +235,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
 
     private readonly pendingRestartInterrupt = new WeakMap<IKernel, Promise<void>>();
     private async wrapKernelMethod(currentContext: 'interrupt' | 'restart', kernel: IKernel) {
-        const notebook = getAssociatedNotebookDocument(kernel);
-        if (!notebook) {
-            throw new Error('Unable to start a kernel that is not attached to a notebook document');
-        }
+        const notebook = kernel.notebook;
         // We don't want to create multiple restarts/interrupt requests for the same kernel.
         const pendingPromise = this.pendingRestartInterrupt.get(kernel);
         if (pendingPromise) {

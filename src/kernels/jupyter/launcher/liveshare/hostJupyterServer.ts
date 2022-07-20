@@ -38,6 +38,9 @@ import { Uri } from 'vscode';
 import { RemoteJupyterServerConnectionError } from '../../../../platform/errors/remoteJupyterServerConnectionError';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/**
+ * Represents a connection to a Jupyter server.
+ */
 export class HostJupyterServer implements INotebookServer {
     private connectionInfoDisconnectHandler: IDisposable | undefined;
     private serverExitCode: number | undefined;

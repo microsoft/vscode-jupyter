@@ -5,6 +5,7 @@ import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataPro
 import { JupyterVariableDataProviderFactory } from './dataviewer/jupyterVariableDataProviderFactory';
 import {
     IDataViewer,
+    IDataViewerDependencyService,
     IDataViewerFactory,
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory
@@ -15,6 +16,7 @@ import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { DataViewer } from './dataviewer/dataViewer';
 import { IServiceManager } from '../../platform/ioc/types';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService';
 
 export function registerTypes(serviceManager: IServiceManager) {
     // Data viewer
@@ -24,6 +26,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
+    serviceManager.addSingleton<IDataViewerDependencyService>(
+        IDataViewerDependencyService,
+        DataViewerDependencyService
+    );
 
     // Variables view
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);

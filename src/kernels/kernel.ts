@@ -14,7 +14,8 @@ import {
     NotebookController,
     ColorThemeKind,
     Disposable,
-    Uri
+    Uri,
+    NotebookDocument
 } from 'vscode';
 import { CodeSnippets, Identifiers } from '../platform/common/constants';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
@@ -43,7 +44,7 @@ import {
 import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import {
-    IKernel,
+    IBaseKernel,
     IKernelConnectionSession,
     INotebookProvider,
     InterruptResult,
@@ -64,7 +65,10 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { traceCellMessage } from './execution/helpers';
 import { KernelExecution } from './execution/kernelExecution';
 
-export class Kernel implements IKernel {
+/**
+ * Represents an active kernel process running on the jupyter (or local) machine.
+ */
+export class Kernel implements IBaseKernel {
     private readonly disposables: IDisposable[] = [];
     get onStatusChanged(): Event<KernelMessage.Status> {
         return this._onStatusChanged.event;
@@ -140,6 +144,7 @@ export class Kernel implements IKernel {
     constructor(
         public readonly uri: Uri,
         public readonly resourceUri: Resource,
+        public readonly notebook: NotebookDocument | undefined,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
         private readonly launchTimeout: number,

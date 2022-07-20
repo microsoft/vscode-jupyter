@@ -14,7 +14,7 @@ import { isNotebookCell, noop } from '../../platform/common/utils/misc';
 import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
-import { getAssociatedNotebookDocument, isPythonNotebook } from '../../kernels/helpers';
+import { isPythonNotebook } from '../../kernels/helpers';
 import { IControllerSelection } from '../../notebooks/controllers/types';
 
 @injectable()
@@ -168,7 +168,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private updateContextOfActiveNotebookKernel(activeEditor?: NotebookEditor) {
         const kernel =
             activeEditor && activeEditor.notebook.notebookType === JupyterNotebookView
-                ? this.kernelProvider.get(activeEditor.notebook.uri)
+                ? this.kernelProvider.get(activeEditor.notebook)
                 : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';
@@ -193,7 +193,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     private updateContextOfActiveInteractiveWindowKernel() {
         const notebook = this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookEditor?.notebook;
-        const kernel = notebook ? this.kernelProvider.get(notebook.uri) : undefined;
+        const kernel = notebook ? this.kernelProvider.get(notebook) : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';
             this.canRestartInteractiveWindowKernelContext.set(!!canStart).ignoreErrors();
@@ -206,11 +206,11 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateSelectedKernelContext();
     }
     private onDidKernelStatusChange({ kernel }: { kernel: IKernel }) {
-        const notebook = getAssociatedNotebookDocument(kernel);
-        if (notebook?.notebookType === InteractiveWindowView) {
+        const notebook = kernel.notebook;
+        if (notebook.notebookType === InteractiveWindowView) {
             this.updateContextOfActiveInteractiveWindowKernel();
         } else if (
-            notebook?.notebookType === JupyterNotebookView &&
+            notebook.notebookType === JupyterNotebookView &&
             notebook === this.vscNotebook.activeNotebookEditor?.notebook
         ) {
             this.updateContextOfActiveNotebookKernel(this.vscNotebook.activeNotebookEditor);

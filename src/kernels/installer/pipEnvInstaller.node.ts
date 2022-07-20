@@ -16,6 +16,9 @@ import { getFilePath } from '../../platform/common/platform/fs-paths';
 
 export const pipenvName = 'pipenv';
 
+/**
+ * Installer for pipenv (not the same as pip)
+ */
 @injectable()
 export class PipEnvInstaller extends ModuleInstaller {
     constructor(

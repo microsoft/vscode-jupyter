@@ -12,6 +12,7 @@ import type {
     Event,
     NotebookCell,
     NotebookController,
+    NotebookDocument,
     QuickPickItem,
     Uri
 } from 'vscode';
@@ -129,12 +130,17 @@ export function isRemoteConnection(
     return !isLocalConnection(kernelConnection);
 }
 
-export interface IKernel extends IAsyncDisposable {
+export interface IKernel extends IBaseKernel {
+    readonly notebook: NotebookDocument;
+}
+
+export interface IBaseKernel extends IAsyncDisposable {
     /**
      * Total execution count on this kernel
      */
     readonly executionCount: number;
     readonly uri: Uri;
+    readonly notebook: NotebookDocument | undefined;
     /**
      * In the case of Notebooks, this is the same as the Notebook Uri.
      * But in the case of Interactive Window, this is the Uri of the file (such as the Python file).
@@ -219,22 +225,38 @@ export type KernelOptions = {
     creator: KernelActionSource;
 };
 export const IKernelProvider = Symbol('IKernelProvider');
-export interface IKernelProvider extends IAsyncDisposable {
-    readonly kernels: Readonly<IKernel[]>;
-    onDidCreateKernel: Event<IKernel>;
-    onDidStartKernel: Event<IKernel>;
-    onDidRestartKernel: Event<IKernel>;
-    onDidDisposeKernel: Event<IKernel>;
-    onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: IKernel }>;
+export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
     /**
-     * Get hold of the active kernel for a given Notebook.
+     * Get hold of the active kernel for a given notebook document.
      */
-    get(uri: Uri): IKernel | undefined;
+    get(uriOrNotebook: Uri | NotebookDocument): IKernel | undefined;
     /**
      * Gets or creates a kernel for a given Notebook.
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
-    getOrCreate(uri: Uri, options: KernelOptions): IKernel;
+    getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
+}
+
+export const IThirdPartyKernelProvider = Symbol('IThirdPartyKernelProvider');
+export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IBaseKernel> {
+    /**
+     * Get hold of the active kernel for a given resource uri.
+     */
+    get(uri: Uri): IBaseKernel | undefined;
+    /**
+     * Gets or creates a kernel for a given resource uri.
+     * WARNING: If called with different options for same resource uri, old kernel associated with the Uri will be disposed.
+     */
+    getOrCreate(uri: Uri, options: KernelOptions): IBaseKernel;
+}
+
+export interface IBaseKernelProvider<T extends IBaseKernel> extends IAsyncDisposable {
+    readonly kernels: Readonly<T[]>;
+    onDidCreateKernel: Event<T>;
+    onDidStartKernel: Event<T>;
+    onDidRestartKernel: Event<T>;
+    onDidDisposeKernel: Event<T>;
+    onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: T }>;
 }
 
 export interface IRawConnection {
@@ -603,5 +625,5 @@ export const enum StartupCodePriority {
 export const IStartupCodeProvider = Symbol('IStartupCodeProvider');
 export interface IStartupCodeProvider {
     priority: StartupCodePriority;
-    getCode(kernel: IKernel): Promise<string[]>;
+    getCode(kernel: IBaseKernel): Promise<string[]>;
 }

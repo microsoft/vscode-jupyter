@@ -17,6 +17,7 @@ import { IJupyterVariable, IJupyterVariables } from '../../../kernels/variables/
 import { traceError } from '../../../platform/logging';
 import { Identifiers } from '../../../platform/common/constants';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
+import { isWeb } from '../../../platform/common/utils/misc';
 
 @injectable()
 export class JupyterVariableDataProvider implements IJupyterVariableDataProvider {
@@ -161,9 +162,9 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         // Postpone pre-req and variable initialization until data is requested.
         if (!this.initialized && this.variable) {
             this.initialized = true;
-            if (this._kernel?.kernelConnectionMetadata.interpreter && this.dependencyService) {
+            if (this._kernel?.kernelConnectionMetadata && this.dependencyService) {
                 await this.dependencyService.checkAndInstallMissingDependencies(
-                    this._kernel?.kernelConnectionMetadata.interpreter
+                    isWeb() ? this._kernel : this._kernel?.kernelConnectionMetadata.interpreter || this._kernel
                 );
             }
             this.variable = await this.variableManager.getDataFrameInfo(this.variable, this._kernel);

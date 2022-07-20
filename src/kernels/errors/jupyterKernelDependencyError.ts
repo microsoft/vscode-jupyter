@@ -8,6 +8,9 @@ import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../types';
 import { BaseKernelError } from './types';
 
+/**
+ * Control flow exception to indicate a dependency is missing in a kernel
+ */
 export class JupyterKernelDependencyError extends BaseKernelError {
     constructor(
         public reason: KernelInterpreterDependencyResponse,

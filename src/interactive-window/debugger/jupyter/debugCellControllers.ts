@@ -11,6 +11,10 @@ import { createDeferred } from '../../../platform/common/utils/async';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getInteractiveCellMetadata } from '../../helpers';
 
+/**
+ * Class that handles keeping track of whether or not a cell needs to be dumped before debugging.
+ * Dumping a cell is how the IPython kernel determines the file path of a cell
+ */
 export class DebugCellController implements IDebuggingDelegate {
     private readonly _ready = createDeferred<void>();
     public readonly ready = this._ready.promise;

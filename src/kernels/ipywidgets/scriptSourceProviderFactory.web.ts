@@ -15,6 +15,9 @@ import {
     IWidgetScriptSourceProviderFactory
 } from './types';
 
+/**
+ * Determines the IWidgetScriptSourceProvider for use in a web environment
+ */
 @injectable()
 export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderFactory {
     constructor(

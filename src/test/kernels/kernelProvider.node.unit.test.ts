@@ -5,8 +5,14 @@ import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, NotebookController, NotebookDocument, Uri } from 'vscode';
 import { CellOutputDisplayIdTracker } from '../../kernels/execution/cellDisplayIdTracker';
-import { KernelProvider as NodeKernelProvider } from '../../kernels/kernelProvider.node';
-import { IKernelProvider, INotebookProvider, KernelConnectionMetadata, KernelOptions } from '../../kernels/types';
+import { KernelProvider, ThirdPartyKernelProvider } from '../../kernels/kernelProvider.node';
+import {
+    IThirdPartyKernelProvider,
+    INotebookProvider,
+    KernelConnectionMetadata,
+    KernelOptions,
+    IKernelProvider
+} from '../../kernels/types';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
 import { JupyterNotebookView } from '../../platform/common/constants';
@@ -26,6 +32,7 @@ suite('KernelProvider Node', () => {
     const disposables: IDisposable[] = [];
     let asyncDisposables: AsyncDisposableRegistry;
     let kernelProvider: IKernelProvider;
+    let thirdPartyKernelProvider: IThirdPartyKernelProvider;
     let notebookProvider: INotebookProvider;
     let configService: IConfigurationService;
     let appShell: IApplicationShell;
@@ -78,7 +85,23 @@ suite('KernelProvider Node', () => {
             instance(sampleNotebook2),
             instance(sampleNotebook3)
         ]);
-        kernelProvider = new NodeKernelProvider(
+
+        kernelProvider = new KernelProvider(
+            asyncDisposables,
+            disposables,
+            instance(notebookProvider),
+            instance(configService),
+            instance(appShell),
+            instance(fs),
+            instance(outputTracker),
+            instance(workspaceService),
+            instance(vscNotebook),
+            instance(pythonExecFactory),
+            instance(statusProvider),
+            instance(context),
+            []
+        );
+        thirdPartyKernelProvider = new ThirdPartyKernelProvider(
             asyncDisposables,
             disposables,
             instance(notebookProvider),
@@ -115,7 +138,7 @@ suite('KernelProvider Node', () => {
 
         const onKernelCreated = createEventHandler(kernelProvider, 'onDidCreateKernel', disposables);
         const onKernelDisposed = createEventHandler(kernelProvider, 'onDidDisposeKernel', disposables);
-        const kernel = kernelProvider.getOrCreate(sampleUri1, options);
+        const kernel = kernelProvider.getOrCreate(instance(sampleNotebook1), options);
         asyncDisposables.push(kernel);
 
         assert.equal(kernel.uri, sampleUri1, 'Kernel id should match the uri');
@@ -125,7 +148,11 @@ suite('KernelProvider Node', () => {
         assert.equal(onKernelDisposed.count, 0, 'Should not have triggered the event');
         assert.isOk(kernel, 'Should be an object');
         assert.equal(kernel, kernelProvider.get(sampleUri1), 'Should return the same instance');
-        assert.equal(kernel, kernelProvider.getOrCreate(sampleUri1, options), 'Should return the same instance');
+        assert.equal(
+            kernel,
+            kernelProvider.getOrCreate(instance(sampleNotebook1), options),
+            'Should return the same instance'
+        );
 
         await kernel.dispose();
         assert.isTrue(kernel.disposed, 'Kernel should be disposed');
@@ -147,33 +174,33 @@ suite('KernelProvider Node', () => {
             resourceUri: uri
         };
 
-        assert.isUndefined(kernelProvider.get(uri), 'Should not return an instance');
-        assert.isUndefined(kernelProvider.get(sampleUri1), 'Should not return an instance');
-        assert.isUndefined(kernelProvider.get(sampleUri2), 'Should not return an instance');
-        assert.isUndefined(kernelProvider.get(sampleUri3), 'Should not return an instance');
+        assert.isUndefined(thirdPartyKernelProvider.get(uri), 'Should not return an instance');
+        assert.isUndefined(thirdPartyKernelProvider.get(sampleUri1), 'Should not return an instance');
+        assert.isUndefined(thirdPartyKernelProvider.get(sampleUri2), 'Should not return an instance');
+        assert.isUndefined(thirdPartyKernelProvider.get(sampleUri3), 'Should not return an instance');
 
-        const onKernelCreated = createEventHandler(kernelProvider, 'onDidCreateKernel', disposables);
-        const onKernelDisposed = createEventHandler(kernelProvider, 'onDidDisposeKernel', disposables);
-        const kernel = kernelProvider.getOrCreate(uri, options);
+        const onKernelCreated = createEventHandler(thirdPartyKernelProvider, 'onDidCreateKernel', disposables);
+        const onKernelDisposed = createEventHandler(thirdPartyKernelProvider, 'onDidDisposeKernel', disposables);
+        const kernel = thirdPartyKernelProvider.getOrCreate(uri, options);
         asyncDisposables.push(kernel);
 
         assert.equal(kernel.uri, uri, 'Kernel id should match the uri');
-        assert.isUndefined(kernelProvider.get(sampleUri2), 'Should not return an instance');
-        assert.isUndefined(kernelProvider.get(sampleUri3), 'Should not return an instance');
+        assert.isUndefined(thirdPartyKernelProvider.get(sampleUri2), 'Should not return an instance');
+        assert.isUndefined(thirdPartyKernelProvider.get(sampleUri3), 'Should not return an instance');
         assert.equal(onKernelCreated.count, 1, 'Should have triggered the event');
         assert.equal(onKernelDisposed.count, 0, 'Should not have triggered the event');
         assert.isOk(kernel, 'Should be an object');
-        assert.equal(kernel, kernelProvider.get(uri), 'Should return the same instance');
-        assert.equal(kernel, kernelProvider.getOrCreate(uri, options), 'Should return the same instance');
+        assert.equal(kernel, thirdPartyKernelProvider.get(uri), 'Should return the same instance');
+        assert.equal(kernel, thirdPartyKernelProvider.getOrCreate(uri, options), 'Should return the same instance');
 
         await kernel.dispose();
         assert.isTrue(kernel.disposed, 'Kernel should be disposed');
         assert.equal(onKernelDisposed.count, 1, 'Should have triggered the disposed event');
         assert.equal(onKernelDisposed.first, kernel, 'Incorrect disposed event arg');
 
-        assert.isUndefined(kernelProvider.get(sampleUri1), 'Should not return an instance');
-        assert.isUndefined(kernelProvider.get(sampleUri2), 'Should not return an instance');
-        assert.isUndefined(kernelProvider.get(sampleUri3), 'Should not return an instance');
+        assert.isUndefined(thirdPartyKernelProvider.get(sampleUri1), 'Should not return an instance');
+        assert.isUndefined(thirdPartyKernelProvider.get(sampleUri2), 'Should not return an instance');
+        assert.isUndefined(thirdPartyKernelProvider.get(sampleUri3), 'Should not return an instance');
     });
     test('When kernel is disposed a new kernel should be returned when calling getOrCreate', async () => {
         const metadata = mock<KernelConnectionMetadata>();
@@ -186,12 +213,12 @@ suite('KernelProvider Node', () => {
         };
 
         // Dispose the first kernel
-        const kernel = kernelProvider.getOrCreate(sampleUri1, options);
+        const kernel = kernelProvider.getOrCreate(sampleNotebook1, options);
         await kernel.dispose();
 
         assert.isTrue(kernel.disposed, 'Kernel should be disposed');
         assert.isUndefined(kernelProvider.get(sampleUri1), 'Should not return an instance as kernel was disposed');
-        const newKernel = kernelProvider.getOrCreate(sampleUri1, options);
+        const newKernel = kernelProvider.getOrCreate(sampleNotebook1, options);
         asyncDisposables.push(newKernel);
         assert.notEqual(kernel, newKernel, 'Should return a different instance');
     });
@@ -205,7 +232,7 @@ suite('KernelProvider Node', () => {
             resourceUri: sampleUri1
         };
 
-        const kernel = kernelProvider.getOrCreate(sampleUri1, options);
+        const kernel = kernelProvider.getOrCreate(instance(sampleNotebook1), options);
         assert.isOk(kernel);
         const onKernelDisposed = createEventHandler(kernelProvider, 'onDidDisposeKernel', disposables);
         assert.isOk(kernelProvider.get(sampleUri1), 'Should return an instance');
@@ -217,7 +244,7 @@ suite('KernelProvider Node', () => {
         assert.isUndefined(kernelProvider.get(sampleUri1), 'Should not return an instance');
 
         // Calling getOrCreate again will return a whole new instance.
-        const newKernel = kernelProvider.getOrCreate(sampleUri1, options);
+        const newKernel = kernelProvider.getOrCreate(instance(sampleNotebook1), options);
         asyncDisposables.push(newKernel);
         assert.notEqual(kernel, newKernel, 'Should return a different instance');
     });

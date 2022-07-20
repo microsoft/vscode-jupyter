@@ -12,12 +12,14 @@ import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory, WidgetScriptSource } from './types';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
-import { getAssociatedNotebookDocument } from '../helpers';
 import { noop } from '../../platform/common/utils/misc';
 import { createDeferred, Deferred } from '../../platform/common/utils/async';
 import { ScriptUriConverter } from './scriptUriConverter';
 import { ResourceMap } from '../../platform/vscode-path/map';
 
+/**
+ * Handles messages from the kernel related to setting up widgets.
+ */
 export class IPyWidgetScriptSource {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
@@ -67,7 +69,7 @@ export class IPyWidgetScriptSource {
         disposables.push(this);
         this.kernelProvider.onDidStartKernel(
             (e) => {
-                if (getAssociatedNotebookDocument(e) === this.document) {
+                if (e.notebook === this.document) {
                     this.initialize();
                 }
             },
@@ -110,7 +112,7 @@ export class IPyWidgetScriptSource {
         }
 
         if (!this.kernel) {
-            this.kernel = this.kernelProvider.get(this.document.uri);
+            this.kernel = this.kernelProvider.get(this.document);
         }
         if (!this.kernel?.session) {
             return;

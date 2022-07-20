@@ -24,6 +24,9 @@ export type ExecutionInstallArgs = {
     useShellExec?: boolean;
 };
 
+/**
+ * Base class for all module installers.
+ */
 export abstract class ModuleInstaller implements IModuleInstaller {
     public abstract get priority(): number;
     public abstract get name(): string;

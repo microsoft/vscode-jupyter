@@ -16,6 +16,9 @@ import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
 import { swallowExceptions } from '../platform/common/utils/decorators';
 
+/**
+ * Monitors kernel crashes and on the event of a crash will display the results in the most recent cell.
+ */
 @injectable()
 export class KernelCrashMonitor implements IExtensionSyncActivationService {
     private lastExecutedCellPerKernel = new WeakMap<IKernel, NotebookCell | undefined>();

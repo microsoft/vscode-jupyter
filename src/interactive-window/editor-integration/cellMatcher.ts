@@ -7,6 +7,9 @@ import { IJupyterSettings } from '../../platform/common/types';
 
 import { noop } from '../../platform/common/utils/misc';
 
+/**
+ * CellMatcher is used to match either markdown or code cells using the regex's provided in the settings.
+ */
 export class CellMatcher {
     public codeExecRegEx: RegExp;
     public markdownExecRegEx: RegExp;

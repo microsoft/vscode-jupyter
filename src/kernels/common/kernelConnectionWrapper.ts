@@ -5,6 +5,9 @@ import type { Kernel } from '@jupyterlab/services';
 import { IDisposable } from '../../platform/common/types';
 import { BaseKernelConnectionWrapper } from '../jupyter/baseKernelConnectionWrapper';
 
+/**
+ * Wrapper around an IKernelConnection that's exposed to 3rd parties.
+ */
 export class KernelConnectionWrapper extends BaseKernelConnectionWrapper {
     /**
      * Use `kernelConnection` to access the value as its not a constant (can change over time).

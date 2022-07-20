@@ -10,6 +10,9 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { traceError } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 
+/**
+ * Used to determine how ports can be used when creating a raw kernel.
+ */
 @injectable()
 export class PortAttributesProviders implements PortAttributesProvider, IExtensionSyncActivationService {
     constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {}

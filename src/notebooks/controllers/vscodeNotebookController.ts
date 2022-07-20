@@ -293,7 +293,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (!event.selected) {
             // If user has selected another controller, then kill the current kernel.
             // Possible user selected a controller that's not contributed by us at all.
-            const kernel = this.kernelProvider.get(event.notebook.uri);
+            const kernel = this.kernelProvider.get(event.notebook);
             if (kernel?.kernelConnectionMetadata.id === this.kernelConnection.id) {
                 traceInfo(
                     `Disposing kernel ${this.kernelConnection.id} for notebook ${getDisplayPath(
@@ -499,8 +499,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // Execution should be ended elsewhere
     }
 
-    private async connectToKernel(doc: NotebookDocument, options: IDisplayOptions) {
-        return KernelConnector.connectToKernel(
+    private async connectToKernel(doc: NotebookDocument, options: IDisplayOptions): Promise<IKernel> {
+        return KernelConnector.connectToNotebookKernel(
             this.controller,
             this.kernelConnection,
             this.serviceContainer,
@@ -552,7 +552,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
     private async onDidSelectController(document: NotebookDocument) {
         const selectedKernelConnectionMetadata = this.connection;
-        const existingKernel = this.kernelProvider.get(document.uri);
+        const existingKernel = this.kernelProvider.get(document);
         if (
             existingKernel &&
             areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)
@@ -610,7 +610,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // This will dispose any existing (older kernels) associated with this notebook.
         // This way other parts of extension have access to this kernel immediately after event is handled.
         // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
-        const newKernel = this.kernelProvider.getOrCreate(document.uri, {
+        const newKernel = this.kernelProvider.getOrCreate(document, {
             metadata: selectedKernelConnectionMetadata,
             controller: this.controller,
             resourceUri: document.uri, // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.

@@ -6,7 +6,7 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
 import { Telemetry } from '../../telemetry';
-import { executeSilently, getAssociatedNotebookDocument, SilentExecutionErrorOptions } from '../helpers';
+import { executeSilently, SilentExecutionErrorOptions } from '../helpers';
 import { IKernel } from '../types';
 import { IKernelVariableRequester, IJupyterVariable } from './types';
 import { IDataFrameScriptGenerator, IVariableScriptGenerator } from '../../platform/common/types';
@@ -59,6 +59,9 @@ async function safeExecuteSilently(
     }
 }
 
+/**
+ * When a kernel is a python kernel, the KernelVariables class will use this object to request variables.
+ */
 @injectable()
 export class PythonVariablesRequester implements IKernelVariableRequester {
     constructor(
@@ -86,7 +89,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             }
         );
 
-        const fileName = getAssociatedNotebookDocument(kernel)?.uri || kernel.resourceUri || kernel.uri;
+        const fileName = kernel.notebook?.uri || kernel.resourceUri || kernel.uri;
 
         // Combine with the original result (the call only returns the new fields)
         return {

@@ -449,6 +449,8 @@ export enum Telemetry {
     DebugFileInteractive = 'DATASCIENCE.DEBUG_FILE_INTERACTIVE',
     PandasNotInstalled = 'DS_INTERNAL.SHOW_DATA_NO_PANDAS',
     PandasTooOld = 'DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD',
+    PandasOK = 'DS_INTERNAL.SHOW_DATA_PANDAS_OK',
+    PandasInstallCanceled = 'DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED',
     DataScienceSettings = 'DS_INTERNAL.SETTINGS',
     VariableExplorerToggled = 'DATASCIENCE.VARIABLE_EXPLORER_TOGGLE',
     VariableExplorerVariableCount = 'DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT',
@@ -520,6 +522,7 @@ export enum Telemetry {
     UserInstalledPandas = 'DATASCIENCE.USER_INSTALLED_PANDAS',
     UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER',
     UserDidNotInstallPandas = 'DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS',
+    FailedToInstallPandas = 'DATASCIENCE.FAILED_TO_INSTALL_PANDAS',
     OpenedInteractiveWindow = 'DATASCIENCE.OPENED_INTERACTIVE',
     OpenNotebookFailure = 'DS_INTERNAL.NATIVE.OPEN_NOTEBOOK_FAILURE',
     FindKernelForLocalConnection = 'DS_INTERNAL.FIND_KERNEL_FOR_LOCAL_CONNECTION',
@@ -641,7 +644,10 @@ export enum Telemetry {
     FetchError = 'DS_INTERNAL.WEB_FETCH_ERROR',
     TerminalShellIdentification = 'TERMINAL_SHELL_IDENTIFICATION',
     TerminalEnvVariableExtraction = 'TERMINAL_ENV_VAR_EXTRACTION',
-    JupyterInstalled = 'JUPYTER_IS_INSTALLED'
+    JupyterInstalled = 'JUPYTER_IS_INSTALLED',
+    NoActiveKernelSession = 'DATASCIENCE.NO_ACTIVE_KERNEL_SESSION',
+    DataViewerUsingInterpreter = 'DATAVIEWER.USING_INTERPRETER',
+    DataViewerUsingKernel = 'DATAVIEWER.USING_KERNEL'
 }
 
 export enum NativeKeyboardCommandTelemetry {

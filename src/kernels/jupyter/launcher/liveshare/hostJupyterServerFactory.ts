@@ -13,6 +13,9 @@ import { JupyterSessionManager } from '../../session/jupyterSessionManager';
 import { IJupyterSessionManagerFactory, INotebookServer, INotebookServerFactory } from '../../types';
 import { HostJupyterServer } from './hostJupyterServer';
 
+/**
+ * Factory for HostJupyterServer.
+ */
 @injectable()
 export class HostJupyterServerFactory implements INotebookServerFactory {
     constructor(

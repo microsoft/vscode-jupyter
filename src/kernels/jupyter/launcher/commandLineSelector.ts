@@ -19,6 +19,9 @@ import {
 } from '../../../platform/common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 
+/**
+ * Provide a quick pick to let a user select command line options for starting jupyter
+ */
 @injectable()
 export class JupyterCommandLineSelector {
     private readonly defaultLabel = `$(zap) ${DataScience.jupyterCommandLineDefaultLabel()}`;

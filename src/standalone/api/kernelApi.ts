@@ -6,8 +6,9 @@ import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
 import {
     IKernelProvider,
-    IKernel,
-    KernelConnectionMetadata as IKernelKernelConnectionMetadata
+    IBaseKernel,
+    KernelConnectionMetadata as IKernelKernelConnectionMetadata,
+    IThirdPartyKernelProvider
 } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo } from '../../platform/logging';
@@ -37,6 +38,7 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
     private readonly extensionApi = new Map<string, IExportedKernelService>();
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IThirdPartyKernelProvider) private readonly thirdPartyKernelProvider: IThirdPartyKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
@@ -57,6 +59,7 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
         const service = new JupyterKernelService(
             accessInfo.extensionId,
             this.kernelProvider,
+            this.thirdPartyKernelProvider,
             this.disposables,
             this.controllerRegistration,
             this.controllerLoader,
@@ -89,10 +92,11 @@ class JupyterKernelService implements IExportedKernelService {
         });
         return this._onDidChangeKernels.event;
     }
-    private static readonly wrappedKernelConnections = new WeakMap<IKernel, IKernelConnectionInfo>();
+    private static readonly wrappedKernelConnections = new WeakMap<IBaseKernel, IKernelConnectionInfo>();
     constructor(
         private readonly callingExtensionId: string,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IThirdPartyKernelProvider) private readonly thirdPartyKernelProvider: IThirdPartyKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
@@ -100,6 +104,8 @@ class JupyterKernelService implements IExportedKernelService {
     ) {
         this.kernelProvider.onDidDisposeKernel(() => this._onDidChangeKernels.fire(), this, disposables);
         this.kernelProvider.onDidStartKernel(() => this._onDidChangeKernels.fire(), this, disposables);
+        this.thirdPartyKernelProvider.onDidDisposeKernel(() => this._onDidChangeKernels.fire(), this, disposables);
+        this.thirdPartyKernelProvider.onDidStartKernel(() => this._onDidChangeKernels.fire(), this, disposables);
         this.controllerLoader.refreshed(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
     }
     async getKernelSpecifications(refresh?: boolean): Promise<KernelConnectionMetadata[]> {
@@ -123,7 +129,25 @@ class JupyterKernelService implements IExportedKernelService {
                 (item) => item.startedAtLeastOnce || item.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel'
             )
             .forEach((item) => {
-                const kernel = this.kernelProvider.get(item.uri);
+                const kernel = this.kernelProvider.get(item.notebook);
+                // When returning list of active sessions, we don't want to return something thats
+                // associated with a controller.
+                // Note: In VS Code, a controller starts a kernel, however the controller only keeps track of the kernel spec.
+                // Hence when we return this connection, we're actually returning the controller's kernel spec & the uri.
+                if (kernel && kernel.session?.kernelId) {
+                    kernelsAlreadyListed.add(kernel.session?.kernelId);
+                }
+                kernels.push({
+                    metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
+                    uri: item.uri
+                });
+            });
+        this.thirdPartyKernelProvider.kernels
+            .filter(
+                (item) => item.startedAtLeastOnce || item.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel'
+            )
+            .forEach((item) => {
+                const kernel = this.thirdPartyKernelProvider.get(item.uri);
                 // When returning list of active sessions, we don't want to return something thats
                 // associated with a controller.
                 // Note: In VS Code, a controller starts a kernel, however the controller only keeps track of the kernel spec.
@@ -155,7 +179,7 @@ class JupyterKernelService implements IExportedKernelService {
             extensionId: this.callingExtensionId,
             pemUsed: 'getKernel'
         });
-        const kernel = this.kernelProvider.get(uri);
+        const kernel = this.thirdPartyKernelProvider.get(uri) ?? this.kernelProvider.get(uri);
         if (kernel?.session?.kernel) {
             const connection = this.wrapKernelConnection(kernel);
             return {
@@ -206,7 +230,7 @@ class JupyterKernelService implements IExportedKernelService {
         }
         return this.wrapKernelConnection(kernel);
     }
-    private wrapKernelConnection(kernel: IKernel): IKernelConnectionInfo {
+    private wrapKernelConnection(kernel: IBaseKernel): IKernelConnectionInfo {
         if (JupyterKernelService.wrappedKernelConnections.get(kernel)) {
             return JupyterKernelService.wrappedKernelConnections.get(kernel)!;
         }
@@ -252,7 +276,7 @@ class KernelSocketWrapper implements IKernelSocket {
     public get onDidChange(): Event<void> {
         return this._onDidSocketChange.event;
     }
-    constructor(kernel: IKernel) {
+    constructor(kernel: IBaseKernel) {
         const subscription = kernel.kernelSocket.subscribe((socket) => {
             this.removeHooks();
             this.socket = socket?.socket;

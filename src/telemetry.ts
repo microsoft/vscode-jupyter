@@ -408,6 +408,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
+    [Telemetry.PandasOK]: never | undefined;
+    [Telemetry.PandasInstallCanceled]: { version: string };
     [Telemetry.DebugpyInstallCancelled]: never | undefined;
     [Telemetry.DebugpyInstallFailed]: never | undefined;
     [Telemetry.DebugpyPromptToInstall]: never | undefined;
@@ -494,6 +496,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserInstalledPandas]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
+    [Telemetry.FailedToInstallPandas]: never | undefined;
     [Telemetry.PythonNotInstalled]: {
         action:
             | 'displayed' // Message displayed.
@@ -1374,4 +1377,17 @@ export interface IEventNamePropertyMapping {
      * Total time take to copy the nb extensions folder.
      */
     [Telemetry.IPyWidgetNbExtensionCopyTime]: never | undefined;
+    /**
+     * Useful when we need an active kernel session in order to execute commands silently.
+     * Used by the dataViewerDependencyService.
+     */
+    [Telemetry.NoActiveKernelSession]: never | undefined;
+    /**
+     * When the Data Viewer installer is using the Python interpreter.
+     */
+    [Telemetry.DataViewerUsingInterpreter]: never | undefined;
+    /**
+     * When the Data Viewer installer is using the Kernel.
+     */
+    [Telemetry.DataViewerUsingKernel]: never | undefined;
 }

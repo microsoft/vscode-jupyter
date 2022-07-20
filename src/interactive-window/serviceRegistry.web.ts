@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IDataScienceCommandListener } from '../platform/common/types';
 import { IStartupCodeProvider, ITracebackFormatter } from '../kernels/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
@@ -17,7 +16,6 @@ import {
     IDataScienceCodeLensProvider,
     ICodeGeneratorFactory
 } from './editor-integration/types';
-import { InteractiveWindowCommandListener } from './interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactiveWindowProvider';
 import { IInteractiveWindowDebuggingManager, IInteractiveWindowProvider } from './types';
 import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
@@ -30,10 +28,6 @@ import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startu
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
-    serviceManager.addSingleton<IDataScienceCommandListener>(
-        IDataScienceCommandListener,
-        InteractiveWindowCommandListener
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
