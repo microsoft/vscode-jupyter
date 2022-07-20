@@ -13,7 +13,7 @@ import { traceDecoratorVerbose, traceInfoIfCI, traceVerbose } from '../../loggin
 
 const CACHE_DURATION = 60 * 60 * 1000;
 @injectable()
-export class EnvironmentVariablesProvider implements ICustomEnvironmentVariablesProvider, Disposable {
+export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVariablesProvider, Disposable {
     public get onDidEnvironmentVariablesChange(): Event<Uri | undefined> {
         return this.changeEventEmitter.event;
     }
