@@ -13,7 +13,6 @@ const core = require('@actions/core');
 const hashjs = require('hash.js');
 const glob = require('glob');
 const { ExtensionRootDir } = require('./constants');
-const { reporter } = require('gulp-typescript');
 
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
 const webTestSummaryJsonFile = path.join(__dirname, '..', 'testresults.json');
@@ -111,7 +110,6 @@ exports.dumpTestSummary = () => {
             }
             runner.emit(output.event, output, output.err);
 
-            core.info(`${output.event} ${output.title}`);
             switch (output.event) {
                 case 'pass': {
                     passedCount++;
@@ -203,11 +201,11 @@ exports.dumpTestSummary = () => {
             }
         });
 
-        core.info(`Passed: ${passedCount}, Skipped: ${skippedTests.length}`);
         if (reportWriter.failures.length) {
             core.setFailed(`${reportWriter.failures.length} tests failed.`);
-        } else if (passedCount < skippedTests.length) {
-            core.setFailed('Failing check, not enough passing tests or too many skipped');
+        } else if (passedCount < 3) {
+            // the non-python suite only has 4 tests passing currently, so that's the highest bar we can use.
+            core.setFailed('Not enough tests were run - are too many being skipped?');
         }
 
         // Write output into an ipynb file with the failures & corresponding console output & screenshot.
