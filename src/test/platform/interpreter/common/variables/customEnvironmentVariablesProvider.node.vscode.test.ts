@@ -4,7 +4,6 @@
 'use strict';
 import { assert } from 'chai';
 import { Uri } from 'vscode';
-// import { RelativePattern, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../../../platform/common/helpers';
 import { IDisposable } from '../../../../../platform/common/types';
@@ -20,7 +19,7 @@ import { IPythonExtensionChecker } from '../../../../../platform/api/types';
 import { captureScreenShot, createEventHandler } from '../../../../common';
 // import * as path from '../../../../../platform/vscode-path/path';
 
-suite.only('Custom Environment Variables Provider', () => {
+suite('Custom Environment Variables Provider', () => {
     let customEnvVarsProvider: CustomEnvironmentVariablesProvider;
     let envVarsService: IEnvironmentVariablesService;
     const disposables: IDisposable[] = [];
@@ -33,7 +32,7 @@ suite.only('Custom Environment Variables Provider', () => {
         'src',
         'test',
         'datascience',
-        'python.env'
+        '.env.python'
     );
     suiteSetup(async function () {
         if (IS_REMOTE_NATIVE_TEST() || isWeb()) {
@@ -44,14 +43,18 @@ suite.only('Custom Environment Variables Provider', () => {
         workspace = api.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         pythonExtChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         contentsOfOldEnvFile = fs.readFileSync(envFile.fsPath).toString();
-        await workspace.getConfiguration('python').update('envFile', '${workspaceFolder}/python.env');
+        await workspace
+            .getConfiguration('python', workspace.workspaceFolders![0].uri)
+            .update('envFile', '${workspaceFolder}/.env.python');
     });
     suiteTeardown(async function () {
         if (IS_REMOTE_NATIVE_TEST() || isWeb()) {
             return;
         }
         fs.writeFileSync(envFile.fsPath, contentsOfOldEnvFile);
-        await workspace.getConfiguration('python').update('envFile', undefined);
+        await workspace
+            .getConfiguration('python', workspace.workspaceFolders![0].uri)
+            .update('envFile', '${workspaceFolder}/.env');
     });
     setup(() => createProvider());
     teardown(async function () {

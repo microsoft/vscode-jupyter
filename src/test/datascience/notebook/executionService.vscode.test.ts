@@ -16,7 +16,8 @@ import {
     NotebookCellKind,
     NotebookCellOutput,
     Uri,
-    window
+    window,
+    workspace
 } from 'vscode';
 import { Common } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
@@ -52,7 +53,7 @@ import {
     createTemporaryNotebookFromFile
 } from './helper.node';
 import { openNotebook } from '../helpers.node';
-import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
+import { isWeb, noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
@@ -75,7 +76,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     const templateNbPath = Uri.file(
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'emptyCellWithOutput.ipynb')
     );
-
+    const envFile = Uri.joinPath(Uri.file(EXTENSION_ROOT_DIR_FOR_TESTS), 'src', 'test', 'datascience', '.env');
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo('Suite Setup VS Code Notebook - Execution');
@@ -88,7 +89,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                 { result: Common.install(), clickImmediately: true },
                 disposables
             );
-
+            if (!IS_REMOTE_NATIVE_TEST() && !isWeb()) {
+                await workspace
+                    .getConfiguration('python', workspace.workspaceFolders![0].uri)
+                    .update('envFile', '${workspaceFolder}/.env');
+            }
             await startJupyterServer();
             await prewarmNotebooks();
             sinon.restore();
@@ -198,6 +203,14 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
+        await fs.writeFileSync(
+            envFile.fsPath,
+            dedent`
+        ENV_VAR_TESTING_CI=HelloWorldEnvVariable
+        PYTHONPATH=./dummyFolderForPythonPath
+        `
+        );
+
         const cell = await insertCodeCell(
             dedent`
                     import sys
