@@ -7,10 +7,14 @@ import { IExtensionSingleActivationService } from '../../../platform/activation/
 import { IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceError } from '../../../platform/logging';
-import { IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../../platform/common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IMemento,
+    WORKSPACE_MEMENTO
+} from '../../../platform/common/types';
 import { getKernelConnectionLanguage } from '../../helpers';
 import { IKernel, IKernelProvider, INotebookProvider } from '../../types';
-import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
 import { DisplayOptions } from '../../displayOptions';
 import { IRawNotebookProvider } from '../../raw/types';
 import { isJupyterNotebook } from '../../../platform/common/utils';
@@ -26,7 +30,6 @@ const LastNotebookCreatedKey = 'last-notebook-created';
 export class ServerPreload implements IExtensionSingleActivationService {
     constructor(
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -36,7 +39,6 @@ export class ServerPreload implements IExtensionSingleActivationService {
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
         notebook.onDidOpenNotebookDocument(this.onDidOpenNotebook.bind(this), this, disposables);
-        this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.onDidOpenOrCloseInteractive.bind(this));
     }
     public activate(): Promise<void> {
         // This is the list of things that should cause us to start a local server
@@ -106,12 +108,6 @@ export class ServerPreload implements IExtensionSingleActivationService {
         }
         // Automatically start a server whenever we open a notebook
         this.createServerIfNecessary().ignoreErrors();
-    }
-
-    private onDidOpenOrCloseInteractive(interactive: IInteractiveWindow | undefined) {
-        if (interactive) {
-            this.createServerIfNecessary().ignoreErrors();
-        }
     }
 
     // Callback for when a notebook is created by the notebook provider
