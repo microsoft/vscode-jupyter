@@ -18,7 +18,7 @@ import {
 } from './types';
 
 /**
- * Determines the 'default' kernel for a notebook
+ * Determines the 'default' kernel for a notebook. Default is what kernel should be used if there's no metadata in a notebook.
  */
 @injectable()
 export class ControllerDefaultService implements IControllerDefaultService {
