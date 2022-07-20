@@ -69,7 +69,7 @@ suite('IPyWidget Script Manager', function () {
         await runCell(cell);
         await waitForCellExecutionToComplete(cell);
 
-        kernel = kernelProvider.get(notebook.uri)!;
+        kernel = kernelProvider.get(notebook)!;
         scriptManager = widgetScriptManagerFactory.getOrCreate(kernel);
     });
     setup(async function () {

@@ -12,14 +12,17 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { Identifiers } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
 import { JupyterDebuggerNotInstalledError } from '../../kernels/errors/jupyterDebuggerNotInstalledError';
-import { getPlainTextOrStreamOutput } from '../../kernels/kernel.base';
+import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
 import { IKernel, isLocalConnection } from '../../kernels/types';
 import { IInteractiveWindowDebugger } from '../types';
 import { IFileGeneratedCodes } from '../editor-integration/types';
 import { IJupyterDebugService } from '../../kernels/debugger/types';
-import { executeSilently, getAssociatedNotebookDocument } from '../../kernels/helpers';
+import { executeSilently } from '../../kernels/helpers';
 import { buildSourceMap } from './helper';
 
+/**
+ * Public API to begin debugging in the interactive window
+ */
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
     private configs: WeakMap<NotebookDocument, DebugConfiguration> = new WeakMap<
@@ -65,10 +68,10 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
     }
 
     public async detach(kernel: IKernel): Promise<void> {
-        const notebook = getAssociatedNotebookDocument(kernel);
-        if (!kernel.session || !notebook) {
+        if (!kernel.session) {
             return;
         }
+        const notebook = kernel.notebook;
         const config = this.configs.get(notebook);
         if (config) {
             traceInfo('stop debugging');
@@ -167,10 +170,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         kernel: IKernel,
         extraConfig: Partial<DebugConfiguration>
     ): Promise<DebugConfiguration | undefined> {
-        const notebook = getAssociatedNotebookDocument(kernel);
-        if (!kernel || !notebook) {
-            return;
-        }
+        const notebook = kernel.notebook;
         // If we already have configuration, we're already attached, don't do it again.
         const key = notebook;
         let result = this.configs.get(key);

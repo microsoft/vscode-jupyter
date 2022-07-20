@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { getAssociatedNotebookDocument } from '../kernels/helpers';
 import { IKernel, IKernelProvider } from '../kernels/types';
 import { IControllerSelection } from '../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
@@ -12,6 +11,9 @@ import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
 
+/**
+ * Responsible for updating the GenerateCodeStorage when kernels reload
+ */
 @injectable()
 export class GeneratedCodeStorageManager implements IExtensionSyncActivationService {
     private readonly disposables: IDisposable[] = [];
@@ -36,8 +38,8 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
         this.codeGeneratorFactory.get(notebook)?.reset();
     }
     private onDidCreateKernel(kernel: IKernel) {
-        const notebook = getAssociatedNotebookDocument(kernel);
-        if (kernel.creator !== 'jupyterExtension' || notebook?.notebookType !== InteractiveWindowView) {
+        const notebook = kernel.notebook;
+        if (kernel.creator !== 'jupyterExtension' || notebook.notebookType !== InteractiveWindowView) {
             return;
         }
         // Possible we changed kernels for the same document.

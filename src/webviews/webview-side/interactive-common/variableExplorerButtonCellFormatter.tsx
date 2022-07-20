@@ -21,7 +21,6 @@ interface IVariableExplorerButtonCellFormatterProps {
     baseTheme: string;
     value?: IButtonCellValue;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
-    isWeb: () => boolean;
 }
 
 export class VariableExplorerButtonCellFormatter extends React.Component<IVariableExplorerButtonCellFormatterProps> {
@@ -32,7 +31,7 @@ export class VariableExplorerButtonCellFormatter extends React.Component<IVariab
     public override render() {
         const className = 'variable-explorer-button-cell';
         if (this.props.value !== null && this.props.value !== undefined) {
-            if (this.props.value.supportsDataExplorer && !this.props.isWeb()) {
+            if (this.props.value.supportsDataExplorer) {
                 return (
                     <div className={className}>
                         <ImageButton

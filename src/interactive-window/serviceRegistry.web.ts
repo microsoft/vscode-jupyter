@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IDataScienceCommandListener } from '../platform/common/types';
-import { ITracebackFormatter } from '../kernels/types';
+import { IStartupCodeProvider, ITracebackFormatter } from '../kernels/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry';
@@ -17,7 +16,6 @@ import {
     IDataScienceCodeLensProvider,
     ICodeGeneratorFactory
 } from './editor-integration/types';
-import { InteractiveWindowCommandListener } from './interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactiveWindowProvider';
 import { IInteractiveWindowDebuggingManager, IInteractiveWindowProvider } from './types';
 import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
@@ -26,13 +24,10 @@ import { IGeneratedCodeStorageFactory } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
 import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
+import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startupCodeProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
-    serviceManager.addSingleton<IDataScienceCommandListener>(
-        IDataScienceCommandListener,
-        InteractiveWindowCommandListener
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
@@ -58,5 +53,9 @@ export function registerTypes(serviceManager: IServiceManager) {
         InteractiveWindowDebuggingManager,
         undefined,
         [IExtensionSingleActivationService]
+    );
+    serviceManager.addSingleton<IStartupCodeProvider>(
+        IStartupCodeProvider,
+        InteractiveWindowDebuggingStartupCodeProvider
     );
 }

@@ -60,6 +60,7 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
         }
     }
     private onDidStartKernel(kernel: IKernel) {
+        // TODO@rebornix, IKernel is already created by Jupyter Extension
         if (kernel.creator !== 'jupyterExtension' || !kernel.resourceUri) {
             return;
         }

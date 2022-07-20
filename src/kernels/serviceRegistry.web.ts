@@ -14,8 +14,8 @@ import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.web';
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.web';
 import { injectable } from 'inversify';
-import { IKernelFinder, IKernelProvider } from './types';
-import { KernelProvider } from './kernelProvider.web';
+import { IKernelFinder, IKernelProvider, IThirdPartyKernelProvider } from './types';
+import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
@@ -76,6 +76,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
+    serviceManager.addSingleton<IThirdPartyKernelProvider>(IThirdPartyKernelProvider, ThirdPartyKernelProvider);
     serviceManager.addSingleton<PreferredRemoteKernelIdProvider>(
         PreferredRemoteKernelIdProvider,
         PreferredRemoteKernelIdProvider

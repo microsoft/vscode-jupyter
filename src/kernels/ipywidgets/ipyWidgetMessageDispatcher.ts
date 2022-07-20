@@ -18,7 +18,6 @@ import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IKernel, IKernelProvider, KernelSocketInformation } from '../types';
 import { WIDGET_MIMETYPE } from './constants';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
-import { getAssociatedNotebookDocument } from '../helpers';
 
 type PendingMessage = {
     resultPromise: Deferred<void>;
@@ -79,7 +78,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.pendingTargetNames.add('jupyter.widget');
         kernelProvider.onDidStartKernel(
             (e) => {
-                if (getAssociatedNotebookDocument(e) === document) {
+                if (e.notebook === document) {
                     this.initialize();
                 }
             },
@@ -386,7 +385,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     private getKernel(): IKernel | undefined {
         if (this.document && !this.kernel?.session) {
-            this.kernel = this.kernelProvider.get(this.document.uri);
+            this.kernel = this.kernelProvider.get(this.document);
             this.kernel?.onDisposed(() => (this.kernel = undefined));
         }
         if (this.kernel && !this.kernelRestartHandlerAttached) {

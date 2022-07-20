@@ -20,6 +20,10 @@ import { IInteractiveWindowProvider } from '../types';
 import { getInteractiveCellMetadata } from '../helpers';
 import * as urlPath from '../../platform/vscode-path/resources';
 
+/**
+ * Provides hover support in python files based on the state of a jupyter kernel. Files that are
+ * sent to the Interactive Window have hover support added when hovering over variables.
+ */
 @injectable()
 export class HoverProvider implements IExtensionSyncActivationService, vscode.HoverProvider {
     private runFiles = new Set<string>();
@@ -135,7 +139,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         this.notebook.notebookDocuments
             .filter((item) => notebookUris.includes(item.uri.toString()))
             .forEach((item) => {
-                const kernel = this.kernelProvider.get(item.uri);
+                const kernel = this.kernelProvider.get(item);
                 if (kernel) {
                     kernels.add(kernel);
                 }

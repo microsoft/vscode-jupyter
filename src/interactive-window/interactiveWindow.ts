@@ -72,6 +72,10 @@ import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
 
+/**
+ * ViewModel for an interactive window from the Jupyter extension's point of view.
+ * Methods for talking to an Interactive Window are exposed here, but the actual UI is part of VS code core.
+ */
 export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
@@ -252,7 +256,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             };
             // When connecting, we need to update the sys info message
             this.updateSysInfoMessage(this.getSysInfoMessage(metadata, SysInfoReason.Start), false, sysInfoCell);
-            const kernel = await KernelConnector.connectToKernel(
+            const kernel = await KernelConnector.connectToNotebookKernel(
                 controller,
                 metadata,
                 this.serviceContainer,

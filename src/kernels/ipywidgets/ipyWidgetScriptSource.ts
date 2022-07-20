@@ -12,7 +12,6 @@ import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory, WidgetScriptSource } from './types';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
-import { getAssociatedNotebookDocument } from '../helpers';
 import { noop } from '../../platform/common/utils/misc';
 import { createDeferred, Deferred } from '../../platform/common/utils/async';
 import { ScriptUriConverter } from './scriptUriConverter';
@@ -70,7 +69,7 @@ export class IPyWidgetScriptSource {
         disposables.push(this);
         this.kernelProvider.onDidStartKernel(
             (e) => {
-                if (getAssociatedNotebookDocument(e) === this.document) {
+                if (e.notebook === this.document) {
                     this.initialize();
                 }
             },
@@ -113,7 +112,7 @@ export class IPyWidgetScriptSource {
         }
 
         if (!this.kernel) {
-            this.kernel = this.kernelProvider.get(this.document.uri);
+            this.kernel = this.kernelProvider.get(this.document);
         }
         if (!this.kernel?.session) {
             return;

@@ -146,9 +146,9 @@ export abstract class DebuggingManagerBase implements IDisposable {
         await this.notebookControllerLoader.loaded;
         const controller = this.notebookControllerSelection.getSelected(doc);
 
-        let kernel = this.kernelProvider.get(doc.uri);
+        let kernel = this.kernelProvider.get(doc);
         if (!kernel && controller) {
-            kernel = this.kernelProvider.getOrCreate(doc.uri, {
+            kernel = this.kernelProvider.getOrCreate(doc, {
                 metadata: controller.connection,
                 controller: controller?.controller,
                 resourceUri: doc.uri,
@@ -164,13 +164,13 @@ export abstract class DebuggingManagerBase implements IDisposable {
 
     protected async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult> {
         try {
-            let kernel = this.kernelProvider.get(doc.uri);
+            let kernel = this.kernelProvider.get(doc);
             if (!kernel) {
                 const controller = this.notebookControllerSelection.getSelected(doc);
                 if (!controller) {
                     return IpykernelCheckResult.ControllerNotSelected;
                 }
-                kernel = this.kernelProvider.getOrCreate(doc.uri, {
+                kernel = this.kernelProvider.getOrCreate(doc, {
                     metadata: controller.connection,
                     controller: controller?.controller,
                     resourceUri: doc.uri,

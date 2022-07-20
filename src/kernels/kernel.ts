@@ -14,7 +14,8 @@ import {
     NotebookController,
     ColorThemeKind,
     Disposable,
-    Uri
+    Uri,
+    NotebookDocument
 } from 'vscode';
 import { CodeSnippets, Identifiers } from '../platform/common/constants';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
@@ -43,11 +44,12 @@ import {
 import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import {
-    IKernel,
+    IBaseKernel,
     IKernelConnectionSession,
     INotebookProvider,
     InterruptResult,
     isLocalConnection,
+    IStartupCodeProvider,
     ITracebackFormatter,
     KernelActionSource,
     KernelConnectionMetadata,
@@ -66,7 +68,7 @@ import { KernelExecution } from './execution/kernelExecution';
 /**
  * Represents an active kernel process running on the jupyter (or local) machine.
  */
-export abstract class BaseKernel implements IKernel {
+export class Kernel implements IBaseKernel {
     private readonly disposables: IDisposable[] = [];
     get onStatusChanged(): Event<KernelMessage.Status> {
         return this._onStatusChanged.event;
@@ -142,6 +144,7 @@ export abstract class BaseKernel implements IKernel {
     constructor(
         public readonly uri: Uri,
         public readonly resourceUri: Resource,
+        public readonly notebook: NotebookDocument | undefined,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
         private readonly launchTimeout: number,
@@ -149,12 +152,14 @@ export abstract class BaseKernel implements IKernel {
         protected readonly appShell: IApplicationShell,
         public readonly controller: NotebookController,
         protected readonly configService: IConfigurationService,
-        protected readonly workspaceService: IWorkspaceService,
         outputTracker: CellOutputDisplayIdTracker,
+        protected readonly workspaceService: IWorkspaceService,
         private readonly statusProvider: IStatusProvider,
         public readonly creator: KernelActionSource,
-        protected readonly context: IExtensionContext,
-        formatters: ITracebackFormatter[]
+        context: IExtensionContext,
+        formatters: ITracebackFormatter[],
+        private readonly startupCodeProviders: IStartupCodeProvider[],
+        private readonly sendTelemetryForPythonKernelExecutable: () => Promise<void>
     ) {
         this.kernelExecution = new KernelExecution(
             this,
@@ -491,8 +496,6 @@ export abstract class BaseKernel implements IKernel {
         }
     }
 
-    protected abstract sendTelemetryForPythonKernelExecutable(): Promise<void>;
-
     protected async initializeAfterStart(session: IKernelConnectionSession | undefined) {
         traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.uri)}`);
         if (!session) {
@@ -612,24 +615,15 @@ export abstract class BaseKernel implements IKernel {
         // Gather all of the startup code into a giant string array so we
         // can execute it all at once.
         const result: string[] = [];
-
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
-            const [changeDirScripts, debugCellScripts] = await Promise.all([
-                // Change our initial directory and path
-                this.getUpdateWorkingDirectoryAndPathCode(this.resourceUri),
-                // Initialize debug cell support.
-                // (IPYKERNEL_CELL_NAME has to be set on every cell execution, but we can't execute a cell to change it)
-                this.getDebugCellHook()
-            ]);
-
-            // Have our debug cell script run first for safety
-            if (
-                isLocalConnection(this.kernelConnectionMetadata) &&
-                !this.configService.getSettings(undefined).forceIPyKernelDebugger
-            ) {
-                result.push(...debugCellScripts);
+            const dirs = await Promise.all(
+                this.startupCodeProviders
+                    .sort((a, b) => b.priority - a.priority)
+                    .map((provider) => provider.getCode(this))
+            );
+            for (let dir of dirs) {
+                result.push(...dir);
             }
-            result.push(...changeDirScripts);
 
             // Set the ipynb file
             const file = getFilePath(this.resourceUri);
@@ -704,8 +698,6 @@ export abstract class BaseKernel implements IKernel {
         return results;
     }
 
-    protected abstract getDebugCellHook(): Promise<string[]>;
-
     private getUserStartupCommands(): string[] {
         const settings = this.configService.getSettings(this.resourceUri);
         // Run any startup commands that we specified. Support the old form too
@@ -723,8 +715,6 @@ export abstract class BaseKernel implements IKernel {
         }
         return [];
     }
-
-    protected abstract getUpdateWorkingDirectoryAndPathCode(launchingFile?: Resource): Promise<string[]>;
 
     private async executeSilently(
         session: IKernelConnectionSession | undefined,

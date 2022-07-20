@@ -248,7 +248,7 @@ suite('Standard IPyWidget Tests', function () {
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
 
         // Restart the kernel.
-        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook.uri)!;
+        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook)!;
         await kernel.restart();
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
@@ -271,7 +271,7 @@ suite('Standard IPyWidget Tests', function () {
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
 
         // Restart the kernel.
-        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook.uri)!;
+        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook)!;
         await kernel.interrupt();
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
