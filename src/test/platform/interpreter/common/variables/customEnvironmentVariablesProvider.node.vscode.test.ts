@@ -3,7 +3,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
-import { RelativePattern, Uri } from 'vscode';
+import { Uri } from 'vscode';
+// import { RelativePattern, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../../../platform/common/helpers';
 import { IDisposable } from '../../../../../platform/common/types';
@@ -17,7 +18,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../../constants.node';
 import * as dedent from 'dedent';
 import { IPythonExtensionChecker } from '../../../../../platform/api/types';
 import { captureScreenShot, createEventHandler } from '../../../../common';
-import * as path from '../../../../../platform/vscode-path/path';
+// import * as path from '../../../../../platform/vscode-path/path';
 
 suite.only('Custom Environment Variables Provider', () => {
     let customEnvVarsProvider: CustomEnvironmentVariablesProvider;
