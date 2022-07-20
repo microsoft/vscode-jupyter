@@ -12,7 +12,7 @@ import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { WorkspaceService } from '../../../platform/common/application/workspace.node';
-import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
+import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/customEnvironmentVariablesProvider.node';
 import { InterpreterService } from '../../../platform/api/pythonApi';
 import {
     createInterpreterKernelSpec,

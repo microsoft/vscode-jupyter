@@ -5,7 +5,7 @@
 
 import { instance, mock, verify } from 'ts-mockito';
 import { EnvironmentVariablesService } from '../../../platform/common/variables/environment.node';
-import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
+import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/customEnvironmentVariablesProvider.node';
 import { registerTypes } from '../../../platform/common/variables/serviceRegistry.node';
 import {
     ICustomEnvironmentVariablesProvider,

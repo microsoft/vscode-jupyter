@@ -3,7 +3,7 @@
 
 import { IServiceManager } from '../../ioc/types';
 import { EnvironmentVariablesService } from './environment.node';
-import { CustomEnvironmentVariablesProvider } from './environmentVariablesProvider.node';
+import { CustomEnvironmentVariablesProvider } from './customEnvironmentVariablesProvider.node';
 import { ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {

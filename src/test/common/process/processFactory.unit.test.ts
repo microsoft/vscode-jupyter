@@ -12,7 +12,7 @@ import { ProcessService } from '../../../platform/common/process/proc.node';
 import { ProcessServiceFactory } from '../../../platform/common/process/processFactory.node';
 import { IBufferDecoder, IProcessLogger } from '../../../platform/common/process/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
-import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
+import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/customEnvironmentVariablesProvider.node';
 import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 
 suite('Process - ProcessServiceFactory', () => {
