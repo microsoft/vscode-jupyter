@@ -120,6 +120,7 @@ const config = {
         ],
         alias: {
             // provides alternate implementation for node module and source files
+            fs: './fs-empty.js'
         },
         fallback: {
             // Webpack 5 no longer polyfills Node.js core modules automatically.
@@ -128,7 +129,9 @@ const config = {
             assert: require.resolve('assert'),
             buffer: require.resolve('buffer'),
             stream: require.resolve('stream-browserify'),
-            os: require.resolve('os-browserify')
+            os: require.resolve('os-browserify'),
+            path: require.resolve('path-browserify'),
+            fs: false
         }
     },
     output: {

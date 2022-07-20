@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+'use strict';
 
 import { inject, injectable } from 'inversify';
 import { Event, extensions, NotebookEditor, window } from 'vscode';
@@ -7,8 +8,8 @@ import { IExtensionSingleActivationService } from '../../../platform/activation/
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
-import { PlotSaveHandler } from './plotSaveHandler.node';
-import { PlotViewHandler } from './plotViewHandler.node';
+import { PlotViewHandler } from './plotViewHandler';
+import { IPlotSaveHandler } from './types';
 
 export type OpenImageInPlotViewer = {
     type: 'openImageInPlotViewer';
@@ -25,7 +26,7 @@ export type SaveImageAs = {
 export class RendererCommunication implements IExtensionSingleActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
-        @inject(PlotSaveHandler) private readonly plotSaveHandler: PlotSaveHandler,
+        @inject(IPlotSaveHandler) private readonly plotSaveHandler: IPlotSaveHandler,
         @inject(PlotViewHandler) private readonly plotViewHandler: PlotViewHandler
     ) {}
 

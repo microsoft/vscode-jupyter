@@ -1,3 +1,7 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
+
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
@@ -15,10 +19,22 @@ import { NotebookWatcher } from './variablesView/notebookWatcher';
 import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { DataViewer } from './dataviewer/dataViewer';
 import { IServiceManager } from '../../platform/ioc/types';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
 import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService';
+import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
+import { PlotViewer } from './plotting/plotViewer';
+import { PlotViewerProvider } from './plotting/plotViewerProvider';
+import { PlotSaveHandler } from './plotView/plotSaveHandler';
+import { PlotViewHandler } from './plotView/plotViewHandler';
+import { RendererCommunication } from './plotView/rendererCommunication';
+import { IPlotSaveHandler } from './plotView/types';
 
 export function registerTypes(serviceManager: IServiceManager) {
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSyncActivationService,
+        RendererCommunication
+    );
+
     // Data viewer
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
@@ -30,6 +46,12 @@ export function registerTypes(serviceManager: IServiceManager) {
         IDataViewerDependencyService,
         DataViewerDependencyService
     );
+
+    // Plot Viewer
+    serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
+    serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
+    serviceManager.addSingleton<IPlotSaveHandler>(IPlotSaveHandler, PlotSaveHandler);
+    serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
 
     // Variables view
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);

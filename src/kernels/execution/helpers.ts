@@ -25,7 +25,6 @@ import { concatMultilineString, splitMultilineString } from '../../platform/comm
 import { traceInfoIfCI, traceError, traceWarning } from '../../platform/logging';
 import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { KernelConnectionMetadata } from '../types';
@@ -267,8 +266,7 @@ function translateDisplayDataOutput(
     */
     const metadata = getOutputMetadata(output);
     // If we have SVG or PNG, then add special metadata to indicate whether to display `open plot`
-    const osType = getOSType();
-    if (osType !== OSType.Unknown && ('image/svg+xml' in output.data || 'image/png' in output.data)) {
+    if ('image/svg+xml' in output.data || 'image/png' in output.data) {
         metadata.__displayOpenPlotIcon = true;
     }
     const items: NotebookCellOutputItem[] = [];
