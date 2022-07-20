@@ -20,8 +20,7 @@ import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
 import { workspace } from 'vscode';
 
-// eslint-disable-next-line
-suite.only('3rd Party Kernel Service API', function () {
+suite('3rd Party Kernel Service API', function () {
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
     const disposables: IDisposable[] = [];
