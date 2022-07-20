@@ -77,6 +77,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
 
     public override dispose() {
         super.dispose();
+        this.removedEvent.dispose();
         if (this.closedEvent) {
             this.closedEvent.fire(this);
         }
