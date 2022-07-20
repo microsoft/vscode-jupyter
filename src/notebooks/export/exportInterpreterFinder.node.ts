@@ -7,6 +7,10 @@ import {
 import * as localize from '../../platform/common/utils/localize';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
+/**
+ * Finds an interpreter to use for doing an export operation. The interpreter attached to a kernel may not
+ * have nbconver installed, so this class will search for one that does.
+ */
 @injectable()
 export class ExportInterpreterFinder {
     constructor(

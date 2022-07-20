@@ -12,6 +12,9 @@ import { ExportFormat, IExportDialog } from './types';
 import { Uri } from 'vscode';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 
+/**
+ * Export utilities that only work in node
+ */
 @injectable()
 export class ExportUtil extends ExportUtilBase {
     constructor(

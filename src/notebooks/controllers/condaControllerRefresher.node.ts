@@ -12,6 +12,10 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { IControllerLoader } from './types';
 
+/**
+ * Listens to the conda service to check for environment updates. If an environment update occurs, it will
+ * cause a refresh of the controllers.
+ */
 @injectable()
 export class CondaControllerRefresher implements IExtensionSingleActivationService {
     constructor(

@@ -17,6 +17,9 @@ import {
     IVSCodeNotebookController
 } from './types';
 
+/**
+ * Determines the 'default' kernel for a notebook
+ */
 @injectable()
 export class ControllerDefaultService implements IControllerDefaultService {
     private get isLocalLaunch(): boolean {

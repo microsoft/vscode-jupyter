@@ -9,6 +9,9 @@ import { traceError } from '../../platform/logging';
 import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
+/**
+ * Concrete implementation of the KernelDebugAdapterBase class that will dump cells
+ */
 export class KernelDebugAdapter extends KernelDebugAdapterBase {
     private readonly cellToFile = new Map<string, string>();
 

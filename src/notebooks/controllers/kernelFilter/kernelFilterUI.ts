@@ -26,6 +26,9 @@ function getKernelLabel(metadata: KernelConnectionMetadata): string {
     return getDisplayNameOrNameOfKernelConnection(metadata);
 }
 
+/**
+ * Provides a UI for filtering kernels.
+ */
 @injectable()
 export class KernelFilterUI implements IExtensionSyncActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];

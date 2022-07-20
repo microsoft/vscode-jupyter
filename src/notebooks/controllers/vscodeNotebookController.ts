@@ -84,6 +84,10 @@ import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { sendNotebookOrKernelLanguageTelemetry } from '../telemetry/notebookOrKernelLanguageTelemetry';
 
+/**
+ * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
+ * in the kernel picker by VS code.
+ */
 export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
     private readonly _onNotebookControllerSelected: EventEmitter<{
         notebook: NotebookDocument;

@@ -36,6 +36,9 @@ import { IJupyterDebugService } from './debuggingTypes';
 // PYDEVD_DEBUG=True
 // DEBUGPY_LOG_DIR=<dir that already exists>
 // PYDEVD_DEBUG_FILE=<dir that exists, but new file allowed>
+/**
+ * Stores information about a debug session
+ */
 class JupyterDebugSession implements DebugSession {
     private _name = 'JupyterDebugSession';
     constructor(
@@ -70,8 +73,9 @@ class JupyterDebugSession implements DebugSession {
 
 /* eslint-disable comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 /**
- * IJupyterDebugService that talks directly to the debugger. Supports both run by line and
- * regular debugging (regular is used in tests).
+ * This class is used for
+ * - Fetching data when debugging a kernel
+ * - Supporting the old method of debugging in the interactive window
  */
 @injectable()
 export class JupyterDebugService implements IJupyterDebugService, IDisposable {

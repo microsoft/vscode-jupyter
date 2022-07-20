@@ -12,6 +12,9 @@ import { IKernel, IKernelProvider, isLocalConnection } from '../../kernels/types
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { ILiveRemoteKernelConnectionUsageTracker } from '../../kernels/jupyter/types';
 
+/**
+ * Tracks the remote kernel in use for a notebook (updates the live kernel information)
+ */
 @injectable()
 export class RemoteKernelConnectionHandler implements IExtensionSyncActivationService {
     constructor(

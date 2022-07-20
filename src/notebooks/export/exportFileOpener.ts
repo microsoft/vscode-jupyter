@@ -14,6 +14,9 @@ import * as localize from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { ExportFormat } from './types';
 
+/**
+ * Used to handle opening the results of an export
+ */
 @injectable()
 export class ExportFileOpener {
     constructor(

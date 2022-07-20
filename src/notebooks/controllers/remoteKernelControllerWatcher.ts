@@ -14,6 +14,10 @@ import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IControllerRegistration } from './types';
 
+/**
+ * Tracks 3rd party IJupyterUriProviders and requests URIs from their handles. We store URI information in our
+ * JupyterServerUriStorage, not the handles.
+ */
 @injectable()
 export class RemoteKernelControllerWatcher implements IExtensionSyncActivationService {
     private readonly handledProviders = new WeakSet<IJupyterUriProvider>();

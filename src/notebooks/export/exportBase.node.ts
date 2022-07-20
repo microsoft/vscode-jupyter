@@ -14,6 +14,9 @@ import { ExportUtil } from './exportUtil.node';
 import { TemporaryDirectory } from '../../platform/common/platform/types';
 import { ExportInterpreterFinder } from './exportInterpreterFinder.node';
 
+/**
+ * Base class for using nbconvert to perform different export operations on node
+ */
 @injectable()
 export class ExportBase implements INbConvertExport, IExportBase {
     constructor(

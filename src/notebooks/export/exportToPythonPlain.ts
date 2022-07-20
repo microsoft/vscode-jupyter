@@ -10,7 +10,7 @@ import { IConfigurationService } from '../../platform/common/types';
 import { appendLineFeed } from '../../platform/common/utils';
 import { IExport } from './types';
 
-// Handles exporting a NotebookDocument to python
+// Handles exporting a NotebookDocument to python without using nbconvert
 @injectable()
 export class ExportToPythonPlain implements IExport {
     public constructor(

@@ -16,6 +16,9 @@ import { cellDebugSetup } from './helper';
 import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from './debuggingTypes';
 import { parseForComments } from '../../platform/common/utils';
 
+/**
+ * Listens to event when doing run by line and controls the behavior of the debugger (like auto stepping on moving out of a cell)
+ */
 export class RunByLineController implements IDebuggingDelegate {
     private lastPausedThreadId: number | undefined;
 

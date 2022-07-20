@@ -11,6 +11,9 @@ import { cellDebugSetup } from './helper';
 import { IDebuggingDelegate, IKernelDebugAdapter } from './debuggingTypes';
 import { noop } from '../../platform/common/utils/misc';
 
+/**
+ * Controls starting execution on a cell when debugging a cell.
+ */
 export class DebugCellController implements IDebuggingDelegate {
     constructor(
         private readonly debugAdapter: IKernelDebugAdapter,

@@ -18,6 +18,9 @@ import { traceLog } from '../../platform/logging';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
 
+/**
+ * Base class for exporting on web. Uses the kernel to perform the export and then translates the blob sent back to a file.
+ */
 @injectable()
 export class ExportBase implements INbConvertExport, IExportBase {
     constructor(

@@ -11,6 +11,9 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../platform/common/constants';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
+/**
+ * Keeps track of which kernels are filtered or not. Supports local and remote but not 'live' kernels.
+ */
 @injectable()
 export class KernelFilterService implements IDisposable {
     private readonly disposables: IDisposable[] = [];

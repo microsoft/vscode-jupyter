@@ -16,6 +16,9 @@ export const PDFExtensions = { PDF: ['pdf'] };
 export const HTMLExtensions = { HTML: ['html', 'htm'] };
 export const PythonExtensions = { Python: ['py'] };
 
+/**
+ * UI for exporting a notebook to a file.
+ */
 @injectable()
 export class ExportDialog implements IExportDialog {
     constructor(
