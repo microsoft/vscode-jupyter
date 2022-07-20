@@ -2,15 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable, optional } from 'inversify';
 import * as path from '../../vscode-path/path';
-import {
-    ConfigurationChangeEvent,
-    Disposable,
-    Event,
-    EventEmitter,
-    FileSystemWatcher,
-    RelativePattern,
-    Uri
-} from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, RelativePattern, Uri } from 'vscode';
 import { TraceOptions } from '../../logging/types';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry.node';
 import { IWorkspaceService } from '../application/types';
