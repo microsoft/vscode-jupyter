@@ -37,11 +37,11 @@ export class CellMatcher {
     }
 
     public isMarkdown(code: string): boolean {
-        return this.markdownMatchRegEx.test(code);
+        return this.markdownMatchRegEx.test(code.trim());
     }
 
     public isCode(code: string): boolean {
-        return this.codeMatchRegEx.test(code) || code.trim() === this.defaultCellMarker;
+        return this.codeMatchRegEx.test(code.trim()) || code.trim() === this.defaultCellMarker;
     }
 
     public getCellType(code: string): string {
