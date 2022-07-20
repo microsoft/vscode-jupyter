@@ -12,7 +12,6 @@ import { INotebookExporter, INotebookImporter } from '../kernels/jupyter/types';
 import { JupyterExporter } from './import-export/jupyterExporter';
 import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
-import { ServerPreload } from './serverPreload/serverPreload.node';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ExtensionRecommendationService } from './recommendation/extensionRecommendation.node';
 import { ActiveEditorContextService } from './context/activeEditorContext';
@@ -33,7 +32,6 @@ import { PythonExtensionRestartNotification } from './notification/pythonExtensi
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         WorkspaceActivation
