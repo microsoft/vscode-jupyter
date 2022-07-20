@@ -45,7 +45,10 @@ suite('Custom Environment Variables Provider', () => {
         contentsOfOldEnvFile = fs.readFileSync(envFile.fsPath).toString();
         await workspace.getConfiguration('python').update('envFile', '${workspaceFolder}/python.env');
     });
-    suiteTeardown(async () => {
+    suiteTeardown(async function () {
+        if (IS_REMOTE_NATIVE_TEST() || isWeb()) {
+            return this.skip();
+        }
         fs.writeFileSync(envFile.fsPath, contentsOfOldEnvFile);
         await workspace.getConfiguration('python').update('envFile', undefined);
     });
