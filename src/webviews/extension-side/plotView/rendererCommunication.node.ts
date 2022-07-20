@@ -6,17 +6,6 @@ import { PlotSaveHandler } from './plotSaveHandler.node';
 import { PlotViewHandler } from './plotViewHandler';
 import { RendererCommunication as RendererCommunicationBase } from './rendererCommunication';
 
-export type OpenImageInPlotViewer = {
-    type: 'openImageInPlotViewer';
-    outputId: string;
-    mimeType: string;
-};
-export type SaveImageAs = {
-    type: 'saveImageAs';
-    outputId: string;
-    mimeType: string;
-};
-
 @injectable()
 export class RendererCommunication extends RendererCommunicationBase {
     constructor(
