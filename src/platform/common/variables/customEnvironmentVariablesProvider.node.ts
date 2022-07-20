@@ -20,6 +20,7 @@ import { EnvironmentVariables, ICustomEnvironmentVariablesProvider, IEnvironment
 import { traceDecoratorVerbose, traceInfoIfCI, traceVerbose } from '../../logging';
 import { SystemVariables } from './systemVariables.node';
 import { disposeAllDisposables } from '../helpers';
+import { IPythonExtensionChecker } from '../../api/types';
 
 const CACHE_DURATION = 60 * 60 * 1000;
 @injectable()
@@ -35,6 +36,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject('number') @optional() private cacheDuration: number = CACHE_DURATION
     ) {
         disposableRegistry.push(this);
@@ -76,23 +78,20 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         }
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
 
-        // eslint-disable-next-line
-        // TODO: This should be added to the python API (or this entire service should move there)
-        // https://github.com/microsoft/vscode-jupyter/issues/51
         const envFile = this.getEnvFile(workspaceFolderUri, purpose);
-        this.createFileWatcher(envFile, workspaceFolderUri, purpose);
+        this.createFileWatcher(envFile, workspaceFolderUri);
         return this.envVarsService.parseFile(envFile, process.env);
     }
     public configurationChanged(e: ConfigurationChangeEvent) {
         this.trackedWorkspaceFolders.forEach((item) => {
             const uri = item && item.length > 0 ? Uri.file(item) : undefined;
             if (e.affectsConfiguration('python.envFile', uri)) {
-                this.onEnvironmentFileChanged(uri, 'RunPythonCode');
+                this.onEnvironmentFileChanged(uri);
             }
         });
     }
-    public createFileWatcher(envFile: string, workspaceFolderUri?: Uri, purpose?: 'RunPythonCode') {
-        const key = this.getCacheKey(workspaceFolderUri, purpose);
+    public createFileWatcher(envFile: string, workspaceFolderUri?: Uri) {
+        const key = this.getCacheKey(workspaceFolderUri);
         if (this.fileWatchers.has(key)) {
             return;
         }
@@ -100,15 +99,9 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         const envFileWatcher = this.workspaceService.createFileSystemWatcher(pattern);
         this.fileWatchers.set(key, envFileWatcher);
         if (envFileWatcher) {
-            this.disposables.push(
-                envFileWatcher.onDidChange(() => this.onEnvironmentFileChanged(workspaceFolderUri, purpose))
-            );
-            this.disposables.push(
-                envFileWatcher.onDidCreate(() => this.onEnvironmentFileCreated(workspaceFolderUri, purpose))
-            );
-            this.disposables.push(
-                envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri, purpose))
-            );
+            envFileWatcher.onDidChange(() => this.onEnvironmentFileChanged(workspaceFolderUri), this, this.disposables);
+            envFileWatcher.onDidCreate(() => this.onEnvironmentFileCreated(workspaceFolderUri), this, this.disposables);
+            envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri), this, this.disposables);
         }
     }
     private getEnvFile(workspaceFolderUri: Uri, purpose?: 'RunPythonCode') {
@@ -119,9 +112,12 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         }
     }
     private getPythonEnvFile(resource?: Uri): string | undefined {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         const sysVars = new SystemVariables(resource, workspaceFolderUri, this.workspaceService);
-        const pythonEnvSetting = this.workspaceService.getConfiguration('python', resource).get<string>('.envFile');
+        const pythonEnvSetting = this.workspaceService.getConfiguration('python', resource).get<string>('envFile');
         return pythonEnvSetting ? sysVars.resolve(pythonEnvSetting) : undefined;
     }
     private async _getEnvironmentVariables(resource?: Uri, reason?: 'RunPythonCode'): Promise<EnvironmentVariables> {
@@ -155,14 +151,17 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         return this.workspaceService.getWorkspaceFolder(resource!)?.uri || defaultWorkspaceFolderUri;
     }
 
-    private onEnvironmentFileCreated(workspaceFolderUri?: Uri, purpose?: 'RunPythonCode') {
-        this.onEnvironmentFileChanged(workspaceFolderUri, purpose);
+    private onEnvironmentFileCreated(workspaceFolderUri?: Uri) {
+        this.onEnvironmentFileChanged(workspaceFolderUri);
         sendFileCreationTelemetry();
     }
 
-    private onEnvironmentFileChanged(workspaceFolderUri?: Uri, purpose?: 'RunPythonCode') {
-        const key = this.getCacheKey(workspaceFolderUri, purpose);
-        new InMemoryCache<EnvironmentVariables>(this.cacheDuration, key).clear();
+    private onEnvironmentFileChanged(workspaceFolderUri?: Uri) {
+        new InMemoryCache<EnvironmentVariables>(this.cacheDuration, this.getCacheKey(workspaceFolderUri)).clear();
+        new InMemoryCache<EnvironmentVariables>(
+            this.cacheDuration,
+            this.getCacheKey(workspaceFolderUri, 'RunPythonCode')
+        ).clear();
 
         this.changeEventEmitter.fire(workspaceFolderUri);
     }
