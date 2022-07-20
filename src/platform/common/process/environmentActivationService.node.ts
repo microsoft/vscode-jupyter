@@ -131,7 +131,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables =
             minTimeAfterWhichWeShouldCacheEnvVariables;
         this.envVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
-
         this.interpreterService.onDidChangeInterpreter(this.clearCache, this, this.disposables);
     }
     public clearCache() {
@@ -186,6 +185,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             envVariablesFromPython.completed &&
             !envVariablesFromPython.value
         ) {
+            traceWarning(
+                `Failed to get env vars from Python extension. Falling back to ours for ${getDisplayPath(
+                    interpreter.uri
+                )}.`
+            );
             await envVariablesOurSelves.promise;
         }
 
@@ -197,8 +201,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             } else {
                 traceVerbose(`Got env vars ourselves faster, but empty ${getDisplayPath(interpreter?.uri)}`);
             }
-        }
-        if (!envVariablesOurSelves.resolved) {
+        } else {
             traceVerbose(`Got env vars with python ext faster ${getDisplayPath(interpreter?.uri)}`);
         }
         return envVariablesFromPython.promise;
@@ -292,6 +295,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         const key = `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`;
 
+        if (this.activatedEnvVariablesCache.has(key)) {
+            traceVerbose(`Got activation Env Vars from cached promise with key ${key}`);
+            return this.activatedEnvVariablesCache.get(key);
+        }
+
         const shellInfo = defaultShells[this.platform.osType];
         const envType = interpreter?.envType;
         if (!shellInfo) {
@@ -308,11 +316,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 reason: 'unknownOS'
             });
             return;
-        }
-
-        if (this.activatedEnvVariablesCache.has(key)) {
-            traceVerbose(`Got activation Env Vars from cached promise with key ${key}`);
-            return this.activatedEnvVariablesCache.get(key);
         }
 
         const promise = (async () => {
