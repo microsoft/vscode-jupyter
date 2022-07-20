@@ -3,21 +3,27 @@
 
 'use strict';
 import { inject, injectable, multiInject } from 'inversify';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../platform/common/application/types';
+import { InteractiveWindowView } from '../platform/common/constants';
 import { NotebookDocument, Uri } from 'vscode';
-import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
 import {
     IAsyncDisposableRegistry,
-    IDisposableRegistry,
     IConfigurationService,
+    IDisposableRegistry,
     IExtensionContext
 } from '../platform/common/types';
-import { Kernel } from './kernel.web';
-import { IBaseKernel, IKernel, INotebookProvider, ITracebackFormatter, KernelOptions } from './types';
 import { BaseCoreKernelProvider, BaseThirdPartyKernelProvider } from './kernelProvider.base';
 import { IStatusProvider } from '../platform/progress/types';
-import { InteractiveWindowView } from '../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
-import { IFileSystem } from '../platform/common/platform/types';
+import { Kernel } from './kernel';
+import {
+    IBaseKernel,
+    IKernel,
+    INotebookProvider,
+    IStartupCodeProvider,
+    ITracebackFormatter,
+    KernelOptions
+} from './types';
 
 /**
  * Web version of a kernel provider. Needed in order to create the web version of a kernel.
@@ -36,7 +42,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -69,7 +75,8 @@ export class KernelProvider extends BaseCoreKernelProvider {
             options.creator,
             this.context,
             this.formatters,
-            this.fs
+            this.startupCodeProviders,
+            () => Promise.resolve()
         ) as IKernel;
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
@@ -101,7 +108,7 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -133,7 +140,8 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
             options.creator,
             this.context,
             this.formatters,
-            this.fs
+            this.startupCodeProviders,
+            () => Promise.resolve()
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

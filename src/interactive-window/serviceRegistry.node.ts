@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { ITracebackFormatter } from '../kernels/types';
+import { IStartupCodeProvider, ITracebackFormatter } from '../kernels/types';
 import { IExtensionSyncActivationService, IExtensionSingleActivationService } from '../platform/activation/types';
 import { IJupyterExtensionBanner } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
@@ -28,6 +28,7 @@ import { IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager, IIntera
 import { InteractiveWindowDebugger } from './debugger/interactiveWindowDebugger.node';
 import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
 import { BANNER_NAME_INTERACTIVE_SHIFTENTER, InteractiveShiftEnterBanner } from './shiftEnterBanner';
+import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startupCodeProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
@@ -63,5 +64,9 @@ export function registerTypes(serviceManager: IServiceManager) {
         IJupyterExtensionBanner,
         InteractiveShiftEnterBanner,
         BANNER_NAME_INTERACTIVE_SHIFTENTER
+    );
+    serviceManager.addSingleton<IStartupCodeProvider>(
+        IStartupCodeProvider,
+        InteractiveWindowDebuggingStartupCodeProvider
     );
 }

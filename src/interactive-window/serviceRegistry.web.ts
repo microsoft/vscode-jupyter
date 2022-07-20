@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { ITracebackFormatter } from '../kernels/types';
+import { IStartupCodeProvider, ITracebackFormatter } from '../kernels/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry';
@@ -24,6 +24,7 @@ import { IGeneratedCodeStorageFactory } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
 import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
+import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startupCodeProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
@@ -52,5 +53,9 @@ export function registerTypes(serviceManager: IServiceManager) {
         InteractiveWindowDebuggingManager,
         undefined,
         [IExtensionSingleActivationService]
+    );
+    serviceManager.addSingleton<IStartupCodeProvider>(
+        IStartupCodeProvider,
+        InteractiveWindowDebuggingStartupCodeProvider
     );
 }

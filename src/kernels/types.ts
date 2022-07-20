@@ -616,3 +616,14 @@ export interface ITracebackFormatter {
      */
     format(cell: NotebookCell, traceback: string[]): string[];
 }
+
+export const enum StartupCodePriority {
+    Base = 0,
+    Debugging = 5
+}
+
+export const IStartupCodeProvider = Symbol('IStartupCodeProvider');
+export interface IStartupCodeProvider {
+    priority: StartupCodePriority;
+    getCode(kernel: IBaseKernel): Promise<string[]>;
+}

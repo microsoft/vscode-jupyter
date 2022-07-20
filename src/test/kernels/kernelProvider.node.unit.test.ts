@@ -17,7 +17,6 @@ import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../pla
 import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import {
     IConfigurationService,
@@ -41,7 +40,6 @@ suite('KernelProvider Node', () => {
     let workspaceService: IWorkspaceService;
     let vscNotebook: IVSCodeNotebook;
     let statusProvider: IStatusProvider;
-    let fs: IFileSystemNode;
     let pythonExecFactory: IPythonExecutionFactory;
     let context: IExtensionContext;
     let onDidCloseNotebookDocument: EventEmitter<NotebookDocument>;
@@ -78,7 +76,6 @@ suite('KernelProvider Node', () => {
         vscNotebook = mock<IVSCodeNotebook>();
         statusProvider = mock<IStatusProvider>();
         context = mock<IExtensionContext>();
-        fs = mock<IFileSystemNode>();
         pythonExecFactory = mock<IPythonExecutionFactory>();
         const configSettings = mock<IWatchableJupyterSettings>();
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
@@ -95,13 +92,13 @@ suite('KernelProvider Node', () => {
             instance(notebookProvider),
             instance(configService),
             instance(appShell),
-            instance(fs),
             instance(outputTracker),
             instance(workspaceService),
             instance(vscNotebook),
             instance(pythonExecFactory),
             instance(statusProvider),
             instance(context),
+            [],
             []
         );
         thirdPartyKernelProvider = new ThirdPartyKernelProvider(
@@ -110,13 +107,13 @@ suite('KernelProvider Node', () => {
             instance(notebookProvider),
             instance(configService),
             instance(appShell),
-            instance(fs),
             instance(outputTracker),
             instance(workspaceService),
             instance(vscNotebook),
             instance(pythonExecFactory),
             instance(statusProvider),
             instance(context),
+            [],
             []
         );
     });

@@ -949,7 +949,7 @@ No properties for event
 ```
 
 
-[src/kernels/kernel.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts)
+[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
     }
     public async executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState> {
@@ -1908,7 +1908,7 @@ No description provided
 
 ## Locations Used
 
-[src/kernels/kernel.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts)
+[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
             await this.executeSilently(session, startupCode, {
                 traceErrors: true,
@@ -2848,7 +2848,7 @@ No properties for event
 ```
 
 
-[src/kernels/kernel.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts)
+[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
             await (this._jupyterSessionPromise
                 ? this.kernelExecution.restart(this._jupyterSessionPromise)
@@ -2860,7 +2860,7 @@ No properties for event
 ```
 
 
-[src/kernels/kernel.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts)
+[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
             this.restarting = undefined;
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
@@ -4729,7 +4729,7 @@ No description provided
 
 ## Locations Used
 
-[src/kernels/kernel.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts)
+[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
             await this.executeSilently(session, this.getUserStartupCommands(), {
                 traceErrors: true,
@@ -7311,7 +7311,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/kernel.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts)
+[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
         // Setup telemetry
         if (!this.perceivedJupyterStartupTelemetryCaptured) {
@@ -7323,7 +7323,7 @@ No properties for event
 ```
 
 
-[src/kernels/kernel.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts)
+[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
 
             sendKernelTelemetryEvent(
@@ -8757,7 +8757,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/kernel.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts)
+[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
             sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
             executionPromise
