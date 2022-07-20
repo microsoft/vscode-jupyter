@@ -18,7 +18,7 @@ import * as dedent from 'dedent';
 import { IPythonExtensionChecker } from '../../../../../platform/api/types';
 import { createEventHandler } from '../../../../common';
 
-suite('DataScience Error Handler Unit Tests', () => {
+suite('Custom Environment Variables Provider', () => {
     let customEnvVarsProvider: CustomEnvironmentVariablesProvider;
     let envVarsService: IEnvironmentVariablesService;
     const disposables: IDisposable[] = [];
