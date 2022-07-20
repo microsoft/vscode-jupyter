@@ -266,7 +266,6 @@ function translateDisplayDataOutput(
     */
     const metadata = getOutputMetadata(output);
     // If we have SVG or PNG, then add special metadata to indicate whether to display `open plot`
-    console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', output.data);
     if ('image/svg+xml' in output.data || 'image/png' in output.data) {
         metadata.__displayOpenPlotIcon = true;
     }
