@@ -44,7 +44,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
         _interpreter: PythonEnvironment,
         _token: CancellationToken
     ): Promise<void> {
-        const kernel = this.kernelProvider.get(sourceDocument.uri);
+        const kernel = this.kernelProvider.get(sourceDocument);
         if (!kernel) {
             // trace error
             return;

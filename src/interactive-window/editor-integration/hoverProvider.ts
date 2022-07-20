@@ -139,7 +139,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         this.notebook.notebookDocuments
             .filter((item) => notebookUris.includes(item.uri.toString()))
             .forEach((item) => {
-                const kernel = this.kernelProvider.get(item.uri);
+                const kernel = this.kernelProvider.get(item);
                 if (kernel) {
                     kernels.add(kernel);
                 }

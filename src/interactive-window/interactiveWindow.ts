@@ -256,7 +256,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             };
             // When connecting, we need to update the sys info message
             this.updateSysInfoMessage(this.getSysInfoMessage(metadata, SysInfoReason.Start), false, sysInfoCell);
-            const kernel = await KernelConnector.connectToKernel(
+            const kernel = await KernelConnector.connectToNotebookKernel(
                 controller,
                 metadata,
                 this.serviceContainer,

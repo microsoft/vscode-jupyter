@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { NotebookController, Uri } from 'vscode';
+import { NotebookController, NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
 import { Resource, IConfigurationService, IExtensionContext } from '../platform/common/types';
 import { INotebookProvider, ITracebackFormatter, KernelActionSource, KernelConnectionMetadata } from './types';
@@ -10,7 +10,6 @@ import { BaseKernel } from './kernel.base';
 import { IStatusProvider } from '../platform/progress/types';
 import { InteractiveWindowView } from '../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
-import { getAssociatedNotebookDocument } from './helpers';
 import { IFileSystem } from '../platform/common/platform/types';
 
 /**
@@ -22,6 +21,7 @@ export class Kernel extends BaseKernel {
     constructor(
         id: Uri,
         resourceUri: Resource,
+        notebook: NotebookDocument | undefined,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         notebookProvider: INotebookProvider,
         launchTimeout: number,
@@ -40,6 +40,7 @@ export class Kernel extends BaseKernel {
         super(
             id,
             resourceUri,
+            notebook,
             kernelConnectionMetadata,
             notebookProvider,
             launchTimeout,
@@ -57,7 +58,7 @@ export class Kernel extends BaseKernel {
     }
 
     protected async getDebugCellHook(): Promise<string[]> {
-        if (getAssociatedNotebookDocument(this)?.notebookType === InteractiveWindowView) {
+        if (this.notebook?.notebookType === InteractiveWindowView) {
             // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
             if (!this.addRunCellHookContents) {

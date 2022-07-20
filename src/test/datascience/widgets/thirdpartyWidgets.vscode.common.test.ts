@@ -160,7 +160,7 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
             });
             const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
             // ipyvolume fails in Python 3.10 due to a known issue.
-            const kernel = kernelProvider.get(cell.notebook.uri);
+            const kernel = kernelProvider.get(cell.notebook);
             if (
                 kernel &&
                 kernel.kernelConnectionMetadata.interpreter &&

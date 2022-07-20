@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { getAssociatedNotebookDocument } from '../kernels/helpers';
 import { IKernel, IKernelProvider } from '../kernels/types';
 import { IControllerSelection } from '../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
@@ -39,8 +38,8 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
         this.codeGeneratorFactory.get(notebook)?.reset();
     }
     private onDidCreateKernel(kernel: IKernel) {
-        const notebook = getAssociatedNotebookDocument(kernel);
-        if (kernel.creator !== 'jupyterExtension' || notebook?.notebookType !== InteractiveWindowView) {
+        const notebook = kernel.notebook;
+        if (kernel.creator !== 'jupyterExtension' || notebook.notebookType !== InteractiveWindowView) {
             return;
         }
         // Possible we changed kernels for the same document.

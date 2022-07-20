@@ -30,13 +30,13 @@ import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarm
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { IDebugLocationTracker, IDebugLocationTrackerFactory, IJupyterDebugService } from './debugger/types';
-import { IKernelDependencyService, IKernelFinder, IKernelProvider } from './types';
+import { IKernelDependencyService, IKernelFinder, IKernelProvider, IThirdPartyKernelProvider } from './types';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { KernelAutoRestartMonitor } from './kernelAutoRestartMonitor.node';
 import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.node';
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.node';
-import { KernelProvider } from './kernelProvider.node';
+import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.node';
 import { KernelFinder } from './kernelFinder.node';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
@@ -107,6 +107,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         KernelAutoRestartMonitor
     );
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
+    serviceManager.addSingleton<IThirdPartyKernelProvider>(IThirdPartyKernelProvider, ThirdPartyKernelProvider);
     serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
 
     // Subdirectories

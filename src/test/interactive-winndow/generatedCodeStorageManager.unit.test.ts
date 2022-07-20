@@ -92,6 +92,7 @@ suite('GeneratedCodeStorageManager', () => {
         const iwKernelRestart = new EventEmitter<void>();
         disposables.push(iwKernelRestart);
         when(kernel.onRestarted).thenReturn(iwKernelRestart.event);
+        when(kernel.notebook).thenReturn(iwNotebookInstance);
         when(kernel.uri).thenReturn(nbUri);
         when(kernel.creator).thenReturn('jupyterExtension');
         when(iwNotebook.notebookType).thenReturn(InteractiveWindowView);

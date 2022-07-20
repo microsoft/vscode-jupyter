@@ -147,14 +147,14 @@ No properties for event
 
 ## Locations Used
 
-[src/interactive-window/interactiveWindowCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts)
+[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
 ```typescript
         }
     }
 
     @captureTelemetry(Telemetry.CreateNewInteractive, undefined, false)
     private async createNewInteractiveWindow(connection?: KernelConnectionMetadata): Promise<void> {
-        await this.interactiveWindowProvider.getOrCreate(undefined, connection);
+        await this.interactiveWindowProvider?.getOrCreate(undefined, connection);
     }
 ```
 
@@ -1163,7 +1163,7 @@ No properties for event
 
 ## Locations Used
 
-[src/interactive-window/interactiveWindowCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts)
+[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
 ```typescript
         return result;
     }
@@ -1191,7 +1191,7 @@ No properties for event
 
 ## Locations Used
 
-[src/interactive-window/interactiveWindowCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts)
+[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
 ```typescript
         }
     }
@@ -1447,19 +1447,19 @@ No description provided
 
 ## Locations Used
 
-[src/interactive-window/interactiveWindowCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts)
+[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
 ```typescript
         return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)
     private async importNotebook(): Promise<void> {
-        const filtersKey = localize.DataScience.importDialogFilter();
+        const filtersKey = DataScience.importDialogFilter();
         const filtersObject: { [name: string]: string[] } = {};
 ```
 
 
-[src/interactive-window/interactiveWindowCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts)
+[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
 ```typescript
         }
     }
@@ -3231,7 +3231,7 @@ No properties for event
         }
 
         sendTelemetryEvent(Telemetry.RestartKernelCommand);
-        const kernel = this.kernelProvider.get(document.uri);
+        const kernel = this.kernelProvider.get(document);
 
         if (kernel) {
 ```
@@ -4596,27 +4596,15 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts)
+[src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts)
 ```typescript
-                sendTelemetryEvent(Telemetry.UserInstalledPandas);
-            }
+        if (selection === Common.install()) {
+            await this._doInstall(executer, tokenSource);
         } else {
             sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
-            throw new Error(
-                DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer)
-            );
-```
-
-
-[src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
-```typescript
-                throw new Error(DataScience.failedToInstallPandas());
-            }
-        } else {
-            sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
-            throw new Error(
-                DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer)
-            );
+            throw new Error(message);
+        }
+    }
 ```
 
 </details>
@@ -4690,37 +4678,37 @@ No properties for event
 
 [src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts)
 ```typescript
-                cancellationPromise
-            ]);
-            if (response === InstallerResponse.Installed) {
-                sendTelemetryEvent(Telemetry.UserInstalledPandas);
-            }
-        } else {
-            sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
+            cancellationPromise
+        ]);
+        if (response === InstallerResponse.Installed) {
+            sendTelemetryEvent(Telemetry.UserInstalledPandas);
+        }
+    }
+
 ```
 
 
 [src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
 ```typescript
-        if (await this.promptInstall()) {
-            try {
-                await this.execute(command, kernel);
-                sendTelemetryEvent(Telemetry.UserInstalledPandas);
-            } catch (e) {
-                sendTelemetryEvent(Telemetry.UserInstalledPandas, undefined, undefined, e);
-                throw new Error(DataScience.failedToInstallPandas());
+
+        try {
+            await this.execute(command, kernel);
+            sendTelemetryEvent(Telemetry.UserInstalledPandas);
+        } catch (e) {
+            sendTelemetryEvent(Telemetry.UserInstalledPandas, undefined, undefined, e);
+            throw new Error(DataScience.failedToInstallPandas());
 ```
 
 
 [src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
 ```typescript
-                await this.execute(command, kernel);
-                sendTelemetryEvent(Telemetry.UserInstalledPandas);
-            } catch (e) {
-                sendTelemetryEvent(Telemetry.UserInstalledPandas, undefined, undefined, e);
-                throw new Error(DataScience.failedToInstallPandas());
-            }
-        } else {
+            await this.execute(command, kernel);
+            sendTelemetryEvent(Telemetry.UserInstalledPandas);
+        } catch (e) {
+            sendTelemetryEvent(Telemetry.UserInstalledPandas, undefined, undefined, e);
+            throw new Error(DataScience.failedToInstallPandas());
+        }
+    }
 ```
 
 </details>
@@ -4892,8 +4880,8 @@ No properties for event
     public async checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void> {
         sendTelemetryEvent(Telemetry.DataViewerUsingInterpreter);
 
-        const tokenSource = new CancellationTokenSource();
-        try {
+        await this.checkOrInstall(interpreter);
+    }
 ```
 
 </details>
@@ -7758,27 +7746,15 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts)
+[src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts)
 ```typescript
-        interpreter: PythonEnvironment,
-        tokenSource: CancellationTokenSource
-    ): Promise<void> {
-        sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
-            action: 'displayed',
-            moduleName: ProductNames.get(Product.pandas)!,
-            pythonEnvType: interpreter?.envType
-```
-
-
-[src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
-```typescript
+        }
     }
 
-    private async installMissingDependencies(kernel: IKernelWithSession): Promise<void> {
-        sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
-            action: 'displayed',
-            moduleName: ProductNames.get(Product.pandas)!
-        });
+    @captureTelemetry(Telemetry.PythonModuleInstall, {
+        action: 'displayed',
+        moduleName: ProductNames.get(Product.pandas)!
+    })
 ```
 
 </details>
@@ -8669,27 +8645,15 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts)
+[src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts)
 ```typescript
-                throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
+                const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
+                await this.promptInstall(executer, tokenSource, versionStr);
             }
-
             sendTelemetryEvent(Telemetry.PandasNotInstalled);
-            await this.installMissingDependencies(interpreter, tokenSource);
+            await this.promptInstall(executer, tokenSource);
         } finally {
             tokenSource.dispose();
-```
-
-
-[src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
-```typescript
-            throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
-        }
-
-        sendTelemetryEvent(Telemetry.PandasNotInstalled);
-
-        await this.installMissingDependencies(kernel);
-    }
 ```
 
 </details>
@@ -8707,9 +8671,9 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts)
+[src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts)
 ```typescript
-            const pandasVersion = await this.getVersion(interpreter, tokenSource.token);
+            const pandasVersion = await this.getVersion(executer, tokenSource.token);
 
             if (Cancellation.isCanceled(tokenSource.token)) {
                 sendTelemetryEvent(Telemetry.PandasInstallCanceled);
@@ -8735,7 +8699,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts)
+[src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts)
 ```typescript
 
             if (pandasVersion) {
@@ -8744,18 +8708,6 @@ No properties for event
                     return;
                 }
                 sendTelemetryEvent(Telemetry.PandasTooOld);
-```
-
-
-[src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
-```typescript
-
-        if (pandasVersion) {
-            if (pandasVersion.compare(pandasMinimumVersionSupportedByVariableViewer) > 0) {
-                sendTelemetryEvent(Telemetry.PandasOK);
-                return;
-            }
-            sendTelemetryEvent(Telemetry.PandasTooOld);
 ```
 
 </details>
@@ -8775,7 +8727,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts)
+[src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/baseDataViewerDependencyImplementation.ts)
 ```typescript
                     sendTelemetryEvent(Telemetry.PandasOK);
                     return;
@@ -8783,19 +8735,7 @@ No properties for event
                 sendTelemetryEvent(Telemetry.PandasTooOld);
                 // Warn user that we cannot start because pandas is too old.
                 const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
-                throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
-```
-
-
-[src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
-```typescript
-                sendTelemetryEvent(Telemetry.PandasOK);
-                return;
-            }
-            sendTelemetryEvent(Telemetry.PandasTooOld);
-            // Warn user that we cannot start because pandas is too old.
-            const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
-            throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
+                await this.promptInstall(executer, tokenSource, versionStr);
 ```
 
 </details>

@@ -29,7 +29,6 @@ import {
 } from './types';
 import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from './helpers';
 import { noop } from '../../platform/common/utils/misc';
-import { getAssociatedNotebookDocument } from '../helpers';
 
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;
@@ -170,7 +169,7 @@ export class DebuggerVariables
             frameId: (targetVariable as any).frameId
         });
 
-        const notebook = getAssociatedNotebookDocument(kernel);
+        const notebook = kernel?.notebook;
         let fileName = notebook ? path.basename(notebook.uri.path) : '';
         if (!fileName && this.debugLocation?.fileName) {
             fileName = path.basename(this.debugLocation.fileName);
@@ -290,7 +289,7 @@ export class DebuggerVariables
     }
 
     private watchKernel(kernel: IKernel) {
-        const key = getAssociatedNotebookDocument(kernel)?.uri.toString();
+        const key = kernel.notebook?.uri.toString();
         if (key && !this.watchedNotebooks.has(key)) {
             const disposables: Disposable[] = [];
             disposables.push(kernel.onRestarted(this.resetImport.bind(this, key)));
