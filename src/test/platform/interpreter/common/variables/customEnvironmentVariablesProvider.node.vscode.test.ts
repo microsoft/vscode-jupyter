@@ -16,7 +16,7 @@ import * as fs from 'fs-extra';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../../constants.node';
 import * as dedent from 'dedent';
 import { IPythonExtensionChecker } from '../../../../../platform/api/types';
-import { createEventHandler } from '../../../../common';
+import { captureScreenShot, createEventHandler } from '../../../../common';
 import * as path from '../../../../../platform/vscode-path/path';
 
 suite('Custom Environment Variables Provider', () => {
@@ -53,7 +53,11 @@ suite('Custom Environment Variables Provider', () => {
         await workspace.getConfiguration('python').update('envFile', undefined);
     });
     setup(() => createProvider());
-    teardown(() => {
+    teardown(async function () {
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this);
+        }
+
         disposeAllDisposables(disposables);
         if (fs.existsSync(customPythonEnvFile.fsPath)) {
             fs.unlinkSync(customPythonEnvFile.fsPath);
