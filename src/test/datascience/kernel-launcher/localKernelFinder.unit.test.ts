@@ -58,6 +58,7 @@ import { IJupyterRemoteCachedKernelValidator, IServerConnectionType } from '../.
 import { uriEquals } from '../helpers';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
+import { IApplicationEnvironment } from '../../../platform/common/application/types';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -133,6 +134,8 @@ import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
             fs = mock(FileSystem);
             when(fs.delete(anything())).thenResolve();
             when(fs.exists(anything())).thenResolve(true);
+            const env = mock<IApplicationEnvironment>();
+            when(env.extensionVersion).thenReturn('');
             const workspaceService = mock(WorkspaceService);
             const testWorkspaceFolder = Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience'));
 
@@ -264,7 +267,8 @@ import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
                 instance(fs),
                 instance(serverUriStorage),
                 instance(connectionType),
-                instance(cachedRemoteKernelValidator)
+                instance(cachedRemoteKernelValidator),
+                instance(env)
             );
         }
         teardown(() => {
