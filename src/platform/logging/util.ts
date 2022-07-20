@@ -6,6 +6,9 @@
 export type Arguments = any[];
 
 function valueToLogString(value: unknown, kind: string): string {
+    if (Array.isArray(value)) {
+        return value.map((item) => valueToLogString(item, kind)).join(', ');
+    }
     if (value === undefined) {
         return 'undefined';
     }
