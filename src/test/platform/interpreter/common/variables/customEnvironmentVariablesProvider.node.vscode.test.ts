@@ -19,7 +19,7 @@ import { IPythonExtensionChecker } from '../../../../../platform/api/types';
 import { captureScreenShot, createEventHandler } from '../../../../common';
 import * as path from '../../../../../platform/vscode-path/path';
 
-suite('Custom Environment Variables Provider', () => {
+suite.only('Custom Environment Variables Provider', () => {
     let customEnvVarsProvider: CustomEnvironmentVariablesProvider;
     let envVarsService: IEnvironmentVariablesService;
     const disposables: IDisposable[] = [];
