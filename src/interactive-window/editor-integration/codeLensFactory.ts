@@ -144,7 +144,9 @@ export class CodeLensFactory implements ICodeLensFactory {
                 firstCell = false;
             });
         } else {
-            traceInfoIfCI(`NOT Generating new code lenses for version ${document.version} of document ${document.uri}`);
+            traceInfoIfCI(
+                `NOT Generating new code lenses for version ${document.version} of document ${document.uri} - needUpdate: ${needUpdate}, cellRanges.length: ${cache.cellRanges.length}`
+            );
         }
 
         // Generate the goto cell lenses if necessary

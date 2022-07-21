@@ -128,7 +128,9 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             return [];
         }
 
-        return this.adjustDebuggingLenses(document, codeLenses);
+        const result = this.adjustDebuggingLenses(document, codeLenses);
+        traceInfoIfCI(`CodeLensProvider: returning ${result.map((x) => x.command?.title).join(', ')}`);
+        return result;
     }
 
     // Adjust what code lenses are visible or not given debug mode and debug context location

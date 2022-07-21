@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { traceInfo } from '../../platform/logging';
+import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
@@ -281,6 +281,7 @@ export async function waitForLastCellToComplete(
     } else {
         await waitForExecutionCompletedSuccessfully(codeCell!);
     }
+    traceInfoIfCI(`finished waiting for last cell to complete of ${numberOfCells} cells`);
     return codeCell!;
 }
 
@@ -316,6 +317,7 @@ export async function waitForCodeLenses(document: vscode.Uri, command: string) {
         `Code lens with command ${command} not found`
     );
 
+    traceInfoIfCI(`Found code lenses with command ${command}`);
     return codeLenses;
 }
 

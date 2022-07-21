@@ -35,7 +35,7 @@ export function sharedIWDebuggerTests(
         suiteSetup?: (debuggerType: DebuggerType) => Promise<void>;
     }
 ) {
-    const debuggerTypes: DebuggerType[] = ['VSCodePythonDebugger', 'JupyterProtocolDebugger'];
+    const debuggerTypes: DebuggerType[] = ['VSCodePythonDebugger'];
     debuggerTypes.forEach((debuggerType) => {
         suite(`Debugging with ${debuggerType}`, async function () {
             this.timeout(120_000);
@@ -292,8 +292,7 @@ export function sharedIWDebuggerTests(
 
                 // Aquire the variable view from the provider
                 const coreVariableView = await variableViewProvider.activeVariableView;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const variableView = coreVariableView as any as ITestWebviewHost;
+                const variableView = coreVariableView as unknown as ITestWebviewHost;
 
                 // Parse the HTML for our expected variables
                 let expectedVariables = [{ name: 'x', type: 'int', length: '', value: '1' }];
