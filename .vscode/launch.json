@@ -238,6 +238,7 @@
                 "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE": "1",
                 "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE_HTML": "1", //Enable to get full coverage repor (in coverage folder).
                 "VSC_JUPYTER_EXPOSE_SVC": "1"
+                // "VSC_JUPYTER_CI_IS_CONDA": "true" // Enable to run conda tests
             },
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],

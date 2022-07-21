@@ -289,6 +289,7 @@ export class InterpreterService implements IInterpreterService {
     private canFindRefreshPromise: boolean | undefined = undefined;
     private refreshPromise: Promise<void> | undefined = undefined;
     private api: PythonApi | undefined;
+    private apiPromise: Promise<PythonApi> | undefined;
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
@@ -337,9 +338,9 @@ export class InterpreterService implements IInterpreterService {
     }
 
     public async refreshInterpreters() {
-        const api = await this.apiProvider.getApi();
+        const api = await this.getApi();
         try {
-            if (api.refreshInterpreters) {
+            if (api?.refreshInterpreters) {
                 const newItems = await api.refreshInterpreters({ clearCache: false });
                 this.interpreterListCachePromise = undefined;
                 this.didChangeInterpreters.fire();
@@ -362,9 +363,8 @@ export class InterpreterService implements IInterpreterService {
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
         let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
         if (!promise) {
-            promise = this.apiProvider
-                .getApi()
-                .then((api) => api.getActiveInterpreter(resource))
+            promise = this.getApi()
+                .then((api) => api?.getActiveInterpreter(resource))
                 .then(deserializePythonEnvironment);
 
             if (promise) {
@@ -397,9 +397,8 @@ export class InterpreterService implements IInterpreterService {
     public async getInterpreterDetails(pythonPath: Uri, resource?: Uri): Promise<undefined | PythonEnvironment> {
         this.hookupOnDidChangeInterpreterEvent();
         try {
-            return await this.apiProvider
-                .getApi()
-                .then((api) => api.getInterpreterDetails(getFilePath(pythonPath), resource))
+            return await this.getApi()
+                .then((api) => api?.getInterpreterDetails(getFilePath(pythonPath), resource))
                 .then(deserializePythonEnvironment);
         } catch {
             // If the python extension cannot get the details here, don't fail. Just don't use them.
@@ -411,14 +410,14 @@ export class InterpreterService implements IInterpreterService {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
-        if (!this.api) {
-            this.api = await this.apiProvider.getApi();
+        if (!this.apiPromise) {
+            this.apiPromise = this.apiProvider.getApi().then((a) => (this.api = a));
         }
-        return this.api;
+        return this.apiPromise;
     }
 
     private tryGetApi(): PythonApi | undefined {
-        if (!this.api) {
+        if (!this.apiPromise) {
             this.getApi().ignoreErrors();
         }
         return this.api;
