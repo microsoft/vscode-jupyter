@@ -70,6 +70,9 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
     }
 }
 
+/**
+ * Kernel service for 3rd party extensions to talk to.
+ */
 class JupyterKernelService implements IExportedKernelService {
     private readonly _onDidChangeKernelSpecifications = new EventEmitter<void>();
     private readonly _onDidChangeKernels = new EventEmitter<void>();

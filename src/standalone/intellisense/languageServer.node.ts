@@ -38,6 +38,10 @@ function ensure(target: any, key: string) {
     return target[key];
 }
 
+/**
+ * Swallows message from pylance to allow both Jupyter and Python to have a pylance server running.
+ * Specifically pylance attempts to register a set of commands. Commands can only be registered once.
+ */
 class NerfedExecuteCommandFeature implements DynamicFeature<ExecuteCommandRegistrationOptions> {
     private _id = uuid();
     private _commands: Map<string, Disposable[]> = new Map<string, Disposable[]>();

@@ -13,6 +13,9 @@ import { IFileConverter } from '../../notebooks/export/types';
 import { ExportCommands } from './exportCommands';
 import { IControllerSelection, IControllerPreferredService } from '../../notebooks/controllers/types';
 
+/**
+ * Registers the export commands if in a trusted workspace.
+ */
 @injectable()
 export class CommandRegistry implements IExtensionSingleActivationService {
     private exportCommand?: ExportCommands;

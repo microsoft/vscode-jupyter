@@ -25,6 +25,9 @@ export const TrustedExtensionPublishers = new Set([JVSC_EXTENSION_ID.split('.')[
 // However, the user will still be prompted to grant these extensions access to the kernels..
 export const PublishersAllowedWithPrompts = new Set([JVSC_EXTENSION_ID.split('.')[0], 'rchiodo']);
 
+/**
+ * Responisble for controlling what extensions can access the IExtensionApi
+ */
 @injectable()
 export class ApiAccessService {
     private readonly extensionAccess = new Map<string, Promise<{ extensionId: string; accessAllowed: boolean }>>();

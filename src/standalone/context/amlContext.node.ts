@@ -8,6 +8,9 @@ import { setSharedProperty } from '../../telemetry';
 
 const amlComputeRemoteName = 'amlext';
 
+/**
+ * Tracks whether or not the extension host is running on an aml compute.
+ */
 @injectable()
 export class AmlComputeContext implements IExtensionSingleActivationService {
     constructor() {
