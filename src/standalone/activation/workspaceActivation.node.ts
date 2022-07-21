@@ -32,7 +32,7 @@ export class WorkspaceActivation implements IExtensionSingleActivationService {
         return this.activateWorkspace(this.getActiveResource());
     }
 
-    public getActiveResource(): Resource {
+    private getActiveResource(): Resource {
         const editor = this.documentManager.activeTextEditor;
         if (editor && !editor.document.isUntitled) {
             return editor.document.uri;
