@@ -495,7 +495,7 @@ export class KernelConnector {
     public static async connectToKernel(
         metadata: KernelConnectionMetadata,
         serviceContainer: IServiceContainer,
-        resource: { resource: Uri; notebook: undefined },
+        resource: { resource: Uri },
         options: IDisplayOptions,
         disposables: IDisposable[],
         actionSource: KernelActionSource = 'jupyterExtension',

@@ -218,7 +218,7 @@ class JupyterKernelService implements IExportedKernelService {
         const kernel = await KernelConnector.connectToKernel(
             connection,
             this.serviceContainer,
-            { resource: uri, notebook: undefined },
+            { resource: uri },
             new DisplayOptions(false),
             this.disposables,
             '3rdPartyExtension'
