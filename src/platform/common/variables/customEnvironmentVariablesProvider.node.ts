@@ -2,14 +2,17 @@
 // Licensed under the MIT License.
 import { inject, injectable, optional } from 'inversify';
 import * as path from '../../vscode-path/path';
-import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, RelativePattern, Uri } from 'vscode';
 import { TraceOptions } from '../../logging/types';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry.node';
 import { IWorkspaceService } from '../application/types';
-import { IDisposableRegistry } from '../types';
+import { IDisposableRegistry, Resource } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
-import { traceDecoratorVerbose, traceInfoIfCI, traceVerbose } from '../../logging';
+import { traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose } from '../../logging';
+import { SystemVariables } from './systemVariables.node';
+import { disposeAllDisposables } from '../helpers';
+import { IPythonExtensionChecker } from '../../api/types';
 
 const CACHE_DURATION = 60 * 60 * 1000;
 @injectable()
@@ -18,58 +21,76 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         return this.changeEventEmitter.event;
     }
     public trackedWorkspaceFolders = new Set<string>();
-    private fileWatchers = new Map<string, FileSystemWatcher>();
+    private fileWatchers = new Set<string>();
     private disposables: Disposable[] = [];
-    private changeEventEmitter: EventEmitter<Uri | undefined>;
+    private changeEventEmitter = new EventEmitter<Uri | undefined>();
     constructor(
         @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject('number') @optional() private cacheDuration: number = CACHE_DURATION
     ) {
         disposableRegistry.push(this);
-        this.changeEventEmitter = new EventEmitter();
-        const disposable = this.workspaceService.onDidChangeConfiguration(this.configurationChanged, this);
-        this.disposables.push(disposable);
+        this.workspaceService.onDidChangeConfiguration(this.configurationChanged, this, this.disposables);
     }
 
     public dispose() {
         this.changeEventEmitter.dispose();
-        this.fileWatchers.forEach((watcher) => {
-            if (watcher) {
-                watcher.dispose();
-            }
-        });
+        disposeAllDisposables(this.disposables);
     }
 
     @traceDecoratorVerbose('Get Custom Env Variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    public async getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
+    public async getEnvironmentVariables(
+        resource: Resource,
+        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+    ): Promise<EnvironmentVariables> {
         // Cache resource specific interpreter data
-        const key = this.workspaceService.getWorkspaceFolderIdentifier(resource);
-        const cacheStoreIndexedByWorkspaceFolder = new InMemoryCache<EnvironmentVariables>(this.cacheDuration, key);
+        const cacheStoreIndexedByWorkspaceFolder = new InMemoryCache<EnvironmentVariables>(
+            this.cacheDuration,
+            this.getCacheKeyForMergedVars(resource, purpose)
+        );
 
         if (cacheStoreIndexedByWorkspaceFolder.hasData && cacheStoreIndexedByWorkspaceFolder.data) {
             traceVerbose(`Cached data exists getEnvironmentVariables, ${resource ? resource.fsPath : '<No Resource>'}`);
             return cacheStoreIndexedByWorkspaceFolder.data!;
         }
-        const promise = this._getEnvironmentVariables(resource);
+        const promise = this._getEnvironmentVariables(resource, purpose);
         promise.then((result) => (cacheStoreIndexedByWorkspaceFolder.data = result)).ignoreErrors();
         return promise;
     }
-    public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
+    public async getCustomEnvironmentVariables(
+        resource: Resource,
+        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+    ): Promise<EnvironmentVariables | undefined> {
+        // Cache resource specific interpreter data
+        const cacheStoreIndexedByWorkspaceFolder = new InMemoryCache<EnvironmentVariables>(
+            this.cacheDuration,
+            this.getCacheKeyForCustomVars(resource, purpose)
+        );
+
+        if (cacheStoreIndexedByWorkspaceFolder.hasData) {
+            traceVerbose(
+                `Cached custom vars data exists getCustomEnvironmentVariables, ${
+                    resource ? resource.fsPath : '<No Resource>'
+                }`
+            );
+            return cacheStoreIndexedByWorkspaceFolder.data!;
+        }
+
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         if (!workspaceFolderUri) {
             traceInfoIfCI(`No workspace folder found for ${resource ? resource.fsPath : '<No Resource>'}`);
             return;
         }
-        this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
+        this.trackedWorkspaceFolders.add(workspaceFolderUri.fsPath || '');
 
-        // eslint-disable-next-line
-        // TODO: This should be added to the python API (or this entire service should move there)
-        // https://github.com/microsoft/vscode-jupyter/issues/51
-        const envFile = path.join(workspaceFolderUri.fsPath, '.env');
+        const envFile = this.getEnvFile(workspaceFolderUri, purpose);
         this.createFileWatcher(envFile, workspaceFolderUri);
-        return this.envVarsService.parseFile(envFile, process.env);
+
+        const promise = this.envVarsService.parseFile(envFile, process.env);
+        promise.then((result) => (cacheStoreIndexedByWorkspaceFolder.data = result)).ignoreErrors();
+        return promise;
     }
     public configurationChanged(e: ConfigurationChangeEvent) {
         this.trackedWorkspaceFolders.forEach((item) => {
@@ -80,19 +101,43 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         });
     }
     public createFileWatcher(envFile: string, workspaceFolderUri?: Uri) {
-        if (this.fileWatchers.has(envFile)) {
+        const key = this.getCacheKeyForMergedVars(workspaceFolderUri, 'RunNonPythonCode');
+        if (this.fileWatchers.has(key)) {
             return;
         }
-        const envFileWatcher = this.workspaceService.createFileSystemWatcher(envFile);
-        this.fileWatchers.set(envFile, envFileWatcher);
+        const pattern = new RelativePattern(Uri.file(path.dirname(envFile)), path.basename(envFile));
+        const envFileWatcher = this.workspaceService.createFileSystemWatcher(pattern, false, false, false);
         if (envFileWatcher) {
-            this.disposables.push(envFileWatcher.onDidChange(() => this.onEnvironmentFileChanged(workspaceFolderUri)));
-            this.disposables.push(envFileWatcher.onDidCreate(() => this.onEnvironmentFileCreated(workspaceFolderUri)));
-            this.disposables.push(envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri)));
+            this.disposables.push(envFileWatcher);
+            this.fileWatchers.add(key);
+            envFileWatcher.onDidChange(() => this.onEnvironmentFileChanged(workspaceFolderUri), this, this.disposables);
+            envFileWatcher.onDidCreate(() => this.onEnvironmentFileCreated(workspaceFolderUri), this, this.disposables);
+            envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri), this, this.disposables);
+        } else {
+            traceError('Failed to create file watcher for environment file');
         }
     }
-    private async _getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
-        let customEnvVars = await this.getCustomEnvironmentVariables(resource);
+    private getEnvFile(workspaceFolderUri: Uri, purpose: 'RunPythonCode' | 'RunNonPythonCode') {
+        if (purpose === 'RunPythonCode') {
+            return this.getPythonEnvFile(workspaceFolderUri) || path.join(workspaceFolderUri.fsPath, '.env');
+        } else {
+            return path.join(workspaceFolderUri.fsPath, '.env');
+        }
+    }
+    private getPythonEnvFile(resource?: Uri): string | undefined {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
+        const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
+        const sysVars = new SystemVariables(resource, workspaceFolderUri, this.workspaceService);
+        const pythonEnvSetting = this.workspaceService.getConfiguration('python', resource).get<string>('envFile');
+        return pythonEnvSetting ? sysVars.resolve(pythonEnvSetting) : undefined;
+    }
+    private async _getEnvironmentVariables(
+        resource: Resource,
+        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+    ): Promise<EnvironmentVariables> {
+        let customEnvVars = await this.getCustomEnvironmentVariables(resource, purpose);
         if (!customEnvVars) {
             customEnvVars = {};
         }
@@ -127,10 +172,31 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         sendFileCreationTelemetry();
     }
 
-    private onEnvironmentFileChanged(workspaceFolderUri?: Uri) {
-        const key = this.workspaceService.getWorkspaceFolderIdentifier(workspaceFolderUri);
-        new InMemoryCache<EnvironmentVariables>(this.cacheDuration, `$getEnvironmentVariables-${key}`).clear();
+    private onEnvironmentFileChanged(workspaceFolderUri: Resource) {
+        new InMemoryCache<EnvironmentVariables>(
+            this.cacheDuration,
+            this.getCacheKeyForMergedVars(workspaceFolderUri, 'RunNonPythonCode')
+        ).clear();
+        new InMemoryCache<EnvironmentVariables>(
+            this.cacheDuration,
+            this.getCacheKeyForMergedVars(workspaceFolderUri, 'RunPythonCode')
+        ).clear();
+
+        new InMemoryCache<EnvironmentVariables>(
+            this.cacheDuration,
+            this.getCacheKeyForCustomVars(workspaceFolderUri, 'RunNonPythonCode')
+        ).clear();
+        new InMemoryCache<EnvironmentVariables>(
+            this.cacheDuration,
+            this.getCacheKeyForCustomVars(workspaceFolderUri, 'RunPythonCode')
+        ).clear();
 
         this.changeEventEmitter.fire(workspaceFolderUri);
+    }
+    private getCacheKeyForMergedVars(workspaceFolderUri: Resource, purpose: 'RunPythonCode' | 'RunNonPythonCode') {
+        return `${this.workspaceService.getWorkspaceFolderIdentifier(workspaceFolderUri)}:${purpose || ''}`;
+    }
+    private getCacheKeyForCustomVars(workspaceFolderUri: Resource, purpose: 'RunPythonCode' | 'RunNonPythonCode') {
+        return `${this.workspaceService.getWorkspaceFolderIdentifier(workspaceFolderUri)}:${purpose || ''}:CustomVars`;
     }
 }

@@ -29,7 +29,7 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         if (!this.workspace.isTrusted) {
             throw new Error('Workspace not trusted');
         }
-        const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
+        const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource, 'RunNonPythonCode');
         const proc: IProcessService = new ProcessService(this.decoder, customEnvVars);
         this.disposableRegistry.push(proc);
         return proc.on('exec', this.processLogger.logProcess.bind(this.processLogger));

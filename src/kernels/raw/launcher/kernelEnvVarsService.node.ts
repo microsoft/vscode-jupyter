@@ -16,6 +16,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../../types';
 import { Uri } from 'vscode';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 
 /**
  * Class used to fetch environment variables for a kernel.
@@ -49,7 +50,7 @@ export class KernelEnvironmentVariablesService {
         kernelSpec: IJupyterKernelSpec
     ) {
         let kernelEnv = kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? kernelSpec.env : undefined;
-
+        const isPythonKernel = (kernelSpec.language || '').toLowerCase() === PYTHON_LANGUAGE;
         // If an interpreter was not explicitly passed in, check for an interpreter path in the kernelspec to use
         if (!interpreter && kernelSpec.interpreterPath) {
             interpreter = await this.interpreterService
@@ -61,7 +62,9 @@ export class KernelEnvironmentVariablesService {
         }
 
         let [customEnvVars, interpreterEnv] = await Promise.all([
-            this.customEnvVars.getCustomEnvironmentVariables(resource).catch(noop),
+            this.customEnvVars
+                .getCustomEnvironmentVariables(resource, isPythonKernel ? 'RunPythonCode' : 'RunNonPythonCode')
+                .catch(noop),
             interpreter
                 ? this.envActivation
                       .getActivatedEnvironmentVariables(resource, interpreter, false)

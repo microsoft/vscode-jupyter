@@ -44,7 +44,7 @@ suite('DataScience - PreWarm Env Vars', () => {
         when(extensionChecker.isPythonExtensionActive).thenReturn(true);
         zmqSupported = mock<IRawNotebookSupportedService>();
         const envVarsProvider = mock<ICustomEnvironmentVariablesProvider>();
-        when(envVarsProvider.getEnvironmentVariables(anything())).thenResolve();
+        when(envVarsProvider.getEnvironmentVariables(anything(), anything())).thenResolve();
         const workspace = mock<IWorkspaceService>();
         when(workspace.workspaceFolders).thenReturn();
         when(zmqSupported.isSupported).thenReturn(false);

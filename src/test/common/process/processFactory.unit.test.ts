@@ -52,10 +52,10 @@ suite('Process - ProcessServiceFactory', () => {
 
     [Uri.parse('test'), undefined].forEach((resource) => {
         test(`Ensure ProcessService is created with an ${resource ? 'existing' : 'undefined'} resource`, async () => {
-            when(envVariablesProvider.getEnvironmentVariables(resource)).thenResolve({ x: 'test' });
+            when(envVariablesProvider.getEnvironmentVariables(resource, 'RunNonPythonCode')).thenResolve({ x: 'test' });
 
             const proc = await factory.create(resource);
-            verify(envVariablesProvider.getEnvironmentVariables(resource)).once();
+            verify(envVariablesProvider.getEnvironmentVariables(resource, 'RunNonPythonCode')).once();
 
             const disposables = disposableRegistry as Disposable[];
             expect(disposables.length).equal(1);

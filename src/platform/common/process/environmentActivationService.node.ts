@@ -130,19 +130,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     ) {
         EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables =
             minTimeAfterWhichWeShouldCacheEnvVariables;
-        this.envVarsService.onDidEnvironmentVariablesChange(
-            () => this.activatedEnvVariablesCache.clear(),
-            this,
-            this.disposables
-        );
-
-        this.interpreterService.onDidChangeInterpreter(
-            () => this.activatedEnvVariablesCache.clear(),
-            this,
-            this.disposables
-        );
+        this.envVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
+        this.interpreterService.onDidChangeInterpreter(this.clearCache, this, this.disposables);
     }
-    @testOnlyMethod()
     public clearCache() {
         this.activatedEnvVariablesCache.clear();
     }
@@ -195,6 +185,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             envVariablesFromPython.completed &&
             !envVariablesFromPython.value
         ) {
+            traceWarning(
+                `Failed to get env vars from Python extension. Falling back to ours for ${getDisplayPath(
+                    interpreter.uri
+                )}.`
+            );
             await envVariablesOurSelves.promise;
         }
 
@@ -206,8 +201,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             } else {
                 traceVerbose(`Got env vars ourselves faster, but empty ${getDisplayPath(interpreter?.uri)}`);
             }
-        }
-        if (!envVariablesOurSelves.resolved) {
+        } else {
             traceVerbose(`Got env vars with python ext faster ${getDisplayPath(interpreter?.uri)}`);
         }
         return envVariablesFromPython.promise;
@@ -222,7 +216,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const stopWatch = new StopWatch();
         // We'll need this later.
-        this.envVarsService.getEnvironmentVariables(resource).catch(noop);
+        this.envVarsService.getEnvironmentVariables(resource, 'RunPythonCode').catch(noop);
 
         // Check cache.
         let reasonForFailure:
@@ -244,7 +238,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                         return undefined;
                     })
             ),
-            this.envVarsService.getCustomEnvironmentVariables(resource).catch((ex) => {
+            this.envVarsService.getCustomEnvironmentVariables(resource, 'RunPythonCode').catch((ex) => {
                 traceError(
                     `Failed to get activated env variables from Python Extension for ${getDisplayPath(
                         interpreter.uri
@@ -301,6 +295,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         const key = `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`;
 
+        if (this.activatedEnvVariablesCache.has(key)) {
+            traceVerbose(`Got activation Env Vars from cached promise with key ${key}`);
+            return this.activatedEnvVariablesCache.get(key);
+        }
+
         const shellInfo = defaultShells[this.platform.osType];
         const envType = interpreter?.envType;
         if (!shellInfo) {
@@ -317,11 +316,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 reason: 'unknownOS'
             });
             return;
-        }
-
-        if (this.activatedEnvVariablesCache.has(key)) {
-            traceVerbose(`Got activation Env Vars from cached promise with key ${key}`);
-            return this.activatedEnvVariablesCache.get(key);
         }
 
         const promise = (async () => {
@@ -378,7 +372,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
             const [activationCommands, customEnvVars] = await Promise.all([
                 this.getActivationCommands(resource, interpreterDetails || interpreter),
-                this.envVarsService.getEnvironmentVariables(resource)
+                this.envVarsService.getEnvironmentVariables(resource, 'RunPythonCode')
             ]);
             const processService = await processServicePromise;
             const hasCustomEnvVars = Object.keys(customEnvVars).length;
@@ -573,7 +567,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this.condaService.getCondaFile(),
             this.condaService.getCondaVersion(),
             this.fs.createTemporaryLocalFile('.json'),
-            this.envVarsService.getEnvironmentVariables(resource)
+            this.envVarsService.getEnvironmentVariables(resource, 'RunPythonCode')
         ]);
         const hasCustomEnvVars = Object.keys(customEnvVars).length;
         const env = hasCustomEnvVars
