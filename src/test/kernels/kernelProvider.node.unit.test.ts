@@ -37,7 +37,6 @@ suite('KernelProvider Node', () => {
     let configService: IConfigurationService;
     let appShell: IApplicationShell;
     let outputTracker: CellOutputDisplayIdTracker;
-    let workspaceService: IWorkspaceService;
     let vscNotebook: IVSCodeNotebook;
     let statusProvider: IStatusProvider;
     let pythonExecFactory: IPythonExecutionFactory;
@@ -72,7 +71,6 @@ suite('KernelProvider Node', () => {
         configService = mock<IConfigurationService>();
         appShell = mock<IApplicationShell>();
         outputTracker = mock<CellOutputDisplayIdTracker>();
-        workspaceService = mock<IWorkspaceService>();
         vscNotebook = mock<IVSCodeNotebook>();
         statusProvider = mock<IStatusProvider>();
         context = mock<IExtensionContext>();
@@ -93,7 +91,6 @@ suite('KernelProvider Node', () => {
             instance(configService),
             instance(appShell),
             instance(outputTracker),
-            instance(workspaceService),
             instance(vscNotebook),
             instance(pythonExecFactory),
             instance(statusProvider),
@@ -107,9 +104,7 @@ suite('KernelProvider Node', () => {
             instance(notebookProvider),
             instance(configService),
             instance(appShell),
-            instance(workspaceService),
             instance(vscNotebook),
-            instance(pythonExecFactory),
             instance(statusProvider),
             []
         );

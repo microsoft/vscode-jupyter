@@ -4,7 +4,7 @@
 'use strict';
 import { inject, injectable, multiInject } from 'inversify';
 import { NotebookDocument, Uri } from 'vscode';
-import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
+import { IApplicationShell, IVSCodeNotebook } from '../platform/common/application/types';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import {
     IAsyncDisposableRegistry,
@@ -40,7 +40,6 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
@@ -74,7 +73,6 @@ export class KernelProvider extends BaseCoreKernelProvider {
             options.controller,
             this.configService,
             this.outputTracker,
-            this.workspaceService,
             this.statusProvider,
             this.context,
             this.formatters,
@@ -115,9 +113,7 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
     ) {
@@ -144,21 +140,8 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
             interruptTimeout,
             this.appShell,
             this.configService,
-            this.workspaceService,
             this.statusProvider,
-            this.startupCodeProviders,
-            () => {
-                if (kernel.session) {
-                    return sendTelemetryForPythonKernelExecutable(
-                        kernel.session,
-                        kernel.resourceUri,
-                        kernel.kernelConnectionMetadata,
-                        this.pythonExecutionFactory
-                    );
-                } else {
-                    return Promise.resolve();
-                }
-            }
+            this.startupCodeProviders
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

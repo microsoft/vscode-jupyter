@@ -18,7 +18,7 @@ import {
     NotebookDocument
 } from 'vscode';
 import { CodeSnippets, Identifiers } from '../platform/common/constants';
-import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
+import { IApplicationShell } from '../platform/common/application/types';
 import { WrappedError } from '../platform/errors/types';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
@@ -146,11 +146,9 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         protected readonly interruptTimeout: number,
         protected readonly appShell: IApplicationShell,
         protected readonly configService: IConfigurationService,
-        protected readonly workspaceService: IWorkspaceService,
         protected readonly statusProvider: IStatusProvider,
         protected readonly startupCodeProviders: IStartupCodeProvider[],
-        private readonly _creator: KernelActionSource,
-        protected readonly sendTelemetryForPythonKernelExecutable: () => Promise<void>
+        private readonly _creator: KernelActionSource
     ) {
         this.disposables.push(this._onStatusChanged);
         this.disposables.push(this._onRestarted);
@@ -475,15 +473,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         // Restart sessions and retries might make this hard to do correctly otherwise.
         session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
-        if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
-            // Request completions to warm up the completion engine.
-            this.requestEmptyCompletions();
-
-            if (isLocalConnection(this.kernelConnectionMetadata)) {
-                await this.sendTelemetryForPythonKernelExecutable();
-            }
-        }
-
         // If this is a live kernel, we shouldn't be changing anything by running startup code.
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             // Gather all of the startup code at one time and execute as one cell
@@ -580,21 +569,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         return result;
     }
 
-    /**
-     * Do not wait for completions,
-     * If the completions request crashes then we don't get a response for this request,
-     * Hence we end up waiting indefinitely.
-     * https://github.com/microsoft/vscode-jupyter/issues/9014
-     */
-    protected requestEmptyCompletions() {
-        this.session
-            ?.requestComplete({
-                code: '__file__.',
-                cursor_pos: 9
-            })
-            .ignoreErrors();
-    }
-
     protected getMatplotLibInitializeCode(): string[] {
         const results: string[] = [];
 
@@ -675,10 +649,8 @@ export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> {
         interruptTimeout: number,
         appShell: IApplicationShell,
         configService: IConfigurationService,
-        workspaceService: IWorkspaceService,
         statusProvider: IStatusProvider,
-        startupCodeProviders: IStartupCodeProvider[],
-        sendTelemetryForPythonKernelExecutable: () => Promise<void>
+        startupCodeProviders: IStartupCodeProvider[]
     ) {
         super(
             uri,
@@ -689,11 +661,9 @@ export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> {
             interruptTimeout,
             appShell,
             configService,
-            workspaceService,
             statusProvider,
             startupCodeProviders,
-            '3rdPartyExtension',
-            sendTelemetryForPythonKernelExecutable
+            '3rdPartyExtension'
         );
         this.kernelExecution = new ThirdPartyKernelExecution(this, this.interruptTimeout);
         this.disposables.push(this.kernelExecution);
@@ -729,12 +699,11 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         public readonly controller: NotebookController,
         configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
-        workspaceService: IWorkspaceService,
         statusProvider: IStatusProvider,
         context: IExtensionContext,
         formatters: ITracebackFormatter[],
         startupCodeProviders: IStartupCodeProvider[],
-        sendTelemetryForPythonKernelExecutable: () => Promise<void>
+        private readonly sendTelemetryForPythonKernelExecutable: () => Promise<void>
     ) {
         super(
             uri,
@@ -745,11 +714,9 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
             interruptTimeout,
             appShell,
             configService,
-            workspaceService,
             statusProvider,
             startupCodeProviders,
-            'jupyterExtension',
-            sendTelemetryForPythonKernelExecutable
+            'jupyterExtension'
         );
 
         this.kernelExecution = new KernelExecution(
@@ -811,7 +778,30 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
     }
     protected override async initializeAfterStart(session: IKernelConnectionSession | undefined) {
         this._visibleExecutionCount = 0;
+        if (session && isPythonKernelConnection(this.kernelConnectionMetadata)) {
+            // Request completions to warm up the completion engine.
+            this.requestEmptyCompletions(session);
+
+            if (isLocalConnection(this.kernelConnectionMetadata)) {
+                await this.sendTelemetryForPythonKernelExecutable();
+            }
+        }
         return super.initializeAfterStart(session);
+    }
+
+    /**
+     * Do not wait for completions,
+     * If the completions request crashes then we don't get a response for this request,
+     * Hence we end up waiting indefinitely.
+     * https://github.com/microsoft/vscode-jupyter/issues/9014
+     */
+    private requestEmptyCompletions(session: IKernelConnectionSession) {
+        session
+            ?.requestComplete({
+                code: '__file__.',
+                cursor_pos: 9
+            })
+            .ignoreErrors();
     }
 }
 
