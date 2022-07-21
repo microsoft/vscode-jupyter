@@ -1200,14 +1200,6 @@ export interface ILanguageService {
 
 export type Channel = 'stable' | 'insiders';
 
-/**
- * Wraps the `ActiveResourceService` API class. Created for injecting and mocking class methods in testing
- */
-export const IActiveResourceService = Symbol('IActiveResourceService');
-export interface IActiveResourceService {
-    getActiveResource(): Resource;
-}
-
 export const IClipboard = Symbol('IClipboard');
 export interface IClipboard {
     /**

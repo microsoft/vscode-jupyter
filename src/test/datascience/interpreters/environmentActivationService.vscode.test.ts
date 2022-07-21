@@ -26,7 +26,6 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { CondaService } from '../../../platform/common/process/condaService.node';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { CurrentProcess } from '../../../platform/common/process/currentProcess.node';
 import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { Disposable, Memento } from 'vscode';
@@ -83,7 +82,6 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         return new EnvironmentActivationService(
             serviceContainer.get(IPlatformService),
             serviceContainer.get(IProcessServiceFactory),
-            serviceContainer.get(CurrentProcess),
             serviceContainer.get(IWorkspaceService),
             serviceContainer.get(IInterpreterService),
             serviceContainer.get(ICustomEnvironmentVariablesProvider),
@@ -185,7 +183,6 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         envActivationService = new EnvironmentActivationService(
             api.serviceContainer.get(IPlatformService),
             api.serviceContainer.get(IProcessServiceFactory),
-            api.serviceContainer.get(CurrentProcess),
             api.serviceContainer.get(IWorkspaceService),
             api.serviceContainer.get(IInterpreterService),
             api.serviceContainer.get(ICustomEnvironmentVariablesProvider),

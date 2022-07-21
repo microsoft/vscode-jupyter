@@ -3,7 +3,6 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDataFrameScriptGenerator, IExperimentService, IHttpClient, IVariableScriptGenerator } from '../common/types';
 import { IServiceManager } from '../ioc/types';
-import { ActiveResourceService } from './application/activeResource.node';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';
 import { ClipboardService } from './application/clipboard';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand.node';
@@ -14,7 +13,6 @@ import { Extensions } from './application/extensions.node';
 import { LanguageService } from './application/languageService.node';
 import { VSCodeNotebook } from './application/notebook';
 import {
-    IActiveResourceService,
     IApplicationEnvironment,
     IClipboard,
     IDebugService,
@@ -58,7 +56,6 @@ import { DataFrameScriptGenerator } from './dataFrameScriptGenerator';
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
 
-    serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
     serviceManager.addSingleton<IVSCodeNotebook>(IVSCodeNotebook, VSCodeNotebook);

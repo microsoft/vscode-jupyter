@@ -3,7 +3,6 @@
 
 import { IServiceManager } from '../../ioc/types';
 import { CondaService } from './condaService.node';
-import { CurrentProcess } from './currentProcess.node';
 import { BufferDecoder } from './decoder.node';
 import { ProcessServiceFactory } from './processFactory.node';
 import { PythonExecutionFactory } from './pythonExecutionFactory.node';
@@ -14,5 +13,4 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
     serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
     serviceManager.addSingleton<CondaService>(CondaService, CondaService);
-    serviceManager.addSingleton<CurrentProcess>(CurrentProcess, CurrentProcess);
 }

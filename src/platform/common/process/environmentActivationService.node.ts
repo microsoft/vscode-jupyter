@@ -23,7 +23,6 @@ import { Memento, Uri } from 'vscode';
 import { getDisplayPath } from '../platform/fs-paths';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { CurrentProcess } from './currentProcess.node';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { CondaService } from './condaService.node';
 import { condaVersionSupportsLiveStreaming, createCondaEnv } from './pythonEnvironment.node';
@@ -115,7 +114,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
-        @inject(CurrentProcess) private currentProcess: CurrentProcess,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(ICustomEnvironmentVariablesProvider)
@@ -384,15 +382,13 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     failed: true,
                     reason: 'noActivationCommands'
                 });
-                return hasCustomEnvVars ? { ...this.currentProcess.env, ...customEnvVars } : undefined;
+                return hasCustomEnvVars ? { ...this.processEnv, ...customEnvVars } : undefined;
             }
             traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
             isPossiblyCondaEnv = activationCommands.join(' ').toLowerCase().includes('conda');
             // Run the activate command collect the environment from it.
             const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
-            const env = hasCustomEnvVars
-                ? { ...this.currentProcess.env, ...customEnvVars }
-                : { ...this.currentProcess.env };
+            const env = hasCustomEnvVars ? { ...this.processEnv, ...customEnvVars } : { ...this.processEnv };
 
             // Make sure python warnings don't interfere with getting the environment. However
             // respect the warning in the returned values
@@ -501,6 +497,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         );
     }
 
+    private get processEnv(): EnvironmentVariables {
+        return process.env as unknown as EnvironmentVariables;
+    }
+
     private async storeActivatedEnvVariablesInCache(
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
@@ -536,7 +536,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // Even in real world we can ignore these, these should not impact the Env Variables of Conda.
         // So for the purpose of checking if env variables have changed, we'll ignore these,
         // However when returning the cached env variables we'll restore these to the latest values (so things work well when debugging VSC).
-        const vars = JSON.parse(JSON.stringify(this.currentProcess.env));
+        const vars = JSON.parse(JSON.stringify(this.processEnv));
         Object.keys(vars).forEach((key) => {
             if (key.startsWith('VSCODE_')) {
                 delete vars[key];
@@ -570,9 +570,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this.envVarsService.getEnvironmentVariables(resource, 'RunPythonCode')
         ]);
         const hasCustomEnvVars = Object.keys(customEnvVars).length;
-        const env = hasCustomEnvVars
-            ? { ...this.currentProcess.env, ...customEnvVars }
-            : { ...this.currentProcess.env };
+        const env = hasCustomEnvVars ? { ...this.processEnv, ...customEnvVars } : { ...this.processEnv };
 
         try {
             if (!condaExec) {
