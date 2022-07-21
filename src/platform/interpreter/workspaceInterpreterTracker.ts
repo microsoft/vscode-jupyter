@@ -11,6 +11,9 @@ import { IInterpreterService } from './contracts';
 import { IPythonExtensionChecker } from '../api/types';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 
+/**
+ * Tracks the interpreters in use for a workspace. Necessary to send kernel telemetry.
+ */
 @injectable()
 export class WorkspaceInterpreterTracker implements IExtensionSyncActivationService {
     private static readonly workspaceInterpreters = new Map<string, undefined | Uri>();

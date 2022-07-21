@@ -14,6 +14,9 @@ import { parseVersion } from '../utils/version.node';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants.node';
 import { IPlatformService } from './types';
 
+/**
+ * Wrapper around the node os module. Allows same functions to be used in web.
+ */
 @injectable()
 export class PlatformService implements IPlatformService {
     private readonly _homeDir = getUserHomeDir() || Uri.file(os.homedir());

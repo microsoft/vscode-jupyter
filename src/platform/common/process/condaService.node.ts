@@ -18,6 +18,9 @@ import { noop } from '../utils/misc';
 
 const CACHEKEY_FOR_CONDA_INFO = 'CONDA_INFORMATION_CACHE';
 const condaEnvironmentsFile = uriPath.joinPath(homePath, '.conda', 'environments.txt');
+/**
+ * Provides utilties to query information about conda that's installed on the same machine as the extension. (Note: doesn't work over remote)
+ */
 @injectable()
 export class CondaService {
     private isAvailable: boolean | undefined;

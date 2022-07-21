@@ -8,6 +8,9 @@ import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
 import { noop } from '../common/utils/misc';
 import { IDisposableRegistry } from '../common/types';
 
+/**
+ * Sends telemetry for the number of interpreters
+ */
 @injectable()
 export class InterpreterCountTracker implements IExtensionSingleActivationService {
     private static interpreterCount = 0;

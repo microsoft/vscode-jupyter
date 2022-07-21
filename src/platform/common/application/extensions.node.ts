@@ -12,6 +12,9 @@ import * as stacktrace from 'stack-trace';
 import { EXTENSION_ROOT_DIR } from '../../constants.node';
 import { IFileSystem } from '../platform/types';
 
+/**
+ * Provides functions for tracking the list of extensions that VS code has installed (besides our own)
+ */
 @injectable()
 export class Extensions implements IExtensions {
     constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}

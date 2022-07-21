@@ -6,6 +6,9 @@
 import * as vscode from 'vscode';
 import { Channel, IApplicationEnvironment } from './types';
 
+/**
+ * Wrapper around the vscode.env object and some other properties related to the VS code instance.
+ */
 export abstract class BaseApplicationEnvironment implements IApplicationEnvironment {
     public abstract get userSettingsFile(): vscode.Uri | undefined;
     public abstract get userCustomKeybindingsFile(): vscode.Uri | undefined;

@@ -7,6 +7,9 @@ import { ModuleNotInstalledError } from '../../errors/moduleNotInstalledError';
 import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ObservableExecutionResult, SpawnOptions } from './types.node';
 
+/**
+ * IProcessService (like) that is python based. Starting arg isn't necessary when python is used.
+ */
 class PythonProcessService {
     constructor(
         // This is the externally defined functionality used by the class.

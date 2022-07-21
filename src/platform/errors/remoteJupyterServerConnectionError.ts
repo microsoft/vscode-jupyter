@@ -4,6 +4,9 @@
 import { DataScience } from '../common/utils/localize';
 import { BaseError } from './types';
 
+/**
+ * Generic error for any problem with connecting to a remote jupyter server
+ */
 export class RemoteJupyterServerConnectionError extends BaseError {
     public readonly baseUrl: string;
     constructor(url: string, public readonly serverId: string, public readonly originalError: Error) {

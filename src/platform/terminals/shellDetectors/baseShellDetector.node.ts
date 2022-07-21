@@ -45,6 +45,9 @@ detectableShells.set(TerminalShellType.cshell, IS_CSHELL);
 detectableShells.set(TerminalShellType.powershellCore, IS_POWERSHELL_CORE);
 detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
 
+/**
+ * ShellDetectors parse shell paths and attempt to identify the shell type.
+ */
 export abstract class BaseShellDetector implements IShellDetector {
     constructor(public readonly priority: number) {}
     public abstract identify(

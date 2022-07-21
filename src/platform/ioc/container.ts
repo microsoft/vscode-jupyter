@@ -16,6 +16,9 @@ try {
     traceWarning('Failed to decorate EventEmitter for DI (possibly already decorated by another Extension)', ex);
 }
 
+/**
+ * Wrapper around an inversify container. Provides get access to different services.
+ */
 @injectable()
 export class ServiceContainer implements IServiceContainer {
     constructor(private container: Container) {}

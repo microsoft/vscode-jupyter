@@ -11,6 +11,9 @@ class ResourceMapEntry<T> {
     constructor(readonly Uri: Uri, readonly value: T) {}
 }
 
+/**
+ * Map that's keyed off a URI. Better than using a toString() as the key.
+ */
 export class ResourceMap<T> implements Map<Uri, T> {
     private static readonly defaultToKey = (resource: Uri) => resource.toString();
 

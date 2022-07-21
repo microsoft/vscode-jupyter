@@ -4,6 +4,10 @@ import { BaseWorkspaceService } from './workspace.base';
 import * as urlPath from '../../vscode-path/resources';
 import { getFilePath } from '../platform/fs-paths';
 
+/**
+ * Web implementation of the workspace service. Computing working directory is different for web.
+ */
+
 @injectable()
 export class WorkspaceService extends BaseWorkspaceService {
     public async computeWorkingDirectory(resource: Resource): Promise<string> {

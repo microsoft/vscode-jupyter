@@ -10,6 +10,9 @@ import { DataScience } from '../utils/localize';
 import * as stacktrace from 'stack-trace';
 import { JVSC_EXTENSION_ID } from '../constants';
 
+/**
+ * Provides functions for tracking the list of extensions that VS code has installed (besides our own)
+ */
 @injectable()
 export class Extensions implements IExtensions {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

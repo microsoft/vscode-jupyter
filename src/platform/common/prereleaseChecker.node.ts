@@ -15,6 +15,9 @@ import { noop } from './utils/misc';
 
 const PRERELEASE_DONT_ASK_FLAG = 'dontAskForPrereleaseUpgrade';
 
+/**
+ * Puts up a UI asking the user to pick the prerelease version of the extension when running in insiders.
+ */
 @injectable()
 export class PreReleaseChecker implements IExtensionSingleActivationService {
     constructor(

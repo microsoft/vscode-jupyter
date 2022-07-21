@@ -15,6 +15,9 @@ const cleanupCode = dedent`
                                 pass
                             `;
 
+/**
+ * Provides utilities to extract python scripts from the extension installation. These scripts can then be used to query variable information in the kernel.
+ */
 @injectable()
 export class VariableScriptGenerator implements IVariableScriptGenerator {
     static contentsOfScript: string | undefined;

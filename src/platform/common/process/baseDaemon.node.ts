@@ -37,6 +37,9 @@ export class DaemonError extends BaseError {
         super('daemon', message);
     }
 }
+/**
+ * Daemon is a process that runs in the background and provides methods to run modules or scripts.
+ */
 export abstract class BasePythonDaemon {
     public get isAlive(): boolean {
         return this.connectionClosedMessage === '';

@@ -35,6 +35,9 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
     }
 ];
 
+/**
+ * Manages deprecation of features. Commands that are deprecated end up here.
+ */
 @injectable()
 export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     private disposables: Disposable[] = [];

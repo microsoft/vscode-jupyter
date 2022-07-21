@@ -14,6 +14,9 @@ export function launch(url: string) {
     env.openExternal(Uri.parse(url)).then(noop, noop);
 }
 
+/**
+ * Wrapper around the vscode openExternal api
+ */
 @injectable()
 export class BrowserService implements IBrowserService {
     public launch(url: string): void {

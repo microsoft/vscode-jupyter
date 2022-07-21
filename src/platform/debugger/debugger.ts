@@ -5,6 +5,9 @@
 import { debug, NotebookDocument, DebugSession, DebugSessionOptions, DebugConfiguration } from 'vscode';
 import { noop } from '../../platform/common/utils/misc';
 
+/**
+ * Wraps debug start in a promise
+ */
 export class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
     private rejectFunc?: (reason?: Error) => void;

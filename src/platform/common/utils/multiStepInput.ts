@@ -62,6 +62,10 @@ export interface InputBoxParameters {
 
 type MultiStepInputQuickPicResponseType<T, P> = T | (P extends { buttons: (infer I)[] } ? I : never);
 type MultiStepInputInputBoxResponseType<P> = string | (P extends { buttons: (infer I)[] } ? I : never);
+/**
+ * Interface used to provide a series of QuickPicks and input boxes to the user. Back buttons allow the user to move back to the previous step.
+ * This is generally implemented by just bringing up the same QuickPick or InputBox again.
+ */
 export interface IMultiStepInput<S> {
     run(start: InputStep<S>, state: S): Promise<InputFlowAction | undefined>;
     showQuickPick<T extends QuickPickItem, P extends IQuickPickParameters<T>>({

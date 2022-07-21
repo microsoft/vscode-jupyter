@@ -11,13 +11,8 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterStatusBarVisibility } from '../interpreter/display/visibilityFilter.node';
 import { IServiceManager } from '../ioc/types';
 import { InterpreterSelector, InterpreterService, PythonApiProvider, PythonExtensionChecker } from './pythonApi';
-import { LanguageServerProvider, PythonDebuggerPathProvider } from './pythonApi.node';
-import {
-    ILanguageServerProvider,
-    IPythonApiProvider,
-    IPythonDebuggerPathProvider,
-    IPythonExtensionChecker
-} from './types';
+import { PythonDebuggerPathProvider } from './pythonApi.node';
+import { IPythonApiProvider, IPythonDebuggerPathProvider, IPythonExtensionChecker } from './types';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IPythonApiProvider>(IPythonApiProvider, PythonApiProvider);
@@ -29,7 +24,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
         InterpreterStatusBarVisibility
     );
     serviceManager.addSingleton<IPythonDebuggerPathProvider>(IPythonDebuggerPathProvider, PythonDebuggerPathProvider);
-    serviceManager.addSingleton<ILanguageServerProvider>(ILanguageServerProvider, LanguageServerProvider);
     serviceManager.addSingleton<IEnvironmentActivationService>(
         IEnvironmentActivationService,
         EnvironmentActivationService

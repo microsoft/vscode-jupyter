@@ -23,6 +23,12 @@ import {
 } from './types.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Used to create node processes and kill them.
+ * Tracks the process and its output.
+ * Can make observables or promises for launching.
+ * Environment variables to launch with can be passed into the constructor.
+ */
 export class ProcessService extends EventEmitter implements IProcessService {
     private processesToKill = new Set<IDisposable>();
     constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) {
