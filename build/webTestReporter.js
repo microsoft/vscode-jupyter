@@ -113,6 +113,7 @@ exports.dumpTestSummary = () => {
             switch (output.event) {
                 case 'pass': {
                     passedCount++;
+                    break;
                 }
                 case 'suite': {
                     indent += 1;
