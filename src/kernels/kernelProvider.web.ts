@@ -123,7 +123,6 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         const kernel = new ThirdPartyKernel(
             uri,
             resourceUri,
-            undefined,
             options.metadata,
             this.notebookProvider,
             waitForIdleTimeout,

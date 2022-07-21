@@ -74,9 +74,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     get onStatusChanged(): Event<KernelMessage.Status> {
         return this._onStatusChanged.event;
     }
-    get notebook(): NotebookDocument | undefined {
-        return this._notebookDocument;
-    }
     get onRestarted(): Event<void> {
         return this._onRestarted.event;
     }
@@ -147,7 +144,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     constructor(
         public readonly uri: Uri,
         public readonly resourceUri: Resource,
-        private readonly _notebookDocument: NotebookDocument | undefined,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         protected readonly notebookProvider: INotebookProvider,
         protected readonly launchTimeout: number,
@@ -709,7 +705,6 @@ export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> {
     constructor(
         uri: Uri,
         resourceUri: Resource,
-        notebook: NotebookDocument | undefined,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         notebookProvider: INotebookProvider,
         launchTimeout: number,
@@ -724,7 +719,6 @@ export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> {
         super(
             uri,
             resourceUri,
-            notebook,
             kernelConnectionMetadata,
             notebookProvider,
             launchTimeout,
@@ -754,14 +748,10 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         return this._onPreExecute.event;
     }
     protected readonly _onPreExecute = new EventEmitter<NotebookCell>();
-    override get notebook(): NotebookDocument {
-        return this._notebook;
-    }
-
     constructor(
         uri: Uri,
         resourceUri: Resource,
-        private _notebook: NotebookDocument,
+        public readonly notebook: NotebookDocument,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         notebookProvider: INotebookProvider,
         launchTimeout: number,
@@ -780,7 +770,6 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         super(
             uri,
             resourceUri,
-            _notebook,
             kernelConnectionMetadata,
             notebookProvider,
             launchTimeout,
