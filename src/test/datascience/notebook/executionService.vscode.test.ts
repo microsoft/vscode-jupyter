@@ -60,7 +60,12 @@ import { Product } from '../../../kernels/installer/types';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
-import { getTextOutputValue, translateCellErrorOutput, hasErrorOutput } from '../../../kernels/execution/helpers';
+import {
+    getTextOutputValue,
+    translateCellErrorOutput,
+    hasErrorOutput,
+    getTextOutputValues
+} from '../../../kernels/execution/helpers';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ErrorRendererCommunicationHandler } from '../../../notebooks/outputs/errorRendererComms';
 import { InteractiveWindowMessages } from '../../../messageTypes';
@@ -670,16 +675,16 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             runAllCellsInActiveNotebook(),
             waitForCondition(
                 async () => {
-                    expect(getTextOutputValue(cells[0].outputs[0])).to.include('iteration 9');
+                    expect(getTextOutputValues(cells[0])).to.include('iteration 9');
                     return true;
                 },
                 defaultNotebookTestTimeout,
-                () => `Output '${getTextOutputValue(cells[0].outputs[0])}' does not contain 'iteration 9'`
+                () => `Output '${getTextOutputValues(cells[0])}' does not contain 'iteration 9'`
             ),
             waitForTextOutput(cells[0], 'iteration 9', 0, false),
             waitForCondition(
                 async () => {
-                    const textOutput = getTextOutputValue(cells[0].outputs[0]);
+                    const textOutput = getTextOutputValues(cells[0]);
                     expect(textOutput.indexOf('main thread done')).lessThan(
                         textOutput.indexOf('iteration 9'),
                         'Main thread should have completed before background thread'
@@ -687,19 +692,19 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     return true;
                 },
                 defaultNotebookTestTimeout,
-                () => `Main thread output not before background output, '${getTextOutputValue(cells[0].outputs[0])}'`
+                () => `Main thread output not before background output, '${getTextOutputValues(cells[0])}'`
             ),
             waitForCondition(
                 async () => {
-                    const textOutput = getTextOutputValue(cells[0].outputs[0]);
-                    expect(getTextOutputValue(cells[0].outputs[0]).indexOf('main thread done')).greaterThan(
+                    const textOutput = getTextOutputValues(cells[0]);
+                    expect(textOutput.indexOf('main thread done')).greaterThan(
                         textOutput.indexOf('iteration 0'),
                         'Main thread should have completed after background starts'
                     );
                     return true;
                 },
                 defaultNotebookTestTimeout,
-                () => `Main thread not after first background output, '${getTextOutputValue(cells[0].outputs[0])}'`
+                () => `Main thread not after first background output, '${getTextOutputValues(cells[0])}'`
             )
         ]);
     });
@@ -735,25 +740,22 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             runAllCellsInActiveNotebook(),
             waitForCondition(
                 async () => {
-                    expect(getTextOutputValue(cell1.outputs[0])).to.include('main thread started');
+                    expect(getTextOutputValues(cell1)).to.include('main thread started');
                     return true;
                 },
                 defaultNotebookTestTimeout,
-                () => `First Output '${getTextOutputValue(cell1.outputs[0])}' does not contain 'main thread started'`
+                () => `First Output '${getTextOutputValues(cell1)}' does not contain 'main thread started'`
             ),
             waitForCondition(
                 async () => {
-                    const secondCellOutput = cell2.outputs.map((output) => getTextOutputValue(output)).join('');
+                    const secondCellOutput = getTextOutputValues(cell2);
                     expect(secondCellOutput).to.include('HELLO');
                     // The last output from the first cell should end up in the second cell.
                     expect(secondCellOutput).to.include('iteration 9');
                     return true;
                 },
                 defaultNotebookTestTimeout,
-                () =>
-                    `Second cell Output '${cell2.outputs
-                        .map((output) => getTextOutputValue(output))
-                        .join('')}' does not contain 'iteration 9' and 'HELLO'`
+                () => `Second cell Output '${getTextOutputValues(cell2)}' does not contain 'iteration 9' and 'HELLO'`
             )
         ]);
     });

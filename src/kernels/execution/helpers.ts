@@ -645,6 +645,9 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
     }
     return '';
 }
+export function getTextOutputValues(cell: NotebookCell): string {
+    return cell.outputs.map(getTextOutputValue).join('');
+}
 export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
     const errorOutput = outputs.find(
         (op) => op.items.length && !op.items.some((opit) => opit.mime !== CellOutputMimeTypes.error)
