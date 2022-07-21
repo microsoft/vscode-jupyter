@@ -13,7 +13,7 @@ import {
     KernelOptions,
     IKernelProvider
 } from '../../kernels/types';
-import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
+import { IApplicationShell, IVSCodeNotebook } from '../../platform/common/application/types';
 import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';

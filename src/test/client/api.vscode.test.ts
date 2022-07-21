@@ -20,6 +20,7 @@ import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
 import { workspace } from 'vscode';
 import { executeSilently } from '../../kernels/helpers';
+import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
 
 suite('3rd Party Kernel Service API', function () {
     let api: IExtensionTestApi;
@@ -139,7 +140,7 @@ suite('3rd Party Kernel Service API', function () {
         // Verify we can run some code against this kernel.
         const outputs = await executeSilently(kernel?.connection.connection!, '98765');
         assert.strictEqual(outputs.length, 1);
-        assert.strictEqual((outputs[0]!.data as { 'text/plain': string })['text/plain'].trim(), '98765');
+        assert.include(getPlainTextOrStreamOutput(outputs), '98765');
         await closeNotebooksAndCleanUpAfterTests(disposables);
 
         await onDidChangeKernels.assertFiredExactly(2);
