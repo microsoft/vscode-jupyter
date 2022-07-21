@@ -32,6 +32,7 @@ import {
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { NotebookCellLanguageService } from '../../../notebooks/languages/cellLanguageService';
 import { INotebookEditorProvider } from '../../../notebooks/types';
+import { captureScreenShot } from '../../common';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () => {
@@ -92,8 +93,11 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         testEmptyPythonNb = await createTemporaryNotebookFromFile(emptyPythonNb, disposables);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(async () => {
+    teardown(async function () {
         verifyPromptWasNotDisplayed();
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this);
+        }
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
