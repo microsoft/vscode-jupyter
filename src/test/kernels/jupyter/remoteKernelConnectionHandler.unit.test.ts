@@ -124,7 +124,7 @@ suite('Remote kernel connection handler', async () => {
     function verifyRemoteKernelTracking(connection: KernelConnectionMetadata, source: KernelActionSource) {
         const kernel1 = mock<IKernel>();
         when(kernel1.kernelConnectionMetadata).thenReturn(connection);
-        when(kernel1.creator).thenReturn(source);
+        when(kernel1.creator).thenReturn('jupyterExtension');
         const subject = new Subject<KernelSocketInformation>();
         disposables.push(new Disposable(() => subject.unsubscribe()));
         when(kernel1.kernelSocket).thenReturn(subject);

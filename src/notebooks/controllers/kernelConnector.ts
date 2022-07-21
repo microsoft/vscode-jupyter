@@ -106,7 +106,7 @@ export class KernelConnector {
         errorContext: KernelAction,
         resource: Resource,
         kernel: IBaseKernel,
-        controller: NotebookController,
+        controller: NotebookController | undefined,
         metadata: KernelConnectionMetadata,
         actionSource: KernelActionSource
     ) {
@@ -233,7 +233,6 @@ export class KernelConnector {
             }
             // Kernel is dead and we didn't prompt the user to restart it, hence re-run the code that will prompt the user for a restart.
             return KernelConnector.wrapKernelMethod(
-                kernel.controller,
                 kernel.kernelConnectionMetadata,
                 'start',
                 actionSource,
@@ -248,7 +247,6 @@ export class KernelConnector {
     }
 
     public static async wrapKernelMethod(
-        controller: NotebookController,
         metadata: KernelConnectionMetadata,
         initialContext: KernelAction,
         actionSource: KernelActionSource,
@@ -289,7 +287,6 @@ export class KernelConnector {
         }
 
         const promise = KernelConnector.wrapKernelMethodImpl(
-            controller,
             metadata,
             initialContext,
             serviceContainer,
@@ -327,7 +324,7 @@ export class KernelConnector {
         );
     }
     private static getKernelInfo(notebookResource: NotebookResource) {
-        return notebookResource.notebook
+        return 'notebook' in notebookResource
             ? KernelConnector.connectionsByNotebook.get(notebookResource.notebook)
             : KernelConnector.connectionsByUri.get(notebookResource.resource.toString());
     }
@@ -339,7 +336,7 @@ export class KernelConnector {
         }>,
         options: IDisplayOptions
     ) {
-        if (notebookResource.notebook) {
+        if ('notebook' in notebookResource) {
             KernelConnector.connectionsByNotebook.set(notebookResource.notebook, {
                 kernel: deferred as Deferred<{
                     kernel: IKernel;
@@ -359,7 +356,7 @@ export class KernelConnector {
         }>
     ) {
         if (!matchingKernelPromise) {
-            if (notebookResource.notebook) {
+            if ('notebook' in notebookResource) {
                 KernelConnector.connectionsByNotebook.delete(notebookResource.notebook);
             } else {
                 KernelConnector.connectionsByUri.delete(notebookResource.resource.toString());
@@ -367,7 +364,7 @@ export class KernelConnector {
             return;
         }
         if (
-            notebookResource.notebook &&
+            'notebook' in notebookResource &&
             KernelConnector.connectionsByNotebook.get(notebookResource.notebook)?.kernel.promise ===
                 matchingKernelPromise
         ) {
@@ -382,7 +379,6 @@ export class KernelConnector {
     }
 
     private static async wrapKernelMethodImpl(
-        controller: NotebookController,
         metadata: KernelConnectionMetadata,
         initialContext: KernelAction,
         serviceContainer: IServiceContainer,
@@ -399,21 +395,20 @@ export class KernelConnector {
         let kernel: IBaseKernel | undefined;
         let currentMethod = KernelConnector.convertContextToFunction(initialContext, options);
         let currentContext = initialContext;
+        let controller = 'controller' in notebookResource ? notebookResource.controller : undefined;
         while (kernel === undefined) {
             // Try to create the kernel (possibly again)
-            kernel = notebookResource.notebook
-                ? kernelProvider.getOrCreate(notebookResource.notebook, {
-                      metadata,
-                      controller,
-                      resourceUri: notebookResource.resource,
-                      creator: actionSource
-                  })
-                : thirdPartyKernelProvider.getOrCreate(notebookResource.resource, {
-                      metadata,
-                      controller,
-                      resourceUri: notebookResource.resource,
-                      creator: actionSource
-                  });
+            kernel =
+                'notebook' in notebookResource
+                    ? kernelProvider.getOrCreate(notebookResource.notebook, {
+                          metadata,
+                          controller: controller || notebookResource.controller,
+                          resourceUri: notebookResource.resource
+                      })
+                    : thirdPartyKernelProvider.getOrCreate(notebookResource.resource, {
+                          metadata,
+                          resourceUri: notebookResource.resource
+                      });
 
             const isKernelDead = (k: IBaseKernel) =>
                 k.status === 'dead' || (k.status === 'terminating' && !k.disposed && !k.disposing);
@@ -477,17 +472,15 @@ export class KernelConnector {
     }
 
     public static async connectToNotebookKernel(
-        controller: NotebookController,
         metadata: KernelConnectionMetadata,
         serviceContainer: IServiceContainer,
-        notebookResource: { resource: Resource; notebook: NotebookDocument },
+        notebookResource: { resource: Resource; notebook: NotebookDocument; controller: NotebookController },
         options: IDisplayOptions,
         disposables: IDisposable[],
         actionSource: KernelActionSource = 'jupyterExtension',
         onAction: (action: KernelAction, kernel: IKernel) => void = () => noop()
     ): Promise<IKernel> {
         return KernelConnector.wrapKernelMethod(
-            controller,
             metadata,
             'start',
             actionSource,
@@ -500,7 +493,6 @@ export class KernelConnector {
     }
 
     public static async connectToKernel(
-        controller: NotebookController,
         metadata: KernelConnectionMetadata,
         serviceContainer: IServiceContainer,
         resource: { resource: Uri; notebook: undefined },
@@ -510,7 +502,6 @@ export class KernelConnector {
         onAction: (action: KernelAction, kernel: IBaseKernel) => void = () => noop()
     ): Promise<IBaseKernel> {
         return KernelConnector.wrapKernelMethod(
-            controller,
             metadata,
             'start',
             actionSource,
@@ -523,4 +514,6 @@ export class KernelConnector {
     }
 }
 
-type NotebookResource = { resource: Resource; notebook: NotebookDocument } | { resource: Uri; notebook: undefined };
+type NotebookResource =
+    | { resource: Resource; notebook: NotebookDocument; controller: NotebookController }
+    | { resource: Uri };

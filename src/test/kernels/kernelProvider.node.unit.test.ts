@@ -107,13 +107,10 @@ suite('KernelProvider Node', () => {
             instance(notebookProvider),
             instance(configService),
             instance(appShell),
-            instance(outputTracker),
             instance(workspaceService),
             instance(vscNotebook),
             instance(pythonExecFactory),
             instance(statusProvider),
-            instance(context),
-            [],
             []
         );
     });
@@ -127,7 +124,6 @@ suite('KernelProvider Node', () => {
         when(metadata.id).thenReturn('xyz');
         const options: KernelOptions = {
             controller: instance(mock<NotebookController>()),
-            creator: 'jupyterExtension',
             metadata: instance(metadata),
             resourceUri: sampleUri1
         };
@@ -169,7 +165,6 @@ suite('KernelProvider Node', () => {
         when(metadata.id).thenReturn('xyz');
         const options: KernelOptions = {
             controller: instance(mock<NotebookController>()),
-            creator: '3rdPartyExtension',
             metadata: instance(metadata),
             resourceUri: uri
         };
@@ -207,7 +202,6 @@ suite('KernelProvider Node', () => {
         when(metadata.id).thenReturn('xyz');
         const options: KernelOptions = {
             controller: instance(mock<NotebookController>()),
-            creator: 'jupyterExtension',
             metadata: instance(metadata),
             resourceUri: sampleUri1
         };
@@ -227,7 +221,6 @@ suite('KernelProvider Node', () => {
         when(metadata.id).thenReturn('xyz');
         const options: KernelOptions = {
             controller: instance(mock<NotebookController>()),
-            creator: 'jupyterExtension',
             metadata: instance(metadata),
             resourceUri: sampleUri1
         };

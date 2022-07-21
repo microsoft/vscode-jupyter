@@ -279,6 +279,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 err instanceof InvalidRemoteJupyterServerUriHandleError
                     ? this.extensions.getExtension(err.extensionId)?.packageJSON.displayName || err.extensionId
                     : '';
+            const options = actionSource === 'jupyterExtension' ? [DataScience.selectDifferentKernel()] : [];
             const selection = await this.applicationShell.showErrorMessage(
                 err instanceof InvalidRemoteJupyterServerUriHandleError
                     ? DataScience.remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid().format(extensionName)
@@ -286,7 +287,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 { detail: message, modal: true },
                 DataScience.removeRemoteJupyterConnectionButtonText(),
                 DataScience.changeRemoteJupyterConnectionButtonText(),
-                DataScience.selectDifferentKernel()
+                ...options
             );
             switch (selection) {
                 case DataScience.removeRemoteJupyterConnectionButtonText(): {

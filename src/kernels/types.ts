@@ -132,6 +132,25 @@ export function isRemoteConnection(
 
 export interface IKernel extends IBaseKernel {
     readonly notebook: NotebookDocument;
+    readonly onPreExecute: Event<NotebookCell>;
+    /**
+     * Cells that are still being executed (or pending).
+     */
+    readonly pendingCells: readonly NotebookCell[];
+    /**
+     * Controller associated with this kernel
+     */
+    readonly controller: NotebookController;
+    readonly creator: 'jupyterExtension';
+    /**
+     * @param cell Cell to execute
+     * @param codeOverride Override the code to execute
+     */
+    executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState>;
+    /**
+     * Executes arbitrary code against the kernel without incrementing the execution count.
+     */
+    executeHidden(code: string): Promise<nbformat.IOutput[]>;
 }
 
 export interface IBaseKernel extends IAsyncDisposable {
@@ -140,7 +159,6 @@ export interface IBaseKernel extends IAsyncDisposable {
      */
     readonly executionCount: number;
     readonly uri: Uri;
-    readonly notebook: NotebookDocument | undefined;
     /**
      * In the case of Notebooks, this is the same as the Notebook Uri.
      * But in the case of Interactive Window, this is the Uri of the file (such as the Python file).
@@ -157,16 +175,7 @@ export interface IBaseKernel extends IAsyncDisposable {
     readonly onDisposed: Event<void>;
     readonly onStarted: Event<void>;
     readonly onRestarted: Event<void>;
-    readonly onPreExecute: Event<NotebookCell>;
     readonly status: KernelMessage.Status;
-    /**
-     * Who created this kernel, 3rd party extension or our (jupyter) extension.
-     */
-    readonly creator: KernelActionSource;
-    /**
-     * Cells that are still being executed (or pending).
-     */
-    readonly pendingCells: readonly NotebookCell[];
     readonly disposed: boolean;
     readonly disposing: boolean;
     /**
@@ -191,26 +200,24 @@ export interface IBaseKernel extends IAsyncDisposable {
      * This flag will tell us whether a real kernel was or is active.
      */
     readonly startedAtLeastOnce?: boolean;
-    /**
-     * Controller associated with this kernel
-     */
-    readonly controller: NotebookController;
     start(options?: IDisplayOptions): Promise<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
-    /**
-     * @param cell Cell to execute
-     * @param codeOverride Override the code to execute
-     */
-    executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState>;
-    /**
-     * Executes arbitrary code against the kernel without incrementing the execution count.
-     */
-    executeHidden(code: string): Promise<nbformat.IOutput[]>;
     addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
     removeEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
 }
+export interface IThirdPartyKernel extends IBaseKernel {
+    readonly creator: '3rdPartyExtension';
+}
 
+export type ThirdPartyKernelOptions = {
+    metadata: KernelConnectionMetadata;
+    /**
+     * When creating a kernel for an Interactive window, pass the Uri of the Python file here (to set the working directory, file & the like)
+     * In the case of Notebooks, just pass the uri of the notebook.
+     */
+    resourceUri: Resource;
+};
 export type KernelOptions = {
     metadata: KernelConnectionMetadata;
     controller: NotebookController;
@@ -219,10 +226,6 @@ export type KernelOptions = {
      * In the case of Notebooks, just pass the uri of the notebook.
      */
     resourceUri: Resource;
-    /**
-     * What is initiating this kernel action, is it Jupyter or a 3rd party extension.
-     */
-    creator: KernelActionSource;
 };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
@@ -238,16 +241,16 @@ export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
 }
 
 export const IThirdPartyKernelProvider = Symbol('IThirdPartyKernelProvider');
-export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IBaseKernel> {
+export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPartyKernel> {
     /**
      * Get hold of the active kernel for a given resource uri.
      */
-    get(uri: Uri): IBaseKernel | undefined;
+    get(uri: Uri): IThirdPartyKernel | undefined;
     /**
      * Gets or creates a kernel for a given resource uri.
      * WARNING: If called with different options for same resource uri, old kernel associated with the Uri will be disposed.
      */
-    getOrCreate(uri: Uri, options: KernelOptions): IBaseKernel;
+    getOrCreate(uri: Uri, options: ThirdPartyKernelOptions): IThirdPartyKernel;
 }
 
 export interface IBaseKernelProvider<T extends IBaseKernel> extends IAsyncDisposable {

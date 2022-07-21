@@ -6,9 +6,9 @@ import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
 import {
     IKernelProvider,
-    IBaseKernel,
     KernelConnectionMetadata as IKernelKernelConnectionMetadata,
-    IThirdPartyKernelProvider
+    IThirdPartyKernelProvider,
+    IBaseKernel
 } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo } from '../../platform/logging';
@@ -210,14 +210,13 @@ class JupyterKernelService implements IExportedKernelService {
         uri: Uri
     ): Promise<IKernelConnectionInfo> {
         await this.controllerLoader.loadControllers();
-        const controllers = this.controllerRegistration.registered;
-        const controller = controllers.find((item) => item.connection.id === spec.id);
-        if (!controller) {
+        const connections = this.controllerRegistration.all;
+        const connection = connections.find((item) => item.id === spec.id);
+        if (!connection) {
             throw new Error('Not found');
         }
         const kernel = await KernelConnector.connectToKernel(
-            controller.controller,
-            controller.connection,
+            connection,
             this.serviceContainer,
             { resource: uri, notebook: undefined },
             new DisplayOptions(false),

@@ -151,8 +151,7 @@ export abstract class DebuggingManagerBase implements IDisposable {
             kernel = this.kernelProvider.getOrCreate(doc, {
                 metadata: controller.connection,
                 controller: controller?.controller,
-                resourceUri: doc.uri,
-                creator: 'jupyterExtension'
+                resourceUri: doc.uri
             });
         }
         if (kernel && kernel.status === 'unknown') {
@@ -173,8 +172,7 @@ export abstract class DebuggingManagerBase implements IDisposable {
                 kernel = this.kernelProvider.getOrCreate(doc, {
                     metadata: controller.connection,
                     controller: controller?.controller,
-                    resourceUri: doc.uri,
-                    creator: 'jupyterExtension'
+                    resourceUri: doc.uri
                 });
             }
 

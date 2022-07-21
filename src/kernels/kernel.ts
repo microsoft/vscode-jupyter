@@ -44,17 +44,18 @@ import {
 import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import {
-    IBaseKernel,
+    IKernel,
     IKernelConnectionSession,
     INotebookProvider,
     InterruptResult,
     isLocalConnection,
     IStartupCodeProvider,
     ITracebackFormatter,
-    KernelActionSource,
     KernelConnectionMetadata,
     KernelSocketInformation,
-    NotebookCellRunState
+    NotebookCellRunState,
+    IBaseKernel,
+    KernelActionSource
 } from './types';
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
@@ -63,15 +64,18 @@ import { SilentExecutionErrorOptions } from './helpers';
 import { IStatusProvider } from '../platform/progress/types';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { traceCellMessage } from './execution/helpers';
-import { KernelExecution } from './execution/kernelExecution';
+import { BaseKernelExecution, KernelExecution, ThirdPartyKernelExecution } from './execution/kernelExecution';
 
 /**
  * Represents an active kernel process running on the jupyter (or local) machine.
  */
-export class Kernel implements IBaseKernel {
-    private readonly disposables: IDisposable[] = [];
+abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implements IBaseKernel {
+    protected readonly disposables: IDisposable[] = [];
     get onStatusChanged(): Event<KernelMessage.Status> {
         return this._onStatusChanged.event;
+    }
+    get notebook(): NotebookDocument | undefined {
+        return this._notebookDocument;
     }
     get onRestarted(): Event<void> {
         return this._onRestarted.event;
@@ -82,14 +86,14 @@ export class Kernel implements IBaseKernel {
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
     }
-    get onPreExecute(): Event<NotebookCell> {
-        return this._onPreExecute.event;
+    get creator(): KernelActionSource {
+        return this._creator;
     }
     get startedAtLeastOnce() {
         return this._startedAtLeastOnce;
     }
-    private _info?: KernelMessage.IInfoReplyMsg['content'];
-    private _startedAtLeastOnce?: boolean;
+    protected _info?: KernelMessage.IInfoReplyMsg['content'];
+    protected _startedAtLeastOnce?: boolean;
     get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
         return this._info;
     }
@@ -118,68 +122,51 @@ export class Kernel implements IBaseKernel {
      * `unknown` is generally used to indicate jupyter kernel hasn't started.
      * If a jupyter kernel dies after it has started, then status is set to `dead`.
      */
-    private isKernelDead?: boolean;
+    protected isKernelDead?: boolean;
     public get session(): IKernelConnectionSession | undefined {
         return this._session;
     }
     protected _disposed?: boolean;
     protected _disposing?: boolean;
     protected _ignoreJupyterSessionDisposedErrors?: boolean;
-    private readonly _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
+    protected readonly _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     protected readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     protected readonly _onRestarted = new EventEmitter<void>();
-    private readonly _onStarted = new EventEmitter<void>();
+    protected readonly _onStarted = new EventEmitter<void>();
     protected readonly _onDisposed = new EventEmitter<void>();
-    protected readonly _onPreExecute = new EventEmitter<NotebookCell>();
     protected _jupyterSessionPromise?: Promise<IKernelConnectionSession>;
-    private readonly hookedSessionForEvents = new WeakSet<IKernelConnectionSession>();
+    protected readonly hookedSessionForEvents = new WeakSet<IKernelConnectionSession>();
     protected eventHooks: ((ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
     protected restarting?: Deferred<void>;
     protected startCancellation = new CancellationTokenSource();
-    private startupUI = new DisplayOptions(true);
-    private readonly kernelExecution: KernelExecution;
-    private disposingPromise?: Promise<void>;
-    private _visibleExecutionCount = 0;
+    protected startupUI = new DisplayOptions(true);
+    protected kernelExecution: TKernelExecution;
+    protected disposingPromise?: Promise<void>;
+    protected _visibleExecutionCount = 0;
 
     constructor(
         public readonly uri: Uri,
         public readonly resourceUri: Resource,
-        public readonly notebook: NotebookDocument | undefined,
+        private readonly _notebookDocument: NotebookDocument | undefined,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
-        private readonly notebookProvider: INotebookProvider,
-        private readonly launchTimeout: number,
-        interruptTimeout: number,
+        protected readonly notebookProvider: INotebookProvider,
+        protected readonly launchTimeout: number,
+        protected readonly interruptTimeout: number,
         protected readonly appShell: IApplicationShell,
-        public readonly controller: NotebookController,
         protected readonly configService: IConfigurationService,
-        outputTracker: CellOutputDisplayIdTracker,
         protected readonly workspaceService: IWorkspaceService,
-        private readonly statusProvider: IStatusProvider,
-        public readonly creator: KernelActionSource,
-        context: IExtensionContext,
-        formatters: ITracebackFormatter[],
-        private readonly startupCodeProviders: IStartupCodeProvider[],
-        private readonly sendTelemetryForPythonKernelExecutable: () => Promise<void>
+        protected readonly statusProvider: IStatusProvider,
+        protected readonly startupCodeProviders: IStartupCodeProvider[],
+        private readonly _creator: KernelActionSource,
+        protected readonly sendTelemetryForPythonKernelExecutable: () => Promise<void>
     ) {
-        this.kernelExecution = new KernelExecution(
-            this,
-            appShell,
-            interruptTimeout,
-            outputTracker,
-            context,
-            formatters
-        );
-        this.kernelExecution.onPreExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
-        this.disposables.push(this.kernelExecution);
         this.disposables.push(this._onStatusChanged);
         this.disposables.push(this._onRestarted);
         this.disposables.push(this._onStarted);
         this.disposables.push(this._onDisposed);
-        this.disposables.push(this._onPreExecute);
-        this.disposables.push(this.kernelExecution);
         this.disposables.push({ dispose: () => this._kernelSocket.unsubscribe() });
     }
-    private perceivedJupyterStartupTelemetryCaptured?: boolean;
+    protected perceivedJupyterStartupTelemetryCaptured?: boolean;
 
     public addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
         this.eventHooks.push(hook);
@@ -198,20 +185,6 @@ export class Kernel implements IBaseKernel {
     }
     public async start(options?: IDisplayOptions): Promise<void> {
         await this.startJupyterSession(options);
-    }
-    public get pendingCells(): readonly NotebookCell[] {
-        return this.kernelExecution.queue;
-    }
-    public async executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState> {
-        traceCellMessage(cell, `kernel.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
-        sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
-        const stopWatch = new StopWatch();
-        const sessionPromise = this.startJupyterSession();
-        const promise = this.kernelExecution.executeCell(sessionPromise, cell, codeOverride);
-        this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
-        promise.finally(() => (this._visibleExecutionCount += 1));
-        promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`), noop);
-        return promise;
     }
     public async interrupt(): Promise<void> {
         await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
@@ -401,7 +374,7 @@ export class Kernel implements IBaseKernel {
         return this._jupyterSessionPromise;
     }
 
-    private async createJupyterSession(stopWatch: StopWatch): Promise<IKernelConnectionSession> {
+    protected async createJupyterSession(stopWatch: StopWatch): Promise<IKernelConnectionSession> {
         let disposables: Disposable[] = [];
         try {
             // No need to block kernel startup on UI updates.
@@ -468,7 +441,7 @@ export class Kernel implements IBaseKernel {
         }
     }
 
-    private createProgressIndicator(disposables: IDisposable[]) {
+    protected createProgressIndicator(disposables: IDisposable[]) {
         // Even if we're not supposed to display the progress indicator,
         // create it and keep it hidden.
         const progressReporter = KernelProgressReporter.createProgressReporter(
@@ -611,7 +584,7 @@ export class Kernel implements IBaseKernel {
         }
     }
 
-    private async gatherInternalStartupCode(): Promise<string[]> {
+    protected async gatherInternalStartupCode(): Promise<string[]> {
         // Gather all of the startup code into a giant string array so we
         // can execute it all at once.
         const result: string[] = [];
@@ -653,7 +626,7 @@ export class Kernel implements IBaseKernel {
      * Hence we end up waiting indefinitely.
      * https://github.com/microsoft/vscode-jupyter/issues/9014
      */
-    private requestEmptyCompletions() {
+    protected requestEmptyCompletions() {
         this.session
             ?.requestComplete({
                 code: '__file__.',
@@ -662,7 +635,7 @@ export class Kernel implements IBaseKernel {
             .ignoreErrors();
     }
 
-    private getMatplotLibInitializeCode(): string[] {
+    protected getMatplotLibInitializeCode(): string[] {
         const results: string[] = [];
 
         const settings = this.configService.getSettings(this.resourceUri);
@@ -698,7 +671,7 @@ export class Kernel implements IBaseKernel {
         return results;
     }
 
-    private getUserStartupCommands(): string[] {
+    protected getUserStartupCommands(): string[] {
         const settings = this.configService.getSettings(this.resourceUri);
         // Run any startup commands that we specified. Support the old form too
         let setting = settings.runStartupCommands;
@@ -716,7 +689,7 @@ export class Kernel implements IBaseKernel {
         return [];
     }
 
-    private async executeSilently(
+    protected async executeSilently(
         session: IKernelConnectionSession | undefined,
         code: string[],
         errorOptions?: SilentExecutionErrorOptions
@@ -726,6 +699,132 @@ export class Kernel implements IBaseKernel {
             return;
         }
         await executeSilently(session, code.join('\n'), errorOptions);
+    }
+}
+
+export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> {
+    public override get creator(): '3rdPartyExtension' {
+        return '3rdPartyExtension';
+    }
+    constructor(
+        uri: Uri,
+        resourceUri: Resource,
+        notebook: NotebookDocument | undefined,
+        kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
+        notebookProvider: INotebookProvider,
+        launchTimeout: number,
+        interruptTimeout: number,
+        appShell: IApplicationShell,
+        configService: IConfigurationService,
+        workspaceService: IWorkspaceService,
+        statusProvider: IStatusProvider,
+        startupCodeProviders: IStartupCodeProvider[],
+        sendTelemetryForPythonKernelExecutable: () => Promise<void>
+    ) {
+        super(
+            uri,
+            resourceUri,
+            notebook,
+            kernelConnectionMetadata,
+            notebookProvider,
+            launchTimeout,
+            interruptTimeout,
+            appShell,
+            configService,
+            workspaceService,
+            statusProvider,
+            startupCodeProviders,
+            '3rdPartyExtension',
+            sendTelemetryForPythonKernelExecutable
+        );
+        this.kernelExecution = new ThirdPartyKernelExecution(this, this.interruptTimeout);
+        this.disposables.push(this.kernelExecution);
+    }
+}
+
+/**
+ * Represents an active kernel process running on the jupyter (or local) machine.
+ */
+export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
+    public override get creator(): 'jupyterExtension' {
+        return 'jupyterExtension';
+    }
+
+    get onPreExecute(): Event<NotebookCell> {
+        return this._onPreExecute.event;
+    }
+    protected readonly _onPreExecute = new EventEmitter<NotebookCell>();
+    override get notebook(): NotebookDocument {
+        return this._notebook;
+    }
+
+    constructor(
+        uri: Uri,
+        resourceUri: Resource,
+        private _notebook: NotebookDocument,
+        kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
+        notebookProvider: INotebookProvider,
+        launchTimeout: number,
+        interruptTimeout: number,
+        appShell: IApplicationShell,
+        public readonly controller: NotebookController,
+        configService: IConfigurationService,
+        outputTracker: CellOutputDisplayIdTracker,
+        workspaceService: IWorkspaceService,
+        statusProvider: IStatusProvider,
+        context: IExtensionContext,
+        formatters: ITracebackFormatter[],
+        startupCodeProviders: IStartupCodeProvider[],
+        sendTelemetryForPythonKernelExecutable: () => Promise<void>
+    ) {
+        super(
+            uri,
+            resourceUri,
+            _notebook,
+            kernelConnectionMetadata,
+            notebookProvider,
+            launchTimeout,
+            interruptTimeout,
+            appShell,
+            configService,
+            workspaceService,
+            statusProvider,
+            startupCodeProviders,
+            'jupyterExtension',
+            sendTelemetryForPythonKernelExecutable
+        );
+
+        this.kernelExecution = new KernelExecution(
+            this,
+            appShell,
+            interruptTimeout,
+            outputTracker,
+            context,
+            formatters
+        );
+        this.kernelExecution.onPreExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
+        this.disposables.push(this.kernelExecution);
+        this.disposables.push(this._onStatusChanged);
+        this.disposables.push(this._onRestarted);
+        this.disposables.push(this._onStarted);
+        this.disposables.push(this._onDisposed);
+        this.disposables.push(this._onPreExecute);
+        this.disposables.push(this.kernelExecution);
+        this.disposables.push({ dispose: () => this._kernelSocket.unsubscribe() });
+    }
+    public get pendingCells(): readonly NotebookCell[] {
+        return this.kernelExecution.queue;
+    }
+    public async executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState> {
+        traceCellMessage(cell, `kernel.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
+        sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
+        const stopWatch = new StopWatch();
+        const sessionPromise = this.startJupyterSession();
+        const promise = this.kernelExecution.executeCell(sessionPromise, cell, codeOverride);
+        this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
+        promise.finally(() => (this._visibleExecutionCount += 1));
+        promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`), noop);
+        return promise;
     }
 }
 

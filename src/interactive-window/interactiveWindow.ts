@@ -257,10 +257,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             // When connecting, we need to update the sys info message
             this.updateSysInfoMessage(this.getSysInfoMessage(metadata, SysInfoReason.Start), false, sysInfoCell);
             const kernel = await KernelConnector.connectToNotebookKernel(
-                controller,
                 metadata,
                 this.serviceContainer,
-                { resource: this.owner, notebook: this.notebookDocument },
+                { resource: this.owner, notebook: this.notebookDocument, controller },
                 new DisplayOptions(false),
                 this.internalDisposables,
                 'jupyterExtension',
