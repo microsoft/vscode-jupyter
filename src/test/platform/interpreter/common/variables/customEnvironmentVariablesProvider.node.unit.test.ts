@@ -3,21 +3,23 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
-import { Uri } from 'vscode';
+import { ConfigurationChangeEvent, EventEmitter, FileSystemWatcher, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../../../platform/common/helpers';
-import { IDisposable } from '../../../../../platform/common/types';
-import { isWeb } from '../../../../../platform/common/utils/misc';
+import { IDisposable, IExtensionContext, IHttpClient } from '../../../../../platform/common/types';
 import { CustomEnvironmentVariablesProvider } from '../../../../../platform/common/variables/customEnvironmentVariablesProvider.node';
 import { IEnvironmentVariablesService } from '../../../../../platform/common/variables/types';
-import { IS_REMOTE_NATIVE_TEST } from '../../../../constants';
-import { initialize } from '../../../../initialize';
 import * as fs from 'fs-extra';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../../constants.node';
 import * as dedent from 'dedent';
 import { IPythonExtensionChecker } from '../../../../../platform/api/types';
 import { captureScreenShot, createEventHandler } from '../../../../common';
 import { traceInfo } from '../../../../../platform/logging';
+import { anything, instance, mock, when } from 'ts-mockito';
+import { clearCache } from '../../../../../platform/common/utils/cacheUtils';
+import { EnvironmentVariablesService } from '../../../../../platform/common/variables/environment.node';
+import { FileSystem } from '../../../../../platform/common/platform/fileSystem.node';
+import * as sinon from 'sinon';
 // import * as path from '../../../../../platform/vscode-path/path';
 
 suite('Custom Environment Variables Provider', () => {
@@ -28,6 +30,7 @@ suite('Custom Environment Variables Provider', () => {
     let pythonExtChecker: IPythonExtensionChecker;
     const envFile = Uri.joinPath(Uri.file(EXTENSION_ROOT_DIR_FOR_TESTS), 'src', 'test', 'datascience', '.env');
     let contentsOfOldEnvFile: string;
+    let onDidChangeConfiguration: EventEmitter<ConfigurationChangeEvent>;
     let customPythonEnvFile = Uri.joinPath(
         Uri.file(EXTENSION_ROOT_DIR_FOR_TESTS),
         'src',
@@ -35,18 +38,41 @@ suite('Custom Environment Variables Provider', () => {
         'datascience',
         '.env.python'
     );
-    suiteSetup(async function () {
-        if (IS_REMOTE_NATIVE_TEST() || isWeb()) {
-            return this.skip();
-        }
-        const api = await initialize();
-        envVarsService = api.serviceContainer.get<IEnvironmentVariablesService>(IEnvironmentVariablesService);
-        workspace = api.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        pythonExtChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-        contentsOfOldEnvFile = fs.readFileSync(envFile.fsPath).toString();
-    });
+    let onFSEvent: EventEmitter<Uri>;
+    let fsWatcher: FileSystemWatcher;
+    const workspaceUri = Uri.joinPath(Uri.file(EXTENSION_ROOT_DIR_FOR_TESTS), 'src', 'test', 'datascience');
+    const workspaceFolder = { index: 0, name: 'workspace', uri: workspaceUri };
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
+        clearCache();
+        envVarsService = new EnvironmentVariablesService(
+            new FileSystem(instance(mock<IExtensionContext>()), instance(mock<IHttpClient>()))
+        );
+        pythonExtChecker = mock<IPythonExtensionChecker>();
+        when(pythonExtChecker.isPythonExtensionInstalled).thenReturn(true);
+        contentsOfOldEnvFile = fs.readFileSync(envFile.fsPath).toString();
+        onDidChangeConfiguration = new EventEmitter<ConfigurationChangeEvent>();
+        disposables.push(onDidChangeConfiguration);
+        workspace = mock<IWorkspaceService>();
+        onFSEvent = new EventEmitter<Uri>();
+        disposables.push(onFSEvent);
+        fsWatcher = mock<FileSystemWatcher>();
+        when(fsWatcher.dispose()).thenReturn();
+        when(fsWatcher.onDidChange).thenReturn(onFSEvent.event);
+        when(fsWatcher.onDidCreate).thenReturn(onFSEvent.event);
+        when(fsWatcher.onDidDelete).thenReturn(onFSEvent.event);
+        when(workspace.onDidChangeConfiguration).thenReturn(onDidChangeConfiguration.event);
+        when(workspace.workspaceFolders).thenReturn([workspaceFolder]);
+        when(workspace.getWorkspaceFolder(anything())).thenCall(() => workspaceFolder);
+        when(workspace.getConfiguration(anything(), anything())).thenCall(() => {
+            const workspaceConfig = mock<WorkspaceConfiguration>();
+            when(workspaceConfig.get<string>('envFile')).thenReturn('${workspaceFolder}/.env.python');
+            return instance(workspaceConfig);
+        });
+        when(workspace.getWorkspaceFolderIdentifier(anything())).thenCall(() => workspaceFolder.uri.fsPath);
+        when(workspace.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(
+            instance(fsWatcher)
+        );
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
@@ -59,9 +85,7 @@ suite('Custom Environment Variables Provider', () => {
             fs.unlinkSync(customPythonEnvFile.fsPath);
         }
         fs.writeFileSync(envFile.fsPath, contentsOfOldEnvFile);
-        await workspace
-            .getConfiguration('python', workspace.workspaceFolders![0].uri)
-            .update('envFile', '${workspaceFolder}/.env');
+        sinon.restore();
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
 
@@ -69,22 +93,33 @@ suite('Custom Environment Variables Provider', () => {
         customEnvVarsProvider = new CustomEnvironmentVariablesProvider(
             envVarsService,
             disposables,
-            workspace,
+            instance(workspace),
             pythonExtChecker,
             cacheDuration
         );
     }
     test('Loads .env file', async () => {
+        const fsSpy = sinon.spy(FileSystem.prototype, 'readFile');
         const envVars = dedent`
                     VSCODE_JUPYTER_ENV_TEST_VAR1=FOO
                     VSCODE_JUPYTER_ENV_TEST_VAR2=BAR
                     `;
-        traceInfo('Write to env file');
+        traceInfo('Write to env file', envFile.fsPath);
         fs.writeFileSync(envFile.fsPath, envVars);
         createProvider();
         const vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunNonPythonCode');
 
         assert.deepEqual(vars, {
+            VSCODE_JUPYTER_ENV_TEST_VAR1: 'FOO',
+            VSCODE_JUPYTER_ENV_TEST_VAR2: 'BAR'
+        });
+
+        // Reading again doesn't require a new read of the file.
+        const originalCalLCount = fsSpy.callCount;
+        const vars2 = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunNonPythonCode');
+
+        assert.strictEqual(fsSpy.callCount, originalCalLCount);
+        assert.deepEqual(vars2, {
             VSCODE_JUPYTER_ENV_TEST_VAR1: 'FOO',
             VSCODE_JUPYTER_ENV_TEST_VAR2: 'BAR'
         });
@@ -94,7 +129,7 @@ suite('Custom Environment Variables Provider', () => {
                     VSCODE_JUPYTER_ENV_TEST_VAR1=FOO
                     VSCODE_JUPYTER_ENV_TEST_VAR2=BAR
                     `;
-        traceInfo('Write to env file1');
+        traceInfo('Write to env file1', envFile.fsPath);
         fs.writeFileSync(envFile.fsPath, envVars);
         createProvider();
         let vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunNonPythonCode');
@@ -110,38 +145,13 @@ suite('Custom Environment Variables Provider', () => {
             'onDidEnvironmentVariablesChange',
             disposables
         );
-        // const pattern = new RelativePattern(Uri.file(path.dirname(envFile.fsPath)), path.basename(envFile.fsPath));
-        // console.error('RegEx Pattern', pattern);
-        // console.error('RegEx Pattern', pattern.baseUri);
-        // console.error('RegEx Pattern', pattern.pattern);
-        // const envFileWatcher = workspace.createFileSystemWatcher(pattern, false, false, false);
-        // envFileWatcher.onDidChange(
-        //     (e) => {
-        //         console.error(`Change detected in ${e.fsPath}`);
-        //     },
-        //     this,
-        //     disposables
-        // );
-        // envFileWatcher.onDidCreate(
-        //     (e) => {
-        //         console.error(`Create detected in ${e.fsPath}`);
-        //     },
-        //     this,
-        //     disposables
-        // );
-        // envFileWatcher.onDidDelete(
-        //     (e) => {
-        //         console.error(`Delete detected in ${e.fsPath}`);
-        //     },
-        //     this,
-        //     disposables
-        // );
         envVars = dedent`
                     VSCODE_JUPYTER_ENV_TEST_VAR1=FOO2
                     VSCODE_JUPYTER_ENV_TEST_VAR2=BAR2
                     `;
-        traceInfo('Write to env file2');
+        traceInfo('Write to env file2', envFile.fsPath);
         fs.writeFileSync(envFile.fsPath, envVars);
+        onFSEvent.fire(envFile);
 
         // Detect the change.
         await changeDetected.assertFired(5_000);
@@ -154,7 +164,7 @@ suite('Custom Environment Variables Provider', () => {
         });
     });
     test('Detects creation of the .env file', async () => {
-        traceInfo('Delete to env file');
+        traceInfo('Delete to env file', envFile.fsPath);
         fs.unlinkSync(envFile.fsPath);
         createProvider();
         let vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunNonPythonCode');
@@ -170,8 +180,9 @@ suite('Custom Environment Variables Provider', () => {
                     VSCODE_JUPYTER_ENV_TEST_VAR1=FOO2
                     VSCODE_JUPYTER_ENV_TEST_VAR2=BAR2
                     `;
-        traceInfo('Create env file');
+        traceInfo('Create env file', envFile.fsPath);
         fs.writeFileSync(envFile.fsPath, envVars);
+        onFSEvent.fire(envFile);
 
         // Detect the change.
         await changeDetected.assertFired(5_000);
@@ -188,17 +199,14 @@ suite('Custom Environment Variables Provider', () => {
                     VSCODE_JUPYTER_ENV_TEST_VAR1=FOO
                     VSCODE_JUPYTER_ENV_TEST_VAR2=BAR
                     `;
-        traceInfo('Write to env file');
+        traceInfo('Write to env file', envFile.fsPath);
         fs.writeFileSync(envFile.fsPath, envVars);
         const pythonEnvVars = dedent`
                     VSCODE_JUPYTER_ENV_TEST_VAR1=PYTHON_FOO
                     VSCODE_JUPYTER_ENV_TEST_VAR2=PYTHON_BAR
                     `;
-        traceInfo('Write to python env file');
+        traceInfo('Write to python env file', customPythonEnvFile.fsPath);
         fs.writeFileSync(customPythonEnvFile.fsPath, pythonEnvVars);
-        await workspace
-            .getConfiguration('python', workspace.workspaceFolders![0].uri)
-            .update('envFile', '${workspaceFolder}/.env.python');
 
         createProvider();
         const vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunNonPythonCode');
@@ -218,11 +226,8 @@ suite('Custom Environment Variables Provider', () => {
                     VSCODE_JUPYTER_ENV_TEST_VAR1=FOO
                     VSCODE_JUPYTER_ENV_TEST_VAR2=BAR
                     `;
-        traceInfo('Write to env file');
+        traceInfo('Write to env file', customPythonEnvFile.fsPath);
         fs.writeFileSync(customPythonEnvFile.fsPath, envVars);
-        await workspace
-            .getConfiguration('python', workspace.workspaceFolders![0].uri)
-            .update('envFile', '${workspaceFolder}/.env.python');
 
         createProvider();
         let vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunPythonCode');
@@ -242,8 +247,9 @@ suite('Custom Environment Variables Provider', () => {
         VSCODE_JUPYTER_ENV_TEST_VAR1=FOO2
         VSCODE_JUPYTER_ENV_TEST_VAR2=BAR2
         `;
-        traceInfo('Write to env file 2');
+        traceInfo('Write to env file 2', customPythonEnvFile.fsPath);
         fs.writeFileSync(customPythonEnvFile.fsPath, envVars);
+        onFSEvent.fire(customPythonEnvFile);
 
         // Detect the change.
         await changeDetected.assertFired(5_000);
@@ -256,9 +262,6 @@ suite('Custom Environment Variables Provider', () => {
         });
     });
     test('Detects creation of the python.env file', async () => {
-        await workspace
-            .getConfiguration('python', workspace.workspaceFolders![0].uri)
-            .update('envFile', '${workspaceFolder}/.env.python');
         createProvider();
 
         let vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunPythonCode');
@@ -274,8 +277,9 @@ suite('Custom Environment Variables Provider', () => {
                     VSCODE_JUPYTER_ENV_TEST_VAR1=FOO2
                     VSCODE_JUPYTER_ENV_TEST_VAR2=BAR2
                     `;
-        traceInfo('Write to Python env file');
+        traceInfo('Write to Python env file', customPythonEnvFile.fsPath);
         fs.writeFileSync(customPythonEnvFile.fsPath, envVars);
+        onFSEvent.fire(customPythonEnvFile);
 
         // Detect the change.
         await changeDetected.assertFired(5_000);

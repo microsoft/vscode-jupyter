@@ -13,7 +13,6 @@ import { traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose } from '
 import { SystemVariables } from './systemVariables.node';
 import { disposeAllDisposables } from '../helpers';
 import { IPythonExtensionChecker } from '../../api/types';
-import { getDisplayPath } from '../platform/fs-paths';
 
 const CACHE_DURATION = 60 * 60 * 1000;
 @injectable()
@@ -37,7 +36,6 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
     }
 
     public dispose() {
-        console.error('Disposing CustomEnvironmentVariablesProvider');
         this.changeEventEmitter.dispose();
         disposeAllDisposables(this.disposables);
     }
@@ -48,8 +46,10 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         purpose: 'RunPythonCode' | 'RunNonPythonCode'
     ): Promise<EnvironmentVariables> {
         // Cache resource specific interpreter data
-        const key = this.getCacheKey(resource, purpose);
-        const cacheStoreIndexedByWorkspaceFolder = new InMemoryCache<EnvironmentVariables>(this.cacheDuration, key);
+        const cacheStoreIndexedByWorkspaceFolder = new InMemoryCache<EnvironmentVariables>(
+            this.cacheDuration,
+            this.getCacheKeyForMergedVars(resource, purpose)
+        );
 
         if (cacheStoreIndexedByWorkspaceFolder.hasData && cacheStoreIndexedByWorkspaceFolder.data) {
             traceVerbose(`Cached data exists getEnvironmentVariables, ${resource ? resource.fsPath : '<No Resource>'}`);
@@ -63,17 +63,34 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         resource: Resource,
         purpose: 'RunPythonCode' | 'RunNonPythonCode'
     ): Promise<EnvironmentVariables | undefined> {
+        // Cache resource specific interpreter data
+        const cacheStoreIndexedByWorkspaceFolder = new InMemoryCache<EnvironmentVariables>(
+            this.cacheDuration,
+            this.getCacheKeyForCustomVars(resource, purpose)
+        );
+
+        if (cacheStoreIndexedByWorkspaceFolder.hasData) {
+            traceVerbose(
+                `Cached custom vars data exists getCustomEnvironmentVariables, ${
+                    resource ? resource.fsPath : '<No Resource>'
+                }`
+            );
+            return cacheStoreIndexedByWorkspaceFolder.data!;
+        }
+
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         if (!workspaceFolderUri) {
             traceInfoIfCI(`No workspace folder found for ${resource ? resource.fsPath : '<No Resource>'}`);
             return;
         }
-        this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
+        this.trackedWorkspaceFolders.add(workspaceFolderUri.fsPath || '');
 
         const envFile = this.getEnvFile(workspaceFolderUri, purpose);
-        traceInfoIfCI(`Env File => ${getDisplayPath(Uri.file(envFile))}`);
         this.createFileWatcher(envFile, workspaceFolderUri);
-        return this.envVarsService.parseFile(envFile, process.env);
+
+        const promise = this.envVarsService.parseFile(envFile, process.env);
+        promise.then((result) => (cacheStoreIndexedByWorkspaceFolder.data = result)).ignoreErrors();
+        return promise;
     }
     public configurationChanged(e: ConfigurationChangeEvent) {
         this.trackedWorkspaceFolders.forEach((item) => {
@@ -84,44 +101,18 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         });
     }
     public createFileWatcher(envFile: string, workspaceFolderUri?: Uri) {
-        const key = this.getCacheKey(workspaceFolderUri, 'RunNonPythonCode');
+        const key = this.getCacheKeyForMergedVars(workspaceFolderUri, 'RunNonPythonCode');
         if (this.fileWatchers.has(key)) {
-            console.error('File watcher exists for ', envFile);
             return;
         }
-        console.error('Creating File watcher for ', envFile);
         const pattern = new RelativePattern(Uri.file(path.dirname(envFile)), path.basename(envFile));
-        console.error('RegEx Pattern in code', pattern.baseUri.fsPath);
-        console.error('RegEx Pattern in code', pattern.pattern);
         const envFileWatcher = this.workspaceService.createFileSystemWatcher(pattern, false, false, false);
         if (envFileWatcher) {
-            console.error('createFileWatcher created', pattern.pattern);
             this.disposables.push(envFileWatcher);
             this.fileWatchers.add(key);
-            envFileWatcher.onDidChange(
-                (e) => {
-                    traceVerbose('Environment file changed', e.fsPath);
-                    this.onEnvironmentFileChanged(workspaceFolderUri);
-                },
-                this,
-                this.disposables
-            );
-            envFileWatcher.onDidCreate(
-                (e) => {
-                    traceVerbose('Environment file created', e.fsPath);
-                    this.onEnvironmentFileCreated(workspaceFolderUri);
-                },
-                this,
-                this.disposables
-            );
-            envFileWatcher.onDidDelete(
-                (e) => {
-                    traceVerbose('Environment file deleted', e.fsPath);
-                    this.onEnvironmentFileChanged(workspaceFolderUri);
-                },
-                this,
-                this.disposables
-            );
+            envFileWatcher.onDidChange(() => this.onEnvironmentFileChanged(workspaceFolderUri), this, this.disposables);
+            envFileWatcher.onDidCreate(() => this.onEnvironmentFileCreated(workspaceFolderUri), this, this.disposables);
+            envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri), this, this.disposables);
         } else {
             traceError('Failed to create file watcher for environment file');
         }
@@ -184,16 +175,28 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
     private onEnvironmentFileChanged(workspaceFolderUri: Resource) {
         new InMemoryCache<EnvironmentVariables>(
             this.cacheDuration,
-            this.getCacheKey(workspaceFolderUri, 'RunNonPythonCode')
+            this.getCacheKeyForMergedVars(workspaceFolderUri, 'RunNonPythonCode')
         ).clear();
         new InMemoryCache<EnvironmentVariables>(
             this.cacheDuration,
-            this.getCacheKey(workspaceFolderUri, 'RunPythonCode')
+            this.getCacheKeyForMergedVars(workspaceFolderUri, 'RunPythonCode')
+        ).clear();
+
+        new InMemoryCache<EnvironmentVariables>(
+            this.cacheDuration,
+            this.getCacheKeyForCustomVars(workspaceFolderUri, 'RunNonPythonCode')
+        ).clear();
+        new InMemoryCache<EnvironmentVariables>(
+            this.cacheDuration,
+            this.getCacheKeyForCustomVars(workspaceFolderUri, 'RunPythonCode')
         ).clear();
 
         this.changeEventEmitter.fire(workspaceFolderUri);
     }
-    private getCacheKey(workspaceFolderUri: Resource, purpose: 'RunPythonCode' | 'RunNonPythonCode') {
+    private getCacheKeyForMergedVars(workspaceFolderUri: Resource, purpose: 'RunPythonCode' | 'RunNonPythonCode') {
         return `${this.workspaceService.getWorkspaceFolderIdentifier(workspaceFolderUri)}:${purpose || ''}`;
+    }
+    private getCacheKeyForCustomVars(workspaceFolderUri: Resource, purpose: 'RunPythonCode' | 'RunNonPythonCode') {
+        return `${this.workspaceService.getWorkspaceFolderIdentifier(workspaceFolderUri)}:${purpose || ''}:CustomVars`;
     }
 }
