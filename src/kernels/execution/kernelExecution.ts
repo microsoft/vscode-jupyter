@@ -52,13 +52,12 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
     public async interrupt(sessionPromise?: Promise<IKernelConnectionSession>): Promise<InterruptResult> {
-        // Possible we don't have a notebook.
         const session = sessionPromise ? await sessionPromise.catch(() => undefined) : undefined;
         const pendingExecutions = this.cancelPendingExecutions();
         traceInfo('Interrupt kernel execution');
 
         if (!session) {
-            traceInfo('No notebook to interrupt');
+            traceInfo('No kernel session to interrupt');
             this._interruptPromise = undefined;
             await pendingExecutions;
             return InterruptResult.Success;
@@ -85,7 +84,7 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
         const session = sessionPromise ? await sessionPromise.catch(() => undefined) : undefined;
 
         if (!session) {
-            traceInfo('No notebook to interrupt');
+            traceInfo('No kernel session to interrupt');
             this._restartPromise = undefined;
             return;
         }
@@ -221,8 +220,7 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
         return this._onPreExecute.event;
     }
     public get queue() {
-        const notebook = this.kernel.notebook;
-        return notebook ? this.documentExecutions.get(notebook)?.queue || [] : [];
+        return this.documentExecutions.get(this.kernel.notebook)?.queue || [];
     }
     public async executeCell(
         sessionPromise: Promise<IKernelConnectionSession>,
@@ -246,11 +244,7 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
     }
     public override async cancel() {
         await super.cancel();
-        const notebook = this.kernel.notebook;
-        if (!notebook) {
-            return;
-        }
-        const executionQueue = this.documentExecutions.get(notebook);
+        const executionQueue = this.documentExecutions.get(this.kernel.notebook);
         if (executionQueue) {
             await executionQueue.cancel(true);
         }
@@ -262,17 +256,15 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
      */
     public override async interrupt(sessionPromise?: Promise<IKernelConnectionSession>): Promise<InterruptResult> {
         trackKernelResourceInformation(this.kernel.resourceUri, { interruptKernel: true });
-        const notebook = this.kernel.notebook;
-        const executionQueue = notebook ? this.documentExecutions.get(notebook) : undefined;
-        if (notebook && !executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
+        const executionQueue = this.documentExecutions.get(this.kernel.notebook);
+        if (!executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             return InterruptResult.Success;
         }
         return super.interrupt(sessionPromise);
     }
     protected override async cancelPendingExecutions(): Promise<void> {
-        const notebook = this.kernel.notebook;
-        const executionQueue = notebook ? this.documentExecutions.get(notebook) : undefined;
-        if (notebook && !executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
+        const executionQueue = this.documentExecutions.get(this.kernel.notebook);
+        if (!executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             return;
         }
         traceInfo('Interrupt kernel execution');
@@ -292,8 +284,7 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
      */
     public override async restart(sessionPromise?: Promise<IKernelConnectionSession>): Promise<void> {
         trackKernelResourceInformation(this.kernel.resourceUri, { restartKernel: true });
-        const notebook = this.kernel.notebook;
-        const executionQueue = notebook ? this.documentExecutions.get(notebook) : undefined;
+        const executionQueue = this.documentExecutions.get(this.kernel.notebook);
         // Possible we don't have a notebook.
         const session = sessionPromise ? await sessionPromise.catch(() => undefined) : undefined;
         traceInfo('Restart kernel execution');
@@ -306,7 +297,7 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
             : Promise.resolve();
 
         if (!session) {
-            traceInfo('No notebook to interrupt');
+            traceInfo('No kernel session to interrupt');
             await pendingCells;
         }
 
