@@ -131,6 +131,10 @@ export function isRemoteConnection(
 }
 
 export interface IKernel extends IBaseKernel {
+    /**
+     * Total execution count on this kernel
+     */
+    readonly executionCount: number;
     readonly notebook: NotebookDocument;
     readonly onPreExecute: Event<NotebookCell>;
     /**
@@ -154,10 +158,6 @@ export interface IKernel extends IBaseKernel {
 }
 
 export interface IBaseKernel extends IAsyncDisposable {
-    /**
-     * Total execution count on this kernel
-     */
-    readonly executionCount: number;
     readonly uri: Uri;
     /**
      * In the case of Notebooks, this is the same as the Notebook Uri.

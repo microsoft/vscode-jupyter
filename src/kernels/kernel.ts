@@ -89,8 +89,8 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     get startedAtLeastOnce() {
         return this._startedAtLeastOnce;
     }
-    protected _info?: KernelMessage.IInfoReplyMsg['content'];
-    protected _startedAtLeastOnce?: boolean;
+    private _info?: KernelMessage.IInfoReplyMsg['content'];
+    private _startedAtLeastOnce?: boolean;
     get info(): KernelMessage.IInfoReplyMsg['content'] | undefined {
         return this._info;
     }
@@ -109,37 +109,33 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
-    get executionCount(): number {
-        return this._visibleExecutionCount;
-    }
-    protected _session?: IKernelConnectionSession;
+    private _session?: IKernelConnectionSession;
     /**
      * If the session died, then ensure the status is set to `dead`.
      * We need to provide an accurate status.
      * `unknown` is generally used to indicate jupyter kernel hasn't started.
      * If a jupyter kernel dies after it has started, then status is set to `dead`.
      */
-    protected isKernelDead?: boolean;
+    private isKernelDead?: boolean;
     public get session(): IKernelConnectionSession | undefined {
         return this._session;
     }
-    protected _disposed?: boolean;
-    protected _disposing?: boolean;
-    protected _ignoreJupyterSessionDisposedErrors?: boolean;
-    protected readonly _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
-    protected readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
-    protected readonly _onRestarted = new EventEmitter<void>();
-    protected readonly _onStarted = new EventEmitter<void>();
-    protected readonly _onDisposed = new EventEmitter<void>();
-    protected _jupyterSessionPromise?: Promise<IKernelConnectionSession>;
-    protected readonly hookedSessionForEvents = new WeakSet<IKernelConnectionSession>();
-    protected eventHooks: ((ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
-    protected restarting?: Deferred<void>;
-    protected startCancellation = new CancellationTokenSource();
-    protected startupUI = new DisplayOptions(true);
+    private _disposed?: boolean;
+    private _disposing?: boolean;
+    private _ignoreJupyterSessionDisposedErrors?: boolean;
+    private readonly _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
+    private readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
+    private readonly _onRestarted = new EventEmitter<void>();
+    private readonly _onStarted = new EventEmitter<void>();
+    private readonly _onDisposed = new EventEmitter<void>();
+    private _jupyterSessionPromise?: Promise<IKernelConnectionSession>;
+    private readonly hookedSessionForEvents = new WeakSet<IKernelConnectionSession>();
+    private eventHooks: ((ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
+    private restarting?: Deferred<void>;
+    private startCancellation = new CancellationTokenSource();
+    private startupUI = new DisplayOptions(true);
     protected kernelExecution: TKernelExecution;
-    protected disposingPromise?: Promise<void>;
-    protected _visibleExecutionCount = 0;
+    private disposingPromise?: Promise<void>;
 
     constructor(
         public readonly uri: Uri,
@@ -162,7 +158,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         this.disposables.push(this._onDisposed);
         this.disposables.push({ dispose: () => this._kernelSocket.unsubscribe() });
     }
-    protected perceivedJupyterStartupTelemetryCaptured?: boolean;
 
     public addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
         this.eventHooks.push(hook);
@@ -172,13 +167,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         this.eventHooks = this.eventHooks.filter((h) => h !== hook);
     }
 
-    public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
-        const stopWatch = new StopWatch();
-        const sessionPromise = this.startJupyterSession();
-        const promise = sessionPromise.then((session) => executeSilently(session, code));
-        this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
-        return promise;
-    }
     public async start(options?: IDisplayOptions): Promise<void> {
         await this.startJupyterSession(options);
     }
@@ -293,29 +281,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
 
         // Indicate a restart occurred if it succeeds
         this._onRestarted.fire();
-    }
-    protected async trackNotebookCellPerceivedColdTime(
-        stopWatch: StopWatch,
-        started: Promise<unknown>,
-        executionPromise: Promise<unknown>
-    ): Promise<void> {
-        if (this.perceivedJupyterStartupTelemetryCaptured) {
-            return;
-        }
-        const session = await started;
-        if (!session) {
-            return;
-        }
-        // Setup telemetry
-        if (!this.perceivedJupyterStartupTelemetryCaptured) {
-            this.perceivedJupyterStartupTelemetryCaptured = true;
-            sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
-            executionPromise
-                .finally(() =>
-                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
-                )
-                .catch(noop);
-        }
     }
     protected async startJupyterSession(
         options: IDisplayOptions = new DisplayOptions(false)
@@ -471,7 +436,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             traceVerbose('Not running kernel initialization');
             return;
         }
-        this._visibleExecutionCount = 0;
         if (!this.hookedSessionForEvents.has(session)) {
             this.hookedSessionForEvents.add(session);
             session.kernelSocket.subscribe(this._kernelSocket);
@@ -686,7 +650,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     }
 
     protected async executeSilently(
-        session: IKernelConnectionSession | undefined,
+        session: IKernelConnectionSession,
         code: string[],
         errorOptions?: SilentExecutionErrorOptions
     ) {
@@ -747,7 +711,12 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
     get onPreExecute(): Event<NotebookCell> {
         return this._onPreExecute.event;
     }
-    protected readonly _onPreExecute = new EventEmitter<NotebookCell>();
+    get executionCount(): number {
+        return this._visibleExecutionCount;
+    }
+    private _visibleExecutionCount = 0;
+    private readonly _onPreExecute = new EventEmitter<NotebookCell>();
+    private perceivedJupyterStartupTelemetryCaptured?: boolean;
     constructor(
         uri: Uri,
         resourceUri: Resource,
@@ -793,13 +762,8 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         );
         this.kernelExecution.onPreExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
         this.disposables.push(this.kernelExecution);
-        this.disposables.push(this._onStatusChanged);
-        this.disposables.push(this._onRestarted);
-        this.disposables.push(this._onStarted);
-        this.disposables.push(this._onDisposed);
         this.disposables.push(this._onPreExecute);
         this.disposables.push(this.kernelExecution);
-        this.disposables.push({ dispose: () => this._kernelSocket.unsubscribe() });
     }
     public get pendingCells(): readonly NotebookCell[] {
         return this.kernelExecution.queue;
@@ -814,6 +778,40 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         promise.finally(() => (this._visibleExecutionCount += 1));
         promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`), noop);
         return promise;
+    }
+    public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
+        const stopWatch = new StopWatch();
+        const sessionPromise = this.startJupyterSession();
+        const promise = sessionPromise.then((session) => executeSilently(session, code));
+        this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
+        return promise;
+    }
+    protected async trackNotebookCellPerceivedColdTime(
+        stopWatch: StopWatch,
+        started: Promise<unknown>,
+        executionPromise: Promise<unknown>
+    ): Promise<void> {
+        if (this.perceivedJupyterStartupTelemetryCaptured) {
+            return;
+        }
+        const session = await started;
+        if (!session) {
+            return;
+        }
+        // Setup telemetry
+        if (!this.perceivedJupyterStartupTelemetryCaptured) {
+            this.perceivedJupyterStartupTelemetryCaptured = true;
+            sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
+            executionPromise
+                .finally(() =>
+                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
+                )
+                .catch(noop);
+        }
+    }
+    protected override async initializeAfterStart(session: IKernelConnectionSession | undefined) {
+        this._visibleExecutionCount = 0;
+        return super.initializeAfterStart(session);
     }
 }
 
