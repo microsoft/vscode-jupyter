@@ -21,7 +21,7 @@ import {
 } from 'vscode';
 import { Common } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
+import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
@@ -60,7 +60,12 @@ import { Product } from '../../../kernels/installer/types';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
-import { getTextOutputValue, translateCellErrorOutput, hasErrorOutput } from '../../../kernels/execution/helpers';
+import {
+    getTextOutputValue,
+    translateCellErrorOutput,
+    hasErrorOutput,
+    getTextOutputValues
+} from '../../../kernels/execution/helpers';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ErrorRendererCommunicationHandler } from '../../../notebooks/outputs/errorRendererComms';
 import { InteractiveWindowMessages } from '../../../messageTypes';
@@ -642,9 +647,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         ]);
     });
     test('More messages from background threads', async function () {
-        // Not consistently passing
-        // https://github.com/microsoft/vscode-jupyter/issues/7620
-        this.skip();
         // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
         await insertCodeCell(
             dedent`
@@ -671,16 +673,17 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await Promise.all([
             runAllCellsInActiveNotebook(),
-            // Wait for last line to be `iteration 9`
-            waitForCondition(
-                async () => cells[0].outputs.length === 1,
-                defaultNotebookTestTimeout,
-                'Incorrect number of output'
-            ),
-            waitForTextOutput(cells[0], 'iteration 9', 0, false),
             waitForCondition(
                 async () => {
-                    const textOutput = getTextOutputValue(cells[0].outputs[0]);
+                    expect(getTextOutputValues(cells[0])).to.include('iteration 9');
+                    return true;
+                },
+                defaultNotebookTestTimeout,
+                () => `'iteration 9' not in output => '${getTextOutputValues(cells[0])}'`
+            ),
+            waitForCondition(
+                async () => {
+                    const textOutput = getTextOutputValues(cells[0]);
                     expect(textOutput.indexOf('main thread done')).lessThan(
                         textOutput.indexOf('iteration 9'),
                         'Main thread should have completed before background thread'
@@ -688,11 +691,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     return true;
                 },
                 defaultNotebookTestTimeout,
-                'Main thread should have completed before background thread'
+                () => `Main thread output not before background output, '${getTextOutputValues(cells[0])}'`
             ),
             waitForCondition(
                 async () => {
-                    const textOutput = getTextOutputValue(cells[0].outputs[0]);
+                    const textOutput = getTextOutputValues(cells[0]);
                     expect(textOutput.indexOf('main thread done')).greaterThan(
                         textOutput.indexOf('iteration 0'),
                         'Main thread should have completed after background starts'
@@ -700,14 +703,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     return true;
                 },
                 defaultNotebookTestTimeout,
-                'Main thread should have completed before background thread'
+                () => `Main thread not after first background output, '${getTextOutputValues(cells[0])}'`
             )
         ]);
     });
     test('Messages from background threads can come in other cell output', async function () {
-        // Not consistently passing
-        // https://github.com/microsoft/vscode-jupyter/issues/7620
-        this.skip();
         // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
         // If you have a background thread in cell 1 & then immediately after that you have a cell 2.
         // The background messages (output) from cell one will end up in cell 2.
@@ -728,7 +728,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             time.sleep(0.3)
 
         spawn()
-        print('main thread done')
+        print('main thread started')
         `,
             { index: 0 }
         );
@@ -739,32 +739,24 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             runAllCellsInActiveNotebook(),
             waitForCondition(
                 async () => {
-                    const output = cell2.outputs[0];
-                    const text = getTextOutputValue(output);
-                    // Since we're printing output in a background thread, the output should go into last executed cell.
-                    // Last executed cell is cell 2, hence output should end with `iteration 9`.
-                    if (text.trim().endsWith('iteration 9')) {
-                        return true;
-                    }
-                    const cell1Output = getTextOutputValue(cell1.outputs[0]);
-                    const cell2Output = getTextOutputValue(cell2.outputs[0]);
-                    // https://github.com/microsoft/vscode-jupyter/issues/6175
-                    traceInfoIfCI(`Cell 1 Output: ${cell1Output}\nCell 2 Output: ${cell2Output}`);
-                    return false;
+                    expect(getTextOutputValues(cell1)).to.include('main thread started');
+                    return true;
                 },
-                20_000,
-                'Expected background messages to end up in cell 2'
+                defaultNotebookTestTimeout,
+                () => `'main thread started' not in output => '${getTextOutputValues(cell1)}'`
+            ),
+            waitForCondition(
+                async () => {
+                    const secondCellOutput = getTextOutputValues(cell2);
+                    expect(secondCellOutput).to.include('HELLO');
+                    // The last output from the first cell should end up in the second cell.
+                    expect(secondCellOutput).to.include('iteration 9');
+                    return true;
+                },
+                defaultNotebookTestTimeout,
+                () => `'iteration 9' and 'HELLO' not in second cell Output => '${getTextOutputValues(cell2)}'`
             )
         ]);
-        const cell1Output = getTextOutputValue(cell1.outputs[0]);
-        const cell2Output = getTextOutputValue(cell2.outputs[0]);
-        expect(cell1Output).includes('main thread done', 'Main thread did not complete in cell 1');
-        expect(cell2Output).includes('HELLO', 'Print output from cell 2 not in output of cell 2');
-        expect(cell2Output).includes('iteration 9', 'Background output from cell 1 not in output of cell 2');
-        expect(cell2Output.indexOf('iteration 9')).greaterThan(
-            cell2Output.indexOf('HELLO'),
-            'output from cell 2 should be printed before last background output from cell 1'
-        );
     });
     test('Outputs with support for ansic code `\u001b[A`', async function () {
         // Ansi Code `<esc>[A` means move cursor up, i.e. replace previous line with the new output (or erase previous line & start there).
