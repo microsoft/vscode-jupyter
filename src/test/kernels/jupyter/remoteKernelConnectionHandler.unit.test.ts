@@ -199,9 +199,6 @@ suite('Remote kernel connection handler', async () => {
     test('When starting a remote kernel spec ensure we track this', async () => {
         verifyRemoteKernelTracking(remoteKernelSpec, 'jupyterExtension');
     });
-    test('When starting a remote kernel spec from a 3rd party extension ensure we do not track this', async () => {
-        verifyRemoteKernelTracking(remoteKernelSpec, '3rdPartyExtension');
-    });
     test('When starting a local kernel spec ensure we do not track this', async () => {
         verifyRemoteKernelTracking(localKernelSpec, 'jupyterExtension');
     });
