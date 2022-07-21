@@ -188,6 +188,13 @@ export const VSCodeKnownNotebookLanguages: string[] = [
     'ocaml'
 ];
 
+export enum CommandSource {
+    auto = 'auto',
+    ui = 'ui',
+    codelens = 'codelens',
+    commandPalette = 'commandpalette'
+}
+
 export namespace Commands {
     export const RunAllCells = 'jupyter.runallcells';
     export const RunAllCellsAbove = 'jupyter.runallcellsabove';
