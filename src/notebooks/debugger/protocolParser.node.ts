@@ -4,7 +4,6 @@
 /* eslint-disable no-constant-condition */
 
 import { EventEmitter } from 'events';
-import { injectable } from 'inversify';
 import { Readable } from 'stream';
 import { Disposable } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
