@@ -256,13 +256,6 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.prompts.clear();
         this.clearLastUsedStreamOutput();
         this.execution = undefined;
-
-        if (this.cell.document.isClosed || (this.ownedCommIds.size === 0 && this.completedExecution)) {
-            // If no comms channels were opened as a result of any outputs of this cell,
-            // this means we don't have any widgets that can send comm message back to the kernel.
-            // Hence no point listening to any of the iopub messages & the like, i.e. we can stop listening to everything in this class.
-            this.dispose();
-        }
     }
     private onKernelAnyMessage(_: unknown, { direction, msg }: Kernel.IAnyMessageArgs) {
         if (this.cell.document.isClosed) {

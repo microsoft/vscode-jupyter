@@ -171,7 +171,6 @@ export class CellExecution implements IDisposable {
         // Begin the request that will modify our cell.
         this.execute(this.codeOverride || this.cell.document.getText().replace(/\r\n/g, '\n'), session)
             .catch((e) => this.completedWithErrors(e))
-            .finally(() => this.dispose())
             .catch(noop);
     }
     /**
@@ -212,6 +211,7 @@ export class CellExecution implements IDisposable {
     public dispose() {
         traceCellMessage(this.cell, 'Execution disposed');
         disposeAllDisposables(this.disposables);
+        this.cellExecutionHandler?.dispose();
     }
     private completedWithErrors(error: Partial<Error>) {
         traceWarning(`Cell completed with errors`, error);

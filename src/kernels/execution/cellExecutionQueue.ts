@@ -19,6 +19,7 @@ export class CellExecutionQueue implements Disposable {
     private startedRunningCells = false;
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     private disposables: Disposable[] = [];
+    private lastCellExecution?: CellExecution;
     /**
      * Whether all cells have completed processing or cancelled, or some completed & others cancelled.
      */
@@ -43,6 +44,7 @@ export class CellExecutionQueue implements Disposable {
 
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
+        this.lastCellExecution?.dispose();
     }
 
     public get onPreExecute() {
@@ -79,6 +81,7 @@ export class CellExecutionQueue implements Disposable {
         this.cancelledOrCompletedWithErrors = true;
         traceInfo('Cancel pending cells');
         await Promise.all(this.queueOfCellsToExecute.map((item) => item.cancel(forced)));
+        this.lastCellExecution?.dispose();
         this.queueOfCellsToExecute.splice(0, this.queueOfCellsToExecute.length);
     }
     /**
@@ -120,10 +123,18 @@ export class CellExecutionQueue implements Disposable {
         const kernelConnection = await this.session;
         this.queueOfCellsToExecute.forEach((exec) => traceCellMessage(exec.cell, 'Ready to execute'));
         while (this.queueOfCellsToExecute.length) {
+            // Dispose the previous cell execution.
+            // We should keep the last cell execution alive, as we could get messages even after
+            // cell execution has completed, leaving it alive, allows it to process the messages.
+            // If we run another cell, then the background messages from previous cell will be picked up
+            // by the next cell execution (which is now the last cell execution).
+            this.lastCellExecution?.dispose();
+
             // Take the first item from the queue, this way we maintain order of cell executions.
             // Remove from the queue only after we process it
             // This way we don't accidentally end up queueing the same cell again (we know its in the queue).
             const cellToExecute = this.queueOfCellsToExecute[0];
+            this.lastCellExecution = cellToExecute;
             traceCellMessage(cellToExecute.cell, 'Before Execute individual cell');
 
             let executionResult: NotebookCellRunState | undefined;
