@@ -36,7 +36,13 @@ import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../p
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
-import { Commands, JVSC_EXTENSION_ID, PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
+import {
+    Commands,
+    CommandSource,
+    JVSC_EXTENSION_ID,
+    PYTHON_LANGUAGE,
+    Telemetry
+} from '../../platform/common/constants';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from '../editor-integration/types';
 import { IInteractiveWindowProvider } from '../types';
 import * as urlPath from '../../platform/vscode-path/resources';
@@ -47,7 +53,6 @@ import { ExportFormat, IExportDialog, IFileConverter } from '../../notebooks/exp
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { traceError, traceInfo } from '../../platform/logging';
-import { CommandSource } from '../../platform/testing/common/constants';
 import { generateCellsFromDocument } from '../editor-integration/cellFactory';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { INotebookEditorProvider } from '../../notebooks/types';

@@ -14,9 +14,8 @@ import {
     ViewColumn
 } from 'vscode';
 import { IShowDataViewerFromVariablePanel } from './messageTypes';
-import { Commands as DSCommands } from './platform/common/constants';
+import { Commands as DSCommands, CommandSource } from './platform/common/constants';
 import { PythonEnvironment } from './platform/pythonEnvironments/info';
-import { CommandSource } from './platform/testing/common/constants';
 import { Channel } from './platform/common/application/types';
 import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
 
