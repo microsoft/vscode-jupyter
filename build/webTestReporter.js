@@ -190,9 +190,11 @@ exports.dumpTestSummary = () => {
                         text: consoleOutputs
                     };
                     // Look for a screenshot file with the above prefix & attach that to the cell outputs.
+                    console.error(`Looking for screenshot file ${fileNamePrefix}*-screenshot.png`);
                     const screenshots = glob
                         .sync(`${fileNamePrefix}*-screenshot.png`, { cwd: ExtensionRootDir })
                         .map((file) => {
+                            console.error(`Found screenshot file ${file}`);
                             const contents = Buffer.from(fs.readFileSync(path.join(ExtensionRootDir, file))).toString(
                                 'base64'
                             );
