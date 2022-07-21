@@ -679,9 +679,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     return true;
                 },
                 defaultNotebookTestTimeout,
-                () => `Output '${getTextOutputValues(cells[0])}' does not contain 'iteration 9'`
+                () => `'iteration 9' not in output => '${getTextOutputValues(cells[0])}'`
             ),
-            waitForTextOutput(cells[0], 'iteration 9', 0, false),
             waitForCondition(
                 async () => {
                     const textOutput = getTextOutputValues(cells[0]);
@@ -744,7 +743,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     return true;
                 },
                 defaultNotebookTestTimeout,
-                () => `First Output '${getTextOutputValues(cell1)}' does not contain 'main thread started'`
+                () => `'main thread started' not in output => '${getTextOutputValues(cell1)}'`
             ),
             waitForCondition(
                 async () => {
@@ -755,7 +754,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     return true;
                 },
                 defaultNotebookTestTimeout,
-                () => `Second cell Output '${getTextOutputValues(cell2)}' does not contain 'iteration 9' and 'HELLO'`
+                () => `'iteration 9' and 'HELLO' not in second cell Output => '${getTextOutputValues(cell2)}'`
             )
         ]);
     });
