@@ -4,7 +4,6 @@
 import * as path from '../../platform/vscode-path/path';
 import '../../platform/common/extensions';
 import { traceError } from '../../platform/logging';
-import { BufferDecoder } from '../../platform/common/process/decoder.node';
 import { PythonEnvInfo } from '../../platform/common/process/internal/scripts/index.node';
 import { ProcessService } from '../../platform/common/process/proc.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
@@ -40,7 +39,7 @@ export async function getInterpreterInfo(pythonPath: Uri | undefined): Promise<P
     const promise = (async () => {
         try {
             const cli = await getPythonCli(pythonPath);
-            const processService = new ProcessService(new BufferDecoder());
+            const processService = new ProcessService();
             const argv = [...cli, path.join(SCRIPTS_DIR, 'interpreterInfo.py').fileToCommandArgument()];
             const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');
             const result = await processService.shellExec(cmd, {
@@ -78,7 +77,7 @@ export async function getActivatedEnvVariables(pythonPath: Uri): Promise<NodeJS.
     }
     const promise = (async () => {
         const cli = await getPythonCli(pythonPath);
-        const processService = new ProcessService(new BufferDecoder());
+        const processService = new ProcessService();
         const separator = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d';
         const argv = [...cli, path.join(SCRIPTS_DIR, 'printEnvVariables.py')];
         const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');

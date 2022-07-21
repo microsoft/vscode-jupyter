@@ -28,7 +28,6 @@ import { CondaService } from './condaService.node';
 import { condaVersionSupportsLiveStreaming, createCondaEnv } from './pythonEnvironment.node';
 import { printEnvVariablesToFile } from './internal/scripts/index.node';
 import { ProcessService } from './proc.node';
-import { BufferDecoder } from './decoder.node';
 import { testOnlyMethod } from '../utils/decorators';
 import { DataScience } from '../utils/localize';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
@@ -576,7 +575,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             if (!condaExec) {
                 return;
             }
-            const proc = new ProcessService(new BufferDecoder(), env);
+            const proc = new ProcessService(env);
             const service = createCondaEnv(
                 condaExec.fsPath,
                 {

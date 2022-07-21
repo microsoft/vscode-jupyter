@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { exec, execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
+import * as iconv from 'iconv-lite';
 import { Observable } from 'rxjs/Observable';
 import { CancellationError, Disposable } from 'vscode';
 import { ignoreLogging, traceDecoratorVerbose, traceInfoIfCI } from '../../logging';
@@ -22,6 +23,13 @@ import {
     StdErrError
 } from './types.node';
 
+export class BufferDecoder implements IBufferDecoder {
+    public decode(buffers: Buffer[], encoding: string = DEFAULT_ENCODING): string {
+        encoding = iconv.encodingExists(encoding) ? encoding : DEFAULT_ENCODING;
+        return iconv.decode(Buffer.concat(buffers), encoding);
+    }
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Used to create node processes and kill them.
@@ -31,8 +39,10 @@ import {
  */
 export class ProcessService extends EventEmitter implements IProcessService {
     private processesToKill = new Set<IDisposable>();
-    constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) {
+    private readonly decoder: IBufferDecoder;
+    constructor(private readonly env?: EnvironmentVariables) {
         super();
+        this.decoder = new BufferDecoder();
     }
     public static isAlive(pid: number): boolean {
         try {

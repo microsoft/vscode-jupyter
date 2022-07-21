@@ -11,7 +11,7 @@ import { IWorkspaceService } from '../application/types';
 import { IDisposableRegistry } from '../types';
 import { ICustomEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc.node';
-import { IBufferDecoder, IProcessLogger, IProcessService, IProcessServiceFactory } from './types.node';
+import { IProcessLogger, IProcessService, IProcessServiceFactory } from './types.node';
 
 /**
  * Factory for creating ProcessService objects. Get the current interpreter from a URI to determine the starting environment.
@@ -22,7 +22,6 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         @inject(ICustomEnvironmentVariablesProvider)
         private readonly envVarsService: ICustomEnvironmentVariablesProvider,
         @inject(IProcessLogger) private readonly processLogger: IProcessLogger,
-        @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
@@ -33,7 +32,7 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
             throw new Error('Workspace not trusted');
         }
         const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource, 'RunNonPythonCode');
-        const proc: IProcessService = new ProcessService(this.decoder, customEnvVars);
+        const proc: IProcessService = new ProcessService(customEnvVars);
         this.disposableRegistry.push(proc);
         return proc.on('exec', this.processLogger.logProcess.bind(this.processLogger));
     }

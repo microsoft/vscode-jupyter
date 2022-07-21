@@ -6,11 +6,10 @@ import { instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 
-import { BufferDecoder } from '../../../platform/common/process/decoder.node';
 import { ProcessLogger } from '../../../platform/common/process/logger.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { ProcessServiceFactory } from '../../../platform/common/process/processFactory.node';
-import { IBufferDecoder, IProcessLogger } from '../../../platform/common/process/types.node';
+import { IProcessLogger } from '../../../platform/common/process/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/customEnvironmentVariablesProvider.node';
 import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
@@ -18,13 +17,11 @@ import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/va
 suite('Process - ProcessServiceFactory', () => {
     let factory: ProcessServiceFactory;
     let envVariablesProvider: ICustomEnvironmentVariablesProvider;
-    let bufferDecoder: IBufferDecoder;
     let processLogger: IProcessLogger;
     let processService: ProcessService;
     let disposableRegistry: IDisposableRegistry;
 
     setup(() => {
-        bufferDecoder = mock(BufferDecoder);
         envVariablesProvider = mock(CustomEnvironmentVariablesProvider);
         processLogger = mock(ProcessLogger);
         when(processLogger.logProcess('', [], {})).thenReturn();
@@ -40,7 +37,6 @@ suite('Process - ProcessServiceFactory', () => {
         factory = new ProcessServiceFactory(
             instance(envVariablesProvider),
             instance(processLogger),
-            instance(bufferDecoder),
             disposableRegistry,
             instance(workspace)
         );
