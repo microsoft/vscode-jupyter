@@ -641,7 +641,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
+          name: Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
           path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
           retention-days: 1
 
@@ -649,7 +649,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: VSCodeLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
+          name: VSCodeLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
@@ -661,7 +661,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: TestResult-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
+          name: TestResult-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
           path: testresults.json
           retention-days: 1
 
@@ -669,7 +669,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: TestResultNotebook-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
+          name: TestResultNotebook-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
           path: testresults.ipynb
           retention-days: 1
 

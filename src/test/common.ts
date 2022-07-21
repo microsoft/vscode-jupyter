@@ -7,6 +7,7 @@ import { NotebookDocument, Uri, Event } from 'vscode';
 import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
+import * as hashjs from 'hash.js';
 
 export interface IExtensionTestApi extends IExtensionApi {
     serviceContainer: IServiceContainer;
@@ -203,4 +204,23 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
 
 export async function initialize() {
     return API.initialize();
+}
+
+const screenShotCount = new Map<string, number>();
+export function generateScreenShotFileName(contextOrFileName: string | Mocha.Context) {
+    const fullTestNameHash =
+        typeof contextOrFileName === 'string'
+            ? ''
+            : hashjs
+                  .sha256()
+                  .update(contextOrFileName.currentTest?.fullTitle() || '')
+                  .digest('hex')
+                  .substring(0, 10); // Ensure file names are short enough for windows.
+    const testTitle = typeof contextOrFileName === 'string' ? '' : contextOrFileName.currentTest?.title || '';
+    const counter = (screenShotCount.get(fullTestNameHash) || 0) + 1;
+    screenShotCount.set(fullTestNameHash, counter);
+    const fileNamePrefix =
+        typeof contextOrFileName === 'string' ? contextOrFileName : `${testTitle}_${fullTestNameHash}`;
+    const name = `${fileNamePrefix}_${counter}`.replace(/[\W]+/g, '_');
+    return `${name}-screenshot.png`;
 }

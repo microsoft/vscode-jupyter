@@ -19,6 +19,18 @@ const webTestSummaryJsonFile = path.join(__dirname, '..', 'testresults.json');
 const webTestSummaryNb = path.join(__dirname, '..', 'testresults.ipynb');
 const progress = [];
 
+async function captureScreenShot(name, res) {
+    try {
+        const screenshot = require('screenshot-desktop');
+        const filename = path.join(ExtensionRootDir, name);
+        await screenshot({ filename });
+        console.info(`Screenshot captured into ${filename}`);
+    } catch (ex) {
+        console.error(`Failed to capture screenshot into ${filename}`, ex);
+    }
+    res.writeHead(200);
+    res.end();
+}
 exports.startReportServer = async function () {
     return new Promise((resolve) => {
         console.log(`Creating test server`);
@@ -45,7 +57,12 @@ exports.startReportServer = async function () {
                 });
                 req.on('end', () => {
                     try {
-                        progress.push(JSON.parse(data));
+                        const jsonData = jsonc.parse(data);
+                        if ('command' in jsonData && jsonData.command === 'captureScreenShot') {
+                            return captureScreenShot(jsonData.filename, res);
+                        } else {
+                            progress.push(jsonData);
+                        }
                     } catch (ex) {
                         console.error('Failed to parse test output', ex);
                     }
@@ -174,9 +191,11 @@ exports.dumpTestSummary = () => {
                         text: consoleOutputs
                     };
                     // Look for a screenshot file with the above prefix & attach that to the cell outputs.
+                    console.error(`Looking for screenshot file ${fileNamePrefix}*-screenshot.png`);
                     const screenshots = glob
                         .sync(`${fileNamePrefix}*-screenshot.png`, { cwd: ExtensionRootDir })
                         .map((file) => {
+                            console.error(`Found screenshot file ${file}`);
                             const contents = Buffer.from(fs.readFileSync(path.join(ExtensionRootDir, file))).toString(
                                 'base64'
                             );

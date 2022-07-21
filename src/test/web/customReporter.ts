@@ -3,11 +3,12 @@
 // Licensed under the MIT License.
 
 import type * as mochaTypes from 'mocha';
-import { env, extensions, UIKind, Uri, workspace } from 'vscode';
+import { env, extensions, UIKind, Uri } from 'vscode';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../constants';
 import { format } from 'util';
 import { registerLogger, traceInfoIfCI } from '../../platform/logging/index';
 import { Arguments, ILogger } from '../../platform/logging/types';
+import { ClientAPI } from './clientApi';
 const { inherits } = require('mocha/lib/utils');
 const defaultReporter = require('mocha/lib/reporters/spec');
 
@@ -104,25 +105,14 @@ function writeReportProgress(message: Message) {
         }
     } else {
         if (message.event === constants.EVENT_RUN_BEGIN) {
-            console.log(
-                `DEBUG_JUPYTER_SERVER_URI={workspace.getConfiguration('jupyter').get('DEBUG_JUPYTER_SERVER_URI')}`
-            );
-            const reportServerPor = workspace.getConfiguration('jupyter').get('REPORT_SERVER_PORT') as number;
-
-            url = `http://127.0.0.1:${reportServerPor}`;
+            ClientAPI.initialize();
             console.error(`Started test reporter and writing to ${url}`);
         }
-        currentPromise = currentPromise.finally(() => {
-            return fetch(url, {
-                method: 'post',
-                body: JSON.stringify(message),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }).catch((_ex) => {
+        currentPromise = currentPromise.finally(() =>
+            ClientAPI.sendRawMessage(message).catch((_ex) => {
                 // console.error(`Failed to post data to ${url}`, ex);
-            });
-        });
+            })
+        );
     }
 }
 function formatException(err: any) {

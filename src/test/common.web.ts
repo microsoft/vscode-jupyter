@@ -3,11 +3,30 @@
 
 import { commands, NotebookDocument, Uri, workspace } from 'vscode';
 import { IDisposable } from '../platform/common/types';
-import { initializeCommonApi } from './common';
+import { generateScreenShotFileName, initializeCommonApi } from './common';
 import { JUPYTER_SERVER_URI } from './constants';
 import * as uuid from 'uuid/v4';
 import { noop } from './core';
 import { initialize } from './initialize';
+import { isCI } from '../platform/common/constants';
+import { ClientAPI } from './web/clientApi';
+
+/**
+ * Captures screenshots (png format) & dumpts into root directory (only on CI).
+ * If there's a failure, it will be logged (errors are swallowed).
+ */
+async function captureScreenShot(contextOrFileName: string | Mocha.Context) {
+    if (!isCI) {
+        return;
+    }
+    const filename = generateScreenShotFileName(contextOrFileName);
+    try {
+        await ClientAPI.captureScreenShot(filename);
+        console.info(`Screenshot captured into ${filename}`);
+    } catch (ex) {
+        console.error(`Failed to capture screenshot into ${filename}`, ex);
+    }
+}
 
 export function initializeCommonWebApi() {
     initializeCommonApi({
@@ -45,6 +64,7 @@ export function initializeCommonWebApi() {
         },
         async initialize() {
             return initialize();
-        }
+        },
+        captureScreenShot
     });
 }

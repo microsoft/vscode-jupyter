@@ -8,6 +8,7 @@ const { startJupyter } = require('./preLaunchWebTest');
 const jsonc = require('jsonc-parser');
 const { startReportServer } = require('./webTestReporter');
 const { noop } = require('../out/test/core');
+const { isCI } = require('./constants');
 const extensionDevelopmentPath = path.resolve(__dirname, '../');
 const packageJsonFile = path.join(extensionDevelopmentPath, 'package.json');
 
@@ -36,7 +37,7 @@ async function go() {
         await test_web.runTests({
             browserType: 'chromium',
             verbose: true,
-            headless: true, // Set this to false to debug failures
+            headless: isCI ? false : true, // Set this to false to debug failures (false on CI to support capturing screenshots when tests fail).
             extensionDevelopmentPath,
             folderPath: path.resolve(__dirname, '..', 'src', 'test', 'datascience'),
             extensionTestsPath: bundlePath
