@@ -27,8 +27,8 @@ import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
-import { IProtocolParser } from '../../platform/debugger/extension/types.node';
 import { IJupyterDebugService } from './debuggingTypes';
+import { ProtocolParser } from './protocolParser.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -93,11 +93,10 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     private _breakpoints: Breakpoint[] = [];
     private _stoppedThreadId: number | undefined;
     private _topFrameId: number | undefined;
-    constructor(
-        @inject(IProtocolParser) private protocolParser: IProtocolParser,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
-    ) {
+    private protocolParser: ProtocolParser;
+    constructor(@inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry) {
         disposableRegistry.push(this);
+        this.protocolParser = new ProtocolParser();
     }
 
     public dispose(): void {

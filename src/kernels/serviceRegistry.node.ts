@@ -6,8 +6,6 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IApplicationEnvironment } from '../platform/common/application/types';
 import { Identifiers, JVSC_EXTENSION_ID } from '../platform/common/constants';
-import { ProtocolParser } from '../platform/debugger/extension/helpers/protocolParser.node';
-import { IProtocolParser } from '../platform/debugger/extension/types.node';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
 import { registerInstallerTypes } from './installer/serviceRegistry.node';
@@ -90,7 +88,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         Identifiers.PYTHON_VARIABLES_REQUESTER
     );
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
-    serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
