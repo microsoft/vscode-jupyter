@@ -17,7 +17,7 @@ try {
 }
 
 /**
- * Wrapper around an inversicy container. Provides get access to different services.
+ * Wrapper around an inversify container. Provides get access to different services.
  */
 @injectable()
 export class ServiceContainer implements IServiceContainer {
