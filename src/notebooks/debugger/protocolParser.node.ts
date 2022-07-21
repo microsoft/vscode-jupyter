@@ -32,7 +32,6 @@ export interface IProtocolParser extends Disposable {
  * @extends {EventEmitter}
  * @implements {IProtocolParser}
  */
-@injectable()
 export class ProtocolParser implements IProtocolParser {
     private rawData = Buffer.concat([]);
     private contentLength: number = -1;
