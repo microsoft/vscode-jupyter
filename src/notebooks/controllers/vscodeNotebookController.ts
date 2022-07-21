@@ -505,10 +505,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 
     private async connectToKernel(doc: NotebookDocument, options: IDisplayOptions): Promise<IKernel> {
         return KernelConnector.connectToNotebookKernel(
-            this.controller,
             this.kernelConnection,
             this.serviceContainer,
-            { resource: doc.uri, notebook: doc },
+            { resource: doc.uri, notebook: doc, controller: this.controller },
             options,
             this.disposables
         );
@@ -617,8 +616,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         const newKernel = this.kernelProvider.getOrCreate(document, {
             metadata: selectedKernelConnectionMetadata,
             controller: this.controller,
-            resourceUri: document.uri, // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.
-            creator: 'jupyterExtension'
+            resourceUri: document.uri // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.
         });
         traceVerbose(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
 

@@ -19,6 +19,8 @@ import { captureScreenShot, createEventHandler, IExtensionTestApi } from '../com
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
 import { workspace } from 'vscode';
+import { executeSilently } from '../../kernels/helpers';
+import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
 
 suite('3rd Party Kernel Service API', function () {
     let api: IExtensionTestApi;
@@ -131,10 +133,14 @@ suite('3rd Party Kernel Service API', function () {
             'Kernel notebook is not the active notebook'
         );
 
-        assert.strictEqual(kernels![0].metadata, pythonKernel, 'Kernel Connection is not the same');
+        assert.strictEqual(kernels![0].metadata.id, pythonKernel?.id, 'Kernel Connection is not the same');
         const kernel = kernelService?.getKernel(nb.uri);
-        assert.strictEqual(kernels![0].metadata, kernel!.metadata, 'Kernel Connection not same for the document');
+        assert.strictEqual(kernels![0].metadata.id, kernel!.metadata.id, 'Kernel Connection not same for the document');
 
+        // Verify we can run some code against this kernel.
+        const outputs = await executeSilently(kernel?.connection.connection!, '98765');
+        assert.strictEqual(outputs.length, 1);
+        assert.include(getPlainTextOrStreamOutput(outputs), '98765');
         await closeNotebooksAndCleanUpAfterTests(disposables);
 
         await onDidChangeKernels.assertFiredExactly(2);

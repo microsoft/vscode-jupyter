@@ -124,7 +124,7 @@ suite('Remote kernel connection handler', async () => {
     function verifyRemoteKernelTracking(connection: KernelConnectionMetadata, source: KernelActionSource) {
         const kernel1 = mock<IKernel>();
         when(kernel1.kernelConnectionMetadata).thenReturn(connection);
-        when(kernel1.creator).thenReturn(source);
+        when(kernel1.creator).thenReturn('jupyterExtension');
         const subject = new Subject<KernelSocketInformation>();
         disposables.push(new Disposable(() => subject.unsubscribe()));
         when(kernel1.kernelSocket).thenReturn(subject);
@@ -198,9 +198,6 @@ suite('Remote kernel connection handler', async () => {
     }
     test('When starting a remote kernel spec ensure we track this', async () => {
         verifyRemoteKernelTracking(remoteKernelSpec, 'jupyterExtension');
-    });
-    test('When starting a remote kernel spec from a 3rd party extension ensure we do not track this', async () => {
-        verifyRemoteKernelTracking(remoteKernelSpec, '3rdPartyExtension');
     });
     test('When starting a local kernel spec ensure we do not track this', async () => {
         verifyRemoteKernelTracking(localKernelSpec, 'jupyterExtension');

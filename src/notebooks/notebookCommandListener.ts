@@ -254,12 +254,11 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 }
                 // Wrap the restart/interrupt in a loop that allows the user to switch
                 await KernelConnector.wrapKernelMethod(
-                    controller.controller,
                     controller.connection,
                     currentContext,
                     kernel.creator,
                     this.serviceContainer,
-                    { resource: kernel.resourceUri, notebook },
+                    { resource: kernel.resourceUri, notebook, controller: controller.controller },
                     new DisplayOptions(false),
                     this.disposableRegistry
                 );

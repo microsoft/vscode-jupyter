@@ -13,7 +13,7 @@ import {
     KernelOptions,
     IKernelProvider
 } from '../../kernels/types';
-import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
+import { IApplicationShell, IVSCodeNotebook } from '../../platform/common/application/types';
 import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
@@ -37,7 +37,6 @@ suite('KernelProvider Node', () => {
     let configService: IConfigurationService;
     let appShell: IApplicationShell;
     let outputTracker: CellOutputDisplayIdTracker;
-    let workspaceService: IWorkspaceService;
     let vscNotebook: IVSCodeNotebook;
     let statusProvider: IStatusProvider;
     let pythonExecFactory: IPythonExecutionFactory;
@@ -72,7 +71,6 @@ suite('KernelProvider Node', () => {
         configService = mock<IConfigurationService>();
         appShell = mock<IApplicationShell>();
         outputTracker = mock<CellOutputDisplayIdTracker>();
-        workspaceService = mock<IWorkspaceService>();
         vscNotebook = mock<IVSCodeNotebook>();
         statusProvider = mock<IStatusProvider>();
         context = mock<IExtensionContext>();
@@ -93,7 +91,6 @@ suite('KernelProvider Node', () => {
             instance(configService),
             instance(appShell),
             instance(outputTracker),
-            instance(workspaceService),
             instance(vscNotebook),
             instance(pythonExecFactory),
             instance(statusProvider),
@@ -107,13 +104,8 @@ suite('KernelProvider Node', () => {
             instance(notebookProvider),
             instance(configService),
             instance(appShell),
-            instance(outputTracker),
-            instance(workspaceService),
             instance(vscNotebook),
-            instance(pythonExecFactory),
             instance(statusProvider),
-            instance(context),
-            [],
             []
         );
     });
@@ -127,7 +119,6 @@ suite('KernelProvider Node', () => {
         when(metadata.id).thenReturn('xyz');
         const options: KernelOptions = {
             controller: instance(mock<NotebookController>()),
-            creator: 'jupyterExtension',
             metadata: instance(metadata),
             resourceUri: sampleUri1
         };
@@ -169,7 +160,6 @@ suite('KernelProvider Node', () => {
         when(metadata.id).thenReturn('xyz');
         const options: KernelOptions = {
             controller: instance(mock<NotebookController>()),
-            creator: '3rdPartyExtension',
             metadata: instance(metadata),
             resourceUri: uri
         };
@@ -207,7 +197,6 @@ suite('KernelProvider Node', () => {
         when(metadata.id).thenReturn('xyz');
         const options: KernelOptions = {
             controller: instance(mock<NotebookController>()),
-            creator: 'jupyterExtension',
             metadata: instance(metadata),
             resourceUri: sampleUri1
         };
@@ -227,7 +216,6 @@ suite('KernelProvider Node', () => {
         when(metadata.id).thenReturn('xyz');
         const options: KernelOptions = {
             controller: instance(mock<NotebookController>()),
-            creator: 'jupyterExtension',
             metadata: instance(metadata),
             resourceUri: sampleUri1
         };

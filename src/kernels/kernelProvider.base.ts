@@ -9,7 +9,14 @@ import { traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../platform/common/types';
 import { isUri, noop } from '../platform/common/utils/misc';
-import { IBaseKernel, IKernelProvider, IKernel, KernelOptions, IThirdPartyKernelProvider } from './types';
+import {
+    IThirdPartyKernel,
+    IKernelProvider,
+    IKernel,
+    KernelOptions,
+    IThirdPartyKernelProvider,
+    ThirdPartyKernelOptions
+} from './types';
 
 /**
  * Provides kernels to the system. Generally backed by a URI or a notebook object.
@@ -137,15 +144,15 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
      * The life time of kernels not tied to a notebook will be managed by callers of the API.
      * Where as if a kernel is tied to a notebook, then the kernel dies along with notebooks.
      */
-    private readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IBaseKernel }>();
+    private readonly kernelsByUri = new Map<string, { options: ThirdPartyKernelOptions; kernel: IThirdPartyKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
-    protected readonly _onDidRestartKernel = new EventEmitter<IBaseKernel>();
-    protected readonly _onDidStartKernel = new EventEmitter<IBaseKernel>();
-    protected readonly _onDidCreateKernel = new EventEmitter<IBaseKernel>();
-    protected readonly _onDidDisposeKernel = new EventEmitter<IBaseKernel>();
+    protected readonly _onDidRestartKernel = new EventEmitter<IThirdPartyKernel>();
+    protected readonly _onDidStartKernel = new EventEmitter<IThirdPartyKernel>();
+    protected readonly _onDidCreateKernel = new EventEmitter<IThirdPartyKernel>();
+    protected readonly _onDidDisposeKernel = new EventEmitter<IThirdPartyKernel>();
     protected readonly _onKernelStatusChanged = new EventEmitter<{
         status: KernelMessage.Status;
-        kernel: IBaseKernel;
+        kernel: IThirdPartyKernel;
     }>();
     public readonly onKernelStatusChanged = this._onKernelStatusChanged.event;
     public get kernels() {
@@ -165,26 +172,26 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
         disposables.push(this._onDidCreateKernel);
     }
 
-    public get onDidDisposeKernel(): Event<IBaseKernel> {
+    public get onDidDisposeKernel(): Event<IThirdPartyKernel> {
         return this._onDidDisposeKernel.event;
     }
-    public get onDidRestartKernel(): Event<IBaseKernel> {
+    public get onDidRestartKernel(): Event<IThirdPartyKernel> {
         return this._onDidRestartKernel.event;
     }
-    public get onDidStartKernel(): Event<IBaseKernel> {
+    public get onDidStartKernel(): Event<IThirdPartyKernel> {
         return this._onDidStartKernel.event;
     }
-    public get onDidCreateKernel(): Event<IBaseKernel> {
+    public get onDidCreateKernel(): Event<IThirdPartyKernel> {
         return this._onDidCreateKernel.event;
     }
-    public get(uri: Uri): IBaseKernel | undefined {
+    public get(uri: Uri): IThirdPartyKernel | undefined {
         return this.kernelsByUri.get(uri.toString())?.kernel;
     }
 
     public getInternal(uri: Uri):
         | {
-              options: KernelOptions;
-              kernel: IBaseKernel;
+              options: ThirdPartyKernelOptions;
+              kernel: IThirdPartyKernel;
           }
         | undefined {
         return this.kernelsByUri.get(uri.toString());
@@ -197,8 +204,8 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
         await Promise.all(items);
         await Promise.all(this.kernels.map((k) => k.dispose()));
     }
-    public abstract getOrCreate(uri: Uri, options: KernelOptions): IBaseKernel;
-    protected storeKernel(uri: Uri, options: KernelOptions, kernel: IBaseKernel) {
+    public abstract getOrCreate(uri: Uri, options: ThirdPartyKernelOptions): IThirdPartyKernel;
+    protected storeKernel(uri: Uri, options: ThirdPartyKernelOptions, kernel: IThirdPartyKernel) {
         this.kernelsByUri.set(uri.toString(), { options, kernel });
         this._onDidCreateKernel.fire(kernel);
     }
@@ -206,7 +213,7 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
     /**
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.
      */
-    protected deleteMappingIfKernelIsDisposed(uri: Uri, kernel: IBaseKernel) {
+    protected deleteMappingIfKernelIsDisposed(uri: Uri, kernel: IThirdPartyKernel) {
         kernel.onDisposed(
             () => {
                 // If the same kernel is associated with this document & it was disposed, then delete it.

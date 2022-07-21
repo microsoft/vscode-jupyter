@@ -6,7 +6,7 @@ const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp
 import * as path from '../platform/vscode-path/path';
 import * as uriPath from '../platform/vscode-path/resources';
 import * as nbformat from '@jupyterlab/nbformat';
-import type { KernelSpec } from '@jupyterlab/services';
+import type { Kernel, KernelSpec } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import * as url from 'url-parse';
@@ -1452,7 +1452,7 @@ export type SilentExecutionErrorOptions = {
 };
 
 export async function executeSilently(
-    session: IKernelConnectionSession,
+    session: IKernelConnectionSession | Kernel.IKernelConnection,
     code: string,
     errorOptions?: SilentExecutionErrorOptions
 ): Promise<nbformat.IOutput[]> {
