@@ -20,6 +20,9 @@ import {
 } from './types.node';
 
 type ErrorResponse = { error?: string };
+/**
+ * Daemon that is started as a python process. Uses a IPythonExecutionService to start daemon, which means it has the enviroment associated with an interpreter.
+ */
 export class PythonDaemonExecutionService extends BasePythonDaemon implements IPythonDaemonExecutionService {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(

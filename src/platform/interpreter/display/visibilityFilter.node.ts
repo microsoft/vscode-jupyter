@@ -9,6 +9,9 @@ import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
 import { isJupyterNotebook } from '../../common/utils';
 
+/**
+ * Singleton that listens to active editor changes in order to hide/show the python interpreter
+ */
 @injectable()
 export class InterpreterStatusBarVisibility
     implements IInterpreterStatusbarVisibilityFilter, IExtensionSingleActivationService

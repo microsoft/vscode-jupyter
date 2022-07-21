@@ -11,7 +11,7 @@ import { noop } from '../../utils/misc';
 import { ICommandManager, IWorkspaceService } from '../types';
 
 /**
- * Prompts user to reload VS Code with a custom message, and reloads if necessary.
+ * Allows the jupyter extension to run in a different process than other extensions.
  */
 @injectable()
 export class RunInDedicatedExtensionHostCommandHandler implements IExtensionSingleActivationService {

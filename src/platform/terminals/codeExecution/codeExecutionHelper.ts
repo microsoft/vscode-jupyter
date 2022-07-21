@@ -10,6 +10,9 @@ import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 import { noop } from '../../common/utils/misc';
 
+/**
+ * Handles trimming code sent to a terminal so it actually runs.
+ */
 export class CodeExecutionHelperBase implements ICodeExecutionHelper {
     protected readonly documentManager: IDocumentManager;
     private readonly applicationShell: IApplicationShell;

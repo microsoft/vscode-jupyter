@@ -6,6 +6,9 @@ import { injectable } from 'inversify';
 import { DEFAULT_ENCODING } from './constants.node';
 import { IBufferDecoder } from './types.node';
 
+/**
+ * Provides a way to decode buffers to strings.
+ */
 @injectable()
 export class BufferDecoder implements IBufferDecoder {
     public decode(buffers: Buffer[], encoding: string = DEFAULT_ENCODING): string {

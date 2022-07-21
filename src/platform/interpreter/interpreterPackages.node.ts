@@ -35,6 +35,10 @@ const interestedPackages = new Set(
 );
 
 const notInstalled = 'NOT INSTALLED';
+
+/**
+ * Gets information about packages installed in a given interpreter.
+ */
 @injectable()
 export class InterpreterPackages implements IInterpreterPackages {
     private interpreterInformation = new Map<string, Deferred<Map<string, string>>>();

@@ -8,6 +8,9 @@ import { Uri, Range } from 'vscode';
 import { IWorkspaceService, IDocumentManager } from '../application/types';
 import { AbstractSystemVariables } from './systemVariables';
 
+/**
+ * System variables for web extension. Web specific is necessary because of lacking of the current process environment.
+ */
 export class SystemVariables extends AbstractSystemVariables {
     private _workspaceFolder: string;
     private _filePath: string | undefined;

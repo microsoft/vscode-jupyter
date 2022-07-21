@@ -24,6 +24,9 @@ import {
     IPythonExecutionService
 } from './types.node';
 
+/**
+ * Factory for creating PythonDaemonExecutionService.
+ */
 export class PythonDaemonFactory {
     protected readonly envVariables: NodeJS.ProcessEnv;
     protected readonly interpreter: PythonEnvironment;

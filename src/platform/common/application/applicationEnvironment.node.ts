@@ -13,6 +13,9 @@ import { OSType } from '../utils/platform';
 import { getUserHomeDir } from '../utils/platform.node';
 import { BaseApplicationEnvironment } from './applicationEnvironment.base';
 
+/**
+ * BaseApplicationEnvironment for Node.js
+ */
 @injectable()
 export class ApplicationEnvironment extends BaseApplicationEnvironment {
     private homeDir = getUserHomeDir() || Uri.file('');

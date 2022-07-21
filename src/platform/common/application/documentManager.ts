@@ -23,6 +23,9 @@ import { IDocumentManager } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 
+/**
+ * Wrapper around the vscode workspace and window apis related to TextDocuments
+ */
 @injectable()
 export class DocumentManager implements IDocumentManager {
     public get textDocuments(): readonly TextDocument[] {

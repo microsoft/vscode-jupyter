@@ -25,6 +25,9 @@ export async function computeWorkingDirectory(resource: Resource, workspace: IWo
     return workspace.getWorkspaceFolder(resource)?.uri.fsPath || workspace.rootFolder?.fsPath || process.cwd();
 }
 
+/**
+ * Node implementation of the workspace service. Computing working directory is different for node.
+ */
 @injectable()
 export class WorkspaceService extends BaseWorkspaceService {
     public computeWorkingDirectory(resource: Resource): Promise<string> {

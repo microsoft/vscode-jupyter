@@ -35,6 +35,9 @@ import { IInterpreterService } from '../../interpreter/contracts';
 // Minimum version number of conda required to be able to use 'conda run'
 export const CONDA_RUN_VERSION = '4.6.0';
 
+/**
+ * Creates IPythonExecutionService objects. They can be either process based or daemon based.
+ */
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
     private readonly daemonsPerPythonService = new Map<string, Promise<IPythonDaemonExecutionService>>();

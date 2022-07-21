@@ -12,6 +12,9 @@ import { ICommandManager } from './types';
 
 // This contains a list of commands to be ignored when sending telemetry in the command handler.
 const commandsToIgnore = new Set<string>(['setContext']);
+/**
+ * Wrapper around the vscode commands api but reenforces type safety for each command.
+ */
 @injectable()
 export class CommandManager implements ICommandManager {
     /**

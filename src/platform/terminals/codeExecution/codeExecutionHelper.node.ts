@@ -14,6 +14,9 @@ import { IProcessServiceFactory } from '../../common/process/types.node';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 
+/**
+ * Node version of the code execution helper. Node version is necessary because we can't create processes in the web version.
+ */
 @injectable()
 export class CodeExecutionHelper extends CodeExecutionHelperBase {
     private readonly interpreterService: IInterpreterService;

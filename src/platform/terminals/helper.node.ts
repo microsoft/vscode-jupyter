@@ -17,6 +17,9 @@ import { traceError } from '../logging';
 import { ShellDetector } from './shellDetector.node';
 import { IShellDetector, ITerminalHelper, TerminalShellType } from './types';
 
+/**
+ * Uses a terminal to fetch environment variables
+ */
 @injectable()
 export class TerminalHelper implements ITerminalHelper {
     private readonly shellDetector: ShellDetector;

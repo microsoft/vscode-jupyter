@@ -10,7 +10,7 @@ import { ICryptoUtils, IHashFormat } from './types';
 import * as hashjs from 'hash.js';
 
 /**
- * Implements tools related to cryptography
+ * Provides hashing functions. These hashing functions should only be used for non sensitive data. For sensitive data, use msrCrypto instead.
  */
 @injectable()
 export class CryptoUtils implements ICryptoUtils {

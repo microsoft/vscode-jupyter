@@ -7,6 +7,9 @@ import { injectable } from 'inversify';
 import { env } from 'vscode';
 import { IClipboard } from './types';
 
+/**
+ * Wrapper around the vscode clipboard apis.
+ */
 @injectable()
 export class ClipboardService implements IClipboard {
     public async readText(): Promise<string> {

@@ -18,6 +18,9 @@ import { Resource } from '../types';
 import { getOSType, OSType } from '../utils/platform';
 import { IWorkspaceService } from './types';
 
+/**
+ * Wrapper around vscode's workspace namespace.
+ */
 export abstract class BaseWorkspaceService implements IWorkspaceService {
     public get onDidChangeConfiguration(): Event<ConfigurationChangeEvent> {
         return workspace.onDidChangeConfiguration;

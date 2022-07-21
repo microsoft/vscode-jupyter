@@ -5,6 +5,9 @@
 import { injectable } from 'inversify';
 import { EnvironmentVariables } from '../variables/types';
 
+/**
+ * Used to wrap process.env. Potentially overkill?
+ */
 @injectable()
 export class CurrentProcess {
     public get env(): EnvironmentVariables {

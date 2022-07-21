@@ -4,6 +4,9 @@
 
 import { BaseError } from './types';
 
+/**
+ * Error thrown when a jupyter server is using a self signed expired certificate. This can be expected and we should ask if they want to allow it anyway.
+ */
 export class JupyterSelfCertsExpiredError extends BaseError {
     constructor(message: string) {
         super('jupyterselfexpiredcert', message);

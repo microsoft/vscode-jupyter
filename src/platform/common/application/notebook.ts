@@ -28,6 +28,9 @@ import { sleep } from '../utils/async';
 import { testOnlyMethod } from '../utils/decorators';
 import { IApplicationEnvironment, IVSCodeNotebook } from './types';
 
+/**
+ * Wrapper around the vscode notebook apis. Essential to running tests as some of the ways we close down notebooks don't fire the real VS code apis.
+ */
 @injectable()
 export class VSCodeNotebook implements IVSCodeNotebook {
     public readonly onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
