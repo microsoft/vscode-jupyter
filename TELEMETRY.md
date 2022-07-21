@@ -2964,7 +2964,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/plotting/plotViewerProvider.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/plotting/plotViewerProvider.node.ts)
+[src/webviews/extension-side/plotting/plotViewerProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/plotting/plotViewerProvider.ts)
 ```typescript
             this.currentViewer = this.serviceContainer.get<IPlotViewer>(IPlotViewer);
             this.currentViewerClosed = this.currentViewer.closed(this.closedViewer);
