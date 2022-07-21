@@ -19,6 +19,9 @@ import {
 import { traceInfoIfCI } from '../../logging';
 import { IDebugService } from './types';
 
+/**
+ * Wrapper around the vscode debug namespace.
+ */
 @injectable()
 export class DebugService implements IDebugService {
     public static instance = new DebugService();

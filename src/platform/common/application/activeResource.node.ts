@@ -7,6 +7,9 @@ import { inject, injectable } from 'inversify';
 import { Resource } from '../types';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from './types';
 
+/**
+ * Used to determine the active editor that is not untitled or the root workspace folder
+ */
 @injectable()
 export class ActiveResourceService implements IActiveResourceService {
     constructor(

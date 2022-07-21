@@ -8,6 +8,9 @@ import { JupyterSettings } from '../configSettings';
 import { isTestExecution, isUnitTestExecution } from '../constants';
 import { IConfigurationService, IWatchableJupyterSettings } from '../types';
 
+/**
+ * Wrapper around the workspace.getConfiguration api. Makes for typesafe access to configuration properties.
+ */
 export abstract class BaseConfigurationService implements IConfigurationService {
     protected readonly workspaceService: IWorkspaceService;
     constructor(private readonly serviceContainer: IServiceContainer) {

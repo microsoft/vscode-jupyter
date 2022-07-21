@@ -8,6 +8,9 @@ import { IStringDictionary, ISystemVariables } from './types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any, , jsdoc/check-alignment,jsdoc/check-indentation,jsdoc/newline-after-description, no-restricted-syntax, prefer-const,  */
 
+/**
+ * Resolves vscode style environment variables in a string. Example ${workspaceRoot}
+ */
 export abstract class AbstractSystemVariables implements ISystemVariables {
     public resolve(value: string): string;
     public resolve(value: string[]): string[];

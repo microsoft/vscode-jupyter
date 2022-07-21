@@ -11,6 +11,9 @@ import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../platform/types';
 
+/**
+ * Singleton utitility for managing environment variables. Allows merging, concating etc. Handles environment variables with different casing.
+ */
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
     constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}

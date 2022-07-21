@@ -30,6 +30,9 @@ import { ISystemVariables, ISystemVariablesConstructor } from './variables/types
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
 // eslint-disable-next-line
+/**
+ * Typesafe representation of the settings in the jupyter extension.
+ */
 export class JupyterSettings implements IWatchableJupyterSettings {
     public get onDidChange(): Event<void> {
         return this._changeEmitter.event;

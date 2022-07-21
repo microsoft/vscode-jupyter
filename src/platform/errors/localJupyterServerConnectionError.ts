@@ -4,6 +4,9 @@
 import { DataScience } from '../common/utils/localize';
 import { BaseError } from './types';
 
+/**
+ * Generic error when the local jupyter server fails to start. Local means we started it.
+ */
 export class LocalJupyterServerConnectionError extends BaseError {
     constructor(public readonly originalError: Error) {
         super(

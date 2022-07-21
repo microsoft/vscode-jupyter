@@ -27,6 +27,10 @@ import { ExperimentationTelemetry } from './telemetry.node';
 // There's no public API yet, hence we access the global storage that is updated by the experiments package.
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
 
+/**
+ * Exposes an api to determine what experiments are in use. Experiments are generally feature flags that can be used to try out different features for a subset of users.
+ * For more information, see https://expdocs.azurewebsites.net/docs/experimentauth/featureexperiments.html
+ */
 @injectable()
 export class ExperimentService implements IExperimentService {
     /**

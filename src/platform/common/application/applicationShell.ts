@@ -37,6 +37,9 @@ import {
 import { noop } from '../utils/misc';
 import { IApplicationShell } from './types';
 
+/**
+ * Singleton wrapper around the VS code window namespace. Makes for easier mocking.
+ */
 @injectable()
 export class ApplicationShell implements IApplicationShell {
     public get activeColorTheme(): ColorTheme {

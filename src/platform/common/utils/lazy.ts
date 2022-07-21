@@ -14,6 +14,9 @@ export interface Lazy<T> {
     map<R>(f: (x: T) => R): Lazy<R>;
 }
 
+/**
+ * Allows a value to be resolved lazily. Delayed execution.
+ */
 export class Lazy<T> {
     private _didRun: boolean = false;
     private _value?: T;

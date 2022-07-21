@@ -6,6 +6,9 @@ import { injectable } from 'inversify';
 import { OSType } from '../utils/platform';
 import { IPlatformService } from './types';
 
+/**
+ * Reimplementation of the node os module but for web.
+ */
 @injectable()
 export class PlatformService implements IPlatformService {
     public get tempDir() {

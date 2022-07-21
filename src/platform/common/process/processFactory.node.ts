@@ -13,6 +13,9 @@ import { ICustomEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc.node';
 import { IBufferDecoder, IProcessLogger, IProcessService, IProcessServiceFactory } from './types.node';
 
+/**
+ * Factory for creating ProcessService objects. Uses the current interpreter for a URI to determine the starting environment.
+ */
 @injectable()
 export class ProcessServiceFactory implements IProcessServiceFactory {
     constructor(

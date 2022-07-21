@@ -14,6 +14,10 @@ const cleanupCode = dedent`
                             except:
                                 pass
                             `;
+
+/**
+ * Provides utilities to extrace the dataframe python scripts from the extension installation. These scripts can then be used to query dataframes in the kernel.
+ */
 @injectable()
 export class DataFrameScriptGenerator implements IDataFrameScriptGenerator {
     constructor(

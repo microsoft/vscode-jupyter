@@ -16,6 +16,9 @@ import * as path from '../../platform/vscode-path/resources';
 
 const PYTHON_PACKAGES_MEMENTO_KEY = 'jupyter.pythonPackages';
 export const ignoreListSettingName = 'diagnostics.reservedPythonNames.exclude';
+/**
+ * Determines if a file or directory in the workspace is overriding a reserved python name.
+ */
 @injectable()
 export class ReservedNamedProvider implements IReservedPythonNamedProvider {
     private ignoredFiles = new Set<string>();

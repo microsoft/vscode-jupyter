@@ -9,6 +9,9 @@ import { IWorkspaceService } from '../application/types';
 import { traceVerbose } from '../../logging';
 import * as fetch from 'cross-fetch';
 
+/**
+ * Class used to verify http connections and make GET requests
+ */
 @injectable()
 export class HttpClient implements IHttpClient {
     public readonly requestOptions: RequestInit = {};

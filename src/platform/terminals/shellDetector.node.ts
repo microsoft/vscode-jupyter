@@ -18,6 +18,9 @@ const defaultOSShells = {
     [OSType.Unknown]: TerminalShellType.other
 };
 
+/**
+ * Uses shellDetectors to identify the shell of the terminal.
+ */
 export class ShellDetector {
     constructor(private readonly platform: IPlatformService, private readonly shellDetectors: IShellDetector[]) {}
     /**

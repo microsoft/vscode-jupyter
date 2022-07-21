@@ -1,22 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, Event, QuickPickItem, Uri } from 'vscode';
-import * as lsp from 'vscode-languageserver-protocol';
-import { InterpreterUri, Resource } from '../common/types';
+import { Event, QuickPickItem, Uri } from 'vscode';
+import { Resource } from '../common/types';
 import type { SemVer } from 'semver';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
 import { EnvironmentType } from '../pythonEnvironments/info';
-
-export type ILanguageServerConnection = Pick<
-    lsp.ProtocolConnection,
-    'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
->;
-
-export interface ILanguageServer extends Disposable {
-    readonly connection: ILanguageServerConnection;
-    readonly capabilities: lsp.ServerCapabilities;
-}
 
 export const IPythonApiProvider = Symbol('IPythonApi');
 export interface IPythonApiProvider {
@@ -123,11 +112,6 @@ export type PythonApi = {
      */
     getDebuggerPath(): Promise<string>;
     /**
-     * Returns a ILanguageServer that can be used for communicating with a language server process.
-     * @param resource file that determines which connection to return
-     */
-    getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined>;
-    /**
      * Registers a visibility filter for the interpreter status bar.
      */
     registerInterpreterStatusFilter(filter: IInterpreterStatusbarVisibilityFilter): void;
@@ -183,9 +167,4 @@ export type IPythonProposedApi = {
 export const IPythonDebuggerPathProvider = Symbol('IPythonDebuggerPathProvider');
 export interface IPythonDebuggerPathProvider {
     getDebuggerPath(): Promise<string>;
-}
-
-export const ILanguageServerProvider = Symbol('ILanguageServerProvider');
-export interface ILanguageServerProvider {
-    getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined>;
 }

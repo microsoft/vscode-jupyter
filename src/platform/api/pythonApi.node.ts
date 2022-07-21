@@ -13,17 +13,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { InterpreterUri } from '../common/types';
-import { ILanguageServer, ILanguageServerProvider, IPythonApiProvider, IPythonDebuggerPathProvider } from './types';
-
-@injectable()
-export class LanguageServerProvider implements ILanguageServerProvider {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
-
-    public getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined> {
-        return this.apiProvider.getApi().then((api) => api.getLanguageServer(resource));
-    }
-}
+import { IPythonApiProvider, IPythonDebuggerPathProvider } from './types';
 
 @injectable()
 export class PythonDebuggerPathProvider implements IPythonDebuggerPathProvider {

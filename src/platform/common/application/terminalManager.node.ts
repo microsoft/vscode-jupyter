@@ -5,6 +5,9 @@ import { injectable } from 'inversify';
 import { Event, Terminal, TerminalOptions, window } from 'vscode';
 import { ITerminalManager } from './types';
 
+/**
+ * Wrapper around the vscode terminal apis.
+ */
 @injectable()
 export class TerminalManager implements ITerminalManager {
     public get onDidCloseTerminal(): Event<Terminal> {

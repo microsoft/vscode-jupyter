@@ -25,6 +25,9 @@ import {
 
 type DaemonType = 'StandardDaemon' | 'ObservableDaemon';
 
+/**
+ * Creates a pool of daemons so we don't continually spin up new processes. Daemons are useful because they can be reused, therefore saving start up time for a process.
+ */
 export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implements IPythonDaemonExecutionService {
     private readonly daemons: IPythonDaemonExecutionService[] = [];
     private readonly observableDaemons: IPythonDaemonExecutionService[] = [];

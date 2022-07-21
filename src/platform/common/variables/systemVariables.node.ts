@@ -9,6 +9,9 @@ import { Uri, Range } from 'vscode';
 import { IWorkspaceService, IDocumentManager } from '../application/types';
 import { AbstractSystemVariables } from './systemVariables';
 
+/**
+ * System variables for node.js. Node specific is necessary because of using the current process environment.
+ */
 export class SystemVariables extends AbstractSystemVariables {
     private _workspaceFolder: string;
     private _workspaceFolderName: string;
