@@ -11,6 +11,9 @@ import {
 } from '../../platform/activation/types';
 import { traceError } from '../../platform/logging';
 
+/**
+ * Responsbile for calling the 'activate' method on all of the IExtensionSingleActivationServices and IExtensionSyncActivationServices.
+ */
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
     constructor(

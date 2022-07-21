@@ -7,6 +7,9 @@ import { noop } from '../../platform/common/utils/misc';
 import { BaseKernelConnectionWrapper } from '../../kernels/jupyter/baseKernelConnectionWrapper';
 import { IBaseKernel } from '../../kernels/types';
 
+/**
+ * Wrapper around an IKernelConnection that is exposed to 3rd parties. Allows us to change the underlying connection without exposing it to the 3rd party (like on a restart)
+ */
 export class KernelConnectionWrapper extends BaseKernelConnectionWrapper {
     /**
      * Use `kernelConnection` to access the value as its not a constant (can change over time).

@@ -75,6 +75,9 @@ class FileCancellationSenderStrategy implements CancellationSenderStrategy {
     }
 }
 
+/**
+ * Allows pylance (which is single threaded) to poll the existence of a file in order to allow for cancellation.
+ */
 export class FileBasedCancellationStrategy implements CancellationStrategy, Disposable {
     private _sender: FileCancellationSenderStrategy;
 

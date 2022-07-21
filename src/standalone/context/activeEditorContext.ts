@@ -17,6 +17,9 @@ import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/ut
 import { isPythonNotebook } from '../../kernels/helpers';
 import { IControllerSelection } from '../../notebooks/controllers/types';
 
+/**
+ * Tracks a lot of the context keys needed in the extension.
+ */
 @injectable()
 export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];

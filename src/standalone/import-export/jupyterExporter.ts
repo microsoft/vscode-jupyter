@@ -18,6 +18,9 @@ import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { noop } from '../../platform/common/utils/misc';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 
+/**
+ * Provides export for the interactive window
+ */
 @injectable()
 export class JupyterExporter implements INotebookExporter {
     constructor(

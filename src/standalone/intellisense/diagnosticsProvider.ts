@@ -42,6 +42,9 @@ const condaMessage = DataScience.percentPipCondaInstallInsteadOfBang().format('c
 const matplotlibMessage = DataScience.matplotlibWidgetInsteadOfOther();
 const diagnosticSource = 'Jupyter';
 
+/**
+ * Provides a diagnostic error to explain that !pip and !conda should not be used, instead use %pip and %conda because they run the correct version of pip and conda.
+ */
 @injectable()
 export class NotebookCellBangInstallDiagnosticsProvider
     implements IExtensionSyncActivationService, CodeActionProvider, HoverProvider

@@ -55,6 +55,10 @@ export type ShowBannerWithExpiryTime = {
      */
     expiry?: number;
 };
+
+/**
+ * Puts up a survey banner after a certain number of notebook executions. The survey will only show after 10 minutes have passed to prevent it from showing up immediately.
+ */
 @injectable()
 export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtensionSingleActivationService {
     public isEnabled(type: BannerType): boolean {

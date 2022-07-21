@@ -50,6 +50,9 @@ const testExecution = isTestExecution();
 export const IImportTracker = Symbol('IImportTracker');
 export interface IImportTracker {}
 
+/**
+ * Sends hashed names of imported packages to telemetry. Hashes are updated on opening, closing, and saving of documents.
+ */
 @injectable()
 export class ImportTracker implements IExtensionSingleActivationService, IDisposable {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();

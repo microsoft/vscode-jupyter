@@ -18,6 +18,9 @@ import {
 } from '../../kernels/jupyter/types';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 
+/**
+ * Translates a python file into a notebook
+ */
 @injectable()
 export class JupyterImporter implements INotebookImporter {
     public isDisposed: boolean = false;

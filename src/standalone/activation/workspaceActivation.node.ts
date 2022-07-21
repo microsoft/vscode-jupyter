@@ -11,6 +11,9 @@ import { traceDecoratorError } from '../../platform/logging';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 
+/**
+ * Responsible for sending workspace level telemetry and making sure that the list of interpreters is always fetched when opening a workspace.
+ */
 @injectable()
 export class WorkspaceActivation implements IExtensionSingleActivationService {
     public readonly activatedWorkspaces = new Set<string>();

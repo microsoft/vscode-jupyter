@@ -38,6 +38,9 @@ const extensionsThatSupportJupyterKernelLanguages = new Map<string, string>([
     ['powershell', 'ms-dotnettools.dotnet-interactive-vscode']
 ]);
 
+/**
+ * Responsible for showing UI to recommend .NET Interactive Notebooks when the user picks a .NET language
+ */
 @injectable()
 export class ExtensionRecommendationService implements IExtensionSyncActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];

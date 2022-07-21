@@ -39,6 +39,9 @@ import { swallowExceptions } from '../../platform/common/utils/decorators';
 
 export const enabledSettingName = 'diagnostics.reservedPythonNames.enabled';
 
+/**
+ * Generates errors when reserved names are used for files in the workspace
+ */
 @injectable()
 export class ReservedFileNamesDiagnosticProvider
     implements IExtensionSingleActivationService, CodeActionProvider, FileDecorationProvider

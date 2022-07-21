@@ -24,6 +24,10 @@ import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-in
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
 
+/**
+ * Singleton class that activate a bunch of random things that didn't fit anywhere else.
+ * Could probably be broken up.
+ */
 @injectable()
 export class GlobalActivation implements IExtensionSingleActivationService {
     public isDisposed: boolean = false;

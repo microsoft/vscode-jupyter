@@ -25,6 +25,9 @@ interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;
 }
 
+/**
+ * Registers the notebook specific import/export commands
+ */
 export class ExportCommands implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(

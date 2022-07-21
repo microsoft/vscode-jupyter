@@ -19,6 +19,9 @@ interface IRequestMessage {
 export const IExtensionSideRenderer = Symbol('IExtensionSideRenderer');
 export interface IExtensionSideRenderer {}
 
+/**
+ * Responsible for sending loc data to renderers
+ */
 @injectable()
 export class ExtensionSideRenderer implements IDisposable {
     private disposables: IDisposable[];
