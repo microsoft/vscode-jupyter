@@ -13,6 +13,7 @@ import { traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose } from '
 import { SystemVariables } from './systemVariables.node';
 import { disposeAllDisposables } from '../helpers';
 import { IPythonExtensionChecker } from '../../api/types';
+import { getDisplayPath } from '../platform/fs-paths';
 
 const CACHE_DURATION = 60 * 60 * 1000;
 @injectable()
@@ -70,6 +71,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
 
         const envFile = this.getEnvFile(workspaceFolderUri, purpose);
+        traceInfoIfCI(`Env File => ${getDisplayPath(Uri.file(envFile))}`);
         this.createFileWatcher(envFile, workspaceFolderUri);
         return this.envVarsService.parseFile(envFile, process.env);
     }
@@ -104,8 +106,22 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
                 this,
                 this.disposables
             );
-            envFileWatcher.onDidCreate(() => this.onEnvironmentFileCreated(workspaceFolderUri), this, this.disposables);
-            envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri), this, this.disposables);
+            envFileWatcher.onDidCreate(
+                (e) => {
+                    traceVerbose('Environment file created', e.fsPath);
+                    this.onEnvironmentFileCreated(workspaceFolderUri);
+                },
+                this,
+                this.disposables
+            );
+            envFileWatcher.onDidDelete(
+                (e) => {
+                    traceVerbose('Environment file deleted', e.fsPath);
+                    this.onEnvironmentFileChanged(workspaceFolderUri);
+                },
+                this,
+                this.disposables
+            );
         } else {
             traceError('Failed to create file watcher for environment file');
         }
