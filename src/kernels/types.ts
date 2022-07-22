@@ -13,7 +13,6 @@ import type {
     NotebookCell,
     NotebookController,
     NotebookDocument,
-    QuickPickItem,
     Uri
 } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
@@ -111,11 +110,6 @@ export type RemoteKernelConnectionMetadata =
     | Readonly<LiveRemoteKernelConnectionMetadata>
     | Readonly<RemoteKernelSpecConnectionMetadata>;
 
-export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata>
-    extends QuickPickItem {
-    selection: T;
-}
-
 export function isLocalConnection(
     kernelConnection: KernelConnectionMetadata
 ): kernelConnection is LocalKernelConnectionMetadata {
@@ -128,33 +122,6 @@ export function isRemoteConnection(
     kernelConnection: KernelConnectionMetadata
 ): kernelConnection is RemoteKernelConnectionMetadata {
     return !isLocalConnection(kernelConnection);
-}
-
-export interface IKernel extends IBaseKernel {
-    /**
-     * Total execution count on this kernel
-     */
-    readonly executionCount: number;
-    readonly notebook: NotebookDocument;
-    readonly onPreExecute: Event<NotebookCell>;
-    /**
-     * Cells that are still being executed (or pending).
-     */
-    readonly pendingCells: readonly NotebookCell[];
-    /**
-     * Controller associated with this kernel
-     */
-    readonly controller: NotebookController;
-    readonly creator: 'jupyterExtension';
-    /**
-     * @param cell Cell to execute
-     * @param codeOverride Override the code to execute
-     */
-    executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState>;
-    /**
-     * Executes arbitrary code against the kernel without incrementing the execution count.
-     */
-    executeHidden(code: string): Promise<nbformat.IOutput[]>;
 }
 
 export interface IBaseKernel extends IAsyncDisposable {
@@ -206,18 +173,47 @@ export interface IBaseKernel extends IAsyncDisposable {
     addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
     removeEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
 }
+
+/**
+ * Kernels created by this extension.
+ */
+export interface IKernel extends IBaseKernel {
+    /**
+     * Total execution count on this kernel
+     */
+    readonly executionCount: number;
+    readonly notebook: NotebookDocument;
+    readonly onPreExecute: Event<NotebookCell>;
+    /**
+     * Cells that are still being executed (or pending).
+     */
+    readonly pendingCells: readonly NotebookCell[];
+    /**
+     * Controller associated with this kernel
+     */
+    readonly controller: NotebookController;
+    readonly creator: 'jupyterExtension';
+    /**
+     * @param cell Cell to execute
+     * @param codeOverride Override the code to execute
+     */
+    executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState>;
+    /**
+     * Executes arbitrary code against the kernel without incrementing the execution count.
+     */
+    executeHidden(code: string): Promise<nbformat.IOutput[]>;
+}
+
+/**
+ * Kernels created by third party extensions.
+ */
 export interface IThirdPartyKernel extends IBaseKernel {
     readonly creator: '3rdPartyExtension';
 }
 
-export type ThirdPartyKernelOptions = {
-    metadata: KernelConnectionMetadata;
-    /**
-     * When creating a kernel for an Interactive window, pass the Uri of the Python file here (to set the working directory, file & the like)
-     * In the case of Notebooks, just pass the uri of the notebook.
-     */
-    resourceUri: Resource;
-};
+/**
+ * Kernel options for creating first party kernels.
+ */
 export type KernelOptions = {
     metadata: KernelConnectionMetadata;
     controller: NotebookController;
@@ -227,6 +223,34 @@ export type KernelOptions = {
      */
     resourceUri: Resource;
 };
+
+/**
+ * Kernel options for creating third party kernels.
+ */
+export type ThirdPartyKernelOptions = {
+    metadata: KernelConnectionMetadata;
+    /**
+     * When creating a kernel for an Interactive window, pass the Uri of the Python file here (to set the working directory, file & the like)
+     * In the case of Notebooks, just pass the uri of the notebook.
+     */
+    resourceUri: Resource;
+};
+
+/**
+ * Common kernel provider interface shared between first party and third party kernel providers.
+ */
+export interface IBaseKernelProvider<T extends IBaseKernel> extends IAsyncDisposable {
+    readonly kernels: Readonly<T[]>;
+    onDidCreateKernel: Event<T>;
+    onDidStartKernel: Event<T>;
+    onDidRestartKernel: Event<T>;
+    onDidDisposeKernel: Event<T>;
+    onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: T }>;
+}
+
+/**
+ * Kernel provider for fetching and creating kernels inside the extension.
+ */
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
     /**
@@ -240,6 +264,9 @@ export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
     getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
 }
 
+/**
+ * Kernel provider used by third party extensions (indirectly).
+ */
 export const IThirdPartyKernelProvider = Symbol('IThirdPartyKernelProvider');
 export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPartyKernel> {
     /**
@@ -251,15 +278,6 @@ export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPar
      * WARNING: If called with different options for same resource uri, old kernel associated with the Uri will be disposed.
      */
     getOrCreate(uri: Uri, options: ThirdPartyKernelOptions): IThirdPartyKernel;
-}
-
-export interface IBaseKernelProvider<T extends IBaseKernel> extends IAsyncDisposable {
-    readonly kernels: Readonly<T[]>;
-    onDidCreateKernel: Event<T>;
-    onDidStartKernel: Event<T>;
-    onDidRestartKernel: Event<T>;
-    onDidDisposeKernel: Event<T>;
-    onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: T }>;
 }
 
 export interface IRawConnection {
@@ -625,6 +643,9 @@ export const enum StartupCodePriority {
     Debugging = 5
 }
 
+/**
+ * Startup code provider provides code snippets that are run right after the kernel is started but before running any code.
+ */
 export const IStartupCodeProvider = Symbol('IStartupCodeProvider');
 export interface IStartupCodeProvider {
     priority: StartupCodePriority;
