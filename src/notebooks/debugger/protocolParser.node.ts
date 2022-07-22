@@ -4,15 +4,20 @@
 /* eslint-disable no-constant-condition */
 
 import { EventEmitter } from 'events';
-import { injectable } from 'inversify';
 import { Readable } from 'stream';
+import { Disposable } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IProtocolParser } from '../types.node';
 
 const PROTOCOL_START_INDENTIFIER = '\r\n\r\n';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Listener = (...args: any[]) => void;
+
+export interface IProtocolParser extends Disposable {
+    connect(stream: Readable): void;
+    once(event: string | symbol, listener: Function): this;
+    on(event: string | symbol, listener: Function): this;
+}
 
 /**
  * Parsers the debugger Protocol messages and raises the following events:
@@ -26,7 +31,6 @@ type Listener = (...args: any[]) => void;
  * @extends {EventEmitter}
  * @implements {IProtocolParser}
  */
-@injectable()
 export class ProtocolParser implements IProtocolParser {
     private rawData = Buffer.concat([]);
     private contentLength: number = -1;

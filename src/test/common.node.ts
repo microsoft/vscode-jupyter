@@ -185,10 +185,8 @@ function getPythonPath(): string {
  * @return `SemVer` version of the Python interpreter, or `undefined` if an error occurs.
  */
 export async function getPythonSemVer(procService?: IProcessService): Promise<SemVer | undefined> {
-    const decoder = await import('../platform/common/process/decoder.node');
     const proc = await import('../platform/common/process/proc.node');
-
-    const pythonProcRunner = procService ? procService : new proc.ProcessService(new decoder.BufferDecoder());
+    const pythonProcRunner = procService ? procService : new proc.ProcessService();
     const pyVerArgs = ['-c', 'import sys;print("{0}.{1}.{2}".format(*sys.version_info[:3]))'];
 
     return pythonProcRunner

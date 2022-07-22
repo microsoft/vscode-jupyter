@@ -22,7 +22,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { traceError, traceInfoIfCI } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
 import { IKernelDebugAdapterConfig } from './debuggingTypes';
-import { Debugger } from '../../platform/debugger/debugger';
+import { Debugger } from './debugger';
 import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
 import { IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { noop } from '../../platform/common/utils/misc';

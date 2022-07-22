@@ -177,8 +177,3 @@ export type IPythonProposedApi = {
         refreshInterpreters(options?: RefreshInterpretersOptions): Promise<string[] | undefined>;
     };
 };
-
-export const IPythonDebuggerPathProvider = Symbol('IPythonDebuggerPathProvider');
-export interface IPythonDebuggerPathProvider {
-    getDebuggerPath(): Promise<string>;
-}

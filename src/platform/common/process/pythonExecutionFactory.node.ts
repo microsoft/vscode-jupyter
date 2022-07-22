@@ -20,7 +20,6 @@ import {
     DaemonExecutionFactoryCreationOptions,
     ExecutionFactoryCreateWithEnvironmentOptions,
     ExecutionFactoryCreationOptions,
-    IBufferDecoder,
     IProcessLogger,
     IProcessService,
     IProcessServiceFactory,
@@ -48,7 +47,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
-        @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IConfigurationService) private readonly config: IConfigurationService,
@@ -180,7 +178,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 interpreter: options.interpreter
             });
         }
-        const processService: IProcessService = new ProcessService(this.decoder, { ...envVars });
+        const processService: IProcessService = new ProcessService({ ...envVars });
         processService.on('exec', this.logger.logProcess.bind(this.logger));
         this.disposables.push(processService);
 

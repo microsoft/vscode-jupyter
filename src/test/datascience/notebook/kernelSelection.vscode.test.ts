@@ -8,7 +8,6 @@ import * as sinon from 'sinon';
 import { commands, ConfigurationTarget, QuickInputButtons, Uri, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { BufferDecoder } from '../../../platform/common/process/decoder.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { IKernelProvider, isLocalConnection, isRemoteConnection } from '../../../platform/../kernels/types';
@@ -141,7 +140,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
                 : activeInterpreterPath.fsPath;
 
         // Ensure IPykernel is in all environments.
-        const proc = new ProcessService(new BufferDecoder());
+        const proc = new ProcessService();
         await Promise.all([
             proc.exec(venvNoKernelPython.fsPath, ['-m', 'pip', 'install', 'ipykernel']),
             proc.exec(venvKernelPython.fsPath, ['-m', 'pip', 'install', 'ipykernel']),

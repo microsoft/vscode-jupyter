@@ -4,7 +4,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { DebugConfiguration, Disposable, NotebookDocument } from 'vscode';
-import { IPythonDebuggerPathProvider } from '../../platform/api/types';
+import { IPythonApiProvider } from '../../platform/api/types';
 import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
@@ -36,7 +36,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
     private readonly tracingDisableCode: string;
     private debuggingActive: boolean = false;
     constructor(
-        @inject(IPythonDebuggerPathProvider) private readonly debuggerPathProvider: IPythonDebuggerPathProvider,
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IJupyterDebugService)
         @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
@@ -232,7 +232,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         // Actually until this is resolved: https://github.com/microsoft/vscode-python/issues/7615, skip adding
         // this path.
         if (isLocalConnection(kernel.kernelConnectionMetadata)) {
-            let localPath = await this.debuggerPathProvider.getDebuggerPath();
+            let localPath = await this.getDebuggerPath();
             if (this.platform.isWindows) {
                 localPath = localPath.replace(/\\/g, '\\\\');
             }
@@ -252,6 +252,10 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         }
 
         return undefined;
+    }
+
+    public getDebuggerPath(): Promise<string> {
+        return this.apiProvider.getApi().then((api) => api.getDebuggerPath());
     }
 
     // Append our local debugger path and debugger settings path to sys.path

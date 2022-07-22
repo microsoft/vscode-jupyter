@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { TextDocument } from 'vscode';
 import { sendActivationTelemetry } from '../../platform/telemetry/envFileTelemetry.node';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import { IWorkspaceService, IActiveResourceService, IDocumentManager } from '../../platform/common/application/types';
+import { IWorkspaceService, IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposable, Resource } from '../../platform/common/types';
 import { Deferred } from '../../platform/common/utils/async';
@@ -26,14 +26,24 @@ export class WorkspaceActivation implements IExtensionSingleActivationService {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
 
     public async activate(): Promise<void> {
         this.addHandlers();
         this.addRemoveDocOpenedHandlers();
-        return this.activateWorkspace(this.activeResourceService.getActiveResource());
+        return this.activateWorkspace(this.getActiveResource());
+    }
+
+    private getActiveResource(): Resource {
+        const editor = this.documentManager.activeTextEditor;
+        if (editor && !editor.document.isUntitled) {
+            return editor.document.uri;
+        }
+        return Array.isArray(this.workspaceService.workspaceFolders) &&
+            this.workspaceService.workspaceFolders.length > 0
+            ? this.workspaceService.workspaceFolders[0].uri
+            : undefined;
     }
 
     @traceDecoratorError('Failed to activate a workspace')

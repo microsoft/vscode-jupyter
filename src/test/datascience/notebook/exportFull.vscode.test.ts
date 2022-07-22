@@ -30,7 +30,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
 import { ProcessService } from '../../../platform/common/process/proc.node';
-import { BufferDecoder } from '../../../platform/common/process/decoder.node';
 import { INbConvertInterpreterDependencyChecker, INotebookImporter } from '../../../kernels/jupyter/types';
 import { JupyterImporter } from '../../../standalone/import-export/jupyterImporter.node';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -73,7 +72,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
 
             sinon.restore();
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-            proc = new ProcessService(new BufferDecoder());
+            proc = new ProcessService();
             traceInfo('Suite Setup (completed)');
         } catch (e) {
             await captureScreenShot('export-suite');
