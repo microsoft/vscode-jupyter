@@ -422,26 +422,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         message = message.split('\n').join('  \n');
         this.updateSysInfoMessage(message, true, cellPromise);
     }
-    private registerControllerChangeListener(controller: IVSCodeNotebookController) {
-        const controllerChangeListener = controller.controller.onDidChangeSelectedNotebooks(
-            (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
-                // Controller was deselected for this InteractiveWindow's NotebookDocument
-                if (selectedEvent.selected === false && selectedEvent.notebook === this.notebookEditor.notebook) {
-                    controllerChangeListener.dispose();
-                    this.disconnectKernel();
-                }
-            },
-            this,
-            this.internalDisposables
-        );
-    }
-
     private listenForControllerSelection() {
-        const controller = this.notebookControllerSelection.getSelected(this.notebookEditor.notebook);
-        if (controller !== undefined) {
-            this.registerControllerChangeListener(controller);
-        }
-
         // Ensure we hear about any controller changes so we can update our cached promises
         this.notebookControllerSelection.onControllerSelected(
             (e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) => {
@@ -450,7 +431,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 }
 
                 // Clear cached kernel when the selected controller for this document changes
-                this.registerControllerChangeListener(e.controller);
                 if (e.controller.id !== this.currentKernelInfo.controller?.id) {
                     this.disconnectKernel();
                     this.startKernel(e.controller.controller, e.controller.connection).ignoreErrors();

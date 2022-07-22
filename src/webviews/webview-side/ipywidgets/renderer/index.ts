@@ -17,7 +17,7 @@ export const activate: ActivationFunction = (context) => {
     hookupTestScripts(context);
     return {
         renderOutputItem(outputItem: OutputItem, element: HTMLElement) {
-            logger(`Rendering ${outputItem.id}`);
+            logger(`Got item for Rendering ${outputItem.id}}`);
             try {
                 const renderOutputFunc =
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,6 +35,7 @@ export const activate: ActivationFunction = (context) => {
             }
         },
         disposeOutputItem(id?: string) {
+            logger(`Disposing rendered output for ${id}`);
             const disposeOutputFunc =
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (window as any).ipywidgetsKernel?.disposeOutput || (global as any).ipywidgetsKernel?.disposeOutput;

@@ -44,21 +44,16 @@ function initializeComms() {
         return;
     }
     rendererContext.onDidReceiveMessage((message) => {
-        rendererContext.postMessage!({
-            command: 'log',
-            message: `Received message in Widget renderer ${JSON.stringify(message)}`
-        });
-
         if (!message || !message.command) {
             return;
         }
         if (handlers.has(message.command)) {
-            rendererContext.postMessage!({
-                command: 'log',
-                message: `Handled message in Widget renderer ${JSON.stringify(message)}`
-            });
             handlers.get(message.command)!(message);
         } else {
+            rendererContext.postMessage!({
+                command: 'log',
+                message: `Error: Message not handled in Widget renderer ${JSON.stringify(message)}`
+            });
             console.error('No handler for command', message.command);
         }
     });
@@ -194,13 +189,16 @@ function hijackLogging() {
             category: channel
         });
     };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    globalThis.console = {} as any;
     ['log', 'error', 'warn'].forEach((channel) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const originalConsoleLogger = (console as any)[channel] as unknown as Function;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (console as any)[channel] = (...args: any[]) => {
             logMessage('log', args);
-            originalConsoleLogger(...args);
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (globalThis.console as any)[channel] = (...args: any[]) => {
+            logMessage('log', args);
         };
     });
 }

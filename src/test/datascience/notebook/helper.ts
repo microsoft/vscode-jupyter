@@ -399,7 +399,7 @@ async function waitForKernelToChangeImpl(
                 k.connection.interpreter!.uri.fsPath.toLowerCase().includes(interpreterPath.fsPath.toLowerCase())
             );
     }
-    traceInfo(`Switching to kernel id ${controller}`);
+    traceInfo(`Switching to kernel id ${controller?.id}`);
     const isRightKernel = () => {
         const doc = vscodeNotebook.activeNotebookEditor?.notebook;
         if (!doc) {
@@ -432,7 +432,7 @@ async function waitForKernelToChangeImpl(
                         extension: JVSC_EXTENSION_ID
                     });
                     traceInfoIfCI(
-                        `Notebook select.kernel command switched to kernel id ${controller?.connection.kind}:${controller}`
+                        `Notebook select.kernel command switched to kernel id ${controller?.connection.kind}:${controller?.id}`
                     );
                     tryCount += 1;
                 }
@@ -445,6 +445,9 @@ async function waitForKernelToChangeImpl(
         );
         // Make sure the kernel is actually in use before returning (switching is async)
         await sleep(500);
+        traceInfoIfCI(
+            `Notebook select.kernel command successfully switched to kernel id ${controller?.connection.kind}${controller?.id}: after ${tryCount} attempts.`
+        );
     }
 }
 
