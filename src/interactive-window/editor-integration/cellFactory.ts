@@ -10,6 +10,7 @@ import { ICell, ICellRange, IJupyterSettings } from '../../platform/common/types
 import { noop } from '../../platform/common/utils/misc';
 import { createJupyterCellFromVSCNotebookCell } from '../../kernels/execution/helpers';
 import { appendLineFeed, parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
+import { traceInfoIfCI } from '../../platform/logging';
 
 export function createCodeCell(): nbformat.ICodeCell;
 // eslint-disable-next-line @typescript-eslint/unified-signatures
@@ -137,6 +138,7 @@ export function generateCellRangesFromDocument(document: TextDocument, settings?
     for (let index = 0; index < document.lineCount; index += 1) {
         const line = document.lineAt(index);
         if (matcher.isCell(line.text)) {
+            traceInfoIfCI(`${line.text} is a cell marker`);
             if (cells.length > 0) {
                 const previousCell = cells[cells.length - 1];
                 previousCell.range = new Range(previousCell.range.start, document.lineAt(index - 1).range.end);
@@ -146,6 +148,8 @@ export function generateCellRangesFromDocument(document: TextDocument, settings?
                 range: line.range,
                 cell_type: matcher.getCellType(line.text)
             });
+        } else {
+            traceInfoIfCI(`${line.text} is a not cell marker`);
         }
     }
 

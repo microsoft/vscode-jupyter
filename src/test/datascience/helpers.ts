@@ -267,9 +267,10 @@ export async function waitForLastCellToComplete(
 ) {
     const notebookDocument = await waitForInteractiveWindow(interactiveWindow);
     let codeCell: vscode.NotebookCell | undefined;
+    let codeCells: vscode.NotebookCell[] = [];
     await waitForCondition(
         async () => {
-            const codeCells = notebookDocument?.getCells().filter((c) => c.kind === vscode.NotebookCellKind.Code);
+            codeCells = notebookDocument?.getCells().filter((c) => c.kind === vscode.NotebookCellKind.Code);
             codeCell = codeCells && codeCells.length ? codeCells[codeCells.length - 1] : undefined;
             return codeCell && (numberOfCells === -1 || numberOfCells === codeCells!.length) ? true : false;
         },
@@ -281,7 +282,7 @@ export async function waitForLastCellToComplete(
     } else {
         await waitForExecutionCompletedSuccessfully(codeCell!);
     }
-    traceInfoIfCI(`finished waiting for last cell to complete of ${numberOfCells} cells`);
+    traceInfoIfCI(`finished waiting for last cell to complete of ${codeCells.length} cells`);
     return codeCell!;
 }
 

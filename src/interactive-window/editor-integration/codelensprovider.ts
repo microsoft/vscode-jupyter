@@ -129,7 +129,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         }
 
         const result = this.adjustDebuggingLenses(document, codeLenses);
-        traceInfoIfCI(`CodeLensProvider: returning ${result.map((x) => x.command?.title).join(', ')}`);
+        traceInfoIfCI(`CodeLensProvider: returning ${result.length} code lenses`);
         return result;
     }
 

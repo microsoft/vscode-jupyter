@@ -109,7 +109,6 @@ export class CodeLensFactory implements ICodeLensFactory {
             // Because we have all new ranges, we need to recompute ALL of our code lenses.
             cache.documentLenses = [];
             cache.gotoCellLens = [];
-            cache.cachedDocumentVersion = document.version;
             needUpdate = true;
         }
 
@@ -138,11 +137,12 @@ export class CodeLensFactory implements ICodeLensFactory {
                 commands.forEach((c) => {
                     const codeLens = this.createCodeLens(document, r, c, firstCell);
                     if (codeLens) {
-                        cache?.documentLenses.push(codeLens); // NOSONAR
+                        cache!.documentLenses.push(codeLens); // NOSONAR
                     }
                 });
                 firstCell = false;
             });
+            traceInfoIfCI(`Cached ${cache.documentLenses.length} code lenses`);
         } else {
             traceInfoIfCI(
                 `NOT Generating new code lenses for version ${document.version} of document ${document.uri} - needUpdate: ${needUpdate}, cellRanges.length: ${cache.cellRanges.length}`
@@ -169,6 +169,8 @@ export class CodeLensFactory implements ICodeLensFactory {
                 });
             }
         }
+
+        cache.cachedDocumentVersion = document.version;
         return cache;
     }
     private getDocumentExecutionCounts(key: string): number[] {
