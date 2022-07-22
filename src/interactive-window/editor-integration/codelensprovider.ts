@@ -166,6 +166,13 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
                     }
                     return false;
                 });
+            } else {
+                traceInfoIfCI(
+                    `Detected debugging context because activeDebugSession is name:"${this.debugService.activeDebugSession.name}", type: "${this.debugService.activeDebugSession.type}", ` +
+                        `but fell through with debugLocation: ${JSON.stringify(
+                            debugLocation
+                        )}, and doument.uri: ${document.uri.toString()}`
+                );
             }
         } else {
             return lenses.filter((lens) => {
