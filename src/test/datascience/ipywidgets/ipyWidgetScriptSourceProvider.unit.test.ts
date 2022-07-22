@@ -17,14 +17,17 @@ import {
     LocalKernelSpecConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../platform/../kernels/types';
-import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/ipyWidgetScriptSourceProvider';
-import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/localWidgetScriptSourceProvider.node';
-import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/remoteWidgetScriptSourceProvider';
-import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory } from '../../../kernels/ipywidgets/types';
-import { ScriptSourceProviderFactory } from '../../../kernels/ipywidgets/scriptSourceProviderFactory.node';
-import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/cdnWidgetScriptSourceProvider';
-import { IPyWidgetScriptManagerFactory } from '../../../kernels/ipywidgets/ipyWidgetScriptManagerFactory.node';
-import { NbExtensionsPathProvider } from '../../../kernels/ipywidgets/nbExtensionsPathProvider.node';
+import { IPyWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/ipyWidgetScriptSourceProvider';
+import { LocalWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/localWidgetScriptSourceProvider.node';
+import { RemoteWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/remoteWidgetScriptSourceProvider';
+import {
+    ILocalResourceUriConverter,
+    IWidgetScriptSourceProviderFactory
+} from '../../../notebooks/controllers/ipywidgets/types';
+import { ScriptSourceProviderFactory } from '../../../notebooks/controllers/ipywidgets/scriptSourceProviderFactory.node';
+import { CDNWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/cdnWidgetScriptSourceProvider';
+import { IPyWidgetScriptManagerFactory } from '../../../notebooks/controllers/ipywidgets/ipyWidgetScriptManagerFactory.node';
+import { NbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/nbExtensionsPathProvider.node';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

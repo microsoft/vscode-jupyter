@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import * as path from '../../platform/vscode-path/path';
+import * as path from '../../../platform/vscode-path/path';
 import { ExtensionMode, Uri } from 'vscode';
-import { IExtensionContext, IHttpClient } from '../../platform/common/types';
-import { traceError, traceInfoIfCI } from '../../platform/logging';
-import { executeSilently, isPythonKernelConnection } from '../helpers';
-import { IKernel, RemoteKernelConnectionMetadata } from '../types';
+import { IExtensionContext, IHttpClient } from '../../../platform/common/types';
+import { traceError, traceInfoIfCI } from '../../../platform/logging';
+import { executeSilently, isPythonKernelConnection } from '../../../kernels/helpers';
+import { IKernel, RemoteKernelConnectionMetadata } from '../../../kernels/types';
 import { IIPyWidgetScriptManager } from './types';
 import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
-import { isCI } from '../../platform/common/constants';
-import { sleep } from '../../platform/common/utils/async';
-import { noop } from '../../platform/common/utils/misc';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { isCI } from '../../../platform/common/constants';
+import { sleep } from '../../../platform/common/utils/async';
+import { noop } from '../../../platform/common/utils/misc';
+import { IFileSystem } from '../../../platform/common/platform/types';
 
 /**
  * IPyWidgetScriptManager for remote kernels

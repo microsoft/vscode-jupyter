@@ -7,16 +7,15 @@ import type { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
-import { traceVerbose, traceError, traceInfo } from '../../platform/logging';
-import { Identifiers } from '../../platform/common/constants';
-import { IDisposable } from '../../platform/common/types';
-import { Deferred, createDeferred } from '../../platform/common/utils/async';
-import { noop } from '../../platform/common/utils/misc';
-import { deserializeDataViews, serializeDataViews } from '../../platform/common/utils/serializers';
-import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../messageTypes';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { IKernel, IKernelProvider, KernelSocketInformation } from '../types';
-import { WIDGET_MIMETYPE } from './constants';
+import { traceVerbose, traceError, traceInfo } from '../../../platform/logging';
+import { Identifiers, WIDGET_MIMETYPE } from '../../../platform/common/constants';
+import { IDisposable } from '../../../platform/common/types';
+import { Deferred, createDeferred } from '../../../platform/common/utils/async';
+import { noop } from '../../../platform/common/utils/misc';
+import { deserializeDataViews, serializeDataViews } from '../../../platform/common/utils/serializers';
+import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../../messageTypes';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { IKernel, IKernelProvider, KernelSocketInformation } from '../../../kernels/types';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 
 type PendingMessage = {

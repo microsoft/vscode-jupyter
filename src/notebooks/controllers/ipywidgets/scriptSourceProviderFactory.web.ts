@@ -3,9 +3,9 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
-import { IApplicationShell } from '../../platform/common/application/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IHttpClient, IMemento } from '../../platform/common/types';
-import { IKernel } from '../types';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IHttpClient, IMemento } from '../../../platform/common/types';
+import { IKernel } from '../../../kernels/types';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import {

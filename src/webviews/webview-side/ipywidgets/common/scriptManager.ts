@@ -10,7 +10,6 @@ import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatib
 import { registerScripts, undefineModule } from '../common/requirejsRegistry';
 import { ScriptLoader } from './types';
 import { logMessage } from '../../react-common/logger';
-import { WidgetScriptSource } from '../../../../kernels/ipywidgets/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
 import { SharedMessages, IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../messageTypes';
 import { IJupyterExtraSettings } from '../../../../platform/webviews/types';
@@ -18,6 +17,7 @@ import { isCDNReachable } from './helper';
 import { noop } from '../../../../platform/common/utils/misc';
 import { IDisposable } from '../../../../platform/common/types';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
+import { WidgetScriptSource } from '../../../../notebooks/controllers/ipywidgets/types';
 
 export class ScriptManager extends EventEmitter {
     public readonly widgetsRegisteredInRequireJs = new Set<string>();

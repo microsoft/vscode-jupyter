@@ -55,8 +55,8 @@ import { DebuggerVariables } from './debugger/debuggerVariables';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
 
-export function registerTypes(serviceManager: IServiceManager) {
-    registerControllerTypes(serviceManager);
+export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
+    registerControllerTypes(serviceManager, isDevMode);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
     serviceManager.addSingleton<IExtensionSingleActivationService>(

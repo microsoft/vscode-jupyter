@@ -718,3 +718,5 @@ export const DataScienceStartupTime = Symbol('DataScienceStartupTime');
 
 // Default for notebook version (major & minor) used when creating notebooks.
 export const defaultNotebookFormat = { major: 4, minor: 2 };
+
+export const WIDGET_MIMETYPE = 'application/vnd.jupyter.widget-view+json';

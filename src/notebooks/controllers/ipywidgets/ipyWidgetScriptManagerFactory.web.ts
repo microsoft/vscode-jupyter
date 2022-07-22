@@ -3,9 +3,9 @@
 // Licensed under the MIT License.
 
 import { injectable, inject } from 'inversify';
-import { IFileSystem } from '../../platform/common/platform/types';
-import { IExtensionContext, IHttpClient } from '../../platform/common/types';
-import { IKernel } from '../types';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IExtensionContext, IHttpClient } from '../../../platform/common/types';
+import { IKernel } from '../../../kernels/types';
 import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory } from './types';
 

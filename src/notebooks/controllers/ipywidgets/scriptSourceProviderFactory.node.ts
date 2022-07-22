@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { GLOBAL_MEMENTO, IConfigurationService, IHttpClient, IMemento } from '../../platform/common/types';
-import { IKernel } from '../types';
+import { GLOBAL_MEMENTO, IConfigurationService, IHttpClient, IMemento } from '../../../platform/common/types';
+import { IKernel } from '../../../kernels/types';
 import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvider.node';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import {
@@ -12,7 +12,7 @@ import {
     IWidgetScriptSourceProvider,
     IWidgetScriptSourceProviderFactory
 } from './types';
-import { IApplicationShell } from '../../platform/common/application/types';
+import { IApplicationShell } from '../../../platform/common/application/types';
 import { Memento } from 'vscode';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 

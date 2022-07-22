@@ -4,7 +4,7 @@
 'use strict';
 
 import { Uri } from 'vscode';
-import { IKernel, RemoteKernelConnectionMetadata } from '../types';
+import { IKernel, RemoteKernelConnectionMetadata } from '../../../kernels/types';
 import {
     IIPyWidgetScriptManager,
     IIPyWidgetScriptManagerFactory,

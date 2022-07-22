@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from '../../platform/vscode-path/path';
+import * as path from '../../../platform/vscode-path/path';
 import { Uri } from 'vscode';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
-import { IExtensionContext } from '../../platform/common/types';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import { IKernel } from '../types';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
+import { IExtensionContext } from '../../../platform/common/types';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
+import { IKernel } from '../../../kernels/types';
 import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, INbExtensionsPathProvider } from './types';
-import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
+import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 
 type KernelConnectionId = string;
 /**

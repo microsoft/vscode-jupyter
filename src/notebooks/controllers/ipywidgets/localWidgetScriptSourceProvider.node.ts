@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { IKernel } from '../types';
+import { IKernel } from '../../../kernels/types';
 import {
     IIPyWidgetScriptManagerFactory,
     ILocalResourceUriConverter,
