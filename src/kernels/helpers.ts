@@ -176,7 +176,7 @@ export function rankKernels(
     }
 
     traceInfoIfCI(`preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpec?.id}`);
-    traceInfoIfCI(`filtering kernels: ${JSON.stringify(kernels)}`);
+    // traceInfoIfCI(`filtering kernels: ${JSON.stringify(kernels)}`); very large log, but useful for debugging
 
     // Figure out our possible language from the metadata
     const actualNbMetadataLanguage: string | undefined =
@@ -184,12 +184,12 @@ export function rankKernels(
         (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language?.toLowerCase();
     let possibleNbMetadataLanguage = actualNbMetadataLanguage;
 
+    traceInfoIfCI(`filtering out kernels that don't match notebook's language: ${possibleNbMetadataLanguage}`);
     // If the notebook has a language set, remove anything not that language as we don't want to rank those items
     kernels = kernels.filter((kernel) => {
         if (
             possibleNbMetadataLanguage &&
             possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&
-            !notebookMetadata?.kernelspec &&
             kernel.kind !== 'connectToLiveRemoteKernel' &&
             kernel.kernelSpec.language &&
             kernel.kernelSpec.language.toLowerCase() !== possibleNbMetadataLanguage
@@ -197,10 +197,6 @@ export function rankKernels(
             return false;
         }
         // Return everything else
-        if (kernel.kind !== 'connectToLiveRemoteKernel' && kernel.kernelSpec.language) {
-            traceInfoIfCI(`including Kernel with language ${kernel.kernelSpec.language} as a possible match`);
-        }
-
         return true;
     });
 
@@ -231,7 +227,6 @@ export function rankKernels(
             preferredRemoteKernelId
         )
     );
-    traceInfoIfCI(`ranked kernels: ${JSON.stringify(kernels)}`);
     return kernels;
 }
 
