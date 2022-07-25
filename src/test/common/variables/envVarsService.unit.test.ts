@@ -223,7 +223,7 @@ PYTHON=${BINDIR}/python3\n\
             expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
         });
 
-        test(`Ensure PATH is appended irregardless of case`, async () => {
+        test(`Ensure PATH is appeneded irregardless of case`, async () => {
             const vars = { ONE: '1' };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (vars as any)['paTh'] = 'PATH';
@@ -234,54 +234,6 @@ PYTHON=${BINDIR}/python3\n\
             expect(Object.keys(vars)).lengthOf(2, `Incorrect number of variables ${Object.keys(vars).join(' ')}`);
             expect(vars).to.have.property('ONE', '1', 'Incorrect value');
             expect(vars).to.have.property(`paTh`, `PATH${path.delimiter}${pathToAppend}`, 'Incorrect value');
-        });
-        test(`Ensure PATH is not appended if already at the end`, async () => {
-            const defaultPath = `/usr/one${path.delimiter}/usr/three${path.delimiter}/usr/four${path.delimiter}/usr/five`;
-            const vars = {
-                ONE: '1',
-                paTh: defaultPath
-            };
-            const pathToAppend = `/usr/four${path.delimiter}/usr/five`;
-
-            variablesService.appendPath(vars, pathToAppend);
-
-            expect(vars).to.have.property(`paTh`, defaultPath, 'Incorrect value');
-        });
-        test(`Ensure PATH is appended even if path exists elsewhere in the PATH value`, async () => {
-            const defaultPath = `/usr/one${path.delimiter}/usr/three${path.delimiter}/usr/four${path.delimiter}/usr/five`;
-            const vars = {
-                ONE: '1',
-                paTh: defaultPath
-            };
-            const pathToAppend = `/usr/one${path.delimiter}/usr/three`;
-
-            variablesService.appendPath(vars, pathToAppend);
-
-            expect(vars).to.have.property(`paTh`, `${defaultPath}${path.delimiter}${pathToAppend}`, 'Incorrect value');
-        });
-        test(`Ensure PATH is not prepended if already at the start`, async () => {
-            const defaultPath = `/usr/one${path.delimiter}/usr/three${path.delimiter}/usr/four${path.delimiter}/usr/five`;
-            const vars = {
-                ONE: '1',
-                paTh: defaultPath
-            };
-            const pathToPrepend = `/usr/one${path.delimiter}/usr/three`;
-
-            variablesService.prependPath(vars, pathToPrepend);
-
-            expect(vars).to.have.property(`paTh`, defaultPath, 'Incorrect value');
-        });
-        test(`Ensure PATH is prepended even if path exists elsewhere in the PATH value`, async () => {
-            const defaultPath = `/usr/one${path.delimiter}/usr/three${path.delimiter}/usr/four${path.delimiter}/usr/five`;
-            const vars = {
-                ONE: '1',
-                paTh: defaultPath
-            };
-            const pathToPrepend = `/usr/four${path.delimiter}/usr/five`;
-
-            variablesService.prependPath(vars, pathToPrepend);
-
-            expect(vars).to.have.property(`paTh`, `${pathToPrepend}${path.delimiter}${defaultPath}`, 'Incorrect value');
         });
     });
 
