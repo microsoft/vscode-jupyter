@@ -70,6 +70,19 @@
         },
         {
             "type": "npm",
+            "script": "launchWebExtension",
+            "problemMatcher": [],
+            "label": "Launch Web Extension (Chrome)"
+        },
+        {
+            "type": "shell",
+            "problemMatcher": [],
+            "command": "npm",
+            "args": ["run", "launchWebExtension", "--", "--browser=webkit", "--port=3111"],
+            "label": "Launch Web Extension (Safari)"
+        },
+        {
+            "type": "npm",
             "script": "lint",
             "problemMatcher": ["$eslint-stylish"],
             "label": "npm: lint",
@@ -88,7 +101,7 @@
             "options": {
                 "env": {
                     "CI_PYTHON_PATH": "", // Update with path to real python interpereter used for testing.
-                    "EXISTING_JUPYTER_URI": "", // Update with a server that you started yourself to avoid this script doing it
+                    "EXISTING_JUPYTER_URI": "" // Update with a server that you started yourself to avoid this script doing it
                 }
             }
         },

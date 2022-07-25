@@ -16,6 +16,7 @@ const { hideBin } = require('yargs/helpers');
 const argv = yargs(hideBin(process.argv)).argv;
 
 const browserType = argv.browser || argv.browserType || 'chromium';
+const port = argv.port || 3000;
 
 exports.launch = async function launch(launchTests) {
     let exitCode = 0;
@@ -42,10 +43,10 @@ exports.launch = async function launch(launchTests) {
         const options = {
             browserType,
             verbose: true,
+            port,
             headless: isCI ? false : false, // Set this to false to debug failures (false on CI to support capturing screenshots when tests fail).
             extensionDevelopmentPath,
-            folderPath: path.resolve(__dirname, '..', 'src', 'test', 'datascience'),
-            extensionTestsPath: bundlePath
+            folderPath: path.resolve(__dirname, '..', 'src', 'test', 'datascience')
         };
         if (launchTests) {
             options.extensionTestsPath = bundlePath;

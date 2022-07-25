@@ -126,56 +126,10 @@ function fixJupyterLabRenderers() {
     }
 }
 
-function fixJupyterLabFuture() {
-    const warnings = [];
-    [
-        'node_modules/@jupyterlab/services/lib/kernel/future.js',
-        'node_modules/@lumino/signaling/dist/index.es6.js'
-    ].forEach((file) => {
-        const filePath = path.join(__dirname, '..', '..', file);
-        if (!fs.existsSync(filePath)) {
-            return;
-        }
-        const textToReplace = `return ok ? requestAnimationFrame : setImmediate;`;
-        const textToReplaceWith = `return ok ? requestAnimationFrame : (typeof setImmediate === 'function' ? setImmediate : (fn) => setTimeout(fn, 0));`;
-        const fileContents = fs.readFileSync(filePath, 'utf8').toString();
-        if (fileContents.indexOf(textToReplace) === -1 && fileContents.indexOf(textToReplaceWith) === -1) {
-            warnings.push(`Unable to find Jupyter kernel/future/setImmediate usage to replace! in ${file}`);
-        }
-        fs.writeFileSync(filePath, fileContents.replace(textToReplace, textToReplaceWith));
-    });
-    if (warnings.length === 2) {
-        throw new Error(warnings[0] + '\n' + warnings[1]);
-    }
-}
-function fixLuminoPolling() {
-    const warnings = [];
-    ['node_modules/@lumino/polling/dist/index.es6.js'].forEach((file) => {
-        const filePath = path.join(__dirname, '..', '..', file);
-        if (!fs.existsSync(filePath)) {
-            return;
-        }
-        const textToReplace = `: setImmediate;`;
-        const textToReplaceWith = `: typeof setImmediate === 'function' ? setImmediate : (fn) => setTimeout(fn, 0);`;
-        const fileContents = fs.readFileSync(filePath, 'utf8').toString();
-        if (fileContents.indexOf(textToReplace) === -1 && fileContents.indexOf(textToReplaceWith) === -1) {
-            warnings.push('Unable to find Jupyter @lumino/polling/setImmediate usage to replace!');
-        }
-        fs.writeFileSync(filePath, fileContents.replace(textToReplace, textToReplaceWith));
-
-        const textToReplace2 = `: clearImmediate;`;
-        const textToReplaceWith2 = `: typeof clearImmediate === 'function' ? clearImmediate : clearTimeout;`;
-        const fileContents2 = fs.readFileSync(filePath, 'utf8').toString();
-        if (fileContents2.indexOf(textToReplace2) === -1 && fileContents2.indexOf(textToReplaceWith2) === -1) {
-            warnings.push('Unable to find Jupyter @lumino/polling/clearImmediate usage to replace!');
-        }
-        fs.writeFileSync(filePath, fileContents2.replace(textToReplace2, textToReplaceWith2));
-    });
-    if (warnings.length === 2) {
-        throw new Error(warnings[0] + '\n' + warnings[1]);
-    }
-}
-
+/**
+ * Ensures extension loads in safari (https://github.com/microsoft/vscode-jupyter/issues/10621)
+ * Some of the regexes are not supported in safari and not required either.
+ */
 function fixStripComments() {
     const file = 'node_modules/strip-comments/lib/languages.js';
     const filePath = path.join(__dirname, '..', '..', file);
@@ -197,6 +151,4 @@ fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
 createJupyterKernelWithoutSerialization();
 updateJSDomTypeDefinition();
-fixJupyterLabFuture();
-fixLuminoPolling();
 fixStripComments();
