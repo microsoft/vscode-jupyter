@@ -7,8 +7,6 @@ const colors = require('colors/safe');
 const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
-const child_process = require('child_process');
-const dedent = require('dedent');
 
 /**
  * In order to get raw kernels working, we reuse the default kernel that jupyterlab ships.
