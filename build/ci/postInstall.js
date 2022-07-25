@@ -8,6 +8,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
 const child_process = require('child_process');
+const dedent = require('dedent');
 
 /**
  * In order to get raw kernels working, we reuse the default kernel that jupyterlab ships.
@@ -125,7 +126,78 @@ function fixJupyterLabRenderers() {
     }
 }
 
+function fixJupyterLabFuture() {
+    const warnings = [];
+    [
+        'node_modules/@jupyterlab/services/lib/kernel/future.js',
+        'node_modules/@lumino/signaling/dist/index.es6.js'
+    ].forEach((file) => {
+        const filePath = path.join(__dirname, '..', '..', file);
+        if (!fs.existsSync(filePath)) {
+            return;
+        }
+        const textToReplace = `return ok ? requestAnimationFrame : setImmediate;`;
+        const textToReplaceWith = `return ok ? requestAnimationFrame : (typeof setImmediate === 'function' ? setImmediate : setTimeout);`;
+        const fileContents = fs.readFileSync(filePath, 'utf8').toString();
+        if (fileContents.indexOf(textToReplace) === -1 && fileContents.indexOf(textToReplaceWith) === -1) {
+            warnings.push(`Unable to find Jupyter kernel/future/setImmediate usage to replace! in ${file}`);
+        }
+        fs.writeFileSync(filePath, fileContents.replace(textToReplace, textToReplaceWith));
+    });
+    if (warnings.length === 2) {
+        throw new Error(warnings[0] + '\n' + warnings[1]);
+    }
+}
+function fixLuminoPolling() {
+    const warnings = [];
+    ['node_modules/@lumino/polling/dist/index.es6.js'].forEach((file) => {
+        const filePath = path.join(__dirname, '..', '..', file);
+        if (!fs.existsSync(filePath)) {
+            return;
+        }
+        const textToReplace = `: setImmediate;`;
+        const textToReplaceWith = `: typeof setImmediate === 'function' ? setImmediate : setTimeout;`;
+        const fileContents = fs.readFileSync(filePath, 'utf8').toString();
+        if (fileContents.indexOf(textToReplace) === -1 && fileContents.indexOf(textToReplaceWith) === -1) {
+            warnings.push('Unable to find Jupyter @lumino/polling/setImmediate usage to replace!');
+        }
+        fs.writeFileSync(filePath, fileContents.replace(textToReplace, textToReplaceWith));
+
+        const textToReplace2 = `: clearImmediate;`;
+        const textToReplaceWith2 = `: typeof clearImmediate === 'function' ? clearImmediate : clearTimeout;`;
+        const fileContents2 = fs.readFileSync(filePath, 'utf8').toString();
+        if (fileContents2.indexOf(textToReplace2) === -1 && fileContents2.indexOf(textToReplaceWith2) === -1) {
+            warnings.push('Unable to find Jupyter @lumino/polling/clearImmediate usage to replace!');
+        }
+        fs.writeFileSync(filePath, fileContents2.replace(textToReplace2, textToReplaceWith2));
+    });
+    if (warnings.length === 2) {
+        throw new Error(warnings[0] + '\n' + warnings[1]);
+    }
+}
+
+function fixStripComments() {
+    const file = 'node_modules/strip-comments/lib/languages.js';
+    const filePath = path.join(__dirname, '..', '..', file);
+    if (!fs.existsSync(filePath)) {
+        return;
+    }
+    const contents = dedent`
+    'use strict';
+
+    exports.python = {
+        BLOCK_OPEN_REGEX: /^"""/,
+        BLOCK_CLOSE_REGEX: /^"""/,
+        LINE_REGEX: /^#.*/
+    };
+    `;
+    fs.writeFileSync(filePath, contents);
+}
+
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
 createJupyterKernelWithoutSerialization();
 updateJSDomTypeDefinition();
+fixJupyterLabFuture();
+fixLuminoPolling();
+fixStripComments();
