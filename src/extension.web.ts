@@ -13,7 +13,7 @@ if ((Reflect as any).metadata === undefined) {
 // & requestAnimationFrame is the preferred approach and setImmediate is the fallback.
 // As requestAnimationFrame is supported in chrome webworkers there's no need for a fallback to setImmediate.
 // https://github.com/microsoft/vscode-jupyter/issues/10621
-require('setImmediate');
+require('setimmediate');
 
 // Initialize the logger first.
 require('./platform/logging');
