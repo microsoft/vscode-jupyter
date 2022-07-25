@@ -7600,8 +7600,9 @@ No description provided
             | 'error' // Some other error.
             | 'installedInJupyter' // The package was successfully installed in Jupyter whilst failed to install in Python ext.
             | 'failedToInstallInJupyter' // Failed to install the package in Jupyter as well as Python ext.
-            | 'dismissed';
--  // User chose to dismiss the prompt.
+            | 'dismissed' // User chose to dismiss the prompt.
+            | 'moreInfo';
+-  // User requested more information on the module in question
         resourceType?: 'notebook' | 'interactive';
 - 
         /**
@@ -7640,7 +7641,7 @@ No description provided
 
 [src/kernels/kernelDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.node.ts)
 ```typescript
-            : [Common.install()];
+
         try {
             if (!this.isCodeSpace) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
@@ -7652,8 +7653,20 @@ No description provided
 
 [src/kernels/kernelDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.node.ts)
 ```typescript
-                      promptCancellationPromise
-                  ]);
+                      ]);
+
+                if (selection === moreInfoOption) {
+                    sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                        action: 'moreInfo',
+                        moduleName: productNameForTelemetry,
+                        resourceType,
+```
+
+
+[src/kernels/kernelDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.node.ts)
+```typescript
+                // "More Info" isn't a full valid response here, so reprompt after showing it
+            } while (selection === moreInfoOption);
             if (cancelTokenSource.token.isCancellationRequested) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                     action: 'dismissed',
@@ -7666,7 +7679,7 @@ No description provided
 ```typescript
                 return KernelInterpreterDependencyResponse.cancel;
             }
-            if (selection === selectKernel) {
+            if (selection === selectKernelOption) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                     action: 'differentKernel',
                     moduleName: productNameForTelemetry,
@@ -7678,7 +7691,7 @@ No description provided
 ```typescript
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
-            } else if (selection === Common.install()) {
+            } else if (selection === installOption) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                     action: 'install',
                     moduleName: productNameForTelemetry,
@@ -7712,9 +7725,9 @@ No description provided
 
 [src/kernels/kernelDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.node.ts)
 ```typescript
+                    return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
                 }
             }
-
             sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                 action: 'dismissed',
                 moduleName: productNameForTelemetry,

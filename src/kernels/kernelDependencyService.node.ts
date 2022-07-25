@@ -228,14 +228,19 @@ export class KernelDependencyService implements IKernelDependencyService {
             defaultValue: undefined,
             token: cancelTokenSource.token
         });
-        const selectKernel = DataScience.selectKernel();
-        // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.
-        // https://github.com/microsoft/vscode-jupyter/issues/6135
-        const options = resource
-            ? cannotChangeKernels
-                ? [Common.install()]
-                : [Common.install(), selectKernel]
-            : [Common.install()];
+
+        // Build our set of prompt actions
+        const installOption = Common.install();
+        const selectKernelOption = DataScience.selectKernel();
+        const moreInfoOption = Common.moreInfo();
+        const options = [installOption];
+        if (resource && !cannotChangeKernels) {
+            // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.
+            // https://github.com/microsoft/vscode-jupyter/issues/6135
+            options.push(selectKernelOption);
+        }
+        options.push(moreInfoOption);
+
         try {
             if (!this.isCodeSpace) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
@@ -247,12 +252,30 @@ export class KernelDependencyService implements IKernelDependencyService {
                 });
             }
             traceInfoIfCI(`Prompting user for install (this.isCodeSpace=${this.isCodeSpace}).`);
-            const selection = this.isCodeSpace
-                ? Common.install()
-                : await Promise.race([
-                      this.appShell.showInformationMessage(message, { modal: true }, ...options),
-                      promptCancellationPromise
-                  ]);
+            let selection;
+            do {
+                selection = this.isCodeSpace
+                    ? installOption
+                    : await Promise.race([
+                          this.appShell.showInformationMessage(message, { modal: true }, ...options),
+                          promptCancellationPromise
+                      ]);
+
+                if (selection === moreInfoOption) {
+                    sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                        action: 'moreInfo',
+                        moduleName: productNameForTelemetry,
+                        resourceType,
+                        resourceHash,
+                        pythonEnvType: interpreter.envType
+                    });
+
+                    // Link to our wiki page on jupyter kernels + ipykernel
+                    // https://github.com/microsoft/vscode-jupyter/wiki/Jupyter-Kernels-and-the-Jupyter-Extension#python-extension-and-ipykernel
+                    this.appShell.openUrl('https://aka.ms/AAhi594');
+                }
+                // "More Info" isn't a full valid response here, so reprompt after showing it
+            } while (selection === moreInfoOption);
             if (cancelTokenSource.token.isCancellationRequested) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                     action: 'dismissed',
@@ -263,7 +286,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 });
                 return KernelInterpreterDependencyResponse.cancel;
             }
-            if (selection === selectKernel) {
+            if (selection === selectKernelOption) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                     action: 'differentKernel',
                     moduleName: productNameForTelemetry,
@@ -272,7 +295,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     pythonEnvType: interpreter.envType
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
-            } else if (selection === Common.install()) {
+            } else if (selection === installOption) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                     action: 'install',
                     moduleName: productNameForTelemetry,
@@ -316,7 +339,6 @@ export class KernelDependencyService implements IKernelDependencyService {
                     return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
                 }
             }
-
             sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                 action: 'dismissed',
                 moduleName: productNameForTelemetry,

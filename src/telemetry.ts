@@ -542,7 +542,8 @@ export interface IEventNamePropertyMapping {
             | 'error' // Some other error.
             | 'installedInJupyter' // The package was successfully installed in Jupyter whilst failed to install in Python ext.
             | 'failedToInstallInJupyter' // Failed to install the package in Jupyter as well as Python ext.
-            | 'dismissed'; // User chose to dismiss the prompt.
+            | 'dismissed' // User chose to dismiss the prompt.
+            | 'moreInfo'; // User requested more information on the module in question
         resourceType?: 'notebook' | 'interactive';
         /**
          * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
