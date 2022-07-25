@@ -137,7 +137,7 @@ function fixJupyterLabFuture() {
             return;
         }
         const textToReplace = `return ok ? requestAnimationFrame : setImmediate;`;
-        const textToReplaceWith = `return ok ? requestAnimationFrame : (typeof setImmediate === 'function' ? setImmediate : setTimeout);`;
+        const textToReplaceWith = `return ok ? requestAnimationFrame : (typeof setImmediate === 'function' ? setImmediate : (fn) => setTimeout(fn, 0));`;
         const fileContents = fs.readFileSync(filePath, 'utf8').toString();
         if (fileContents.indexOf(textToReplace) === -1 && fileContents.indexOf(textToReplaceWith) === -1) {
             warnings.push(`Unable to find Jupyter kernel/future/setImmediate usage to replace! in ${file}`);
@@ -156,7 +156,7 @@ function fixLuminoPolling() {
             return;
         }
         const textToReplace = `: setImmediate;`;
-        const textToReplaceWith = `: typeof setImmediate === 'function' ? setImmediate : setTimeout;`;
+        const textToReplaceWith = `: typeof setImmediate === 'function' ? setImmediate : (fn) => setTimeout(fn, 0);`;
         const fileContents = fs.readFileSync(filePath, 'utf8').toString();
         if (fileContents.indexOf(textToReplace) === -1 && fileContents.indexOf(textToReplaceWith) === -1) {
             warnings.push('Unable to find Jupyter @lumino/polling/setImmediate usage to replace!');
