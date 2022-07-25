@@ -22,7 +22,7 @@ exports.launch = async function launch(launchTests) {
     let server;
     let testServer;
     try {
-        if (launchTests){
+        if (launchTests) {
             server = (await startJupyter()).server;
             testServer = await startReportServer();
         }
