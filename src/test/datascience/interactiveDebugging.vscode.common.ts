@@ -35,7 +35,7 @@ export function sharedIWDebuggerTests(
         suiteSetup?: (debuggerType: DebuggerType) => Promise<void>;
     }
 ) {
-    const debuggerTypes: DebuggerType[] = ['VSCodePythonDebugger'];
+    const debuggerTypes: DebuggerType[] = ['VSCodePythonDebugger', 'JupyterProtocolDebugger'];
     debuggerTypes.forEach((debuggerType) => {
         suite(`Debugging with ${debuggerType}`, async function () {
             this.timeout(120_000);
