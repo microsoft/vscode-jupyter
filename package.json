@@ -2038,7 +2038,7 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.markdownDescription%",
-                    "scope": "machine",
+                    "scope": "application",
                     "tags": [
                         "experimental"
                     ]
