@@ -3,4 +3,4 @@
 
 const { launch } = require('./launchWebUtils');
 
-void launch(true);
+void launch();

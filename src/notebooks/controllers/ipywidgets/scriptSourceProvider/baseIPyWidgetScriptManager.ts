@@ -66,7 +66,7 @@ export function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderNa
     // the config entry is js, and not json.
     // We cannot eval as thats dangerous, and we cannot use JSON.parse either as it not JSON.
     // Lets just extract what we need.
-    configStr = stripComments(configStr);
+    configStr = stripComments(configStr, { language: 'javascript' });
     configStr = configStr.splitLines({ trim: true, removeEmptyEntries: true }).join('');
     // Now that we have just valid JS, extract contents between the third '{' and corresponding ending '}'
     const mappings = configStr
