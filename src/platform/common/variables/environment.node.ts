@@ -91,13 +91,13 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         // depending upon where the environment variable comes from (kernelspec might have 'PATH' whereas windows might use 'Path')
         const variableNameLower = variableName.toLowerCase();
         const matchingKey = vars ? Object.keys(vars).find((k) => k.toLowerCase() == variableNameLower) : undefined;
-        const variable = vars && matchingKey ? vars[matchingKey] : undefined;
+        const existingValue = vars && matchingKey ? vars[matchingKey] : undefined;
         const setKey = matchingKey || variableName;
-        if (variable && typeof variable === 'string' && variable.length > 0) {
-            if (append) {
-                vars[setKey] = variable + path.delimiter + valueToAppendOrPrepend;
-            } else {
-                vars[setKey] = valueToAppendOrPrepend + path.delimiter + variable;
+        if (existingValue && typeof existingValue === 'string' && existingValue.length > 0) {
+            if (append && !(vars[setKey] || '').endsWith(path.delimiter + valueToAppendOrPrepend)) {
+                vars[setKey] = existingValue + path.delimiter + valueToAppendOrPrepend;
+            } else if (!append && !(vars[setKey] || '').startsWith(valueToAppendOrPrepend + path.delimiter)) {
+                vars[setKey] = valueToAppendOrPrepend + path.delimiter + existingValue;
             }
         } else {
             vars[setKey] = valueToAppendOrPrepend;
