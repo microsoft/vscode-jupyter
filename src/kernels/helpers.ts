@@ -176,7 +176,6 @@ export function rankKernels(
     }
 
     traceInfoIfCI(`preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpec?.id}`);
-    traceInfoIfCI(`filtering kernels: ${JSON.stringify(kernels)}`);
 
     // Figure out our possible language from the metadata
     const actualNbMetadataLanguage: string | undefined =
@@ -197,10 +196,6 @@ export function rankKernels(
             return false;
         }
         // Return everything else
-        if (kernel.kind !== 'connectToLiveRemoteKernel' && kernel.kernelSpec.language) {
-            traceInfoIfCI(`including Kernel with language ${kernel.kernelSpec.language} as a possible match`);
-        }
-
         return true;
     });
 
@@ -231,7 +226,6 @@ export function rankKernels(
             preferredRemoteKernelId
         )
     );
-    traceInfoIfCI(`ranked kernels: ${JSON.stringify(kernels)}`);
     return kernels;
 }
 
