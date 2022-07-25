@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import { when, mock, instance } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { NbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/nbExtensionsPathProvider.node';
-import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/nbExtensionsPathProvider.web';
+import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/nbExtensionsPathProvider.web';
 import { INbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/types';
 import {
     IJupyterKernelSpec,
