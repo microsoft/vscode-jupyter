@@ -33,7 +33,7 @@ import {
     executeCellAndWaitForOutput,
     initializeNotebookForWidgetTest
 } from './standardWidgets.vscode.common.test';
-import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../notebooks/controllers/ipywidgets/cdnWidgetScriptSourceProvider';
+import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

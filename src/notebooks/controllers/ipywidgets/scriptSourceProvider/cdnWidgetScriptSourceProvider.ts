@@ -4,16 +4,16 @@
 'use strict';
 
 import { ConfigurationTarget, Memento } from 'vscode';
-import { IApplicationShell } from '../../../platform/common/application/types';
-import { Telemetry } from '../../../platform/common/constants';
-import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../../platform/common/types';
-import { createDeferred, Deferred } from '../../../platform/common/utils/async';
-import { Common, DataScience } from '../../../platform/common/utils/localize';
-import { noop } from '../../../platform/common/utils/misc';
-import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
-import { ConsoleForegroundColors } from '../../../platform/logging/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
+import { IApplicationShell } from '../../../../platform/common/application/types';
+import { Telemetry } from '../../../../platform/common/constants';
+import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../../../platform/common/types';
+import { createDeferred, Deferred } from '../../../../platform/common/utils/async';
+import { Common, DataScience } from '../../../../platform/common/utils/localize';
+import { noop } from '../../../../platform/common/utils/misc';
+import { traceError, traceInfo, traceVerbose } from '../../../../platform/logging';
+import { ConsoleForegroundColors } from '../../../../platform/logging/types';
+import { sendTelemetryEvent } from '../../../../telemetry';
+import { IWidgetScriptSourceProvider, WidgetScriptSource } from '../types';
 
 // Source borrowed from https://github.com/jupyter-widgets/ipywidgets/blob/54941b7a4b54036d089652d91b39f937bde6b6cd/packages/html-manager/src/libembed-amd.ts#L33
 const unpgkUrl = 'https://unpkg.com/';

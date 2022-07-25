@@ -9,7 +9,7 @@ import {
     IIPyWidgetScriptManager,
     IIPyWidgetScriptManagerFactory
 } from '../../../notebooks/controllers/ipywidgets/types';
-import { RemoteWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/remoteWidgetScriptSourceProvider';
+import { RemoteWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/remoteWidgetScriptSourceProvider';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - ipywidget - Remote Widget Script Source', () => {

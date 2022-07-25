@@ -3,8 +3,8 @@
 
 import { injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IKernel } from '../../../kernels/types';
-import { INbExtensionsPathProvider } from './types';
+import { IKernel } from '../../../../kernels/types';
+import { INbExtensionsPathProvider } from '../types';
 
 /**
  * Returns the path to the nbExtensions folder for a given kernel (node)

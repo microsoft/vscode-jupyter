@@ -17,17 +17,17 @@ import {
     LocalKernelSpecConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../platform/../kernels/types';
-import { IPyWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/ipyWidgetScriptSourceProvider';
-import { LocalWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/localWidgetScriptSourceProvider.node';
-import { RemoteWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/remoteWidgetScriptSourceProvider';
+import { IPyWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/ipyWidgetScriptSourceProvider';
+import { LocalWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/localWidgetScriptSourceProvider.node';
+import { RemoteWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/remoteWidgetScriptSourceProvider';
 import {
     ILocalResourceUriConverter,
     IWidgetScriptSourceProviderFactory
 } from '../../../notebooks/controllers/ipywidgets/types';
-import { ScriptSourceProviderFactory } from '../../../notebooks/controllers/ipywidgets/scriptSourceProviderFactory.node';
-import { CDNWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/cdnWidgetScriptSourceProvider';
-import { IPyWidgetScriptManagerFactory } from '../../../notebooks/controllers/ipywidgets/ipyWidgetScriptManagerFactory.node';
-import { NbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/nbExtensionsPathProvider.node';
+import { ScriptSourceProviderFactory } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/scriptSourceProviderFactory.node';
+import { CDNWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
+import { IPyWidgetScriptManagerFactory } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/ipyWidgetScriptManagerFactory.node';
+import { NbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/nbExtensionsPathProvider.node';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

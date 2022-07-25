@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { ILocalResourceUriConverter } from './types';
+import { ILocalResourceUriConverter } from '../types';
 
 /**
  * Converts the uri of a widget script for loading in a vscode webview

@@ -1,9 +1,9 @@
 import { IServiceManager } from '../../../platform/ioc/types';
-import { ScriptSourceProviderFactory } from './scriptSourceProviderFactory.web';
+import { ScriptSourceProviderFactory } from './scriptSourceProvider/scriptSourceProviderFactory.web';
 import { IIPyWidgetScriptManagerFactory, INbExtensionsPathProvider, IWidgetScriptSourceProviderFactory } from './types';
-import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
+import { IPyWidgetMessageDispatcherFactory } from './message/ipyWidgetMessageDispatcherFactory';
 import { NbExtensionsPathProvider } from './nbExtensionsPathProvider.web';
-import { IPyWidgetScriptManagerFactory } from './ipyWidgetScriptManagerFactory.web';
+import { IPyWidgetScriptManagerFactory } from './scriptSourceProvider/ipyWidgetScriptManagerFactory.web';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(

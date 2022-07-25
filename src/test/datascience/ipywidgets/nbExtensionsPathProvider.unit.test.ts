@@ -6,7 +6,7 @@ import * as path from '../../../platform/vscode-path/path';
 import { assert } from 'chai';
 import { when, mock, instance } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { NbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/nbExtensionsPathProvider.node';
+import { NbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/nbExtensionsPathProvider.node';
 import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/nbExtensionsPathProvider.web';
 import { INbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/types';
 import {

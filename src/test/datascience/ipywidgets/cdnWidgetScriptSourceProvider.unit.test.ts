@@ -17,7 +17,7 @@ import {
     CDNWidgetScriptSourceProvider,
     GlobalStateKeyToNeverWarnAboutNoNetworkAccess,
     GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce
-} from '../../../notebooks/controllers/ipywidgets/cdnWidgetScriptSourceProvider';
+} from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/types';
 import { HttpClient } from '../../../platform/common/net/httpClient';
 import { IApplicationShell } from '../../../platform/common/application/types';

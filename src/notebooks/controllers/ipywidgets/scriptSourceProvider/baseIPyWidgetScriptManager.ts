@@ -3,17 +3,17 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { IDisposable } from '../../../platform/common/types';
-import { traceError, traceInfoIfCI, traceWarning } from '../../../platform/logging';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { IKernel, isLocalConnection } from '../../../kernels/types';
-import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
+import { disposeAllDisposables } from '../../../../platform/common/helpers';
+import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
+import { IDisposable } from '../../../../platform/common/types';
+import { traceError, traceInfoIfCI, traceWarning } from '../../../../platform/logging';
+import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
+import { IKernel, isLocalConnection } from '../../../../kernels/types';
+import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
 import * as stripComments from 'strip-comments';
-import { IIPyWidgetScriptManager } from './types';
-import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { isCI } from '../../../platform/common/constants';
+import { IIPyWidgetScriptManager } from '../types';
+import { StopWatch } from '../../../../platform/common/utils/stopWatch';
+import { isCI } from '../../../../platform/common/constants';
 
 export function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderName: string, contents: string) {
     // Look for `require.config(` or `window["require"].config` or `window['requirejs'].config`
