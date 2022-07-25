@@ -182,15 +182,14 @@ function fixStripComments() {
     if (!fs.existsSync(filePath)) {
         return;
     }
-    const contents = dedent`
-    'use strict';
+    const contents = `
+'use strict';
 
-    exports.python = {
-        BLOCK_OPEN_REGEX: /^"""/,
-        BLOCK_CLOSE_REGEX: /^"""/,
-        LINE_REGEX: /^#.*/
-    };
-    `;
+exports.javascript = {
+    BLOCK_OPEN_REGEX: /^\\/\\*\\*?(!?)/,
+    BLOCK_CLOSE_REGEX: /^\\*\\/(\\n?)/,
+    LINE_REGEX: /^\\/\\/(!?).*/
+};`;
     fs.writeFileSync(filePath, contents);
 }
 

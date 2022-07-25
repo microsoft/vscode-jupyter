@@ -15,7 +15,7 @@ const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const argv = yargs(hideBin(process.argv)).argv;
 
-const browserType = argv.browser || argv.browserType || 'chromimum';
+const browserType = argv.browser || argv.browserType || 'chromium';
 
 exports.launch = async function launch(launchTests) {
     let exitCode = 0;
@@ -39,25 +39,18 @@ exports.launch = async function launch(launchTests) {
         );
         const updatedSettingsJson = jsonc.applyEdits(settingsJson, edits);
         fs.writeFileSync(packageJsonFile, updatedSettingsJson);
-
+        const options = {
+            browserType,
+            verbose: true,
+            headless: isCI ? false : false, // Set this to false to debug failures (false on CI to support capturing screenshots when tests fail).
+            extensionDevelopmentPath,
+            folderPath: path.resolve(__dirname, '..', 'src', 'test', 'datascience'),
+            extensionTestsPath: bundlePath
+        };
         if (launchTests) {
-            await test_web.runTests({
-                browserType,
-                verbose: true,
-                headless: isCI ? false : false, // Set this to false to debug failures (false on CI to support capturing screenshots when tests fail).
-                extensionDevelopmentPath,
-                folderPath: path.resolve(__dirname, '..', 'src', 'test', 'datascience'),
-                extensionTestsPath: bundlePath
-            });
-        } else {
-            await test_web.open({
-                browserType,
-                verbose: true,
-                headless: false,
-                extensionDevelopmentPath,
-                folderPath: path.resolve(__dirname, '..', 'src', 'test', 'datascience')
-            });
+            options.extensionTestsPath = bundlePath;
         }
+        await test_web.runTests(options);
     } catch (err) {
         console.error(launchTests ? 'Failed to run tests' : 'Failed to launch VS Code', err);
         exitCode = 1;
