@@ -9,6 +9,7 @@ import { EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { IServerConnectionType } from '../../../../kernels/jupyter/types';
 import {
     IKernelFinder,
+    KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../../kernels/types';
@@ -21,7 +22,7 @@ import {
 } from '../../../../notebooks/controllers/types';
 import { IPythonExtensionChecker } from '../../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
-import { JupyterNotebookView } from '../../../../platform/common/constants';
+import { JupyterNotebookView, InteractiveWindowView } from '../../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
 import { IDisposable } from '../../../../platform/common/types';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
@@ -96,22 +97,16 @@ suite('Preferred Controller', () => {
         },
         kind: 'startUsingLocalKernelSpec'
     };
-    test('Find preferred non-python Kernel', async () => {
-        const doc = mock<NotebookDocument>();
-        const kernels = [pythonKernel, juliaKernel];
-        const metadata: Partial<INotebookMetadata> = {
-            kernelspec: {
-                display_name: '',
-                name: 'julia'
-            },
-            language_info: {
-                name: 'julia'
-            }
-        };
-
-        when(doc.uri).thenReturn(Uri.file('one.ipynb'));
-        when(doc.notebookType).thenReturn(JupyterNotebookView);
-        when(doc.metadata).thenReturn({ custom: { metadata } });
+    function setupData(
+        metadata: Partial<INotebookMetadata>,
+        kernels: KernelConnectionMetadata[],
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView = JupyterNotebookView
+    ) {
+        const document = mock<NotebookDocument>();
+        const uri = notebookType === JupyterNotebookView ? Uri.file('one.ipynb') : Uri.file('one.py');
+        when(document.uri).thenReturn(uri);
+        when(document.notebookType).thenReturn(notebookType);
+        when(document.metadata).thenReturn({ custom: { metadata } });
         when(serverConnectionType.isLocalLaunch).thenReturn(true);
         when(
             kernelFinder.rankKernels(anything(), anything(), anything(), anything(), anything(), anything())
@@ -127,14 +122,30 @@ suite('Preferred Controller', () => {
         });
         when(controllerRegistrations.registered).thenReturn(controllers);
 
-        const { preferredConnection, controller } = await preferredControllerService.computePreferred(instance(doc));
+        return { document };
+    }
+    test('Find preferred non-python Kernel', async () => {
+        const kernels = [pythonKernel, juliaKernel];
+        const metadata: Partial<INotebookMetadata> = {
+            kernelspec: {
+                display_name: '',
+                name: 'julia'
+            },
+            language_info: {
+                name: 'julia'
+            }
+        };
+        const { document } = setupData(metadata, kernels);
+
+        const { preferredConnection, controller } = await preferredControllerService.computePreferred(
+            instance(document)
+        );
 
         assert.isOk(preferredConnection);
         assert.equal(preferredConnection, juliaKernel);
         assert.equal(controller?.connection, juliaKernel);
     });
     test('Does not find a matching Kernel', async () => {
-        const doc = mock<NotebookDocument>();
         const kernels = [pythonKernel, juliaKernel];
         const metadata: Partial<INotebookMetadata> = {
             kernelspec: {
@@ -146,25 +157,11 @@ suite('Preferred Controller', () => {
             }
         };
 
-        when(doc.uri).thenReturn(Uri.file('one.ipynb'));
-        when(doc.notebookType).thenReturn(JupyterNotebookView);
-        when(doc.metadata).thenReturn({ custom: { metadata } });
-        when(serverConnectionType.isLocalLaunch).thenReturn(true);
-        when(
-            kernelFinder.rankKernels(anything(), anything(), anything(), anything(), anything(), anything())
-        ).thenResolve(kernels);
-        when(kernelFinder.isExactMatch(anything(), anything(), anything())).thenReturn(false);
-        const controllers = kernels.map((kernel) => {
-            const controller = mock<IVSCodeNotebookController>();
-            when(controller.id).thenReturn(kernel.id);
-            when(controller.connection).thenReturn(kernel);
-            when(controller.controller).thenReturn({ updateNotebookAffinity: () => Promise.resolve() } as any);
-            when(controllerRegistrations.get(kernel, anything())).thenReturn(instance(controller));
-            return instance(controller);
-        });
-        when(controllerRegistrations.registered).thenReturn(controllers);
+        const { document } = setupData(metadata, kernels);
 
-        const { preferredConnection, controller } = await preferredControllerService.computePreferred(instance(doc));
+        const { preferredConnection, controller } = await preferredControllerService.computePreferred(
+            instance(document)
+        );
 
         assert.isUndefined(preferredConnection);
         assert.isUndefined(controller);

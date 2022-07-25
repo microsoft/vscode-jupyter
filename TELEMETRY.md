@@ -1566,8 +1566,8 @@ No properties for event
 
 [src/kernels/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/kernelExecution.ts)
 ```typescript
-        this.documentExecutions.set(document, newCellExecutionQueue);
-        return newCellExecutionQueue;
+        traceInfoIfCI(`Dispose KernelExecution`);
+        this.disposables.forEach((d) => d.dispose());
     }
     @captureTelemetry(Telemetry.Interrupt)
     @captureTelemetry(Telemetry.InterruptJupyterTime)
@@ -6031,13 +6031,13 @@ No properties for event
 
 [src/kernels/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/kernelExecution.ts)
 ```typescript
-        return newCellExecutionQueue;
+        this.disposables.forEach((d) => d.dispose());
     }
     @captureTelemetry(Telemetry.Interrupt)
     @captureTelemetry(Telemetry.InterruptJupyterTime)
     private async interruptExecution(
         session: IKernelConnectionSession,
-        pendingCells: Promise<unknown>
+        pendingExecutions: Promise<unknown>
 ```
 
 </details>
@@ -7313,18 +7313,6 @@ No properties for event
 
 [src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
-        // Setup telemetry
-        if (!this.perceivedJupyterStartupTelemetryCaptured) {
-            this.perceivedJupyterStartupTelemetryCaptured = true;
-            sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
-            executionPromise
-                .finally(() =>
-                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
-```
-
-
-[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
-```typescript
 
             sendKernelTelemetryEvent(
                 this.resourceUri,
@@ -7332,6 +7320,18 @@ No properties for event
                 stopWatch.elapsedTime
             );
             this._session = session;
+```
+
+
+[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
+```typescript
+        // Setup telemetry
+        if (!this.perceivedJupyterStartupTelemetryCaptured) {
+            this.perceivedJupyterStartupTelemetryCaptured = true;
+            sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
+            executionPromise
+                .finally(() =>
+                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
 ```
 
 </details>
@@ -7382,9 +7382,9 @@ No description provided
 
 [src/notebooks/controllers/controllerPreferredService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/controllerPreferredService.ts)
 ```typescript
-            onlyConnection && (matchReason |= PreferredKernelExactMatchReason.OnlyKernel);
             topMatchIsPreferredInterpreter && (matchReason |= PreferredKernelExactMatchReason.WasPreferredInterpreter);
             isExactMatch && (matchReason |= PreferredKernelExactMatchReason.IsExactMatch);
+            isNonPythonLanguageMatch && (matchReason |= PreferredKernelExactMatchReason.IsNonPythonKernelLanguageMatch);
             sendTelemetryEvent(Telemetry.PreferredKernelExactMatch, undefined, {
                 matchedReason: matchReason
             });
