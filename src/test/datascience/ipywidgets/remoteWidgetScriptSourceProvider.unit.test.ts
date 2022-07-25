@@ -4,9 +4,12 @@ import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IJupyterKernelSpec, IKernel, RemoteKernelConnectionMetadata } from '../../../platform/../kernels/types';
-import { IWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/types';
-import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory } from '../../../kernels/ipywidgets/types';
-import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/remoteWidgetScriptSourceProvider';
+import { IWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/types';
+import {
+    IIPyWidgetScriptManager,
+    IIPyWidgetScriptManagerFactory
+} from '../../../notebooks/controllers/ipywidgets/types';
+import { RemoteWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/remoteWidgetScriptSourceProvider';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - ipywidget - Remote Widget Script Source', () => {

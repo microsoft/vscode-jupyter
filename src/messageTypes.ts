@@ -11,10 +11,10 @@ import {
 } from './webviews/webview-side/interactive-common/redux/reducers/types';
 // eslint-disable-next-line
 import { BaseReduxActionPayload } from './webviews/types';
-import { WidgetScriptSource } from './kernels/ipywidgets/types';
 import { KernelConnectionMetadata, KernelSocketOptions } from './kernels/types';
 import { ICell } from './platform/common/types';
 import { IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from './kernels/variables/types';
+import { WidgetScriptSource } from './notebooks/controllers/ipywidgets/types';
 
 export type NotifyIPyWidgetWidgetVersionNotSupportedAction = {
     moduleName: 'qgrid';

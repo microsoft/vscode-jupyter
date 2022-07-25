@@ -34,7 +34,6 @@ import {
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { KernelAutoRestartMonitor } from './kernelAutoRestartMonitor.node';
-import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.node';
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.node';
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.node';
 import { KernelFinder } from './kernelFinder.node';
@@ -100,7 +99,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
     registerInstallerTypes(serviceManager);
-    registerWidgetTypes(serviceManager, isDevMode);
 
     const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
     const packageJson: { engines: { vscode: string } } | undefined =

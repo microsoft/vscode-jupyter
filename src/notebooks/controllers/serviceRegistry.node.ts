@@ -17,8 +17,9 @@ import {
     IControllerRegistration,
     IControllerSelection
 } from './types';
+import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.node';
 
-export function registerTypes(serviceManager: IServiceManager) {
+export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IControllerRegistration>(IControllerRegistration, ControllerRegistration);
     serviceManager.addSingleton<IControllerDefaultService>(IControllerDefaultService, ControllerDefaultService);
     serviceManager.addSingleton<IControllerLoader>(IControllerLoader, ControllerLoader);
@@ -26,4 +27,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IControllerPreferredService>(IControllerPreferredService, ControllerPreferredService);
     serviceManager.addBinding(IControllerPreferredService, IExtensionSingleActivationService);
     serviceManager.addSingleton<IControllerSelection>(IControllerSelection, ControllerSelection);
+
+    registerWidgetTypes(serviceManager, isDevMode);
 }

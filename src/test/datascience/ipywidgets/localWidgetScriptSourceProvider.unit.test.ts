@@ -4,13 +4,13 @@ import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IKernel } from '../../../platform/../kernels/types';
-import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/localWidgetScriptSourceProvider.node';
+import { LocalWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/localWidgetScriptSourceProvider.node';
 import {
     ILocalResourceUriConverter,
     IWidgetScriptSourceProvider,
     IIPyWidgetScriptManager,
     IIPyWidgetScriptManagerFactory
-} from '../../../kernels/ipywidgets/types';
+} from '../../../notebooks/controllers/ipywidgets/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - ipywidget - Local Widget Script Source', () => {

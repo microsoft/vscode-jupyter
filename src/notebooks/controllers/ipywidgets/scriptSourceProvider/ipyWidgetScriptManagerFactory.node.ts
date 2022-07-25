@@ -3,13 +3,13 @@
 // Licensed under the MIT License.
 
 import { injectable, inject } from 'inversify';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
-import { IExtensionContext, IHttpClient } from '../../platform/common/types';
-import { IKernel } from '../types';
-import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory, INbExtensionsPathProvider } from './types';
+import { IFileSystemNode } from '../../../../platform/common/platform/types.node';
+import { IExtensionContext, IHttpClient } from '../../../../platform/common/types';
+import { IKernel } from '../../../../kernels/types';
+import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory, INbExtensionsPathProvider } from '../types';
 import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
 import { LocalIPyWidgetScriptManager } from './localIPyWidgetScriptManager.node';
-import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
+import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 
 /**
  * Determines the IPyWidgetScriptManager for use in a node environment

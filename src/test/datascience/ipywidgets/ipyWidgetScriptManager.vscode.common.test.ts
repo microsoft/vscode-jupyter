@@ -19,10 +19,13 @@ import { initialize } from '../../initialize';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo } from '../../../platform/logging';
 import { IKernel, IKernelProvider, isLocalConnection } from '../../../kernels/types';
-import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory } from '../../../kernels/ipywidgets/types';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
+import {
+    IIPyWidgetScriptManager,
+    IIPyWidgetScriptManagerFactory
+} from '../../../notebooks/controllers/ipywidgets/types';
 
 suite('IPyWidget Script Manager', function () {
     this.timeout(120_000);

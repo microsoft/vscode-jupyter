@@ -4,13 +4,13 @@
 'use strict';
 
 import { Uri } from 'vscode';
-import { IKernel, RemoteKernelConnectionMetadata } from '../types';
+import { IKernel, RemoteKernelConnectionMetadata } from '../../../../kernels/types';
 import {
     IIPyWidgetScriptManager,
     IIPyWidgetScriptManagerFactory,
     IWidgetScriptSourceProvider,
     WidgetScriptSource
-} from './types';
+} from '../types';
 
 /**
  * When using a remote jupyter connection the widget scripts are accessible over

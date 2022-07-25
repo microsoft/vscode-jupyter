@@ -5,38 +5,38 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
-import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { IApplicationShell, ICommandManager } from '../../../../platform/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
+import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../../../platform/logging';
 import {
     IDisposableRegistry,
     IOutputChannel,
     IConfigurationService,
     IHttpClient,
     IsWebExtension
-} from '../../platform/common/types';
-import { Common, DataScience } from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
-import { stripAnsi } from '../../platform/common/utils/regexp';
+} from '../../../../platform/common/types';
+import { Common, DataScience } from '../../../../platform/common/utils/localize';
+import { noop } from '../../../../platform/common/utils/misc';
+import { stripAnsi } from '../../../../platform/common/utils/regexp';
 import {
     ILoadIPyWidgetClassFailureAction,
     InteractiveWindowMessages,
     IPyWidgetMessages,
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgetWidgetVersionNotSupportedAction
-} from '../../messageTypes';
-import { IServiceContainer } from '../../platform/ioc/types';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import { Commands } from '../../platform/common/constants';
-import { IKernelProvider } from '../types';
+} from '../../../../messageTypes';
+import { IServiceContainer } from '../../../../platform/ioc/types';
+import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
+import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
+import { Commands } from '../../../../platform/common/constants';
+import { IKernelProvider } from '../../../../kernels/types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
-import { IPyWidgetScriptSource } from './ipyWidgetScriptSource';
-import { IIPyWidgetMessageDispatcher, IWidgetScriptSourceProviderFactory } from './types';
-import { ConsoleForegroundColors } from '../../platform/logging/types';
-import { createDeferred } from '../../platform/common/utils/async';
-import { IWebviewCommunication } from '../../platform/webviews/types';
-import { swallowExceptions } from '../../platform/common/utils/decorators';
+import { IPyWidgetScriptSource } from '../scriptSourceProvider/ipyWidgetScriptSource';
+import { IIPyWidgetMessageDispatcher, IWidgetScriptSourceProviderFactory } from '../types';
+import { ConsoleForegroundColors } from '../../../../platform/logging/types';
+import { createDeferred } from '../../../../platform/common/utils/async';
+import { IWebviewCommunication } from '../../../../platform/webviews/types';
+import { swallowExceptions } from '../../../../platform/common/utils/decorators';
 
 /**
  * This class wraps all of the ipywidgets communication with a backing notebook

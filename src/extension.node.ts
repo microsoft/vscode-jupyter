@@ -320,7 +320,7 @@ async function activateLegacy(
     // Register the rest of the types (platform is first because it's needed by others)
     registerPlatformTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
-    registerNotebookTypes(serviceManager);
+    registerNotebookTypes(serviceManager, isDevMode);
     registerInteractiveTypes(serviceManager);
     registerStandaloneTypes(context, serviceManager, isDevMode);
     registerWebviewTypes(serviceManager);

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { WidgetScriptSource } from '../../../../kernels/ipywidgets/types';
+import { WidgetScriptSource } from '../../../../notebooks/controllers/ipywidgets/types';
 import { logMessage } from '../../react-common/logger';
 
 type NonPartial<T> = {

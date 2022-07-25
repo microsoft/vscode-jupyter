@@ -21,7 +21,7 @@ import { IServiceContainer } from '../../platform/ioc/types';
 import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IWebviewCommunication } from '../../platform/webviews/types';
-import { CommonMessageCoordinator } from '../../kernels/ipywidgets/commonMessageCoordinator';
+import { CommonMessageCoordinator } from './ipywidgets/message/commonMessageCoordinator';
 
 /**
  * Posts/Receives messages from the renderer in order to have kernel messages available in the webview

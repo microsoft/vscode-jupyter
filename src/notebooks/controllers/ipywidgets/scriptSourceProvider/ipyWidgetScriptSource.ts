@@ -4,18 +4,23 @@
 'use strict';
 import type * as jupyterlabService from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
-import { traceError, traceInfo, traceVerbose, traceWarning } from '../../platform/logging';
-import { IDisposableRegistry, IConfigurationService, IHttpClient, IDisposable } from '../../platform/common/types';
-import { InteractiveWindowMessages, IPyWidgetMessages } from '../../messageTypes';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { IKernel, IKernelProvider } from '../types';
+import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../../platform/logging';
+import {
+    IDisposableRegistry,
+    IConfigurationService,
+    IHttpClient,
+    IDisposable
+} from '../../../../platform/common/types';
+import { InteractiveWindowMessages, IPyWidgetMessages } from '../../../../messageTypes';
+import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
+import { IKernel, IKernelProvider } from '../../../../kernels/types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
-import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory, WidgetScriptSource } from './types';
-import { ConsoleForegroundColors } from '../../platform/logging/types';
-import { noop } from '../../platform/common/utils/misc';
-import { createDeferred, Deferred } from '../../platform/common/utils/async';
+import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory, WidgetScriptSource } from '../types';
+import { ConsoleForegroundColors } from '../../../../platform/logging/types';
+import { noop } from '../../../../platform/common/utils/misc';
+import { createDeferred, Deferred } from '../../../../platform/common/utils/async';
 import { ScriptUriConverter } from './scriptUriConverter';
-import { ResourceMap } from '../../platform/vscode-path/map';
+import { ResourceMap } from '../../../../platform/vscode-path/map';
 
 /**
  * Handles messages from the kernel related to setting up widgets.

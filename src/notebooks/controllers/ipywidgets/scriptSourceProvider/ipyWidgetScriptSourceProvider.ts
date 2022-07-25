@@ -3,18 +3,18 @@
 
 'use strict';
 
-import '../../platform/common/extensions';
-import { traceError, traceInfo } from '../../platform/logging';
-import { WidgetCDNs, IConfigurationService, IHttpClient } from '../../platform/common/types';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import { IKernel } from '../types';
+import '../../../../platform/common/extensions';
+import { traceError, traceInfo } from '../../../../platform/logging';
+import { WidgetCDNs, IConfigurationService, IHttpClient } from '../../../../platform/common/types';
+import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
+import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
+import { IKernel } from '../../../../kernels/types';
 import {
     ILocalResourceUriConverter,
     IWidgetScriptSourceProvider,
     IWidgetScriptSourceProviderFactory,
     WidgetScriptSource
-} from './types';
+} from '../types';
 
 /**
  * This class decides where to get widget scripts from.

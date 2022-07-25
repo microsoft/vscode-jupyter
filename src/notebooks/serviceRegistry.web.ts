@@ -49,8 +49,8 @@ import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFact
 import { IJupyterVariables } from '../kernels/variables/types';
 import { DebuggerVariables } from './debugger/debuggerVariables';
 
-export function registerTypes(serviceManager: IServiceManager) {
-    registerControllerTypes(serviceManager);
+export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
+    registerControllerTypes(serviceManager, isDevMode);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
 

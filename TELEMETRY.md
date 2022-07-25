@@ -1566,8 +1566,8 @@ No properties for event
 
 [src/kernels/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/kernelExecution.ts)
 ```typescript
-        this.documentExecutions.set(document, newCellExecutionQueue);
-        return newCellExecutionQueue;
+        traceInfoIfCI(`Dispose KernelExecution`);
+        this.disposables.forEach((d) => d.dispose());
     }
     @captureTelemetry(Telemetry.Interrupt)
     @captureTelemetry(Telemetry.InterruptJupyterTime)
@@ -6031,13 +6031,13 @@ No properties for event
 
 [src/kernels/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/kernelExecution.ts)
 ```typescript
-        return newCellExecutionQueue;
+        this.disposables.forEach((d) => d.dispose());
     }
     @captureTelemetry(Telemetry.Interrupt)
     @captureTelemetry(Telemetry.InterruptJupyterTime)
     private async interruptExecution(
         session: IKernelConnectionSession,
-        pendingCells: Promise<unknown>
+        pendingExecutions: Promise<unknown>
 ```
 
 </details>
@@ -6092,7 +6092,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts)
+[src/notebooks/controllers/ipywidgets/scriptSourceProvider/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/scriptSourceProvider/baseIPyWidgetScriptManager.ts)
 ```typescript
                 )}`
             );
@@ -6143,7 +6143,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/ipyWidgetScriptSource.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/ipyWidgetScriptSource.ts)
+[src/notebooks/controllers/ipywidgets/scriptSourceProvider/ipyWidgetScriptSource.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/scriptSourceProvider/ipyWidgetScriptSource.ts)
 ```typescript
             }
         } catch (ex) {
@@ -6174,7 +6174,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts)
+[src/notebooks/controllers/ipywidgets/scriptSourceProvider/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/scriptSourceProvider/baseIPyWidgetScriptManager.ts)
 ```typescript
     }
 
@@ -6186,7 +6186,7 @@ No properties for event
 ```
 
 
-[src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts)
+[src/notebooks/controllers/ipywidgets/scriptSourceProvider/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/scriptSourceProvider/baseIPyWidgetScriptManager.ts)
 ```typescript
     // Find the end bracket for the require config call.
     const endBracket = contents.indexOf(')', indexOfRequireConfig);
@@ -6198,7 +6198,7 @@ No properties for event
 ```
 
 
-[src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts)
+[src/notebooks/controllers/ipywidgets/scriptSourceProvider/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/scriptSourceProvider/baseIPyWidgetScriptManager.ts)
 ```typescript
     });
 
@@ -6210,7 +6210,7 @@ No properties for event
 ```
 
 
-[src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts)
+[src/notebooks/controllers/ipywidgets/scriptSourceProvider/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/scriptSourceProvider/baseIPyWidgetScriptManager.ts)
 ```typescript
         });
         return;
@@ -6261,7 +6261,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/commonMessageCoordinator.ts)
+[src/notebooks/controllers/ipywidgets/message/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/message/commonMessageCoordinator.ts)
 ```typescript
             }
             traceError(`Widget load failure ${errorMessage}`, payload);
@@ -6291,7 +6291,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/commonMessageCoordinator.ts)
+[src/notebooks/controllers/ipywidgets/message/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/message/commonMessageCoordinator.ts)
 ```typescript
 
     private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
@@ -6321,7 +6321,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/ipyWidgetMessageDispatcher.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/ipyWidgetMessageDispatcher.ts)
+[src/notebooks/controllers/ipywidgets/message/ipyWidgetMessageDispatcher.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/message/ipyWidgetMessageDispatcher.ts)
 ```typescript
     }
 
@@ -6352,7 +6352,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/cdnWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/cdnWidgetScriptSourceProvider.ts)
+[src/notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider.ts)
 ```typescript
             return this.configurationPromise.promise;
         }
@@ -6382,7 +6382,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/cdnWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/cdnWidgetScriptSourceProvider.ts)
+[src/notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider.ts)
 ```typescript
                 break;
         }
@@ -6412,7 +6412,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/commonMessageCoordinator.ts)
+[src/notebooks/controllers/ipywidgets/message/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/message/commonMessageCoordinator.ts)
 ```typescript
     private sendRenderFailureTelemetry(payload: Error) {
         try {
@@ -6463,7 +6463,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/localIPyWidgetScriptManager.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/localIPyWidgetScriptManager.node.ts)
+[src/notebooks/controllers/ipywidgets/scriptSourceProvider/localIPyWidgetScriptManager.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/scriptSourceProvider/localIPyWidgetScriptManager.node.ts)
 ```typescript
             LocalIPyWidgetScriptManager.nbExtensionsCopiedKernelConnectionList.add(
                 this.kernel.kernelConnectionMetadata.id
@@ -6475,7 +6475,7 @@ No properties for event
 ```
 
 
-[src/kernels/ipywidgets/localIPyWidgetScriptManager.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/localIPyWidgetScriptManager.node.ts)
+[src/notebooks/controllers/ipywidgets/scriptSourceProvider/localIPyWidgetScriptManager.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/scriptSourceProvider/localIPyWidgetScriptManager.node.ts)
 ```typescript
             sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, stopWatch.elapsedTime);
             return baseUrl;
@@ -6505,7 +6505,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/commonMessageCoordinator.ts)
+[src/notebooks/controllers/ipywidgets/message/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/message/commonMessageCoordinator.ts)
 ```typescript
                 this.jupyterOutput.appendLine(
                     DataScience.unhandledMessage().format(msg.header.msg_type, JSON.stringify(msg.content))
@@ -6535,7 +6535,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/ipyWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/ipyWidgetScriptSourceProvider.ts)
+[src/notebooks/controllers/ipywidgets/scriptSourceProvider/ipyWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/scriptSourceProvider/ipyWidgetScriptSourceProvider.ts)
 ```typescript
             }
         }
@@ -6565,7 +6565,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/commonMessageCoordinator.ts)
+[src/notebooks/controllers/ipywidgets/message/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/ipywidgets/message/commonMessageCoordinator.ts)
 ```typescript
     }
     private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgetWidgetVersionNotSupportedAction) {
@@ -7313,18 +7313,6 @@ No properties for event
 
 [src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
-        // Setup telemetry
-        if (!this.perceivedJupyterStartupTelemetryCaptured) {
-            this.perceivedJupyterStartupTelemetryCaptured = true;
-            sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
-            executionPromise
-                .finally(() =>
-                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
-```
-
-
-[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
-```typescript
 
             sendKernelTelemetryEvent(
                 this.resourceUri,
@@ -7332,6 +7320,18 @@ No properties for event
                 stopWatch.elapsedTime
             );
             this._session = session;
+```
+
+
+[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
+```typescript
+        // Setup telemetry
+        if (!this.perceivedJupyterStartupTelemetryCaptured) {
+            this.perceivedJupyterStartupTelemetryCaptured = true;
+            sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
+            executionPromise
+                .finally(() =>
+                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
 ```
 
 </details>

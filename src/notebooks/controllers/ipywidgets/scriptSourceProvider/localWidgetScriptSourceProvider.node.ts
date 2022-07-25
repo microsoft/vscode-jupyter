@@ -3,13 +3,13 @@
 
 'use strict';
 
-import { IKernel } from '../types';
+import { IKernel } from '../../../../kernels/types';
 import {
     IIPyWidgetScriptManagerFactory,
     ILocalResourceUriConverter,
     IWidgetScriptSourceProvider,
     WidgetScriptSource
-} from './types';
+} from '../types';
 
 /**
  * Widget scripts are found in <python folder>/share/jupyter/nbextensions.

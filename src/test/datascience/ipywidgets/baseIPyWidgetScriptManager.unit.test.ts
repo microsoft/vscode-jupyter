@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import { Uri } from 'vscode';
-import { extractRequireConfigFromWidgetEntry } from '../../../kernels/ipywidgets/baseIPyWidgetScriptManager';
+import { extractRequireConfigFromWidgetEntry } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/baseIPyWidgetScriptManager';
 import * as path from '../../../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 
