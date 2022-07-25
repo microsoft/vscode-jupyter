@@ -136,5 +136,6 @@ export enum PreferredKernelExactMatchReason {
     NoMatch = 0,
     OnlyKernel = 1 << 0,
     WasPreferredInterpreter = 1 << 1,
-    IsExactMatch = 1 << 2
+    IsExactMatch = 1 << 2,
+    IsNonPythonKernelLanguageMatch = 1 << 3
 }

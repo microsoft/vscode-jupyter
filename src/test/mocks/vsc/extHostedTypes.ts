@@ -65,6 +65,22 @@ export namespace vscMockExtHostedTypes {
         Error = 4
     }
 
+    /**
+     * Notebook controller affinity for notebook documents.
+     *
+     * @see {@link NotebookController.updateNotebookAffinity}
+     */
+    export enum NotebookControllerAffinity {
+        /**
+         * Default affinity.
+         */
+        Default = 1,
+        /**
+         * A controller is preferred for a notebook.
+         */
+        Preferred = 2
+    }
+
     export enum NotebookRunState {
         Running = 1,
         Idle = 2

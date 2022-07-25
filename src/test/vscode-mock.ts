@@ -145,6 +145,7 @@ mockedVSCode.FileDecoration = vscodeMocks.vscMockExtHostedTypes.FileDecoration;
 (mockedVSCode as any).NotebookCellKind = vscodeMocks.vscMockExtHostedTypes.NotebookCellKind;
 (mockedVSCode as any).NotebookRunState = vscodeMocks.vscMockExtHostedTypes.NotebookRunState;
 (mockedVSCode as any).NotebookCellRunState = vscodeMocks.vscMockExtHostedTypes.NotebookCellRunState;
+(mockedVSCode as any).NotebookControllerAffinity = vscodeMocks.vscMockExtHostedTypes.NotebookControllerAffinity;
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
 (mockedVSCode as any).notebook = { notebookDocuments: [] };

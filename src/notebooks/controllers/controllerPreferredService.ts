@@ -13,6 +13,7 @@ import {
 } from 'vscode';
 import {
     findKernelSpecMatchingInterpreter,
+    getKernelConnectionLanguage,
     getLanguageInNotebookMetadata,
     isPythonNotebook
 } from '../../kernels/helpers';
@@ -275,9 +276,18 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             // Are we an exact match based on metadata hash / name / ect...?
             const isExactMatch = this.kernelFinder.isExactMatch(uri, potentialMatch, notebookMetadata);
 
+            // non-exact matches are ok for non-python kernels, else we revert to active interpreter for non-python kernels.
+            const languageInNotebookMetadata = getLanguageInNotebookMetadata(notebookMetadata);
+            const isNonPythonLanguageMatch =
+                languageInNotebookMetadata &&
+                languageInNotebookMetadata !== PYTHON_LANGUAGE &&
+                getKernelConnectionLanguage(potentialMatch) === languageInNotebookMetadata;
+
             // Match on our possible reasons
-            if (onlyConnection || topMatchIsPreferredInterpreter || isExactMatch) {
-                traceInfo(`Preferred kernel ${potentialMatch.id} is exact match`);
+            if (onlyConnection || topMatchIsPreferredInterpreter || isExactMatch || isNonPythonLanguageMatch) {
+                traceInfo(
+                    `Preferred kernel ${potentialMatch.id} is exact match or top match for non python kernels, (${onlyConnection}, ${topMatchIsPreferredInterpreter}, ${isExactMatch}, ${isNonPythonLanguageMatch})`
+                );
                 preferredConnection = potentialMatch;
             }
 
@@ -286,6 +296,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             onlyConnection && (matchReason |= PreferredKernelExactMatchReason.OnlyKernel);
             topMatchIsPreferredInterpreter && (matchReason |= PreferredKernelExactMatchReason.WasPreferredInterpreter);
             isExactMatch && (matchReason |= PreferredKernelExactMatchReason.IsExactMatch);
+            isNonPythonLanguageMatch && (matchReason |= PreferredKernelExactMatchReason.IsNonPythonKernelLanguageMatch);
             sendTelemetryEvent(Telemetry.PreferredKernelExactMatch, undefined, {
                 matchedReason: matchReason
             });

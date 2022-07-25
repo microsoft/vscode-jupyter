@@ -7382,9 +7382,9 @@ No description provided
 
 [src/notebooks/controllers/controllerPreferredService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/controllerPreferredService.ts)
 ```typescript
-            onlyConnection && (matchReason |= PreferredKernelExactMatchReason.OnlyKernel);
             topMatchIsPreferredInterpreter && (matchReason |= PreferredKernelExactMatchReason.WasPreferredInterpreter);
             isExactMatch && (matchReason |= PreferredKernelExactMatchReason.IsExactMatch);
+            isNonPythonLanguageMatch && (matchReason |= PreferredKernelExactMatchReason.IsNonPythonKernelLanguageMatch);
             sendTelemetryEvent(Telemetry.PreferredKernelExactMatch, undefined, {
                 matchedReason: matchReason
             });
