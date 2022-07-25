@@ -8,15 +8,15 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
-// Initialize the logger first.
-require('./platform/logging');
-
 // Polly fill for webworkers in safari,
 // The scripts load in chrome because chrome supports offScreenCanvas which in turn supports requestAnimationFrame,
 // & requestAnimationFrame is the preferred approach and setImmediate is the fallback.
 // As requestAnimationFrame is supported in chrome webworkers there's no need for a fallback to setImmediate.
 // https://github.com/microsoft/vscode-jupyter/issues/10621
 require('setImmediate');
+
+// Initialize the logger first.
+require('./platform/logging');
 
 //===============================================
 // We start tracking the extension's startup time at this point.  The
