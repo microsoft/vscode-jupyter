@@ -176,7 +176,7 @@ export function rankKernels(
     }
 
     traceInfoIfCI(`preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpec?.id}`);
-    // traceInfoIfCI(`filtering kernels: ${JSON.stringify(kernels)}`); very large log, but useful for debugging
+    traceInfoIfCI(`filtering kernels: ${JSON.stringify(kernels)}`); // very large log, but useful for debugging
 
     // Figure out our possible language from the metadata
     const actualNbMetadataLanguage: string | undefined =
@@ -195,6 +195,11 @@ export function rankKernels(
             kernel.kernelSpec.language.toLowerCase() !== possibleNbMetadataLanguage
         ) {
             return false;
+        }
+        if (kernel.kind !== 'connectToLiveRemoteKernel' && kernel.kernelSpec) {
+            traceInfoIfCI(`including kernel with language ${kernel.kernelSpec.language}`);
+        } else {
+            traceInfoIfCI(`including kernel ${kernel.id}`);
         }
         // Return everything else
         return true;
@@ -227,6 +232,7 @@ export function rankKernels(
             preferredRemoteKernelId
         )
     );
+    traceInfoIfCI(`ranked kernels: ${JSON.stringify(kernels)}`);
     return kernels;
 }
 
