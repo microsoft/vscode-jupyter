@@ -96,7 +96,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         verifyPromptWasNotDisplayed();
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
-    test('Automatically pick java kernel when opening a Java Notebook', async function () {
+    // https://github.com/microsoft/vscode-jupyter/issues/10900
+    test.skip('Automatically pick java kernel when opening a Java Notebook', async function () {
         if (!testJavaKernels) {
             return this.skip();
         }

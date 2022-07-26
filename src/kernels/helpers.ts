@@ -226,7 +226,6 @@ export function rankKernels(
             preferredRemoteKernelId
         )
     );
-
     return kernels;
 }
 

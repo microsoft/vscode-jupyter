@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { traceInfo } from '../../platform/logging';
+import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
@@ -267,9 +267,10 @@ export async function waitForLastCellToComplete(
 ) {
     const notebookDocument = await waitForInteractiveWindow(interactiveWindow);
     let codeCell: vscode.NotebookCell | undefined;
+    let codeCells: vscode.NotebookCell[] = [];
     await waitForCondition(
         async () => {
-            const codeCells = notebookDocument?.getCells().filter((c) => c.kind === vscode.NotebookCellKind.Code);
+            codeCells = notebookDocument?.getCells().filter((c) => c.kind === vscode.NotebookCellKind.Code);
             codeCell = codeCells && codeCells.length ? codeCells[codeCells.length - 1] : undefined;
             return codeCell && (numberOfCells === -1 || numberOfCells === codeCells!.length) ? true : false;
         },
@@ -281,6 +282,7 @@ export async function waitForLastCellToComplete(
     } else {
         await waitForExecutionCompletedSuccessfully(codeCell!);
     }
+    traceInfoIfCI(`finished waiting for last cell to complete of ${codeCells.length} cells`);
     return codeCell!;
 }
 
@@ -316,6 +318,7 @@ export async function waitForCodeLenses(document: vscode.Uri, command: string) {
         `Code lens with command ${command} not found`
     );
 
+    traceInfoIfCI(`Found code lenses with command ${command}`);
     return codeLenses;
 }
 

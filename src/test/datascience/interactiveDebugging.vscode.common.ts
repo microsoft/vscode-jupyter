@@ -58,6 +58,17 @@ export function sharedIWDebuggerTests(
                 if (options?.suiteSetup) {
                     await options?.suiteSetup(debuggerType);
                 }
+
+                // ensure debugger is torn down from previous suites
+                await vscode.commands.executeCommand('workbench.action.debug.stop');
+                await vscode.commands.executeCommand('workbench.action.debug.disconnect');
+                await waitForCondition(
+                    async () => {
+                        return vscode.debug.activeDebugSession === undefined;
+                    },
+                    defaultNotebookTestTimeout,
+                    `Unable to stop debug session on test teardown`
+                );
             });
             suiteTeardown(() => vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints'));
             setup(async function () {
@@ -96,9 +107,7 @@ export function sharedIWDebuggerTests(
                 await closeNotebooksAndCleanUpAfterTests(disposables);
             });
 
-            // Flakey test: https://github.com/microsoft/vscode-jupyter/issues/10521
-
-            test.skip('Debug a cell from a python file', async () => {
+            test('Debug a cell from a python file', async () => {
                 // Run a cell to get IW open
                 const source = 'print(42)';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
@@ -292,8 +301,7 @@ export function sharedIWDebuggerTests(
 
                 // Aquire the variable view from the provider
                 const coreVariableView = await variableViewProvider.activeVariableView;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const variableView = coreVariableView as any as ITestWebviewHost;
+                const variableView = coreVariableView as unknown as ITestWebviewHost;
 
                 // Parse the HTML for our expected variables
                 let expectedVariables = [{ name: 'x', type: 'int', length: '', value: '1' }];

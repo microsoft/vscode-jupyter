@@ -138,13 +138,15 @@ export class CodeLensFactory implements ICodeLensFactory {
                 commands.forEach((c) => {
                     const codeLens = this.createCodeLens(document, r, c, firstCell);
                     if (codeLens) {
-                        cache?.documentLenses.push(codeLens); // NOSONAR
+                        cache!.documentLenses.push(codeLens); // NOSONAR
                     }
                 });
                 firstCell = false;
             });
         } else {
-            traceInfoIfCI(`NOT Generating new code lenses for version ${document.version} of document ${document.uri}`);
+            traceInfoIfCI(
+                `NOT Generating new code lenses for version ${document.version} of document ${document.uri} - needUpdate: ${needUpdate}, cellRanges.length: ${cache.cellRanges.length}`
+            );
         }
 
         // Generate the goto cell lenses if necessary
@@ -167,6 +169,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                 });
             }
         }
+
         return cache;
     }
     private getDocumentExecutionCounts(key: string): number[] {
