@@ -1264,7 +1264,7 @@ export async function getDebugSessionAndAdapter(
     await waitForCondition(
         async () => !!debuggingManager.getDebugSession(doc),
         defaultNotebookTestTimeout,
-        'DebugSession should start'
+        'DebugSession should start, no promise made'
     );
     const session = await debuggingManager.getDebugSession(doc)!;
 
