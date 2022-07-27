@@ -21,7 +21,7 @@ import { executeSilently } from '../../kernels/helpers';
 import { buildSourceMap } from './helper';
 
 /**
- * Public API to begin debugging in the interactive window
+ * Public API to begin debugging in the interactive window, yes
  */
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
