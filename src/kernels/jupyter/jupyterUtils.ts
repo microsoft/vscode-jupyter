@@ -101,20 +101,18 @@ export function createRemoteConnectionInfo(
     let url: URL;
     try {
         url = new URL(uri);
-
-        // Special case for URI's ending with 'lab'. Remove this from the URI. This is not
-        // the location for connecting to jupyterlab
-        if (url.pathname === '/lab') {
-            uri = uri.replace('lab', '');
-        }
-        url = new URL(uri);
     } catch (err) {
         // This should already have been parsed when set, so just throw if it's not right here
         throw err;
     }
 
     const serverUri = getJupyterServerUri(uri);
-    const baseUrl = serverUri ? serverUri.baseUrl : `${url.protocol}//${url.host}${url.pathname}`;
+
+    const baseUrl = serverUri
+        ? serverUri.baseUrl
+        : // Special case for URI's ending with 'lab'. Remove this from the URI. This is not
+          // the location for connecting to jupyterlab
+          `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`;
     const token = serverUri ? serverUri.token : `${url.searchParams.get('token')}`;
     const hostName = serverUri ? new URL(serverUri.baseUrl).hostname : url.hostname;
 
