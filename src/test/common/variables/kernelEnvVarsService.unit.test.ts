@@ -39,8 +39,9 @@ suite('Kernel Environment Variables Service', () => {
         sysPrefix: '0'
     };
     let kernelSpec: IJupyterKernelSpec;
+    let processEnv: NodeJS.ProcessEnv;
     const originalEnvVars = Object.assign({}, process.env);
-    const processPath = Object.keys(process.env).find((k) => k.toLowerCase() == 'path');
+    let processPath: string | undefined;
     setup(() => {
         kernelSpec = {
             name: 'kernel',
@@ -64,6 +65,17 @@ suite('Kernel Environment Variables Service', () => {
             instance(customVariablesService),
             instance(configService)
         );
+        if (process.platform === 'win32') {
+            // Win32 will generate upper case all the time
+            const entries = Object.entries(process.env);
+            processEnv = {};
+            for (const [key, value] of entries) {
+                processEnv[key.toUpperCase()] = value;
+            }
+        } else {
+            processEnv = process.env;
+        }
+        processPath = Object.keys(processEnv).find((k) => k.toLowerCase() == 'path');
     });
     teardown(() => Object.assign(process.env, originalEnvVars));
 
@@ -91,7 +103,7 @@ suite('Kernel Environment Variables Service', () => {
         // Compare ignoring the PATH variable.
         assert.deepEqual(
             Object.assign(vars, { PATH: '', Path: '' }),
-            Object.assign({}, process.env, { HELLO_VAR: 'new' }, { PATH: '', Path: '' })
+            Object.assign({}, processEnv, { HELLO_VAR: 'new' }, { PATH: '', Path: '' })
         );
     });
 
@@ -110,7 +122,7 @@ suite('Kernel Environment Variables Service', () => {
         // Compare ignoring the PATH variable.
         assert.deepEqual(
             Object.assign(vars, { PATH: '', Path: '' }),
-            Object.assign({}, process.env, { HELLO_VAR: 'new' }, { PATH: '', Path: '' })
+            Object.assign({}, processEnv, { HELLO_VAR: 'new' }, { PATH: '', Path: '' })
         );
     });
 
@@ -128,7 +140,7 @@ suite('Kernel Environment Variables Service', () => {
         // Compare ignoring the PATH variable.
         assert.deepEqual(
             Object.assign(vars, { PATH: '', Path: '' }),
-            Object.assign({}, process.env, { HELLO_VAR: 'new' }, { PATH: '', Path: '' })
+            Object.assign({}, processEnv, { HELLO_VAR: 'new' }, { PATH: '', Path: '' })
         );
     });
 
@@ -138,7 +150,7 @@ suite('Kernel Environment Variables Service', () => {
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
 
-        assert.deepEqual(vars, process.env);
+        assert.deepEqual(vars, processEnv);
     });
 
     test('Returns process.env vars if unable to get activated vars for interpreter and no kernelspec.env', async () => {
@@ -150,11 +162,11 @@ suite('Kernel Environment Variables Service', () => {
         // Compare ignoring the PATH variable.
         assert.deepEqual(
             Object.assign({}, vars, { PATH: '', Path: '' }),
-            Object.assign({}, process.env, { PATH: '', Path: '' })
+            Object.assign({}, processEnv, { PATH: '', Path: '' })
         );
         assert.strictEqual(
             vars![processPath!],
-            `${path.dirname(interpreter.uri.fsPath)}${path.delimiter}${process.env[processPath!]}`
+            `${path.dirname(interpreter.uri.fsPath)}${path.delimiter}${processEnv[processPath!]}`
         );
     });
 
@@ -172,6 +184,24 @@ suite('Kernel Environment Variables Service', () => {
             vars![processPath!],
             `${path.dirname(interpreter.uri.fsPath)}${path.delimiter}foobar${path.delimiter}foobaz`
         );
+    });
+
+    test('Upper case is used on windows', async function () {
+        // See this issue as to what happens if it isn't. https://github.com/microsoft/vscode-jupyter/issues/10940
+        if (process.platform !== 'win32') {
+            this.skip();
+        }
+        when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+            path: 'foobar'
+        });
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve({
+            path: 'foobaz'
+        });
+
+        const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
+        const keys = Object.keys(vars);
+        const upperCaseKeys = keys.map((key) => key.toUpperCase());
+        assert.deepEqual(keys, upperCaseKeys);
     });
 
     test('KernelSpec interpreterPath used if interpreter is undefined', async () => {

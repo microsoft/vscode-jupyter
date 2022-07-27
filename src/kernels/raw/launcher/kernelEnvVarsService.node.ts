@@ -79,7 +79,16 @@ export class KernelEnvironmentVariablesService {
         }
         // Merge the env variables with that of the kernel env.
         interpreterEnv = interpreterEnv || {};
-        const mergedVars = { ...process.env };
+        let mergedVars = { ...process.env };
+
+        // On windows (see https://github.com/microsoft/vscode-jupyter/issues/10940)
+        // upper case all of the keys
+        if (process.platform === 'win32') {
+            mergedVars = {};
+            Object.keys(process.env).forEach((k) => {
+                mergedVars[k.toUpperCase()] = process.env[k];
+            });
+        }
         kernelEnv = kernelEnv || {};
         customEnvVars = customEnvVars || {};
         this.envVarsService.mergeVariables(interpreterEnv, mergedVars); // interpreter vars win over proc.
