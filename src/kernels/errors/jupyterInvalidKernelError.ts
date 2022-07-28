@@ -8,7 +8,7 @@ import { KernelConnectionMetadata } from '../types';
 import { BaseKernelError } from './types';
 
 /**
- * Thrown when kernel cannot be used
+ * Thrown when kernel cannot be used & we have no idea why (applies to non-zmq cases).
  */
 export class JupyterInvalidKernelError extends BaseKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {

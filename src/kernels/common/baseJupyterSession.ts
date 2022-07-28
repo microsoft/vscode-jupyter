@@ -6,14 +6,22 @@ import type { JSONObject } from '@lumino/coreutils';
 import type { Slot } from '@lumino/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { CancellationError, CancellationToken, CancellationTokenSource, Event, EventEmitter, Uri } from 'vscode';
+import {
+    CancellationError,
+    CancellationToken,
+    CancellationTokenSource,
+    Disposable,
+    Event,
+    EventEmitter,
+    Uri
+} from 'vscode';
 import { WrappedError } from '../../platform/errors/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../platform/logging';
 import { IDisposable, Resource } from '../../platform/common/types';
 import { createDeferred, sleep, waitForPromise } from '../../platform/common/utils/async';
 import * as localize from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
+import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
@@ -324,25 +332,48 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
                 // When our kernel connects and gets a status message it triggers the ready promise
-                const deferred = createDeferred<string>();
+                const kernelStatus = createDeferred<string>();
                 if (token) {
-                    token.onCancellationRequested(() => deferred.reject(new CancellationError()), this, disposables);
+                    token.onCancellationRequested(
+                        () => kernelStatus.reject(new CancellationError()),
+                        this,
+                        disposables
+                    );
                 }
                 const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
                     traceVerbose(`Got status ${status} in waitForIdleOnSession`);
                     if (status == 'idle') {
-                        deferred.resolve(status);
+                        kernelStatus.resolve(status);
                     }
                 };
                 session.kernel.statusChanged?.connect(handler);
+                disposables.push(
+                    new Disposable(() => swallowExceptions(() => session.kernel?.statusChanged?.disconnect(handler)))
+                );
                 if (session.kernel.status == 'idle') {
-                    deferred.resolve(session.kernel.status);
+                    kernelStatus.resolve(session.kernel.status);
                 }
-                const result = await Promise.race([deferred.promise, sleep(timeout)]);
-                session.kernel.statusChanged?.disconnect(handler);
+                // Check for possibility that kernel has died.
+                const sessionDisposed = createDeferred<unknown>();
+                session.disposed.connect(sessionDisposed.resolve, sessionDisposed);
+                disposables.push(
+                    new Disposable(() =>
+                        swallowExceptions(() => session.disposed.disconnect(sessionDisposed.resolve, sessionDisposed))
+                    )
+                );
+                const sleepPromise = sleep(timeout);
+                sessionDisposed.promise.ignoreErrors();
+                sleepPromise.ignoreErrors();
+                kernelStatus.promise.ignoreErrors();
+                const result = await Promise.race([kernelStatus.promise, sleepPromise, sessionDisposed.promise]);
+                if (session.isDisposed) {
+                    traceError('Session disposed while waiting for session to be idle.');
+                    throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
+                }
+
                 traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
-                if (result.toString() == 'idle') {
+                if (typeof result === 'string' && result.toString() == 'idle') {
                     return;
                 }
                 traceError(

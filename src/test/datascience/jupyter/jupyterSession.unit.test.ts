@@ -35,6 +35,8 @@ import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { BackingFileCreator } from '../../../kernels/jupyter/session/backingFileCreator.node';
 import * as path from '../../../platform/vscode-path/path';
 import { JupyterRequestCreator } from '../../../kernels/jupyter/session/jupyterRequestCreator.node';
+import { Signal } from '@lumino/signaling';
+import { JupyterInvalidKernelError } from '../../../kernels/errors/jupyterInvalidKernelError';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {
@@ -102,9 +104,11 @@ suite('DataScience - JupyterSession', () => {
         kernel = mock(KernelConnection);
         when(session.kernel).thenReturn(instance(kernel));
         statusChangedSignal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
+        const sessionDisposed = new Signal<ISessionWithSocket, void>(instance(session));
         kernelChangedSignal = mock<ISignal<ISessionWithSocket, IKernelChangedArgs>>();
         const ioPubSignal =
             mock<ISignal<ISessionWithSocket, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>();
+        when(session.disposed).thenReturn(sessionDisposed);
         when(session.statusChanged).thenReturn(instance(statusChangedSignal));
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
         when(session.iopubMessage).thenReturn(instance(ioPubSignal));
@@ -329,8 +333,11 @@ suite('DataScience - JupyterSession', () => {
             let newStatusChangedSignal: ISignal<Session.ISessionConnection, Kernel.Status>;
             let newKernelChangedSignal: ISignal<Session.ISessionConnection, IKernelChangedArgs>;
             let newSessionCreated: Deferred<void>;
+            let sessionDisposed: Signal<Session.ISessionConnection, void>;
             setup(async () => {
                 newSession = mock(SessionConnection);
+                sessionDisposed = new Signal<Session.ISessionConnection, void>(instance(newSession));
+                when(newSession.disposed).thenReturn(sessionDisposed);
                 newKernelConnection = mock(KernelConnection);
                 newStatusChangedSignal = mock<ISignal<Session.ISessionConnection, Kernel.Status>>();
                 newKernelChangedSignal = mock<ISignal<Session.ISessionConnection, IKernelChangedArgs>>();
@@ -400,6 +407,27 @@ suite('DataScience - JupyterSession', () => {
                     verify(session.dispose()).once();
                     // Confirm kernel isn't restarted.
                     verify(kernel.restart()).never();
+                });
+                test('Restart should fail if new session dies while waiting for it to be idle', async () => {
+                    when(connection.localLaunch).thenReturn(true);
+                    when(session.isRemoteSession).thenReturn(false);
+                    when(session.isDisposed).thenReturn(false);
+                    when(session.shutdown()).thenResolve();
+                    when(session.dispose()).thenResolve();
+                    const sessionServerSettings: ServerConnection.ISettings = mock<ServerConnection.ISettings>();
+                    when(session.serverSettings).thenReturn(instance(sessionServerSettings));
+
+                    const promise = jupyterSession.restart();
+                    // Mark the new session as disposed
+                    when(newSession.isDisposed).thenReturn(true);
+                    // Ensure the we trigger the event indicating the session got disposed.
+                    // We don't know when the event handler will get bound, hence trigger the event every 100ms.
+                    const timer = setInterval(() => sessionDisposed.emit(), 100);
+                    try {
+                        await assert.isRejected(promise, new JupyterInvalidKernelError(mockKernelSpec).message);
+                    } finally {
+                        clearInterval(timer);
+                    }
                 });
             });
         });

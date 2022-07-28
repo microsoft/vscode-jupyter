@@ -175,17 +175,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     await this.addErrorMessageIfPythonArePossiblyOverridingPythonModules(messageParts, resource);
                 }
                 return messageParts.join('\n');
-            } else if (
-                isLocalConnection(error.kernelConnectionMetadata) &&
-                !failureInfo &&
-                error.category === 'invalidkernel'
-            ) {
-                // In the case when we're using non-zmq, we don't have much error information, as jupyter doesn't provide this.
-                // If the kernel fails to start, treat that as a scenario where kernel failed to start due to some overriding modules.
-                const messageParts: string[] = [];
-                await this.addErrorMessageIfPythonArePossiblyOverridingPythonModules(messageParts, resource);
-                messageParts.push(getUserFriendlyErrorMessage(error, errorContext));
-                return messageParts.join('\n');
             }
         } else if (
             error instanceof RemoteJupyterServerConnectionError ||
