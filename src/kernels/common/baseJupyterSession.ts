@@ -332,14 +332,18 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
                 // When our kernel connects and gets a status message it triggers the ready promise
-                const deferred = createDeferred<string>();
+                const kernelStatus = createDeferred<string>();
                 if (token) {
-                    token.onCancellationRequested(() => deferred.reject(new CancellationError()), this, disposables);
+                    token.onCancellationRequested(
+                        () => kernelStatus.reject(new CancellationError()),
+                        this,
+                        disposables
+                    );
                 }
                 const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
                     traceVerbose(`Got status ${status} in waitForIdleOnSession`);
                     if (status == 'idle') {
-                        deferred.resolve(status);
+                        kernelStatus.resolve(status);
                     }
                 };
                 session.kernel.statusChanged?.connect(handler);
@@ -347,7 +351,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                     new Disposable(() => swallowExceptions(() => session.kernel?.statusChanged?.disconnect(handler)))
                 );
                 if (session.kernel.status == 'idle') {
-                    deferred.resolve(session.kernel.status);
+                    kernelStatus.resolve(session.kernel.status);
                 }
                 // Check for possibility that kernel has died.
                 const sessionDisposed = createDeferred<unknown>();
@@ -360,10 +364,10 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 const sleepPromise = sleep(timeout);
                 sessionDisposed.promise.ignoreErrors();
                 sleepPromise.ignoreErrors();
-                deferred.promise.ignoreErrors();
-                const result = await Promise.race([deferred.promise, sleepPromise, sessionDisposed.promise]);
+                kernelStatus.promise.ignoreErrors();
+                const result = await Promise.race([kernelStatus.promise, sleepPromise, sessionDisposed.promise]);
                 if (session.isDisposed) {
-                    traceError('Session disposed while waiting for session to be idel.');
+                    traceError('Session disposed while waiting for session to be idle.');
                     throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
                 }
 
