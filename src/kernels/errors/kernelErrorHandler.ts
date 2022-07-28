@@ -474,7 +474,7 @@ function getJupyterMissingErrorMessageForCell(err: JupyterInstallError) {
     const productNames = `${ProductNames.get(Product.jupyter)} ${Common.and()} ${ProductNames.get(Product.notebook)}`;
     const moduleNames = [Product.jupyter, Product.notebook].map(translateProductToModule).join(' ');
 
-    const installerCommand = `python -m pip install ${moduleNames} -U\nor\nconda install ${moduleNames} -U`;
+    const installerCommand = `python -m pip install ${moduleNames} -U\nor\nconda install ${moduleNames} --update-deps --force-reinstall`;
     const installationInstructions = DataScience.installPackageInstructions().format(productNames, installerCommand);
 
     return (
