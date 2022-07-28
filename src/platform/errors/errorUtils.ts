@@ -510,6 +510,19 @@ export function analyzeKernelErrors(
                 telemetrySafeTags: ['module.notfound.error']
             };
         }
+    } else if (error instanceof BaseError && error.category === 'invalidkernel' && filesInCwd.length) {
+        // This is the case when we're using non-zmq and we have no idea why the kernel died.
+        // If we have files that could cause the kernel to die, then display an error message
+        // informing the user about that.
+        const fileName = path.basename(filesInCwd[0]);
+        return {
+            reason: KernelFailureReason.overridingBuiltinModules,
+            fileName,
+            moduleName: path.basename(filesInCwd[0], '.py'),
+            message: DataScience.fileSeemsToBeInterferingWithKernelStartup().format(fileName),
+            moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
+            telemetrySafeTags: ['import.error', 'override.modules']
+        };
     } else if (
         lastTwolinesOfError &&
         lastTwolinesOfError[1].toLowerCase().startsWith('ModuleNotFoundError'.toLowerCase())
