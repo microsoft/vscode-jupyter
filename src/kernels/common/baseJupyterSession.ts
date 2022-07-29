@@ -67,9 +67,13 @@ export function suppressShutdownErrors(realKernel: any) {
 /**
  * Exception raised when starting a Jupyter Session fails.
  *
- * @export
- * @class JupyterSessionStartError
- * @extends {Error}
+ * Cause:
+ * Jupyter [session](https://jupyterlab.readthedocs.io/en/stable/api/modules/services.session.html) was not created for some reason
+ * by the [SessionManager](https://jupyterlab.readthedocs.io/en/stable/api/classes/services.sessionmanager-1.html)
+ *
+ * Handled by:
+ * User should be shown this in the executing cell (if there is one), otherwise a notification will pop up. User is asked to look in the output
+ * tab for more information (hopefully the reason the SessionManager failed).
  */
 export class JupyterSessionStartError extends WrappedError {
     constructor(originalException: Error) {

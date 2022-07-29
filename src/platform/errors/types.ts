@@ -1,6 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+/**
+ * Base class for all errors that we send telemetry about.
+ *
+ * @category - What type of error it is. Sent in telemetry data
+ */
 export abstract class BaseError extends Error {
     public stdErr?: string;
     constructor(public readonly category: ErrorCategory, message: string) {
