@@ -26,7 +26,7 @@
 
 ### Fixes
 
-1. Fixes problem where clipboard permissions are required in order to enter a Jupyter server URL.
+1. Fixes problem where clipboard permissions are required in order to enter a Jupyter server URL. (only applies when 'jupyter.showOnlyOneTypeOfKernel' is enabled)
    ([#10191](https://github.com/Microsoft/vscode-jupyter/issues/10191))
 1. Fix problem of determining whether or not in 'local' or 'remote' mode for a Jupyter connection.
    ([#10363](https://github.com/Microsoft/vscode-jupyter/issues/10363))
