@@ -1,5 +1,78 @@
 # Changelog
 
+## 2022.7.100 (29 July 2022)
+
+### Enhancements
+
+1. Warn users when a Python file could override an existing Python package (there by interfering with the kernels. [More info](https://aka.ms/JupyterKernelStartFailureOverrideReservedName)).
+       This feature could be turned off via the setting `"jupyter.diagnostics.reservedPythonNames.enabled": false`.
+   ([#7538](https://github.com/Microsoft/vscode-jupyter/issues/7538))
+1. DataFrame viewer enabled on the web.
+   ([#9665](https://github.com/Microsoft/vscode-jupyter/issues/9665))
+1. The Variable Viewer now shows strings wrapped in single quotes.
+   ([#10225](https://github.com/Microsoft/vscode-jupyter/issues/10225))
+1. Rework kernel selection to be in either 'remote' mode or 'local' mode to avoid confusion about what kernels should be displayed.
+   ([#10435](https://github.com/Microsoft/vscode-jupyter/issues/10435))
+1. Added a more info button to the kernel depedency prompt to give more information about ipykernel.
+   ([#10658](https://github.com/Microsoft/vscode-jupyter/issues/10658))
+1. Use the Python Extension install python command versus just pointing at python.org.
+   ([#10696](https://github.com/Microsoft/vscode-jupyter/issues/10696))
+1. Only show the "kernel may need to be restarted" message when installing Python if there are active kernels.
+   ([#10697](https://github.com/Microsoft/vscode-jupyter/issues/10697))
+1. Added a setting 'jupyter.showOnlyOneTypeOfKernel' to allow trying out the new kernel picker UI.
+   ([#10782](https://github.com/Microsoft/vscode-jupyter/issues/10782))
+1. Don't show the Python getting started page when installing via the Jupyter kernel picker command.
+   ([#10793](https://github.com/Microsoft/vscode-jupyter/issues/10793))
+
+### Fixes
+
+1. Fixes problem where clipboard permissions are required in order to enter a Jupyter server URL. (only applies when 'jupyter.showOnlyOneTypeOfKernel' is enabled)
+   ([#10191](https://github.com/Microsoft/vscode-jupyter/issues/10191))
+1. Fix problem of determining whether or not in 'local' or 'remote' mode for a Jupyter connection.
+   ([#10363](https://github.com/Microsoft/vscode-jupyter/issues/10363))
+1. Don't prompt to install python extension on just trying to check the packages that are in an interpreter.
+   ([#10615](https://github.com/Microsoft/vscode-jupyter/issues/10615))
+1. Ensure the extension loads in the `Safari` browser.
+   ([#10621](https://github.com/Microsoft/vscode-jupyter/issues/10621))
+1. Fixed localization on `package.json` sections: `capabilities`, `contributes.walkthroughs`, `contributes.commands` and `contributes.debuggers`. As well as the localizations on the exceptions thrown if the extension fails to activate and the localization on the messages for deprecated features.
+   ([#10624](https://github.com/Microsoft/vscode-jupyter/issues/10624))
+1. Fix language of picking a jupyter server when in the web extension.
+   ([#10672](https://github.com/Microsoft/vscode-jupyter/issues/10672))
+1. Change wording on 'Connect to Your Own Jupyter Server' to 'Connect to a Jupyter Server'.
+   ([#10675](https://github.com/Microsoft/vscode-jupyter/issues/10675))
+1. Fix error that pops up when trying to restart during debugging a notebook.
+   ([#10741](https://github.com/Microsoft/vscode-jupyter/issues/10741))
+1. Stop waiting for kernel to start (or be idle) when switching kernels.
+   ([#10795](https://github.com/Microsoft/vscode-jupyter/issues/10795))
+1. Display messages from background threads in cell outputs.
+   ([#10864](https://github.com/Microsoft/vscode-jupyter/issues/10864))
+1. Fixes problem with starting a kernel when ZMQ wasn't supported on Windows.
+   ([#10940](https://github.com/Microsoft/vscode-jupyter/issues/10940))
+
+### Code Health
+
+1. Use modal dialogs in places where user input is necessary as part of a workflow.
+   ([#10436](https://github.com/Microsoft/vscode-jupyter/issues/10436))
+1. Load static resources for IPyWidgets from known directories as documented [here](https://docs.jupyter.org/en/latest/use/jupyter-directories.html#data-files).
+   ([#10722](https://github.com/Microsoft/vscode-jupyter/issues/10722))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 ## 2022.6.120 (14 July 2022)
 
 ### Fixes
