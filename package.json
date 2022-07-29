@@ -27,7 +27,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.70.0-insider"
+        "vscode": "^1.70.0"
     },
     "keywords": [
         "jupyter",
