@@ -26,12 +26,31 @@ import {
 
 export type ErrorResponse = { error?: string };
 export type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
+
+/**
+ * Error thrown when daemon is closed externally.
+ *
+ * Cause:
+ * Daemon process died or the user closed the daemon.
+ *
+ * Handled by:
+ * Showing a message in the first cell.
+ */
 export class ConnectionClosedError extends BaseError {
     constructor(message: string) {
         super('daemon', message);
     }
 }
 
+/**
+ * Error thrown when Daemon fails to respond or execute
+ *
+ * Cause:
+ * Daemon code has a bug in it or some module it is using is handing the Daemon
+ *
+ * Handled by:
+ * Showing a message in the first cell or swallowed if the daemon is already running.
+ */
 export class DaemonError extends BaseError {
     constructor(message: string) {
         super('daemon', message);

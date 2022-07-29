@@ -176,6 +176,15 @@ export interface IPythonExecutionService {
  */
 export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable {}
 
+/**
+ * Error thrown when a Daemon emits output on stderr
+ *
+ * Cause:
+ * Something the daemon is doing is emitting an error on stderr.
+ *
+ * Handled by:
+ *
+ */
 export class StdErrError extends BaseError {
     constructor(message: string) {
         super('unknown', message);
