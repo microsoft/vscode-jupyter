@@ -15,23 +15,23 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         typeName = None
         try:
             vartype = type(var)
-            if hasattr(vartype, "__name__"):
+            if _VSCODE_builtins.hasattr(vartype, "__name__"):
                 result["type"] = typeName = vartype.__name__
         except TypeError:
             pass
 
         # Find shape and count if available
-        if hasattr(var, "shape"):
+        if _VSCODE_builtins.hasattr(var, "shape"):
             try:
                 # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
                 if (
-                    isinstance(var.shape, tuple)
+                    _VSCODE_builtins.isinstance(var.shape, _VSCODE_builtins.tuple)
                     or typeName is not None
                     and typeName == "EagerTensor"
                 ):
-                    _VSCODE_shapeStr = str(var.shape)
+                    _VSCODE_shapeStr = _VSCODE_builtins.str(var.shape)
                     if (
-                        len(_VSCODE_shapeStr) >= 3
+                        _VSCODE_builtins.len(_VSCODE_shapeStr) >= 3
                         and _VSCODE_shapeStr[0] == "("
                         and _VSCODE_shapeStr[-1] == ")"
                         and "," in _VSCODE_shapeStr
@@ -40,13 +40,13 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
                     elif _VSCODE_shapeStr.startswith("torch.Size(["):
                         result["shape"] = "(" + _VSCODE_shapeStr[12:-2] + ")"
                     del _VSCODE_shapeStr
-            except TypeError:
+            except _VSCODE_builtins.TypeError:
                 pass
 
         if hasattr(var, "__len__"):
             try:
-                result["count"] = len(var)
-            except TypeError:
+                result["count"] = _VSCODE_builtins.len(var)
+            except _VSCODE_builtins.TypeError:
                 pass
 
         # return our json object as a string
@@ -57,9 +57,9 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
 
     def _VSCODE_getVariableProperties(var, listOfAttributes):
         result = {
-            attr: repr(getattr(var, attr))
+            attr: _VSCODE_builtins.repr(_VSCODE_builtins.getattr(var, attr))
             for attr in listOfAttributes
-            if hasattr(var, attr)
+            if _VSCODE_builtins.hasattr(var, attr)
         }
         if is_debugging:
             return _VSCODE_json.dumps(result)
@@ -71,10 +71,10 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
         result = {}
         for name in varnames:
             try:
-                vartype = type(globals()[name])
-                if hasattr(vartype, "__name__"):
+                vartype = _VSCODE_builtins.type(globals()[name])
+                if _VSCODE_builtins.hasattr(vartype, "__name__"):
                     result[name] = vartype.__name__
-            except TypeError:
+            except _VSCODE_builtins.TypeError:
                 pass
         if is_debugging:
             return _VSCODE_json.dumps(result)
