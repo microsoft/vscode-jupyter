@@ -22,7 +22,8 @@ export function initializeWidgetComms(disposables: IDisposable[]): Utils {
     const disposable = messageChannel.onDidReceiveMessage(async ({ editor, message }) => {
         if (message && message.command === 'log') {
             const messageToLog = message.category === 'error' ? colors.red(message.message) : message.message;
-            traceInfo(`${colors.yellow('Widget renderer')}: ${messageToLog}`);
+            const category = message.category ? ` (${message.category})` : '';
+            traceInfo(`${colors.yellow('Widget renderer')}${category}: ${messageToLog}`);
         }
         if (message && message.command === 'INIT') {
             deferred.resolve(editor);
