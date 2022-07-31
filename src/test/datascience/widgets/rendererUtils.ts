@@ -167,9 +167,9 @@ function hijackLogging() {
         return;
     }
     consoleLoggersHijacked = true;
-
+    type ConsoleChannel = 'log' | 'warn' | 'error' | 'debug' | 'trace';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const logMessage = (channel: 'log' | 'warn' | 'error', args: any[]) => {
+    const logMessage = (channel: ConsoleChannel, args: any[]) => {
         let message = `WebView ${channel} Console:`;
         (args || []).forEach((arg) => {
             try {
@@ -189,16 +189,14 @@ function hijackLogging() {
             category: channel
         });
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    globalThis.console = {} as any;
-    ['log', 'error', 'warn'].forEach((channel) => {
+    (['log', 'error', 'warn', 'debug', 'trace'] as ConsoleChannel[]).forEach((channel) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (console as any)[channel] = (...args: any[]) => {
-            logMessage('log', args);
+            logMessage(channel, args);
         };
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (globalThis.console as any)[channel] = (...args: any[]) => {
-            logMessage('log', args);
+            logMessage(channel, args);
         };
     });
 }
