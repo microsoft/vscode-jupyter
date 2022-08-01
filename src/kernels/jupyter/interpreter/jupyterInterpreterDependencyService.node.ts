@@ -330,8 +330,7 @@ export class JupyterInterpreterDependencyService {
         const selectionFromError = await this.applicationShell.showErrorMessage(
             DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.uri.fsPath),
             { modal: true },
-            DataScience.selectDifferentJupyterInterpreter(),
-            Common.cancel()
+            DataScience.selectDifferentJupyterInterpreter()
         );
         return selectionFromError === DataScience.selectDifferentJupyterInterpreter()
             ? JupyterInterpreterDependencyResponse.selectAnotherInterpreter
