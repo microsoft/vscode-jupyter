@@ -19,7 +19,7 @@ jobs:
         env:
             ISSUE_OWNER: ${{github.event.issue.user.login}}
         run: |
-          echo ::set-output name=result::$(node -p -e "['rchiodo', 'greazer', 'amunger', 'IanMatthewHuff', 'DonJayamanne', 'minsa110', 'rebornix', 'roblourens'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
+          echo ::set-output name=result::$(node -p -e "['amunger', 'IanMatthewHuff', 'DonJayamanne', 'minsa110', 'rebornix', 'roblourens'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
         shell: bash
       - name: Should we proceed
         id: proceed
