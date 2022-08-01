@@ -9,8 +9,7 @@ import { IProcessServiceFactory } from '../../platform/common/process/types.node
 import { GLOBAL_MEMENTO, IMemento } from '../../platform/common/types';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
-import { ITerminalHelper, TerminalShellType } from '../../platform/terminals/types';
-import * as path from '../../platform/vscode-path/path';
+import { TerminalShellType } from '../../platform/terminals/types';
 import { sendTelemetryEvent } from '../../telemetry';
 
 const JupyterDetectionTelemetrySentMementoKey = 'JupyterDetectionTelemetrySentMementoKey';
@@ -21,7 +20,6 @@ const JupyterDetectionTelemetrySentMementoKey = 'JupyterDetectionTelemetrySentMe
 @injectable()
 export class JupyterDetectionTelemetry implements IExtensionSyncActivationService {
     constructor(
-        @inject(ITerminalHelper) private readonly terminalHelper: ITerminalHelper,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory
     ) {}
@@ -40,33 +38,6 @@ export class JupyterDetectionTelemetry implements IExtensionSyncActivationServic
         this.globalMemento.update(JupyterDetectionTelemetrySentMementoKey, true).then(noop, noop);
         this.detectJupyter('notebook', process.env).catch(noop);
         this.detectJupyter('lab', process.env).catch(noop);
-        const { env, shell } = await this.terminalHelper.getEnvironmentVariables(undefined);
-        if (!env) {
-            return;
-        }
-        const mergedVariables = { ...process.env };
-        Object.keys(env).forEach((key) => {
-            if (key in process.env) {
-                return;
-            }
-            if (key.toLowerCase() == 'path') {
-                // Append path from terminal.
-                let delimiter = path.delimiter;
-                const currentPath = (process.env['PATH'] || process.env['Path'] || '').trim();
-                const terminalPath = (env['PATH'] || env['Path'] || '').trim();
-                if (currentPath.endsWith(delimiter)) {
-                    delimiter = '';
-                }
-                if (terminalPath.startsWith(delimiter)) {
-                    delimiter = '';
-                }
-                mergedVariables[key] = `${currentPath}${delimiter}${terminalPath}`;
-            } else {
-                mergedVariables[key] = env[key];
-            }
-        });
-        this.detectJupyter('notebook', mergedVariables, shell).catch(noop);
-        this.detectJupyter('lab', mergedVariables, shell).catch(noop);
     }
     private async detectJupyter(
         frontEnd: 'notebook' | 'lab',
