@@ -66,7 +66,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
     eventName: E,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     promise: Promise<any> | Thenable<any>,
-    stopWatch?: StopWatch,
+    handleError: boolean,
     properties?: P[E] & { [waitBeforeSending]?: Promise<void> }
 ) {
     if (eventName === Telemetry.ExecuteCell) {
@@ -74,7 +74,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const props: any = properties || {};
-    stopWatch = stopWatch ? stopWatch : new StopWatch();
+    const stopWatch = new StopWatch();
     if (typeof promise.then === 'function') {
         // eslint-disable-next-line , @typescript-eslint/no-explicit-any
         (promise as Promise<any>)
@@ -94,6 +94,9 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                     // eslint-disable-next-line @typescript-eslint/promise-function-async
                 },
                 (ex) => {
+                    if (!handleError) {
+                        return;
+                    }
                     const props = getContextualPropsForTelemetry(resource);
                     Object.assign(props, properties || {});
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,7 +105,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         eventName as any,
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                        stopWatch!.elapsedTime,
+                        undefined,
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         props as any,
                         ex,

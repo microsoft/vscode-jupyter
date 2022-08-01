@@ -88,7 +88,10 @@ export class NotebookProvider implements INotebookProvider {
             await this.jupyterNotebookProvider.connect(serverOptions);
         }
         Cancellation.throwIfCanceled(options.token);
-        trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection });
+        trackKernelResourceInformation(options.resource, {
+            kernelConnection: options.kernelConnection,
+            actionSource: options.creator
+        });
         const promise = rawLocalKernel
             ? this.rawNotebookProvider!.createNotebook(
                   options.resource,
@@ -102,7 +105,7 @@ export class NotebookProvider implements INotebookProvider {
             options.resource,
             Telemetry.NotebookStart,
             promise || Promise.resolve(undefined),
-            undefined,
+            false, // Error telemetry will be sent further up the chain, after we have analyzed the error, such as if dependencies are installed or not.
             {
                 disableUI: options.ui.disableUI === true
             }

@@ -113,7 +113,12 @@ export class KernelLauncher implements IKernelLauncher {
             // Should be available now, wait with a timeout
             return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
         })();
-        sendKernelTelemetryWhenDone(resource, Telemetry.KernelLauncherPerf, promise);
+        sendKernelTelemetryWhenDone(
+            resource,
+            Telemetry.KernelLauncherPerf,
+            promise,
+            false /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
+        );
         return promise;
     }
 
