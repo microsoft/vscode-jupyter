@@ -14,7 +14,7 @@ def _VSCODE_getVariable(what_to_get, is_debugging, *args):
 
         typeName = None
         try:
-            vartype = type(var)
+            vartype = _VSCODE_builtins.type(var)
             if _VSCODE_builtins.hasattr(vartype, "__name__"):
                 result["type"] = typeName = vartype.__name__
         except TypeError:
