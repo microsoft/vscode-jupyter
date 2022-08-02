@@ -4,7 +4,7 @@
 
 import { injectable, inject } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
-import { getKernelId } from '../helpers';
+import { getKernelId, getLanguageInKernelSpec } from '../helpers';
 import {
     IJupyterKernelSpec,
     INotebookProviderConnection,
@@ -21,6 +21,7 @@ import { sendKernelSpecTelemetry } from '../raw/finder/helper';
 import { traceError, traceInfoIfCI } from '../../platform/logging';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { computeServerId } from './jupyterUtils';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -127,7 +128,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         if (
             (parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1') &&
             this.extensionChecker.isPythonExtensionInstalled &&
-            !this.isWebExtension
+            !this.isWebExtension &&
+            getLanguageInKernelSpec(spec) === PYTHON_LANGUAGE
         ) {
             // Interpreter is possible. Same machine as VS code
             try {

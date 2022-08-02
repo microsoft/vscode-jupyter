@@ -76,8 +76,7 @@ class WidgetManagerComponent {
 }
 
 const outputDisposables = new Map<string, { dispose(): void }>();
-const htmlDisposables = new WeakMap<HTMLElement, { dispose(): void }>();
-const renderedWidgets = new Map<string, { widget?: { dispose: Function } }>();
+const renderedWidgets = new Map<string, { container: HTMLElement; widget?: { dispose: Function } }>();
 /**
  * Called from renderer to render output.
  * This will be exposed as a public method on window for renderer to render output.
@@ -131,8 +130,12 @@ function renderIPyWidget(
     logger: (message: string, category?: 'info' | 'error') => void
 ) {
     logger(`Rendering IPyWidget ${outputId} with model ${model.model_id}`);
-    if (renderedWidgets.has(outputId)) {
+    if (renderedWidgets.has(outputId) && renderedWidgets.get(outputId)?.container === container) {
         return logger('already rendering');
+    }
+    if (renderedWidgets.has(outputId)) {
+        logger('Widget was already rendering for another container, dispose that widget so we can re-render it');
+        renderedWidgets.get(outputId)?.widget?.dispose();
     }
     const output = document.createElement('div');
     output.className = 'cell-output cell-output';
@@ -143,9 +146,14 @@ function renderIPyWidget(
     ele.className = 'cell-output-ipywidget-background';
     container.appendChild(ele);
     ele.appendChild(output);
-    renderedWidgets.set(outputId, {});
+    renderedWidgets.set(outputId, { container });
     createWidgetView(model, ele)
         .then((w) => {
+            if (renderedWidgets.get(outputId)?.container !== container) {
+                logger('Widget container changed, hence disposing the widget');
+                w?.dispose();
+                return;
+            }
             if (renderedWidgets.has(outputId)) {
                 renderedWidgets.get(outputId)!.widget = w;
             }
@@ -157,7 +165,6 @@ function renderIPyWidget(
                 }
             };
             outputDisposables.set(outputId, disposable);
-            htmlDisposables.set(ele, disposable);
             // Keep track of the fact that we have successfully rendered a widget for this outputId.
             const statusInfo = stackOfWidgetsRenderStatusByOutputId.find((item) => item.outputId === outputId);
             if (statusInfo) {
@@ -205,7 +212,8 @@ async function createWidgetView(
         return await wm?.renderWidget(widgetData, element);
     } catch (ex) {
         // eslint-disable-next-line no-console
-        console.error('Failed to render widget', ex);
+        console.error(`Failed to render widget ${widgetData.model_id}`, ex);
+        logMessage(`Error: Failed to render widget ${widgetData.model_id}, ${ex.toString()}`);
     }
 }
 
@@ -219,6 +227,7 @@ function initialize(context?: KernelMessagingApi) {
     } catch (ex) {
         // eslint-disable-next-line no-console
         console.error('Exception initializing WidgetManager', ex);
+        logMessage(`Error: Exception initializing WidgetManager, ${ex.toString()}`);
     }
 }
 
