@@ -27,6 +27,7 @@ on:
 
 env:
   NODE_VERSION: 16.14.2
+  NPM_VERSION: 8.15.1
   PYTHON_VERSION: 3.8
   JULIA_VERSION: 1.5.2
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
@@ -71,6 +72,9 @@ jobs:
         uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{env.NODE_VERSION}}
+
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v2
@@ -200,6 +204,9 @@ jobs:
         uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{env.NODE_VERSION}}
+
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
@@ -381,6 +388,9 @@ jobs:
         uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{env.NODE_VERSION}}
+
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
 
       # Start caching
 
@@ -720,6 +730,9 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
+
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
@@ -801,6 +814,9 @@ jobs:
         uses: actions/setup-node@v2.4.1
         with:
           node-version: ${{env.NODE_VERSION}}
+
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Download VSIX
         uses: actions/download-artifact@v2

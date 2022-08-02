@@ -14,7 +14,7 @@
 ### Prerequisites
 
 1. [Node.js](https://nodejs.org/) 16.14.2
-2. [npm](https://www.npmjs.com/) 8.3.0
+2. [npm](https://www.npmjs.com/) 8.15.1
 3. [Python](https://www.python.org/) 3.6 or later
 4. Windows, macOS, or Linux
 5. [Visual Studio Code](https://code.visualstudio.com/)
