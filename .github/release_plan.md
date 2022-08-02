@@ -39,7 +39,7 @@
         -   [ ] Confirm the 3rd part of the version ends with `100`.
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
--   [ ] GDPR bookkeeping (@greazer) (🤖)
+-   [ ] GDPR bookkeeping (🤖)
     - https://gdpr.datasmart.ms/ search `EntityName like 'ms-toolsai.jupyter/%' and complete = 'false'`
     - Typically just update columns DataClassification, BusinessJustification, InteralOnly, Suppressed, Retired
         - Suspected PII requires more
@@ -92,7 +92,7 @@
 
 # Day of VS Code publishing (Wednesday, XXX XX)
 -   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+sort%3Aupdated-asc+label%3Ainfo-needed) and close any that have no activity for over a month (🤖)
--   [ ] GDPR bookkeeping (🤖) ((@greazer does regular classification every Monday evening))
+-   [ ] GDPR bookkeeping (🤖)
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
 
 # Day of VS Code releasing the next insider version (Wednesday, XXX XX)
