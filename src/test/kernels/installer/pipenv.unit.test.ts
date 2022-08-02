@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import * as pathModule from '../../../platform/vscode-path/path';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import * as platformApis from '../../../platform/common/utils/platform.node';
 import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
@@ -7,8 +7,6 @@ import * as fileUtilsCommon from '../../../platform/common/platform/fileUtils';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
 import { isPipenvEnvironmentRelatedToFolder, _getAssociatedPipfile } from '../../../kernels/installer/pipenv.node';
 import { Uri } from 'vscode';
-
-const path = platformApis.getOSType() === platformApis.OSType.Windows ? pathModule.win32 : pathModule.posix;
 
 suite('Pipenv helper', () => {
     suite('isPipenvEnvironmentRelatedToFolder()', async () => {
