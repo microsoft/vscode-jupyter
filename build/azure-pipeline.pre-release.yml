@@ -25,6 +25,9 @@ extends:
     locTsConfigs: $(Build.SourcesDirectory)/tsconfig.json
     locBundleDestination: $(Build.SourcesDirectory)/out
     buildSteps:
+      - script: npm i -g npm@8.15.1
+        displayName: Install npm 8.15.1
+
       - script: npm ci
         displayName: Install dependencies
 
