@@ -40,7 +40,8 @@ import {
     QuickPickItemButtonEvent,
     EventEmitter,
     ConfigurationTarget,
-    NotebookEditor
+    NotebookEditor,
+    debug
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -314,6 +315,7 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
         // Dispose any cached python settings (used only in test env).
         configSettings.JupyterSettings.dispose();
     }
+    await ensureNoActiveDebuggingSession();
     VSCodeNotebookController.kernelAssociatedWithDocument = undefined;
     await closeNotebooks(disposables);
     disposeAllDisposables(disposables);
@@ -1288,4 +1290,16 @@ export async function clickOKForRestartPrompt() {
         return (appShell.showInformationMessage as any).wrappedMethod.apply(appShell, arguments);
     });
     return { dispose: () => showInformationMessage.restore() };
+}
+
+export async function ensureNoActiveDebuggingSession(){
+    await commands.executeCommand('workbench.action.debug.stop');
+    await commands.executeCommand('workbench.action.debug.disconnect');
+    await waitForCondition(
+        async () => {
+            return debug.activeDebugSession === undefined;
+        },
+        defaultNotebookTestTimeout,
+        `Unable to stop debug session`
+    );
 }
