@@ -1,11 +1,11 @@
 # Changelog
 
-## 2022.7.100 (29 July 2022)
+## 2022.7.100 (3 Aug 2022)
 
 ### Enhancements
 
 1. Warn users when a Python file could override an existing Python package (there by interfering with the kernels. [More info](https://aka.ms/JupyterKernelStartFailureOverrideReservedName)).
-       This feature could be turned off via the setting `"jupyter.diagnostics.reservedPythonNames.enabled": false`.
+   This feature could be turned off via the setting `"jupyter.diagnostics.reservedPythonNames.enabled": false`.
    ([#7538](https://github.com/Microsoft/vscode-jupyter/issues/7538))
 1. DataFrame viewer enabled on the web.
    ([#9665](https://github.com/Microsoft/vscode-jupyter/issues/9665))
@@ -26,6 +26,8 @@
 
 ### Fixes
 
+1. Fixes related to loading of environment variables from `.env` files ([#10359](https://github.com/Microsoft/vscode-jupyter/issues/10359), [#9774](https://github.com/Microsoft/vscode-jupyter/issues/9774), [#10392](https://github.com/Microsoft/vscode-jupyter/issues/10392), [#10755](https://github.com/Microsoft/vscode-jupyter/issues/10755)).
+1. Load environment variables for Python kernels from file defined in the setting `python.envFile` ([#9691](https://github.com/Microsoft/vscode-jupyter/issues/9691)).
 1. Fixes problem where clipboard permissions are required in order to enter a Jupyter server URL. (only applies when 'jupyter.showOnlyOneTypeOfKernel' is enabled)
    ([#10191](https://github.com/Microsoft/vscode-jupyter/issues/10191))
 1. Fix problem of determining whether or not in 'local' or 'remote' mode for a Jupyter connection.
@@ -164,7 +166,6 @@ make this extension useful:
    ([#10202](https://github.com/Microsoft/vscode-jupyter/issues/10202))
 1. Fix 'Special Token Check' test.
    ([#10565](https://github.com/Microsoft/vscode-jupyter/issues/10565))
-
 
 ### Thanks
 
