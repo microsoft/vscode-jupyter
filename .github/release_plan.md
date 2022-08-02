@@ -5,7 +5,8 @@
 
 # Move open issues (Tuesday of VS Code endgame week, XXX XX)
 
-- [ ] Move all open issues to next milestone or remove milestone and put back in triage. This allows endgame champ to have a better understanding of done state.
+- [ ] Ask the team to move all open issues to next milestone or remove milestone and put back in triage. This allows endgame champ to have a better understanding of done state.
+- [ ] Schedule a bugbash if needed.
 
 # Release candidate (Friday of VS Code endgame week, XXX XX)
 
@@ -14,9 +15,12 @@
     -   [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
 -   [ ] Create new release branch with format `release/release-YYYY.MM.100`
     -   [ ] Create a pull request against `release/release-YYYY.MM.100` for changes
-    -   [ ] Run `npm install` to verify `package-lock.json` did not get updated.
+    -   [ ] Bump the vscode engine version in package.json
+    -   [ ] Run `npm install` to verify `package-lock.json` did not get updated aside from the vscode engine version.
+        -   If there are minor changes, they can be just be updated in the release branch and later ported back to main.
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-jupyter/blob/main/CHANGELOG.md)
         -   [ ] Run [`news`](https://github.com/Microsoft/vscode-jupyter/tree/main/news) (typically `python news --final --update CHANGELOG.md | code-insiders -`)
+        -   [ ] Update the date at the top to when the release is planned.
         -   [ ] Copy over the "Thanks" section from the previous release into the "Thanks" section for the new release
         -   [ ] Make sure the "Thanks" section is up-to-date (e.g. compare to versions in [`requirements.txt`](https://github.com/microsoft/vscode-jupyter/blob/main/requirements.txt))
         -   [ ] Touch up news entries (e.g. add missing periods)
@@ -35,7 +39,10 @@
         -   [ ] Confirm the 3rd part of the version ends with `100`.
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
--   [ ] GDPR bookkeeping (@greazer) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
+-   [ ] GDPR bookkeeping (@greazer) (🤖)
+    - https://gdpr.datasmart.ms/ search `EntityName like 'ms-toolsai.jupyter/%' and complete = 'false'`
+    - Typically just update columns DataClassification, BusinessJustification, InteralOnly, Suppressed, Retired
+        - Suspected PII requires more
 -   [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
     -   new features
     -   settings changes
@@ -43,8 +50,10 @@
 -   [ ] Release notes from VS Code have something about Jupyter
     -   Example doc update [here](https://github.com/microsoft/vscode-docs/pull/5256)
 -   [ ] Schedule a sanity test. Aim for close after freeze so there is still time to fix release bugs before release. Ask teams before bash for specific areas that need testing.
--   [ ] Is the validation pipeline clear? If not, drive to make sure that it is clear for release. Sanity test can be used to help with this.
--   [ ] Ask CTI to test the release candidate
+-   [ ] Ensure that closed issues targeting this release will be verfied, asking for verification steps if needed. Sanity test can be used to help with this.
+    -   `is:issue sort:updated-desc milestone:"<milestone>" label:verification-needed -label:verified`
+-   [ ] Ask CTI (Python Tools CTI) to test the release candidate
+    -   Test plan document: https://github.com/microsoft/vscode-jupyter/blob/main/.github/test_plan.md
 
 # Testing (Monday of VS Code release week, XXX XX)
 
