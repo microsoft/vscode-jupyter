@@ -525,7 +525,6 @@
         "comment": ["{Locked='kernel'}"]
     },
     "DataScience.restartKernelMessageYes": "Yes",
-    "DataScience.restartKernelMessageNo": "No",
     "DataScience.restartingKernelFailed": {
         "message": "Kernel restart failed. Jupyter server is hung. Please reload VS Code.",
         "comment": ["{Locked='Kernel'}"]

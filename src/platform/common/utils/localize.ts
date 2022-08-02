@@ -463,7 +463,6 @@ export namespace DataScience {
     export const restartKernelMessageYes = () => localize('DataScience.restartKernelMessageYes', 'Restart');
     export const restartKernelMessageDontAskAgain = () =>
         localize('DataScience.restartKernelMessageDontAskAgain', "Don't Ask Again");
-    export const restartKernelMessageNo = () => localize('DataScience.restartKernelMessageNo', 'Cancel');
     export const restartingKernelStatus = () => localize('DataScience.restartingKernelStatus', 'Restarting Kernel {0}');
     export const restartingKernelFailed = () =>
         localize(
