@@ -74,7 +74,7 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Use Npm ${{env.NPM_VERSION}}
-        run: npm i -g npm@${{NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v2
@@ -206,7 +206,7 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Use Npm ${{env.NPM_VERSION}}
-        run: npm i -g npm@${{NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
@@ -390,7 +390,7 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Use Npm ${{env.NPM_VERSION}}
-        run: npm i -g npm@${{NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
 
       # Start caching
 
@@ -731,7 +731,7 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Use Npm ${{env.NPM_VERSION}}
-        run: npm i -g npm@${{NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Download VSIX
         uses: actions/download-artifact@v2
@@ -816,7 +816,7 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Use Npm ${{env.NPM_VERSION}}
-        run: npm i -g npm@${{NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Download VSIX
         uses: actions/download-artifact@v2
