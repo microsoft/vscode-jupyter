@@ -19,7 +19,15 @@ const msrCrypto = require('../../platform/msrCrypto/msrCrypto');
 
 // Use window crypto if it's available, otherwise use the msrCrypto module
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const crypto = ((global?.window as any)?.msCrypto || (global?.window as any)?.crypto || msrCrypto) as Crypto;
+const globalMsCrypto = (global?.window as any)?.msCrypto?.subtle?.digest
+    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global?.window as any)?.msCrypto
+    : undefined;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const windowCrypto = (global?.window as any)?.crypto?.subtle?.digest ? (global?.window as any)?.crypto : undefined;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+console.error('globalMsCrypto', globalMsCrypto, windowCrypto, msrCrypto);
+const crypto = (globalMsCrypto || windowCrypto || msrCrypto) as Crypto;
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -138,6 +146,7 @@ export function createRemoteConnectionInfo(
 
 export async function computeServerId(uri: string) {
     try {
+        debugger;
         const inputBuffer = new TextEncoder().encode(uri);
         const hashBuffer = await crypto.subtle.digest({ name: 'SHA-256' }, inputBuffer);
 
