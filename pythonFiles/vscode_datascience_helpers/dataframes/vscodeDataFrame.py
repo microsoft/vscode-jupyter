@@ -10,15 +10,19 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
     _VSCODE_allowedTensorTypes = ["Tensor", "EagerTensor"]
 
     def _VSCODE_stringifyElement(element):
-        if isinstance(element, _VSCODE_np.ndarray):
+        if _VSCODE_builtins.isinstance(element, _VSCODE_np.ndarray):
             # Ensure no rjust or ljust padding is applied to stringified elements
             stringified = _VSCODE_np.array2string(
-                element, separator=", ", formatter={"all": lambda x: str(x)}
+                element,
+                separator=", ",
+                formatter={"all": lambda x: _VSCODE_builtins.str(x)},
             )
-        elif isinstance(element, (list, tuple)):
+        elif _VSCODE_builtins.isinstance(
+            element, (_VSCODE_builtins.list, _VSCODE_builtins.tuple)
+        ):
             # We can't pass lists and tuples to array2string because it expects
             # the size attribute to be defined
-            stringified = str(element)
+            stringified = _VSCODE_builtins.str(element)
         else:
             stringified = element
         return stringified
@@ -33,17 +37,17 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
         try:
             if start is not None and end is not None:
                 ndarray = ndarray[start:end]
-            if ndarray.ndim < 3 and str(ndarray.dtype) != "object":
+            if ndarray.ndim < 3 and _VSCODE_builtins.str(ndarray.dtype) != "object":
                 pass
-            elif ndarray.ndim == 1 and str(ndarray.dtype) == "object":
+            elif ndarray.ndim == 1 and _VSCODE_builtins.str(ndarray.dtype) == "object":
                 flattened = _VSCODE_np.empty(ndarray.shape[:2], dtype="object")
-                for i in range(len(flattened)):
+                for i in _VSCODE_builtins.range(_VSCODE_builtins.len(flattened)):
                     flattened[i] = _VSCODE_stringifyElement(ndarray[i])
                 ndarray = flattened
             else:
                 flattened = _VSCODE_np.empty(ndarray.shape[:2], dtype="object")
-                for i in range(len(flattened)):
-                    for j in range(len(flattened[i])):
+                for i in _VSCODE_builtins.range(_VSCODE_builtins.len(flattened)):
+                    for j in _VSCODE_builtins.range(_VSCODE_builtins.len(flattened[i])):
                         flattened[i][j] = _VSCODE_stringifyElement(ndarray[i][j])
                 ndarray = flattened
         finally:
@@ -62,12 +66,12 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
                 temp = temp[start:end]
             # Can't directly convert sparse tensors to numpy arrays
             # so first convert them to dense tensors
-            if hasattr(temp, "is_sparse") and temp.is_sparse:
+            if _VSCODE_builtins.hasattr(temp, "is_sparse") and temp.is_sparse:
                 # This guard is needed because to_dense exists on all PyTorch
                 # tensors and throws an error if the tensor is already strided
                 temp = temp.to_dense()
             # See https://discuss.pytorch.org/t/should-it-really-be-necessary-to-do-var-detach-cpu-numpy/35489
-            if hasattr(temp, "data"):
+            if _VSCODE_builtins.hasattr(temp, "data"):
                 # PyTorch tensors need to be explicitly detached
                 # from the computation graph and copied to CPU
                 temp = temp.data.detach().cpu()
@@ -79,7 +83,7 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
             temp = _VSCODE_convertNumpyArrayToDataFrame(temp)
             tensor = temp
             del temp
-        except AttributeError:
+        except _VSCODE_builtins.AttributeError:
             # TensorFlow EagerTensors and PyTorch Tensors support numpy()
             # but avoid a crash just in case the current variable doesn't
             pass
@@ -87,26 +91,29 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
 
     # Function that converts the var passed in into a pandas data frame if possible
     def _VSCODE_convertToDataFrame(df, start=None, end=None):
-        vartype = type(df)
-        if isinstance(df, list):
+        vartype = _VSCODE_builtins.type(df)
+        if _VSCODE_builtins.isinstance(df, _VSCODE_builtins.list):
             df = _VSCODE_pd.DataFrame(df).iloc[start:end]
-        elif isinstance(df, _VSCODE_pd.Series):
+        elif _VSCODE_builtins.isinstance(df, _VSCODE_pd.Series):
             df = _VSCODE_pd.Series.to_frame(df).iloc[start:end]
-        elif isinstance(df, dict):
+        elif _VSCODE_builtins.isinstance(df, _VSCODE_builtins.dict):
             df = _VSCODE_pd.Series(df)
             df = _VSCODE_pd.Series.to_frame(df).iloc[start:end]
-        elif hasattr(df, "toPandas"):
+        elif _VSCODE_builtins.hasattr(df, "toPandas"):
             df = df.toPandas().iloc[start:end]
         elif (
-            hasattr(vartype, "__name__")
+            _VSCODE_builtins.hasattr(vartype, "__name__")
             and vartype.__name__ in _VSCODE_allowedTensorTypes
         ):
             df = _VSCODE_convertTensorToDataFrame(df, start, end)
-        elif hasattr(vartype, "__name__") and vartype.__name__ == "ndarray":
+        elif (
+            _VSCODE_builtins.hasattr(vartype, "__name__")
+            and vartype.__name__ == "ndarray"
+        ):
             df = _VSCODE_convertNumpyArrayToDataFrame(df, start, end)
         elif (
-            hasattr(df, "__array__")
-            and hasattr(vartype, "__name__")
+            _VSCODE_builtins.hasattr(df, "__array__")
+            and _VSCODE_builtins.hasattr(vartype, "__name__")
             and vartype.__name__ == "DataArray"
         ):
             df = _VSCODE_convertNumpyArrayToDataFrame(
@@ -125,17 +132,17 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
 
     # Function to compute row count for a value
     def _VSCODE_getRowCount(var):
-        if hasattr(var, "shape"):
+        if _VSCODE_builtins.hasattr(var, "shape"):
             try:
                 # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
-                if isinstance(var.shape, tuple):
+                if _VSCODE_builtins.isinstance(var.shape, _VSCODE_builtins.tuple):
                     return var.shape[0]
-            except TypeError:
+            except _VSCODE_builtins.TypeError:
                 return 0
-        elif hasattr(var, "__len__"):
+        elif _VSCODE_builtins.hasattr(var, "__len__"):
             try:
                 return _VSCODE_builtins.len(var)
-            except TypeError:
+            except _VSCODE_builtins.TypeError:
                 return 0
 
     # Function to retrieve a set of rows for a data frame
@@ -172,18 +179,18 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
             try:
                 row = df.iloc[0:1]
                 json_row = _VSCODE_pd_json.to_json(None, row, date_format="iso")
-                columnNames = list(_VSCODE_json.loads(json_row))
+                columnNames = _VSCODE_builtins.list(_VSCODE_json.loads(json_row))
             except:
-                columnNames = list(df)
+                columnNames = _VSCODE_builtins.list(df)
         else:
-            columnNames = list(df)
+            columnNames = _VSCODE_builtins.list(df)
 
         columnTypes = _VSCODE_builtins.list(df.dtypes)
 
         # Compute the index column. It may have been renamed
         try:
             indexColumn = df.index.name if df.index.name else "index"
-        except AttributeError:
+        except _VSCODE_builtins.AttributeError:
             indexColumn = "index"
 
         # Make sure the index column exists
@@ -195,11 +202,11 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
         columns = []
         for n in _VSCODE_builtins.range(0, _VSCODE_builtins.len(columnNames)):
             column_type = columnTypes[n]
-            column_name = str(columnNames[n])
+            column_name = _VSCODE_builtins.str(columnNames[n])
             colobj = {}
             colobj["key"] = column_name
             colobj["name"] = column_name
-            colobj["type"] = str(column_type)
+            colobj["type"] = _VSCODE_builtins.str(column_type)
             columns.append(colobj)
 
         # Save this in our target
