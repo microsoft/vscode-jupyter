@@ -187,8 +187,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             if (result === InterruptResult.TimedOut) {
                 const message = DataScience.restartKernelAfterInterruptMessage();
                 const yes = DataScience.restartKernelMessageYes();
-                const no = DataScience.restartKernelMessageNo();
-                const v = await this.appShell.showInformationMessage(message, { modal: true }, yes, no);
+                const v = await this.appShell.showInformationMessage(message, { modal: true }, yes);
                 if (v === yes) {
                     await this.restart();
                 }
