@@ -671,7 +671,7 @@ jobs:
         with:
           name: TestResultNotebook-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
           path: testresults.ipynb
-          retention-days: 1
+          retention-days: 4
 
       - name: Upload Memory snapshot
         uses: actions/upload-artifact@v2
