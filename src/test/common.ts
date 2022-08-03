@@ -8,6 +8,7 @@ import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 import * as hashjs from 'hash.js';
+import { traceInfoIfCI } from '../platform/logging';
 
 export interface IExtensionTestApi extends IExtensionApi {
     serviceContainer: IServiceContainer;
@@ -47,16 +48,16 @@ export async function waitForCondition(
     intervalTimeoutMs: number = 10,
     throwOnError: boolean = false
 ): Promise<void> {
+    traceInfoIfCI(`Waiting ${timeoutMs}ms for condition`);
     return new Promise<void>(async (resolve, reject) => {
+        let timer: NodeJS.Timer;
         const timeout = setTimeout(() => {
             clearTimeout(timeout);
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
             clearTimeout(timer);
             errorMessage = typeof errorMessage === 'string' ? errorMessage : errorMessage();
             console.log(`Test failing --- ${errorMessage}`);
             reject(new Error(errorMessage));
         }, timeoutMs);
-        let timer: NodeJS.Timer;
         const timerFunc = async () => {
             let success = false;
             try {
