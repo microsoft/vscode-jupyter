@@ -989,6 +989,14 @@ export interface IEventNamePropertyMapping {
         | ({ result: InterruptResult } & ResourceSpecificTelemetryProperties) // If successful (interrupted, timeout, restart).
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
     [Telemetry.NotebookRestart]:
+        | {
+              /**
+               * If true, this is the total time taken to restart the kernel (excluding times to stop current cells and the like).
+               * Also in the case of raw kernels, we keep a separate process running, and when restarting we just switch to that process.
+               * In such cases this value will be `undefined`. In the case of raw kernels this will be true only when starting a new kernel process from scratch.
+               */
+              startTimeOnly: true;
+          }
         | ({
               failed: true;
               failureCategory: ErrorCategory;

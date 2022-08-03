@@ -17,7 +17,7 @@ import { IDisplayOptions, IDisposable, Resource } from '../../../platform/common
 import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
+import { sendKernelTelemetryEvent, sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { sendTelemetryEvent, captureTelemetry, Telemetry } from '../../../telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
@@ -79,7 +79,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         try {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
-            newSession = await this.startRawSession(options);
+            newSession = await this.startRawSession({ ...options, purpose: 'start' });
             Cancellation.throwIfCanceled(options.token);
             // Only connect our session if we didn't cancel or timeout
             sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
@@ -228,18 +228,22 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
             .catch(noop);
         return promise;
     }
-    protected async createRestartSession(
+    private async createRestartSession(
         disableUI: boolean,
         cancelToken: CancellationToken
     ): Promise<ISessionWithSocket> {
         if (!this.kernelConnectionMetadata || this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
             throw new Error('Unsupported - unable to restart live kernel sessions using raw kernel.');
         }
-        return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI) });
+        return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI), purpose: 'restart' });
     }
 
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
-    private async startRawSession(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<RawSession> {
+    private async startRawSession(options: {
+        token: CancellationToken;
+        ui: IDisplayOptions;
+        purpose?: 'start' | 'restart';
+    }): Promise<RawSession> {
         if (
             this.kernelConnectionMetadata.kind !== 'startUsingLocalKernelSpec' &&
             this.kernelConnectionMetadata.kind !== 'startUsingPythonInterpreter'
@@ -256,6 +260,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         );
 
         this.terminatingStatus = undefined;
+        const stopWatch = new StopWatch();
         const process = await KernelProgressReporter.wrapAndReportProgress(
             this.resource,
             DataScience.connectingToKernel().format(
@@ -271,11 +276,17 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                     options.token
                 )
         );
-        return KernelProgressReporter.wrapAndReportProgress(
+        const promise = KernelProgressReporter.wrapAndReportProgress(
             this.resource,
             DataScience.waitingForJupyterSessionToBeIdle(),
             () => this.postStartRawSession(options, process)
         );
+        if (options.purpose === 'restart') {
+            sendKernelTelemetryWhenDone(this.resource, Telemetry.NotebookRestart, promise, stopWatch, {
+                startTimeOnly: true
+            });
+        }
+        return promise;
     }
     private async postStartRawSession(
         options: { token: CancellationToken; ui: IDisplayOptions },

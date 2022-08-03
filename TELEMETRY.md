@@ -2848,6 +2848,42 @@ No properties for event
 ```
 
 
+[src/kernels/common/baseJupyterSession.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/common/baseJupyterSession.ts)
+```typescript
+        if (this.session?.isRemoteSession && this.session.kernel) {
+            const stopWatch = new StopWatch();
+            await this.session.kernel.restart();
+            sendKernelTelemetryEvent(this.resource, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
+                startTimeOnly: true
+            });
+            this.setSession(this.session, true);
+```
+
+
+[src/kernels/raw/session/rawJupyterSession.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts)
+```typescript
+            () => this.postStartRawSession(options, process)
+        );
+        if (options.purpose === 'restart') {
+            sendKernelTelemetryWhenDone(this.resource, Telemetry.NotebookRestart, promise, stopWatch, {
+                startTimeOnly: true
+            });
+        }
+```
+
+
+[src/kernels/jupyter/session/jupyterSession.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/session/jupyterSession.ts)
+```typescript
+            const stopWatch = new StopWatch();
+            result = await this.createSession({ token: cancelToken, ui });
+            await this.waitForIdleOnSession(result, this.idleTimeout, cancelToken);
+            sendKernelTelemetryEvent(this.resource, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
+                startTimeOnly: true
+            });
+            return result;
+```
+
+
 [src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
             await (this._jupyterSessionPromise
@@ -7453,9 +7489,9 @@ No description provided
 
 [src/platform/api/pythonApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts)
 ```typescript
+        PythonExtensionChecker.promptDisplayed = true;
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();
-        const no = localize.Common.bannerLabelNo();
         sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
         const answer = await this.appShell.showInformationMessage(
             localize.DataScience.pythonExtensionRequired(),
@@ -7465,7 +7501,7 @@ No description provided
 
 [src/platform/api/pythonApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts)
 ```typescript
-            no
+            yes
         );
         if (answer === yes) {
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
@@ -8229,7 +8265,7 @@ No properties for event
 
 [src/kernels/raw/session/rawJupyterSession.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts)
 ```typescript
-            newSession = await this.startRawSession(options);
+            newSession = await this.startRawSession({ ...options, purpose: 'start' });
             Cancellation.throwIfCanceled(options.token);
             // Only connect our session if we didn't cancel or timeout
             sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
@@ -8313,13 +8349,13 @@ No properties for event
 
 [src/kernels/raw/session/rawJupyterSession.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts)
 ```typescript
-        return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI) });
+        return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI), purpose: 'restart' });
     }
 
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
-    private async startRawSession(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<RawSession> {
-        if (
-            this.kernelConnectionMetadata.kind !== 'startUsingLocalKernelSpec' &&
+    private async startRawSession(options: {
+        token: CancellationToken;
+        ui: IDisplayOptions;
 ```
 
 </details>

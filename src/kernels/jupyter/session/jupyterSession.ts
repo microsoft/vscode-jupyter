@@ -28,6 +28,8 @@ import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyte
 import { CancellationError, Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop } from '../../../platform/common/utils/misc';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 
 // function is
 export class JupyterSession extends BaseJupyterSession implements IJupyterKernelConnectionSession {
@@ -155,8 +157,12 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
             traceVerbose(
                 `JupyterSession.createNewKernelSession ${tryCount}, id is ${this.kernelConnectionMetadata?.id}`
             );
+            const stopWatch = new StopWatch();
             result = await this.createSession({ token: cancelToken, ui });
             await this.waitForIdleOnSession(result, this.idleTimeout, cancelToken);
+            sendKernelTelemetryEvent(this.resource, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
+                startTimeOnly: true
+            });
             return result;
         } catch (exc) {
             traceInfo(`Error waiting for restart session: ${exc}`);
