@@ -12,7 +12,9 @@
 
 -   [ ] Review [Component Governance](https://dev.azure.com/monacotools/Monaco/_componentGovernance/191876) (Click on "microsoft/vscode-jupyter" on that page) and resolve all High/Severe issues.
 
+    -   [ ] Focus on resolving `Critical` and `High` priority issues as others will be addressed in the `debt` week.
     -   [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
+        Instructions on updating `npm` dependencies in `package.json` & `package-lock.json` can be found [here](https://github.com/microsoft/vscode-jupyter/wiki/Resolving-Component-Governance-and-Dependabot-issues-(updating-package-lock.json)).
 -   [ ] Create new release branch with format `release/release-YYYY.MM.100`
     -   [ ] Create a pull request against `release/release-YYYY.MM.100` for changes
     -   [ ] Bump the vscode engine version in package.json
