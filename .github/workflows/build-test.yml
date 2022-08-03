@@ -168,6 +168,9 @@ jobs:
       - name: Check dependencies
         run: npm run checkDependencies
 
+      - name: Check changes to package-lock.json
+        run: npx gulp validatePackageLockJson
+
       - name: 'Check for telemetry edit'
         uses: brettcannon/check-for-changed-files@v1.1.0
         with:
