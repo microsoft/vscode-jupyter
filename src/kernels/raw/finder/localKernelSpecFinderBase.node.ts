@@ -8,7 +8,7 @@ import { CancellationToken, Memento, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfo, traceVerbose, traceError, traceDecoratorError } from '../../../platform/logging';
+import { traceInfo, traceVerbose, traceError, traceDecoratorError, traceInfoIfCI } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { ReadWrite } from '../../../platform/common/types';
@@ -138,6 +138,7 @@ export abstract class LocalKernelSpecFinderBase {
     ): Promise<IJupyterKernelSpec | undefined> {
         // This is a backup folder for old kernels created by us.
         if (specPath.fsPath.includes(oldKernelsSpecFolderName)) {
+            traceInfoIfCI(`Kernel spec for ${getDisplayPath(specPath)} skipped as it is in an old kernelSpec folder.`);
             return;
         }
         const key = getComparisonKey(specPath);
@@ -157,6 +158,13 @@ export abstract class LocalKernelSpecFinderBase {
             if (kernelSpec && !shouldDeleteKernelSpec) {
                 return kernelSpec;
             }
+            traceInfoIfCI(
+                `Kernel spec for ${getDisplayPath(specPath)} skipped as it should be, ${
+                    kernelSpec ? getKernelRegistrationInfo(kernelSpec) : ''
+                }.`,
+                `(globalSpecRootPath = ${getDisplayPath(globalSpecRootPath)})`,
+                `(kernelSpec.specFile = ${getDisplayPath(kernelSpec?.specFile)})`
+            );
             if (kernelSpec?.specFile && shouldDeleteKernelSpec) {
                 // If this kernelSpec was registered by us and is in the global kernels folder,
                 // then remove it.
@@ -214,21 +222,30 @@ export abstract class LocalKernelSpecFinderBase {
         }
         const promise = (async () => {
             const searchPath = isUri(searchItem) ? searchItem : searchItem.kernelSearchPath;
-            if (await this.fs.exists(searchPath)) {
-                if (cancelToken?.isCancellationRequested) {
+            traceInfoIfCI(`Looking for kernelSpecs in ${getDisplayPath(searchPath)}.`);
+            try {
+                if (await this.fs.exists(searchPath)) {
+                    if (cancelToken?.isCancellationRequested) {
+                        traceInfoIfCI(`kernelSpecs search cancelled for ${getDisplayPath(searchPath)}.`);
+                        return [];
+                    }
+                    const files = await this.fs.searchLocal(`**/kernel.json`, searchPath.fsPath, true);
+                    traceInfoIfCI(`found kernelSpecs in ${getDisplayPath(searchPath)}, list is ${files.join(',')}.`);
+                    return files
+                        .map((item) => uriPath.joinPath(searchPath, item))
+                        .map((item) => {
+                            return {
+                                interpreter: isUri(searchItem) ? undefined : searchItem.interpreter,
+                                kernelSpecFile: item
+                            };
+                        });
+                } else {
+                    traceInfoIfCI(`No kernelSpecs in ${getDisplayPath(searchPath)}.`);
                     return [];
                 }
-                const files = await this.fs.searchLocal(`**/kernel.json`, searchPath.fsPath, true);
-                return files
-                    .map((item) => uriPath.joinPath(searchPath, item))
-                    .map((item) => {
-                        return {
-                            interpreter: isUri(searchItem) ? undefined : searchItem.interpreter,
-                            kernelSpecFile: item
-                        };
-                    });
-            } else {
-                return [];
+            } catch (ex) {
+                traceInfoIfCI(`Looking for kernelSpecs failed in ${getDisplayPath(searchPath)}.`, ex);
+                throw ex;
             }
         })();
         this.findKernelSpecsInPathCache.set(cacheKey, promise);

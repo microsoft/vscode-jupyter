@@ -23,13 +23,14 @@ export function getFilePath(file: Uri | undefined) {
 }
 
 export function getDisplayPath(
-    filename: Uri | undefined,
+    filename: string | Uri | undefined,
     workspaceFolders: readonly WorkspaceFolder[] | WorkspaceFolder[] = [],
     homePath: Uri | undefined = undefined
 ) {
-    const relativeToHome = getDisplayPathImpl(filename, undefined, homePath);
+    const uri = typeof filename === 'string' ? Uri.file(filename) : filename;
+    const relativeToHome = getDisplayPathImpl(uri, undefined, homePath);
     const relativeToWorkspaceFolders = workspaceFolders.map((folder) =>
-        getDisplayPathImpl(filename, folder.uri, homePath)
+        getDisplayPathImpl(uri, folder.uri, homePath)
     );
     // Pick the shortest path for display purposes.
     // As those are most likely relative to some workspace folder.
