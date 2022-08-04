@@ -7,6 +7,7 @@ import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTest
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import * as tmp from 'tmp';
 import { PythonExtension, PylanceExtension, setTestExecution } from '../platform/common/constants';
+import * as jsonc from 'jsonc-parser';
 
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_JUPYTER_CI_TEST = '1';
@@ -80,6 +81,20 @@ async function installPythonExtension(vscodeExecutablePath: string) {
     });
 }
 
+async function updatePackageJson() {
+    const packageJsonFile = path.join(extensionDevelopmentPath, 'package.json');
+    // Changing the logging level to be read from workspace settings file.
+    // This way we can enable verbose logging and get the logs for the tests.
+    const settingsJson = fs.readFileSync(packageJsonFile).toString();
+    const edits = jsonc.modify(
+        settingsJson,
+        ['contributes', 'configuration', 'properties', 'jupyter.logging.level', 'scope'],
+        'resource',
+        {}
+    );
+    const updatedSettingsJson = jsonc.applyEdits(settingsJson, edits);
+    fs.writeFileSync(packageJsonFile, updatedSettingsJson);
+}
 async function createSettings(): Promise<string> {
     // User data dir can be overridden with an environment variable.
     const userDataDirectory = process.env.VSC_JUPYTER_USER_DATA_DIR || (await createTempDir());
@@ -113,6 +128,7 @@ async function start() {
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];
     const userDataDirectory = await createSettings();
     await installPythonExtension(vscodeExecutablePath);
+    await updatePackageJson();
     await runTests({
         vscodeExecutablePath,
         extensionDevelopmentPath: extensionDevelopmentPath,
