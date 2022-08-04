@@ -600,15 +600,15 @@ export const IKernelFinder = Symbol('IKernelFinder');
 export interface IKernelFinder {
     rankKernels(
         resource: Resource,
+        cancelToken: CancellationToken,
         option?: nbformat.INotebookMetadata,
         preferredInterpreter?: PythonEnvironment,
-        cancelToken?: CancellationToken,
         useCache?: 'useCache' | 'ignoreCache',
         serverId?: string
     ): Promise<KernelConnectionMetadata[] | undefined>;
     listKernels(
         resource: Resource,
-        cancelToken?: CancellationToken,
+        cancelToken: CancellationToken,
         useCache?: 'useCache' | 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]>;
     // For the given kernel connection, return true if it's an exact match for the notebookMetadata

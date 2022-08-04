@@ -30,7 +30,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
     public async listKernels(
         resource: Resource,
-        @ignoreLogging() cancelToken?: CancellationToken
+        @ignoreLogging() cancelToken: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
         let [nonPythonKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
             this.nonPythonKernelFinder.listKernelSpecs(false, cancelToken),

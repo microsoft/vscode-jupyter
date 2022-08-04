@@ -48,11 +48,12 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'localKernelSpec' })
     public async listKernelSpecs(
         includePythonKernels: boolean,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         return this.listKernelsWithCache(
             includePythonKernels ? 'IncludePythonV2' : 'ExcludePythonV2',
             false,
+            cancelToken,
             async () => {
                 // First find the on disk kernel specs and interpreters
                 const kernelSpecs = await this.findKernelSpecs(cancelToken);

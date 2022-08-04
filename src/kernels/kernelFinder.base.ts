@@ -61,9 +61,9 @@ export abstract class BaseKernelFinder implements IKernelFinder {
     @captureTelemetry(Telemetry.RankKernelsPerf)
     public async rankKernels(
         resource: Resource,
+        @ignoreLogging() cancelToken: CancellationToken,
         notebookMetadata?: nbformat.INotebookMetadata,
         @logValue<PythonEnvironment>('uri') preferredInterpreter?: PythonEnvironment,
-        @ignoreLogging() cancelToken?: CancellationToken,
         useCache?: 'useCache' | 'ignoreCache',
         serverId?: string
     ): Promise<KernelConnectionMetadata[] | undefined> {
@@ -95,7 +95,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
 
     public async listKernels(
         resource: Resource,
-        cancelToken?: CancellationToken,
+        cancelToken: CancellationToken,
         useCache?: 'ignoreCache' | 'useCache'
     ): Promise<KernelConnectionMetadata[]> {
         this.startTimeForFetching = this.startTimeForFetching ?? new StopWatch();
@@ -139,10 +139,10 @@ export abstract class BaseKernelFinder implements IKernelFinder {
 
     private async listLocalKernels(
         resource: Resource,
-        cancelToken?: CancellationToken,
+        cancelToken: CancellationToken,
         useCache: 'ignoreCache' | 'useCache' = 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]> {
-        return this.listKernelsUsingFinder(
+        const promise = this.listKernelsUsingFinder(
             () =>
                 this.localKernelFinder
                     ? this.localKernelFinder.listKernels(resource, cancelToken)
@@ -150,12 +150,16 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             cancelToken,
             'local',
             useCache
-        ).then((l) => this.finishListingKernels(l, useCache, 'local'));
+        );
+        promise
+            .then(() => !cancelToken.isCancellationRequested && this.finishListingKernels(useCache, 'local'))
+            .ignoreErrors();
+        return promise;
     }
 
     private async listRemoteKernels(
         resource: Resource,
-        cancelToken?: CancellationToken,
+        cancelToken: CancellationToken,
         useCache: 'ignoreCache' | 'useCache' = 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]> {
         if (this.serverConnectionType.isLocalLaunch) {
@@ -165,7 +169,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         // If there are any errors in fetching the remote kernel specs without cache,
         // then fall back to the cache.
         // I.e. the cache will always be used if we can't fetch the remote kernel specs.
-        return this.listKernelsUsingFinder(
+        const promise = this.listKernelsUsingFinder(
             async () => {
                 const connInfo = await this.getRemoteConnectionInfo(cancelToken);
                 return this.remoteKernelFinder && connInfo
@@ -175,12 +179,16 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             cancelToken,
             'remote',
             useCache
-        ).then((l) => this.finishListingKernels(l, useCache, 'remote'));
+        );
+        promise
+            .then(() => !cancelToken.isCancellationRequested && this.finishListingKernels(useCache, 'remote'))
+            .ignoreErrors();
+        return promise;
     }
 
     private async listKernelsUsingFinder(
         finder: () => Promise<KernelConnectionMetadata[]>,
-        cancelToken: CancellationToken | undefined,
+        cancelToken: CancellationToken,
         kind: 'local' | 'remote',
         useCache: 'ignoreCache' | 'useCache'
     ) {
@@ -236,17 +244,13 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         }
 
         // Do not update the cache if we got kernels from the cache.
-        if (updateCache) {
+        if (updateCache && !cancelToken.isCancellationRequested) {
             await this.writeToCache(kind, kernels);
         }
         return kernels;
     }
 
-    private finishListingKernels(
-        list: KernelConnectionMetadata[],
-        useCache: 'ignoreCache' | 'useCache',
-        kind: 'local' | 'remote'
-    ) {
+    private finishListingKernels(useCache: 'ignoreCache' | 'useCache', kind: 'local' | 'remote') {
         // Send the telemetry once for each type of search
         const key = `${kind}:${useCache}`;
         if (this.startTimeForFetching && !this.fetchingTelemetrySent.has(key)) {
@@ -256,9 +260,6 @@ export abstract class BaseKernelFinder implements IKernelFinder {
                 kind
             });
         }
-
-        // Just return the list
-        return list;
     }
 
     private async getRemoteConnectionInfo(
@@ -280,7 +281,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
 
     protected async getFromCache(
         kind: 'local' | 'remote',
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<KernelConnectionMetadata[]> {
         let results: KernelConnectionMetadata[] = this.cache.get(kind) || [];
         const key = this.getCacheKey(kind);
@@ -301,12 +302,20 @@ export abstract class BaseKernelFinder implements IKernelFinder {
              * Hence its wrong and buggy to use those files.
              * To ensure we don't run into weird issues with the use of cached kernelSpec.json files, we ensure the cache is tied to each version of the extension.
              */
-            if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
+            if (
+                values &&
+                isArray(values.kernels) &&
+                values.extensionVersion === this.env.extensionVersion &&
+                !cancelToken.isCancellationRequested
+            ) {
                 results = values.kernels.map(deserializeKernelConnection);
                 this.cache.set(kind, results);
             }
         }
 
+        if (cancelToken.isCancellationRequested) {
+            return [];
+        }
         // Validate
         const validValues: KernelConnectionMetadata[] = [];
         const promise = Promise.all(
@@ -316,14 +325,10 @@ export abstract class BaseKernelFinder implements IKernelFinder {
                 }
             })
         );
-        if (cancelToken) {
-            await Promise.race([
-                promise,
-                createPromiseFromCancellation({ token: cancelToken, cancelAction: 'resolve', defaultValue: undefined })
-            ]);
-        } else {
-            await promise;
-        }
+        await Promise.race([
+            promise,
+            createPromiseFromCancellation({ token: cancelToken, cancelAction: 'resolve', defaultValue: undefined })
+        ]);
         return validValues;
     }
 

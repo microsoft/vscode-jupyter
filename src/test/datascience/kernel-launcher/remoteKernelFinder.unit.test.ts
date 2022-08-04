@@ -8,7 +8,7 @@ import { assert } from 'chai';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { Disposable, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Disposable, EventEmitter, Memento, Uri } from 'vscode';
 import { CryptoUtils } from '../../../platform/common/crypto';
 import { noop } from '../../core';
 import {
@@ -56,6 +56,7 @@ suite(`Remote Kernel Finder`, () => {
     const dummyEvent = new EventEmitter<number>();
     let interpreterService: IInterpreterService;
     let cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator;
+    let cancelToken: CancellationToken;
     const connInfo: IJupyterConnection = {
         url: 'http://foobar',
         type: 'jupyter',
@@ -120,6 +121,9 @@ suite(`Remote Kernel Finder`, () => {
     });
 
     setup(() => {
+        const cancellationTokenSource = new CancellationTokenSource();
+        cancelToken = cancellationTokenSource.token;
+        disposables.push(cancellationTokenSource);
         memento = mock<Memento>();
         when(memento.get(anything(), anything())).thenCall((key: string, defaultValue: unknown) => {
             if (key === ActiveKernelIdList) {
@@ -232,21 +236,21 @@ suite(`Remote Kernel Finder`, () => {
         ]);
 
         // Try python
-        let kernel = await kernelFinder.rankKernels(undefined, {
+        let kernel = await kernelFinder.rankKernels(undefined, cancelToken, {
             language_info: { name: PYTHON_LANGUAGE },
             orig_nbformat: 4
         });
         assert.ok(kernel, 'No python kernel found matching notebook metadata');
 
         // Julia
-        kernel = await kernelFinder.rankKernels(undefined, {
+        kernel = await kernelFinder.rankKernels(undefined, cancelToken, {
             language_info: { name: 'julia' },
             orig_nbformat: 4
         });
         assert.ok(kernel, 'No julia kernel found matching notebook metadata');
 
         // Python 2
-        kernel = await kernelFinder.rankKernels(undefined, {
+        kernel = await kernelFinder.rankKernels(undefined, cancelToken, {
             kernelspec: {
                 display_name: 'Python 2 on Disk',
                 name: 'python2'
@@ -276,7 +280,7 @@ suite(`Remote Kernel Finder`, () => {
         const uri = Uri.file('/usr/foobar/foo.ipynb');
         await preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(uri, '2');
 
-        const kernel = takeTopRankKernel(await kernelFinder.rankKernels(uri));
+        const kernel = takeTopRankKernel(await kernelFinder.rankKernels(uri, cancelToken));
         assert.ok(kernel, 'Kernel not found for uri');
         assert.equal(kernel?.kind, 'connectToLiveRemoteKernel', 'Live kernel not found');
         assert.equal(
@@ -341,7 +345,7 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManager.getRunningSessions()).thenResolve([]);
         when(jupyterSessionManager.getKernelSpecs()).thenResolve([]);
 
-        const kernels = await kernelFinder.listKernels(Uri.file('a.ipynb'), undefined, 'useCache');
+        const kernels = await kernelFinder.listKernels(Uri.file('a.ipynb'), cancelToken, 'useCache');
         assert.lengthOf(kernels, 0);
 
         verify(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).once();
@@ -401,7 +405,7 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManager.getRunningSessions()).thenResolve([]);
         when(jupyterSessionManager.getKernelSpecs()).thenResolve([]);
 
-        const kernels = await kernelFinder.listKernels(Uri.file('a.ipynb'), undefined, 'useCache');
+        const kernels = await kernelFinder.listKernels(Uri.file('a.ipynb'), cancelToken, 'useCache');
         assert.lengthOf(kernels, 1);
         assert.deepEqual(kernels, [liveRemoteKernel]);
 

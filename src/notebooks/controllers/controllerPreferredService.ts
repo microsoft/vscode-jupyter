@@ -257,9 +257,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         let preferredConnection: KernelConnectionMetadata | undefined;
         const rankedConnections = await this.kernelFinder.rankKernels(
             uri,
+            cancelToken,
             notebookMetadata,
             preferredInterpreter,
-            cancelToken,
             useCache,
             serverId
         );

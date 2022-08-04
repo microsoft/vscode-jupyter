@@ -56,7 +56,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         super(fs, workspaceService, extensionChecker, globalState);
     }
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
-    public async listKernelSpecs(resource: Resource, ignoreCache?: boolean, cancelToken?: CancellationToken) {
+    public async listKernelSpecs(resource: Resource, ignoreCache: boolean, cancelToken: CancellationToken) {
         // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
         const workspaceFolderId =
             this.workspaceService.getWorkspaceFolderIdentifier(
@@ -66,14 +66,14 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         return this.listKernelsWithCache(
             workspaceFolderId,
             true,
+            cancelToken,
             () => this.listKernelsImplementation(resource, cancelToken),
-            ignoreCache,
-            cancelToken
+            ignoreCache
         );
     }
     private async listKernelsImplementation(
         resource: Resource,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getInterpreters(resource)
@@ -90,7 +90,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     }
     private async listGlobalPythonKernelSpecs(
         includeKernelsRegisteredByUs: boolean,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<LocalKernelSpecConnectionMetadata[]> {
         const kernelSpecs = await this.kernelSpecsFromKnownLocations.listKernelSpecs(true, cancelToken);
         return (
@@ -112,7 +112,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     private async listPythonAndRelatedNonPythonKernelSpecs(
         resource: Resource,
         interpreters: PythonEnvironment[],
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         // First find the on disk kernel specs and interpreters
         const [kernelSpecs, activeInterpreter, globalKernelSpecs, tempDirForKernelSpecs] = await Promise.all([

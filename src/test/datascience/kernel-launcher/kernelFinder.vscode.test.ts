@@ -5,7 +5,7 @@
 
 import * as path from '../../../platform/vscode-path/path';
 import { assert } from 'chai';
-import { Uri, workspace } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Uri, workspace } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { getKernelConnectionLanguage } from '../../../kernels/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -22,6 +22,8 @@ suite('DataScience - Kernels Finder', () => {
     let kernelFinder: IKernelFinder;
     let interpreterService: IInterpreterService;
     let resourceToUse: Uri;
+    let cancellationToken: CancellationToken;
+    let cancellationTokenSource: CancellationTokenSource;
     suiteSetup(async () => {
         api = await initialize();
         kernelFinder = api.serviceContainer.get<IKernelFinder>(IKernelFinder);
@@ -30,19 +32,22 @@ suite('DataScience - Kernels Finder', () => {
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
+        cancellationTokenSource = new CancellationTokenSource();
+        cancellationToken = cancellationTokenSource.token;
     });
     teardown(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
+        cancellationTokenSource.dispose();
     });
 
     test('Can list all kernels', async () => {
-        const kernelSpecs = await kernelFinder.listKernels(resourceToUse);
+        const kernelSpecs = await kernelFinder.listKernels(resourceToUse, cancellationToken);
         assert.isArray(kernelSpecs);
         assert.isAtLeast(kernelSpecs.length, 1);
     });
     test('No kernel returned or non exact match if no matching kernel found for language', async () => {
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernels(resourceToUse, {
+            await kernelFinder.rankKernels(resourceToUse, cancellationToken, {
                 language_info: { name: 'foobar' },
                 orig_nbformat: 4
             })
@@ -60,6 +65,7 @@ suite('DataScience - Kernels Finder', () => {
         const kernelSpec = takeTopRankKernel(
             await kernelFinder.rankKernels(
                 resourceToUse,
+                cancellationToken,
                 {
                     kernelspec: { display_name: 'foobar', name: 'foobar' },
                     orig_nbformat: 4,
@@ -86,6 +92,7 @@ suite('DataScience - Kernels Finder', () => {
         const kernelSpec = takeTopRankKernel(
             await kernelFinder.rankKernels(
                 resourceToUse,
+                cancellationToken,
                 {
                     kernelspec: undefined,
                     orig_nbformat: 4,
@@ -108,7 +115,7 @@ suite('DataScience - Kernels Finder', () => {
     });
     test('Can find a Python kernel based on language', async () => {
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernels(resourceToUse, {
+            await kernelFinder.rankKernels(resourceToUse, cancellationToken, {
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
             })
@@ -124,7 +131,7 @@ suite('DataScience - Kernels Finder', () => {
         }
 
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernels(resourceToUse, {
+            await kernelFinder.rankKernels(resourceToUse, cancellationToken, {
                 language_info: { name: 'julia' },
                 orig_nbformat: 4
             })
@@ -138,14 +145,14 @@ suite('DataScience - Kernels Finder', () => {
         if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST) {
             return this.skip();
         }
-        const kernelSpecs = await kernelFinder.listKernels(resourceToUse);
+        const kernelSpecs = await kernelFinder.listKernels(resourceToUse, cancellationToken);
         const juliaKernelSpec = kernelSpecs.find(
             (item) => item.kind !== 'connectToLiveRemoteKernel' && item?.kernelSpec?.language === 'julia'
         ) as LocalKernelConnectionMetadata;
         assert.ok(juliaKernelSpec);
 
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernels(resourceToUse, {
+            await kernelFinder.rankKernels(resourceToUse, cancellationToken, {
                 kernelspec: juliaKernelSpec?.kernelSpec as any,
                 orig_nbformat: 4
             })

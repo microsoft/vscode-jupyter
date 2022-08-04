@@ -21,6 +21,7 @@ import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
 import { workspace } from 'vscode';
 import { executeSilently } from '../../kernels/helpers';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 
 suite('3rd Party Kernel Service API', function () {
     let api: IExtensionTestApi;
@@ -103,7 +104,10 @@ suite('3rd Party Kernel Service API', function () {
     });
 
     test('Start Kernel', async function () {
-        const kernelService = await api.getKernelService();
+        const [kernelService, activeInterpreter] = await Promise.all([
+            api.getKernelService(),
+            api.serviceContainer.get<IInterpreterService>(IInterpreterService).getActiveInterpreter()
+        ]);
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
 
         const kernelSpecs = await kernelService!.getKernelSpecifications();
@@ -111,7 +115,11 @@ suite('3rd Party Kernel Service API', function () {
             ? kernelSpecs.find(
                   (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === 'python'
               )
-            : kernelSpecs.find((item) => item.kind === 'startUsingPythonInterpreter');
+            : kernelSpecs.find(
+                  (item) =>
+                      item.kind === 'startUsingPythonInterpreter' &&
+                      item.interpreter.uri.fsPath === activeInterpreter?.uri.fsPath
+              );
         assert.isOk(pythonKernel, 'Python Kernel Spec not found');
 
         // Don't use same file (due to dirty handling, we might save in dirty.)

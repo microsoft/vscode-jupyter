@@ -61,7 +61,7 @@ export interface ILocalKernelFinder {
     /**
      * Finds all kernel specs including Python.
      */
-    listKernels(resource: Resource, cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
+    listKernels(resource: Resource, cancelToken: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
 }
 
 export const IRemoteKernelFinder = Symbol('IRemoteKernelFinder');

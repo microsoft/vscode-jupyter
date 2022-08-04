@@ -31,7 +31,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvi
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
-import { EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -76,6 +76,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
         let preferredRemote: PreferredRemoteKernelIdProvider;
         let pythonExecService: IPythonExecutionService;
         let cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator;
+        let cancelToken: CancellationToken;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -100,6 +101,9 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             activeInterpreter?: PythonEnvironment,
             doNotAddActiveInterpreterIntoListOfInterpreters?: boolean
         ) {
+            const cancellationTokenSource = new CancellationTokenSource();
+            cancelToken = cancellationTokenSource.token;
+            disposables.push(cancellationTokenSource);
             const getRealPathStub = sinon.stub(fsExtra, 'realpath');
             getRealPathStub.returnsArg(0);
             const getOSTypeStub = sinon.stub(platform, 'getOSType');
@@ -642,7 +646,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
          * Gets the list of kernels from the kernel provider and compares them against what's expected.
          */
         async function verifyKernels(expectations: ExpectedKernels) {
-            const actualKernels = await localKernelFinder.listKernels(undefined);
+            const actualKernels = await localKernelFinder.listKernels(undefined, cancelToken);
             const expectedKernels = await generateExpectedKernels(
                 expectations.expectedGlobalKernelSpecs || [],
                 expectations.expectedInterpreterKernelSpecFiles || [],
@@ -799,7 +803,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                 ]
             };
             await initialize(testData);
-            const kernels = await localKernelFinder.listKernels(undefined);
+            const kernels = await localKernelFinder.listKernels(undefined, cancelToken);
             verifyGlobalKernelSpec(
                 kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
                 juliaKernelSpec
@@ -829,7 +833,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                 ]
             };
             await initialize(testData);
-            const kernels = await localKernelFinder.listKernels(undefined);
+            const kernels = await localKernelFinder.listKernels(undefined, cancelToken);
             assert.isUndefined(
                 kernels.find(
                     (item) =>
@@ -1029,7 +1033,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Nothing should be started using the Python interpreter.
                         // Why? Because we don't have the Python extension.
-                        const actualKernels = await localKernelFinder.listKernels(undefined);
+                        const actualKernels = await localKernelFinder.listKernels(undefined, cancelToken);
                         assert.isUndefined(
                             actualKernels.find((kernel) => kernel.kind === 'startUsingPythonInterpreter')
                         );
@@ -1224,6 +1228,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     language_info: { name: PYTHON_LANGUAGE },
                                     orig_nbformat: 4
@@ -1245,6 +1250,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: '',
@@ -1270,6 +1276,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: 'Python',
@@ -1295,6 +1302,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: 'Python 3',
@@ -1320,6 +1328,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: 'Python 3 (IPyKernel)',
@@ -1345,6 +1354,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: 'Python 2 on Disk',
@@ -1372,6 +1382,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     language_info: { name: 'julia' },
                                     orig_nbformat: 4
@@ -1385,6 +1396,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: juliaKernelSpec.display_name,
@@ -1401,6 +1413,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: rV1KernelSpec.display_name,
@@ -1418,6 +1431,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: '',
@@ -1435,6 +1449,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: rV1KernelSpec.display_name,
@@ -1452,6 +1467,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: 'Some unknown name for Python 2',
@@ -1469,6 +1485,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: python2Global.displayName || '',
@@ -1486,6 +1503,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: '',
@@ -1503,6 +1521,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: condaEnv1.displayName || '',
@@ -1520,6 +1539,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: condaEnv1.displayName || '',
@@ -1537,6 +1557,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: 'Will never match',
@@ -1557,6 +1578,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     kernelspec: {
                                         display_name: 'Junk Display Name',
@@ -1575,6 +1597,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 nbUri,
+                                cancelToken,
                                 {
                                     language_info: { name: 'someunknownlanguage' },
                                     orig_nbformat: 4
@@ -1620,6 +1643,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         const kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 Uri.file('wow.py'),
+                                cancelToken,
                                 {
                                     language_info: { name: PYTHON_LANGUAGE },
                                     orig_nbformat: 4
@@ -1667,7 +1691,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
                         const kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(Uri.file('wow.py'), undefined, activePythonEnv)
+                            await kernelFinder.rankKernels(Uri.file('wow.py'), cancelToken, undefined, activePythonEnv)
                         ) as LocalKernelConnectionMetadata;
                         assert.strictEqual(
                             kernel?.kernelSpec?.language,
@@ -1711,6 +1735,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         const kernel = takeTopRankKernel(
                             await kernelFinder.rankKernels(
                                 Uri.file('wow.py'),
+                                cancelToken,
                                 {
                                     language_info: {
                                         name: PYTHON_LANGUAGE

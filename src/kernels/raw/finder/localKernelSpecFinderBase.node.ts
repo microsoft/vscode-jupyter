@@ -78,9 +78,9 @@ export abstract class LocalKernelSpecFinderBase {
     protected async listKernelsWithCache(
         cacheKey: string,
         dependsOnPythonExtension: boolean,
+        cancelToken: CancellationToken,
         finder: () => Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
-        ignoreCache?: boolean,
-        cancelToken?: CancellationToken
+        ignoreCache?: boolean
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         // If we have already searched for this resource, then use that.
         const result = this.kernelSpecCache.get(cacheKey);
@@ -124,7 +124,7 @@ export abstract class LocalKernelSpecFinderBase {
         const wasPythonExtInstalled = this.extensionChecker.isPythonExtensionInstalled;
         this.kernelSpecCache.set(cacheKey, { usesPython: dependsOnPythonExtension, promise, wasPythonExtInstalled });
 
-        const disposable = cancelToken?.onCancellationRequested(() => {
+        const disposable = cancelToken.onCancellationRequested(() => {
             if (this.kernelSpecCache.get(cacheKey)?.promise === promise) {
                 this.kernelSpecCache.delete(cacheKey);
             }
@@ -132,8 +132,8 @@ export abstract class LocalKernelSpecFinderBase {
 
         promise
             .finally(() => {
-                disposable?.dispose();
-                if (this.kernelSpecCache.get(cacheKey)?.promise === promise && cancelToken?.isCancellationRequested) {
+                disposable.dispose();
+                if (this.kernelSpecCache.get(cacheKey)?.promise === promise && cancelToken.isCancellationRequested) {
                     this.kernelSpecCache.delete(cacheKey);
                 }
             })
