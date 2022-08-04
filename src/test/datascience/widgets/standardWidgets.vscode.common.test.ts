@@ -274,28 +274,23 @@ suite('Standard IPyWidget Tests', function () {
         await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
     });
     test('Widget renders after interrupting kernel', async () => {
-        // https://github.com/microsoft/vscode-jupyter/issues/8749
         const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
-            templateFile: 'standard_widgets.ipynb'
+            templateFile: 'standard_widgets_kernel_interrupt.ipynb.ipynb'
         });
-        let cell = editor.notebook.cellAt(0)!;
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
+        const [cell1, cell2] = editor.notebook.getCells();
+        await executeCellAndWaitForOutput(cell1, comms);
+        await assertOutputContainsHtml(cell1, comms, ['6519'], '.widget-readout');
 
-        // Restart the kernel.
-        const uri = editor.notebook.uri;
-        await commands.executeCommand('workbench.action.files.save');
-        await closeActiveWindows();
+        // Interrupt the kernel
+        const promise = runCell(cell2, true);
+        const kernel = kernelProvider.get(editor.notebook)!;
+        await Promise.all([kernel.restart(), promise]);
+        await commands.executeCommand('notebook.clearAllCellsOutputs');
+        await waitForCondition(async () => cell1.outputs.length === 0, 5_000, 'Cell did not get cleared');
 
-        // Open this notebook again.
-        const newNotebook = await initializeNotebookForWidgetTest(disposables, { notebookFile: uri });
-        cell = newNotebook.editor.notebook.cellAt(0)!;
-
-        // Verify we have output in the first cell.
-        assert.isOk(cell.outputs.length, 'No outputs in the cell after saving nb');
-
-        await executeCellAndWaitForOutput(cell, newNotebook.comms);
-        await assertOutputContainsHtml(cell, newNotebook.comms, ['6519'], '.widget-readout');
+        // Run the first cell again
+        await executeCellAndWaitForOutput(cell1, comms);
+        await assertOutputContainsHtml(cell1, comms, ['6519'], '.widget-readout');
     });
     test('Nested Output Widgets', async () => {
         const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
