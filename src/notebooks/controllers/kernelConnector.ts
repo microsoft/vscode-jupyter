@@ -16,7 +16,7 @@ import {
 } from '../../kernels/types';
 import { Memento, NotebookDocument, NotebookController, Uri } from 'vscode';
 import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
-import { traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import { traceVerbose, traceWarning } from '../../platform/logging';
 import { Resource, IMemento, GLOBAL_MEMENTO, IDisplayOptions, IDisposable } from '../../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../../platform/common/utils/async';
 import { DataScience } from '../../platform/common/utils/localize';
