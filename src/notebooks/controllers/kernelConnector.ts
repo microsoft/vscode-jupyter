@@ -16,7 +16,7 @@ import {
 } from '../../kernels/types';
 import { Memento, NotebookDocument, NotebookController, Uri } from 'vscode';
 import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
-import { traceVerbose, traceWarning } from '../../platform/logging';
+import { traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { Resource, IMemento, GLOBAL_MEMENTO, IDisplayOptions, IDisposable } from '../../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../../platform/common/utils/async';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -36,6 +36,7 @@ import { IRawNotebookProvider } from '../../kernels/raw/types';
 import { IControllerSelection, IVSCodeNotebookController } from './types';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 /**
  * Class used for connecting a controller to an instance of an IKernel
@@ -480,6 +481,7 @@ export class KernelConnector {
         actionSource: KernelActionSource = 'jupyterExtension',
         onAction: (action: KernelAction, kernel: IKernel) => void = () => noop()
     ): Promise<IKernel> {
+        traceVerbose(`Connect to notebook kernel ${metadata.id} for ${getDisplayPath(notebookResource.notebook.uri)}.`);
         return KernelConnector.wrapKernelMethod(
             metadata,
             'start',

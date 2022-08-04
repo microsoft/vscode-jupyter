@@ -282,7 +282,9 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     protected async startJupyterSession(
         options: IDisplayOptions = new DisplayOptions(false)
     ): Promise<IKernelConnectionSession> {
-        traceVerbose(`Start Jupyter Session in kernel.ts with disableUI = ${options.disableUI}`);
+        traceVerbose(
+            `Start Jupyter Session in kernel.ts with disableUI = ${options.disableUI}, ${this.kernelConnectionMetadata.id}`
+        );
         this._startedAtLeastOnce = true;
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
