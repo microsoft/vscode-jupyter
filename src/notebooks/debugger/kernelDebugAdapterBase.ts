@@ -207,7 +207,11 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         if (!this.disconnected) {
             this.disconnected = true;
             if (this.debugService.activeDebugSession === this.session) {
-                await this.session.customRequest('disconnect', { restart: false });
+                try {
+                    await this.session.customRequest('disconnect', { restart: false });
+                } catch (e) {
+                    traceError(`Failed to disconnect debug session`, e);
+                }
             }
             this.endSession.fire(this.session);
             this.kernel?.removeEventHook(this.kernelEventHook);
