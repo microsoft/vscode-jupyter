@@ -257,7 +257,7 @@ export class KernelConnector {
         disposables: IDisposable[],
         onAction: (action: KernelAction, kernel: IBaseKernel | IKernel) => void = () => noop()
     ): Promise<IBaseKernel | IKernel> {
-        traceVerbose(`${initialContext} the kernel, options.disableUI=${options.disableUI}`);
+        traceVerbose(`${initialContext} the kernel, options.disableUI=${options.disableUI} with ${metadata.id}`);
 
         let currentPromise = this.getKernelInfo(notebookResource);
         if (!options.disableUI && currentPromise?.options.disableUI) {

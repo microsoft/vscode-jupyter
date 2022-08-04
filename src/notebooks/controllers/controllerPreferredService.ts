@@ -136,6 +136,8 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     ));
                 }
 
+                traceInfo(`Preferred kernel for ${getDisplayPath(document.uri)} is '${preferredConnection?.id}'.`);
+
                 // Send telemetry on looking for preferred don't await for sending it
                 this.sendPreferredKernelTelemetry(
                     document.uri,
