@@ -85,6 +85,9 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
             this.jupyterPaths.getKernelSpecRootPath()
         ]);
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
+        if (cancelToken?.isCancellationRequested) {
+            return [];
+        }
         await Promise.all(
             searchResults.map(async (resultPath) => {
                 try {

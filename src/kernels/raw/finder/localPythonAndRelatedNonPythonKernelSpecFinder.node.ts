@@ -67,7 +67,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             workspaceFolderId,
             true,
             () => this.listKernelsImplementation(resource, cancelToken),
-            ignoreCache
+            ignoreCache,
+            cancelToken
         );
     }
     private async listKernelsImplementation(
@@ -120,6 +121,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             this.listGlobalPythonKernelSpecs(true, cancelToken),
             this.jupyterPaths.getKernelSpecTempRegistrationFolder()
         ]);
+        if (cancelToken?.isCancellationRequested) {
+            return [];
+        }
         const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
             getKernelRegistrationInfo(item.kernelSpec)
         );
@@ -205,6 +209,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
                 })
         );
+        if (cancelToken?.isCancellationRequested) {
+            return [];
+        }
+
         await Promise.all(
             [...kernelSpecs, ...globalPythonKernelSpecsRegisteredByUs.map((item) => item.kernelSpec)]
                 .filter((kernelspec) => {
@@ -429,6 +437,14 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         );
 
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
+        if (cancelToken?.isCancellationRequested) {
+            traceInfoIfCI(
+                `Finding kernel specs for ${interpreters.length} interpreters: ${interpreters
+                    .map((i) => `${i.displayName} => ${i.uri}`)
+                    .join('\n')} cancelled.`
+            );
+            return [];
+        }
         let results: IJupyterKernelSpec[] = [];
         await Promise.all(
             searchResults.map(async (resultPath) => {

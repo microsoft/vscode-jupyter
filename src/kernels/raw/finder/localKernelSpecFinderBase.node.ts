@@ -11,7 +11,7 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceVerbose, traceError, traceDecoratorError, traceInfoIfCI } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { ReadWrite } from '../../../platform/common/types';
+import { IDisposable, ReadWrite } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { isUri, noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -79,7 +79,8 @@ export abstract class LocalKernelSpecFinderBase {
         cacheKey: string,
         dependsOnPythonExtension: boolean,
         finder: () => Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
-        ignoreCache?: boolean
+        ignoreCache?: boolean,
+        cancelToken?: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         // If we have already searched for this resource, then use that.
         const result = this.kernelSpecCache.get(cacheKey);
@@ -122,6 +123,21 @@ export abstract class LocalKernelSpecFinderBase {
         // Next time if its installed then we can ignore this cache.
         const wasPythonExtInstalled = this.extensionChecker.isPythonExtensionInstalled;
         this.kernelSpecCache.set(cacheKey, { usesPython: dependsOnPythonExtension, promise, wasPythonExtInstalled });
+
+        const disposable = cancelToken?.onCancellationRequested(() => {
+            if (this.kernelSpecCache.get(cacheKey)?.promise === promise) {
+                this.kernelSpecCache.delete(cacheKey);
+            }
+        });
+
+        promise
+            .finally(() => {
+                disposable?.dispose();
+                if (this.kernelSpecCache.get(cacheKey)?.promise === promise && cancelToken?.isCancellationRequested) {
+                    this.kernelSpecCache.delete(cacheKey);
+                }
+            })
+            .ignoreErrors();
 
         // ! as the has and set above verify that we have a return here
         return this.kernelSpecCache.get(cacheKey)!.promise;
@@ -249,6 +265,19 @@ export abstract class LocalKernelSpecFinderBase {
             }
         })();
         this.findKernelSpecsInPathCache.set(cacheKey, promise);
+        const disposable = cancelToken?.onCancellationRequested(() => {
+            if (this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
+                this.findKernelSpecsInPathCache.delete(cacheKey);
+            }
+        });
+        promise
+            .finally(() => {
+                disposable?.dispose();
+                if (this.findKernelSpecsInPathCache.get(cacheKey) === promise && cancelToken?.isCancellationRequested) {
+                    this.findKernelSpecsInPathCache.delete(cacheKey);
+                }
+            })
+            .ignoreErrors();
         promise.catch(() => {
             if (this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
                 this.findKernelSpecsInPathCache.delete(cacheKey);
