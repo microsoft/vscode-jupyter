@@ -164,7 +164,7 @@ suite(`Interactive window execution`, async function () {
         const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         const kernel = kernelProvider.get(notebookDocument);
         const handler = createEventHandler(kernel!, 'onRestarted', disposables);
-        await vscode.commands.executeCommand('jupyter.restartkernel');
+        await kernel?.restart();
         // Wait for restart to finish
         await handler.assertFiredExactly(1, defaultNotebookTestTimeout);
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
