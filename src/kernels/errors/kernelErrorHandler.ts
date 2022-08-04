@@ -9,7 +9,7 @@ import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
-import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
+import { traceError, traceWarning } from '../../platform/logging';
 import {
     IBrowserService,
     IConfigurationService,
