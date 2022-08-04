@@ -217,7 +217,7 @@ suite('Standard IPyWidget Tests', function () {
         await clickWidget(comms, cell0, 'button');
         await waitForTextOutput(cell0, 'Button clicked.', 1, false);
     });
-    test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
+    test('Widget renders after executing a notebook which was saved after previous execution', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8748
         let comms = await initializeNotebookForWidgetTest(disposables, { templateFile: 'standard_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
@@ -238,7 +238,7 @@ suite('Standard IPyWidget Tests', function () {
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
     });
-    test.skip('Widget renders after restarting kernel', async () => {
+    test('Widget renders after restarting kernel', async () => {
         const comms = await initializeNotebookForWidgetTest(disposables, {
             templateFile: 'standard_widgets.ipynb'
         });
@@ -260,7 +260,7 @@ suite('Standard IPyWidget Tests', function () {
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
     });
-    test.skip('Widget renders after interrupting kernel', async () => {
+    test('Widget renders after interrupting kernel', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8749
         const comms = await initializeNotebookForWidgetTest(disposables, {
             templateFile: 'standard_widgets.ipynb'
