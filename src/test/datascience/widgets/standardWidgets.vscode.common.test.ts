@@ -275,7 +275,7 @@ suite('Standard IPyWidget Tests', function () {
     });
     test('Widget renders after interrupting kernel', async () => {
         const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
-            templateFile: 'standard_widgets_kernel_interrupt.ipynb.ipynb'
+            templateFile: 'standard_widgets_kernel_interrupt.ipynb'
         });
         const [cell1, cell2] = editor.notebook.getCells();
         await executeCellAndWaitForOutput(cell1, comms);
