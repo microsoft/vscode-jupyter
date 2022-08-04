@@ -2042,32 +2042,6 @@
                     "tags": [
                         "experimental"
                     ]
-                },
-                "jupyter.diagnostics.reservedPythonNames.enabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "markdownDescription": "%jupyter.configuration.jupyter.diagnostics.reservedPythonNames.enabled.markdownDescription%",
-                    "scope": "machine",
-                    "tags": [
-                        "diagnostics"
-                    ]
-                },
-                "jupyter.diagnostics.reservedPythonNames.exclude": {
-                    "type": "array",
-                    "default": [
-                        "**/site-packages/**",
-                        "**/lib/python/**",
-                        "**/lib64/python/**"
-                    ],
-                    "items": {
-                        "type": "string"
-                    },
-                    "uniqueItems": true,
-                    "markdownDescription": "%jupyter.configuration.jupyter.diagnostics.reservedPythonNames.exclude.markdownDescription%",
-                    "scope": "machine",
-                    "tags": [
-                        "diagnostics"
-                    ]
                 }
             }
         },
