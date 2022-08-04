@@ -30,6 +30,7 @@ const logLevelMap: Map<string | undefined, LogLevel> = new Map([
     ['warn', LogLevel.Warn],
     ['info', LogLevel.Info],
     ['debug', LogLevel.Debug],
+    ['verbose', LogLevel.Trace],
     ['everything', LogLevel.Everything],
     ['none', LogLevel.Off],
     ['off', LogLevel.Off],
