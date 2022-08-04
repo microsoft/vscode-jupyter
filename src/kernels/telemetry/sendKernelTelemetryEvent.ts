@@ -104,8 +104,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                     sendTelemetryEvent(
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         eventName as any,
-                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                        undefined,
+                        stopWatch.elapsedTime,
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         props as any,
                         ex,
