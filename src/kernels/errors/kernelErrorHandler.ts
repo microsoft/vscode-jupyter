@@ -96,7 +96,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             await handleExpiredCertsError(this.applicationShell, this.configuration, err.message);
         } else if (isCancellationError(err)) {
             // Don't show the message for cancellation errors
-            traceVerbose(`Cancelled by user`);
         } else if (err instanceof KernelConnectionTimeoutError || err instanceof KernelPortNotUsedTimeoutError) {
             this.applicationShell.showErrorMessage(err.message).then(noop, noop);
         } else if (
@@ -135,7 +134,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             return DataScience.jupyterNotebookRemoteConnectFailedWeb().format(error.baseUrl);
         } else if (isCancellationError(error)) {
             // Don't show the message for cancellation errors
-            traceVerbose(`Cancelled by user`);
             return '';
         } else if (
             (error instanceof KernelDiedError || error instanceof KernelProcessExitedError) &&
@@ -224,7 +222,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
 
         // Jupyter kernels, non zmq actually do the dependency install themselves
         if (isCancellationError(err)) {
-            traceVerbose(`Cancelled by user`);
             this.sendKernelTelemetry(err, errorContext, resource, 'cancelled');
             return KernelInterpreterDependencyResponse.cancel;
         } else if (err instanceof JupyterKernelDependencyError) {
