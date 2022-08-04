@@ -19,13 +19,10 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable } from '../../../platform/common/types';
 import { ignoreListSettingName, ReservedNamedProvider } from '../../../platform/interpreter/reservedNamedProvider.node';
 import * as path from '../../../platform/vscode-path/path';
-import { BuiltInModules } from '../../../platform/interpreter/constants';
-import { IInterpreterPackages } from '../../../platform/interpreter/types';
 
 suite('Reserved Names Provider', () => {
     const disposables: IDisposable[] = [];
     let reservedNamedProvider: ReservedNamedProvider;
-    let interpreterPackages: IInterpreterPackages;
     let memento: Memento;
     let workspace: IWorkspaceService;
     let platform: IPlatformService;
@@ -34,7 +31,6 @@ suite('Reserved Names Provider', () => {
     let settingsChanged: EventEmitter<ConfigurationChangeEvent>;
     const defaultIgnoreList = ['**/site-packages/**', '**/lib/python/**', '**/lib64/python/**'];
     setup(() => {
-        interpreterPackages = mock<IInterpreterPackages>();
         memento = mock<Memento>();
         workspace = mock<IWorkspaceService>();
         platform = mock<IPlatformService>();
@@ -44,7 +40,6 @@ suite('Reserved Names Provider', () => {
         when(workspace.getConfiguration('jupyter')).thenReturn(instance(workspaceConfig));
         when(workspaceConfig.get(ignoreListSettingName, anything())).thenReturn(defaultIgnoreList);
         when(memento.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue as any);
-        when(interpreterPackages.listPackages(anything())).thenResolve(BuiltInModules.map((m) => m.toLowerCase()));
         settingsChanged = new EventEmitter<ConfigurationChangeEvent>();
         disposables.push(settingsChanged);
         when(workspace.onDidChangeConfiguration).thenReturn(settingsChanged.event);
@@ -55,7 +50,6 @@ suite('Reserved Names Provider', () => {
     });
     function createProvider() {
         reservedNamedProvider = new ReservedNamedProvider(
-            instance(interpreterPackages),
             instance(memento),
             instance(workspace),
             instance(platform),
@@ -77,22 +71,12 @@ suite('Reserved Names Provider', () => {
         // Assume that a module named `overrideThirdPartyModule` has been installed into python, then
         // python will return that as an installed item as well.
         let listPackagesCallCount = 0;
-        when(interpreterPackages.listPackages(anything())).thenCall(() => {
-            listPackagesCallCount += 1;
-            return BuiltInModules.concat(['overrideThirdPartyModule']).map((m) => m.toLowerCase());
-        });
 
         const uris = await reservedNamedProvider.getUriOverridingReservedPythonNames(cwd);
 
         assert.deepEqual(
             uris.map((uri) => uri.uri.fsPath).sort(),
-            [
-                'xml.py',
-                'os.py',
-                'random.py',
-                `overrideThirdPartyModule${path.sep}__init__.py`,
-                `xml${path.sep}__init__.py`
-            ]
+            ['xml.py', 'os.py', 'random.py', `xml${path.sep}__init__.py`]
                 .map((file) => Uri.joinPath(cwd, file).fsPath)
                 .sort()
         );
@@ -100,22 +84,13 @@ suite('Reserved Names Provider', () => {
         // Also verify we don't call into Python API for the same Python files that we know are overriding builtins.
         const initialCallCountIntoPythonApi = listPackagesCallCount;
         when(fs.searchLocal('*.py', cwd.fsPath, true)).thenResolve(['xml.py', 'os.py', 'random.py']);
-        when(fs.searchLocal('*/__init__.py', cwd.fsPath, true)).thenResolve([
-            `xml${path.sep}__init__.py`,
-            `overrideThirdPartyModule${path.sep}__init__.py`
-        ]);
+        when(fs.searchLocal('*/__init__.py', cwd.fsPath, true)).thenResolve([`xml${path.sep}__init__.py`]);
 
         const urisAgain = await reservedNamedProvider.getUriOverridingReservedPythonNames(cwd);
 
         assert.deepEqual(
             urisAgain.map((uri) => uri.uri.fsPath).sort(),
-            [
-                'xml.py',
-                'os.py',
-                'random.py',
-                `overrideThirdPartyModule${path.sep}__init__.py`,
-                `xml${path.sep}__init__.py`
-            ]
+            ['xml.py', 'os.py', 'random.py', `xml${path.sep}__init__.py`]
                 .map((file) => Uri.joinPath(cwd, file).fsPath)
                 .sort()
         );
