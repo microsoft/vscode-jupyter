@@ -807,7 +807,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         }
 
         // eslint-disable-next-line complexity
-        traceCellMessage(this.cell, 'Update streamed output');
+        traceCellMessage(this.cell, `Update streamed output, new output '${msg.content.text.substring(0, 100)}'`);
         // Possible execution of cell has completed (the task would have been disposed).
         // This message could have come from a background thread.
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
@@ -845,7 +845,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                 name: msg.content.name,
                 text: this.lastUsedStreamOutput.text
             });
-            traceCellMessage(this.cell, `Replace output items ${this.lastUsedStreamOutput.text.substring(0, 100)}`);
+            traceCellMessage(this.cell, `Replace output items '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
             task?.replaceOutputItems(output.items, this.lastUsedStreamOutput.output).then(noop, noop);
         } else if (previousValueOfClearOutputOnNextUpdateToOutput) {
             // Replace the current outputs with a single new output.
@@ -856,7 +856,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                 text
             });
             this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
-            traceCellMessage(this.cell, `Replace output ${this.lastUsedStreamOutput.text.substring(0, 100)}`);
+            traceCellMessage(this.cell, `Replace output '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
             task?.replaceOutput([output]).then(noop, noop);
         } else {
             // Create a new output
@@ -867,7 +867,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                 text
             });
             this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
-            traceCellMessage(this.cell, `Append output ${this.lastUsedStreamOutput.text.substring(0, 100)}`);
+            traceCellMessage(this.cell, `Append output '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
             task?.appendOutput([output]).then(noop, noop);
         }
         this.endTemporaryTask();

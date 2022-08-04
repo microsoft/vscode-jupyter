@@ -6,7 +6,9 @@ import { getTimeForLogging } from './util';
 const format = require('format-util') as typeof import('format-util');
 
 function formatMessage(level: string | undefined, message: string, ...data: Arguments): string {
-    return level ? `${level} ${getTimeForLogging()}: ${format(message, ...data)}` : format(message, ...data);
+    const isDataEmpty = [...data].length === 0;
+    const formattedMessage = isDataEmpty ? format(message) : format(message, ...data);
+    return level ? `${level} ${getTimeForLogging()}: ${formattedMessage}` : formattedMessage;
 }
 
 export class ConsoleLogger implements ILogger {
