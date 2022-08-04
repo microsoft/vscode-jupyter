@@ -29,9 +29,7 @@ export function getDisplayPath(
 ) {
     const uri = typeof filename === 'string' ? Uri.file(filename) : filename;
     const relativeToHome = getDisplayPathImpl(uri, undefined, homePath);
-    const relativeToWorkspaceFolders = workspaceFolders.map((folder) =>
-        getDisplayPathImpl(uri, folder.uri, homePath)
-    );
+    const relativeToWorkspaceFolders = workspaceFolders.map((folder) => getDisplayPathImpl(uri, folder.uri, homePath));
     // Pick the shortest path for display purposes.
     // As those are most likely relative to some workspace folder.
     let bestDisplayPath = relativeToHome;
