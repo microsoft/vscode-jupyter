@@ -36,14 +36,12 @@ const templateRootPath: Uri =
         : Uri.file('');
 export async function initializeNotebookForWidgetTest(
     disposables: IDisposable[],
-    options: { fullTemplateFile: Uri } | { templateFile: string } | { notebookFile: Uri }
+    options: { templateFile: string } | { notebookFile: Uri }
 ) {
     const nbUri =
-        'templateFile' in options || 'fullTemplateFile' in options
+        'templateFile' in options
             ? await createTemporaryNotebookFromFile(
-                  'templateFile' in options
-                      ? urlPath.joinPath(templateRootPath, options.templateFile)
-                      : options.fullTemplateFile,
+                  urlPath.joinPath(templateRootPath, options.templateFile),
                   disposables
               )
             : options.notebookFile;
@@ -242,9 +240,10 @@ suite('Standard IPyWidget Tests', function () {
         // Close the notebook and open this as a new file (containing the widget output)
         const uri = editor.notebook.uri;
         await commands.executeCommand('workbench.action.files.save');
-        // comms.dispose();
-        // await closeActiveWindows();
-        let newNb = await initializeNotebookForWidgetTest(disposables, { fullTemplateFile: uri });
+        await closeActiveWindows();
+
+        // Open this notebook again.
+        let newNb = await initializeNotebookForWidgetTest(disposables, { notebookFile: uri });
         // Verify we have output in the first cell.
         cell = newNb.editor.notebook.cellAt(0)!;
         assert.isOk(cell.outputs.length, 'No outputs in the cell after saving nb');
