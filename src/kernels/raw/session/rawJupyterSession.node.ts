@@ -14,7 +14,7 @@ import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platfo
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisplayOptions, IDisposable, Resource } from '../../../platform/common/types';
-import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { sendKernelTelemetryEvent, sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
@@ -105,17 +105,6 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                 );
                 sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartUserCancel);
                 traceVerbose('Starting of raw session cancelled by user');
-                throw error;
-            } else if (error instanceof TimedOutError) {
-                sendKernelTelemetryEvent(
-                    this.resource,
-                    Telemetry.RawKernelSessionStart,
-                    stopWatch.elapsedTime,
-                    undefined,
-                    error
-                );
-                sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartTimeout);
-                traceError('Raw session failed to start in given timeout');
                 throw error;
             } else {
                 // Send our telemetry event with the error included

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isCancellationError } from '../common/cancellation';
-
 /**
  * Base class for all errors that we send telemetry about.
  *
@@ -52,16 +50,12 @@ export class WrappedError extends BaseError {
 
 export function getErrorCategory(error?: Error): ErrorCategory {
     if (!error) {
-        return 'noerror';
-    }
-    if (isCancellationError(error)) {
-        return 'cancelled';
+        return 'unknown';
     }
     return error instanceof BaseError ? error.category : 'unknown';
 }
 
 export type ErrorCategory =
-    | 'noerror'
     | 'cancelled'
     | 'timeout'
     | 'daemon'

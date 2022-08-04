@@ -3,19 +3,8 @@
 
 'use strict';
 
-import { BaseError } from '../../errors/types';
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
-
-/**
- * Error type thrown when a timeout occurs
- */
-export class TimedOutError extends BaseError {
-    constructor(message: string) {
-        super('timeout', message);
-    }
-}
 
 export async function sleep(timeout: number): Promise<number> {
     return new Promise<number>((resolve) => {
