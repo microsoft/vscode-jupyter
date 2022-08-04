@@ -234,5 +234,48 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../no
             await assertOutputContainsHtml(cell2, comms, ['>Figure 1<', '<canvas', 'Download plot']);
             await assertOutputContainsHtml(cell3, comms, ['>Figure 2<', '<canvas', 'Download plot']);
         });
+        test('Render k3d Widget', async function () {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
+                templateFile: 'k3d_widgets.ipynb'
+            });
+            const [, , , cell3, , cell5] = editor.notebook.getCells();
+
+            await executeCellAndWaitForOutput(cell3, comms);
+            await executeCellAndWaitForOutput(cell5, comms);
+            await assertOutputContainsHtml(cell3, comms, ['<canvas']);
+            await assertOutputContainsHtml(cell5, comms, ['0.00'], '.widget-readout');
+        });
+        test('Render Beakerx Widget', async function () {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
+                templateFile: 'beakerx_widgets.ipynb'
+            });
+            const [, cell1] = editor.notebook.getCells();
+
+            await executeCellAndWaitForOutput(cell1, comms);
+            await assertOutputContainsHtml(cell1, comms, ['<svg']);
+        });
+        test('Render bqplot Widget', async function () {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
+                templateFile: 'bqplot_widgets2.ipynb'
+            });
+            const [, , cell2, cell3, , cell5, cell6, cell7] = editor.notebook.getCells();
+
+            await executeCellAndWaitForOutput(cell2, comms);
+            await assertOutputContainsHtml(cell2, comms, ['<svg', 'My Second Chart']);
+
+            await executeCellAndDontWaitForOutput(cell3);
+
+            // Verify we can update the color to red.
+            await executeCellAndDontWaitForOutput(cell5);
+            await assertOutputContainsHtml(cell2, comms, ['red']);
+
+            // Verify we can update the color to yellow.
+            await executeCellAndDontWaitForOutput(cell6);
+            await assertOutputContainsHtml(cell2, comms, ['yellow']);
+
+            // Verify we can update the title.
+            await executeCellAndDontWaitForOutput(cell7);
+            await assertOutputContainsHtml(cell2, comms, ['Updated second time']);
+        });
     });
 });
