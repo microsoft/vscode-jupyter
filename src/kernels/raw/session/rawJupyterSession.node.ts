@@ -260,7 +260,6 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         );
 
         this.terminatingStatus = undefined;
-        const stopWatch = new StopWatch();
         const process = await KernelProgressReporter.wrapAndReportProgress(
             this.resource,
             DataScience.connectingToKernel().format(
@@ -282,7 +281,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
             () => this.postStartRawSession(options, process)
         );
         if (options.purpose === 'restart') {
-            sendKernelTelemetryWhenDone(this.resource, Telemetry.NotebookRestart, promise, stopWatch, {
+            sendKernelTelemetryWhenDone(this.resource, Telemetry.NotebookRestart, promise, false, {
                 startTimeOnly: true
             });
         }

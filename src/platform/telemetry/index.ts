@@ -429,11 +429,6 @@ export interface ISharedPropertyMapping {
     /**
      * Whether using local or remote connection.
      */
-    ['localOrRemoteConnection']: 'local' | 'remote';
-
-    /**
-     * Whether using local or remote connection.
-     */
     ['isPythonExtensionInstalled']: 'true' | 'false';
 }
 

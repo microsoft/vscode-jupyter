@@ -40,7 +40,6 @@ import { KernelFinder } from './kernelFinder.node';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { Activation } from './activation.node';
 import { PortAttributesProviders } from './port/portAttributeProvider.node';
-import { IServerConnectionType } from './jupyter/types';
 import { ServerPreload } from './jupyter/launcher/serverPreload.node';
 import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
 
@@ -109,8 +108,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
     // This is temporary, and once we ship native editor this needs to be removed.
     setSharedProperty('ds_notebookeditor', 'native');
-    const isLocalConnection = serviceManager.get<IServerConnectionType>(IServerConnectionType).isLocalLaunch;
-    setSharedProperty('localOrRemoteConnection', isLocalConnection ? 'local' : 'remote');
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(
         'isPythonExtensionInstalled',
