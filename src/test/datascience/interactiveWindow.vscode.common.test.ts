@@ -50,6 +50,7 @@ import * as dedent from 'dedent';
 import { generateCellRangesFromDocument } from '../../interactive-window/editor-integration/cellFactory';
 import { Commands } from '../../platform/common/constants';
 import { IControllerSelection } from '../../notebooks/controllers/types';
+import { format } from 'util';
 
 suite(`Interactive window execution`, async function () {
     this.timeout(120_000);
@@ -371,11 +372,27 @@ ${actualCode}
         assert.equal(notebookDocument?.cellCount, 3, `Running a whole file did not split cells`);
 
         // Make sure it output something
-        notebookDocument?.getCells().forEach((c, i) => {
-            if (c.document.uri.scheme === 'vscode-notebook-cell' && c.kind == vscode.NotebookCellKind.Code) {
-                assertHasTextOutputInVSCode(c, `${i}`);
-            }
-        });
+        let lastErrorMessage = 'No output found';
+        await waitForCondition(
+            async () => {
+                try {
+                    notebookDocument?.getCells().forEach((c, i) => {
+                        if (
+                            c.document.uri.scheme === 'vscode-notebook-cell' &&
+                            c.kind == vscode.NotebookCellKind.Code
+                        ) {
+                            assertHasTextOutputInVSCode(c, `${i}`);
+                        }
+                    });
+                    return true;
+                } catch (ex) {
+                    lastErrorMessage = format(ex);
+                    return false;
+                }
+            },
+            defaultNotebookTestTimeout,
+            () => lastErrorMessage
+        );
     });
 
     test('Run a latex cell with a cell marker', async () => {

@@ -164,7 +164,7 @@ export function traceCellMessage(cell: NotebookCell, message: string) {
             cell.notebook.uri
         )} with state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
             cell.executionSummary?.executionOrder
-        }. ${message}`
+        }. ${message}.`
     );
 }
 
