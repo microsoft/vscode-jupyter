@@ -92,7 +92,8 @@ export async function clickWidget(comms: Utils, cell: NotebookCell, selector: st
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('Standard IPyWidget Tests', function () {
+// eslint-disable-next-line no-only-tests/no-only-tests
+suite.only('Standard IPyWidget Tests', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
