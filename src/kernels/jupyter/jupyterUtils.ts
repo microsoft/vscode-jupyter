@@ -144,7 +144,6 @@ export function createRemoteConnectionInfo(
 
 export async function computeServerId(uri: string) {
     try {
-        debugger;
         const inputBuffer = new TextEncoder().encode(uri);
         const hashBuffer = await crypto.subtle.digest({ name: 'SHA-256' }, inputBuffer);
 
