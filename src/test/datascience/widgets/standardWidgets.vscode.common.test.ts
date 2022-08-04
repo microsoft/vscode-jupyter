@@ -280,7 +280,7 @@ suite('Standard IPyWidget Tests', function () {
         });
         let cell = editor.notebook.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
+        await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
 
         // Restart the kernel.
         const uri = editor.notebook.uri;
@@ -295,7 +295,7 @@ suite('Standard IPyWidget Tests', function () {
         assert.isOk(cell.outputs.length, 'No outputs in the cell after saving nb');
 
         await executeCellAndWaitForOutput(cell, newNotebook.comms);
-        await assertOutputContainsHtml(cell, newNotebook.comms, ['66'], '.widget-readout');
+        await assertOutputContainsHtml(cell, newNotebook.comms, ['6519'], '.widget-readout');
     });
     test('Nested Output Widgets', async () => {
         const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
