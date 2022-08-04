@@ -59,7 +59,7 @@ suite('Reserved Names Provider', () => {
     }
     test('Returns valid Uris of files and folders that can override builtins', async () => {
         const cwd = Uri.joinPath(Uri.file('users'), 'username', 'folder', 'projectDir');
-        const cwdFiles = ['one.py', 'xml.py', 'two.py', 'os.py', 'random.py', 'sample.py'];
+        const cwdFiles = ['one.py', 'xml.py', 'two.py', 'urllib.py', 'random.py', 'sample.py'];
         const initFiles = [
             `xml${path.sep}__init__.py`,
             `overrideThirdPartyModule${path.sep}__init__.py`,
@@ -76,21 +76,21 @@ suite('Reserved Names Provider', () => {
 
         assert.deepEqual(
             uris.map((uri) => uri.uri.fsPath).sort(),
-            ['xml.py', 'os.py', 'random.py', `xml${path.sep}__init__.py`]
+            ['xml.py', 'urllib.py', 'random.py', `xml${path.sep}__init__.py`]
                 .map((file) => Uri.joinPath(cwd, file).fsPath)
                 .sort()
         );
 
         // Also verify we don't call into Python API for the same Python files that we know are overriding builtins.
         const initialCallCountIntoPythonApi = listPackagesCallCount;
-        when(fs.searchLocal('*.py', cwd.fsPath, true)).thenResolve(['xml.py', 'os.py', 'random.py']);
+        when(fs.searchLocal('*.py', cwd.fsPath, true)).thenResolve(['xml.py', 'urllib.py', 'random.py']);
         when(fs.searchLocal('*/__init__.py', cwd.fsPath, true)).thenResolve([`xml${path.sep}__init__.py`]);
 
         const urisAgain = await reservedNamedProvider.getUriOverridingReservedPythonNames(cwd);
 
         assert.deepEqual(
             urisAgain.map((uri) => uri.uri.fsPath).sort(),
-            ['xml.py', 'os.py', 'random.py', `xml${path.sep}__init__.py`]
+            ['xml.py', 'urllib.py', 'random.py', `xml${path.sep}__init__.py`]
                 .map((file) => Uri.joinPath(cwd, file).fsPath)
                 .sort()
         );
