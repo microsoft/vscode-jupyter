@@ -4,12 +4,13 @@ import TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter
 import { IS_CI_SERVER } from './ciConstants.node';
 import { extensions } from 'vscode';
 import { sleep } from '../platform/common/utils/async';
-import { traceInfoIfCI } from '../platform/logging';
+import { setLoggingLevel, traceInfoIfCI } from '../platform/logging';
 
 let telemetryReporter: TelemetryReporter;
 
 export const rootHooks: Mocha.RootHookObject = {
     beforeAll() {
+        setLoggingLevel('verbose');
         traceInfoIfCI(`Environment Variable dump: ${JSON.stringify(process.env)}`);
         if (!IS_CI_SERVER) {
             return;

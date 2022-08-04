@@ -210,6 +210,7 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
             writeReportProgress({ event: constants.EVENT_RUN_BEGIN });
         })
         .once(constants.EVENT_RUN_END, () => {
+            console.info(`Test run complete`);
             consoleHijacker.release();
             console.error('Writing the end of the test run');
             writeReportProgress({ event: constants.EVENT_RUN_END, stats: runner.stats });
