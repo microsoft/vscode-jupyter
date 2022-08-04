@@ -5,11 +5,10 @@ import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Memento, Uri } from 'vscode';
 import { IMemento, GLOBAL_MEMENTO, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { BuiltInModules } from './constants';
-import { noop } from '../../platform/common/utils/misc';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { IInterpreterPackages, IReservedPythonNamedProvider } from './types';
+import { IReservedPythonNamedProvider } from './types';
 import * as minimatch from 'minimatch';
 import { IFileSystemNode } from '../common/platform/types.node';
 import * as path from '../../platform/vscode-path/resources';
@@ -26,7 +25,6 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
     private pendingUpdate = Promise.resolve();
     private readonly disposables: IDisposable[] = [];
     constructor(
-        @inject(IInterpreterPackages) private readonly packages: IInterpreterPackages,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private cache: Memento,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IPlatformService) private platform: IPlatformService,
@@ -104,17 +102,7 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         const baseName = path.basename(uri, path.extname(uri)).toLowerCase();
         // If its a __init__.py, get name of parent folder (as its a module).
         const possibleModule = baseName === '__init__' ? path.basename(path.dirname(uri)).toLowerCase() : baseName;
-        if (this.cachedModules.has(possibleModule)) {
-            return true;
-        }
-
-        const packages = new Set(await this.packages.listPackages(uri));
-        const previousCount = this.cachedModules.size;
-        packages.forEach((item) => this.cachedModules.add(item.toLowerCase()));
-        if (previousCount < this.cachedModules.size) {
-            this.cache.update(PYTHON_PACKAGES_MEMENTO_KEY, Array.from(this.cachedModules)).then(noop, noop);
-        }
-        return packages.has(possibleModule);
+        return this.cachedModules.has(possibleModule);
     }
     public async addToIgnoreList(uri: Uri) {
         await this.pendingUpdate;
