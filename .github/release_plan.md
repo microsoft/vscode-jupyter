@@ -81,11 +81,11 @@
     -   [ ] Verify the PR Pipeline on Github actions is green against the release branch.
     -   [ ] Manually run the [Stable pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=284) against the `release/release-YYYY.MM.100` branch
     -   [ ] Approve the `Publish` stage
-    -   [ ] For manual (if needed as automatic should be tried first)
-    -   [ ] Go to https://github.com/microsoft/vscode-jupyter/releases and add a new release
-        -   [ ] Tag is version number
-        -   [ ] Branch is release branch
-        -   [ ] Copy contents of release branch changelog into the release (just copy the markdown)
+    -   [ ] Check if the release was automatically published here, https://github.com/microsoft/vscode-jupyter/releases - If not, publish manually: (This has been required since the move to az pipelines)
+        -   [ ] Add a new release at https://github.com/microsoft/vscode-jupyter/releases
+            -   Tag is version number
+            -   Branch is release branch
+            -   Copy contents of release branch changelog into the release (just copy the markdown)
         -   [ ] Publish
 -   [ ] Determine if a hotfix is needed
     -   [ ] Ensure the version in package.json is updated as follows:
