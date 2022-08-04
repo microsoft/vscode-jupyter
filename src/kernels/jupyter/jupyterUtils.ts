@@ -25,8 +25,6 @@ const globalMsCrypto = (global?.window as any)?.msCrypto?.subtle?.digest
     : undefined;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const windowCrypto = (global?.window as any)?.crypto?.subtle?.digest ? (global?.window as any)?.crypto : undefined;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-console.error('globalMsCrypto', globalMsCrypto, windowCrypto, msrCrypto);
 const crypto = (globalMsCrypto || windowCrypto || msrCrypto) as Crypto;
 
 export function expandWorkingDir(
