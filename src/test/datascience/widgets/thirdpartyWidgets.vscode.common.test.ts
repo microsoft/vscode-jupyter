@@ -6,7 +6,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as sinon from 'sinon';
 import { commands, ConfigurationTarget, Memento, workspace } from 'vscode';
-import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import {
     GLOBAL_MEMENTO,
@@ -40,7 +39,6 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../no
     suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'}`, function () {
         let api: IExtensionTestApi;
         const disposables: IDisposable[] = [];
-        let vscodeNotebook: IVSCodeNotebook;
         let kernelProvider: IKernelProvider;
 
         this.timeout(120_000);
@@ -53,7 +51,6 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../no
             api = await initialize();
             const config = workspace.getConfiguration('jupyter', undefined);
             await config.update('widgetScriptSources', widgetScriptSourcesValue, ConfigurationTarget.Global);
-            vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
             const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
             const settings = configService.getSettings(undefined) as ReadWrite<IJupyterSettings>;
@@ -88,10 +85,10 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../no
         suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
 
         test('Button Widget with custom comm message rendering a matplotlib widget', async () => {
-            const comms = await initializeNotebookForWidgetTest(disposables, {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'button_widget_comm_msg_matplotlib.ipynb'
             });
-            const [cell0, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [cell0, cell1] = editor.notebook.getCells();
 
             await executeCellAndWaitForOutput(cell0, comms);
             await executeCellAndWaitForOutput(cell1, comms);
@@ -106,10 +103,10 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../no
                 // https://github.com/microsoft/vscode-jupyter/issues/10506
                 return this.skip();
             }
-            const comms = await initializeNotebookForWidgetTest(disposables, {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'ipySheet_widgets.ipynb'
             });
-            const [, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [, cell1] = editor.notebook.getCells();
 
             await executeCellAndWaitForOutput(cell1, comms);
             await assertOutputContainsHtml(cell1, comms, ['Hello', 'World', '42.000']);
@@ -119,10 +116,10 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../no
                 // https://github.com/microsoft/vscode-jupyter/issues/10506
                 return this.skip();
             }
-            const comms = await initializeNotebookForWidgetTest(disposables, {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'ipySheet_widgets_search.ipynb'
             });
-            const [, cell1, cell2] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [, cell1, cell2] = editor.notebook.getCells();
 
             await executeCellAndWaitForOutput(cell1, comms);
             await executeCellAndWaitForOutput(cell2, comms);
@@ -138,10 +135,10 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../no
                 // https://github.com/microsoft/vscode-jupyter/issues/10506
                 return this.skip();
             }
-            const comms = await initializeNotebookForWidgetTest(disposables, {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'ipySheet_widgets_slider.ipynb'
             });
-            const [, cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [, cell1, cell2, cell3] = editor.notebook.getCells();
 
             await executeCellAndWaitForOutput(cell1, comms);
             await executeCellAndWaitForOutput(cell2, comms);
@@ -155,10 +152,10 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../no
             await assertOutputContainsHtml(cell3, comms, ['>5255<', '>5378.0']);
         });
         test('Render ipyvolume (slider, color picker, figure)', async function () {
-            const comms = await initializeNotebookForWidgetTest(disposables, {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'ipyvolume_widgets.ipynb'
             });
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+            const cell = editor.notebook.cellAt(1);
             // ipyvolume fails in Python 3.10 due to a known issue.
             const kernel = kernelProvider.get(cell.notebook);
             if (
@@ -175,37 +172,37 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../no
             await assertOutputContainsHtml(cell, comms, ['<input type="color"', '>Slider1<', '>Slider2<', '<canvas']);
         });
         test('Render pythreejs', async function () {
-            const comms = await initializeNotebookForWidgetTest(disposables, {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'pythreejs_widgets.ipynb'
             });
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+            const cell = editor.notebook.cellAt(1);
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['<canvas']);
         });
         test('Render pythreejs, 2', async function () {
-            const comms = await initializeNotebookForWidgetTest(disposables, {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'pythreejs_widgets2.ipynb'
             });
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+            const cell = editor.notebook.cellAt(1);
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['<canvas']);
         });
         test('Render matplotlib, interactive inline', async function () {
-            const comms = await initializeNotebookForWidgetTest(disposables, {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'matplotlib_widgets_interactive.ipynb'
             });
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+            const cell = editor.notebook.cellAt(1);
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="data:image']);
         });
         test('Render matplotlib, non-interactive inline', async function () {
-            await initializeNotebookForWidgetTest(disposables, {
+            const { editor } = await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'matplotlib_widgets_inline.ipynb'
             });
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(2);
+            const cell = editor.notebook.cellAt(2);
 
             const mimTypes = () =>
                 cell.outputs.map((output) => output.items.map((item) => item.mime).join(',')).join(',');
@@ -217,19 +214,19 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../no
             );
         });
         test('Render matplotlib, widget', async function () {
-            const comms = await initializeNotebookForWidgetTest(disposables, {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'matplotlib_widgets_widget.ipynb'
             });
-            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(3);
+            const cell = editor.notebook.cellAt(3);
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
         test('Render matplotlib, widget in multiple cells', async function () {
-            const comms = await initializeNotebookForWidgetTest(disposables, {
+            const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
                 templateFile: 'matplotlib_multiple_cells_widgets.ipynb'
             });
-            const [, cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [, cell1, cell2, cell3] = editor.notebook.getCells();
 
             await executeCellAndDontWaitForOutput(cell1);
             await executeCellAndWaitForOutput(cell2, comms);

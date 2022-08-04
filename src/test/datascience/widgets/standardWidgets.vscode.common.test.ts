@@ -8,7 +8,6 @@ import { assert } from 'chai';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as sinon from 'sinon';
 import { commands, ConfigurationTarget, NotebookCell, Uri, workspace } from 'vscode';
-import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { IKernelProvider } from '../../../kernels/types';
@@ -37,16 +36,19 @@ const templateRootPath: Uri =
         : Uri.file('');
 export async function initializeNotebookForWidgetTest(
     disposables: IDisposable[],
-    options: { templateFile: string } | { notebookFile: Uri }
+    options: { fullTemplateFile: Uri } | { templateFile: string } | { notebookFile: Uri }
 ) {
     const nbUri =
-        'templateFile' in options
+        'templateFile' in options || 'fullTemplateFile' in options
             ? await createTemporaryNotebookFromFile(
-                  urlPath.joinPath(templateRootPath, options.templateFile),
+                  'templateFile' in options
+                      ? urlPath.joinPath(templateRootPath, options.templateFile)
+                      : options.fullTemplateFile,
                   disposables
               )
             : options.notebookFile;
-    await openNotebook(nbUri);
+    const { editor } = await openNotebook(nbUri);
+
     await waitForKernelToGetAutoSelected();
     // Widgets get rendered only when the output is in view. If we have a very large notebook
     // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
@@ -54,7 +56,7 @@ export async function initializeNotebookForWidgetTest(
     await commands.executeCommand('workbench.action.closePanel');
     await commands.executeCommand('workbench.action.maximizeEditor');
     await commands.executeCommand('notebook.cell.collapseAllCellInputs');
-    return initializeWidgetComms(disposables);
+    return { editor, comms: initializeWidgetComms(disposables) };
 }
 export async function executeCellAndWaitForOutput(cell: NotebookCell, comms: Utils) {
     await Promise.all([
@@ -93,10 +95,9 @@ export async function clickWidget(comms: Utils, cell: NotebookCell, selector: st
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 // eslint-disable-next-line no-only-tests/no-only-tests
-suite.only('Standard IPyWidget Tests', function () {
+suite('Standard IPyWidget Tests', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
-    let vscodeNotebook: IVSCodeNotebook;
     let kernelProvider: IKernelProvider;
 
     this.timeout(120_000);
@@ -112,7 +113,6 @@ suite.only('Standard IPyWidget Tests', function () {
         await startJupyterServer();
         await prewarmNotebooks();
         sinon.restore();
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         traceInfo('Suite Setup (completed)');
     });
@@ -136,22 +136,26 @@ suite.only('Standard IPyWidget Tests', function () {
     });
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Slider Widget', async function () {
-        const comms = await initializeNotebookForWidgetTest(disposables, { templateFile: 'slider_widgets.ipynb' });
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
+            templateFile: 'slider_widgets.ipynb'
+        });
+        const cell = editor.notebook.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
     });
     test('Textbox Widget', async () => {
-        const comms = await initializeNotebookForWidgetTest(disposables, {
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
             templateFile: 'standard_widgets.ipynb'
         });
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
+        const cell = editor.notebook.cellAt(1)!;
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['<input type="text', 'Enter your name:'], '.widget-text');
     });
     test('Linking Widgets slider to textbox widget', async function () {
-        const comms = await initializeNotebookForWidgetTest(disposables, { templateFile: 'slider_widgets.ipynb' });
-        const [, cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.notebook.getCells()!;
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
+            templateFile: 'slider_widgets.ipynb'
+        });
+        const [, cell1, cell2, cell3] = editor.notebook.getCells()!;
         await executeCellAndDontWaitForOutput(cell1);
         await executeCellAndWaitForOutput(cell2, comms);
         await executeCellAndWaitForOutput(cell3, comms);
@@ -165,16 +169,18 @@ suite.only('Standard IPyWidget Tests', function () {
         await assertOutputContainsHtml(cell2, comms, ['60'], '.widget-readout');
     });
     test('Checkbox Widget', async () => {
-        const comms = await initializeNotebookForWidgetTest(disposables, {
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
             templateFile: 'standard_widgets.ipynb'
         });
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(2)!;
+        const cell = editor.notebook.cellAt(2)!;
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['Check me', '<input type="checkbox'], '.widget-checkbox');
     });
     test('Button Widget (click button)', async () => {
-        const comms = await initializeNotebookForWidgetTest(disposables, { templateFile: 'button_widgets.ipynb' });
-        const [cell0, cell1, cell2] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
+            templateFile: 'button_widgets.ipynb'
+        });
+        const [cell0, cell1, cell2] = editor.notebook.getCells();
 
         await executeCellAndWaitForOutput(cell0, comms);
         await executeCellAndWaitForOutput(cell1, comms);
@@ -189,8 +195,10 @@ suite.only('Standard IPyWidget Tests', function () {
         await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
     });
     test('Button Widget (click button in output of another cell)', async () => {
-        const comms = await initializeNotebookForWidgetTest(disposables, { templateFile: 'button_widgets.ipynb' });
-        const [cell0, cell1, cell2] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
+            templateFile: 'button_widgets.ipynb'
+        });
+        const [cell0, cell1, cell2] = editor.notebook.getCells();
 
         await executeCellAndWaitForOutput(cell0, comms);
         await executeCellAndWaitForOutput(cell1, comms);
@@ -205,10 +213,10 @@ suite.only('Standard IPyWidget Tests', function () {
         await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
     });
     test('Button Widget with custom comm message', async () => {
-        const comms = await initializeNotebookForWidgetTest(disposables, {
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
             templateFile: 'button_widget_comm_msg.ipynb'
         });
-        const [cell0, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+        const [cell0, cell1] = editor.notebook.getCells();
 
         await executeCellAndWaitForOutput(cell0, comms);
         await executeCellAndWaitForOutput(cell1, comms);
@@ -218,77 +226,83 @@ suite.only('Standard IPyWidget Tests', function () {
         await clickWidget(comms, cell0, 'button');
         await waitForTextOutput(cell0, 'Button clicked.', 1, false);
     });
-    test('Widget renders after executing a notebook which was saved after previous execution', async () => {
+    test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8748
-        let comms = await initializeNotebookForWidgetTest(disposables, { templateFile: 'standard_widgets.ipynb' });
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        // Problem with this test is simple, when we open a notebook with an existing widget output,
+        // then the widget renderer loads first, not the test script, even though the
+        // test scripts have been defined in the controller script dependencies as the first script in list of scripts to be loaded.
+        // Hence the widget renderer cannot find the test script and we cannot communicate with the widget renderer.
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
+            templateFile: 'standard_widgets.ipynb'
+        });
+        let cell = editor.notebook.cellAt(0)!;
+        await executeCellAndWaitForOutput(cell, comms);
+        await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
+
+        // Close the notebook and open this as a new file (containing the widget output)
+        const uri = editor.notebook.uri;
+        await commands.executeCommand('workbench.action.files.save');
+        // comms.dispose();
+        // await closeActiveWindows();
+        let newNb = await initializeNotebookForWidgetTest(disposables, { fullTemplateFile: uri });
+        // Verify we have output in the first cell.
+        cell = newNb.editor.notebook.cellAt(0)!;
+        assert.isOk(cell.outputs.length, 'No outputs in the cell after saving nb');
+
+        await executeCellAndWaitForOutput(cell, newNb.comms);
+        await assertOutputContainsHtml(cell, newNb.comms, ['6519'], '.widget-readout');
+    });
+    test('Widget renders after restarting kernel', async () => {
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
+            templateFile: 'standard_widgets.ipynb'
+        });
+        const cell = editor.notebook.cellAt(0)!;
+        await executeCellAndWaitForOutput(cell, comms);
+        await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
+
+        // Restart the kernel.
+        const kernel = kernelProvider.get(editor.notebook)!;
+        await kernel.restart();
+        await executeCellAndWaitForOutput(cell, comms);
+        await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
+
+        // Clear all cells and restart and test again.
+        await kernel.restart();
+        await commands.executeCommand('notebook.clearAllCellsOutputs');
+        await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
+
+        await executeCellAndWaitForOutput(cell, comms);
+        await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
+    });
+    test('Widget renders after interrupting kernel', async () => {
+        // https://github.com/microsoft/vscode-jupyter/issues/8749
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
+            templateFile: 'standard_widgets.ipynb'
+        });
+        let cell = editor.notebook.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
 
         // Restart the kernel.
-        const uri = vscodeNotebook.activeNotebookEditor!.notebook.uri;
+        const uri = editor.notebook.uri;
         await commands.executeCommand('workbench.action.files.save');
         await closeActiveWindows();
 
         // Open this notebook again.
-        comms = await initializeNotebookForWidgetTest(disposables, { notebookFile: uri });
+        const newNotebook = await initializeNotebookForWidgetTest(disposables, { notebookFile: uri });
+        cell = newNotebook.editor.notebook.cellAt(0)!;
 
         // Verify we have output in the first cell.
         assert.isOk(cell.outputs.length, 'No outputs in the cell after saving nb');
 
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
-    });
-    test('Widget renders after restarting kernel', async () => {
-        const comms = await initializeNotebookForWidgetTest(disposables, {
-            templateFile: 'standard_widgets.ipynb'
-        });
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
-
-        // Restart the kernel.
-        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook)!;
-        await kernel.restart();
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
-
-        // Clear all cells and restart and test again.
-        await kernel.restart();
-        await commands.executeCommand('notebook.clearAllCellsOutputs');
-        await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
-
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
-    });
-    test('Widget renders after interrupting kernel', async () => {
-        // https://github.com/microsoft/vscode-jupyter/issues/8749
-        const comms = await initializeNotebookForWidgetTest(disposables, {
-            templateFile: 'standard_widgets.ipynb'
-        });
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
-
-        // Restart the kernel.
-        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook)!;
-        await kernel.interrupt();
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
-
-        // Clear all cells and restart and test again.
-        await kernel.interrupt();
-        await commands.executeCommand('notebook.clearAllCellsOutputs');
-        await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
-
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
+        await executeCellAndWaitForOutput(cell, newNotebook.comms);
+        await assertOutputContainsHtml(cell, newNotebook.comms, ['66'], '.widget-readout');
     });
     test('Nested Output Widgets', async () => {
-        const comms = await initializeNotebookForWidgetTest(disposables, {
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
             templateFile: 'nested_output_widget.ipynb'
         });
-        const [cell1, cell2, cell3, cell4] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+        const [cell1, cell2, cell3, cell4] = editor.notebook.getCells();
         await executeCellAndWaitForOutput(cell1, comms);
 
         // Run the second cell & verify we have output in the first cell.
@@ -313,10 +327,10 @@ suite.only('Standard IPyWidget Tests', function () {
         assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
     });
     test('More Nested Output Widgets', async () => {
-        const comms = await initializeNotebookForWidgetTest(disposables, {
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
             templateFile: 'nested_output_widget2.ipynb'
         });
-        const [cell1, cell2, cell3, cell4, cell5, cell6] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+        const [cell1, cell2, cell3, cell4, cell5, cell6] = editor.notebook.getCells();
         let html = '';
 
         const runCellAndTestOutput = async (cell: NotebookCell) => {
@@ -443,10 +457,10 @@ suite.only('Standard IPyWidget Tests', function () {
         );
     });
     test('Interactive Button', async () => {
-        const comms = await initializeNotebookForWidgetTest(disposables, {
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
             templateFile: 'interactive_button.ipynb'
         });
-        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
+        const cell = editor.notebook.cellAt(0);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['Click Me!', '<button']);
@@ -463,10 +477,10 @@ suite.only('Standard IPyWidget Tests', function () {
         );
     });
     test('Interactive Function', async () => {
-        const comms = await initializeNotebookForWidgetTest(disposables, {
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
             templateFile: 'interactive_function.ipynb'
         });
-        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
+        const cell = editor.notebook.cellAt(0);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, [
@@ -489,10 +503,10 @@ suite.only('Standard IPyWidget Tests', function () {
         assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), `'Hello World'`);
     });
     test('Interactive Plot', async () => {
-        const comms = await initializeNotebookForWidgetTest(disposables, {
+        const { comms, editor } = await initializeNotebookForWidgetTest(disposables, {
             templateFile: 'interactive_plot.ipynb'
         });
-        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
+        const cell = editor.notebook.cellAt(0);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['Text Value is Foo']);
