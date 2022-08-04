@@ -4,9 +4,6 @@
 
 ### Enhancements
 
-1. Warn users when a Python file could override an existing Python package (there by interfering with the kernels. [More info](https://aka.ms/JupyterKernelStartFailureOverrideReservedName)).
-   This feature could be turned off via the setting `"jupyter.diagnostics.reservedPythonNames.enabled": false`.
-   ([#7538](https://github.com/Microsoft/vscode-jupyter/issues/7538))
 1. DataFrame viewer enabled on the web.
    ([#9665](https://github.com/Microsoft/vscode-jupyter/issues/9665))
 1. The Variable Viewer now shows strings wrapped in single quotes.

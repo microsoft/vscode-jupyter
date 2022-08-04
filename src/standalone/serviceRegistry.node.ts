@@ -27,7 +27,6 @@ import { DataScienceSurveyBanner, ISurveyBanner } from './survey/dataScienceSurv
 import { IExtensionContext } from '../platform/common/types';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
-import { registerTypes as registerDiagnosticTypes } from './diagnostics/serviceRegistry.node';
 import { PythonExtensionRestartNotification } from './notification/pythonExtensionRestartNotification';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
@@ -79,8 +78,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSyncActivationService,
         PythonExtensionRestartNotification
     );
-
-    registerDiagnosticTypes(serviceManager);
 
     // Intellisense
     registerIntellisenseTypes(serviceManager, isDevMode);
