@@ -16,12 +16,18 @@ import { DebuggingTelemetry } from './notebooks/debugger/constants';
 import { EnvironmentType } from './platform/pythonEnvironments/info';
 import { TelemetryErrorProperties, ErrorCategory } from './platform/errors/types';
 import { ExportFormat } from './notebooks/export/types';
-import { InterruptResult, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from './kernels/types';
+import {
+    InterruptResult,
+    KernelActionSource,
+    KernelConnectionMetadata,
+    KernelInterpreterDependencyResponse
+} from './kernels/types';
 // eslint-disable-next-line
 import { IExportedKernelService } from './standalone/api/extension';
 import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
 import { TerminalShellType } from './platform/terminals/types';
 import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
+import { KernelFailureReason } from './platform/errors/errorUtils';
 
 export * from './platform/telemetry/index';
 
@@ -103,6 +109,10 @@ export type ResourceSpecificTelemetryProperties = Partial<{
      * Total number of live kernels in the kernel spec list.
      */
     kernelLiveCount: number;
+    /**
+     * Whether this was started by Jupyter extension or a 3rd party.
+     */
+    actionSource: KernelActionSource;
 }>;
 
 export interface IEventNamePropertyMapping {
@@ -981,7 +991,7 @@ export interface IEventNamePropertyMapping {
         | ResourceSpecificTelemetryProperties // If successful.
         | ({
               failed: true;
-              failureCategory: ErrorCategory;
+              failureCategory: ErrorCategory | KernelFailureReason;
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there any any unhandled exceptions.
     [Telemetry.SwitchKernel]: ResourceSpecificTelemetryProperties; // If there are unhandled exceptions;

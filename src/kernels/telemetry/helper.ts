@@ -8,7 +8,7 @@ import { getResourceType } from '../../platform/common/utils';
 import { getComparisonKey } from '../../platform/vscode-path/resources';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { trackedInfo, pythonEnvironmentsByHash, updatePythonPackages } from '../../platform/telemetry/telemetry';
-import { KernelConnectionMetadata } from '../types';
+import { KernelActionSource, KernelConnectionMetadata } from '../types';
 import { setSharedProperty } from '../../telemetry';
 
 /**
@@ -33,6 +33,7 @@ export type ContextualTelemetryProps = {
      * When we start local Python kernels, this property indicates whether the interpreter matches the kernel. If not this means we've started the wrong interpreter or the mapping is wrong.
      */
     interpreterMatchesKernel: boolean;
+    actionSource: KernelActionSource;
 };
 
 export function trackKernelResourceInformation(resource: Resource, information: Partial<ContextualTelemetryProps>) {

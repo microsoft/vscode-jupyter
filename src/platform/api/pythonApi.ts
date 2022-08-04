@@ -13,7 +13,7 @@ import {
 } from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent, sendTelemetryWhenDone } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
@@ -288,6 +288,7 @@ export class InterpreterService implements IInterpreterService {
     private refreshPromise: Promise<void> | undefined = undefined;
     private api: PythonApi | undefined;
     private apiPromise: Promise<PythonApi> | undefined;
+    private interpretersFetchedOnceBefore?: boolean;
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
@@ -324,14 +325,18 @@ export class InterpreterService implements IInterpreterService {
         return this.didChangeInterpreters.event;
     }
 
-    @captureTelemetry(Telemetry.InterpreterListingPerf)
     @traceDecoratorVerbose('Get Interpreters', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
         // Cache result as it only changes when the interpreter list changes or we add more workspace folders
+        const firstTime = !!this.interpretersFetchedOnceBefore;
+        this.interpretersFetchedOnceBefore = true;
         if (!this.interpreterListCachePromise) {
             this.interpreterListCachePromise = this.getInterpretersImpl(resource);
         }
+        sendTelemetryWhenDone(Telemetry.InterpreterListingPerf, this.interpreterListCachePromise, undefined, {
+            firstTime
+        });
         return this.interpreterListCachePromise;
     }
 

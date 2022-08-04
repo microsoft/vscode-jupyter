@@ -9,7 +9,7 @@ import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
-import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
+import { traceError, traceWarning } from '../../platform/logging';
 import {
     IBrowserService,
     IConfigurationService,
@@ -39,7 +39,7 @@ import {
 } from '../../platform/errors/errorUtils';
 import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
 import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
-import { WrappedError, BaseError } from '../../platform/errors/types';
+import { WrappedError, BaseError, ErrorCategory } from '../../platform/errors/types';
 import { noop } from '../../platform/common/utils/misc';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { KernelDeadError } from './kernelDeadError';
@@ -57,6 +57,7 @@ import { RemoteJupyterServerConnectionError } from '../../platform/errors/remote
 import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriProviderError';
 import { InvalidRemoteJupyterServerUriHandleError } from './invalidRemoteJupyterServerUriHandleError';
 import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from './types';
+import { sendKernelTelemetryWhenDone } from '../telemetry/sendKernelTelemetryEvent';
 
 /***
  * Common code for handling errors.
@@ -79,6 +80,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         @inject(IExtensions) private readonly extensions: IExtensions
     ) {}
     private handledErrors = new WeakSet<Error>();
+    private handledKernelErrors = new WeakSet<Error>();
     public async handleError(err: Error): Promise<void> {
         traceWarning('DataScience Error', err);
         err = WrappedError.unwrap(err);
@@ -94,7 +96,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             await handleExpiredCertsError(this.applicationShell, this.configuration, err.message);
         } else if (isCancellationError(err)) {
             // Don't show the message for cancellation errors
-            traceVerbose(`Cancelled by user`);
         } else if (err instanceof KernelConnectionTimeoutError || err instanceof KernelPortNotUsedTimeoutError) {
             this.applicationShell.showErrorMessage(err.message).then(noop, noop);
         } else if (
@@ -133,7 +134,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             return DataScience.jupyterNotebookRemoteConnectFailedWeb().format(error.baseUrl);
         } else if (isCancellationError(error)) {
             // Don't show the message for cancellation errors
-            traceVerbose(`Cancelled by user`);
             return '';
         } else if (
             (error instanceof KernelDiedError || error instanceof KernelProcessExitedError) &&
@@ -222,23 +222,34 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
 
         // Jupyter kernels, non zmq actually do the dependency install themselves
         if (isCancellationError(err)) {
+            this.sendKernelTelemetry(err, errorContext, resource, 'cancelled');
             return KernelInterpreterDependencyResponse.cancel;
         } else if (err instanceof JupyterKernelDependencyError) {
             traceWarning(`Jupyter Kernel Dependency Error, reason=${err.reason}`, err);
-            if (err.reason === KernelInterpreterDependencyResponse.uiHidden) {
+            this.sendKernelTelemetry(err, errorContext, resource, err.category);
+            if (err.reason === KernelInterpreterDependencyResponse.uiHidden && this.kernelDependency) {
                 // At this point we're handling the error, and if the error was initially swallowed due to
                 // auto start (ui hidden), now we need to display the error to the user.
-                const response = this.dependencyManager
-                    ? await this.dependencyManager.installMissingDependencies(err)
-                    : JupyterInterpreterDependencyResponse.cancel;
-                return response === JupyterInterpreterDependencyResponse.ok
-                    ? KernelInterpreterDependencyResponse.ok
-                    : KernelInterpreterDependencyResponse.cancel;
+                const tokenSource = new CancellationTokenSource();
+                try {
+                    const cannotChangeKernel = actionSource === '3rdPartyExtension';
+                    return this.kernelDependency.installMissingDependencies(
+                        resource,
+                        kernelConnection,
+                        new DisplayOptions(false),
+                        tokenSource.token,
+                        true,
+                        cannotChangeKernel
+                    );
+                } finally {
+                    tokenSource.dispose();
+                }
             } else {
                 return err.reason;
             }
             // Use the kernel dependency service to first determine if this is because dependencies are missing or not
         } else if ((errorContext === 'start' || errorContext === 'restart') && err instanceof JupyterInstallError) {
+            this.sendKernelTelemetry(err, errorContext, resource, err.category);
             const response = this.dependencyManager
                 ? await this.dependencyManager.installMissingDependencies(err)
                 : JupyterInterpreterDependencyResponse.cancel;
@@ -250,6 +261,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             err instanceof RemoteJupyterServerUriProviderError ||
             err instanceof InvalidRemoteJupyterServerUriHandleError
         ) {
+            this.sendKernelTelemetry(err, errorContext, resource, err.category);
             const savedList = await this.serverUriStorage.getSavedUriList();
             const message =
                 err instanceof InvalidRemoteJupyterServerUriHandleError
@@ -306,6 +318,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             }
             return KernelInterpreterDependencyResponse.cancel;
         } else if (err instanceof JupyterSelfCertsError) {
+            this.sendKernelTelemetry(err, errorContext, resource, err.category);
             // On a self cert error, warn the user and ask if they want to change the setting
             const enableOption: string = DataScience.jupyterSelfCertEnable();
             const closeOption: string = DataScience.jupyterSelfCertClose();
@@ -328,15 +341,12 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 })
                 .then(noop, noop);
             return KernelInterpreterDependencyResponse.failed;
-        } else if (isCancellationError(err)) {
-            // Don't show the message for cancellation errors
-            traceVerbose(`Cancelled by user`);
-            return KernelInterpreterDependencyResponse.cancel;
         } else if (
             (errorContext === 'start' || errorContext === 'restart') &&
             this.kernelDependency &&
             !(await this.kernelDependency.areDependenciesInstalled(kernelConnection, undefined, true))
         ) {
+            this.sendKernelTelemetry(err, errorContext, resource, 'noipykernel');
             const tokenSource = new CancellationTokenSource();
             try {
                 const cannotChangeKernel = actionSource === '3rdPartyExtension';
@@ -360,6 +370,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 kernelConnection.interpreter?.sysPrefix,
                 files.map((f) => f.uri)
             );
+            this.sendKernelTelemetry(err, errorContext, resource, failureInfo?.reason);
             if (failureInfo) {
                 this.showMessageWithMoreInfo(failureInfo?.message, failureInfo?.moreInfoLink).catch(noop);
             } else {
@@ -368,6 +379,23 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 this.showMessageWithMoreInfo(getUserFriendlyErrorMessage(err, errorContext)).catch(noop);
             }
             return KernelInterpreterDependencyResponse.failed;
+        }
+    }
+    private sendKernelTelemetry(
+        err: Error,
+        errorContext: KernelAction,
+        resource: Resource,
+        failureCategory: ErrorCategory | KernelFailureReason | undefined
+    ) {
+        if (this.handledKernelErrors.has(err)) {
+            return;
+        }
+        this.handledKernelErrors.add(err);
+        if (errorContext === 'start') {
+            sendKernelTelemetryWhenDone(resource, Telemetry.NotebookStart, Promise.reject(err), true, {
+                disableUI: false,
+                failureCategory
+            });
         }
     }
     protected abstract addErrorMessageIfPythonArePossiblyOverridingPythonModules(
