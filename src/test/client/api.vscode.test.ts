@@ -22,6 +22,7 @@ import { workspace } from 'vscode';
 import { executeSilently } from '../../kernels/helpers';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 suite('3rd Party Kernel Service API', function () {
     let api: IExtensionTestApi;
@@ -109,8 +110,9 @@ suite('3rd Party Kernel Service API', function () {
             api.serviceContainer.get<IInterpreterService>(IInterpreterService).getActiveInterpreter()
         ]);
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
-
+        traceInfo(`Active Interpreter: ${getDisplayPath(activeInterpreter?.uri)}`);
         const kernelSpecs = await kernelService!.getKernelSpecifications();
+        traceInfo(`kernelSpecs: ${JSON.stringify(kernelSpecs)}`);
         const pythonKernel = IS_REMOTE_NATIVE_TEST()
             ? kernelSpecs.find(
                   (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === 'python'
