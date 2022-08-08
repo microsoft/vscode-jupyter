@@ -43,6 +43,8 @@ type SetupOptions = Mocha.MochaOptions & {
         properties?: string;
     };
     exit: boolean;
+    'experimental-specifier-resolution': 'node';
+    loader: 'ts-node/esm';
 };
 
 process.on('unhandledRejection', (ex: any, _a) => {
@@ -102,7 +104,9 @@ function configure(): SetupOptions {
         testFilesSuffix,
         // Force Mocha to exit after tests.
         // It has been observed that this isn't sufficient, hence the reason for src/test/common/exitCIAfterTestReporter.ts
-        exit: true
+        exit: true,
+        'experimental-specifier-resolution': 'node',
+        loader: 'ts-node/esm'
     };
 
     // Set up the CI reporter for

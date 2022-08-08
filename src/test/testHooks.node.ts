@@ -26,8 +26,8 @@ export const rootHooks: Mocha.RootHookObject = {
     afterEach(this: Context) {
         if (
             !IS_CI_SERVER ||
-            !process.env.GITHUB_REF_NAME ||
-            process.env.GITHUB_REF_NAME !== 'main' ||
+            //!process.env.GITHUB_REF_NAME ||
+            //process.env.GITHUB_REF_NAME !== 'main' ||
             (process.env.VSC_JUPYTER_WARMUP && process.env.VSC_JUPYTER_WARMUP == 'true')
         ) {
             return;
