@@ -674,7 +674,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: TestResult-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          name: TestResult-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
           path: testresults.json
           retention-days: 1
 
@@ -682,7 +682,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: TestResultNotebook-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          name: TestResultNotebook-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
           path: testresults.ipynb
           retention-days: 4
 
