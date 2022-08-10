@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { Resource } from '../../platform/common/types';
 import { Telemetry } from '../../platform/common/constants';
 import { setSharedProperty, sendTelemetryEvent, waitBeforeSending, IEventNamePropertyMapping } from '../../telemetry';

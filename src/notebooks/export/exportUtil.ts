@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { inject, injectable } from 'inversify';
 import { NotebookCellData, NotebookData, NotebookDocument, Uri } from 'vscode';
 import { IExtensions } from '../../platform/common/types';

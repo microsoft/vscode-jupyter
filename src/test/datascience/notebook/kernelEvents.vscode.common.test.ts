@@ -1,7 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-void */
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+/* eslint-disable no-void */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 'use strict';
 

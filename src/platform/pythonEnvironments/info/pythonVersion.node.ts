@@ -1,14 +1,6 @@
-/**
- * Convert a Python version string.
- *
- * The supported formats are:
- *
- *  * MAJOR.MINOR.MICRO-RELEASE_LEVEL
- *
- *  (where RELEASE_LEVEL is one of {alpha,beta,candidate,final})
- *
- * Everything else, including an empty string, results in `undefined`.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 // Eventually we will want to also support the release serial
 // (e.g. beta1, candidate3) and maybe even release abbreviations
 

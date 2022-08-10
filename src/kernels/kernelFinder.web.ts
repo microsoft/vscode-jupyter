@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { injectable, inject, named } from 'inversify';
 import { Memento } from 'vscode';
 import { GLOBAL_MEMENTO, IMemento } from '../platform/common/types';

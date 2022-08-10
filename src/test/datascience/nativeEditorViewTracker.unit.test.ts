@@ -1,6 +1,5 @@
-// // Copyright (c) Microsoft Corporation. All rights reserved.
-// // Licensed under the MIT License.
-// 'use strict';
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 // import { expect } from 'chai';
 // import { anything, instance, mock, when } from 'ts-mockito';

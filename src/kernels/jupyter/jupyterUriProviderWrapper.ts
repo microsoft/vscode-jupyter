@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import * as vscode from 'vscode';
 import * as localize from '../../platform/common/utils/localize';
 import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from './types';

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { Resource } from '../../platform/common/types';
 import { WorkspaceInterpreterTracker } from '../../platform/interpreter/workspaceInterpreterTracker';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';

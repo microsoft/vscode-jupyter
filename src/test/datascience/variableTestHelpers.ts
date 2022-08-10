@@ -1,10 +1,5 @@
-// // Copyright (c) Microsoft Corporation. All rights reserved.
-// // Licensed under the MIT License.
-// 'use strict';
-// import { expect } from 'chai';
-// import { ReactWrapper } from 'enzyme';
-// import { parse } from 'node-html-parser';
-// import * as React from 'react';
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 // import { Uri } from 'vscode';
 // import { IDocumentManager } from '../../platform/common/application/types';

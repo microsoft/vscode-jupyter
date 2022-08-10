@@ -1,6 +1,5 @@
-// Re-export extension entry point, so that the output from this file
-// when bundled can be used as entry point for extension as well as tests.
-// The same objects/types will be used as the module is only ever loaded once by nodejs.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 // First initialize the extension state.
 import { setCI, setTestExecution } from '../../platform/common/constants';

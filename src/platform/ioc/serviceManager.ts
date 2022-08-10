@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { Container, injectable, interfaces } from 'inversify';
 import { testOnlyMethod } from '../common/utils/decorators';
 

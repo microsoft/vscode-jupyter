@@ -1,4 +1,5 @@
-// Miscellaneous functions from other spots in VS code
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 export namespace Schemas {
     /**

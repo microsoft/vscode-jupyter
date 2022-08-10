@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { Disposable } from 'vscode';
 import { IStatusProvider } from '../../platform/progress/types';
 import { noop } from '../core';

@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type Event<T> = (listener: (e?: T) => any) => void;

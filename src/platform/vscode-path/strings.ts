@@ -1,4 +1,6 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.

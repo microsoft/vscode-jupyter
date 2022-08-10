@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Tab, Uri } from 'vscode';

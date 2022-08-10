@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
 // Not sure why but on windows, if you execute a process from the System32 directory, it will just crash Node.

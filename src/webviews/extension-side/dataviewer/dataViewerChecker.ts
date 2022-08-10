@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IConfigurationService, Resource } from '../../../platform/common/types';

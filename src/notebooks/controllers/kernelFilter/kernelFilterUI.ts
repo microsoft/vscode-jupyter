@@ -1,4 +1,5 @@
-// import { INotebookControllerManager } from './types';
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
 import { QuickPickItem } from 'vscode';

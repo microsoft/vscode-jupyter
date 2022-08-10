@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { Event } from 'vscode';
 import { IVariableExplorerHeight } from '../../../webviews/webview-side/interactive-common/redux/reducers/types';
 import { InteractiveWindowMessages, IShowDataViewer, IFinishCell, SharedMessages } from '../../../messageTypes';

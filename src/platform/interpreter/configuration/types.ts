@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { QuickPickItem } from 'vscode';
 import { Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';

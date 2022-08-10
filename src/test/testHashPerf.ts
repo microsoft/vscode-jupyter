@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import * as crypto from 'crypto';
 import * as path from '../platform/vscode-path/path';
 import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';

@@ -1,4 +1,5 @@
-/* eslint-disable no-console */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 import { spawnSync } from 'child_process';
 import * as path from '../platform/vscode-path/path';

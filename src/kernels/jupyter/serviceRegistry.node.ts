@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { DataScienceErrorHandlerNode } from '../errors/kernelErrorHandler.node';

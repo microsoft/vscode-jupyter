@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { isTestExecution } from '../../platform/common/constants';

@@ -1,4 +1,8 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 // Helper functions for dealing with kernels and kernelspecs
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports

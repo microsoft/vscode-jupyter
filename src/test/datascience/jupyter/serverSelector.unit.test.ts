@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { assert } from 'chai';
 import { anyString, anything, instance, mock, when, verify, deepEqual } from 'ts-mockito';
 

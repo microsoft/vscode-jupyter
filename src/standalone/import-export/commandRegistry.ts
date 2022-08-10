@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { inject, injectable, optional } from 'inversify';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';

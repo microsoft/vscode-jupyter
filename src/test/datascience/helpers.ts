@@ -1,6 +1,7 @@
-/* eslint-disable local-rules/dont-use-fspath */
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+/* eslint-disable local-rules/dont-use-fspath */
 
 import { assert } from 'chai';
 import * as vscode from 'vscode';

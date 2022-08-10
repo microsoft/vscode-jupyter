@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, , no-invalid-this */
 
 import '../extensions';

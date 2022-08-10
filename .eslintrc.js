@@ -174,7 +174,8 @@ module.exports = {
         '@typescript-eslint',
         '@typescript-eslint/tslint',
         'eslint-plugin-local-rules',
-        'no-only-tests'
+        'no-only-tests',
+        'header'
     ],
     rules: {
         'no-only-tests/no-only-tests': ['error', { block: ['test', 'suite'], focus: ['only'] }],
@@ -342,7 +343,16 @@ module.exports = {
         'local-rules/dont-use-process': ['error'],
         'local-rules/dont-use-fspath': ['error'],
         'local-rules/dont-use-filename': ['error'],
-        strict: 'off'
+        strict: 'off',
+        'header/header': [
+            'error',
+            'line',
+            [
+                ' Copyright (c) Microsoft Corporation.',
+                ' Licensed under the MIT License.',
+            ],
+            2
+        ]
     },
     overrides: [
         {

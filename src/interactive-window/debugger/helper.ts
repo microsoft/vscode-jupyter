@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { ISourceMapRequest } from '../../notebooks/debugger/debuggingTypes';
 import { getFilePath } from '../../platform/common/platform/fs-paths';

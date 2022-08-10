@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import * as path from '../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot, initializeCommonNodeApi } from './common.node';

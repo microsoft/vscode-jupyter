@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { assert } from 'chai';
 import { CellMatcher } from '../../interactive-window/editor-integration/cellMatcher';

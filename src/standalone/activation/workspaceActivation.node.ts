@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { inject, injectable } from 'inversify';
 import { TextDocument } from 'vscode';
 import { sendActivationTelemetry } from '../../platform/telemetry/envFileTelemetry.node';
