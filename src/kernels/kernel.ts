@@ -30,7 +30,7 @@ import {
     IDisplayOptions,
     IExtensionContext
 } from '../platform/common/types';
-import { Deferred, sleep } from '../platform/common/utils/async';
+import { sleep } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
@@ -131,12 +131,10 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     private _jupyterSessionPromise?: Promise<IKernelConnectionSession>;
     private readonly hookedSessionForEvents = new WeakSet<IKernelConnectionSession>();
     private eventHooks: ((ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
-    private restarting?: Deferred<void>;
     private startCancellation = new CancellationTokenSource();
     private startupUI = new DisplayOptions(true);
     protected kernelExecution: TKernelExecution;
     private disposingPromise?: Promise<void>;
-
     constructor(
         public readonly uri: Uri,
         public readonly resourceUri: Resource,
@@ -171,10 +169,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     public async interrupt(): Promise<void> {
         await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
         trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
-        if (this.restarting) {
-            traceInfo(`Interrupt requested & currently restarting ${getDisplayPath(this.resourceUri || this.uri)}`);
-            await this.restarting.promise;
-        }
         traceInfo(`Interrupt requested ${getDisplayPath(this.resourceUri || this.uri)}`);
         this.startCancellation.cancel();
         const interruptResultPromise = this.kernelExecution.interrupt(this._jupyterSessionPromise);
@@ -205,7 +199,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         this._ignoreJupyterSessionDisposedErrors = true;
         this.startCancellation.cancel();
         const disposeImpl = async () => {
-            this.restarting = undefined;
             const promises: Promise<void>[] = [];
             promises.push(this.kernelExecution.cancel());
             this._session = this._session
@@ -232,9 +225,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         await this.disposingPromise;
     }
     public async restart(): Promise<void> {
-        if (this.restarting) {
-            return this.restarting.promise;
-        }
         await Promise.all(this.eventHooks.map((h) => h('willRestart')));
         traceInfo(`Restart requested ${this.uri}`);
         this.startCancellation.cancel();
@@ -261,7 +251,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             const session = this._session;
             this._session = undefined;
             this._jupyterSessionPromise = undefined;
-            this.restarting = undefined;
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime, undefined, ex);
@@ -310,9 +299,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
                 this,
                 this.disposables
             );
-        }
-        if (this.restarting) {
-            await this.restarting.promise;
         }
         if (!this._jupyterSessionPromise) {
             // Don't create a new one unnecessarily.
