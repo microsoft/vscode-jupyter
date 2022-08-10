@@ -22,6 +22,8 @@ import { KernelVariables } from './variables/kernelVariables';
 import { JupyterVariables } from './variables/jupyterVariables';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
+import { kernelAutoReConnectFailedMonitor } from './kernelAutoReConnectFailedMonitor';
+import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -59,6 +61,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, kernelAutoReConnectFailedMonitor);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelAutoReconnectMonitor);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<IThirdPartyKernelProvider>(IThirdPartyKernelProvider, ThirdPartyKernelProvider);
     serviceManager.addSingleton<PreferredRemoteKernelIdProvider>(

@@ -231,10 +231,14 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
 
             // Rewire our status changed event.
             newSession.statusChanged.connect(this.statusHandler);
+            newSession.kernel.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
         }
         traceInfo('Started new restart session');
         if (oldStatusHandler && oldSession) {
             oldSession.statusChanged.disconnect(oldStatusHandler);
+            if (oldSession.kernel) {
+                oldSession.kernel.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
+            }
         }
         this.shutdownSession(oldSession, undefined, false).ignoreErrors();
     }
@@ -410,6 +414,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
             }
             if (this.statusHandler) {
                 oldSession.statusChanged.disconnect(this.statusHandler);
+                oldSession.kernel?.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
             }
         }
         this._session = session;
@@ -420,6 +425,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
 
             // Listen for session status changes
             session.statusChanged.connect(this.statusHandler);
+            session.kernel?.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
             if (session.kernelSocketInformation.socket?.onAnyMessage) {
                 // These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
                 // As a result, we don't get any notification that messages were sent (on the anymessage signal).
@@ -568,6 +574,12 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
         return 'unknown';
     }
 
+    private onKernelConnectionStatusHandler(_: unknown, kernelConnection: Kernel.ConnectionStatus) {
+        if (kernelConnection === 'disconnected') {
+            const status = this.getServerStatus();
+            this.onStatusChangedEvent.fire(status);
+        }
+    }
     private onStatusChanged(_s: Session.ISessionConnection) {
         const status = this.getServerStatus();
         traceInfoIfCI(`Server Status = ${status}`);

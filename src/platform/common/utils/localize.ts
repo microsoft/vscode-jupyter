@@ -463,6 +463,8 @@ export namespace DataScience {
     export const restartKernelMessageYes = () => localize('DataScience.restartKernelMessageYes', 'Restart');
     export const restartKernelMessageDontAskAgain = () =>
         localize('DataScience.restartKernelMessageDontAskAgain', "Don't Ask Again");
+    export const automaticallyReconnectingToAKernelProgressMessage = () =>
+        localize('DataScience.automaticallyReconnectingToAKernelProgressMessage', 'Reconnecting to the kernel {0}');
     export const restartingKernelStatus = () => localize('DataScience.restartingKernelStatus', 'Restarting Kernel {0}');
     export const restartingKernelFailed = () =>
         localize(
@@ -566,6 +568,11 @@ export namespace DataScience {
                 ]
             },
             "The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure. Click <a href='https://aka.ms/vscodeJupyterKernelCrash'>here</a> for more info. View Jupyter [log](command:jupyter.viewOutput) for further details."
+        );
+    export const kernelDisconnected = () =>
+        localize(
+            'DataScience.kernelDisconnected',
+            'Unable to connect to the kernel, please verify the Jupyter Server connection. View Jupyter [log](command:jupyter.viewOutput) for further details.'
         );
     export const cannotRunCellKernelIsDead = () =>
         localize(
