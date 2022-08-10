@@ -17,7 +17,7 @@ import { IKernel, IKernelProvider, isLocalConnection } from './types';
  * In such a case we need to display a little progress indicator so user is aware of the fact that the kernel is restarting.
  */
 @injectable()
-export class kernelAutoReConnectFailedMonitor implements IExtensionSyncActivationService {
+export class KernelAutoReConnectFailedMonitor implements IExtensionSyncActivationService {
     private kernelsStartedSuccessfully = new WeakSet<IKernel>();
     private kernelConnectionToKernelMapping = new WeakMap<Kernel.IKernelConnection, IKernel>();
     private kernelsRestarting = new WeakSet<IKernel>();

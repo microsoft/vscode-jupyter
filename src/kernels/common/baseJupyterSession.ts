@@ -52,7 +52,8 @@ export function suppressShutdownErrors(realKernel: any) {
         const defaultKernel = realKernel as any; // NOSONAR
         if (defaultKernel && defaultKernel._futures) {
             const futures = defaultKernel._futures as Map<any, any>; // NOSONAR
-            if (futures) {
+            if (futures.forEach) {
+                // Requires for unit tests when things are mocked.
                 futures.forEach((f) => {
                     if (f._status !== undefined) {
                         f._status |= 4;

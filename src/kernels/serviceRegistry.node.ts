@@ -42,7 +42,7 @@ import { Activation } from './activation.node';
 import { PortAttributesProviders } from './port/portAttributeProvider.node';
 import { ServerPreload } from './jupyter/launcher/serverPreload.node';
 import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
-import { kernelAutoReConnectFailedMonitor } from './kernelAutoReConnectFailedMonitor';
+import { KernelAutoReConnectFailedMonitor } from './kernelAutoReConnectFailedMonitor';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
@@ -91,7 +91,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
-        kernelAutoReConnectFailedMonitor
+        KernelAutoReConnectFailedMonitor
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
