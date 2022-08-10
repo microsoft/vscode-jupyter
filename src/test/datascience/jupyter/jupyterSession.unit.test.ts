@@ -11,7 +11,6 @@ import {
     Session,
     SessionManager
 } from '@jupyterlab/services';
-import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
 import { SessionConnection } from '@jupyterlab/services/lib/session/default';
 import { ISignal } from '@lumino/signaling';
 import { assert } from 'chai';
@@ -81,7 +80,9 @@ suite('DataScience - JupyterSession', () => {
             kernel: {
                 status: 'idle',
                 restart: () => (restartCount = restartCount + 1),
-                registerCommTarget: noop
+                registerCommTarget: noop,
+                statusChanged: instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()),
+                connectionStatusChanged: instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
             },
             shutdown: () => Promise.resolve(),
             isRemoteSession: false
@@ -102,7 +103,7 @@ suite('DataScience - JupyterSession', () => {
             }
         };
         session = mock<ISessionWithSocket>();
-        kernel = mock(KernelConnection);
+        kernel = mock<Kernel.IKernelConnection>();
         when(session.kernel).thenReturn(instance(kernel));
         statusChangedSignal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
         const sessionDisposed = new Signal<ISessionWithSocket, void>(instance(session));
@@ -117,6 +118,10 @@ suite('DataScience - JupyterSession', () => {
         when(session.kernel).thenReturn(instance(kernel));
         when(session.isDisposed).thenReturn(false);
         when(kernel.status).thenReturn('idle');
+        when(kernel.statusChanged).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()));
+        when(kernel.connectionStatusChanged).thenReturn(
+            instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
+        );
         when(connection.rootDirectory).thenReturn(Uri.file(''));
         when(connection.localLaunch).thenReturn(false);
         const channel = new MockOutputChannel('JUPYTER');
@@ -339,7 +344,7 @@ suite('DataScience - JupyterSession', () => {
                 newSession = mock(SessionConnection);
                 sessionDisposed = new Signal<Session.ISessionConnection, void>(instance(newSession));
                 when(newSession.disposed).thenReturn(sessionDisposed);
-                newKernelConnection = mock(KernelConnection);
+                newKernelConnection = mock<Kernel.IKernelConnection>();
                 newStatusChangedSignal = mock<ISignal<Session.ISessionConnection, Kernel.Status>>();
                 newKernelChangedSignal = mock<ISignal<Session.ISessionConnection, IKernelChangedArgs>>();
                 const newIoPubSignal =
@@ -358,6 +363,12 @@ suite('DataScience - JupyterSession', () => {
                 when(newKernelConnection.clientId).thenReturn('restartClientId');
                 when(newKernelConnection.status).thenReturn('idle');
                 when(newSession.kernel).thenReturn(instance(newKernelConnection));
+                when(newKernelConnection.statusChanged).thenReturn(
+                    instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>())
+                );
+                when(newKernelConnection.connectionStatusChanged).thenReturn(
+                    instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
+                );
                 when(sessionManager.startNew(anything(), anything())).thenCall(() => {
                     newSessionCreated.resolve();
                     return Promise.resolve(instance(newSession));
@@ -441,11 +452,13 @@ suite('DataScience - JupyterSession', () => {
         suite('Switching kernels', () => {
             setup(async () => {
                 remoteSession = mock<ISessionWithSocket>();
-                remoteKernel = mock(KernelConnection);
+                remoteKernel = mock<Kernel.IKernelConnection>();
                 remoteSessionInstance = instance(remoteSession);
                 remoteSessionInstance.isRemoteSession = false;
                 when(remoteSession.kernel).thenReturn(instance(remoteKernel));
                 when(remoteKernel.registerCommTarget(anything(), anything())).thenReturn();
+                const connectionStatusChanged = mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>();
+                when(remoteKernel.connectionStatusChanged).thenReturn(instance(connectionStatusChanged));
                 when(sessionManager.startNew(anything(), anything())).thenCall(() => {
                     return Promise.resolve(instance(remoteSession));
                 });

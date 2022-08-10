@@ -35,6 +35,10 @@ export * from './platform/telemetry/index';
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';
     /**
+     * Hash of the Kernel Connection id.
+     */
+    kernelId: string;
+    /**
      * Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
      * If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
      */

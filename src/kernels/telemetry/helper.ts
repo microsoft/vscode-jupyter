@@ -101,6 +101,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
                 break;
         }
         currentData.kernelLanguage = getTelemetrySafeLanguage(language);
+        currentData.kernelId = getTelemetrySafeHashedString(kernelConnection.id);
         // Keep track of the kernel that was last selected.
         context.previouslySelectedKernelConnectionId = kernelConnection.id;
 
