@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
@@ -17,7 +16,7 @@ export class PersistentState<T> implements IPersistentState<T> {
         private key: string,
         private defaultValue?: T,
         private expiryDurationMs?: number
-    ) {}
+    ) { }
 
     public get value(): T {
         if (this.expiryDurationMs) {
@@ -46,7 +45,7 @@ export class PersistentStateFactory implements IPersistentStateFactory {
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento
-    ) {}
+    ) { }
     public createGlobalPersistentState<T>(
         key: string,
         defaultValue?: T,

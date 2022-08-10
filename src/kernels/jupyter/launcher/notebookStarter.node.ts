@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import * as cp from 'child_process';
@@ -59,7 +58,7 @@ export class NotebookStarter implements INotebookStarter {
         @inject(IOutputChannel)
         @named(JUPYTER_OUTPUT_CHANNEL)
         private readonly jupyterOutputChannel: IOutputChannel
-    ) {}
+    ) { }
     public dispose() {
         while (this.disposables.length > 0) {
             const disposable = this.disposables.shift();

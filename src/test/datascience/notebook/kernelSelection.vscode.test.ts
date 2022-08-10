@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
@@ -135,10 +134,10 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             activeInterpreter.displayName === interpreter1.displayName
                 ? venvNoKernelSearchString
                 : activeInterpreter.displayName === interpreter2.displayName
-                ? venvKernelSearchString
-                : activeInterpreter.displayName === interpreter3.displayName
-                ? venvNoRegSearchString
-                : activeInterpreterPath.fsPath;
+                    ? venvKernelSearchString
+                    : activeInterpreter.displayName === interpreter3.displayName
+                        ? venvNoRegSearchString
+                        : activeInterpreterPath.fsPath;
 
         // Ensure IPykernel is in all environments.
         const proc = new ProcessService();

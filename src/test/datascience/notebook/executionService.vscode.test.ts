@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
@@ -1206,7 +1205,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // https://github.com/microsoft/vscode/issues/130791
         assert.isTrue(
             cell3.executionSummary?.executionOrder === undefined ||
-                cell3.executionSummary?.executionOrder == lastExecutionOrderOfCell3,
+            cell3.executionSummary?.executionOrder == lastExecutionOrderOfCell3,
             'Cell 3 should not have run again, but execution cleared like Jupyter'
         );
     });

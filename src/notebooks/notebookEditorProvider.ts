@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -27,7 +26,7 @@ import { getOSType, OSType } from '../platform/common/utils/platform';
 @injectable()
 export class NotebookEditorProvider implements INotebookEditorProvider {
     private providers: Set<IEmbedNotebookEditorProvider> = new Set();
-    constructor(@inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook) {}
+    constructor(@inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook) { }
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<void> {
         // contents will be ignored

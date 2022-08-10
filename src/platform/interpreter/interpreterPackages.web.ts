@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { injectable } from 'inversify';
 import { InterpreterUri, Resource } from '../common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';

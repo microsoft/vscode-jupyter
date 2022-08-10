@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -24,7 +23,7 @@ export class JupyterServerSelectorCommand implements IExtensionSyncActivationSer
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
-    ) {}
+    ) { }
     public activate() {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SelectJupyterURI, this.selectJupyterUri, this)

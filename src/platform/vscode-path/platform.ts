@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 const LANGUAGE_DEFAULT = 'en';
 
 let _isWindows = false;
@@ -110,7 +109,7 @@ else if (typeof nodeProcess === 'object') {
             // VSCode's default language is 'en'
             _language = resolved ? resolved : LANGUAGE_DEFAULT;
             _translationsConfigFile = nlsConfig._translationsConfigFile;
-        } catch (e) {}
+        } catch (e) { }
     }
     _isNative = true;
 }

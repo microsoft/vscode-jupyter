@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { IPlatformService } from '../../common/platform/types';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';

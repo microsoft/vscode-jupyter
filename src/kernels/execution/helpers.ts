@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import type * as nbformat from '@jupyterlab/nbformat';
@@ -117,7 +116,7 @@ function isEmptyVendoredMimeType(outputItem: NotebookCellOutputItem) {
     if (outputItem.mime.startsWith('application/vnd.')) {
         try {
             return Buffer.from(outputItem.data).toString().length === 0;
-        } catch {}
+        } catch { }
     }
     return false;
 }
@@ -163,8 +162,7 @@ export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfoIfCI(
         `Cell Index:${cell.index}, of document ${uriPath.basename(
             cell.notebook.uri
-        )} with state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
-            cell.executionSummary?.executionOrder
+        )} with state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${cell.executionSummary?.executionOrder
         }. ${message}.`
     );
 }
@@ -763,11 +761,11 @@ export function updateNotebookMetadata(
             'interpreter' in metadata // In the past we'd store interpreter.hash directly under metadata, but now we store it under metadata.vscode.
                 ? (metadata.interpreter as undefined | { hash?: string })
                 : 'vscode' in metadata &&
-                  metadata.vscode &&
-                  typeof metadata.vscode === 'object' &&
-                  'interpreter' in metadata.vscode
-                ? (metadata.vscode.interpreter as undefined | { hash?: string })
-                : undefined;
+                    metadata.vscode &&
+                    typeof metadata.vscode === 'object' &&
+                    'interpreter' in metadata.vscode
+                    ? (metadata.vscode.interpreter as undefined | { hash?: string })
+                    : undefined;
         const metadataInterpreterHash = metadataInterpreter?.hash;
         if (metadata.kernelspec?.name !== name || (interpreterHash && interpreterHash !== metadataInterpreterHash)) {
             changed = true;

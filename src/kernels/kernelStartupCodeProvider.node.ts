@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
@@ -23,7 +22,7 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
-    ) {}
+    ) { }
 
     async getCode(kernel: IKernel): Promise<string[]> {
         if (

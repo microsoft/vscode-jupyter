@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 import { injectable, inject } from 'inversify';
 import * as os from 'os';
@@ -47,7 +46,7 @@ export class LogReplayService implements IExtensionSingleActivationService {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         this.disposableRegistry.push(
             this.commandService.registerCommand(Commands.ReplayPylanceLog, this.replayPylanceLog, this)
@@ -156,9 +155,9 @@ export class LogReplayService implements IExtensionSingleActivationService {
                 const replaced =
                     fragment != null && fragment.length > 1
                         ? this.activeNotebook
-                              .cellAt(0)
-                              .document.uri.toString()
-                              .replace(/(#ch\d+)/, fragment[1])
+                            .cellAt(0)
+                            .document.uri.toString()
+                            .replace(/(#ch\d+)/, fragment[1])
                         : step.textDocument.uri;
                 step.textDocument.uri = replaced;
             }

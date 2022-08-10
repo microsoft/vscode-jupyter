@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Uri, WorkspaceFolder } from 'vscode';
 import * as path from '../../vscode-path/path';
 import * as uriPath from '../../vscode-path/resources';

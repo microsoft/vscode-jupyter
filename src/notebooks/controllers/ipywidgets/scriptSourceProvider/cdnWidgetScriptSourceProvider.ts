@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { ConfigurationTarget, Memento } from 'vscode';
@@ -81,7 +80,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         private readonly globalMemento: Memento,
         private readonly configurationSettings: IConfigurationService,
         private readonly httpClient: IHttpClient
-    ) {}
+    ) { }
     public dispose() {
         this.cache.clear();
     }
@@ -132,8 +131,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         moduleVersion: string
     ): Promise<WidgetScriptSource> {
         traceInfo(
-            `${
-                ConsoleForegroundColors.Green
+            `${ConsoleForegroundColors.Green
             }Searching for Widget Script ${moduleName}#${moduleVersion} using cdns ${this.cdnProviders.join(' ')}`
         );
         await this.configureWidgets();

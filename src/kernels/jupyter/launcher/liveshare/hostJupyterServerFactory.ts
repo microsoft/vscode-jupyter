@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, named } from 'inversify';
-import {} from 'underscore';
+import { } from 'underscore';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
 import { IAsyncDisposableRegistry, IDisposableRegistry, IOutputChannel } from '../../../../platform/common/types';
@@ -25,7 +24,7 @@ export class HostJupyterServerFactory implements INotebookServerFactory {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {}
+    ) { }
     public async createNotebookServer(connection: IJupyterConnection): Promise<INotebookServer> {
         traceInfo(`Connecting server kernel ${connection.baseUrl}`);
 

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 
 import type * as nbformat from '@jupyterlab/nbformat';
@@ -240,14 +239,14 @@ export async function createTemporaryNotebook(
     cells =
         cells.length == 0
             ? [
-                  {
-                      cell_type: 'code',
-                      outputs: [],
-                      source: ['\n'],
-                      execution_count: 0,
-                      metadata: {}
-                  }
-              ]
+                {
+                    cell_type: 'code',
+                    outputs: [],
+                    source: ['\n'],
+                    execution_count: 0,
+                    metadata: {}
+                }
+            ]
             : cells;
     const data: nbformat.INotebookContent = {
         cells,
@@ -754,8 +753,7 @@ export async function waitForQueuedForExecutionOrExecuting(
         },
         timeout,
         () =>
-            `Cell ${
-                cell.index + 1
+            `Cell ${cell.index + 1
             } not queued for execution nor already executing, current state is ${NotebookCellStateTracker.getCellState(
                 cell
             )}`
@@ -769,7 +767,7 @@ export async function waitForExecutionCompletedWithoutChangesToExecutionCount(
         async () =>
             (cell.executionSummary?.executionOrder ?? 0) === 0 &&
             (NotebookCellStateTracker.getCellState(cell) ?? NotebookCellExecutionState.Idle) ===
-                NotebookCellExecutionState.Idle,
+            NotebookCellExecutionState.Idle,
         timeout,
         () => `Cell ${cell.index + 1} did not complete, State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
@@ -835,7 +833,7 @@ function assertHasExecutionCompletedWithErrors(cell: NotebookCell, executionOder
     return (
         (executionOderShouldChange ? (cell.executionSummary?.executionOrder ?? 0) > 0 : true) &&
         (NotebookCellStateTracker.getCellState(cell) || NotebookCellExecutionState.Idle) ===
-            NotebookCellExecutionState.Idle &&
+        NotebookCellExecutionState.Idle &&
         hasErrorOutput(cell.outputs)
     );
 }
@@ -897,8 +895,7 @@ export async function waitForTextOutput(
         async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
         timeout,
         () =>
-            `After ${timeout}ms output, does not contain provided text '${text}' for Cell ${
-                cell.index + 1
+            `After ${timeout}ms output, does not contain provided text '${text}' for Cell ${cell.index + 1
             } in output index ${index}, it is ${cell.outputs
                 .map(
                     (output, index) =>

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
@@ -54,7 +53,7 @@ export function clearCache() {
 }
 
 export class InMemoryCache<T> {
-    constructor(private readonly expiryDurationMs: number, private readonly cacheKey: string = '') {}
+    constructor(private readonly expiryDurationMs: number, private readonly cacheKey: string = '') { }
     public get hasData() {
         const store = globalCacheStore.get(this.cacheKey);
         return store && !store.expired ? true : false;

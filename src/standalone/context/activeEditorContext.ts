@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 import { inject, injectable, optional } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
@@ -239,7 +238,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.pythonOrInteractiveOrNativeContext
             .set(
                 this.nativeContext.value === true ||
-                    (this.interactiveContext.value === true && this.isPythonFileActive === true)
+                (this.interactiveContext.value === true && this.isPythonFileActive === true)
             )
             .ignoreErrors();
     }

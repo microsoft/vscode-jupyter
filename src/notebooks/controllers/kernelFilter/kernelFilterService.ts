@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';

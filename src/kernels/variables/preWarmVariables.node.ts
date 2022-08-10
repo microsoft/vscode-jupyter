@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -32,7 +31,7 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         private readonly envVarsProvider: ICustomEnvironmentVariablesProvider,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(CondaService) private readonly condaService: CondaService
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         // Don't prewarm global interpreter if running with ZMQ
         if (!this.rawNotebookSupported.isSupported) {

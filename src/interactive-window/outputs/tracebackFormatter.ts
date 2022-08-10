@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { NotebookCell, Uri } from 'vscode';
 import { ITracebackFormatter } from '../../kernels/types';
@@ -27,7 +26,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
     constructor(
         @inject(IGeneratedCodeStorageFactory) private readonly storageFactory: IGeneratedCodeStorageFactory,
         @inject(IPlatformService) private platformService: IPlatformService
-    ) {}
+    ) { }
     public format(cell: NotebookCell, traceback: string[]): string[] {
         if (cell.notebook.notebookType !== InteractiveWindowView) {
             return traceback;

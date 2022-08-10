@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 // export interface ITestInteractiveWindowProvider extends IInteractiveWindowProvider {
 //     getMountedWebView(window: IInteractiveWindow | undefined): IMountedWebView;
 //     waitForMessage(identity: Uri | undefined, message: string, options?: WaitForMessageOptions): Promise<void>;

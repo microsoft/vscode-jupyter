@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
@@ -167,8 +166,7 @@ suite(`Interactive window Execution`, async function () {
             let controller = notebookDocument ? notebookControllerManager.getSelected(notebookDocument) : undefined;
             assert.ok(
                 areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
-                `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)} - active: ${
-                    activeInterpreter?.uri
+                `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)} - active: ${activeInterpreter?.uri
                 } controller: ${controller?.connection.interpreter?.uri}`
             );
 

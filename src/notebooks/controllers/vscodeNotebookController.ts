@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import type * as nbformat from '@jupyterlab/nbformat';
 import {
     Disposable,
@@ -241,8 +240,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         cells = cells.filter((cell) => {
             if (cell.index < 0) {
                 traceWarning(
-                    `Attempting to run a cell with index ${cell.index}, kind ${
-                        cell.kind
+                    `Attempting to run a cell with index ${cell.index}, kind ${cell.kind
                     }, text = ${cell.document.getText()}`
                 );
                 return false;
@@ -286,8 +284,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
         traceInfoIfCI(
-            `NotebookController selection event called for notebook ${event.notebook.uri.toString()} & controller ${
-                this.connection.kind
+            `NotebookController selection event called for notebook ${event.notebook.uri.toString()} & controller ${this.connection.kind
             }:${this.id}. Selected ${event.selected} `
         );
         if (this.associatedDocuments.has(event.notebook) && event.selected) {

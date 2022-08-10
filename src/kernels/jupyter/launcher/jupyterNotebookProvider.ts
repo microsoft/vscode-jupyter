@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -22,7 +21,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
     constructor(
         @inject(IJupyterServerProvider) private readonly serverProvider: IJupyterServerProvider,
         @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage
-    ) {}
+    ) { }
 
     public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection> {
         const { connection } = await this.serverProvider.getOrCreateServer(options);
@@ -40,18 +39,18 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         // Make sure we have a server
         const serverOptions: GetServerOptions = isLocalConnection(kernelConnection)
             ? {
-                  ui: options.ui,
-                  resource: options.resource,
-                  token: options.token,
-                  localJupyter: true
-              }
+                ui: options.ui,
+                resource: options.resource,
+                token: options.token,
+                localJupyter: true
+            }
             : {
-                  ui: options.ui,
-                  resource: options.resource,
-                  token: options.token,
-                  localJupyter: false,
-                  serverId: kernelConnection.serverId
-              };
+                ui: options.ui,
+                resource: options.resource,
+                token: options.token,
+                localJupyter: false,
+                serverId: kernelConnection.serverId
+            };
         const server = await this.serverProvider.getOrCreateServer(serverOptions);
         Cancellation.throwIfCanceled(options.token);
         return server.createNotebook(

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, optional } from 'inversify';
 import {
     CancellationToken,
@@ -181,8 +180,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
             createPromiseFromCancellation({ defaultValue: undefined, cancelAction: 'resolve', token: cancelToken })
         ]);
         traceInfoIfCI(
-            `Got jupyter notebook completions. Is cancel? ${cancelToken?.isCancellationRequested}: ${
-                result ? JSON.stringify(result) : 'empty'
+            `Got jupyter notebook completions. Is cancel? ${cancelToken?.isCancellationRequested}: ${result ? JSON.stringify(result) : 'empty'
             }`
         );
         traceVerbose(`Jupyter completion time: ${stopWatch.elapsedTime}`);
@@ -305,9 +303,9 @@ export function filterCompletions(
             newRange =
                 r.range && 'start' in r.range
                     ? new Range(
-                          new Position(r.range.start.line, r.range.start.character + changeInCharacters),
-                          r.range.end
-                      )
+                        new Position(r.range.start.line, r.range.start.character + changeInCharacters),
+                        r.range.end
+                    )
                     : r.range;
         }
         // We're after the '.' and the user is typing more. We are in the middle of the string then.
@@ -320,9 +318,9 @@ export function filterCompletions(
             newRange =
                 r.range && 'start' in r.range
                     ? new Range(
-                          new Position(r.range.start.line, r.range.start.character + changeInCharacters),
-                          r.range.end
-                      )
+                        new Position(r.range.start.line, r.range.start.character + changeInCharacters),
+                        r.range.end
+                    )
                     : r.range;
         }
         if (newLabel && newText && newRange) {
@@ -371,14 +369,12 @@ export function filterCompletions(
     }
 
     traceInfoIfCI(
-        `Jupyter completions for ${word} at pos ${position.line}:${
-            position.character
+        `Jupyter completions for ${word} at pos ${position.line}:${position.character
         } with trigger: ${triggerCharacter}\n   ${completions.map((r) => r.label).join(',')}`
     );
 
     traceInfoIfCI(
-        `Jupyter results for ${word} at pos ${position.line}:${
-            position.character
+        `Jupyter results for ${word} at pos ${position.line}:${position.character
         } with trigger: ${triggerCharacter}\n   ${result.map((r) => r.label).join(',')}`
     );
 

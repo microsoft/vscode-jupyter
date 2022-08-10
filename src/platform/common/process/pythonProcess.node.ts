@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ErrorUtils } from '../../errors/errorUtils';
 import { ModuleNotInstalledError } from '../../errors/moduleNotInstalledError';
@@ -23,7 +22,7 @@ class PythonProcessService {
             exec(file: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
             execObservable(file: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
         }
-    ) {}
+    ) { }
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -20,7 +19,7 @@ export class CommandRegistry implements IExtensionSingleActivationService {
         @inject(JupyterCommandLineSelectorCommand)
         private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
+    ) { }
     public async activate() {
         this.registerCommandsIfTrusted();
     }

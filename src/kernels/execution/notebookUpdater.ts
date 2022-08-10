@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { isPromise } from 'rxjs/internal-compatibility';
 import { NotebookDocument, NotebookEditor, workspace, WorkspaceEdit, window } from 'vscode';
 import { createDeferred } from '../../platform/common/utils/async';

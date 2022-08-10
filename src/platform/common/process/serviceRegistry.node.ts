@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { IServiceManager } from '../../ioc/types';
 import { CondaService } from './condaService.node';
 import { ProcessServiceFactory } from './processFactory.node';

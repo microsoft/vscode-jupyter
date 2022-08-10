@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { assert } from 'chai';
@@ -43,9 +42,9 @@ export async function initializeNotebookForWidgetTest(
     const nbUri =
         'templateFile' in options
             ? await createTemporaryNotebookFromFile(
-                  urlPath.joinPath(templateRootPath, options.templateFile),
-                  disposables
-              )
+                urlPath.joinPath(templateRootPath, options.templateFile),
+                disposables
+            )
             : options.notebookFile;
     await openNotebook(nbUri);
     await waitForKernelToGetAutoSelected();

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -25,7 +24,7 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         @inject(IProcessLogger) private readonly processLogger: IProcessLogger,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
+    ) { }
     @traceDecoratorVerbose('Create ProcessService', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async create(resource?: Uri): Promise<IProcessService> {
         // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.

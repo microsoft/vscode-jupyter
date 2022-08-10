@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { Terminal } from 'vscode';
@@ -50,7 +49,7 @@ detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
  * ShellDetectors parse shell paths and attempt to identify the shell type.
  */
 export abstract class BaseShellDetector implements IShellDetector {
-    constructor(public readonly priority: number) {}
+    constructor(public readonly priority: number) { }
     public abstract identify(
         telemetryProperties: ShellIdentificationTelemetry,
         terminal?: Terminal

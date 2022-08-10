@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { traceWarning } from '../../platform/logging';
 import { LiveRemoteKernelConnectionMetadata } from '../types';
@@ -24,7 +23,7 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
 
         @inject(IJupyterServerUriStorage) private readonly uriStorage: IJupyterServerUriStorage,
         @inject(IJupyterUriProviderRegistration) private readonly providerRegistration: IJupyterUriProviderRegistration
-    ) {}
+    ) { }
     public async isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean> {
         // Only list live kernels that was used by the user,
         if (!this.liveKernelConnectionTracker.wasKernelUsed(kernel)) {

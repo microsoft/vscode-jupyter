@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import * as fsapi from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
 import { ShellOptions, ExecutionResult, IProcessServiceFactory } from '../process/types.node';

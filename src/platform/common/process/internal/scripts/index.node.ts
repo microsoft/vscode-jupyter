@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import * as path from '../../../../vscode-path/path';
 import { EXTENSION_ROOT_DIR } from '../../../../constants.node';
 

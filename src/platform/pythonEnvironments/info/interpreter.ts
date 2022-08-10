@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { sha256 } from 'hash.js';
 import { Uri } from 'vscode';
 import * as uriPath from '../../vscode-path/resources';
@@ -9,7 +8,7 @@ import { PythonEnvironment } from '.';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { getFilePath } from '../../common/platform/fs-paths';
 
-export function getInterpreterHash(interpreter: PythonEnvironment | {uri: Uri}){
+export function getInterpreterHash(interpreter: PythonEnvironment | { uri: Uri }) {
     const interpreterPath = getNormalizedInterpreterPath(interpreter.uri);
     return sha256().update(interpreterPath.path).digest('hex');
 }
@@ -25,7 +24,7 @@ export function areInterpretersSame(i1: PythonEnvironment | undefined, i2: Pytho
  *  They are both the same.
  * This function will take that into account.
  */
-export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = Uri.file(''), ostype = getOSType(), forceLowerCase: boolean = false){
+export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2: Uri = Uri.file(''), ostype = getOSType(), forceLowerCase: boolean = false) {
     const norm1 = getNormalizedInterpreterPath(path1, ostype, ostype == OSType.Windows || forceLowerCase);
     const norm2 = getNormalizedInterpreterPath(path2, ostype, ostype == OSType.Windows || forceLowerCase);
     return norm1 === norm2 || uriPath.isEqual(norm1, norm2, true);
@@ -37,7 +36,7 @@ export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = U
  *  They are both the same.
  * This function will take that into account.
  */
- export function getNormalizedInterpreterPath(path:Uri = Uri.file(''), ostype = getOSType(), forceLowerCase: boolean = false){
+export function getNormalizedInterpreterPath(path: Uri = Uri.file(''), ostype = getOSType(), forceLowerCase: boolean = false) {
     let fsPath = getFilePath(path);
     if (forceLowerCase) {
         fsPath = fsPath.toLowerCase();
@@ -52,7 +51,7 @@ export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = U
     // - /opt/hostedtoolcache/Python/3.8.11/x64/bin/python
     // They are both the same.
     // To ensure we treat them as the same, lets drop the `bin` on unix.
-    if ([OSType.Linux, OSType.OSX].includes(ostype)){
+    if ([OSType.Linux, OSType.OSX].includes(ostype)) {
         // We need to exclude paths such as `/usr/bin/python`
         return fsPath.endsWith('/bin/python') && fsPath.split('/').length > 4 ? Uri.file(fsPath.replace('/bin/python', '/python')) : Uri.file(fsPath);
     }

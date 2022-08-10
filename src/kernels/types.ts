@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import type { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
@@ -442,26 +441,26 @@ export interface IJupyterKernelSpec {
      * Whether the kernelspec is registered by VS Code
      */
     readonly isRegisteredByVSC?:
-        | 'registeredByNewVersionOfExt'
-        | 'registeredByOldVersionOfExt'
-        | 'registeredByNewVersionOfExtForCustomKernelSpec';
+    | 'registeredByNewVersionOfExt'
+    | 'registeredByOldVersionOfExt'
+    | 'registeredByNewVersionOfExtForCustomKernelSpec';
 }
 
 export type GetServerOptions =
     | {
-          ui: IDisplayOptions;
-          localJupyter: true;
-          token: CancellationToken | undefined;
-          resource: Resource;
-          serverId?: undefined;
-      }
+        ui: IDisplayOptions;
+        localJupyter: true;
+        token: CancellationToken | undefined;
+        resource: Resource;
+        serverId?: undefined;
+    }
     | {
-          ui: IDisplayOptions;
-          localJupyter: false;
-          token: CancellationToken | undefined;
-          resource: Resource;
-          serverId: string;
-      };
+        ui: IDisplayOptions;
+        localJupyter: false;
+        token: CancellationToken | undefined;
+        resource: Resource;
+        serverId: string;
+    };
 
 // Options for connecting to a notebook provider
 export type ConnectNotebookProviderOptions = GetServerOptions;

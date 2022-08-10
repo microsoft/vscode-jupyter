@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any, @typescript-eslint/no-extraneous-class */
@@ -94,7 +93,7 @@ export interface IMultiStepInput<S> {
 export class MultiStepInput<S> implements IMultiStepInput<S> {
     private current?: QuickInput;
     private steps: InputStep<S>[] = [];
-    constructor(private readonly shell: IApplicationShell) {}
+    constructor(private readonly shell: IApplicationShell) { }
     public run(start: InputStep<S>, state: S) {
         return this.stepThrough(start, state);
     }
@@ -336,7 +335,7 @@ export interface IMultiStepInputFactory {
 }
 @injectable()
 export class MultiStepInputFactory {
-    constructor(@inject(IApplicationShell) private readonly shell: IApplicationShell) {}
+    constructor(@inject(IApplicationShell) private readonly shell: IApplicationShell) { }
     public create<S>(): IMultiStepInput<S> {
         return new MultiStepInput<S>(this.shell);
     }

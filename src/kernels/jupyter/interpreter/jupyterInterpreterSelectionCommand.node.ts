@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -20,7 +19,7 @@ export class JupyterInterpreterSelectionCommand implements IExtensionSingleActiv
         @inject(JupyterInterpreterService) private readonly service: JupyterInterpreterService,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         this.disposables.push(
             this.cmdManager.registerCommand('jupyter.selectJupyterInterpreter', () => {

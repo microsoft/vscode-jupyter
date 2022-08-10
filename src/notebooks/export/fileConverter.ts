@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
@@ -35,7 +34,7 @@ export class FileConverter implements IFileConverter {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(ExportFileOpener) protected readonly exportFileOpener: ExportFileOpener,
         @inject(IConfigurationService) protected readonly configuration: IConfigurationService
-    ) {}
+    ) { }
 
     async importIpynb(source: Uri): Promise<void> {
         const reporter = this.progressReporter.createProgressIndicator(localize.DataScience.importingIpynb(), true);

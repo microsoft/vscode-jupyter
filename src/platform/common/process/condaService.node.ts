@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, named } from 'inversify';
 import { SemVer } from 'semver';
 import { EventEmitter, Memento, RelativePattern, Uri, workspace } from 'vscode';

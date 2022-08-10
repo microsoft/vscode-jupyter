@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, named } from 'inversify';
 import { GLOBAL_MEMENTO, IConfigurationService, IHttpClient, IMemento } from '../../../../platform/common/types';
 import { IKernel } from '../../../../kernels/types';
@@ -28,7 +27,7 @@ export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderF
         private readonly widgetScriptManagerFactory: IIPyWidgetScriptManagerFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
-    ) {}
+    ) { }
 
     public getProviders(kernel: IKernel, uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
         const scriptProviders: IWidgetScriptSourceProvider[] = [];

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -41,7 +40,7 @@ export class JupyterInterpreterService {
         @inject(JupyterInterpreterDependencyService)
         private readonly interpreterConfiguration: JupyterInterpreterDependencyService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
-    ) {}
+    ) { }
     /**
      * Gets the selected interpreter configured to run Jupyter.
      *

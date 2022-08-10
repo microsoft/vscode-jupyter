@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
@@ -15,8 +14,7 @@ import { isJupyterNotebook } from '../../common/utils';
  */
 @injectable()
 export class InterpreterStatusBarVisibility
-    implements IInterpreterStatusbarVisibilityFilter, IExtensionSingleActivationService
-{
+    implements IInterpreterStatusbarVisibilityFilter, IExtensionSingleActivationService {
     private _changed = new EventEmitter<void>();
     private _registered = false;
 

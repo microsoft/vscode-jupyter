@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 /* eslint-disable no-constant-condition */
 
 import { EventEmitter } from 'events';

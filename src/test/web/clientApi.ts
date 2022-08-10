@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { workspace } from 'vscode';
 
 export class ClientAPI {

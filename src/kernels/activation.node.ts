@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -31,7 +30,7 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IRawNotebookSupportedService) private readonly rawSupported: IRawNotebookSupportedService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         this.disposables.push(this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));

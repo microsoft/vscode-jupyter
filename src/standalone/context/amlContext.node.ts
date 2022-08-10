@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { injectable } from 'inversify';
 import { env } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';

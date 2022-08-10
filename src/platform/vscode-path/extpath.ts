@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { CharCode } from './charCode';
 import { posix, sep } from './path';
 import { startsWithIgnoreCase } from './strings';

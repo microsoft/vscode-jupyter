@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
@@ -79,8 +78,8 @@ export abstract class BaseConfigurationService implements IConfigurationService 
                         target === ConfigurationTarget.Global
                             ? setting.globalValue
                             : target === ConfigurationTarget.Workspace
-                            ? setting.workspaceValue
-                            : setting.workspaceFolderValue;
+                                ? setting.workspaceValue
+                                : setting.workspaceFolderValue;
                     if (actual === value) {
                         break;
                     }

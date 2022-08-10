@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -28,7 +27,7 @@ export class JupyterInterpreterSelector {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(JupyterInterpreterStateStore) private readonly interpreterSelectionState: JupyterInterpreterStateStore,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
+    ) { }
     /**
      * Displays interpreter selector and returns the selection.
      *

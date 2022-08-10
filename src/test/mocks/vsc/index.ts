@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 /* eslint-disable no-invalid-this, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any, max-classes-per-file */
@@ -57,7 +56,7 @@ export namespace vscMock {
     }
 
     export class Disposable {
-        constructor(private callOnDispose: Function) {}
+        constructor(private callOnDispose: Function) { }
         public dispose(): any {
             if (this.callOnDispose) {
                 this.callOnDispose();
@@ -98,7 +97,7 @@ export namespace vscMock {
      * being cancelled or when an operation is being cancelled by the
      * executor of that operation.
      */
-    export class CancellationError extends Error {}
+    export class CancellationError extends Error { }
 
     export class CancellationToken extends EventEmitter<any> implements vscode.CancellationToken {
         public isCancellationRequested!: boolean;
@@ -291,7 +290,7 @@ export namespace vscMock {
         public static readonly SourceOrganizeImports: CodeActionKind = new CodeActionKind('source.organize.imports');
         public static readonly SourceFixAll: CodeActionKind = new CodeActionKind('source.fix.all');
 
-        private constructor(private _value: string) {}
+        private constructor(private _value: string) { }
 
         public append(parts: string): CodeActionKind {
             return new CodeActionKind(`${this._value}.${parts}`);
@@ -316,14 +315,14 @@ export namespace vscMock {
     }
 
     export class DebugAdapterServer {
-        constructor(public readonly port: number, public readonly host?: string) {}
+        constructor(public readonly port: number, public readonly host?: string) { }
     }
     export class DebugAdapterExecutable {
         constructor(
             public readonly command: string,
             public readonly args: string[] = [],
             public readonly options?: DebugAdapterExecutableOptions
-        ) {}
+        ) { }
     }
 
     export enum FileType {

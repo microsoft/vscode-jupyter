@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { IServiceManager } from '../../ioc/types';
 import { EnvironmentVariablesService } from './environment.node';
 import { CustomEnvironmentVariablesProvider } from './customEnvironmentVariablesProvider.node';

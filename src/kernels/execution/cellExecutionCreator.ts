@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import {
@@ -24,7 +23,7 @@ class NotebookCellExecutionWrapper implements NotebookCellExecution {
         private readonly _impl: NotebookCellExecution,
         public controllerId: string,
         private _endCallback: (() => void) | undefined
-    ) {}
+    ) { }
     public get cell(): NotebookCell {
         return this._impl.cell;
     }

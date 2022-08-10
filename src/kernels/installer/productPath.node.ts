@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { injectable, inject } from 'inversify';
@@ -30,7 +29,7 @@ export abstract class BaseProductPathsService implements IProductPathService {
         try {
             moduleName = this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
             // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-        } catch {}
+        } catch { }
 
         // User may have customized the module name or provided the fully qualified path.
         const executableName = this.getExecutableNameFromSettings(product, resource);

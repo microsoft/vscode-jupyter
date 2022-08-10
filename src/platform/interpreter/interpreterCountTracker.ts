@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { IExtensionSingleActivationService } from '../activation/types';
 import { inject, injectable } from 'inversify';
 import { IInterpreterService } from './contracts';
@@ -24,7 +23,7 @@ export class InterpreterCountTracker implements IExtensionSingleActivationServic
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonApiProvider) private pythonApi: IPythonApiProvider,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
-    ) {}
+    ) { }
     public async activate() {
         if (this.pythonExtensionChecker.isPythonExtensionActive) {
             this.trackInterpreters();

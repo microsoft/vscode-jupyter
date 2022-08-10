@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as path from '../../../../platform/vscode-path/path';
@@ -44,8 +43,7 @@ import { Settings } from '../../../../platform/common/constants';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 [true, false].forEach((useJedi) => {
     suite(
-        `DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter) (slow) ${
-            useJedi ? 'withJedi' : 'withoutJedi'
+        `DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter) (slow) ${useJedi ? 'withJedi' : 'withoutJedi'
         }`,
         function () {
             let api: IExtensionTestApi;

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { Disposable, NotebookDocument } from 'vscode';
 import { IControllerSelection, IVSCodeNotebookController } from './types';
@@ -26,7 +25,7 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
         private readonly liveKernelTracker: ILiveRemoteKernelConnectionUsageTracker,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
-    ) {}
+    ) { }
     activate(): void {
         this.kernelProvider.onDidStartKernel(this.onDidStartKernel, this, this.disposables);
         this.controllers.onControllerSelectionChanged(

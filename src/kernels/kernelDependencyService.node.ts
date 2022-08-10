@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
@@ -48,7 +47,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(IRawNotebookSupportedService) private readonly rawSupport: IRawNotebookSupportedService,
         @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
-    ) {}
+    ) { }
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.
@@ -63,8 +62,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         cannotChangeKernels?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfo(
-            `installMissingDependencies ${
-                kernelConnection.interpreter?.uri ? getDisplayPath(kernelConnection.interpreter?.uri) : ''
+            `installMissingDependencies ${kernelConnection.interpreter?.uri ? getDisplayPath(kernelConnection.interpreter?.uri) : ''
             }, ui.disabled=${ui.disableUI} for resource '${getDisplayPath(resource)}'`
         );
         if (
@@ -189,8 +187,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         cannotChangeKernels?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfoIfCI(
-            `Run Installer for ${getDisplayPath(resource)} ui.disableUI=${
-                ui.disableUI
+            `Run Installer for ${getDisplayPath(resource)} ui.disableUI=${ui.disableUI
             }, cancelTokenSource.token.isCancellationRequested=${cancelTokenSource.token.isCancellationRequested}`
         );
         // If there's no UI, then cancel installation.
@@ -258,9 +255,9 @@ export class KernelDependencyService implements IKernelDependencyService {
                 selection = this.isCodeSpace
                     ? installOption
                     : await Promise.race([
-                          this.appShell.showInformationMessage(message, { modal: true }, ...options),
-                          promptCancellationPromise
-                      ]);
+                        this.appShell.showInformationMessage(message, { modal: true }, ...options),
+                        promptCancellationPromise
+                    ]);
 
                 if (selection === moreInfoOption) {
                     sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {

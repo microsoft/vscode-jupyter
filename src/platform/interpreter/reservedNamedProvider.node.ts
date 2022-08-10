@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Memento, Uri } from 'vscode';
 import { IMemento, GLOBAL_MEMENTO, IDisposable, IDisposableRegistry } from '../../platform/common/types';

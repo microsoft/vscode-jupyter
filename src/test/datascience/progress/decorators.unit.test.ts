@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { anything, deepEqual, instance, mock, verify } from 'ts-mockito';

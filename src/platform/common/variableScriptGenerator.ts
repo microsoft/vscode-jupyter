@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { IFileSystem } from './platform/types';
 import { IExtensionContext, IVariableScriptGenerator } from './types';
@@ -25,7 +24,7 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext
-    ) {}
+    ) { }
     async generateCodeToGetVariableInfo(options: { isDebugging: boolean; variableName: string }) {
         const initializeCode = await this.getContentsOfScript();
         const isDebugging = options.isDebugging ? 'True' : 'False';

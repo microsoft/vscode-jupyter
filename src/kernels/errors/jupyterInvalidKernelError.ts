@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';

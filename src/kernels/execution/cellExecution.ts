@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
@@ -41,7 +40,7 @@ export class CellExecutionFactory {
     constructor(
         private readonly controller: NotebookController,
         private readonly requestListener: CellExecutionMessageHandlerService
-    ) {}
+    ) { }
 
     public create(cell: NotebookCell, code: string | undefined, metadata: Readonly<KernelConnectionMetadata>) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define

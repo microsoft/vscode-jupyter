@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { FetchError } from 'node-fetch';
 import * as stackTrace from 'stack-trace';
 import { getTelemetrySafeHashedString } from '../telemetry/helpers';
@@ -91,7 +90,7 @@ function getCallSite(frame: stackTrace.StackFrame) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Constructor<T> = { new (...args: any[]): T };
+type Constructor<T> = { new(...args: any[]): T };
 
 function isErrorType<T>(error: Error, expectedType: Constructor<T>) {
     // If the expectedType is undefined, which may happen in the web,

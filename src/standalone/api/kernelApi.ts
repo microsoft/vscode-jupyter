@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { injectable, inject } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
@@ -46,7 +45,7 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
         @inject(ApiAccessService) private readonly apiAccess: ApiAccessService,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
-    ) {}
+    ) { }
     public async getService() {
         const info = await this.extensions.determineExtensionFromCallStack();
         const accessInfo = await this.chainedApiAccess.chainFinally(() => this.apiAccess.getAccessInformation(info));

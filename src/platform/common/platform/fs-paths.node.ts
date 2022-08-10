@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { getOSType, OSType } from '../utils/platform';
 import { getDisplayPath as getDisplayPathCommon } from './fs-paths';
 import { Uri, WorkspaceFolder } from 'vscode';
@@ -27,12 +26,12 @@ export function removeHomeFromFile(file: string | undefined) {
 export function getDisplayPathFromLocalFile(file: string | undefined, cwd?: string | undefined) {
     const folders: WorkspaceFolder[] = cwd
         ? [
-              {
-                  uri: Uri.file(cwd),
-                  name: '',
-                  index: 0
-              }
-          ]
+            {
+                uri: Uri.file(cwd),
+                name: '',
+                index: 0
+            }
+        ]
         : [];
     return getDisplayPath(file ? Uri.file(file) : undefined, folders);
 }

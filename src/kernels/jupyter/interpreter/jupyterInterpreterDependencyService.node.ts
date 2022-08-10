@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -76,12 +75,12 @@ export function getMessageForLibrariesNotInstalled(products: Product[], interpre
             const lastItem = names.pop();
             return interpreterName
                 ? DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter().format(
-                      interpreterName,
-                      `${names.join(', ')} ${Common.and()} ${lastItem}`
-                  )
+                    interpreterName,
+                    `${names.join(', ')} ${Common.and()} ${lastItem}`
+                )
                 : DataScience.librariesRequiredToLaunchJupyterNotInstalled().format(
-                      `${names.join(', ')} ${Common.and()} ${lastItem}`
-                  );
+                    `${names.join(', ')} ${Common.and()} ${lastItem}`
+                );
         }
     }
 }
@@ -109,7 +108,7 @@ export class JupyterInterpreterDependencyService {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IJupyterCommandFactory) private readonly commandFactory: IJupyterCommandFactory
-    ) {}
+    ) { }
     /**
      * Configures the python interpreter to ensure it can run Jupyter server by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.

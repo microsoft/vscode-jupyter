@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 // Stuff common to React and Extensions.
@@ -26,6 +25,6 @@ type BaseDataWithPayload<T> = {
 // This forms the base content of every payload in all dispatchers.
 export type BaseReduxActionPayload<T = never | undefined> = T extends never
     ? T extends undefined
-        ? BaseData
-        : BaseDataWithPayload<T>
+    ? BaseData
+    : BaseDataWithPayload<T>
     : BaseDataWithPayload<T>;

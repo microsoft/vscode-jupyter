@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { expect } from 'chai';
@@ -87,9 +86,8 @@ suite('ProcessLogger suite', () => {
         const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
-        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n${Logging.currentWorkingDirectory()} ${
-            options.cwd
-        }\n`;
+        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n${Logging.currentWorkingDirectory()} ${options.cwd
+            }\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
     });
 

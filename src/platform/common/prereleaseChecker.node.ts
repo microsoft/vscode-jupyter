@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import './extensions';
@@ -26,7 +25,7 @@ export class PreReleaseChecker implements IExtensionSingleActivationService {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: vscode.Memento,
         @inject(IsPreRelease) private isPreRelease: Promise<boolean>
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         this.isPreRelease
             .then((isPreRelease) => {

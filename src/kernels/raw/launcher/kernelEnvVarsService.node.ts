@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import { traceInfo, traceError } from '../../../platform/logging';
@@ -31,7 +30,7 @@ export class KernelEnvironmentVariablesService {
         @inject(ICustomEnvironmentVariablesProvider)
         private readonly customEnvVars: ICustomEnvironmentVariablesProvider,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
-    ) {}
+    ) { }
     /**
      * Generates the environment variables for the kernel.
      *
@@ -68,11 +67,11 @@ export class KernelEnvironmentVariablesService {
                 .catch(noop),
             interpreter
                 ? this.envActivation
-                      .getActivatedEnvironmentVariables(resource, interpreter, false)
-                      .catch<undefined>((ex) => {
-                          traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
-                          return undefined;
-                      })
+                    .getActivatedEnvironmentVariables(resource, interpreter, false)
+                    .catch<undefined>((ex) => {
+                        traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
+                        return undefined;
+                    })
                 : undefined
         ]);
         if (!interpreterEnv && Object.keys(customEnvVars || {}).length === 0) {

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -25,7 +24,7 @@ export class NbConvertInterpreterDependencyChecker implements INbConvertInterpre
     constructor(
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IJupyterCommandFactory) private readonly commandFactory: IJupyterCommandFactory
-    ) {}
+    ) { }
 
     // Check to see if nbconvert is installed in the given interpreter, note that we also need jupyter since that supplies the needed
     // template files for conversion

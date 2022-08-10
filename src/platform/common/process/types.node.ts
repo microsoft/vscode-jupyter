@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
@@ -175,7 +174,7 @@ export interface IPythonExecutionService {
  * @extends {IPythonExecutionService}
  * @extends {IDisposable}
  */
-export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable {}
+export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable { }
 
 /**
  * Error thrown when a Daemon emits output on stderr

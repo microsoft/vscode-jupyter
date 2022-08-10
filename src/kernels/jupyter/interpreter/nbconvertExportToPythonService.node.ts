@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -18,7 +17,7 @@ import { JupyterDaemonModule } from '../../../platform/common/constants';
  */
 @injectable()
 export class NbConvertExportToPythonService {
-    constructor(@inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory) {}
+    constructor(@inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory) { }
 
     @reportAction(ReportableAction.ExportNotebookToPython)
     public async exportNotebookToPython(

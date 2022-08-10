@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Arguments, ILogger } from './types';
 import { getTimeForLogging } from './util';
 const format = require('format-util') as typeof import('format-util');
@@ -13,7 +12,7 @@ function formatMessage(level: string | undefined, message: string, ...data: Argu
 }
 
 export class ConsoleLogger implements ILogger {
-    constructor(private readonly prefix: string | undefined) {}
+    constructor(private readonly prefix: string | undefined) { }
 
     public traceLog(message: string, ...data: Arguments): void {
         console.log(format(`${this.prefix || ''} ${message}`, ...data));

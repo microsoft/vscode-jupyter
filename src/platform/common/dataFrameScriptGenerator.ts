@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { IFileSystem } from './platform/types';
 import { IDataFrameScriptGenerator, IExtensionContext } from './types';
@@ -24,7 +23,7 @@ export class DataFrameScriptGenerator implements IDataFrameScriptGenerator {
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext
-    ) {}
+    ) { }
     public async generateCodeToGetDataFrameInfo(options: { isDebugging: boolean; variableName: string }) {
         const initializeCode = await this.getContentsOfDataFrameScript();
         const isDebugging = options.isDebugging ? 'True' : 'False';

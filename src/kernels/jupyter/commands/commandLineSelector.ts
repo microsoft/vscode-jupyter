@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -19,7 +18,7 @@ export class JupyterCommandLineSelectorCommand implements IDisposable {
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterCommandLineSelector) private readonly commandSelector: JupyterCommandLineSelector
-    ) {}
+    ) { }
     public register() {
         this.disposables.push(
             this.commandManager.registerCommand(

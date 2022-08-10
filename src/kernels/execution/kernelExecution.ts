@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { EventEmitter, NotebookCell, NotebookCellKind, NotebookDocument, workspace } from 'vscode';
@@ -42,7 +41,7 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
     protected get restarting() {
         return this._restartPromise || Promise.resolve();
     }
-    constructor(protected readonly kernel: TKernel, private readonly interruptTimeout: number) {}
+    constructor(protected readonly kernel: TKernel, private readonly interruptTimeout: number) { }
 
     public async cancel() {
         noop();
@@ -187,7 +186,7 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
     }
 }
 
-export class ThirdPartyKernelExecution extends BaseKernelExecution<IThirdPartyKernel> {}
+export class ThirdPartyKernelExecution extends BaseKernelExecution<IThirdPartyKernel> { }
 
 /**
  * Separate class that deals just with kernel execution.

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import type { Kernel } from '@jupyterlab/services';
 import { IDisposable } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';

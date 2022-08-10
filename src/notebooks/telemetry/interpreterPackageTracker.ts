@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, optional } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
@@ -30,7 +29,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IControllerSelection) private readonly notebookControllerManager: IControllerSelection
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         this.notebookControllerManager.onControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
         this.interpreterService.onDidChangeInterpreter(this.trackPackagesOfActiveInterpreter, this, this.disposables);

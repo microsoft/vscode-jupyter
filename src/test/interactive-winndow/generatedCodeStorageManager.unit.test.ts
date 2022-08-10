@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { EventEmitter, NotebookDocument, Uri } from 'vscode';
 import {

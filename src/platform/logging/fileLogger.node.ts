@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { WriteStream } from 'fs-extra';
 import * as util from 'util';
 import { Disposable } from 'vscode-jsonrpc';
@@ -13,7 +12,7 @@ function formatMessage(level?: string, ...data: Arguments): string {
 }
 
 export class FileLogger implements ILogger, Disposable {
-    constructor(private readonly stream: WriteStream) {}
+    constructor(private readonly stream: WriteStream) { }
 
     public traceLog(...data: Arguments): void {
         this.stream.write(formatMessage(undefined, ...data));

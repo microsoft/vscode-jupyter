@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Event, QuickPickItem, Uri } from 'vscode';
 import { Resource } from '../common/types';
 import type { SemVer } from 'semver';

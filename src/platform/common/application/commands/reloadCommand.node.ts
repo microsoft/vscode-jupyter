@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -18,7 +17,7 @@ export class ReloadVSCodeCommandHandler implements IExtensionSingleActivationSer
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         this.commandManager.registerCommand('jupyter.reloadVSCode', this.onReloadVSCode, this);
     }

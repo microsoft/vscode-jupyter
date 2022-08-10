@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { workspace } from 'vscode';
 import { CancellationToken, PortAttributes, PortAttributesProvider, PortAutoForwardAction } from 'vscode';
@@ -16,7 +15,7 @@ import { IDisposableRegistry } from '../../platform/common/types';
  */
 @injectable()
 export class PortAttributesProviders implements PortAttributesProvider, IExtensionSyncActivationService {
-    constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {}
+    constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) { }
     activate(): void {
         try {
             this.disposables.push(workspace.registerPortAttributesProvider({}, this));

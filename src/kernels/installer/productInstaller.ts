@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Memento, Uri } from 'vscode';
 import { ProductNames } from './productNames';
 import { Product } from './types';

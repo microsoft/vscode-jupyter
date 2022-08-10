@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -150,7 +149,7 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
  */
 export function iterEmpty<T>(): AsyncIterator<T, void> {
     // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-    return (async function* () {})() as unknown as AsyncIterator<T, void>;
+    return (async function* () { })() as unknown as AsyncIterator<T, void>;
 }
 
 type NextResult<T> = { index: number } & (
@@ -168,7 +167,7 @@ async function getNext<T>(it: AsyncIterator<T, T | void>, indexMaybe?: number): 
 }
 
 // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-export const NEVER: Promise<unknown> = new Promise(() => {});
+export const NEVER: Promise<unknown> = new Promise(() => { });
 
 /**
  * Yield everything produced by the given iterators as soon as each is ready.

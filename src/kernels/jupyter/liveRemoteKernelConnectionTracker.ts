@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, named } from 'inversify';
 import { Memento, Uri } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
@@ -23,14 +22,13 @@ type UriSessionUsedByResources = Record<ServerId, Record<KernelId, UriString[]>>
  */
 @injectable()
 export class LiveRemoteKernelConnectionUsageTracker
-    implements IExtensionSyncActivationService, ILiveRemoteKernelConnectionUsageTracker
-{
+    implements IExtensionSyncActivationService, ILiveRemoteKernelConnectionUsageTracker {
     private usedRemoteKernelServerIdsAndSessions: UriSessionUsedByResources = {};
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IJupyterServerUriStorage) private readonly uriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
-    ) {}
+    ) { }
     public activate(): void {
         this.usedRemoteKernelServerIdsAndSessions = this.memento.get<UriSessionUsedByResources>(
             mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,

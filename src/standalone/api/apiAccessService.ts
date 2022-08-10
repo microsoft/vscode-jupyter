@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { injectable, inject, named } from 'inversify';
 import { ExtensionMode, Memento } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
@@ -37,7 +36,7 @@ export class ApiAccessService {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IExtensionContext) private context: IExtensionContext
-    ) {}
+    ) { }
     public async getAccessInformation(info: {
         extensionId: string;
         displayName: string;

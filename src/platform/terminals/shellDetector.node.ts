@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { Terminal } from 'vscode';
@@ -23,7 +22,7 @@ const defaultOSShells = {
  * Uses shellDetectors to identify the shell of the terminal.
  */
 export class ShellDetector {
-    constructor(private readonly platform: IPlatformService, private readonly shellDetectors: IShellDetector[]) {}
+    constructor(private readonly platform: IPlatformService, private readonly shellDetectors: IShellDetector[]) { }
     /**
      * Logic is as follows:
      * 1. Try to identify the type of the shell based on the name of the terminal.

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
@@ -35,12 +34,12 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
     }
     public inspect<T>(_section: string):
         | {
-              key: string;
-              defaultValue?: T | undefined;
-              globalValue?: T | undefined;
-              workspaceValue?: T | undefined;
-              workspaceFolderValue?: T | undefined;
-          }
+            key: string;
+            defaultValue?: T | undefined;
+            globalValue?: T | undefined;
+            workspaceValue?: T | undefined;
+            workspaceFolderValue?: T | undefined;
+        }
         | undefined {
         return;
     }

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { commands, NotebookDocument, Uri, workspace } from 'vscode';
 import { IDisposable } from '../platform/common/types';
 import { generateScreenShotFileName, initializeCommonApi } from './common';

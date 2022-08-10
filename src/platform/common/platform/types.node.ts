@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import * as fs from 'fs';
 import { IFileSystem, TemporaryFile } from './types';
 

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
@@ -85,9 +84,9 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
 
     public getInternal(notebook: NotebookDocument):
         | {
-              options: KernelOptions;
-              kernel: IKernel;
-          }
+            options: KernelOptions;
+            kernel: IKernel;
+        }
         | undefined {
         return this.kernelsByNotebook.get(notebook);
     }
@@ -191,9 +190,9 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
 
     public getInternal(uri: Uri):
         | {
-              options: ThirdPartyKernelOptions;
-              kernel: IThirdPartyKernel;
-          }
+            options: ThirdPartyKernelOptions;
+            kernel: IThirdPartyKernel;
+        }
         | undefined {
         return this.kernelsByUri.get(uri.toString());
     }

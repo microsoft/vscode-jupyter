@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Event, Uri } from 'vscode';
 import { WebviewViewProvider } from 'vscode';
 import { IJupyterSettings } from '../common/types';

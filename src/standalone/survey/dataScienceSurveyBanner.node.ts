@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -25,7 +24,7 @@ import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 
 export const ISurveyBanner = Symbol('ISurveyBanner');
-export interface ISurveyBanner extends IExtensionSingleActivationService, IJupyterExtensionBanner {}
+export interface ISurveyBanner extends IExtensionSingleActivationService, IJupyterExtensionBanner { }
 
 export enum InsidersNotebookSurveyStateKeys {
     ShowBanner = 'ShowInsidersNotebookSurveyBanner',

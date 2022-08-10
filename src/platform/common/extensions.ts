@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 /**
  * @typedef {Object} SplitLinesOptions
  * @property {boolean} [trim=true] - Whether to trim the lines.
@@ -106,7 +105,7 @@ declare interface Promise<T> {
  */
 Promise.prototype.ignoreErrors = function <T>(this: Promise<T>) {
     // eslint-disable-next-line no-empty, @typescript-eslint/no-empty-function
-    this.catch(() => {});
+    this.catch(() => { });
 };
 
 if (!String.prototype.format) {

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import * as fastDeepEqual from 'fast-deep-equal';
@@ -432,7 +431,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                 } else if (
                     this.outputsAreSpecificToAWidget.length &&
                     this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].handlingCommId ===
-                        msg.content.comm_id
+                    msg.content.comm_id
                 ) {
                     // Handle all messages the normal way.
                     this.outputsAreSpecificToAWidget.pop();
@@ -494,10 +493,10 @@ export class CellExecutionMessageHandler implements IDisposable {
         const cellOutput = cellOutputToVSCCellOutput(output);
         const displayId =
             'transient' in output &&
-            typeof output.transient === 'object' &&
-            output.transient &&
-            'display_id' in output.transient &&
-            typeof output.transient?.display_id === 'string'
+                typeof output.transient === 'object' &&
+                output.transient &&
+                'display_id' in output.transient &&
+                typeof output.transient?.display_id === 'string'
                 ? output.transient?.display_id
                 : undefined;
         if (this.cell.document.isClosed) {
@@ -524,7 +523,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (
             this.outputsAreSpecificToAWidget.length &&
             this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ===
-                parentHeaderMsgId &&
+            parentHeaderMsgId &&
             cellOutput.items.every((item) =>
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.canMimeTypeBeRenderedByWidgetManager(item)
@@ -535,7 +534,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         } else if (
             this.outputsAreSpecificToAWidget.length &&
             this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ===
-                parentHeaderMsgId
+            parentHeaderMsgId
         ) {
             const result = this.updateJupyterOutputWidgetWithOutput(
                 {
@@ -649,7 +648,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             clearOption ||
             (this.outputsAreSpecificToAWidget.length
                 ? this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1]
-                      .clearOutputOnNextUpdateToOutput === true
+                    .clearOutputOnNextUpdateToOutput === true
                 : false);
         if (this.outputsAreSpecificToAWidget.length) {
             this.outputsAreSpecificToAWidget[
@@ -801,7 +800,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             getParentHeaderMsgId(msg) &&
             this.outputsAreSpecificToAWidget.length &&
             this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ==
-                getParentHeaderMsgId(msg)
+            getParentHeaderMsgId(msg)
         ) {
             // Stream messages will be handled by the Output Widget.
             return;
@@ -890,7 +889,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (
             this.outputsAreSpecificToAWidget.length &&
             this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ===
-                getParentHeaderMsgId(msg)
+            getParentHeaderMsgId(msg)
         ) {
             if (msg.content.wait) {
                 if (this.outputsAreSpecificToAWidget.length) {

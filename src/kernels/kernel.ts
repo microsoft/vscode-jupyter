@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { KernelMessage } from '@jupyterlab/services';
@@ -212,8 +211,8 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             this._session = this._session
                 ? this._session
                 : this._jupyterSessionPromise
-                ? await this._jupyterSessionPromise
-                : undefined;
+                    ? await this._jupyterSessionPromise
+                    : undefined;
             this._jupyterSessionPromise = undefined;
             if (this._session) {
                 promises.push(this._session.dispose().catch(noop));
@@ -347,8 +346,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
                 pythonInfo = ` (${info.join(', ')})`;
             }
             traceInfo(
-                `Starting Jupyter Session id = '${this.kernelConnectionMetadata.kind}:${
-                    this.kernelConnectionMetadata.id
+                `Starting Jupyter Session id = '${this.kernelConnectionMetadata.kind}:${this.kernelConnectionMetadata.id
                 }'${pythonInfo} for '${getDisplayPath(this.uri)}' (disableUI=${this.startupUI.disableUI})`
             );
             this.createProgressIndicator(disposables);

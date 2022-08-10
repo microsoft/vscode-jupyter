@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { NotebookCellKind, NotebookDocument } from 'vscode';
 import { getLanguageInNotebookMetadata } from '../../kernels/helpers';
 import { getNotebookMetadata } from '../../platform/common/utils';

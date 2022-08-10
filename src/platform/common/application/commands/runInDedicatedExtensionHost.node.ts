@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -19,7 +18,7 @@ export class RunInDedicatedExtensionHostCommandHandler implements IExtensionSing
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         this.commandManager.registerCommand('jupyter.runInDedicatedExtensionHost', this.updateAffinity, this);
     }

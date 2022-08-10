@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { expect } from 'chai';
 import { PassThrough } from 'stream';
 import { createDeferred } from '../../../platform/common/utils/async';

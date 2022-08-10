@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import './styles.css';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
 import ansiToHtml from 'ansi-to-html';
@@ -232,8 +231,8 @@ export const activate: ActivationFunction = (context) => {
                 metadata?.outputType === 'error' && metadata?.transient && Array.isArray(metadata?.transient)
                     ? metadata?.transient
                     : Array.isArray(outputItemJson.stack)
-                    ? outputItemJson.stack.map((item: string) => escape(item))
-                    : [escape(outputItemJson.stack)];
+                        ? outputItemJson.stack.map((item: string) => escape(item))
+                        : [escape(outputItemJson.stack)];
 
             // there is traceback
             // Fix links in tracebacks.

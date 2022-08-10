@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 import * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
@@ -29,7 +28,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExportDialog) protected readonly filePicker: IExportDialog,
         @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase
-    ) {}
+    ) { }
 
     public async export(
         _sourceDocument: NotebookDocument,

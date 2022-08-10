@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { logMessage } from '../../react-common/logger';
 
 const unpgkUrl = 'https://unpkg.com/';

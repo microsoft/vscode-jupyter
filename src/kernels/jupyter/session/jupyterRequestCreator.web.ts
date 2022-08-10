@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { injectable } from 'inversify';
 import * as WebSocketIsomorphic from 'isomorphic-ws';
 import { ClassType } from '../../../platform/ioc/types';

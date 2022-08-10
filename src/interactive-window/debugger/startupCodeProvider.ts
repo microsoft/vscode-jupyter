@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IKernel, isLocalConnection, IStartupCodeProvider, StartupCodePriority } from '../../kernels/types';
@@ -19,7 +18,7 @@ export class InteractiveWindowDebuggingStartupCodeProvider implements IStartupCo
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IsWebExtension) private readonly isWebExtension: boolean
-    ) {}
+    ) { }
 
     async getCode(kernel: IKernel): Promise<string[]> {
         if (!this.isWebExtension) {

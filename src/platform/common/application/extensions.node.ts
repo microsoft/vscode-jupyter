@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -18,7 +17,7 @@ import { IFileSystem } from '../platform/types';
  */
 @injectable()
 export class Extensions implements IExtensions {
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
+    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) { }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get all(): readonly Extension<any>[] {
         return extensions.all;

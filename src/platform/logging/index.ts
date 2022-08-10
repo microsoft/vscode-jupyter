@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -102,9 +101,9 @@ export function traceDecoratorWarn(message: string): TraceDecoratorType {
 
 type ParameterLogInformation =
     | {
-          parameterIndex: number;
-          propertyOfParameterToLog: string;
-      }
+        parameterIndex: number;
+        propertyOfParameterToLog: string;
+    }
     | { parameterIndex: number; ignore: true };
 type MethodName = string | symbol;
 type ClassInstance = Object;

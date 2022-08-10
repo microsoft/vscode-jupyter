@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import {
     commands,
@@ -39,7 +38,7 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook
-    ) {}
+    ) { }
 
     activate(): void {
         const messageChannel = notebooks.createRendererMessaging('jupyter-error-renderer');

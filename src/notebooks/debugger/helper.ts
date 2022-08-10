@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernelDebugAdapter, IKernelDebugAdapterConfig, KernelDebugMode } from './debuggingTypes';
 import { IKernel } from '../../kernels/types';

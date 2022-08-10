@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { injectable, inject } from 'inversify';
 import * as localize from '../../platform/common/utils/localize';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
@@ -20,7 +19,7 @@ export class PythonExtensionRestartNotification implements IExtensionSyncActivat
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
-    ) {}
+    ) { }
     activate(): void {
         this.extensionChecker.onPythonExtensionInstallationStatusChanged(
             this.onPythonExtensionInstallationStatusChanged,

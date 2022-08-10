@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import * as path from '../../vscode-path/path';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -17,7 +16,7 @@ import { IFileSystem } from '../platform/types';
  */
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
+    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) { }
 
     public async parseFile(
         filePath?: string,

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { CancellationToken, CancellationTokenSource, Disposable } from 'vscode';
 
 export interface CacheResult<T> extends Disposable {
@@ -10,7 +9,7 @@ export interface CacheResult<T> extends Disposable {
 
 export class Cache<T> {
     private result: CacheResult<T> | null = null;
-    constructor(private task: (ct: CancellationToken) => Promise<T>) {}
+    constructor(private task: (ct: CancellationToken) => Promise<T>) { }
 
     get(): CacheResult<T> {
         if (this.result) {
@@ -42,7 +41,7 @@ export class LRUCachedComputed<TArg, TComputed> {
     private lastCache: TComputed | undefined = undefined;
     private lastArgKey: string | undefined = undefined;
 
-    constructor(private readonly computeFn: (arg: TArg) => TComputed) {}
+    constructor(private readonly computeFn: (arg: TArg) => TComputed) { }
 
     public get(arg: TArg): TComputed {
         const key = JSON.stringify(arg);

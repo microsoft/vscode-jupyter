@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Uri } from 'vscode';
 import { getExecutable as getPythonExecutableCommand } from '../../common/process/internal/python.node';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';

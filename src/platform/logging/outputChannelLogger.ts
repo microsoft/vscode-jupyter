@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { OutputChannel } from 'vscode';
 import { Arguments, ILogger } from './types';
 import { getTimeForLogging } from './util';
@@ -12,7 +11,7 @@ function formatMessage(level: string | undefined, message: string, ...data: Argu
 }
 
 export class OutputChannelLogger implements ILogger {
-    constructor(private readonly channel: OutputChannel) {}
+    constructor(private readonly channel: OutputChannel) { }
 
     public traceLog(message: string, ...data: Arguments): void {
         this.channel.appendLine(format(message, ...data));

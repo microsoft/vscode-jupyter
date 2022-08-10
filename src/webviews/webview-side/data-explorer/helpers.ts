@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { format, getLocString } from '../react-common/locReactSide';
 
 // Licensed under the MIT License.

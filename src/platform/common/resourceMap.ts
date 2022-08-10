@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Uri } from 'vscode';
 
 interface ResourceMapKeyFn {
@@ -9,7 +8,7 @@ interface ResourceMapKeyFn {
 }
 
 class ResourceMapEntry<T> {
-    constructor(readonly Uri: Uri, readonly value: T) {}
+    constructor(readonly Uri: Uri, readonly value: T) { }
 }
 
 /**

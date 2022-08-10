@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable, named, optional } from 'inversify';
@@ -75,7 +74,7 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);

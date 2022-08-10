@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import {
@@ -99,8 +98,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['notebook.execute']: [];
     ['notebook.cell.edit']: [];
     ['notebook.cell.execute']:
-        | []
-        | [{ ranges: { start: number; end: number }[]; document?: Uri; autoReveal?: boolean }]; // TODO update this
+    | []
+    | [{ ranges: { start: number; end: number }[]; document?: Uri; autoReveal?: boolean }]; // TODO update this
     ['notebook.cell.insertCodeCellBelow']: [];
     ['notebook.undo']: [];
     ['notebook.redo']: [];
@@ -109,13 +108,13 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
     ['notebook.selectKernel']:
-        | [
-              // This set of args will set the kernel/controller to the one with the id provided.
-              | { id: string; extension: string }
-              // This set of args will display the kernel picker.
-              | { notebookEditor: NotebookEditor }
-          ]
-        | [];
+    | [
+        // This set of args will set the kernel/controller to the one with the id provided.
+        | { id: string; extension: string }
+        // This set of args will display the kernel picker.
+        | { notebookEditor: NotebookEditor }
+    ]
+    | [];
     ['undo']: [];
     ['interactive.open']: [
         { preserveFocus?: boolean; viewColumn?: ViewColumn },

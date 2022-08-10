@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import { EOL } from 'os';
@@ -864,8 +863,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             async () => verifyIPyKernelWasInstalled(),
             delayForUITest,
             () =>
-                `Prompt not displayed or not installed successfully, call count = ${installerSpy.callCount}, arg0 ${
-                    installerSpy.callCount ? installerSpy.getCall(0).args[0] : undefined
+                `Prompt not displayed or not installed successfully, call count = ${installerSpy.callCount}, arg0 ${installerSpy.callCount ? installerSpy.getCall(0).args[0] : undefined
                 }, result ${installerSpy.callCount ? installerSpy.getCall(0).returnValue : undefined}`
         );
     }

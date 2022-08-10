@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -59,9 +58,8 @@ function getDefaultShell(platform: IPlatformService): string {
 function getTerminalDefaultShellWindows(platform: IPlatformService): string {
     const isAtLeastWindows10 = parseFloat(platform.osRelease) >= 10;
     const is32ProcessOn64Windows = process.env.hasOwnProperty('PROCESSOR_ARCHITEW6432');
-    const powerShellPath = `${process.env.windir}\\${
-        is32ProcessOn64Windows ? 'Sysnative' : 'System32'
-    }\\WindowsPowerShell\\v1.0\\powershell.exe`;
+    const powerShellPath = `${process.env.windir}\\${is32ProcessOn64Windows ? 'Sysnative' : 'System32'
+        }\\WindowsPowerShell\\v1.0\\powershell.exe`;
     return isAtLeastWindows10 ? powerShellPath : getWindowsShell();
 }
 

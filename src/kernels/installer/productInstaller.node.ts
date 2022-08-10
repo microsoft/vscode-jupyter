@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, named } from 'inversify';
 import { CancellationTokenSource, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { ProductNames } from './productNames';
@@ -47,9 +46,9 @@ export async function isModulePresentInEnvironment(memento: Memento, product: Pr
     const packageName = translateProductToModule(product);
     const packageVersionPromise = InterpreterPackages.instance
         ? InterpreterPackages.instance
-              .getPackageVersion(interpreter, packageName)
-              .then((version) => (typeof version === 'string' ? 'found' : 'notfound'))
-              .catch((ex) => traceError('Failed to get interpreter package version', ex))
+            .getPackageVersion(interpreter, packageName)
+            .then((version) => (typeof version === 'string' ? 'found' : 'notfound'))
+            .catch((ex) => traceError('Failed to get interpreter package version', ex))
         : Promise.resolve(500);
     try {
         // Dont wait for too long we don't want to delay installation prompt.

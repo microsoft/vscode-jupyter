@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { KernelMessage } from '@jupyterlab/services';
@@ -186,8 +185,8 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             // Find the cell that matches this line in the IW file by mapping the debugFilePath to the IW file.
             const cell = startLine
                 ? this.cellToDebugFileSortedInReverseOrderByLineNumber.find(
-                      (item) => startLine >= item.metadata.interactive.lineIndex + 1
-                  )
+                    (item) => startLine >= item.metadata.interactive.lineIndex + 1
+                )
                 : undefined;
             if (cell) {
                 const clonedRequest: typeof request = JSON.parse(JSON.stringify(request));

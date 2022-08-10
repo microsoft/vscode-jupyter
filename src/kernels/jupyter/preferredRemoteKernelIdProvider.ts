@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, named } from 'inversify';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 import cloneDeep = require('lodash/cloneDeep');
@@ -28,7 +27,7 @@ export class PreferredRemoteKernelIdProvider {
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(ICryptoUtils) private crypto: ICryptoUtils
-    ) {}
+    ) { }
 
     public getPreferredRemoteKernelId(uri: Uri): string | undefined {
         // Stored as a list so we don't take up too much space

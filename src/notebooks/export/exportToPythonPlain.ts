@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -18,7 +17,7 @@ export class ExportToPythonPlain implements IExport {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IPlatformService) private platform: IPlatformService
-    ) {}
+    ) { }
 
     async writeFile(target: Uri, contents: string): Promise<void> {
         await this.fs.writeFile(target, contents);

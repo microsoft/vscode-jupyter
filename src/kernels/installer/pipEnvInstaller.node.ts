@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IWorkspaceService } from '../../platform/common/application/types';

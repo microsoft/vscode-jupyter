@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { ICommandManager } from '../../platform/common/application/types';
 import { traceError } from '../../platform/logging';
 import { Resource } from '../../platform/common/types';

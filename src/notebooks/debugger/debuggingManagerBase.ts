@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import {
@@ -46,7 +45,7 @@ export abstract class DebuggingManagerBase implements IDisposable {
         protected readonly commandManager: ICommandManager,
         protected readonly appShell: IApplicationShell,
         protected readonly vscNotebook: IVSCodeNotebook
-    ) {}
+    ) { }
 
     public async activate() {
         this.disposables.push(

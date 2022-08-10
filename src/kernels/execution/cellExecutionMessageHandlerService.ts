@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellExecution, NotebookController, NotebookDocument, workspace } from 'vscode';
 import { ITracebackFormatter } from '../../kernels/types';

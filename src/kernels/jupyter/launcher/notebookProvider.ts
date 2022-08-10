@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable, optional } from 'inversify';
@@ -37,7 +36,7 @@ export class NotebookProvider implements INotebookProvider {
         private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType
-    ) {}
+    ) { }
 
     // Attempt to connect to our server provider, and if we do, return the connection info
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection> {
@@ -74,18 +73,18 @@ export class NotebookProvider implements INotebookProvider {
         if (!rawLocalKernel) {
             const serverOptions: GetServerOptions = isLocal
                 ? {
-                      resource: options.resource,
-                      token: options.token,
-                      ui: options.ui,
-                      localJupyter: true
-                  }
+                    resource: options.resource,
+                    token: options.token,
+                    ui: options.ui,
+                    localJupyter: true
+                }
                 : {
-                      resource: options.resource,
-                      token: options.token,
-                      ui: options.ui,
-                      localJupyter: false,
-                      serverId: kernelConnection.serverId
-                  };
+                    resource: options.resource,
+                    token: options.token,
+                    ui: options.ui,
+                    localJupyter: false,
+                    serverId: kernelConnection.serverId
+                };
             await this.jupyterNotebookProvider.connect(serverOptions);
         }
         Cancellation.throwIfCanceled(options.token);
@@ -95,11 +94,11 @@ export class NotebookProvider implements INotebookProvider {
         });
         const promise = rawLocalKernel
             ? this.rawNotebookProvider!.createNotebook(
-                  options.resource,
-                  options.kernelConnection,
-                  options.ui,
-                  options.token
-              )
+                options.resource,
+                options.kernelConnection,
+                options.ui,
+                options.token
+            )
             : this.jupyterNotebookProvider.createNotebook(options);
 
         sendKernelTelemetryWhenDone(

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { CancellationTokenSource, Event, Uri } from 'vscode';
 import { InterpreterUri } from '../../platform/common/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';

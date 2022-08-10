@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import * as path from '../../../../platform/vscode-path/path';
 import { Uri } from 'vscode';
 import { IFileSystemNode } from '../../../../platform/common/platform/types.node';

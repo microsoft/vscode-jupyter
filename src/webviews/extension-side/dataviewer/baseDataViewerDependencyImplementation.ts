@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { IApplicationShell } from '../../../platform/common/application/types';
@@ -23,7 +22,7 @@ import { traceWarning } from '../../../platform/logging';
  * base class of the data viewer dependency implementation.
  */
 export abstract class BaseDataViewerDependencyImplementation<TExecuter> implements IDataViewerDependencyService {
-    constructor(private readonly applicationShell: IApplicationShell, private isCodeSpace: boolean) {}
+    constructor(private readonly applicationShell: IApplicationShell, private isCodeSpace: boolean) { }
 
     abstract checkAndInstallMissingDependencies(executionEnvironment: IKernel | PythonEnvironment): Promise<void>;
 

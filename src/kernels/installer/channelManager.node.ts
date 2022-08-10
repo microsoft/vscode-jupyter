@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IApplicationShell } from '../../platform/common/application/types';
@@ -15,7 +14,7 @@ import { IInstallationChannelManager, IModuleInstaller, Product } from './types'
  */
 @injectable()
 export class InstallationChannelManager implements IInstallationChannelManager {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
 
     public async getInstallationChannel(
         _product: Product,
@@ -71,8 +70,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
             const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
             const osName = platform.isWindows ? 'Windows' : platform.isMac ? 'MacOS' : 'Linux';
             appShell.openUrl(
-                `https://www.bing.com/search?q=Install Pip ${osName} ${
-                    interpreter.envType === EnvironmentType.Conda ? 'Conda' : ''
+                `https://www.bing.com/search?q=Install Pip ${osName} ${interpreter.envType === EnvironmentType.Conda ? 'Conda' : ''
                 }`
             );
         }

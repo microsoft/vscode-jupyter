@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { extractJupyterServerHandleAndId } from '../../kernels/jupyter/jupyterUtils';
 import {
@@ -27,7 +26,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         @inject(IJupyterUriProviderRegistration) private readonly providerRegistry: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly uriStorage: IJupyterServerUriStorage,
         @inject(IControllerRegistration) private readonly controllers: IControllerRegistration
-    ) {}
+    ) { }
     activate(): void {
         this.providerRegistry.onDidChangeProviders(this.addProviderHandlers, this, this.disposables);
         this.addProviderHandlers().catch(noop);

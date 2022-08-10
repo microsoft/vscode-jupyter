@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable } from 'inversify';
@@ -26,7 +25,7 @@ export class ExportDialog implements IExportDialog {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IsWebExtension) private readonly isWebExtension: boolean
-    ) {}
+    ) { }
 
     public async showDialog(
         format: ExportFormat,

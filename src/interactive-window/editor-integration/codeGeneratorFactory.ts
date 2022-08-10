@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
@@ -23,7 +22,7 @@ export class CodeGeneratorFactory implements ICodeGeneratorFactory, IExtensionSy
         @inject(IGeneratedCodeStorageFactory) private readonly storageFactory: IGeneratedCodeStorageFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook
-    ) {}
+    ) { }
     public activate(): void {
         this.notebooks.onDidCloseNotebookDocument(this.onDidCloseNotebook, this, this.disposables);
     }

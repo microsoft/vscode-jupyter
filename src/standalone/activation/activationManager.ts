@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { injectable, multiInject, optional } from 'inversify';
@@ -24,7 +23,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @optional()
         @multiInject(IExtensionSyncActivationService)
         private readonly syncActivationServices: IExtensionSyncActivationService[]
-    ) {}
+    ) { }
 
     public dispose() {
         // Nothing to dispose

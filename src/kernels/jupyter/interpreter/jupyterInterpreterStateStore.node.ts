@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
@@ -23,7 +22,7 @@ const keySelected = 'INTERPRETER_PATH_WAS_SELECTED_FOR_JUPYTER_SERVER';
 @injectable()
 export class JupyterInterpreterStateStore {
     private _interpreterPath?: Uri;
-    constructor(@inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento) {}
+    constructor(@inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento) { }
 
     /**
      * Whether the user set an interpreter at least once (an interpreter for starting of jupyter).
@@ -58,7 +57,7 @@ export class MigrateJupyterInterpreterStateService implements IExtensionSingleAc
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IPythonExtensionChecker) private readonly checker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {}
+    ) { }
 
     // Migrate the interpreter path selected for Jupyter server from the Python extension's globalState memento
     public async activate() {

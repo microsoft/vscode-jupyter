@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getExecutablePath } from '../../pythonEnvironments/info/executable.node';
@@ -28,7 +27,7 @@ class PythonEnvironment {
             exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
             shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
         }
-    ) {}
+    ) { }
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
         const python = this.deps.getPythonArgv(this.interpreter.uri);

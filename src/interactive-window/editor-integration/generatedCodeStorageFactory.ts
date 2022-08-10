@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { NotebookDocument, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
@@ -14,7 +13,7 @@ import { IGeneratedCodeStore, IGeneratedCodeStorageFactory } from './types';
 @injectable()
 export class GeneratedCodeStorageFactory implements IGeneratedCodeStorageFactory {
     private readonly storages = new WeakMap<NotebookDocument, IGeneratedCodeStore>();
-    constructor(@inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook) {}
+    constructor(@inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook) { }
     getOrCreate(notebook: NotebookDocument): IGeneratedCodeStore {
         if (!this.storages.has(notebook)) {
             this.storages.set(notebook, new GeneratedCodeStorage());

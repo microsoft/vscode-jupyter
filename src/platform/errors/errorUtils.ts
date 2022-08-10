@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { NotebookCellOutput, NotebookCellOutputItem, Uri, WorkspaceFolder } from 'vscode';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { DataScience } from '../common/utils/localize';
@@ -191,25 +190,25 @@ type BaseFailure<Reason extends KernelFailureReason, ExtraData = {}> = {
 export type OverridingBuiltInModulesFailure = BaseFailure<
     KernelFailureReason.overridingBuiltinModules,
     | {
-          /**
-           * The module that has been overwritten.
-           */
-          moduleName: string;
-          /**
-           * Fully qualified path to the module.
-           */
-          fileName: string;
-      }
+        /**
+         * The module that has been overwritten.
+         */
+        moduleName: string;
+        /**
+         * Fully qualified path to the module.
+         */
+        fileName: string;
+    }
     | {
-          /**
-           * The module that has been overwritten.
-           */
-          moduleName: string;
-          /**
-           * Folder created by user (that contains a __init__.py) that is overriding the build in module/package.
-           */
-          folderName: string;
-      }
+        /**
+         * The module that has been overwritten.
+         */
+        moduleName: string;
+        /**
+         * Folder created by user (that contains a __init__.py) that is overriding the build in module/package.
+         */
+        folderName: string;
+    }
 >;
 export type ImportErrorFailure = BaseFailure<
     KernelFailureReason.importFailure,

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { IKernel } from '../../../../kernels/types';
@@ -24,7 +23,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         private readonly kernel: IKernel,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
         private readonly scriptManagerFactory: IIPyWidgetScriptManagerFactory
-    ) {}
+    ) { }
     public async getWidgetScriptSource(moduleName: string): Promise<Readonly<WidgetScriptSource>> {
         const sources = await this.getWidgetScriptSources();
         const found = sources.find((item) => item.moduleName.toLowerCase() === moduleName.toLowerCase());

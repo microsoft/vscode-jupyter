@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
@@ -40,7 +39,7 @@ export class ExportCommands implements IDisposable {
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
         private readonly controllerSelection: IControllerSelection,
         private readonly controllerPreferred: IControllerPreferredService
-    ) {}
+    ) { }
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (sourceDocument, interpreter?) =>
             this.export(sourceDocument, ExportFormat.python, undefined, interpreter)
@@ -64,7 +63,7 @@ export class ExportCommands implements IDisposable {
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);

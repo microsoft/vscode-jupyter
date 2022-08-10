@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import type { KernelMessage } from '@jupyterlab/services';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import type * as nbformat from '@jupyterlab/nbformat';
@@ -34,7 +33,7 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker
-    ) {}
+    ) { }
     /**
      * Gets the language to be used for the default cell in an empty notebook.
      * Give preference to `python` when we don't know what to use.

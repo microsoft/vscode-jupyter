@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
@@ -23,7 +22,7 @@ export class JupyterDetectionTelemetry implements IExtensionSyncActivationServic
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory
-    ) {}
+    ) { }
     public activate(): void {
         this.initialize().catch(noop);
     }

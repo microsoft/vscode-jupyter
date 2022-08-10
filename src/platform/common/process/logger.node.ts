@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
@@ -19,7 +18,7 @@ import { removeHomeFromFile } from '../platform/fs-paths.node';
 export class ProcessLogger implements IProcessLogger {
     constructor(
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel
-    ) {}
+    ) { }
 
     public logProcess(file: string, args: string[], options?: SpawnOptions) {
         if (!isTestExecution() && isCI && process.env.UITEST_DISABLE_PROCESS_LOGGING) {

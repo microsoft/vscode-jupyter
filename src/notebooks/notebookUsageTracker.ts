@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { notebooks, NotebookCellExecutionStateChangeEvent, NotebookDocument, NotebookCellExecutionState } from 'vscode';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
@@ -21,7 +20,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
     constructor(
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {}
+    ) { }
 
     public async activate(): Promise<void> {
         this.vscNotebook.onDidOpenNotebookDocument(this.onEditorOpened, this, this.disposables);

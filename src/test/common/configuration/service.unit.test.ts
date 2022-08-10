@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 
-
 'use strict';
 
 import { expect } from 'chai';

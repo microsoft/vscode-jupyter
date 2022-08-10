@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Tab, Uri } from 'vscode';
 import { IDebuggingManager } from '../notebooks/debugger/debuggingTypes';
 import { IKernel, KernelConnectionMetadata } from '../kernels/types';

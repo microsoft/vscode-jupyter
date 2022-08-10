@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Terminal, TextEditor, Uri } from 'vscode';
 import { IEventNamePropertyMapping } from '../../telemetry';
 import { Resource } from '../common/types';

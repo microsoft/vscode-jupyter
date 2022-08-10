@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import {
     NotebookDocument,
@@ -49,8 +48,7 @@ import { IControllerLoader, IControllerSelection } from '../../../notebooks/cont
 @injectable()
 export class InteractiveWindowDebuggingManager
     extends DebuggingManagerBase
-    implements IExtensionSingleActivationService, IDebuggingManager, IInteractiveWindowDebuggingManager
-{
+    implements IExtensionSingleActivationService, IDebuggingManager, IInteractiveWindowDebuggingManager {
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
         @inject(IControllerSelection) controllerSelection: IControllerSelection,
@@ -150,8 +148,8 @@ export class InteractiveWindowDebuggingManager
 
         const activeDoc = config.__interactiveWindowNotebookUri
             ? this.vscNotebook.notebookDocuments.find(
-                  (doc) => doc.uri.toString() === config.__interactiveWindowNotebookUri
-              )
+                (doc) => doc.uri.toString() === config.__interactiveWindowNotebookUri
+            )
             : this.vscNotebook.activeNotebookEditor?.notebook;
         if (!activeDoc || typeof config.__cellIndex !== 'number') {
             // This cannot happen.

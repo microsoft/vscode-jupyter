@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { injectable, inject } from 'inversify';
 import {
     CancellationToken,
@@ -48,8 +47,7 @@ const diagnosticSource = 'Jupyter';
  */
 @injectable()
 export class NotebookCellBangInstallDiagnosticsProvider
-    implements IExtensionSyncActivationService, CodeActionProvider, HoverProvider
-{
+    implements IExtensionSyncActivationService, CodeActionProvider, HoverProvider {
     public readonly problems: DiagnosticCollection;
     private readonly disposables: IDisposable[] = [];
     private readonly notebooksProcessed = new WeakMap<NotebookDocument, Map<CellUri, CellVersion>>();

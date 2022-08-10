@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import type { KernelSpec } from '@jupyterlab/services';
@@ -53,7 +52,7 @@ export class JupyterKernelService implements IJupyterKernelService {
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(KernelEnvironmentVariablesService) private readonly kernelEnvVars: KernelEnvironmentVariablesService
-    ) {}
+    ) { }
 
     /**
      * Makes sure that the kernel pointed to is a valid jupyter kernel (it registers it) and

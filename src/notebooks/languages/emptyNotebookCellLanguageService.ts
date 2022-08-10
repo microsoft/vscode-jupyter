@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { languages, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
@@ -26,7 +25,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         this.notebookControllerSelection.onControllerSelected(
             this.onDidChangeNotebookController,

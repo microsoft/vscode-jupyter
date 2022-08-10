@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import * as path from '../../platform/vscode-path/path';
 import { traceError } from '../../platform/logging';
 import { getEnvironmentVariable } from '../../platform/common/utils/platform.node';

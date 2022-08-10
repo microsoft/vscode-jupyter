@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { ChildProcess } from 'child_process';
@@ -276,9 +275,8 @@ export abstract class BasePythonDaemon {
         });
         start()
             .catch((ex) => {
-                const errorMsg = `Failed to run ${
-                    'fileName' in moduleOrFile ? moduleOrFile.fileName : moduleOrFile.moduleName
-                } as observable with args ${args.join(' ')}`;
+                const errorMsg = `Failed to run ${'fileName' in moduleOrFile ? moduleOrFile.fileName : moduleOrFile.moduleName
+                    } as observable with args ${args.join(' ')}`;
                 traceError(errorMsg, ex);
                 subject.next({ source: 'stderr', out: `${errorMsg}\n${stdErr}` });
                 subject.error(ex);

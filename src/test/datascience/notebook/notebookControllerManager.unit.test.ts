@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { assert } from 'chai';
 import { when, instance, mock } from 'ts-mockito';
 import { Uri } from 'vscode';

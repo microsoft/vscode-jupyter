@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 // Borrowed this from the vscode source. From here:
 // src\vs\editor\common\model\wordHelper.ts
 
@@ -140,9 +139,9 @@ export function getWordAtText(
     const ret =
         match[0].indexOf(' ') >= 0
             ? // did match a word which contains a space character -> use slow word find
-              getWordAtPosSlow(column, wordDefinition, text, textOffset)
+            getWordAtPosSlow(column, wordDefinition, text, textOffset)
             : // sane word definition -> use fast word find
-              getWordAtPosFast(column, wordDefinition, text, textOffset);
+            getWordAtPosFast(column, wordDefinition, text, textOffset);
 
     // both (getWordAtPosFast and getWordAtPosSlow) leave the wordDefinition-RegExp
     // in an undefined state and to not confuse other users of the wordDefinition

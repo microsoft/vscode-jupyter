@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
@@ -49,8 +48,7 @@ import { JupyterDaemonModule, JUPYTER_OUTPUT_CHANNEL } from '../../../platform/c
  */
 @injectable()
 export class JupyterInterpreterSubCommandExecutionService
-    implements IJupyterSubCommandExecutionService, IJupyterInterpreterDependencyManager
-{
+    implements IJupyterSubCommandExecutionService, IJupyterInterpreterDependencyManager {
     constructor(
         @inject(JupyterInterpreterService) private readonly jupyterInterpreter: JupyterInterpreterService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -60,7 +58,7 @@ export class JupyterInterpreterSubCommandExecutionService
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService
-    ) {}
+    ) { }
 
     /**
      * This is a noop, implemented for backwards compatibility.

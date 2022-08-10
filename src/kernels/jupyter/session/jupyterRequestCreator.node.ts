@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { IJupyterRequestCreator } from '../types';
 import * as nodeFetch from 'node-fetch';
 import { ClassType } from '../../../platform/ioc/types';

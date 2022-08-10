@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
 import { traceInfo, traceError } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
@@ -41,7 +40,7 @@ export class CellExecutionQueue implements Disposable {
         private readonly session: Promise<IKernelConnectionSession>,
         private readonly executionFactory: CellExecutionFactory,
         readonly metadata: Readonly<KernelConnectionMetadata>
-    ) {}
+    ) { }
 
     public dispose() {
         this.disposables.forEach((d) => d.dispose());

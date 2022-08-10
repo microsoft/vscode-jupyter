@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Event, EventEmitter } from 'vscode';
 import { IDisplayOptions } from '../platform/common/types';
 
