@@ -137,7 +137,7 @@ export interface IExtUri {
 }
 
 export class ExtUri implements IExtUri {
-    constructor(private _ignorePathCasing: (uri: URI) => boolean) { }
+    constructor(private _ignorePathCasing: (uri: URI) => boolean) {}
 
     compare(uri1: URI, uri2: URI, ignoreFragment: boolean = false): number {
         if (uri1 === uri2) {

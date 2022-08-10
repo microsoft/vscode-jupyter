@@ -214,10 +214,10 @@ export function generateScreenShotFileName(contextOrFileName: string | Mocha.Con
         typeof contextOrFileName === 'string'
             ? ''
             : hashjs
-                .sha256()
-                .update(contextOrFileName.currentTest?.fullTitle() || '')
-                .digest('hex')
-                .substring(0, 10); // Ensure file names are short enough for windows.
+                  .sha256()
+                  .update(contextOrFileName.currentTest?.fullTitle() || '')
+                  .digest('hex')
+                  .substring(0, 10); // Ensure file names are short enough for windows.
     const testTitle = typeof contextOrFileName === 'string' ? '' : contextOrFileName.currentTest?.title || '';
     const counter = (screenShotCount.get(fullTestNameHash) || 0) + 1;
     screenShotCount.set(fullTestNameHash, counter);

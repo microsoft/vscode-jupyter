@@ -46,7 +46,8 @@ import { IControllerLoader, IControllerSelection } from '../controllers/types';
 @injectable()
 export class DebuggingManager
     extends DebuggingManagerBase
-    implements IExtensionSingleActivationService, IDebuggingManager {
+    implements IExtensionSingleActivationService, IDebuggingManager
+{
     private debuggingInProgress: ContextKey;
     private runByLineInProgress: ContextKey;
     private notebookToRunByLineController = new Map<NotebookDocument, RunByLineController>();
@@ -299,8 +300,8 @@ export class DebuggingManager
         assertIsDebugConfig(config);
         const activeDoc = config.__interactiveWindowNotebookUri
             ? this.vscNotebook.notebookDocuments.find(
-                (doc) => doc.uri.toString() === config.__interactiveWindowNotebookUri
-            )
+                  (doc) => doc.uri.toString() === config.__interactiveWindowNotebookUri
+              )
             : this.vscNotebook.activeNotebookEditor?.notebook;
         if (activeDoc) {
             // TODO we apparently always have a kernel here, clean up typings

@@ -51,7 +51,7 @@ export class ConfigKeysIterator implements IKeyIterator<string> {
     private _from!: number;
     private _to!: number;
 
-    constructor(private readonly _caseSensitive: boolean = true) { }
+    constructor(private readonly _caseSensitive: boolean = true) {}
 
     reset(key: string): this {
         this._value = key;
@@ -100,7 +100,7 @@ export class PathIterator implements IKeyIterator<string> {
     private _from!: number;
     private _to!: number;
 
-    constructor(private readonly _splitOnBackslash: boolean = true, private readonly _caseSensitive: boolean = true) { }
+    constructor(private readonly _splitOnBackslash: boolean = true, private readonly _caseSensitive: boolean = true) {}
 
     reset(key: string): this {
         this._from = 0;
@@ -168,7 +168,7 @@ export class UriIterator implements IKeyIterator<URI> {
     constructor(
         private readonly _ignorePathCasing: (uri: URI) => boolean,
         private readonly _ignoreQueryAndFragment: (uri: URI) => boolean
-    ) { }
+    ) {}
 
     reset(key: URI): this {
         this._value = key;
@@ -250,7 +250,7 @@ interface ResourceMapKeyFn {
 }
 
 class ResourceMapEntry<T> {
-    constructor(readonly uri: URI, readonly value: T) { }
+    constructor(readonly uri: URI, readonly value: T) {}
 }
 
 export class ResourceMap<T> implements Map<URI, T> {
