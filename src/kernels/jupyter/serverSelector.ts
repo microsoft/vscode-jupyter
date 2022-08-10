@@ -301,6 +301,7 @@ class JupyterServerSelector_Experimental implements IJupyterServerSelector {
     ): Promise<string | undefined> {
         let inputText = '';
         if ('provider' in selection) {
+            // No need to validate section of providers.
             return;
         } else if ('label' in selection) {
             inputText = selection.label.trim();
