@@ -6,7 +6,7 @@
 
 import { inject, injectable } from 'inversify';
 import isNil = require('lodash/isNil');
-import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
+import { EventEmitter, QuickPick, QuickPickItem, ThemeIcon, Uri } from 'vscode';
 import { IApplicationShell, IClipboard, IWorkspaceService } from '../../platform/common/application/types';
 import { traceDecoratorError, traceError, traceWarning } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -296,8 +296,18 @@ class JupyterServerSelector_Experimental implements IJupyterServerSelector {
         }
     }
 
-    private async validateSelectJupyterURI(inputText: string): Promise<string | undefined> {
-        inputText = inputText.trim();
+    private async validateSelectJupyterURI(
+        selection: QuickPick<QuickPickItem> | QuickPickItem | ISelectUriQuickPickItem
+    ): Promise<string | undefined> {
+        let inputText = '';
+        if ('provider' in selection) {
+            // No need to validate section of providers.
+            return;
+        } else if ('label' in selection) {
+            inputText = selection.label.trim();
+        } else {
+            inputText = selection.value.trim();
+        }
         try {
             new URL(inputText);
         } catch {
