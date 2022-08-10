@@ -12,6 +12,7 @@ import {
     QuickInput,
     QuickInputButton,
     QuickInputButtons,
+    QuickPick,
     QuickPickItem,
     QuickPickItemButtonEvent
 } from 'vscode';
@@ -41,7 +42,7 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     acceptFilterBoxTextAsSelection?: boolean;
     startBusy?: boolean;
     stopBusy?: Event<void>;
-    validate?(value: string): Promise<string | undefined>;
+    validate?(selection: T | QuickPick<T>): Promise<string | undefined>;
     shouldResume?(): Promise<boolean>;
     onDidTriggerItemButton?(e: QuickPickItemButtonEvent<T>): void;
     onDidChangeItems?: Event<T[]>;
@@ -170,10 +171,10 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     input.onDidChangeSelection(async (selectedItems) => {
                         const itemLabel = selectedItems.length ? selectedItems[0].label : '';
                         let resolvable = itemLabel ? true : false;
-                        if (itemLabel && validate) {
+                        if (itemLabel && validate && selectedItems.length) {
                             input.enabled = false;
                             input.busy = true;
-                            const message = await validate(itemLabel);
+                            const message = await validate(selectedItems[0]);
                             if (message) {
                                 resolvable = false;
                                 // No validation allowed on a quick pick. Have to put up a dialog instead
@@ -198,7 +199,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     disposables.push(
                         input.onDidAccept(async () => {
                             if (!input.busy) {
-                                const validationMessage = validate ? await validate(input.value) : undefined;
+                                const validationMessage = validate ? await validate(input) : undefined;
                                 if (!validationMessage) {
                                     resolve(<any>input.value);
                                 } else {
