@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookDocument, Uri } from 'vscode';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';

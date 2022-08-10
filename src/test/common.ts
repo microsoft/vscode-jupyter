@@ -1,6 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use strict';
 
 import { NotebookDocument, Uri, Event } from 'vscode';
@@ -212,10 +214,10 @@ export function generateScreenShotFileName(contextOrFileName: string | Mocha.Con
         typeof contextOrFileName === 'string'
             ? ''
             : hashjs
-                  .sha256()
-                  .update(contextOrFileName.currentTest?.fullTitle() || '')
-                  .digest('hex')
-                  .substring(0, 10); // Ensure file names are short enough for windows.
+                .sha256()
+                .update(contextOrFileName.currentTest?.fullTitle() || '')
+                .digest('hex')
+                .substring(0, 10); // Ensure file names are short enough for windows.
     const testTitle = typeof contextOrFileName === 'string' ? '' : contextOrFileName.currentTest?.title || '';
     const counter = (screenShotCount.get(fullTestNameHash) || 0) + 1;
     screenShotCount.set(fullTestNameHash, counter);

@@ -1,9 +1,9 @@
-/* eslint-disable local-rules/dont-use-fspath */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 /* eslint-disable @typescript-eslint/no-use-before-define */
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
+/* eslint-disable local-rules/dont-use-fspath */
+
 import { Uri as URI } from 'vscode';
 import { CharCode } from './charCode';
 import * as extpath from './extpath';
@@ -137,7 +137,7 @@ export interface IExtUri {
 }
 
 export class ExtUri implements IExtUri {
-    constructor(private _ignorePathCasing: (uri: URI) => boolean) {}
+    constructor(private _ignorePathCasing: (uri: URI) => boolean) { }
 
     compare(uri1: URI, uri2: URI, ignoreFragment: boolean = false): number {
         if (uri1 === uri2) {

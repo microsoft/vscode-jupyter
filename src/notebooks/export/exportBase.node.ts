@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import { CancellationToken, NotebookDocument, Uri } from 'vscode';

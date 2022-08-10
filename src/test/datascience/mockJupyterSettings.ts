@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { JupyterSettings } from '../../platform/common/configSettings';
 import { IJupyterSettings } from '../../platform/common/types';
 

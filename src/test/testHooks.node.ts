@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { Context } from 'mocha';
 import { AppinsightsKey, JVSC_EXTENSION_ID, Telemetry } from '../platform/common/constants';
 import TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter';

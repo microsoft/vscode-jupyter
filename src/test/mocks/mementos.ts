@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { Memento } from 'vscode';
 
 export class MockMemento implements Memento {

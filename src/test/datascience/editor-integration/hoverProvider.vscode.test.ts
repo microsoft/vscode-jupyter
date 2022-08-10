@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { assert } from 'chai';
 import cloneDeep = require('lodash/cloneDeep');
 import * as sinon from 'sinon';

@@ -1,4 +1,8 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 // Helper functions for dealing with kernels and kernelspecs
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -55,8 +59,8 @@ export function createInterpreterKernelSpec(
 ): IJupyterKernelSpec {
     const interpreterMetadata = interpreter
         ? {
-              path: getFilePath(interpreter.uri)
-          }
+            path: getFilePath(interpreter.uri)
+        }
         : {};
     // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
@@ -118,11 +122,11 @@ export function getInterpreterHashInMetadata(
         'interpreter' in notebookMetadata // In the past we'd store interpreter.hash directly under metadata, but now we store it under metadata.vscode.
             ? (notebookMetadata.interpreter as undefined | { hash?: string })
             : 'vscode' in notebookMetadata &&
-              notebookMetadata.vscode &&
-              typeof notebookMetadata.vscode === 'object' &&
-              'interpreter' in notebookMetadata.vscode
-            ? (notebookMetadata.vscode.interpreter as undefined | { hash?: string })
-            : undefined;
+                notebookMetadata.vscode &&
+                typeof notebookMetadata.vscode === 'object' &&
+                'interpreter' in notebookMetadata.vscode
+                ? (notebookMetadata.vscode.interpreter as undefined | { hash?: string })
+                : undefined;
     return metadataInterpreter?.hash;
 }
 
@@ -209,9 +213,9 @@ export function rankKernels(
             !notebookMetadata || isPythonNotebook(notebookMetadata) || !possibleNbMetadataLanguage
                 ? PYTHON_LANGUAGE
                 : (
-                      ((notebookMetadata?.kernelspec as any)?.language as string) ||
-                      notebookMetadata?.language_info?.name
-                  )?.toLowerCase();
+                    ((notebookMetadata?.kernelspec as any)?.language as string) ||
+                    notebookMetadata?.language_info?.name
+                )?.toLowerCase();
     }
 
     kernels.sort((a, b) =>
@@ -1080,9 +1084,8 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
         getNormalizedInterpreterPath(spec.interpreterPath ? Uri.file(spec.interpreterPath) : Uri.file(spec.executable))
     );
     const interpreterPath = getFilePath(getNormalizedInterpreterPath(interpreter?.uri)) || '';
-    return `${prefixForRemoteKernels}${
-        spec.id || ''
-    }.${specName}.${specPath}.${interpreterPath}.${argsForGenerationOfId}`;
+    return `${prefixForRemoteKernels}${spec.id || ''
+        }.${specName}.${specPath}.${interpreterPath}.${argsForGenerationOfId}`;
 }
 
 export function getSysInfoReasonHeader(
@@ -1126,9 +1129,8 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
             ) {
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
-                    const pythonVersion = `Python ${
-                        getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
-                    }`.trim();
+                    const pythonVersion = `Python ${getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                        }`.trim();
                     return kernelConnection.interpreter.envName
                         ? `${oldDisplayName} (${pythonVersion})`
                         : oldDisplayName;
@@ -1145,14 +1147,13 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                 kernelConnection.interpreter.envType &&
                 kernelConnection.interpreter.envType !== EnvironmentType.Global
             ) {
-                const pythonVersion = `Python ${
-                    getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
-                }`.trim();
+                const pythonVersion = `Python ${getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+                    }`.trim();
                 // If user has created a custom kernelspec, then use that.
                 if (
                     kernelConnection.kernelSpec.display_name &&
                     getKernelRegistrationInfo(kernelConnection.kernelSpec) ===
-                        'registeredByNewVersionOfExtForCustomKernelSpec'
+                    'registeredByNewVersionOfExtForCustomKernelSpec'
                 ) {
                     return kernelConnection.kernelSpec.display_name;
                 }
@@ -1383,9 +1384,9 @@ export function getKernelRegistrationInfo(
     const originalName = originalSpecFile ? path.basename(path.dirname(originalSpecFile)) : kernelSpec.name;
     const isUserCreatedOrUserCustomizedKernelSpec = isDefaultKernelSpec({ ...kernelSpec, name: originalName })
         ? // If this is a default kernelspec, and we have env variables, then assume user modified it (effectively a user defined kernelspec).
-          Object.keys(kernelSpec.env || {}).length > 0
+        Object.keys(kernelSpec.env || {}).length > 0
         : // Original kernel spec file paths cannot contain the auto generated identifier.
-          typeof originalSpecFile === 'string' && !originalSpecFile.includes(autoGeneratedKernelNameIdentifier);
+        typeof originalSpecFile === 'string' && !originalSpecFile.includes(autoGeneratedKernelNameIdentifier);
 
     // Check if this is a kernel we registered in the old days.
     // If it is, then no need to display that (selecting kernels registered is done by selecting the corresponding interpreter).
@@ -1395,11 +1396,11 @@ export function getKernelRegistrationInfo(
     if (kernelSpec.name.includes(autoGeneratedKernelNameIdentifier)) {
         return isUserCreatedOrUserCustomizedKernelSpec
             ? // This is a kernelspec we created to be able to load custom kernelspecs using Jupyter.
-              // E.g. user creates a custom kernelspec in a Python env, Jupyter will not be able to load that.
-              // We need to create a corresponding kernelspec in global location (which would be a copy of the users custom kernelspec).
-              'registeredByNewVersionOfExtForCustomKernelSpec'
+            // E.g. user creates a custom kernelspec in a Python env, Jupyter will not be able to load that.
+            // We need to create a corresponding kernelspec in global location (which would be a copy of the users custom kernelspec).
+            'registeredByNewVersionOfExtForCustomKernelSpec'
             : // This is a kernelspec we created to be able to load Python environments using Jupyter.
-              'registeredByNewVersionOfExt';
+            'registeredByNewVersionOfExt';
     }
     const guidRegEx = /[a-f0-9]{32}$/;
     if (kernelSpec.metadata?.interpreter && kernelSpec.name.toLowerCase().search(guidRegEx) !== -1) {

@@ -1,4 +1,6 @@
-/* eslint-disable local-rules/dont-use-fspath */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 

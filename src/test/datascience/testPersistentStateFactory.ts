@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { Memento } from 'vscode';
 import { PersistentStateFactory } from '../../platform/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../platform/common/types';

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import TelemetryReporter from '@vscode/extension-telemetry';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 

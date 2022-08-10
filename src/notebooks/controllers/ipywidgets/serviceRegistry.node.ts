@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { IServiceManager } from '../../../platform/ioc/types';
 import { ScriptSourceProviderFactory } from './scriptSourceProvider/scriptSourceProviderFactory.node';
 import { IIPyWidgetScriptManagerFactory, INbExtensionsPathProvider, IWidgetScriptSourceProviderFactory } from './types';

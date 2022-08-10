@@ -1,6 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 'use strict';
 
@@ -54,11 +55,11 @@ suite('DataScience - File Converter', () => {
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(appShell.showErrorMessage(anything())).thenResolve();
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-        when(exportUtil.generateTempDir()).thenResolve({ path: 'test', dispose: () => {} });
+        when(exportUtil.generateTempDir()).thenResolve({ path: 'test', dispose: () => { } });
         when(exportUtil.makeFileInDirectory(anything(), anything(), anything())).thenResolve('foo');
         when(exportUtil.getTargetFile(anything(), anything(), anything())).thenResolve(Uri.file('bar'));
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-        when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
+        when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => { } });
         when(exportPdf.export(anything(), anything(), anything(), anything())).thenResolve();
         when(exportPythonPlain.export(anything(), anything(), anything())).thenResolve();
         when(filePicker.showDialog(anything(), anything())).thenResolve(Uri.file('foo'));

@@ -1,7 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable local-rules/node-imports */
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+/* eslint-disable local-rules/node-imports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /** DO NOT USE VSCODE in this file. It's loaded outside of an extension */
 

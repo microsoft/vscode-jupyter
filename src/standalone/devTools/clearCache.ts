@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { commands } from 'vscode';
 import { IExtensionContext } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';

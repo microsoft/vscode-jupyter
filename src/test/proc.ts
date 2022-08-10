@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 
 import * as cp from 'child_process';
 import { sleep } from '../platform/common/utils/async';

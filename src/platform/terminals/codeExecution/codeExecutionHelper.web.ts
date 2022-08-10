@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
 import { CodeExecutionHelperBase } from './codeExecutionHelper';

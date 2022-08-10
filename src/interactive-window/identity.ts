@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import * as path from '../platform/vscode-path/path';
 import { Uri } from 'vscode';
 import '../platform/common/extensions';

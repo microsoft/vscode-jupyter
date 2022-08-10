@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import * as vscode from 'vscode';
 import { clearPendingChainedUpdatesForTests } from '../kernels/execution/notebookUpdater';
 import { IExtensionApi } from '../standalone/api/api';

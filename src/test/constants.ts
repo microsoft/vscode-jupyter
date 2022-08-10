@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 export const JVSC_EXTENSION_ID_FOR_TESTS = 'ms-toolsai.jupyter';
 
 export type TestSettingsType = {

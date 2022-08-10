@@ -1,4 +1,6 @@
-/* eslint-disable max-classes-per-file */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 
 import { Memento, Uri } from 'vscode';
 import { ProductNames } from './productNames';

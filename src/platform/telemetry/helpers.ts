@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 
 import * as hashjs from 'hash.js';
 import { KnownKernelLanguageAliases, VSCodeKnownNotebookLanguages } from '../common/constants';
