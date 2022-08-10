@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import * as fs from 'fs-extra';
 import { applyEdits, ModificationOptions, modify } from 'jsonc-parser';
 import * as path from '../../platform/vscode-path/path';

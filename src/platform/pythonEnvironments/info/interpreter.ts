@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { sha256 } from 'hash.js';
 import { Uri } from 'vscode';
 import * as uriPath from '../../vscode-path/resources';

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 // Eventually we will want to also support the release serial
 // (e.g. beta1, candidate3) and maybe even release abbreviations
 

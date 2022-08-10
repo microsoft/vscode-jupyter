@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { WriteStream } from 'fs-extra';
 import * as util from 'util';
 import { Disposable } from 'vscode-jsonrpc';

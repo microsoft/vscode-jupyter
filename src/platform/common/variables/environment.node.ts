@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import * as path from '../../vscode-path/path';
 import { sendTelemetryEvent } from '../../../telemetry';

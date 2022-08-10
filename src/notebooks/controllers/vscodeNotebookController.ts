@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import type * as nbformat from '@jupyterlab/nbformat';
 import {
     Disposable,

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { assert, expect } from 'chai';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';

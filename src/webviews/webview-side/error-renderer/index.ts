@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import './styles.css';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
 import ansiToHtml from 'ansi-to-html';

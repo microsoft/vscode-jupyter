@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Progress, ProgressLocation, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../activation/types';

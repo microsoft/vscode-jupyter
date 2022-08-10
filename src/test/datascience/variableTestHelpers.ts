@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 // import { Uri } from 'vscode';
 // import { IDocumentManager } from '../../platform/common/application/types';
 // import { createDeferred } from '../../platform/common/utils/async';

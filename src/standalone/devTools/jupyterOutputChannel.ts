@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { window, workspace } from 'vscode';
 import { IDisposableRegistry, IOutputChannel } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IKernel, isLocalConnection, IStartupCodeProvider, StartupCodePriority } from '../../kernels/types';

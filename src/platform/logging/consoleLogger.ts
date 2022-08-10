@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Arguments, ILogger } from './types';
 import { getTimeForLogging } from './util';
 const format = require('format-util') as typeof import('format-util');

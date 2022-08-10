@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import * as path from '../platform/vscode-path/path';
 import { setCI, setTestExecution, setUnitTestExecution } from '../platform/common/constants';
 import { setTestSettings } from './constants';

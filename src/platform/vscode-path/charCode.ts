@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 // Names from https://blog.codinghorror.com/ascii-pronunciation-rules-for-programmers/
 
 /**

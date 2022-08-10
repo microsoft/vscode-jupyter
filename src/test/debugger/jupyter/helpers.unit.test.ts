@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { expect } from 'chai';
 import { isShortNamePath } from '../../../notebooks/debugger/helper';
 

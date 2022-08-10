@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 /**
  * @typedef {Object} SplitLinesOptions
  * @property {boolean} [trim=true] - Whether to trim the lines.

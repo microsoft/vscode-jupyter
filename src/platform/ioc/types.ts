@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Container, interfaces } from 'inversify';
 import { IDisposable } from '../common/types';
 

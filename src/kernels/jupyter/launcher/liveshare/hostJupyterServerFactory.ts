@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, named } from 'inversify';
 import {} from 'underscore';
 import { IWorkspaceService } from '../../../../platform/common/application/types';

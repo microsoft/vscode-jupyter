@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 /*
     This script loads in the renderer and the notebook extension.
     This can be used to send receive messages and inspect the HTML (state of the renderer) for tests.

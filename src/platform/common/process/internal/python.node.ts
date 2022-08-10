@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 // "python" contains functions corresponding to the various ways that
 // the extension invokes a Python executable internally.  Each function
 // takes arguments relevant to the specific use case.  However, each

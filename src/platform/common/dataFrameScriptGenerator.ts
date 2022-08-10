@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { IFileSystem } from './platform/types';
 import { IDataFrameScriptGenerator, IExtensionContext } from './types';

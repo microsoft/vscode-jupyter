@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { Disposable, NotebookDocument } from 'vscode';
 import { IControllerSelection, IVSCodeNotebookController } from './types';

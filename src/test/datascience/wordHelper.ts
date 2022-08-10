@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 // Borrowed this from the vscode source. From here:
 // src\vs\editor\common\model\wordHelper.ts
 

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, multiInject } from 'inversify';
 import { Terminal, Uri } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { injectable } from 'inversify';
 import { NotebookCell, NotebookCellOutput, NotebookDocument, workspace } from 'vscode';
 import { isJupyterNotebook } from '../../platform/common/utils';

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, named } from 'inversify';
 import { ICommandManager } from '../common/application/types';
 import { Commands, JUPYTER_OUTPUT_CHANNEL } from '../common/constants';

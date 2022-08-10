@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 import { debug, NotebookDocument, DebugSession, DebugSessionOptions, DebugConfiguration } from 'vscode';
 import { noop } from '../../platform/common/utils/misc';

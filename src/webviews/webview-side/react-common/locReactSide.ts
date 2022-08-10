@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 // The react code can't use the localize.ts module because it reads from
 // disk. This isn't allowed inside a browser, so we pass the collection

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Event, Uri } from 'vscode';
 import { ClassType } from '../../ioc/types';
 import { Resource } from '../types';

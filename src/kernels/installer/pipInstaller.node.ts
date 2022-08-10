@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import * as path from '../../platform/vscode-path/path';

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 // First initialize the extension state.
 import { setCI, setTestExecution } from '../../platform/common/constants';
 import { setTestSettings } from '../constants';

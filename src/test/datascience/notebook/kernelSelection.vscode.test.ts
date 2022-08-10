@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';

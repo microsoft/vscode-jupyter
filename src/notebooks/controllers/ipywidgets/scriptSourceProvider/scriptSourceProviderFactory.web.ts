@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IApplicationShell } from '../../../../platform/common/application/types';

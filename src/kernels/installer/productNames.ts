@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Product } from './types';
 
 export const ProductNames = new Map<Product, string>();

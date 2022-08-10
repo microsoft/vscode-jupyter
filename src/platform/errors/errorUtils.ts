@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { NotebookCellOutput, NotebookCellOutputItem, Uri, WorkspaceFolder } from 'vscode';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { DataScience } from '../common/utils/localize';

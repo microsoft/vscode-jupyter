@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Uri } from 'vscode';
 import { IDisposable, InterpreterUri, Resource } from '../../platform/common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';

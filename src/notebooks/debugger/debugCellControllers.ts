@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { DebugProtocolMessage, NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandManager } from '../../platform/common/application/types';

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { injectable } from 'inversify';
 import { Event, Terminal, TerminalOptions, window } from 'vscode';
 import { ITerminalManager } from './types';

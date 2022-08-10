@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, NotebookController, NotebookDocument, Uri } from 'vscode';

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 'use strict';
 
 import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';

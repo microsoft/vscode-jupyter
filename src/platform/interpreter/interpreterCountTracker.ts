@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { IExtensionSingleActivationService } from '../activation/types';
 import { inject, injectable } from 'inversify';
 import { IInterpreterService } from './contracts';

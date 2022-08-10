@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { IWorkspaceService } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import { traceError } from '../logging';

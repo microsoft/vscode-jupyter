@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { KernelConnectionMetadata } from '../types';
 import { WrappedKernelError } from './types';
 

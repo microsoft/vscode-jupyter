@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { spawn } from 'child_process';
 import * as glob from 'glob';
 import * as path from '../platform/vscode-path/path';

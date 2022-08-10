@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 export const enum Constants {
     /**
      * MAX SMI (SMall Integer) as defined in v8.

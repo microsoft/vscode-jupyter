@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { EventEmitter } from 'events';
 import { Container, decorate, injectable, interfaces } from 'inversify';
 import { traceWarning } from '../logging';

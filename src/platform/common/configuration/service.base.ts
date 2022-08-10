@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';

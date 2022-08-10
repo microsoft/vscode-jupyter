@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
 import { traceInfo, traceError } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';

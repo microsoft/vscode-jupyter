@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { NotebookCell, Uri } from 'vscode';
 import { ITracebackFormatter } from '../../kernels/types';

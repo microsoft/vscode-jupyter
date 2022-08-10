@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { Telemetry } from '../../../platform/common/constants';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeLanguage } from '../../../platform/telemetry/helpers';

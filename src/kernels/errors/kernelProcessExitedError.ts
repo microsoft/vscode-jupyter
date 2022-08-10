@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { KernelConnectionMetadata } from '../types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { BaseKernelError } from './types';

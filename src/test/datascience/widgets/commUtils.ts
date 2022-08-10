@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { NotebookCell, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';

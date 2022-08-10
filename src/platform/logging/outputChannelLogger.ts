@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { OutputChannel } from 'vscode';
 import { Arguments, ILogger } from './types';
 import { getTimeForLogging } from './util';

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { NotebookCell } from 'vscode';
 import { IJupyterSettings } from '../platform/common/types';
 import { appendLineFeed, removeLinesFromFrontAndBackNoConcat } from '../platform/common/utils';

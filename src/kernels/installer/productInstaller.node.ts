@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable, named } from 'inversify';
 import { CancellationTokenSource, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { ProductNames } from './productNames';

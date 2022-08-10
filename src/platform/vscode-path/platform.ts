@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 const LANGUAGE_DEFAULT = 'en';
 
 let _isWindows = false;

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { FetchError } from 'node-fetch';
 import * as stackTrace from 'stack-trace';
 import { getTelemetrySafeHashedString } from '../telemetry/helpers';

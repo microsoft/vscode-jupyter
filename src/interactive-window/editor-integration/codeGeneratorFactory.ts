@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { inject, injectable } from 'inversify';
 import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';

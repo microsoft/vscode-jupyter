@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ErrorUtils } from '../../errors/errorUtils';
 import { ModuleNotInstalledError } from '../../errors/moduleNotInstalledError';

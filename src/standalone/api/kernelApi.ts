@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import { injectable, inject } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';

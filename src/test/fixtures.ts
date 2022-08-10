@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 import * as fs from 'fs-extra';
 import { sleep } from '../platform/common/utils/async';
 import { PYTHON_PATH } from './common.node';
