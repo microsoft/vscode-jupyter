@@ -346,10 +346,10 @@ module.exports = {
         strict: 'off',
         'header/header': [
             'error',
-            "line",
+            'line',
             [
-                " Copyright (c) Microsoft Corporation.",
-                " Licensed under the MIT License.",
+                ' Copyright (c) Microsoft Corporation.',
+                ' Licensed under the MIT License.',
             ],
             2
         ]
