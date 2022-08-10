@@ -467,7 +467,7 @@ suite('DataScience - Kernel Process', () => {
         when(processExecutionFactory.create(anything())).thenResolve(instanceOfExecutionService);
         when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: connectionFile });
         when(fs.writeFile(anything(), anything())).thenResolve();
-        when(kernelEnvVarsService.getEnvironmentVariables(anything(), anything(), anything())).thenResolve(process.env);
+        when(kernelEnvVarsService.getEnvironmentVariables(anything(), anything(), anything())).thenResolve({});
         when(processService.execObservable(anything(), anything(), anything())).thenReturn(observableProc);
         rewiremock.enable();
         rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
