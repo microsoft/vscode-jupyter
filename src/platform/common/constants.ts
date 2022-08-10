@@ -122,7 +122,6 @@ export namespace CodeSnippets {
 
 // Identifier for the output panel that will display the output from the Jupyter Server.
 export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
-export const KernelInterruptDaemonModule = 'vscode_datascience_helpers.kernel_interrupt_daemon';
 export const JupyterDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
 
 export const DefaultTheme = 'Default Light+';

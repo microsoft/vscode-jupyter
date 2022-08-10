@@ -115,12 +115,16 @@ suite('kernel Process', () => {
             out: observableOutput,
             proc: instance(proc)
         });
-        when(daemon.getInterruptHandle()).thenResolve(1);
+        const interrupter = {
+            handle: 1,
+            dispose: () => Promise.resolve(),
+            interrupt: () => Promise.resolve()
+        };
+        when(daemon.createInterrupter(anything(), anything())).thenResolve(interrupter);
         (instance(processService) as any).then = undefined;
         (instance(pythonProcess) as any).then = undefined;
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
         (instance(daemon) as any).then = undefined;
-        when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(daemon));
         rewiremock.enable();
         rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
         when(fs.createTemporaryLocalFile(anything())).thenResolve({
@@ -139,7 +143,8 @@ suite('kernel Process', () => {
             instance(pythonExecFactory),
             instance(outputChannel),
             instance(jupyterSettings),
-            instance(jupyterPaths)
+            instance(jupyterPaths),
+            instance(daemon)
         );
     });
     teardown(() => {
