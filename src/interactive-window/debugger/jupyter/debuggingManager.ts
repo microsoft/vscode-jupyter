@@ -178,7 +178,6 @@ export class InteractiveWindowDebuggingManager
             this.debugLocationTrackerFactory
         );
 
-        this.notebookToDebugAdapter.set(debug.document, adapter);
         this.disposables.push(adapter.onDidEndSession(this.endSession.bind(this)));
 
         // Wait till we're attached before resolving the session
