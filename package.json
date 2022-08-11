@@ -256,17 +256,17 @@
             {
                 "command": "jupyter.runByLine",
                 "key": "f10",
-                "when": "!jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
+                "when": "resource not in jupyter.notebookeditor.debugDocuments"
             },
             {
                 "command": "jupyter.runByLineNext",
                 "key": "f10",
-                "when": "jupyter.notebookeditor.runByLineInProgress"
+                "when": "notebookCellResource in jupyter.notebookeditor.runByLineCells"
             },
             {
                 "command": "jupyter.runByLineStop",
                 "key": "ctrl+enter",
-                "when": "jupyter.notebookeditor.runByLineInProgress"
+                "when": "notebookCellResource in jupyter.notebookeditor.runByLineCells"
             }
         ],
         "commands": [
@@ -294,7 +294,7 @@
                 "title": "%jupyter.command.jupyter.debug.title%",
                 "icon": "$(bug)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
+                "enablement": "notebookKernelCount > 0 && resource not in jupyter.notebookeditor.runByLineDocuments"
             },
             {
                 "command": "jupyter.filterKernels",
@@ -307,7 +307,7 @@
                 "title": "%jupyter.command.jupyter.runByLine.title%",
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
+                "enablement": "notebookKernelCount > 0 && resource not in jupyter.notebookeditor.debugDocuments"
             },
             {
                 "command": "jupyter.runAndDebugCell",
@@ -320,14 +320,14 @@
                 "title": "%jupyter.command.jupyter.runByLineNext.title%",
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
-                "enablement": "jupyter.notebookeditor.runByLineInProgress"
+                "enablement": "notebookCellResource in jupyter.notebookeditor.runByLineCells"
             },
             {
                 "command": "jupyter.runByLineStop",
                 "title": "%jupyter.command.jupyter.runByLineStop.title%",
                 "icon": "$(debug-continue-small)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress"
+                "enablement": "notebookKernelCount > 0 && notebookCellResource in jupyter.notebookeditor.runByLineCells"
             },
             {
                 "command": "jupyter.viewOutput",
@@ -986,29 +986,29 @@
             "notebook/cell/title": [
                 {
                     "command": "jupyter.runByLine",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress",
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.runByLineDocuments",
                     "group": "inline/cell@0"
                 },
                 {
                     "command": "jupyter.runByLineNext",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress",
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && notebookCellResource in jupyter.notebookeditor.runByLineCells",
                     "group": "inline/cell@0"
                 },
                 {
                     "command": "jupyter.runByLineStop",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && notebookCellToolbarLocation == left",
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && notebookCellResource in jupyter.notebookeditor.runByLineCells && notebookCellToolbarLocation == left",
                     "group": "inline/cell@1"
                 },
                 {
                     "command": "jupyter.runByLineStop",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && notebookCellToolbarLocation == right",
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && notebookCellResource in jupyter.notebookeditor.runByLineCells && notebookCellToolbarLocation == right",
                     "group": "inline/cell@0"
                 }
             ],
             "notebook/cell/execute": [
                 {
                     "command": "jupyter.runAndDebugCell",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress"
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments"
                 }
             ],
             "notebook/kernelSource": [
@@ -1138,17 +1138,17 @@
                 {
                     "command": "jupyter.runByLine",
                     "title": "%jupyter.command.jupyter.runByLine.title%",
-                    "when": "!jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
+                    "when": "resource not in jupyter.notebookeditor.debugDocuments"
                 },
                 {
                     "command": "jupyter.runByLineNext",
                     "title": "%jupyter.command.jupyter.runByLineNext.title%",
-                    "when": "jupyter.notebookeditor.runByLineInProgress"
+                    "when": "resource in jupyter.notebookeditor.runByLineDocuments"
                 },
                 {
                     "command": "jupyter.runByLineStop",
                     "title": "%jupyter.command.jupyter.runByLineStop.title%",
-                    "when": "jupyter.notebookeditor.runByLineInProgress"
+                    "when": "resource in jupyter.notebookeditor.runByLineDocuments"
                 },
                 {
                     "command": "jupyter.interactive.copyCell",

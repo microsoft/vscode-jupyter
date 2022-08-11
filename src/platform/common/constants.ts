@@ -321,8 +321,9 @@ export namespace EditorContexts {
     export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
     export const CanRestartInteractiveWindowKernel = 'jupyter.interactive.canRestartNotebookKernel';
     export const CanInterruptInteractiveWindowKernel = 'jupyter.interactive.canInterruptNotebookKernel';
-    export const DebuggingInProgress = 'jupyter.notebookeditor.debuggingInProgress';
-    export const RunByLineInProgress = 'jupyter.notebookeditor.runByLineInProgress';
+    export const RunByLineCells = 'jupyter.notebookeditor.runByLineCells';
+    export const RunByLineDocuments = 'jupyter.notebookeditor.runByLineDocuments';
+    export const DebugDocuments = 'jupyter.notebookeditor.debugDocuments';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsJupyterKernelSelected = 'jupyter.kernel.isjupyter';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';

@@ -5,40 +5,43 @@
 
 import { inject, injectable } from 'inversify';
 import {
-    NotebookDocument,
+    debug,
+    DebugAdapterDescriptor,
     DebugAdapterInlineImplementation,
     DebugSession,
-    NotebookCell,
     DebugSessionOptions,
-    DebugAdapterDescriptor,
+    NotebookCell,
+    NotebookDocument,
     NotebookEditor,
-    debug
+    Uri
 } from 'vscode';
-import * as path from '../../platform/vscode-path/path';
 import { IKernelProvider } from '../../kernels/types';
-import { IConfigurationService } from '../../platform/common/types';
-import { Commands as DSCommands, EditorContexts } from '../../platform/common/constants';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { ContextKey } from '../../platform/common/contextKey';
-import { RunByLineController } from './runByLineController';
 import {
     IApplicationShell,
     ICommandManager,
     IDebugService,
     IVSCodeNotebook
 } from '../../platform/common/application/types';
+import { Commands as DSCommands, EditorContexts } from '../../platform/common/constants';
+import { ContextKey } from '../../platform/common/contextKey';
 import { IPlatformService } from '../../platform/common/platform/types';
-import { DebuggingTelemetry, pythonKernelDebugAdapter } from './constants';
-import { sendTelemetryEvent } from '../../telemetry';
-import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { IConfigurationService } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
-import { DebugCellController } from './debugCellControllers';
-import { KernelDebugAdapter } from './kernelDebugAdapter';
-import { assertIsDebugConfig, IpykernelCheckResult } from './helper';
-import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from './debuggingTypes';
-import { DebuggingManagerBase } from './debuggingManagerBase';
 import { noop } from '../../platform/common/utils/misc';
+import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { ResourceSet } from '../../platform/vscode-path/map';
+import * as path from '../../platform/vscode-path/path';
+import { sendTelemetryEvent } from '../../telemetry';
 import { IControllerLoader, IControllerSelection } from '../controllers/types';
+import { DebuggingTelemetry, pythonKernelDebugAdapter } from './constants';
+import { DebugCellController } from './debugCellControllers';
+import { DebuggingManagerBase } from './debuggingManagerBase';
+import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from './debuggingTypes';
+import { assertIsDebugConfig, IpykernelCheckResult } from './helper';
+import { KernelDebugAdapter } from './kernelDebugAdapter';
+import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
+import { RunByLineController } from './runByLineController';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -48,8 +51,9 @@ export class DebuggingManager
     extends DebuggingManagerBase
     implements IExtensionSingleActivationService, IDebuggingManager
 {
-    private debuggingInProgress: ContextKey;
-    private runByLineInProgress: ContextKey;
+    private runByLineCells: ContextKey<Uri[]>;
+    private runByLineDocuments: ContextKey<Uri[]>;
+    private debugDocuments: ContextKey<Uri[]>;
     private notebookToRunByLineController = new Map<NotebookDocument, RunByLineController>();
 
     public constructor(
@@ -64,23 +68,9 @@ export class DebuggingManager
         @inject(IDebugService) private readonly debugService: IDebugService
     ) {
         super(kernelProvider, controllerLoader, controllerSelection, commandManager, appShell, vscNotebook);
-        this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, commandManager);
-        this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, commandManager);
-        this.updateToolbar(false);
-        this.updateCellToolbar(false);
-
-        this.disposables.push(
-            vscNotebook.onDidChangeActiveNotebookEditor(
-                (e?: NotebookEditor) => {
-                    if (e) {
-                        this.updateCellToolbar(this.isDebugging(e.notebook));
-                        this.updateToolbar(this.isDebugging(e.notebook));
-                    }
-                },
-                this,
-                this.disposables
-            )
-        );
+        this.runByLineCells = new ContextKey(EditorContexts.RunByLineCells, commandManager);
+        this.runByLineDocuments = new ContextKey(EditorContexts.RunByLineDocuments, commandManager);
+        this.debugDocuments = new ContextKey(EditorContexts.DebugDocuments, commandManager);
     }
 
     public override async activate() {
@@ -122,10 +112,6 @@ export class DebuggingManager
                 }
 
                 if (!cell) {
-                    return;
-                }
-
-                if (this.notebookInProgress.has(cell.notebook)) {
                     return;
                 }
 
@@ -172,17 +158,30 @@ export class DebuggingManager
         return controller?.getMode();
     }
 
-    protected override onDidStopDebugging(_notebook: NotebookDocument) {
-        this.updateToolbar(false);
-        this.updateCellToolbar(false);
+    protected override onDidStopDebugging(notebook: NotebookDocument) {
+        super.onDidStopDebugging(notebook);
+        this.notebookToRunByLineController.delete(notebook);
+        this.updateRunByLineContextKeys();
+        this.updateDebugContextKey();
     }
 
-    private updateToolbar(debugging: boolean) {
-        this.debuggingInProgress.set(debugging).ignoreErrors();
+    private updateRunByLineContextKeys() {
+        const rblCellUris: Uri[] = [];
+        const rblDocumentUris: Uri[] = [];
+        this.notebookToRunByLineController.forEach((controller) => {
+            rblCellUris.push(controller.debugCell.document.uri);
+            rblDocumentUris.push(controller.debugCell.notebook.uri);
+        });
+
+        this.runByLineCells.set(rblCellUris).ignoreErrors();
+        this.runByLineDocuments.set(rblDocumentUris).ignoreErrors();
     }
 
-    private updateCellToolbar(runningByLine: boolean) {
-        this.runByLineInProgress.set(runningByLine).ignoreErrors();
+    private updateDebugContextKey() {
+        const debugDocumentUris = new ResourceSet();
+        this.notebookToDebugAdapter.forEach((_, notebook) => debugDocumentUris.add(notebook.uri));
+        this.notebookInProgress.forEach((notebook) => debugDocumentUris.add(notebook.uri));
+        this.debugDocuments.set(Array.from(debugDocumentUris.values())).ignoreErrors();
     }
 
     private async tryToStartDebugging(mode: KernelDebugMode, editor?: NotebookEditor, cell?: NotebookCell) {
@@ -199,11 +198,7 @@ export class DebuggingManager
         }
 
         if (this.isDebugging(editor.notebook)) {
-            traceInfo(`Cannot start debugging. Already debugging this notebook document. Toolbar should update`);
-            this.updateToolbar(true);
-            if (mode === KernelDebugMode.RunByLine) {
-                this.updateCellToolbar(true);
-            }
+            traceInfo(`Cannot start debugging. Already debugging this notebook document.`);
             return;
         }
 
@@ -222,20 +217,16 @@ export class DebuggingManager
                     switch (mode) {
                         case KernelDebugMode.Everything: {
                             await this.startDebugging(editor.notebook);
-                            this.updateToolbar(true);
                             return;
                         }
                         case KernelDebugMode.Cell:
                             if (cell) {
                                 await this.startDebuggingCell(editor.notebook, KernelDebugMode.Cell, cell);
-                                this.updateToolbar(true);
                             }
                             return;
                         case KernelDebugMode.RunByLine:
                             if (cell) {
                                 await this.startDebuggingCell(editor.notebook, KernelDebugMode.RunByLine, cell);
-                                this.updateToolbar(true);
-                                this.updateCellToolbar(true);
                             }
                             return;
                         default:
@@ -253,11 +244,13 @@ export class DebuggingManager
 
         try {
             this.notebookInProgress.add(editor.notebook);
+            this.updateDebugContextKey();
             await checkIpykernelAndStart();
         } catch (e) {
             traceInfo(`Error starting debugging: ${e}`);
         } finally {
             this.notebookInProgress.delete(editor.notebook);
+            this.updateDebugContextKey();
         }
     }
     private async startDebuggingCell(
@@ -291,6 +284,11 @@ export class DebuggingManager
             __mode: KernelDebugMode.Everything
         };
         return this.startDebuggingConfig(doc, config);
+    }
+
+    protected override trackDebugAdapter(notebook: NotebookDocument, adapter: KernelDebugAdapterBase): void {
+        super.trackDebugAdapter(notebook, adapter);
+        this.updateDebugContextKey();
     }
 
     protected override async createDebugAdapterDescriptor(
@@ -330,6 +328,7 @@ export class DebuggingManager
                         );
                         adapter.setDebuggingDelegate(controller);
                         this.notebookToRunByLineController.set(debug.document, controller);
+                        this.updateRunByLineContextKeys();
                     } else if (config.__mode === KernelDebugMode.Cell && typeof config.__cellIndex === 'number') {
                         const cell = activeDoc.cellAt(config.__cellIndex);
                         const controller = new DebugCellController(adapter, cell, kernel!, this.commandManager);

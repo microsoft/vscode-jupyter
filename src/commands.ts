@@ -69,6 +69,13 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['notebook.cell.expandCellOutput']: [];
 }
 
+type ContextKeyPrimitiveValue = null | undefined | boolean | number | string | Uri;
+
+export type ContextKeyValue =
+    | ContextKeyPrimitiveValue
+    | Array<ContextKeyPrimitiveValue>
+    | Record<string, ContextKeyPrimitiveValue>;
+
 /**
  * Mapping between commands and list of arguments.
  * Used to provide strong typing for command & args.
@@ -87,7 +94,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];
     ['extension.open']: [string];
-    ['setContext']: [string, boolean] | ['jupyter.vscode.channel', Channel];
+    ['setContext']: [string, ContextKeyValue] | ['jupyter.vscode.channel', Channel];
     ['jupyter.reloadVSCode']: [string];
     ['jupyter.runInDedicatedExtensionHost']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
