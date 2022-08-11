@@ -28,7 +28,7 @@ function isSupportedPythonVersion(interpreter: PythonEnvironment) {
     if (
         (interpreter?.version?.major ?? 3) >= 3 &&
         // Even thought 3.6 is no longer supported, we know this works well enough for what we want.
-        // This way we don't need to update this everytime the supported version changes.
+        // This way we don't need to update this every time the supported version changes.
         (interpreter?.version?.minor ?? 6) >= 3
     ) {
         return true;
