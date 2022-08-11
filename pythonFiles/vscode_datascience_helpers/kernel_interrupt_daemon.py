@@ -8,7 +8,7 @@ import os
 import logging
 import logging.config
 
-import vscode_datascience_helpers.winapi as winapi
+import winapi as winapi
 
 
 def add_arguments(parser):
@@ -37,7 +37,7 @@ class PythonKernelInterrupter:
         """
         if handle in self.interrupt_handles:
             logging.info("Interrupt kernel process %d", handle)
-            winapi.SetEvent(self.interrupt_handles[handle].interrupt_handle)
+            winapi.SetEvent(self.interrupt_handles[handle])
         else:
             logging.warning("Interrupt handle for kernel process interrupt handle %d not found", handle)
 
@@ -49,7 +49,7 @@ class PythonKernelInterrupter:
         """
         if handle in self.interrupt_handles:
             logging.info("Closing interrupt handle for kernel process interrupt handle %d", handle)
-            winapi.CloseHandle(self.interrupt_handles[handle].interrupt_handle)
+            winapi.CloseHandle(self.interrupt_handles[handle])
 
     def initialize_interrupt(self):
         """Create an interrupt event handle.
@@ -119,19 +119,22 @@ def main():
 
     interrupter = PythonKernelInterrupter(args.ppid)
     for line in sys.stdin:
-        print(f"line = {line}")
-        line = line.strip()
-        if line.startswith('INITIALIZE_INTERRUPT:'):
-            handle = interrupter.initialize_interrupt()
-            print(f"INITIALIZE_INTERRUPT:{int(line.split(':')[1])}:{handle}")
-        elif line.startswith('INTERRUPT:'):
-            interrupter.interrupt(int(line.split(':')[2]))
-            print(f"INTERRUPT:{int(line.split(':')[1])}")
-        elif line.startswith('KILL_INTERRUPT:'):
-            interrupter.close_interrupt_handle(int(line.split(':')[2]))
-            print(f"KILL_INTERRUPT:{int(line.split(':')[1])}")
-        else:
-            logging.warning('Unknown command: %s', line)
+        try:
+            line = line.strip()
+            if line.startswith('INITIALIZE_INTERRUPT:'):
+                handle = interrupter.initialize_interrupt()
+                print(f"INITIALIZE_INTERRUPT:{int(line.split(':')[1])}:{handle}")
+            elif line.startswith('INTERRUPT:'):
+                interrupter.interrupt(int(line.split(':')[2]))
+                print(f"INTERRUPT:{int(line.split(':')[1])}")
+            elif line.startswith('KILL_INTERRUPT:'):
+                interrupter.close_interrupt_handle(int(line.split(':')[2]))
+                print(f"KILL_INTERRUPT:{int(line.split(':')[1])}")
+            else:
+                logging.warning('Unknown command: %s', line)
+        except Exception as e:
+            logging.exception(f"Error in line {line}")
+
 
 if __name__ == "__main__":
     main()

@@ -8,10 +8,10 @@ import { IPythonExecutionFactory, ObservableExecutionResult } from '../../../pla
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { inject, injectable } from 'inversify';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { IAsyncDisposable, IDisposableRegistry, Resource } from '../../../platform/common/types';
+import { IAsyncDisposable, IDisposableRegistry, IExtensionContext, Resource } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
-import { Disposable } from 'vscode';
-
+import { Disposable, Uri } from 'vscode';
+import { EOL } from 'os';
 function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
     if (
         isSupportedPythonVersion(interpreter) &&
@@ -54,12 +54,13 @@ export type Interrupter = IAsyncDisposable & {
 export class PythonKernelInterruptDaemon {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     private startupPromise?: Promise<ObservableExecutionResult<string>>;
-    private messages = new Map<Command & { id: number }, Deferred<unknown>>();
+    private messages = new Map<number, Deferred<unknown>>();
     private requestCounter: number = 0;
     constructor(
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
     public async createInterrupter(pythonEnvironment: PythonEnvironment, resource: Resource): Promise<Interrupter> {
         const interruptHandle = (await this.sendCommand(
@@ -112,21 +113,29 @@ export class PythonKernelInterruptDaemon {
                 interpreter,
                 resource
             });
-            const proc = executionService.execObservable([''], {});
+            const dsFolder = Uri.joinPath(this.context.extensionUri, 'pythonFiles', 'vscode_datascience_helpers');
+            const file = Uri.joinPath(dsFolder, 'kernel_interrupt_daemon.py');
+            const proc = executionService.execObservable([file.fsPath, '--ppid', process.pid.toString()], {
+                cwd: dsFolder.fsPath
+            });
 
             const subscription = proc.out.subscribe((out) => {
                 if (out.source === 'stdout' && out.out.includes('INTERRUPT:')) {
-                    const output = out.out.trim();
-                    const [command, id, response] = output.split(':');
-                    const commandEntry = Array.from(this.messages.entries()).find(
-                        (item) => item[0].command === command && item[0].id.toString() === id
-                    );
-                    if (commandEntry) {
-                        traceVerbose(`Got a response of ${response} for ${command}:${id}`);
-                        commandEntry[1].resolve(response);
-                    } else {
-                        traceError(`Got a response of ${response} for ${command}:${id} but no command entry found`);
-                    }
+                    out.out
+                        .splitLines({ trim: true, removeEmptyEntries: true })
+                        .filter((output) => output.includes('INTERRUPT:'))
+                        .forEach((output) => {
+                            const [command, id, response] = output.split(':');
+                            const deferred = this.messages.get(parseInt(id, 10));
+                            if (deferred) {
+                                traceVerbose(`Got a response of ${response} for ${command}:${id}`);
+                                deferred.resolve(response);
+                            } else {
+                                traceError(
+                                    `Got a response of ${response} for ${command}:${id} but no command entry found`
+                                );
+                            }
+                        });
                 } else {
                     traceWarning(out.out);
                 }
@@ -144,7 +153,7 @@ export class PythonKernelInterruptDaemon {
     ): Promise<unknown> {
         const deferred = createDeferred<unknown>();
         const id = this.requestCounter++;
-        this.messages.set({ ...command, id }, deferred);
+        this.messages.set(id, deferred);
         const messageToSend =
             command.command === 'INITIALIZE_INTERRUPT'
                 ? `${command.command}:${id}`
@@ -155,7 +164,7 @@ export class PythonKernelInterruptDaemon {
             traceError('No process or stdin');
             throw new Error('No process or stdin');
         }
-        proc.stdin.write(messageToSend);
+        proc.stdin.write(`${messageToSend}${EOL}`);
         const response = await deferred.promise;
         if (command.command === 'INITIALIZE_INTERRUPT') {
             return parseInt(response as string, 10);
