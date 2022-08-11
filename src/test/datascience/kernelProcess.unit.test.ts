@@ -404,8 +404,6 @@ suite('kernel Process', () => {
         ];
         await kernelProcess.launch(__dirname, 0, token.token);
 
-        // Daemon is created only on windows.
-        verify(pythonExecFactory.createDaemon(anything())).times(os.platform() === 'win32' ? 1 : 0);
         verify(processService.execObservable(anything(), anything())).never();
         verify(pythonProcess.execObservable(deepEqual(expectedArgs), anything())).once();
     });
