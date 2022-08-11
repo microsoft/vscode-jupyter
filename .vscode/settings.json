@@ -29,11 +29,14 @@
         "editor.formatOnSave": true
     },
     "[typescript]": {
-        "editor.formatOnSave": true
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "[javascript]": {
-        "editor.formatOnSave": true
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
+    "git.branchProtection": ["main", "release*"],
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
     "python.linting.enabled": false,
     "python.testing.promptToConfigure": false,
@@ -48,7 +51,6 @@
         "source.fixAll.eslint": true,
         "source.fixAll.tslint": true
     },
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "python.languageServer": "Pylance",
     "python.analysis.logLevel": "Trace",
     "python.linting.pylintEnabled": false,
