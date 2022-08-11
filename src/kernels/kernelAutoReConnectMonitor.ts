@@ -77,6 +77,9 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             }
             return;
         }
+        if (connectionStatus !== 'connecting') {
+            return;
+        }
         const deferred = createDeferred<void>();
         const message = DataScience.automaticallyReconnectingToAKernelProgressMessage().format(
             getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
