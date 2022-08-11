@@ -478,6 +478,12 @@ suite('DataScience - Kernel Process', () => {
         rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
         const settings = mock<IJupyterSettings>();
         when(settings.enablePythonKernelLogging).thenReturn(false);
+        const interruptDaemon = mock<PythonKernelInterruptDaemon>();
+        when(interruptDaemon.createInterrupter(anything(), anything())).thenResolve({
+            dispose: () => Promise.resolve(),
+            interrupt: () => Promise.resolve(),
+            handle: 1
+        });
         return new KernelProcess(
             instance(processExecutionFactory),
             instance(connection),
@@ -489,7 +495,8 @@ suite('DataScience - Kernel Process', () => {
             instance(pythonExecFactory),
             undefined,
             instance(settings),
-            instance(jupyterPaths)
+            instance(jupyterPaths),
+            instance(interruptDaemon)
         );
     }
     test('Launch from kernelspec (linux)', async function () {
