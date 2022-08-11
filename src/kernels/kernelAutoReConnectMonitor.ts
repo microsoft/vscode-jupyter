@@ -10,7 +10,6 @@ import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { createDeferred } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
-import { IStatusProvider } from '../platform/progress/types';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
 
@@ -26,7 +25,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
     private kernelReconnectProgress = new WeakMap<IKernel, IDisposable>();
 
     constructor(
-        @inject(IStatusProvider) private appShell: IApplicationShell,
+        @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider
     ) {}
@@ -72,7 +71,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             return;
         }
         if (this.kernelReconnectProgress.has(kernel)) {
-            if (connectionStatus !== 'connected') {
+            if (connectionStatus !== 'connecting') {
                 this.kernelReconnectProgress.get(kernel)?.dispose();
                 this.kernelReconnectProgress.delete(kernel);
             }

@@ -17,7 +17,7 @@ import {
  * - Call start more than once
  * - Do something when 'end' is called
  */
-class NotebookCellExecutionWrapper implements NotebookCellExecution {
+export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     public started: boolean = false;
     constructor(
         private readonly _impl: NotebookCellExecution,

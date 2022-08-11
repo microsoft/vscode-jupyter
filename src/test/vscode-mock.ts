@@ -148,6 +148,9 @@ mockedVSCode.FileDecoration = vscodeMocks.vscMockExtHostedTypes.FileDecoration;
 (mockedVSCode as any).NotebookControllerAffinity = vscodeMocks.vscMockExtHostedTypes.NotebookControllerAffinity;
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
+(mockedVSCode as any).NotebookCellOutput = vscodeMocks.vscMockExtHostedTypes.NotebookCellOutput;
+(mockedVSCode as any).NotebookCellOutputItem = vscodeMocks.vscMockExtHostedTypes.NotebookCellOutputItem;
+(mockedVSCode as any).NotebookCellExecutionState = vscodeMocks.vscMockExtHostedTypes.NotebookCellExecutionState;
 (mockedVSCode as any).notebook = { notebookDocuments: [] };
 mockedVSCode.workspace;
 // This API is used in src/telemetry/telemetry.ts

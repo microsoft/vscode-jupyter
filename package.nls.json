@@ -847,7 +847,7 @@
         "message": "The kernel '{0}' died and is being automatically restarted by Jupyter. Click [here](https://aka.ms/vscodeJupyterKernelCrash) for more info. View Jupyter [log](command:jupyter.viewOutput) for further details.",
         "comment": ["{Locked='Kernel'}", "{Locked='command:jupyter.viewOutput'}", "{Locked='vscodeJupyterKernelCrash'}"]
     },
-    "DataScience.kernelDisconnected": "Unable to connect to the kernel, please verify the Jupyter Server connection. View Jupyter [log](command:jupyter.viewOutput) for further details.",
+    "DataScience.kernelDisconnected": "Unable to connect to the kernel '{0}', please verify the Jupyter Server connection. View Jupyter [log](command:jupyter.viewOutput) for further details.",
     "DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell": {
         "message": "The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure. Click <a href='https://aka.ms/vscodeJupyterKernelCrash'>here</a> for more info. View Jupyter [log](command:jupyter.viewOutput) for further details.",
         "comment": ["{Locked='Kernel'}", "{Locked='command:jupyter.viewOutput'}", "{Locked='vscodeJupyterKernelCrash'}"]
