@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as fakeTimers from '@sinonjs/fake-timers';
 import * as sinon from 'sinon';
