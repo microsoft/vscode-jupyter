@@ -52,11 +52,101 @@ export namespace vscMockExtHostedTypes {
             );
         }
     }
+
+    export class NotebookCellOutputItem {
+        static isNotebookCellOutputItem(obj: unknown): obj is vscode.NotebookCellOutputItem {
+            if (obj instanceof NotebookCellOutputItem) {
+                return true;
+            }
+            if (!obj) {
+                return false;
+            }
+            return (
+                typeof (<vscode.NotebookCellOutputItem>obj).mime === 'string' &&
+                (<vscode.NotebookCellOutputItem>obj).data instanceof Uint8Array
+            );
+        }
+
+        static error(err: Error | { name: string; message?: string; stack?: string }): NotebookCellOutputItem {
+            const obj = {
+                name: err.name,
+                message: err.message,
+                stack: err.stack
+            };
+            return NotebookCellOutputItem.json(obj, 'application/vnd.code.notebook.error');
+        }
+
+        static stdout(value: string): NotebookCellOutputItem {
+            return NotebookCellOutputItem.text(value, 'application/vnd.code.notebook.stdout');
+        }
+
+        static stderr(value: string): NotebookCellOutputItem {
+            return NotebookCellOutputItem.text(value, 'application/vnd.code.notebook.stderr');
+        }
+
+        static bytes(value: Uint8Array, mime: string = 'application/octet-stream'): NotebookCellOutputItem {
+            return new NotebookCellOutputItem(value, mime);
+        }
+
+        static #encoder = new TextEncoder();
+
+        static text(value: string, mime: string = 'text/plain'): NotebookCellOutputItem {
+            const bytes = NotebookCellOutputItem.#encoder.encode(String(value));
+            return new NotebookCellOutputItem(bytes, mime);
+        }
+
+        static json(value: any, mime: string = 'text/x-json'): NotebookCellOutputItem {
+            const rawStr = JSON.stringify(value, undefined, '\t');
+            return NotebookCellOutputItem.text(rawStr, mime);
+        }
+
+        constructor(public data: Uint8Array, public mime: string) {
+            this.mime = mime;
+        }
+    }
+
+    export class NotebookCellOutput {
+        static isNotebookCellOutput(candidate: any): candidate is vscode.NotebookCellOutput {
+            if (candidate instanceof NotebookCellOutput) {
+                return true;
+            }
+            if (!candidate || typeof candidate !== 'object') {
+                return false;
+            }
+            return (
+                typeof (<NotebookCellOutput>candidate).id === 'string' &&
+                Array.isArray((<NotebookCellOutput>candidate).items)
+            );
+        }
+
+        id: string;
+        items: NotebookCellOutputItem[];
+        metadata?: Record<string, any>;
+
+        constructor(
+            items: NotebookCellOutputItem[],
+            idOrMetadata?: string | Record<string, any>,
+            metadata?: Record<string, any>
+        ) {
+            this.items = items;
+            if (typeof idOrMetadata === 'string') {
+                this.id = idOrMetadata;
+                this.metadata = metadata;
+            } else {
+                this.id = generateUuid();
+                this.metadata = idOrMetadata ?? metadata;
+            }
+        }
+    }
     export enum NotebookCellKind {
         Markdown = 1,
         Code = 2
     }
-
+    export enum NotebookCellExecutionState {
+        Idle = 1,
+        Pending = 2,
+        Executing = 3
+    }
     export enum NotebookCellRunState {
         Running = 1,
         Idle = 2,

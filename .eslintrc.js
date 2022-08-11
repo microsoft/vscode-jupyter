@@ -277,7 +277,7 @@ module.exports = {
             {
                 zones: [
                     {
-                        target: './src/**[!test]**/**/*.ts',
+                        target: './src/**[!test]**/**/*[!.unit].ts',
                         from: './src/test/**/*.ts',
                         message: 'Importing test modules from ./src/test into extension code is not allowed.'
                     },

@@ -572,7 +572,7 @@ export namespace DataScience {
     export const kernelDisconnected = () =>
         localize(
             'DataScience.kernelDisconnected',
-            'Unable to connect to the kernel, please verify the Jupyter Server connection. View Jupyter [log](command:jupyter.viewOutput) for further details.'
+            "Unable to connect to the kernel '{0}', please verify the Jupyter Server connection. View Jupyter [log](command:jupyter.viewOutput) for further details."
         );
     export const cannotRunCellKernelIsDead = () =>
         localize(

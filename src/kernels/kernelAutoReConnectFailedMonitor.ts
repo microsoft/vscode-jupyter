@@ -3,10 +3,13 @@
 
 import type { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
-import { NotebookCell } from 'vscode';
+import { NotebookCell, NotebookCellExecutionState, notebooks } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
+import { IApplicationShell } from '../platform/common/application/types';
 import { IDisposableRegistry } from '../platform/common/types';
+import { isJupyterNotebook } from '../platform/common/utils';
 import { DataScience } from '../platform/common/utils/localize';
+import { noop } from '../platform/common/utils/misc';
 import { Telemetry } from '../telemetry';
 import { endCellAndDisplayErrorsInCell } from './execution/helpers';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
@@ -26,6 +29,7 @@ export class KernelAutoReConnectFailedMonitor implements IExtensionSyncActivatio
     private lastExecutedCellPerKernel = new WeakMap<IKernel, NotebookCell | undefined>();
 
     constructor(
+        @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider
     ) {}
@@ -41,6 +45,20 @@ export class KernelAutoReConnectFailedMonitor implements IExtensionSyncActivatio
                 this.kernelReconnectProgress.delete(kernel);
             }, this)
         );
+        notebooks.onDidChangeNotebookCellExecutionState((e) => {
+            if (!isJupyterNotebook(e.cell.notebook)) {
+                return;
+            }
+            if (e.state !== NotebookCellExecutionState.Idle) {
+                return;
+            }
+            const kernel = this.kernelProvider.get(e.cell.notebook);
+            if (!kernel || this.lastExecutedCellPerKernel.get(kernel) !== e.cell) {
+                return;
+            }
+            // Ok, the cell has completed.
+            this.lastExecutedCellPerKernel.delete(kernel);
+        });
     }
     private onDidStartKernel(kernel: IKernel) {
         if (!this.kernelsStartedSuccessfully.has(kernel)) {
@@ -93,20 +111,32 @@ export class KernelAutoReConnectFailedMonitor implements IExtensionSyncActivatio
         }
     }
     private async onKernelDisconnected(kernel: IKernel) {
-        const lastExecutedCell = this.lastExecutedCellPerKernel.get(kernel);
-        sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.KernelCrash);
-        if (!lastExecutedCell) {
+        // If it is being disposed and we know of this, then no need to display any messages.
+        if (kernel.disposed || kernel.disposing) {
             return;
         }
+        sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.KernelCrash);
 
         const message = isLocalConnection(kernel.kernelConnectionMetadata)
-            ? DataScience.kernelDisconnected()
-            : DataScience.remoteJupyterConnectionFailedWithServer().format(
+            ? DataScience.kernelDisconnected().format(
                   getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
-              );
-        await endCellAndDisplayErrorsInCell(lastExecutedCell, kernel.controller, message, false);
+              )
+            : DataScience.remoteJupyterConnectionFailedWithServer().format(kernel.kernelConnectionMetadata.baseUrl);
 
-        // Given the fact that we know the kernel connection is dead, dispose the kernel to clean everything.
-        await kernel.dispose();
+        this.appShell.showErrorMessage(message).then(noop, noop);
+
+        try {
+            const lastExecutedCell = this.lastExecutedCellPerKernel.get(kernel);
+            if (!lastExecutedCell || lastExecutedCell.document.isClosed || lastExecutedCell.notebook.isClosed) {
+                return;
+            }
+            if (lastExecutedCell.executionSummary?.success === false) {
+                return;
+            }
+            await endCellAndDisplayErrorsInCell(lastExecutedCell, kernel.controller, message, false);
+        } finally {
+            // Given the fact that we know the kernel connection is dead, dispose the kernel to clean everything.
+            await kernel.dispose();
+        }
     }
 }
