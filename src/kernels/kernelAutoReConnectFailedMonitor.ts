@@ -111,6 +111,10 @@ export class KernelAutoReConnectFailedMonitor implements IExtensionSyncActivatio
         }
     }
     private async onKernelDisconnected(kernel: IKernel) {
+        // If it is being disposed and we know of this, then no need to display any messages.
+        if (kernel.disposed || kernel.disposing) {
+            return;
+        }
         sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.KernelCrash);
 
         const message = isLocalConnection(kernel.kernelConnectionMetadata)
