@@ -8,7 +8,7 @@ import os
 import logging
 import logging.config
 
-import winapi as winapi
+import winapi
 
 
 def add_arguments(parser):
@@ -21,34 +21,27 @@ class PythonKernelInterrupter:
         self.ppid = ppid
         self.interrupt_handles = {}
 
-    def close(self):
-        """Ensure we kill the kernel when shutting down the daemon."""
-        try:
-            # m_kill_kernel()
-            """ We don't care about exceptions coming back from killing the kernel, so pass here """
-        except:  # nosec
-            pass
-
     def interrupt(self, handle):
         """Interrupts the kernel by sending it a signal.
-        Unlike ``signal_kernel``, this operation is well supported on all
-        platforms.
         Borrowed from https://github.com/jupyter/jupyter_client/blob/master/jupyter_client/manager.py
         """
         if handle in self.interrupt_handles:
-            logging.info("Interrupt kernel process %d", handle)
             winapi.SetEvent(self.interrupt_handles[handle])
         else:
-            logging.warning("Interrupt handle for kernel process interrupt handle %d not found", handle)
+            logging.warning(
+                "Interrupt handle for kernel process interrupt handle %d not found",
+                handle,
+            )
 
     def close_interrupt_handle(self, handle):
         """Kills the kernel by sending it a signal.
-        Unlike ``signal_kernel``, this operation is well supported on all
-        platforms.
         Borrowed from https://github.com/jupyter/jupyter_client/blob/master/jupyter_client/manager.py
         """
         if handle in self.interrupt_handles:
-            logging.info("Closing interrupt handle for kernel process interrupt handle %d", handle)
+            logging.info(
+                "Closing interrupt handle for kernel process interrupt handle %d",
+                handle,
+            )
             winapi.CloseHandle(self.interrupt_handles[handle])
 
     def initialize_interrupt(self):
@@ -77,16 +70,16 @@ class PythonKernelInterrupter:
         sa.bInheritHandle = 1
 
         # Create the event in the child process
-        interrupt_handle = ctypes.windll.kernel32.CreateEventA(
-            sa_p, False, False, 0
-        )
+        interrupt_handle = ctypes.windll.kernel32.CreateEventA(sa_p, False, False, 0)
 
         # Duplicate the handle for the parent process
         child_proc_handle = winapi.OpenProcess(
             winapi.PROCESS_ALL_ACCESS, False, os.getpid()
         )
 
-        parent_proc_handle = winapi.OpenProcess(winapi.PROCESS_ALL_ACCESS, False, self.ppid)
+        parent_proc_handle = winapi.OpenProcess(
+            winapi.PROCESS_ALL_ACCESS, False, self.ppid
+        )
         dupe_handle = winapi.DuplicateHandle(
             child_proc_handle,
             interrupt_handle,
@@ -101,19 +94,18 @@ class PythonKernelInterrupter:
 
         return dupe_handle.value
 
+
 def main():
     """Starts the daemon.
-    The daemon_module allows authors of modules to provide a custom daemon implementation.
-    E.g. we have a base implementation for standard python functionality,
-    and a custom daemon implementation for DS work (related to jupyter).
+    Look for commands to create interrupt handles and then subsequently interrupt processes.
     """
-    logging.basicConfig(format="%(asctime)s UTC - %(levelname)s - %(message)s", level=logging.DEBUG)
-    logging.debug("Starting interrupter deamin")
+    logging.basicConfig(
+        format="%(asctime)s UTC - %(levelname)s - %(message)s", level=logging.DEBUG
+    )
     parser = argparse.ArgumentParser()
     add_arguments(parser)
     args = parser.parse_args()
     print(args.ppid)
-    logging.debug("Starting daemon with ppid %s", args.ppid)
     if sys.platform == "win32" and args.ppid == 0:
         return
 
@@ -121,21 +113,20 @@ def main():
     for line in sys.stdin:
         try:
             line = line.strip()
-            if line.startswith('INITIALIZE_INTERRUPT:'):
+            if line.startswith("INITIALIZE_INTERRUPT:"):
                 handle = interrupter.initialize_interrupt()
                 print(f"INITIALIZE_INTERRUPT:{int(line.split(':')[1])}:{handle}")
-            elif line.startswith('INTERRUPT:'):
-                interrupter.interrupt(int(line.split(':')[2]))
+            elif line.startswith("INTERRUPT:"):
+                interrupter.interrupt(int(line.split(":")[2]))
                 print(f"INTERRUPT:{int(line.split(':')[1])}")
-            elif line.startswith('KILL_INTERRUPT:'):
-                interrupter.close_interrupt_handle(int(line.split(':')[2]))
+            elif line.startswith("KILL_INTERRUPT:"):
+                interrupter.close_interrupt_handle(int(line.split(":")[2]))
                 print(f"KILL_INTERRUPT:{int(line.split(':')[1])}")
             else:
-                logging.warning('Unknown command: %s', line)
-        except Exception as e:
+                logging.warning("Unknown command: %s", line)
+        except:
             logging.exception(f"Error in line {line}")
 
 
 if __name__ == "__main__":
     main()
-
