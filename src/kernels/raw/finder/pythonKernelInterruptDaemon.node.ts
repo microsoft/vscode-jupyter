@@ -52,7 +52,6 @@ export type Interrupter = IAsyncDisposable & {
  */
 @injectable()
 export class PythonKernelInterruptDaemon {
-    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     private startupPromise?: Promise<ObservableExecutionResult<string>>;
     private messages = new Map<number, Deferred<unknown>>();
     private requestCounter: number = 0;
