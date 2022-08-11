@@ -85,6 +85,8 @@ suite('Kernel ReConnect Failed Monitor', () => {
             serverId: '1234'
         };
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
+        when(kernel.disposed).thenReturn(false);
+        when(kernel.disposing).thenReturn(false);
         when(kernel.session).thenReturn(instance(session));
         when(kernel.resourceUri).thenReturn(Uri.file('test.ipynb'));
         when(session.kernel).thenReturn(instance(kernelConnection));
@@ -131,6 +133,20 @@ suite('Kernel ReConnect Failed Monitor', () => {
         // Send the kernel into connecting state & then disconnected.
         kernel.kernelConnectionStatusSignal.emit('connecting');
         onDidRestartKernel.fire(instance(kernel.kernel));
+        kernel.kernelConnectionStatusSignal.emit('disconnected');
+        await clock.runAllAsync();
+
+        verify(appShell.showErrorMessage(anything())).never();
+        verify(cellExecution.appendOutput(anything())).never();
+    });
+    test('Do not display a message if kernel is disposed', async () => {
+        const kernel = createKernel();
+
+        onDidStartKernel.fire(instance(kernel.kernel));
+
+        // Send the kernel into connecting state & then disconnected.
+        kernel.kernelConnectionStatusSignal.emit('connecting');
+        when(kernel.kernel.disposed).thenReturn(true);
         kernel.kernelConnectionStatusSignal.emit('disconnected');
         await clock.runAllAsync();
 
