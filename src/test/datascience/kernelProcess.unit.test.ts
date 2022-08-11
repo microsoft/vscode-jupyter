@@ -5,7 +5,6 @@
 
 'use strict';
 
-import * as os from 'os';
 import { assert } from 'chai';
 import * as path from '../../platform/vscode-path/path';
 import * as sinon from 'sinon';
