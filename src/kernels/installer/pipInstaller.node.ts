@@ -79,6 +79,13 @@ export class PipInstaller extends ModuleInstaller {
         if (flags & ModuleInstallFlags.reInstall) {
             args.push('--force-reinstall');
         }
+        if (
+            interpreter.envType === EnvironmentType.Global ||
+            interpreter.envType === EnvironmentType.WindowsStore ||
+            interpreter.envType === EnvironmentType.System
+        ) {
+            args.push('--user');
+        }
         return {
             args: ['-m', 'pip', ...args, moduleName]
         };
