@@ -31,7 +31,9 @@ suite('Pip installer', async () => {
     setup(() => {
         serviceContainer = mock<IServiceContainer>();
         pythonExecutionFactory = mock<IPythonExecutionFactory>();
-        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(instance(pythonExecutionFactory));
+        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(
+            instance(pythonExecutionFactory)
+        );
         pythonExecutionService = mock<IPythonExecutionService>();
         (instance(pythonExecutionService) as any).then = undefined;
         when(pythonExecutionFactory.create(anything())).thenResolve(instance(pythonExecutionService));
