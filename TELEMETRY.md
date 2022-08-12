@@ -1318,7 +1318,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/finder/kernelFinder.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/finder/kernelFinder.base.ts)
+[src/kernels/kernelFinder.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelFinder.ts)
 ```typescript
         const key = `${kind}:${useCache}`;
         if (this.startTimeForFetching && !this.fetchingTelemetrySent.has(key)) {
@@ -7018,15 +7018,15 @@ No description provided
 ```
 
 
-[src/kernels/jupyter/remoteKernelFinder.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/remoteKernelFinder.ts)
+[src/kernels/jupyter/finder/remoteKernelFinder.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/finder/remoteKernelFinder.ts)
 ```typescript
-    ) {}
+    }
 
     // Talk to the remote server to determine sessions
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
     public async listKernels(
         _resource: Resource,
-        connInfo: INotebookProviderConnection,
+        connInfo: INotebookProviderConnection
 ```
 
 </details>
@@ -7903,7 +7903,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/finder/kernelFinder.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/finder/kernelFinder.base.ts)
+[src/kernels/kernelFinder.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelFinder.ts)
 ```typescript
     }
 
