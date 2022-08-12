@@ -31,7 +31,7 @@ suite('Pip installer', async () => {
     setup(() => {
         serviceContainer = mock<IServiceContainer>();
         pythonExecutionFactory = mock<IPythonExecutionFactory>();
-        when(serviceContainer.get(IPythonExecutionFactory)).thenReturn(instance(pythonExecutionFactory));
+        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(instance(pythonExecutionFactory));
         pythonExecutionService = mock<IPythonExecutionService>();
         (instance(pythonExecutionService) as any).then = undefined;
         when(pythonExecutionFactory.create(anything())).thenResolve(instance(pythonExecutionService));
@@ -40,10 +40,10 @@ suite('Pip installer', async () => {
         );
 
         const workspace = mock<IWorkspaceService>();
-        when(serviceContainer.get(IWorkspaceService)).thenReturn(instance(workspace));
+        when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspace));
         const workspaceConfig = mock<WorkspaceConfiguration>();
         const appShell = mock<IApplicationShell>();
-        when(serviceContainer.get(IApplicationShell)).thenReturn(instance(appShell));
+        when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
         const cancellation = new CancellationTokenSource();
         disposables.push(cancellation);
         const progress = mock<any>();
