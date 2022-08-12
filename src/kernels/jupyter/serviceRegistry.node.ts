@@ -38,7 +38,7 @@ import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { NotebookStarter } from './launcher/notebookStarter.node';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
-import { RemoteKernelFinder } from './remoteKernelFinder';
+import { RemoteKernelFinder } from './finder/remoteKernelFinder';
 import { JupyterServerSelector } from './serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.node';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';

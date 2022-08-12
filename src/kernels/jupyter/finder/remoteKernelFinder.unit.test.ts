@@ -21,29 +21,27 @@ import {
     LiveRemoteKernelConnectionMetadata
 } from '../../types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { JupyterSessionManager } from '../../jupyter/session/jupyterSessionManager';
-import { JupyterSessionManagerFactory } from '../../jupyter/session/jupyterSessionManagerFactory';
-import { RemoteKernelFinder } from '../../jupyter/remoteKernelFinder';
-import { ILocalKernelFinder, IRemoteKernelFinder } from '../../raw/types';
-import {
-    ActiveKernelIdList,
-    PreferredRemoteKernelIdProvider
-} from '../../jupyter/preferredRemoteKernelIdProvider';
+import { JupyterSessionManager } from '../session/jupyterSessionManager';
+import { JupyterSessionManagerFactory } from '../session/jupyterSessionManagerFactory';
+import { RemoteKernelFinder } from './remoteKernelFinder';
+import { ILocalKernelFinder } from '../../raw/types';
+import { ActiveKernelIdList, PreferredRemoteKernelIdProvider } from '../preferredRemoteKernelIdProvider';
 import {
     IJupyterKernel,
     IJupyterRemoteCachedKernelValidator,
     IJupyterSessionManager,
+    IRemoteKernelFinder,
     IServerConnectionType
-} from '../../jupyter/types';
-import { KernelFinder } from '../kernelFinder.node';
-import { NotebookProvider } from '../../jupyter/launcher/notebookProvider';
+} from '../types';
+import { KernelFinder } from '../../kernelFinder';
+import { NotebookProvider } from '../launcher/notebookProvider';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { LocalKernelFinder } from '../../raw/finder/localKernelFinder.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { JupyterServerUriStorage } from '../../jupyter/launcher/serverUriStorage';
+import { JupyterServerUriStorage } from '../launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { takeTopRankKernel } from './localKernelFinder.unit.test';
-import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../kernelFinder.base';
+import { takeTopRankKernel } from '../../raw/finder/localKernelFinder.unit.test';
+import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../kernelFinder';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 
 suite(`Remote Kernel Finder`, () => {
@@ -142,14 +140,6 @@ suite(`Remote Kernel Finder`, () => {
         when(localKernelFinder.listKernels(anything(), anything())).thenResolve([]);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-
-        remoteKernelFinder = new RemoteKernelFinder(
-            instance(jupyterSessionManagerFactory),
-            instance(interpreterService),
-            instance(extensionChecker),
-            false
-        );
-
         const notebookProvider = mock(NotebookProvider);
         when(notebookProvider.connect(anything())).thenResolve(connInfo);
         fs = mock(FileSystem);
@@ -167,17 +157,20 @@ suite(`Remote Kernel Finder`, () => {
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(true);
         const env = mock<IApplicationEnvironment>();
         when(env.extensionVersion).thenReturn('');
-        kernelFinder = new KernelFinder(
-            instance(localKernelFinder),
-            remoteKernelFinder,
-            preferredRemoteKernelIdProvider,
+        kernelFinder = new KernelFinder(preferredRemoteKernelIdProvider);
+
+        remoteKernelFinder = new RemoteKernelFinder(
+            instance(jupyterSessionManagerFactory),
+            instance(interpreterService),
+            instance(extensionChecker),
             instance(notebookProvider),
-            instance(memento),
-            instance(fs),
             instance(serverUriStorage),
             instance(connectionType),
+            instance(memento),
+            instance(env),
             instance(cachedRemoteKernelValidator),
-            instance(env)
+            kernelFinder,
+            false
         );
     });
     teardown(() => {

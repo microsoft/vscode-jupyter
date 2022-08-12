@@ -598,6 +598,7 @@ export interface IKernelDependencyService {
 export const IKernelFinder = Symbol('IKernelFinder');
 
 export interface IKernelFinder {
+    registerKernelFinder(finder: IContributedKernelFinder): void;
     rankKernels(
         resource: Resource,
         option?: nbformat.INotebookMetadata,
@@ -650,4 +651,13 @@ export const IStartupCodeProvider = Symbol('IStartupCodeProvider');
 export interface IStartupCodeProvider {
     priority: StartupCodePriority;
     getCode(kernel: IBaseKernel): Promise<string[]>;
+}
+
+export interface IContributedKernelFinder {
+    kind: string;
+    listContributedKernels(
+        resource: Resource,
+        cancelToken: CancellationToken | undefined,
+        useCache: 'ignoreCache' | 'useCache'
+    ): Promise<KernelConnectionMetadata[]>;
 }

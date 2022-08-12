@@ -24,7 +24,10 @@ import {
     IKernelSocket,
     KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
-    IKernelConnectionSession
+    IKernelConnectionSession,
+    INotebookProviderConnection,
+    RemoteKernelConnectionMetadata,
+    IContributedKernelFinder
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 
@@ -332,4 +335,13 @@ export const IServerConnectionType = Symbol('IServerConnectionType');
 export interface IServerConnectionType {
     isLocalLaunch: boolean;
     onDidChange: Event<void>;
+}
+
+export const IRemoteKernelFinder = Symbol('IRemoteKernelFinder');
+export interface IRemoteKernelFinder extends IContributedKernelFinder {
+    listKernels(
+        resource: Resource,
+        connInfo: INotebookProviderConnection | undefined,
+        cancelToken?: CancellationToken
+    ): Promise<RemoteKernelConnectionMetadata[]>;
 }

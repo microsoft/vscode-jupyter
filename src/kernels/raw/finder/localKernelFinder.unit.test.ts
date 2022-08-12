@@ -43,20 +43,18 @@ import {
     LiveRemoteKernelConnectionMetadata,
     LocalKernelConnectionMetadata
 } from '../../types';
-import { JupyterPaths } from '../../raw/finder/jupyterPaths.node';
-import { LocalKernelFinder } from '../../raw/finder/localKernelFinder.node';
-import { loadKernelSpec } from '../../raw/finder/localKernelSpecFinderBase.node';
-import { LocalKnownPathKernelSpecFinder } from '../../raw/finder/localKnownPathKernelSpecFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
-import { ILocalKernelFinder, IRemoteKernelFinder } from '../../raw/types';
+import { JupyterPaths } from './jupyterPaths.node';
+import { LocalKernelFinder } from './localKernelFinder.node';
+import { loadKernelSpec } from './localKernelSpecFinderBase.node';
+import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { ILocalKernelFinder } from '../types';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { KernelFinder } from '../kernelFinder.node';
+import { KernelFinder } from '../../kernelFinder';
 import { PreferredRemoteKernelIdProvider } from '../../jupyter/preferredRemoteKernelIdProvider';
-import { NotebookProvider } from '../../jupyter/launcher/notebookProvider';
-import { RemoteKernelFinder } from '../../jupyter/remoteKernelFinder';
-import { JupyterServerUriStorage } from '../../jupyter/launcher/serverUriStorage';
-import { IJupyterRemoteCachedKernelValidator, IServerConnectionType } from '../../jupyter/types';
+import { RemoteKernelFinder } from '../../jupyter/finder/remoteKernelFinder';
+import { IRemoteKernelFinder, IServerConnectionType } from '../../jupyter/types';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
@@ -77,7 +75,6 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
         let jupyterPaths: JupyterPaths;
         let preferredRemote: PreferredRemoteKernelIdProvider;
         let pythonExecService: IPythonExecutionService;
-        let cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -238,6 +235,16 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2', anything())).thenReturn([]);
             when(memento.get('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenReturn([]);
             when(memento.update('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenResolve();
+
+            preferredRemote = mock(PreferredRemoteKernelIdProvider);
+            const connectionType = mock<IServerConnectionType>();
+            when(connectionType.isLocalLaunch).thenReturn(true);
+            const onDidChangeEvent = new EventEmitter<void>();
+            disposables.push(onDidChangeEvent);
+            when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
+
+            kernelFinder = new KernelFinder(instance(preferredRemote));
+
             localKernelFinder = new LocalKernelFinder(
                 nonPythonKernelSpecFinder,
                 new LocalPythonAndRelatedNonPythonKernelSpecFinder(
@@ -248,29 +255,11 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                     instance(extensionChecker),
                     nonPythonKernelSpecFinder,
                     instance(memento)
-                )
-            );
-            cachedRemoteKernelValidator = mock<IJupyterRemoteCachedKernelValidator>();
-            preferredRemote = mock(PreferredRemoteKernelIdProvider);
-            const notebookProvider = mock(NotebookProvider);
-            const serverUriStorage = mock(JupyterServerUriStorage);
-            const connectionType = mock<IServerConnectionType>();
-            when(connectionType.isLocalLaunch).thenReturn(true);
-            const onDidChangeEvent = new EventEmitter<void>();
-            disposables.push(onDidChangeEvent);
-            when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
-
-            kernelFinder = new KernelFinder(
-                localKernelFinder,
-                instance(remoteKernelFinder),
-                instance(preferredRemote),
-                instance(notebookProvider),
+                ),
                 instance(memento),
                 instance(fs),
-                instance(serverUriStorage),
-                instance(connectionType),
-                instance(cachedRemoteKernelValidator),
-                instance(env)
+                instance(env),
+                kernelFinder
             );
         }
         teardown(() => {
