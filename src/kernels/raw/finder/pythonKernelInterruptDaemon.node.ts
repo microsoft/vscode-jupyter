@@ -13,6 +13,14 @@ import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { Disposable, Uri } from 'vscode';
 import { EOL } from 'os';
 function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
+    // Give preference to globally installed python environments.
+    // The assumption is that users are more likely to uninstall/delete local python environments
+    // than global ones.
+    // The process started for interrupting kernels is per vs code session.
+    // What we'd like to prevent is, a user creates a local python environment, and then we start an interrupt daemon
+    // from that and then they subsequently delete that environment (on linux things should be fine, but on windows, users might not be able
+    // to delete that environment folder as the files are in use).
+    // At least this way user will  not have to exit vscode completely to delete such files/folders.
     if (
         isSupportedPythonVersion(interpreter) &&
         (interpreter?.envType === EnvironmentType.Global ||
@@ -29,7 +37,7 @@ function isSupportedPythonVersion(interpreter: PythonEnvironment) {
         (interpreter?.version?.major ?? 3) >= 3 &&
         // Even thought 3.6 is no longer supported, we know this works well enough for what we want.
         // This way we don't need to update this every time the supported version changes.
-        (interpreter?.version?.minor ?? 6) >= 3
+        (interpreter?.version?.minor ?? 6) >= 6
     ) {
         return true;
     }
