@@ -26,10 +26,10 @@ import {
     LiveRemoteKernelConnectionMetadata,
     IKernelConnectionSession,
     INotebookProviderConnection,
-    RemoteKernelConnectionMetadata,
-    IContributedKernelFinder
+    RemoteKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
+import { IContributedKernelFinder } from '../internalTypes';
 
 export type JupyterServerInfo = {
     base_url: string;

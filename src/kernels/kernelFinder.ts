@@ -12,8 +12,9 @@ import { TraceOptions } from '../platform/logging/types';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { rankKernels, isExactMatch } from './helpers';
+import { IContributedKernelFinder } from './internalTypes';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
-import { IContributedKernelFinder, IKernelFinder, isLocalConnection, KernelConnectionMetadata } from './types';
+import { IKernelFinder, isLocalConnection, KernelConnectionMetadata } from './types';
 
 // Two cache keys so we can get local and remote separately (exported for tests)
 export const LocalKernelSpecsCacheKey = 'JUPYTER_LOCAL_KERNELSPECS_V4';

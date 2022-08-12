@@ -39,6 +39,7 @@ import { deserializeKernelConnection } from '../../helpers';
 import { createDeferredFromPromise } from '../../../platform/common/utils/async';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
+import { KernelFinder } from '../../kernelFinder';
 
 export const LocalKernelSpecsCacheKey = 'JUPYTER_LOCAL_KERNELSPECS_V4';
 export const RemoteKernelSpecsCacheKey = 'JUPYTER_REMOTE_KERNELSPECS_V4';
@@ -66,7 +67,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IJupyterRemoteCachedKernelValidator)
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
-        @inject(IKernelFinder) kernelFinder: IKernelFinder,
+        @inject(IKernelFinder) kernelFinder: KernelFinder,
         @inject(IsWebExtension) private isWebExtension: boolean
     ) {
         kernelFinder.registerKernelFinder(this);

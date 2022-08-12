@@ -28,6 +28,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 import { createDeferredFromPromise } from '../../../platform/common/utils/async';
 import { noop } from '../../../platform/common/utils/misc';
 import { IFileSystem } from '../../../platform/common/platform/types';
+import { KernelFinder } from '../../kernelFinder';
 
 export const LocalKernelSpecsCacheKey = 'JUPYTER_LOCAL_KERNELSPECS_V4';
 export const RemoteKernelSpecsCacheKey = 'JUPYTER_REMOTE_KERNELSPECS_V4';
@@ -47,7 +48,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
-        @inject(IKernelFinder) kernelFinder: IKernelFinder
+        @inject(IKernelFinder) kernelFinder: KernelFinder
     ) {
         kernelFinder.registerKernelFinder(this);
     }

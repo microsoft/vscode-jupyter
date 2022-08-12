@@ -38,7 +38,6 @@ import { IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import {
-    IKernelFinder,
     KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata,
     LocalKernelConnectionMetadata
@@ -64,7 +63,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let localKernelFinder: ILocalKernelFinder;
         let remoteKernelFinder: IRemoteKernelFinder;
-        let kernelFinder: IKernelFinder;
+        let kernelFinder: KernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
         let fs: FileSystem;

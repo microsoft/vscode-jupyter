@@ -5,8 +5,8 @@
 
 import { CancellationToken, Event } from 'vscode';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
+import { IContributedKernelFinder } from '../internalTypes';
 import {
-    IContributedKernelFinder,
     IKernelConnectionSession,
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
