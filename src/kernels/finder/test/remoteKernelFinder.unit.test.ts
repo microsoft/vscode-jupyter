@@ -8,42 +8,42 @@
 import type { Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../../helpers';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { Disposable, EventEmitter, Memento, Uri } from 'vscode';
 import { CryptoUtils } from '../../../platform/common/crypto';
-import { noop } from '../../core';
+import { noop } from '../../../test/core';
 import {
     IJupyterConnection,
     IJupyterKernelSpec,
     IKernelFinder,
     KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata
-} from '../../../kernels/types';
+} from '../../types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager';
-import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory';
-import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
-import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
+import { JupyterSessionManager } from '../../jupyter/session/jupyterSessionManager';
+import { JupyterSessionManagerFactory } from '../../jupyter/session/jupyterSessionManagerFactory';
+import { RemoteKernelFinder } from '../../jupyter/remoteKernelFinder';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../../raw/types';
 import {
     ActiveKernelIdList,
     PreferredRemoteKernelIdProvider
-} from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
+} from '../../jupyter/preferredRemoteKernelIdProvider';
 import {
     IJupyterKernel,
     IJupyterRemoteCachedKernelValidator,
     IJupyterSessionManager,
     IServerConnectionType
-} from '../../../kernels/jupyter/types';
-import { KernelFinder } from '../../../kernels/kernelFinder.node';
-import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
+} from '../../jupyter/types';
+import { KernelFinder } from '../kernelFinder.node';
+import { NotebookProvider } from '../../jupyter/launcher/notebookProvider';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
+import { LocalKernelFinder } from '../../raw/finder/localKernelFinder.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
+import { JupyterServerUriStorage } from '../../jupyter/launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { takeTopRankKernel } from './localKernelFinder.unit.test';
-import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../../kernels/kernelFinder.base';
+import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../kernelFinder.base';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 
 suite(`Remote Kernel Finder`, () => {

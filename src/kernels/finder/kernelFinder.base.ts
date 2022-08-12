@@ -3,13 +3,13 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { CancellationToken, Memento } from 'vscode';
-import { createPromiseFromCancellation, isCancellationError } from '../platform/common/cancellation';
-import { Telemetry } from '../platform/common/constants';
-import { Resource } from '../platform/common/types';
-import { createDeferredFromPromise } from '../platform/common/utils/async';
-import { noop } from '../platform/common/utils/misc';
-import { StopWatch } from '../platform/common/utils/stopWatch';
-import { isArray } from '../platform/common/utils/sysTypes';
+import { createPromiseFromCancellation, isCancellationError } from '../../platform/common/cancellation';
+import { Telemetry } from '../../platform/common/constants';
+import { Resource } from '../../platform/common/types';
+import { createDeferredFromPromise } from '../../platform/common/utils/async';
+import { noop } from '../../platform/common/utils/misc';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { isArray } from '../../platform/common/utils/sysTypes';
 import {
     traceError,
     traceDecoratorVerbose,
@@ -17,23 +17,23 @@ import {
     traceVerbose,
     logValue,
     ignoreLogging
-} from '../platform/logging';
-import { TraceOptions } from '../platform/logging/types';
-import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { DisplayOptions } from './displayOptions';
-import { rankKernels, deserializeKernelConnection, serializeKernelConnection, isExactMatch } from './helpers';
-import { IJupyterServerUriStorage, IServerConnectionType } from './jupyter/types';
-import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
-import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
+} from '../../platform/logging';
+import { TraceOptions } from '../../platform/logging/types';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { DisplayOptions } from '../displayOptions';
+import { rankKernels, deserializeKernelConnection, serializeKernelConnection, isExactMatch } from '../helpers';
+import { IJupyterServerUriStorage, IServerConnectionType } from '../jupyter/types';
+import { PreferredRemoteKernelIdProvider } from '../jupyter/preferredRemoteKernelIdProvider';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../raw/types';
 import {
     IKernelFinder,
     INotebookProvider,
     INotebookProviderConnection,
     isLocalConnection,
     KernelConnectionMetadata
-} from './types';
-import { IApplicationEnvironment } from '../platform/common/application/types';
+} from '../types';
+import { IApplicationEnvironment } from '../../platform/common/application/types';
 
 // Two cache keys so we can get local and remote separately (exported for tests)
 export const LocalKernelSpecsCacheKey = 'JUPYTER_LOCAL_KERNELSPECS_V4';

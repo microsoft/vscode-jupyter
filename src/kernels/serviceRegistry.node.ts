@@ -37,7 +37,7 @@ import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { KernelAutoRestartMonitor } from './kernelAutoRestartMonitor.node';
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.node';
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.node';
-import { KernelFinder } from './kernelFinder.node';
+import { KernelFinder } from './finder/kernelFinder.node';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { Activation } from './activation.node';
 import { PortAttributesProviders } from './port/portAttributeProvider.node';

@@ -3,14 +3,14 @@
 
 import { injectable, inject, named } from 'inversify';
 import { Memento, Uri } from 'vscode';
-import { GLOBAL_MEMENTO, IMemento } from '../platform/common/types';
-import { IJupyterRemoteCachedKernelValidator, IJupyterServerUriStorage, IServerConnectionType } from './jupyter/types';
+import { GLOBAL_MEMENTO, IMemento } from '../../platform/common/types';
+import { IJupyterRemoteCachedKernelValidator, IJupyterServerUriStorage, IServerConnectionType } from '../jupyter/types';
 import { BaseKernelFinder } from './kernelFinder.base';
-import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
-import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
-import { INotebookProvider, KernelConnectionMetadata } from './types';
-import { IFileSystem } from '../platform/common/platform/types';
-import { IApplicationEnvironment } from '../platform/common/application/types';
+import { PreferredRemoteKernelIdProvider } from '../jupyter/preferredRemoteKernelIdProvider';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../raw/types';
+import { INotebookProvider, KernelConnectionMetadata } from '../types';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IApplicationEnvironment } from '../../platform/common/application/types';
 
 /**
  * Node version of a KernelFinder. Node has different ways to validate than web.
