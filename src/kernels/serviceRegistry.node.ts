@@ -67,6 +67,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         KernelEnvironmentVariablesService,
         KernelEnvironmentVariablesService
     );
+    serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
     serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
     serviceManager.addSingleton<JupyterPaths>(JupyterPaths, JupyterPaths);
     serviceManager.addSingleton<LocalKnownPathKernelSpecFinder>(
@@ -104,7 +105,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<IThirdPartyKernelProvider>(IThirdPartyKernelProvider, ThirdPartyKernelProvider);
-    serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
 
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);

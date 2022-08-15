@@ -24,7 +24,10 @@ import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterS
 import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernelFinder';
 import { ILocalKernelFinder } from '../../../kernels/raw/types';
-import { ActiveKernelIdList, PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import {
+    ActiveKernelIdList,
+    PreferredRemoteKernelIdProvider
+} from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import {
     IJupyterKernel,
     IJupyterRemoteCachedKernelValidator,

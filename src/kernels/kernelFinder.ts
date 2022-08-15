@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import type * as nbformat from '@jupyterlab/nbformat';
+import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { isCancellationError } from '../platform/common/cancellation';
 import { Telemetry } from '../platform/common/constants';
@@ -19,12 +20,15 @@ import { IKernelFinder, isLocalConnection, KernelConnectionMetadata } from './ty
 /**
  * Generic class for finding kernels (both remote and local). Handles all of the caching of the results.
  */
+@injectable()
 export class KernelFinder implements IKernelFinder {
     private startTimeForFetching?: StopWatch;
     private fetchingTelemetrySent = new Set<string>();
     private _finders: IContributedKernelFinder[] = [];
 
-    constructor(private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider) {}
+    constructor(
+        @inject(PreferredRemoteKernelIdProvider) private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider
+    ) {}
 
     public registerKernelFinder(finder: IContributedKernelFinder) {
         this._finders.push(finder);
