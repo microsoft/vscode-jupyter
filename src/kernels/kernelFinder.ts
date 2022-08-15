@@ -16,10 +16,6 @@ import { IContributedKernelFinder } from './internalTypes';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { IKernelFinder, isLocalConnection, KernelConnectionMetadata } from './types';
 
-// Two cache keys so we can get local and remote separately (exported for tests)
-export const LocalKernelSpecsCacheKey = 'JUPYTER_LOCAL_KERNELSPECS_V4';
-export const RemoteKernelSpecsCacheKey = 'JUPYTER_REMOTE_KERNELSPECS_V4';
-
 /**
  * Generic class for finding kernels (both remote and local). Handles all of the caching of the results.
  */

@@ -29,9 +29,7 @@ import { createDeferredFromPromise } from '../../../platform/common/utils/async'
 import { noop } from '../../../platform/common/utils/misc';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { KernelFinder } from '../../kernelFinder';
-
-export const LocalKernelSpecsCacheKey = 'JUPYTER_LOCAL_KERNELSPECS_V4';
-export const RemoteKernelSpecsCacheKey = 'JUPYTER_REMOTE_KERNELSPECS_V4';
+import { LocalKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -217,7 +215,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         this.cache = values;
         const serialized = values.map(serializeKernelConnection);
         await Promise.all([
-            this.removeOldCachedItems(),
+            removeOldCachedItems(this.globalState),
             ,
             this.globalState.update(this.getCacheKey(), {
                 kernels: serialized,
@@ -228,27 +226,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
     private getCacheKey() {
         return LocalKernelSpecsCacheKey;
-    }
-
-    /**
-     * The old cached items can be quite large and we should clear them if we no longer need them.
-     */
-    private async removeOldCachedItems(): Promise<void> {
-        await Promise.all(
-            [
-                'JUPYTER_LOCAL_KERNELSPECS',
-                'JUPYTER_LOCAL_KERNELSPECS_V1',
-                'JUPYTER_LOCAL_KERNELSPECS_V2',
-                'JUPYTER_LOCAL_KERNELSPECS_V3',
-                'JUPYTER_REMOTE_KERNELSPECS',
-                'JUPYTER_REMOTE_KERNELSPECS_V1',
-                'JUPYTER_REMOTE_KERNELSPECS_V2',
-                'JUPYTER_REMOTE_KERNELSPECS_V3'
-            ]
-                .filter((key) => LocalKernelSpecsCacheKey !== key && RemoteKernelSpecsCacheKey !== key) // Exclude latest cache key
-                .filter((key) => this.globalState.get(key, undefined) !== undefined)
-                .map((key) => this.globalState.update(key, undefined).then(noop, noop))
-        );
     }
 
     private async isValidCachedKernel(kernel: LocalKernelConnectionMetadata): Promise<boolean> {

@@ -16,7 +16,6 @@ import { noop } from '../../../test/core';
 import {
     IJupyterConnection,
     IJupyterKernelSpec,
-    IKernelFinder,
     KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata
 } from '../../types';
@@ -41,15 +40,15 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { JupyterServerUriStorage } from '../launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { takeTopRankKernel } from '../../raw/finder/localKernelFinder.unit.test';
-import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../kernelFinder';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
+import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
     let preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider;
     let remoteKernelFinder: IRemoteKernelFinder;
     let localKernelFinder: ILocalKernelFinder;
-    let kernelFinder: IKernelFinder;
+    let kernelFinder: KernelFinder;
     let fs: IFileSystemNode;
     let memento: Memento;
     let jupyterSessionManager: IJupyterSessionManager;
