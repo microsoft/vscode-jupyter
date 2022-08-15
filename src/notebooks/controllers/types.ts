@@ -30,6 +30,7 @@ export interface IVSCodeNotebookController extends IDisposable {
     asWebviewUri(localResource: vscode.Uri): vscode.Uri;
     isAssociatedWithDocument(notebook: vscode.NotebookDocument): boolean;
     updateConnection(connection: KernelConnectionMetadata): void;
+    setPendingCellAddition(promise: Promise<void>): void;
 }
 export const IControllerRegistration = Symbol('IControllerRegistration');
 

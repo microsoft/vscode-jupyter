@@ -97,6 +97,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         selected: boolean;
         notebook: NotebookDocument;
     }>();
+    private pendingCellAddition: Promise<void> | undefined;
     private readonly _onDidDispose = new EventEmitter<void>();
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
@@ -211,6 +212,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         traceInfoIfCI(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
         return this.controller.postMessage(message, editor);
     }
+    public setPendingCellAddition(promise: Promise<void>): void {
+        this.pendingCellAddition = promise;
+    }
 
     public dispose() {
         if (!this.isDisposed) {
@@ -235,6 +239,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (cells.length < 1) {
             return;
         }
+        await this.pendingCellAddition;
         // Found on CI that sometimes VS Code calls this with old deleted cells.
         // See here https://github.com/microsoft/vscode-jupyter/runs/5581627878?check_suite_focus=true
         cells = cells.filter((cell) => {

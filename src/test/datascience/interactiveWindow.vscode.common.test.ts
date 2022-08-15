@@ -628,16 +628,18 @@ ${actualCode}
         let runFilePromise = vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows);
 
         const settings = vscode.workspace.getConfiguration('jupyter', null);
-        const mode = await settings.get('interactiveWindowMode') as InteractiveWindowMode;
+        const mode = (await settings.get('interactiveWindowMode')) as InteractiveWindowMode;
         const interactiveWindow = interactiveWindowProvider.getExisting(tempFile.file, mode) as InteractiveWindow;
         await runInteractiveWindowInput('x = 5', interactiveWindow, 5);
         await runFilePromise;
         await waitForLastCellToComplete(interactiveWindow, 5, false);
 
-        const cells = interactiveWindow.notebookDocument.getCells().filter((c) => c.kind === vscode.NotebookCellKind.Code);
+        const cells = interactiveWindow.notebookDocument
+            .getCells()
+            .filter((c) => c.kind === vscode.NotebookCellKind.Code);
         const printCell = cells[cells.length - 2];
 
         const output = getTextOutputValue(printCell.outputs[0]);
-        assert.equal(output, '1', 'original value should have been printed');
+        assert.equal(output.trim(), '1', 'original value should have been printed');
     });
 });
