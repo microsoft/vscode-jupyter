@@ -56,23 +56,21 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         cancelToken: CancellationToken | undefined,
         useCache: 'ignoreCache' | 'useCache'
     ): Promise<KernelConnectionMetadata[]> {
-        const kernels: KernelConnectionMetadata[] = await this.listKernelsUsingFinder(
-            resource,
-            cancelToken,
-            useCache
-        ).catch((ex) => {
-            // Sometimes we can get errors from the socket level or jupyter, with the message 'Canceled', lets ignore those
-            if (!isCancellationError(ex, true)) {
-                traceError('Failed to get local kernels', ex);
+        const kernels: KernelConnectionMetadata[] = await this.listKernelsImpl(resource, cancelToken, useCache).catch(
+            (ex) => {
+                // Sometimes we can get errors from the socket level or jupyter, with the message 'Canceled', lets ignore those
+                if (!isCancellationError(ex, true)) {
+                    traceError('Failed to get local kernels', ex);
+                }
+                return [];
             }
-            return [];
-        });
+        );
         traceVerbose(`KernelFinder discovered ${kernels.length} local`);
 
         return kernels;
     }
 
-    private async listKernelsUsingFinder(
+    private async listKernelsImpl(
         resource: Resource,
         cancelToken: CancellationToken | undefined,
         useCache: 'ignoreCache' | 'useCache'
@@ -139,7 +137,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         // If not in memory, check memento
         if (!results || results.length === 0) {
             // Check memento too
-            const values = this.globalState.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
+            const values = this.globalState.get<{ kernels: LocalKernelConnectionMetadata[]; extensionVersion: string }>(
                 this.getCacheKey(),
                 { kernels: [], extensionVersion: '' }
             );
@@ -153,7 +151,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
              * To ensure we don't run into weird issues with the use of cached kernelSpec.json files, we ensure the cache is tied to each version of the extension.
              */
             if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
-                // TODO@rebornix
                 results = values.kernels.map(deserializeKernelConnection) as LocalKernelConnectionMetadata[];
                 this.cache = results;
             }

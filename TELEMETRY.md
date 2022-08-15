@@ -7024,7 +7024,7 @@ No description provided
 
     // Talk to the remote server to determine sessions
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
-    public async listKernels(
+    public async listKernelsFromConnection(
         _resource: Resource,
         connInfo: INotebookProviderConnection
 ```

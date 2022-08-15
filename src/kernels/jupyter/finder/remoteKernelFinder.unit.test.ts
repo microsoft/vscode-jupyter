@@ -184,7 +184,7 @@ suite(`Remote Kernel Finder`, () => {
             juliaSpec,
             interpreterSpec
         ]);
-        const kernels = await remoteKernelFinder.listKernels(undefined, connInfo);
+        const kernels = await remoteKernelFinder.listKernelsFromConnection(undefined, connInfo);
         assert.equal(kernels.length, 4, 'Not enough kernels returned');
         assert.equal(
             getDisplayNameOrNameOfKernelConnection(kernels[0]),
@@ -211,7 +211,7 @@ suite(`Remote Kernel Finder`, () => {
             juliaSpec,
             interpreterSpec
         ]);
-        const kernels = await remoteKernelFinder.listKernels(undefined, connInfo);
+        const kernels = await remoteKernelFinder.listKernelsFromConnection(undefined, connInfo);
         const liveKernels = kernels.filter((k) => k.kind === 'connectToLiveRemoteKernel');
         assert.equal(liveKernels.length, 3, 'Live kernels not found');
     });

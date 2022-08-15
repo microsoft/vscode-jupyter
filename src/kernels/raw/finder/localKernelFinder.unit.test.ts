@@ -104,7 +104,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
             interpreterService = mock(InterpreterService);
             remoteKernelFinder = mock(RemoteKernelFinder);
-            when(remoteKernelFinder.listKernels(anything(), anything(), anything())).thenResolve([]);
+            when(remoteKernelFinder.listKernelsFromConnection(anything(), anything(), anything())).thenResolve([]);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
                 testData.interpreters = testData.interpreters || [];

@@ -76,23 +76,21 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         cancelToken: CancellationToken | undefined,
         useCache: 'ignoreCache' | 'useCache'
     ): Promise<KernelConnectionMetadata[]> {
-        const kernels: KernelConnectionMetadata[] = await this.listKernelsUsingFinder(
-            resource,
-            cancelToken,
-            useCache
-        ).catch((ex) => {
-            // Sometimes we can get errors from the socket level or jupyter, with the message 'Canceled', lets ignore those
-            if (!isCancellationError(ex, true)) {
-                traceError('Failed to get remote kernels', ex);
+        const kernels: KernelConnectionMetadata[] = await this.listKernelsImpl(resource, cancelToken, useCache).catch(
+            (ex) => {
+                // Sometimes we can get errors from the socket level or jupyter, with the message 'Canceled', lets ignore those
+                if (!isCancellationError(ex, true)) {
+                    traceError('Failed to get remote kernels', ex);
+                }
+                return [];
             }
-            return [];
-        });
+        );
 
         traceVerbose(`KernelFinder discovered ${kernels.length} remote`);
         return kernels;
     }
 
-    private async listKernelsUsingFinder(
+    private async listKernelsImpl(
         resource: Resource,
         cancelToken: CancellationToken | undefined,
         useCache: 'ignoreCache' | 'useCache'
@@ -106,7 +104,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         let updateCache = true;
         const kernelsWithoutCachePromise = (async () => {
             const connInfo = await this.getRemoteConnectionInfo(cancelToken);
-            return connInfo ? this.listKernels(resource, connInfo) : Promise.resolve([]);
+            return connInfo ? this.listKernelsFromConnection(resource, connInfo) : Promise.resolve([]);
         })();
         let kernels: RemoteKernelConnectionMetadata[] = [];
         if (useCache === 'ignoreCache') {
@@ -191,16 +189,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 extensionVersion: string;
             }>(key, { kernels: [], extensionVersion: '' });
 
-            /**
-             * The cached list of raw kernels is pointing to kernelSpec.json files in the extensions directory.
-             * Assume you have version 1 of extension installed.
-             * Now you update to version 2, at this point the cache still points to version 1 and the kernelSpec.json files are in the directory version 1.
-             * Those files in directory for version 1 could get deleted by VS Code at any point in time, as thats an old version of the extension and user has now installed version 2.
-             * Hence its wrong and buggy to use those files.
-             * To ensure we don't run into weird issues with the use of cached kernelSpec.json files, we ensure the cache is tied to each version of the extension.
-             */
             if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
-                // TODO@rebornix
                 results = values.kernels.map(deserializeKernelConnection) as RemoteKernelConnectionMetadata[];
                 this.cache = results;
             }
@@ -228,7 +217,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
 
     // Talk to the remote server to determine sessions
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
-    public async listKernels(
+    public async listKernelsFromConnection(
         _resource: Resource,
         connInfo: INotebookProviderConnection
     ): Promise<RemoteKernelConnectionMetadata[]> {
@@ -337,7 +326,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         const serialized = values.map(serializeKernelConnection);
         await Promise.all([
             removeOldCachedItems(this.globalState),
-            ,
             this.globalState.update(key, { kernels: serialized, extensionVersion: this.env.extensionVersion })
         ]);
     }

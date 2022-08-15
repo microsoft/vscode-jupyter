@@ -339,7 +339,7 @@ export interface IServerConnectionType {
 
 export const IRemoteKernelFinder = Symbol('IRemoteKernelFinder');
 export interface IRemoteKernelFinder extends IContributedKernelFinder {
-    listKernels(
+    listKernelsFromConnection(
         resource: Resource,
         connInfo: INotebookProviderConnection | undefined,
         cancelToken?: CancellationToken
