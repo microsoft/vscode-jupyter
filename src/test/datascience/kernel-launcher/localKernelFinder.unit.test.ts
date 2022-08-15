@@ -24,7 +24,7 @@ import {
     getKernelRegistrationInfo,
     getNameOfKernelConnection,
     serializeKernelConnection
-} from '../../helpers';
+} from '../../../kernels/helpers';
 import { PlatformService } from '../../../platform/common/platform/platformService.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
@@ -41,20 +41,20 @@ import {
     KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata,
     LocalKernelConnectionMetadata
-} from '../../types';
-import { JupyterPaths } from './jupyterPaths.node';
-import { LocalKernelFinder } from './localKernelFinder.node';
-import { loadKernelSpec } from './localKernelSpecFinderBase.node';
-import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
-import { ILocalKernelFinder } from '../types';
+} from '../../../kernels/types';
+import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
+import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
+import { loadKernelSpec } from '../../../kernels/raw/finder/localKernelSpecFinderBase.node';
+import { LocalKnownPathKernelSpecFinder } from '../../../kernels/raw/finder/localKnownPathKernelSpecFinder.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { ILocalKernelFinder } from '../../../kernels/raw/types';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { KernelFinder } from '../../kernelFinder';
-import { PreferredRemoteKernelIdProvider } from '../../jupyter/preferredRemoteKernelIdProvider';
-import { RemoteKernelFinder } from '../../jupyter/finder/remoteKernelFinder';
-import { IRemoteKernelFinder, IServerConnectionType } from '../../jupyter/types';
-import { uriEquals } from '../../../test/datascience/helpers';
+import { KernelFinder } from '../../../kernels/kernelFinder';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernelFinder';
+import { IRemoteKernelFinder, IServerConnectionType } from '../../../kernels/jupyter/types';
+import { uriEquals } from '../helpers';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
