@@ -40,7 +40,7 @@ import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.node'
 import { KernelFinder } from './kernelFinder';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { Activation } from './activation.node';
-import { PortAttributesProviders } from './port/portAttributeProvider.node';
+import { PortAttributesProviders } from './raw/port/portAttributeProvider.node';
 import { ServerPreload } from './jupyter/launcher/serverPreload.node';
 import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
 import { KernelAutoReConnectFailedMonitor } from './kernelAutoReConnectFailedMonitor';
