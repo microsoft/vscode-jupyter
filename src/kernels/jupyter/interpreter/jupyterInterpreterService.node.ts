@@ -18,6 +18,8 @@ import { JupyterInterpreterOldCacheStateStore } from './jupyterInterpreterOldCac
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
 import { JupyterInterpreterDependencyResponse } from '../types';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { DataScience } from '../../../platform/common/utils/localize';
 
 /**
  * Manages picking an interpreter that can run jupyter.
@@ -39,7 +41,8 @@ export class JupyterInterpreterService {
         @inject(JupyterInterpreterSelector) private readonly jupyterInterpreterSelector: JupyterInterpreterSelector,
         @inject(JupyterInterpreterDependencyService)
         private readonly interpreterConfiguration: JupyterInterpreterDependencyService,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
     /**
      * Gets the selected interpreter configured to run Jupyter.
@@ -112,6 +115,17 @@ export class JupyterInterpreterService {
             // Use current interpreter.
             interpreter = await this.interpreterService.getActiveInterpreter(undefined);
             if (!interpreter) {
+                if (err) {
+                    const selection = await this.appShell.showErrorMessage(
+                        err.message,
+                        { modal: true },
+                        DataScience.selectDifferentJupyterInterpreter()
+                    );
+                    if (selection !== DataScience.selectDifferentJupyterInterpreter()) {
+                        return JupyterInterpreterDependencyResponse.cancel;
+                    }
+                }
+
                 // Unlikely scenario, user hasn't selected python, python extension will fall over.
                 // Get user to select something.
                 await this.selectInterpreter();
