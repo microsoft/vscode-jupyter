@@ -5,7 +5,6 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { IServiceManager } from '../../platform/ioc/types';
 import { DataScienceErrorHandlerWeb } from '../errors/kernelErrorHandler.web';
 import { IDataScienceErrorHandler } from '../errors/types';
-import { IRemoteKernelFinder } from '../raw/types';
 import { INotebookProvider } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
 import { CommandRegistry } from './commands/commandRegistry';
@@ -41,7 +40,8 @@ import {
     INotebookServerFactory,
     ILiveRemoteKernelConnectionUsageTracker,
     IJupyterRemoteCachedKernelValidator,
-    IServerConnectionType
+    IServerConnectionType,
+    IRemoteKernelFinder
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
