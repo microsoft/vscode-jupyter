@@ -16,8 +16,8 @@ const { setupCoverage } = require('./coverage.node');
 const nyc = setupCoverage();
 
 import * as fs from 'fs-extra';
-import * as glob from 'glob';
-import * as Mocha from 'mocha';
+import glob from 'glob';
+import Mocha from 'mocha';
 import * as path from '../platform/vscode-path/path';
 import * as v8 from 'v8';
 import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants.node';

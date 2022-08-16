@@ -11,7 +11,7 @@ import { CustomEnvironmentVariablesProvider } from '../../../../../platform/comm
 import { IEnvironmentVariablesService } from '../../../../../platform/common/variables/types';
 import * as fs from 'fs-extra';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../../constants.node';
-import * as dedent from 'dedent';
+import dedent from 'dedent';
 import { IPythonExtensionChecker } from '../../../../../platform/api/types';
 import { captureScreenShot, createEventHandler } from '../../../../common';
 import { traceInfo } from '../../../../../platform/logging';

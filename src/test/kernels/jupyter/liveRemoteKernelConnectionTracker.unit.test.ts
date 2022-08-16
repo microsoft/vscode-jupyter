@@ -10,7 +10,7 @@ import { EventEmitter, Memento, Uri } from 'vscode';
 import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
-import * as chaiAsPromised from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised';
 import {
     LiveRemoteKernelConnectionUsageTracker,
     mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources

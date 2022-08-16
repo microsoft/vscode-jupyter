@@ -6,7 +6,7 @@
 /* eslint-disable  */
 
 import { assert, use } from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised';
 import * as path from '../../../platform/vscode-path/path';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { EnvironmentVariablesService } from '../../../platform/common/variables/environment.node';

@@ -5,7 +5,7 @@
 
 /* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
-import * as assert from 'assert';
+import assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from '../platform/vscode-path/path';
 import * as tmp from 'tmp';

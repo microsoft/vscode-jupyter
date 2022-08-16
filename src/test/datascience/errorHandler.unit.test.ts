@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 'use strict';
-import * as dedent from 'dedent';
+import dedent from 'dedent';
 import { assert } from 'chai';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';

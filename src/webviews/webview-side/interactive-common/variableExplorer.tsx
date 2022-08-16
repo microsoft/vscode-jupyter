@@ -4,7 +4,7 @@
 'use strict';
 import './variableExplorer.css';
 
-import * as fastDeepEqual from 'fast-deep-equal';
+import fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 
 import { getLocString } from '../react-common/locReactSide';
@@ -12,7 +12,7 @@ import { IButtonCellValue, VariableExplorerButtonCellFormatter } from './variabl
 import { CellStyle, VariableExplorerCellFormatter } from './variableExplorerCellFormatter';
 import { VariableExplorerEmptyRowsView } from './variableExplorerEmptyRows';
 
-import * as AdazzleReactDataGrid from 'react-data-grid';
+import AdazzleReactDataGrid from 'react-data-grid';
 import { VariableExplorerHeaderCellFormatter } from './variableExplorerHeaderCellFormatter';
 import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
 
