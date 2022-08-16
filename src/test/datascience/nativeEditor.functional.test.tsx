@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -7,7 +7,7 @@ suite('Dummy8', () => {
         //
     });
 });
-// // Copyright (c) Microsoft Corporation. All rights reserved.
+// // Copyright (c) Microsoft Corporation.
 // // Licensed under the MIT License.
 // 'use strict';
 // import type * as nbformat from '@jupyterlab/nbformat';
