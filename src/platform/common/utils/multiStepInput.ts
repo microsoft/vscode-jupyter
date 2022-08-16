@@ -266,6 +266,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                             resolve(inputValue);
                         } else {
                             input.validationMessage = validationMessage;
+
+                            // On validation error make sure we are showing our input
+                            input.show();
                         }
                         input.enabled = true;
                         input.busy = false;
