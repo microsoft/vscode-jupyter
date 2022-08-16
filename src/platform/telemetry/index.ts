@@ -20,8 +20,7 @@ export {
     JupyterCommands,
     NativeKeyboardCommandTelemetry,
     NativeMouseCommandTelemetry,
-    Telemetry,
-    VSCodeNativeTelemetry
+    Telemetry
 } from '../common/constants';
 
 export const waitBeforeSending = 'waitBeforeSending';
