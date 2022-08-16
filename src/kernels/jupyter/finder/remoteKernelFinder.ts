@@ -41,12 +41,13 @@ import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
 import { RemoteKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
-export class RemoteKernelFinder implements IRemoteKernelFinder {
+export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingleActivationService {
     /**
      * List of ids of kernels that should be hidden from the kernel picker.
      */
@@ -70,6 +71,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     ) {
         kernelFinder.registerKernelFinder(this);
     }
+
+    async activate(): Promise<void> {}
 
     async listContributedKernels(
         resource: Resource,

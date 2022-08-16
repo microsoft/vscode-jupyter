@@ -57,7 +57,6 @@ export interface IKernelProcess extends IDisposable {
     interrupt(): Promise<void>;
 }
 
-export const ILocalKernelFinder = Symbol('ILocalKernelFinder');
 export interface ILocalKernelFinder extends IContributedKernelFinder {
     /**
      * Finds all kernel specs including Python.

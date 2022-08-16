@@ -337,7 +337,6 @@ export interface IServerConnectionType {
     onDidChange: Event<void>;
 }
 
-export const IRemoteKernelFinder = Symbol('IRemoteKernelFinder');
 export interface IRemoteKernelFinder extends IContributedKernelFinder {
     listKernelsFromConnection(
         resource: Resource,

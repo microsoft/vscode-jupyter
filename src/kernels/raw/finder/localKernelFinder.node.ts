@@ -30,12 +30,13 @@ import { noop } from '../../../platform/common/utils/misc';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { KernelFinder } from '../../kernelFinder';
 import { LocalKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
-export class LocalKernelFinder implements ILocalKernelFinder {
+export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleActivationService {
     private cache: LocalKernelConnectionMetadata[] = [];
     kind: string = 'local';
 
@@ -50,6 +51,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     ) {
         kernelFinder.registerKernelFinder(this);
     }
+
+    async activate(): Promise<void> {}
 
     async listContributedKernels(
         resource: Resource,
