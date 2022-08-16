@@ -237,7 +237,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (this.kernelConnectionMetadata) {
             this.pendingCellAdd = cellAddedPromise;
             const controller = this.controllerRegistration.get(this.kernelConnectionMetadata, 'interactive');
-            controller?.setPendingCellAddition(cellAddedPromise);
+            controller?.setPendingCellAddition(this.notebookDocument, cellAddedPromise);
         }
     }
 
