@@ -81,19 +81,10 @@ export class KernelFinder implements IKernelFinder {
 
         const allKernels = await Promise.all(
             this._finders.map((finder) => {
-                return finder
-                    .listContributedKernels(resource, cancelToken, useCache)
-                    .catch((ex) => {
-                        // Sometimes we can get errors from the socket level or jupyter, with the message 'Canceled', lets ignore those
-                        if (!isCancellationError(ex, true)) {
-                            traceError(`Failed to get ${finder.kind} kernels`, ex);
-                        }
-                        return [];
-                    })
-                    .then((kernels) => {
-                        this.finishListingKernels(kernels, useCache, finder.kind as 'local' | 'remote');
-                        return kernels;
-                    });
+                return finder.listContributedKernels(resource, cancelToken, useCache).then((kernels) => {
+                    this.finishListingKernels(kernels, useCache, finder.kind as 'local' | 'remote');
+                    return kernels;
+                });
             })
         );
 

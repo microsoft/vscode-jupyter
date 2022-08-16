@@ -90,7 +90,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
             try {
                 kernels = await kernelsWithoutCachePromise;
             } catch (ex) {
-                traceWarning(`Could not fetch kernels from the ${this.kind} server, falling back to cache: ${ex}`);
+                traceWarning(`Could not fetch kernels from the ${this.kind}`);
                 kernels = [];
                 updateCache = false;
             }
