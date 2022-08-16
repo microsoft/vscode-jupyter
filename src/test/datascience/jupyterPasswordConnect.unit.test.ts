@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as assert from 'assert';
+import assert from 'assert';
 import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';
 

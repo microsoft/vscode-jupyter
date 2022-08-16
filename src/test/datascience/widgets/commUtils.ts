@@ -7,7 +7,7 @@ import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { noop } from '../../core';
-import * as colors from 'colors';
+import colors from 'colors';
 
 export function initializeWidgetComms(disposables: IDisposable[]): Utils {
     const messageChannel = notebooks.createRendererMessaging('jupyter-ipywidget-renderer');

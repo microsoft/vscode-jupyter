@@ -7,7 +7,7 @@ suite('Dummy7', () => {
         //
     });
 });
-// import * as assert from 'assert';
+// import assert from 'assert';
 
 // import { Event, EventEmitter, Extension, ExtensionKind, QuickPickItem, Uri } from 'vscode';
 // import { IExtensions } from '../../platform/common/types';

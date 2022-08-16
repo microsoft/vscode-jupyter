@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as assert from 'assert';
+import assert from 'assert';
 import { instance, mock, when } from 'ts-mockito';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';

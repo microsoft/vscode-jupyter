@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as fastDeepEqual from 'fast-deep-equal';
+import fastDeepEqual from 'fast-deep-equal';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
 import {

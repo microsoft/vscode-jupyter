@@ -5,7 +5,7 @@
 
 /* eslint-disable  */
 
-import * as assert from 'assert';
+import assert from 'assert';
 import * as fs from 'fs';
 import * as path from '../../../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
