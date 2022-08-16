@@ -216,7 +216,6 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         const serialized = values.map(serializeKernelConnection);
         await Promise.all([
             removeOldCachedItems(this.globalState),
-            ,
             this.globalState.update(this.getCacheKey(), {
                 kernels: serialized,
                 extensionVersion: this.env.extensionVersion
