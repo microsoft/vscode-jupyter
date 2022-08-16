@@ -72,7 +72,9 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         kernelFinder.registerKernelFinder(this);
     }
 
-    async activate(): Promise<void> {}
+    async activate(): Promise<void> {
+        noop();
+    }
 
     async listContributedKernels(
         resource: Resource,
