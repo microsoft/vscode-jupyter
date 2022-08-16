@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { ChildProcess, spawn } from 'child_process';
+import { ChildProcess } from 'child_process';
 import { kill } from 'process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
@@ -309,7 +309,7 @@ export class KernelProcess implements IKernelProcess {
             if (this.platform.isWindows) {
                 const windir = process.env['WINDIR'] || 'C:\\Windows';
                 const TASK_KILL = path.join(windir, 'System32', 'taskkill.exe');
-                spawn(TASK_KILL, ['/F', '/T', '/PID', pid.toString()]);
+                await new ProcessService().exec(TASK_KILL, ['/F', '/T', '/PID', pid.toString()]);
             } else {
                 await new Promise<void>((resolve) => {
                     pidtree(pid, (ex: unknown, pids: number[]) => {
