@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -8,7 +8,7 @@ suite('Dummy6', () => {
     });
 });
 
-// // Copyright (c) Microsoft Corporation. All rights reserved.
+// // Copyright (c) Microsoft Corporation.
 // // Licensed under the MIT License.
 // 'use strict';
 // import * as assert from 'assert';

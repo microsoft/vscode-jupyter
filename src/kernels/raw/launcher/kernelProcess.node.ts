@@ -27,7 +27,6 @@ import {
     createPromiseFromCancellation,
     isCancellationError
 } from '../../../platform/common/cancellation';
-import { KernelInterruptDaemonModule } from '../../../platform/common/constants';
 import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback
@@ -57,7 +56,7 @@ import { KernelDiedError } from '../../errors/kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from '../../errors/kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError';
 import { captureTelemetry, Telemetry } from '../../../telemetry';
-import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
+import { Interrupter, PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
 import { TraceOptions } from '../../../platform/logging/types';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
 
@@ -85,13 +84,12 @@ export class KernelProcess implements IKernelProcess {
         return true;
     }
     private _process?: ChildProcess;
-    private _interruptDaemon?: PythonKernelInterruptDaemon;
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
     private launchedOnce?: boolean;
     private disposed?: boolean;
     private connectionFile?: string;
     private _launchKernelSpec?: IJupyterKernelSpec;
-    private _interruptSignalHandle = 0;
+    private interrupter?: Interrupter;
     private readonly _kernelConnectionMetadata: Readonly<
         LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
     >;
@@ -106,7 +104,8 @@ export class KernelProcess implements IKernelProcess {
         private readonly pythonExecFactory: IPythonExecutionFactory,
         private readonly outputChannel: IOutputChannel | undefined,
         private readonly jupyterSettings: IJupyterSettings,
-        private readonly jupyterPaths: JupyterPaths
+        private readonly jupyterPaths: JupyterPaths,
+        private readonly pythonKernelInterruptDaemon: PythonKernelInterruptDaemon
     ) {
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
@@ -116,18 +115,18 @@ export class KernelProcess implements IKernelProcess {
         } else if (
             this._kernelConnectionMetadata.kernelSpec.interrupt_mode !== 'message' &&
             this._process &&
-            !this._interruptSignalHandle
+            !this.interrupter
         ) {
             traceInfo('Interrupting kernel via SIGINT');
             kill(this._process.pid, 'SIGINT');
         } else if (
             this._kernelConnectionMetadata.kernelSpec.interrupt_mode !== 'message' &&
             this._process &&
-            this._interruptSignalHandle &&
+            this.interrupter &&
             isPythonKernelConnection(this._kernelConnectionMetadata)
         ) {
             traceInfo('Interrupting kernel via custom event (Win32)');
-            return this.fireWin32InterruptEvent();
+            return this.interrupter.interrupt();
         } else {
             traceError('No process to interrupt in KernleProcess.ts');
         }
@@ -280,7 +279,7 @@ export class KernelProcess implements IKernelProcess {
         traceVerbose('Dispose Kernel process');
         this.disposed = true;
         swallowExceptions(() => {
-            this._interruptDaemon?.kill().ignoreErrors();
+            this.interrupter?.dispose().ignoreErrors();
             this._process?.kill(); // NOSONAR
             this.exitEvent.fire({});
         });
@@ -505,27 +504,12 @@ export class KernelProcess implements IKernelProcess {
     }
 
     private async getWin32InterruptHandle(): Promise<number> {
-        if (!this._interruptSignalHandle) {
-            const interruptDaemon = await this.pythonExecFactory.createDaemon({
-                daemonModule: KernelInterruptDaemonModule,
-                resource: this.resource,
-                interpreter: this._kernelConnectionMetadata.interpreter!,
-                daemonClass: PythonKernelInterruptDaemon,
-                dedicated: true
-            });
-            if ('kill' in interruptDaemon) {
-                this._interruptDaemon = interruptDaemon;
-            }
-            if (this._interruptDaemon) {
-                this._interruptSignalHandle = await this._interruptDaemon.getInterruptHandle();
-            }
+        if (!this.interrupter) {
+            this.interrupter = await this.pythonKernelInterruptDaemon.createInterrupter(
+                this._kernelConnectionMetadata.interpreter!,
+                this.resource
+            );
         }
-        return this._interruptSignalHandle;
-    }
-
-    private async fireWin32InterruptEvent() {
-        if (this._interruptDaemon) {
-            return this._interruptDaemon.interrupt();
-        }
+        return this.interrupter?.handle;
     }
 }

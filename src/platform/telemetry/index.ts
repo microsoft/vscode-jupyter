@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 // eslint-disable-next-line
@@ -20,8 +20,7 @@ export {
     JupyterCommands,
     NativeKeyboardCommandTelemetry,
     NativeMouseCommandTelemetry,
-    Telemetry,
-    VSCodeNativeTelemetry
+    Telemetry
 } from '../common/constants';
 
 export const waitBeforeSending = 'waitBeforeSending';

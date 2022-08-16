@@ -5,7 +5,6 @@
 
 'use strict';
 
-import * as os from 'os';
 import { assert } from 'chai';
 import * as path from '../../platform/vscode-path/path';
 import * as sinon from 'sinon';
@@ -115,12 +114,16 @@ suite('kernel Process', () => {
             out: observableOutput,
             proc: instance(proc)
         });
-        when(daemon.getInterruptHandle()).thenResolve(1);
+        const interrupter = {
+            handle: 1,
+            dispose: () => Promise.resolve(),
+            interrupt: () => Promise.resolve()
+        };
+        when(daemon.createInterrupter(anything(), anything())).thenResolve(interrupter);
         (instance(processService) as any).then = undefined;
         (instance(pythonProcess) as any).then = undefined;
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
         (instance(daemon) as any).then = undefined;
-        when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(daemon));
         rewiremock.enable();
         rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
         when(fs.createTemporaryLocalFile(anything())).thenResolve({
@@ -139,7 +142,8 @@ suite('kernel Process', () => {
             instance(pythonExecFactory),
             instance(outputChannel),
             instance(jupyterSettings),
-            instance(jupyterPaths)
+            instance(jupyterPaths),
+            instance(daemon)
         );
     });
     teardown(() => {
@@ -314,8 +318,6 @@ suite('kernel Process', () => {
         ];
         await kernelProcess.launch(__dirname, 0, token.token);
 
-        // Daemon is created only on windows.
-        verify(pythonExecFactory.createDaemon(anything())).times(os.platform() === 'win32' ? 1 : 0);
         verify(processService.execObservable(anything(), anything())).never();
         verify(pythonProcess.execObservable(deepEqual(expectedArgs), anything())).once();
 
@@ -362,8 +364,6 @@ suite('kernel Process', () => {
         ];
         await kernelProcess.launch(__dirname, 0, token.token);
 
-        // Daemon is created only on windows.
-        verify(pythonExecFactory.createDaemon(anything())).times(os.platform() === 'win32' ? 1 : 0);
         verify(processService.execObservable(anything(), anything())).never();
         verify(pythonProcess.execObservable(deepEqual(expectedArgs), anything())).once();
 
@@ -403,8 +403,6 @@ suite('kernel Process', () => {
         ];
         await kernelProcess.launch(__dirname, 0, token.token);
 
-        // Daemon is created only on windows.
-        verify(pythonExecFactory.createDaemon(anything())).times(os.platform() === 'win32' ? 1 : 0);
         verify(processService.execObservable(anything(), anything())).never();
         verify(pythonProcess.execObservable(deepEqual(expectedArgs), anything())).once();
     });
@@ -473,6 +471,12 @@ suite('DataScience - Kernel Process', () => {
         rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
         const settings = mock<IJupyterSettings>();
         when(settings.enablePythonKernelLogging).thenReturn(false);
+        const interruptDaemon = mock<PythonKernelInterruptDaemon>();
+        when(interruptDaemon.createInterrupter(anything(), anything())).thenResolve({
+            dispose: () => Promise.resolve(),
+            interrupt: () => Promise.resolve(),
+            handle: 1
+        });
         return new KernelProcess(
             instance(processExecutionFactory),
             instance(connection),
@@ -484,7 +488,8 @@ suite('DataScience - Kernel Process', () => {
             instance(pythonExecFactory),
             undefined,
             instance(settings),
-            instance(jupyterPaths)
+            instance(jupyterPaths),
+            instance(interruptDaemon)
         );
     }
     test('Launch from kernelspec (linux)', async function () {

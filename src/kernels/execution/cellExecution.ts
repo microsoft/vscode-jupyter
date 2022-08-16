@@ -32,6 +32,7 @@ import { activeNotebookCellExecution, CellExecutionMessageHandler } from './cell
 import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
 import { IKernelConnectionSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { NotebookCellStateTracker, traceCellMessage } from './helpers';
+import { JupyterNotebookView } from '../../platform/common/constants';
 
 /**
  * Factory for CellExecution objects.
@@ -297,7 +298,7 @@ export class CellExecution implements IDisposable {
     }
 
     private sendPerceivedCellExecute() {
-        const props = { notebook: true };
+        const props = { notebook: this.controller.notebookType === JupyterNotebookView };
         if (!CellExecution.sentExecuteCellTelemetry) {
             CellExecution.sentExecuteCellTelemetry = true;
             sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatchForTelemetry.elapsedTime, props);
