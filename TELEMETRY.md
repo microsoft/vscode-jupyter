@@ -7006,18 +7006,6 @@ No description provided
 ```
 
 
-[src/kernels/raw/finder/localKernelFinder.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/localKernelFinder.node.ts)
-```typescript
-     * Search all our local file system locations for installed kernel specs and return them
-     */
-    @traceDecoratorError('List kernels failed')
-    @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
-    public async listKernels(
-        resource: Resource,
-        @ignoreLogging() cancelToken?: CancellationToken
-```
-
-
 [src/kernels/jupyter/finder/remoteKernelFinder.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/finder/remoteKernelFinder.ts)
 ```typescript
     }
@@ -7027,6 +7015,18 @@ No description provided
     public async listKernelsFromConnection(
         _resource: Resource,
         connInfo: INotebookProviderConnection
+```
+
+
+[src/kernels/raw/finder/localKernelFinder.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/localKernelFinder.node.ts)
+```typescript
+     * Search all our local file system locations for installed kernel specs and return them
+     */
+    @traceDecoratorError('List kernels failed')
+    @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
+    public async listKernels(
+        resource: Resource,
+        @ignoreLogging() cancelToken?: CancellationToken
 ```
 
 </details>
