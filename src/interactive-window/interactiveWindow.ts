@@ -105,6 +105,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _submitters: Uri[] = [];
     private fileInKernel: Uri | undefined;
     private cellMatcher: CellMatcher;
+    private pendingCellAdd: Promise<void> | undefined;
 
     private internalDisposables: Disposable[] = [];
     private kernelDisposables: Disposable[] = [];
@@ -228,12 +229,15 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.start();
     }
 
-    private setPendingCellAdd() {
+    /**
+     * Inform the controller that a cell is being added and it should wait before adding any others to the execution queue.
+     * @param cellAddedPromise - Promise that resolves when the cell execution has been queued
+     */
+    private setPendingCellAdd(cellAddedPromise: Promise<void>) {
         if (this.kernelConnectionMetadata) {
+            this.pendingCellAdd = cellAddedPromise;
             const controller = this.controllerRegistration.get(this.kernelConnectionMetadata, 'interactive');
-            const deferred = createDeferred<void>();
-            controller?.setPendingCellAddition(deferred.promise);
-            return deferred;
+            controller?.setPendingCellAddition(cellAddedPromise);
         }
     }
 
@@ -264,6 +268,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 // Id may be different if the user switched controllers
                 this.currentKernelInfo.controller = k.controller;
                 this.currentKernelInfo.metadata = k.kernelConnectionMetadata;
+                !!this.pendingCellAdd && this.setPendingCellAdd(this.pendingCellAdd);
                 this.updateSysInfoMessage(
                     this.getSysInfoMessage(k.kernelConnectionMetadata, SysInfoReason.Start),
                     false,
@@ -573,7 +578,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
         // Multiple cells that have split our code.
         const promises = cells.map((c) => {
-            const deferred = this.setPendingCellAdd();
+            const deferred = createDeferred<void>();
+            this.setPendingCellAdd(deferred.promise);
             // Add the cell first. We don't need to wait for this part as we want to add them
             // as quickly as possible
             const notebookCellPromise = this.addNotebookCell(c, fileUri, line);

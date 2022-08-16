@@ -212,8 +212,15 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         traceInfoIfCI(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
         return this.controller.postMessage(message, editor);
     }
+    /**
+     * A cell has been added to the notebook, so wait for the execution to be queued before handling any more execution requests.
+     * This only applies to the Interactive Window since cells are added from both the extension and core.
+     * @param promise A promise that resolves when the notebook is ready to handle more executions.
+     */
     public setPendingCellAddition(promise: Promise<void>): void {
-        this.pendingCellAddition = promise;
+        if (this.viewType === InteractiveWindowView) {
+            this.pendingCellAddition = promise;
+        }
     }
 
     public dispose() {
