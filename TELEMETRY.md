@@ -9,7 +9,8 @@ Expand each section to see more information about that event.
 
 
 
- Data Science
+
+ Telemetry event sent when user adds a cell below the current cell for IW.
 
 ## Properties
 
@@ -37,11 +38,15 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ User exports the IW or Notebook to a specific format.
 
 ## Properties
 
--  format: ExportFormat
+
+No properties for event
+
 
 ## Locations Used
 
@@ -259,7 +264,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when user hits the `continue` button while debugging IW
 
 ## Properties
 
@@ -287,7 +294,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when user debugs the cell in the IW
 
 ## Properties
 
@@ -327,7 +336,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when user debugs the file in the IW
 
 ## Properties
 
@@ -355,7 +366,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when user hits the `step over` button while debugging IW
 
 ## Properties
 
@@ -383,7 +396,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when user hits the `stop` button while debugging IW
 
 ## Properties
 
@@ -804,7 +819,9 @@ Event can be removed. Not referenced anywhere
 ## Description
 
 
-No description provided
+
+
+ Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
 
 ## Properties
 
@@ -844,7 +861,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
 
 ## Properties
 
@@ -915,7 +934,9 @@ No properties for event
 
 
 
- Applies to everything (interactive+Notebooks & local+remote)
+
+ Executes a cell, applies to IW and Notebook.
+ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 
 ## Properties
 
@@ -1048,14 +1069,17 @@ Event can be removed. Not referenced anywhere
 ## Description
 
 
-No description provided
+
+
+ Called when user imports a Jupyter Notebook into a Python file.
+ Command is `Jupyter: Import Jupyter Notebook`
+ Basically user is exporting some jupyter notebook into a Python file or other.
 
 ## Properties
 
--  format: ExportFormat;
--  cancelled?: boolean;
--  successful?: boolean;
--  opened?: boolean
+
+No properties for event
+
 
 ## Locations Used
 
@@ -1101,11 +1125,17 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Called when user exports a Jupyter Notebook or IW into a Python file, HTML, PDF, etc.
+ Command is `Jupyter: Export to Python Script` or `Jupyter: Export to HTML`
+ Basically user is exporting some jupyter notebook or IW into a Python file or other.
 
 ## Properties
 
--  format: ExportFormat
+
+No properties for event
+
 
 ## Locations Used
 
@@ -1127,11 +1157,15 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ Export fails
 
 ## Properties
 
--  format: ExportFormat
+
+No properties for event
+
 
 ## Locations Used
 
@@ -1153,7 +1187,9 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ User exports a .py file with cells as a Jupyter Notebook.
 
 ## Properties
 
@@ -1181,7 +1217,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ User exports a .py file with cells along with the outputs from the current IW as a Jupyter Notebook.
 
 ## Properties
 
@@ -1439,6 +1477,62 @@ Event can be removed. Not referenced anywhere
 ## Description
 
 
+
+
+ Called when user imports a Jupyter Notebook into a Python file.
+ Command is `Jupyter: Import Jupyter Notebook`
+ Basically user is exporting some jupyter notebook into a Python file.
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+[src/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry.ts)
+```typescript
+    [Telemetry.GetPasswordSuccess]: never | undefined;
+    [Telemetry.GotoSourceCode]: never | undefined;
+    [Telemetry.HiddenCellTime]: never | undefined;
+    [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
+    /**
+     * User interrupts a cell
+     * Identical to `Telemetry.InterruptJupyterTime`
+```
+
+
+[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
+```typescript
+        return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
+    }
+
+    @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)
+    private async importNotebook(): Promise<void> {
+        const filtersKey = DataScience.importDialogFilter();
+        const filtersObject: { [name: string]: string[] } = {};
+```
+
+
+[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
+```typescript
+        }
+    }
+
+    @captureTelemetry(Telemetry.ImportNotebook, { scope: 'file' }, false)
+    private async importNotebookOnFile(file: Uri): Promise<void> {
+        const filepath = getFilePath(file);
+        if (filepath && filepath.length > 0) {
+```
+
+</details>
+<details>
+  <summary>DATASCIENCE.IMPORT_NOTEBOOK</summary>
+
+## Description
+
+
 No description provided
 
 ## Properties
@@ -1446,6 +1540,18 @@ No description provided
 -  scope: 'command' | 'file'
 
 ## Locations Used
+
+[src/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry.ts)
+```typescript
+     * Command is `Jupyter: Import Jupyter Notebook`
+     * Basically user is exporting some jupyter notebook into a Python file.
+     */
+    [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
+    /**
+     * Called when user exports a Jupyter Notebook or IW into a Python file, HTML, PDF, etc.
+     * Command is `Jupyter: Export to Python Script` or `Jupyter: Export to HTML`
+```
+
 
 [src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
 ```typescript
@@ -1554,7 +1660,10 @@ No description provided
 ## Description
 
 
-No description provided
+
+
+ User interrupts a cell
+ Identical to `Telemetry.InterruptJupyterTime`
 
 ## Properties
 
@@ -2705,7 +2814,10 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Total time taken to interrupt a kernel
+ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 
 ## Properties
 
@@ -2814,7 +2926,10 @@ export function sendNotebookOrKernelLanguageTelemetry(
 ## Description
 
 
-No description provided
+
+
+ Restarts the Kernel.
+ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 
 ## Properties
 
@@ -2926,7 +3041,10 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Starts a kernel, applies to IW and Notebook.
+ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 
 ## Properties
 
@@ -3275,7 +3393,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when IW or Notebook is restarted.
 
 ## Properties
 
@@ -3326,7 +3446,7 @@ Event can be removed. Not referenced anywhere
 
 
 
- Run Cell Commands in Interactive Python
+ Run all Cell Commands in Interactive Python
 
 ## Properties
 
@@ -3354,7 +3474,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Run all the above cells in Interactive Python
 
 ## Properties
 
@@ -3468,7 +3590,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Run a Cell in Interactive Python
 
 ## Properties
 
@@ -3487,7 +3611,9 @@ Event can be removed. Not referenced anywhere
 ## Description
 
 
-No description provided
+
+
+ Run current cell and all below in Interactive Python
 
 ## Properties
 
@@ -3571,7 +3697,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Run the current Cell in Interactive Python
 
 ## Properties
 
@@ -3627,7 +3755,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Run current cell and advance cursor in Interactive Python
 
 ## Properties
 
@@ -3739,7 +3869,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Run file in Interactive Python
 
 ## Properties
 
@@ -4005,7 +4137,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Run a Selection or Line in Interactive Python
 
 ## Properties
 
@@ -4820,102 +4954,6 @@ Event can be removed. Not referenced anywhere
 
 </details>
 <details>
-  <summary>DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_CODE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_MARKDOWN</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.VSCODE_NATIVE.DELETE_CELL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.VSCODE_NATIVE.INSERT_CELL</summary>
-
-## Description
-
-
-
- Native notebooks events
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.VSCODE_NATIVE.MOVE_CELL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DATAVIEWER.USING_INTERPRETER</summary>
 
 ## Description
@@ -5518,7 +5556,7 @@ No properties for event
 
 
  Telemetry sent to capture first time execution of a cell.
- If `notebook = true`, this its telemetry for native editor/notebooks.
+ If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.
 
 ## Properties
 
@@ -5530,7 +5568,7 @@ No properties for event
 
 [src/kernels/execution/cellExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/cellExecution.ts)
 ```typescript
-        const props = { notebook: true };
+        const props = { notebook: this.controller.notebookType === JupyterNotebookView };
         if (!CellExecution.sentExecuteCellTelemetry) {
             CellExecution.sentExecuteCellTelemetry = true;
             sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatchForTelemetry.elapsedTime, props);
@@ -5562,6 +5600,7 @@ No properties for event
 
  Telemetry sent to capture subsequent execution of a cell.
  If `notebook = true`, this its telemetry for native editor/notebooks.
+ (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)
 
 ## Properties
 
@@ -6079,7 +6118,10 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ User interrupts a cell
+ Identical to `Telemetry.Interrupt`
 
 ## Properties
 
@@ -7215,11 +7257,15 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.
 
 ## Properties
 
--  count: number
+
+No properties for event
+
 
 ## Locations Used
 
@@ -7260,11 +7306,15 @@ Event can be removed. Not referenced anywhere
 ## Description
 
 
-No description provided
+
+
+ Total number of cells executed. Telemetry Sent when VS Code is closed.
 
 ## Properties
 
--  count: number
+
+No properties for event
+
 
 ## Locations Used
 
@@ -7362,6 +7412,7 @@ Event can be removed. Not referenced anywhere
 
 
  Time take for jupyter server to start and be ready to run first user cell.
+ (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)
 
 ## Properties
 
@@ -8417,7 +8468,10 @@ Event can be removed. Not referenced anywhere
 ## Description
 
 
-No description provided
+
+
+ Total time taken to restart a kernel.
+ Identical to `Telemetry.RestartKernel`
 
 ## Properties
 
@@ -8445,7 +8499,10 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Total time taken to restart a kernel.
+ Identical to `Telemetry.RestartJupyterTime`
 
 ## Properties
 
@@ -8908,7 +8965,10 @@ export class JupyterSessionStartError extends WrappedError {
 ## Description
 
 
-No description provided
+
+
+ Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
+ WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.
 
 ## Properties
 
@@ -8955,6 +9015,97 @@ No description provided
 -  language: string
 
 ## Locations Used
+
+[src/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry.ts)
+```typescript
+     * Similar to Telemetry.SwitchKernel, but doesn't contain as much information as Telemetry.SwitchKernel.
+     * WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.
+     */
+    [Telemetry.SwitchToExistingKernel]: { language: string };
+    [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
+    /**
+     * Total time taken to interrupt a kernel
+```
+
+
+[src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts)
+```typescript
+import { getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
+
+export function sendNotebookOrKernelLanguageTelemetry(
+    telemetryEvent: Telemetry.SwitchToExistingKernel | Telemetry.NotebookLanguage,
+    language?: string
+) {
+    language = getTelemetrySafeLanguage(language);
+```
+
+
+[src/notebooks/controllers/vscodeNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts)
+```typescript
+        }
+        switch (this.connection.kind) {
+            case 'startUsingPythonInterpreter':
+                sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, PYTHON_LANGUAGE);
+                break;
+            case 'connectToLiveRemoteKernel':
+                sendNotebookOrKernelLanguageTelemetry(
+```
+
+
+[src/notebooks/controllers/vscodeNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts)
+```typescript
+                break;
+            case 'connectToLiveRemoteKernel':
+                sendNotebookOrKernelLanguageTelemetry(
+                    Telemetry.SwitchToExistingKernel,
+                    this.connection.kernelModel.language
+                );
+                break;
+```
+
+
+[src/notebooks/controllers/vscodeNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts)
+```typescript
+            case 'startUsingLocalKernelSpec':
+            case 'startUsingRemoteKernelSpec':
+                sendNotebookOrKernelLanguageTelemetry(
+                    Telemetry.SwitchToExistingKernel,
+                    this.connection.kernelSpec.language
+                );
+                break;
+```
+
+</details>
+<details>
+  <summary>DS_INTERNAL.SWITCH_TO_EXISTING_KERNEL</summary>
+
+## Description
+
+
+
+
+ Similar to Telemetry.SwitchKernel, but doesn't contain as much information as Telemetry.SwitchKernel.
+ WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+[src/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry.ts)
+```typescript
+    [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
+    [Telemetry.UseInterpreterAsKernel]: never | undefined;
+    [Telemetry.UseExistingKernel]: never | undefined;
+    [Telemetry.SwitchToExistingKernel]: { language: string };
+    [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
+    [Telemetry.ConvertToPythonFile]: never | undefined;
+    [Telemetry.CopySourceCode]: never | undefined;
+```
+
 
 [src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts)
 ```typescript
@@ -9020,7 +9171,44 @@ No properties for event
 
 ## Locations Used
 
-Event can be removed. Not referenced anywhere
+[src/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry.ts)
+```typescript
+     * WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.
+     */
+    [Telemetry.SwitchToExistingKernel]: { language: string };
+    [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
+    /**
+     * Total time taken to interrupt a kernel
+     * Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
+```
+
+</details>
+<details>
+  <summary>DS_INTERNAL.SWITCH_TO_INTERPRETER_AS_KERNEL</summary>
+
+## Description
+
+
+No description provided
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+[src/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry.ts)
+```typescript
+    [Telemetry.UseInterpreterAsKernel]: never | undefined;
+    [Telemetry.UseExistingKernel]: never | undefined;
+    [Telemetry.SwitchToExistingKernel]: { language: string };
+    [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
+    [Telemetry.ConvertToPythonFile]: never | undefined;
+    [Telemetry.CopySourceCode]: never | undefined;
+    [Telemetry.CreateNewNotebook]: never | undefined;
+```
 
 </details>
 <details>
@@ -9740,7 +9928,9 @@ No properties for event
 ## Description
 
 
-No description provided
+
+
+ Telemetry event sent when user opens the data viewer.
 
 ## Properties
 
