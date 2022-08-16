@@ -9,8 +9,7 @@ import {
     JupyterCommands,
     NativeKeyboardCommandTelemetry,
     NativeMouseCommandTelemetry,
-    Telemetry,
-    VSCodeNativeTelemetry
+    Telemetry
 } from './platform/common/constants';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './platform/telemetry/constants';
 import { DebuggingTelemetry } from './notebooks/debugger/constants';
@@ -339,10 +338,15 @@ export interface IEventNamePropertyMapping {
          */
         expNameOptedOutOf?: string;
     };
+    /**
+     * Telemetry event sent when user opens the data viewer.
+     */
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: never | undefined;
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR]: never | undefined;
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS]: never | undefined;
-    // Data Science
+    /**
+     * Telemetry event sent when user adds a cell below the current cell for IW.
+     */
     [Telemetry.AddCellBelow]: never | undefined;
     [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
@@ -371,31 +375,54 @@ export interface IEventNamePropertyMapping {
     [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.CreateNewNotebook]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
+    /**
+     * Telemetry event sent when user hits the `continue` button while debugging IW
+     */
     [Telemetry.DebugContinue]: never | undefined;
+    /**
+     * Telemetry event sent when user debugs the cell in the IW
+     */
     [Telemetry.DebugCurrentCell]: never | undefined;
+    /**
+     * Telemetry event sent when user hits the `step over` button while debugging IW
+     */
     [Telemetry.DebugStepOver]: never | undefined;
+    /**
+     * Telemetry event sent when user hits the `stop` button while debugging IW
+     */
     [Telemetry.DebugStop]: never | undefined;
+    /**
+     * Telemetry event sent when user debugs the file in the IW
+     */
     [Telemetry.DebugFileInteractive]: never | undefined;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
     [Telemetry.FindJupyterCommand]: { command: string };
     [Telemetry.FindJupyterKernelSpec]: never | undefined;
     [Telemetry.FailedToUpdateKernelSpec]: never | undefined;
+    /**
+     * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
+     */
     [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
+    /**
+     * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
+     */
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
     [Telemetry.ExecuteCellTime]: never | undefined;
     /**
      * Telemetry sent to capture first time execution of a cell.
-     * If `notebook = true`, this its telemetry for native editor/notebooks.
+     * If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.
      */
     [Telemetry.ExecuteCellPerceivedCold]: undefined | { notebook: boolean };
     /**
      * Telemetry sent to capture subsequent execution of a cell.
      * If `notebook = true`, this its telemetry for native editor/notebooks.
+     * (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)
      */
     [Telemetry.ExecuteCellPerceivedWarm]: undefined | { notebook: boolean };
     /**
      * Time take for jupyter server to start and be ready to run first user cell.
+     * (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)
      */
     [Telemetry.PerceivedJupyterStartupNotebook]: never | undefined;
     /**
@@ -404,11 +431,39 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartExecuteNotebookCellPerceivedCold]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebookInteractive]: never | undefined;
+    /**
+     * User exports a .py file with cells as a Jupyter Notebook.
+     */
     [Telemetry.ExportPythonFileInteractive]: never | undefined;
+    /**
+     * User exports a .py file with cells along with the outputs from the current IW as a Jupyter Notebook.
+     */
     [Telemetry.ExportPythonFileAndOutputInteractive]: never | undefined;
+    /**
+     * User exports the IW or Notebook to a specific format.
+     */
     [Telemetry.ClickedExportNotebookAsQuickPick]: { format: ExportFormat };
+    /**
+     * Called when user imports a Jupyter Notebook into a Python file.
+     * Command is `Jupyter: Import Jupyter Notebook`
+     * Basically user is exporting some jupyter notebook into a Python file or other.
+     */
     [Telemetry.ExportNotebookAs]: { format: ExportFormat; cancelled?: boolean; successful?: boolean; opened?: boolean };
+    /**
+     * Called when user imports a Jupyter Notebook into a Python file.
+     * Command is `Jupyter: Import Jupyter Notebook`
+     * Basically user is exporting some jupyter notebook into a Python file.
+     */
+    [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
+    /**
+     * Called when user exports a Jupyter Notebook or IW into a Python file, HTML, PDF, etc.
+     * Command is `Jupyter: Export to Python Script` or `Jupyter: Export to HTML`
+     * Basically user is exporting some jupyter notebook or IW into a Python file or other.
+     */
     [Telemetry.ExportNotebookAsCommand]: { format: ExportFormat };
+    /**
+     * Export fails
+     */
     [Telemetry.ExportNotebookAsFailed]: { format: ExportFormat };
     [Telemetry.GetPasswordAttempt]: never | undefined;
     [Telemetry.GetPasswordFailure]: never | undefined;
@@ -416,9 +471,23 @@ export interface IEventNamePropertyMapping {
     [Telemetry.GotoSourceCode]: never | undefined;
     [Telemetry.HiddenCellTime]: never | undefined;
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
+    /**
+     * User interrupts a cell
+     * Identical to `Telemetry.InterruptJupyterTime`
+     */
     [Telemetry.Interrupt]: never | undefined;
+    /**
+     * User interrupts a cell
+     * Identical to `Telemetry.Interrupt`
+     */
     [Telemetry.InterruptJupyterTime]: never | undefined;
+    /**
+     * Total number of cells executed. Telemetry Sent when VS Code is closed.
+     */
     [Telemetry.NotebookRunCount]: { count: number };
+    /**
+     * Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.
+     */
     [Telemetry.NotebookOpenCount]: { count: number };
     [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
@@ -451,21 +520,53 @@ export interface IEventNamePropertyMapping {
     [Telemetry.OpenedInteractiveWindow]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
+    /**
+     * Total time taken to restart a kernel.
+     * Identical to `Telemetry.RestartKernel`
+     */
     [Telemetry.RestartJupyterTime]: never | undefined;
+    /**
+     * Total time taken to restart a kernel.
+     * Identical to `Telemetry.RestartJupyterTime`
+     */
     [Telemetry.RestartKernel]: never | undefined;
+    /**
+     * Telemetry event sent when IW or Notebook is restarted.
+     */
     [Telemetry.RestartKernelCommand]: never | undefined;
     /**
-     * Run Cell Commands in Interactive Python
+     * Run all Cell Commands in Interactive Python
      */
     [Telemetry.RunAllCells]: never | undefined;
+    /**
+     * Run a Selection or Line in Interactive Python
+     */
     [Telemetry.RunSelectionOrLine]: never | undefined;
+    /**
+     * Run a Cell in Interactive Python
+     */
     [Telemetry.RunCell]: never | undefined;
+    /**
+     * Run the current Cell in Interactive Python
+     */
     [Telemetry.RunCurrentCell]: never | undefined;
+    /**
+     * Run all the above cells in Interactive Python
+     */
     [Telemetry.RunAllCellsAbove]: never | undefined;
+    /**
+     * Run current cell and all below in Interactive Python
+     */
     [Telemetry.RunCellAndAllBelow]: never | undefined;
+    /**
+     * Run current cell and advance cursor in Interactive Python
+     */
     [Telemetry.RunCurrentCellAndAdvance]: never | undefined;
-    [Telemetry.RunToLine]: never | undefined;
+    /**
+     * Run file in Interactive Python
+     */
     [Telemetry.RunFileInteractive]: never | undefined;
+    [Telemetry.RunToLine]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
     [Telemetry.ScrolledToCell]: never | undefined;
     /**
@@ -991,7 +1092,15 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelProcessLaunch]: never | undefined;
 
     // Applies to everything (interactive+Notebooks & local+remote)
+    /**
+     * Executes a cell, applies to IW and Notebook.
+     * Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
+     */
     [Telemetry.ExecuteCell]: ResourceSpecificTelemetryProperties;
+    /**
+     * Starts a kernel, applies to IW and Notebook.
+     * Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
+     */
     [Telemetry.NotebookStart]:
         | ResourceSpecificTelemetryProperties // If successful.
         | ({
@@ -999,10 +1108,33 @@ export interface IEventNamePropertyMapping {
               failureCategory: ErrorCategory | KernelFailureReason;
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there any any unhandled exceptions.
+    /**
+     * Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
+     * WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.
+     */
     [Telemetry.SwitchKernel]: ResourceSpecificTelemetryProperties; // If there are unhandled exceptions;
+    /**
+     * Similar to Telemetry.SwitchKernel, but doesn't contain as much information as Telemetry.SwitchKernel.
+     * WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.
+     */
+    [Telemetry.SwitchToExistingKernel]: { language: string };
+    [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
+    /**
+     * Total time taken to interrupt a kernel
+     * Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
+     */
     [Telemetry.NotebookInterrupt]:
-        | ({ result: InterruptResult } & ResourceSpecificTelemetryProperties) // If successful (interrupted, timeout, restart).
+        | ({
+              /**
+               * The result of the interrupt,
+               */
+              result: InterruptResult;
+          } & ResourceSpecificTelemetryProperties) // If successful (interrupted, timeout, restart).
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
+    /**
+     * Restarts the Kernel.
+     * Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
+     */
     [Telemetry.NotebookRestart]:
         | {
               /**
@@ -1097,12 +1229,6 @@ export interface IEventNamePropertyMapping {
         condaEnvsSharingSameInterpreter: number;
     } & ResourceSpecificTelemetryProperties;
 
-    // Native notebooks events
-    [VSCodeNativeTelemetry.AddCell]: never | undefined;
-    [VSCodeNativeTelemetry.DeleteCell]: never | undefined;
-    [VSCodeNativeTelemetry.MoveCell]: never | undefined;
-    [VSCodeNativeTelemetry.ChangeToCode]: never | undefined;
-    [VSCodeNativeTelemetry.ChangeToMarkdown]: never | undefined;
     [Telemetry.VSCNotebookCellTranslationFailed]: {
         isErrorOutput: boolean; // Whether we're trying to translate an error output when we shuldn't be.
     };
