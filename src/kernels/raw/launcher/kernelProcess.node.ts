@@ -301,7 +301,10 @@ export class KernelProcess implements IKernelProcess {
     }
 
     private async killChildProcesses(pid?: number) {
-        if (!pid) {
+        // Do not remove this code, in in unit tests we end up running this,
+        // then we run into the danger of kill all of the processes on the machine.
+        // because calling `pidtree` without a pid will return all pids and hence everything ends up getting killed.
+        if (!pid || !ProcessService.isAlive(pid)) {
             return;
         }
         try {
