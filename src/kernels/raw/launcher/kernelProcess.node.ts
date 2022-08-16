@@ -59,7 +59,6 @@ import { captureTelemetry, Telemetry } from '../../../telemetry';
 import { Interrupter, PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
 import { TraceOptions } from '../../../platform/logging/types';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
-import type { getProcessList as getProcessListType } from 'windows-process-tree';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import pidtree from 'pidtree';
