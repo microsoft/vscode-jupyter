@@ -19,8 +19,6 @@ export class KernelFinder implements IKernelFinder {
     private fetchingTelemetrySent = new Set<string>();
     private _finders: IContributedKernelFinder[] = [];
 
-    constructor() {}
-
     public registerKernelFinder(finder: IContributedKernelFinder) {
         this._finders.push(finder);
     }
