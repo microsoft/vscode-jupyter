@@ -36,6 +36,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
 import { noop } from '../../../platform/common/utils/misc';
 import { sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
+import { IPlatformService } from '../../../platform/common/platform/types';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -60,7 +61,8 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
-        @inject(PythonKernelInterruptDaemon) private readonly pythonKernelInterruptDaemon: PythonKernelInterruptDaemon
+        @inject(PythonKernelInterruptDaemon) private readonly pythonKernelInterruptDaemon: PythonKernelInterruptDaemon,
+        @inject(IPlatformService) private readonly platformService: IPlatformService
     ) {}
 
     public static async cleanupStartPort() {
@@ -213,7 +215,8 @@ export class KernelLauncher implements IKernelLauncher {
             outputChannel,
             jupyterSettings,
             this.jupyterPaths,
-            this.pythonKernelInterruptDaemon
+            this.pythonKernelInterruptDaemon,
+            this.platformService
         );
 
         try {
@@ -222,7 +225,7 @@ export class KernelLauncher implements IKernelLauncher {
                 createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' })
             ]);
         } catch (ex) {
-            kernelProcess.dispose();
+            await kernelProcess.dispose();
             Cancellation.throwIfCanceled(cancelToken);
             throw ex;
         }
