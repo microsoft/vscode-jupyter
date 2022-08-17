@@ -34,7 +34,7 @@ suite('Dummy9', () => {
 // import { ExportFormat } from '../../platform/datascience/export/types';
 // import { getDefaultInteractiveIdentity } from '../../platform/datascience/interactive-window/identity';
 // import { getMessageForLibrariesNotInstalled } from '../../platform/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
-// import { JupyterKernelPromiseFailedError } from '../../platform/../kernels/jupyterKernelPromiseFailedError';
+// import { JupyterKernelPromiseFailedError } from '../../kernels/jupyterKernelPromiseFailedError';
 // import { HostJupyterExecution } from '../../platform/datascience/jupyter/liveshare/hostJupyterExecution';
 // import { HostJupyterNotebook } from '../../platform/datascience/jupyter/liveshare/hostJupyterNotebook';
 // import {

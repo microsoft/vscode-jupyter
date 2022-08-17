@@ -10,7 +10,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
-import { IKernelProvider, isLocalConnection, isRemoteConnection } from '../../../platform/../kernels/types';
+import { IKernelProvider, isLocalConnection, isRemoteConnection } from '../../../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import {
     getInterpreterHash,

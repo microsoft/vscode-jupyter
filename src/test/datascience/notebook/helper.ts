@@ -55,7 +55,7 @@ import {
     IsWebExtension
 } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
-import { IKernelProvider } from '../../../platform/../kernels/types';
+import { IKernelProvider } from '../../../kernels/types';
 import { noop } from '../../core';
 import { closeActiveWindows, isInsiders } from '../../initialize';
 import { DebugProtocol } from 'vscode-debugprotocol';

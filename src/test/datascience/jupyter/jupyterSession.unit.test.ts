@@ -26,7 +26,7 @@ import {
     ISessionWithSocket,
     KernelConnectionMetadata,
     LiveKernelModel
-} from '../../../platform/../kernels/types';
+} from '../../../kernels/types';
 import { MockOutputChannel } from '../../mockClasses';
 import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService.node';
 import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
