@@ -15,6 +15,7 @@ import { traceInfo } from '../../../platform/logging';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IKernelFinder, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../kernels/types';
+import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Kernels Finder', () => {
@@ -22,10 +23,12 @@ suite('DataScience - Kernels Finder', () => {
     let kernelFinder: IKernelFinder;
     let interpreterService: IInterpreterService;
     let resourceToUse: Uri;
+    let rankHelper: IKernelRankingHelper;
     suiteSetup(async () => {
         api = await initialize();
         kernelFinder = api.serviceContainer.get<IKernelFinder>(IKernelFinder);
         interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        rankHelper = api.serviceContainer.get<IKernelRankingHelper>(IKernelRankingHelper);
         resourceToUse = Uri.file(path.join(workspace.workspaceFolders![0].uri.fsPath, 'test.ipynb'));
     });
     setup(async function () {
@@ -42,14 +45,14 @@ suite('DataScience - Kernels Finder', () => {
     });
     test('No kernel returned or non exact match if no matching kernel found for language', async () => {
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernels(resourceToUse, {
+            await rankHelper.rankKernels(resourceToUse, {
                 language_info: { name: 'foobar' },
                 orig_nbformat: 4
             })
         );
         const isMatch =
             kernelSpec &&
-            kernelFinder.isExactMatch(resourceToUse, kernelSpec, {
+            rankHelper.isExactMatch(resourceToUse, kernelSpec, {
                 language_info: { name: 'foobar' },
                 orig_nbformat: 4
             });
@@ -58,7 +61,7 @@ suite('DataScience - Kernels Finder', () => {
     test('Python kernel returned if no matching kernel found', async () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernels(
+            await rankHelper.rankKernels(
                 resourceToUse,
                 {
                     kernelspec: { display_name: 'foobar', name: 'foobar' },
@@ -84,7 +87,7 @@ suite('DataScience - Kernels Finder', () => {
     test('Interpreter kernel returned if kernelspec metadata not provided', async () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernels(
+            await rankHelper.rankKernels(
                 resourceToUse,
                 {
                     kernelspec: undefined,
@@ -108,7 +111,7 @@ suite('DataScience - Kernels Finder', () => {
     });
     test('Can find a Python kernel based on language', async () => {
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernels(resourceToUse, {
+            await rankHelper.rankKernels(resourceToUse, {
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
             })
@@ -124,7 +127,7 @@ suite('DataScience - Kernels Finder', () => {
         }
 
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernels(resourceToUse, {
+            await rankHelper.rankKernels(resourceToUse, {
                 language_info: { name: 'julia' },
                 orig_nbformat: 4
             })
@@ -145,7 +148,7 @@ suite('DataScience - Kernels Finder', () => {
         assert.ok(juliaKernelSpec);
 
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernels(resourceToUse, {
+            await rankHelper.rankKernels(resourceToUse, {
                 kernelspec: juliaKernelSpec?.kernelSpec as any,
                 orig_nbformat: 4
             })

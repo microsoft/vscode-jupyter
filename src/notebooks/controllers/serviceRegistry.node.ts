@@ -15,11 +15,14 @@ import {
     IControllerLoader,
     IControllerPreferredService,
     IControllerRegistration,
-    IControllerSelection
+    IControllerSelection,
+    IKernelRankingHelper
 } from './types';
 import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.node';
+import { KernelRankingHelper } from './kernelRanking/kernelRankingHelper';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
+    serviceManager.addSingleton<IKernelRankingHelper>(IKernelRankingHelper, KernelRankingHelper);
     serviceManager.addSingleton<IControllerRegistration>(IControllerRegistration, ControllerRegistration);
     serviceManager.addSingleton<IControllerDefaultService>(IControllerDefaultService, ControllerDefaultService);
     serviceManager.addSingleton<IControllerLoader>(IControllerLoader, ControllerLoader);

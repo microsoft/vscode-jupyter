@@ -12,15 +12,10 @@ import {
     Uri,
     workspace
 } from 'vscode';
-import {
-    findKernelSpecMatchingInterpreter,
-    getKernelConnectionLanguage,
-    getLanguageInNotebookMetadata,
-    isPythonNotebook
-} from '../../kernels/helpers';
+import { getKernelConnectionLanguage, getLanguageInNotebookMetadata, isPythonNotebook } from '../../kernels/helpers';
 import { IServerConnectionType } from '../../kernels/jupyter/types';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
-import { IKernelFinder, KernelConnectionMetadata } from '../../kernels/types';
+import { KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
@@ -39,11 +34,13 @@ import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platfo
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
 import { sendTelemetryEvent } from '../../telemetry';
+import { findKernelSpecMatchingInterpreter } from './kernelRanking/helpers';
 import {
     IControllerDefaultService,
     IControllerLoader,
     IControllerPreferredService,
     IControllerRegistration,
+    IKernelRankingHelper,
     IVSCodeNotebookController,
     PreferredKernelExactMatchReason
 } from './types';
@@ -66,9 +63,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
-        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType
+        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
+        @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper
     ) {}
     public async activate() {
         // Sign up for document either opening or closing
@@ -254,7 +251,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         preferredConnection: KernelConnectionMetadata | undefined;
     }> {
         let preferredConnection: KernelConnectionMetadata | undefined;
-        const rankedConnections = await this.kernelFinder.rankKernels(
+        const rankedConnections = await this.kernelRankHelper.rankKernels(
             uri,
             notebookMetadata,
             preferredInterpreter,
@@ -275,7 +272,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             ]);
 
             // Are we an exact match based on metadata hash / name / ect...?
-            const isExactMatch = this.kernelFinder.isExactMatch(uri, potentialMatch, notebookMetadata);
+            const isExactMatch = this.kernelRankHelper.isExactMatch(uri, potentialMatch, notebookMetadata);
 
             // non-exact matches are ok for non-python kernels, else we revert to active interpreter for non-python kernels.
             const languageInNotebookMetadata = getLanguageInNotebookMetadata(notebookMetadata);

@@ -598,25 +598,11 @@ export interface IKernelDependencyService {
 export const IKernelFinder = Symbol('IKernelFinder');
 
 export interface IKernelFinder {
-    rankKernels(
-        resource: Resource,
-        option?: nbformat.INotebookMetadata,
-        preferredInterpreter?: PythonEnvironment,
-        cancelToken?: CancellationToken,
-        useCache?: 'useCache' | 'ignoreCache',
-        serverId?: string
-    ): Promise<KernelConnectionMetadata[] | undefined>;
     listKernels(
         resource: Resource,
         cancelToken?: CancellationToken,
         useCache?: 'useCache' | 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]>;
-    // For the given kernel connection, return true if it's an exact match for the notebookMetadata
-    isExactMatch(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        notebookMetadata: nbformat.INotebookMetadata | undefined
-    ): boolean;
 }
 
 export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';

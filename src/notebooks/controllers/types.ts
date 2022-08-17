@@ -4,9 +4,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as vscode from 'vscode';
+import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import { IDisposable, Resource } from '../../platform/common/types';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
 
@@ -99,6 +101,25 @@ export interface IControllerPreferredService {
      * @param notebook
      */
     getPreferred(notebook: vscode.NotebookDocument): IVSCodeNotebookController | undefined;
+}
+
+export const IKernelRankingHelper = Symbol('IKernelRankingHelper');
+export interface IKernelRankingHelper {
+    rankKernels(
+        resource: Resource,
+        option?: INotebookMetadata,
+        preferredInterpreter?: PythonEnvironment,
+        cancelToken?: vscode.CancellationToken,
+        useCache?: 'useCache' | 'ignoreCache',
+        serverId?: string
+    ): Promise<KernelConnectionMetadata[] | undefined>;
+
+    // For the given kernel connection, return true if it's an exact match for the notebookMetadata
+    isExactMatch(
+        resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
+        notebookMetadata: INotebookMetadata | undefined
+    ): boolean;
 }
 
 export const IControllerDefaultService = Symbol('IControllerDefaultService');
