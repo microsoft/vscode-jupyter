@@ -108,7 +108,7 @@ export class RawSession implements ISessionWithSocket {
                 .shutdown()
                 .catch((ex) => traceWarning(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex));
             this._kernel.dispose();
-            this.kernelProcess.dispose();
+            await this.kernelProcess.dispose();
         }
         try {
             this._kernel.statusChanged.disconnect(this.onKernelStatus, this);

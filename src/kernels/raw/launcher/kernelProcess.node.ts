@@ -49,7 +49,7 @@ import {
     IProcessService
 } from '../../../platform/common/process/types.node';
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async';
+import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { KernelDiedError } from '../../errors/kernelDiedError';
@@ -59,6 +59,9 @@ import { captureTelemetry, Telemetry } from '../../../telemetry';
 import { Interrupter, PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
 import { TraceOptions } from '../../../platform/logging/types';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
+import { ProcessService } from '../../../platform/common/process/proc.node';
+import { IPlatformService } from '../../../platform/common/platform/types';
+import pidtree from 'pidtree';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -105,7 +108,8 @@ export class KernelProcess implements IKernelProcess {
         private readonly outputChannel: IOutputChannel | undefined,
         private readonly jupyterSettings: IJupyterSettings,
         private readonly jupyterPaths: JupyterPaths,
-        private readonly pythonKernelInterruptDaemon: PythonKernelInterruptDaemon
+        private readonly pythonKernelInterruptDaemon: PythonKernelInterruptDaemon,
+        private readonly platform: IPlatformService
     ) {
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
@@ -246,7 +250,7 @@ export class KernelProcess implements IKernelProcess {
                 traceError(stderrProc || stderr);
             }
             // Make sure to dispose if we never connect.
-            this.dispose();
+            await this.dispose();
 
             if (!cancelToken?.isCancellationRequested && e instanceof BaseError) {
                 throw e;
@@ -272,12 +276,16 @@ export class KernelProcess implements IKernelProcess {
         }
     }
 
-    public dispose(): void {
+    public async dispose(): Promise<void> {
         if (this.disposed) {
             return;
         }
         traceVerbose('Dispose Kernel process');
         this.disposed = true;
+        await Promise.race([
+            sleep(1_000), // Wait for a max of 1s, we don't want to delay killing the kernel process.
+            this.killChildProcesses(this._process?.pid).catch(noop)
+        ]);
         swallowExceptions(() => {
             this.interrupter?.dispose().ignoreErrors();
             this._process?.kill(); // NOSONAR
@@ -290,6 +298,35 @@ export class KernelProcess implements IKernelProcess {
                     .catch((ex) => traceWarning(`Failed to delete connection file ${this.connectionFile}`, ex));
             }
         });
+    }
+
+    private async killChildProcesses(pid?: number) {
+        // Do not remove this code, in in unit tests we end up running this,
+        // then we run into the danger of kill all of the processes on the machine.
+        // because calling `pidtree` without a pid will return all pids and hence everything ends up getting killed.
+        if (!pid || !ProcessService.isAlive(pid)) {
+            return;
+        }
+        try {
+            if (this.platform.isWindows) {
+                const windir = process.env['WINDIR'] || 'C:\\Windows';
+                const TASK_KILL = path.join(windir, 'System32', 'taskkill.exe');
+                await new ProcessService().exec(TASK_KILL, ['/F', '/T', '/PID', pid.toString()]);
+            } else {
+                await new Promise<void>((resolve) => {
+                    pidtree(pid, (ex: unknown, pids: number[]) => {
+                        if (ex) {
+                            traceWarning(`Failed to kill children for ${pid}`, ex);
+                        } else {
+                            pids.forEach((procId) => ProcessService.kill(procId));
+                        }
+                        resolve();
+                    });
+                });
+            }
+        } catch (ex) {
+            traceWarning(`Failed to kill children for ${pid}`, ex);
+        }
     }
 
     private sendToOutput(data: string) {
