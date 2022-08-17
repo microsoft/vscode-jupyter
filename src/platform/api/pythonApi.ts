@@ -452,7 +452,9 @@ export class InterpreterService implements IInterpreterService {
         traceVerbose(
             `Full interpreter list for ${getDisplayPath(resource)} is length: ${
                 allInterpreters.length
-            }, ${allInterpreters.map((item) => getDisplayPath(item.uri))}`
+            }, ${allInterpreters
+                .map((item) => `${item.displayName}:${item.envType}:${getDisplayPath(item.uri)}`)
+                .join(', ')}`
         );
         allInterpreters.forEach((interpreter) => {
             if (interpreter && !result.find((r) => areInterpreterPathsSame(r.uri, interpreter.uri))) {
