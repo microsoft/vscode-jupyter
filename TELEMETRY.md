@@ -7954,15 +7954,15 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/kernelFinder.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelFinder.ts)
+[src/notebooks/controllers/kernelRanking/kernelRankingHelper.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/kernelRanking/kernelRankingHelper.ts)
 ```typescript
-    }
+    ) {}
 
     @traceDecoratorVerbose('Rank Kernels', TraceOptions.BeforeCall | TraceOptions.Arguments)
     @captureTelemetry(Telemetry.RankKernelsPerf)
     public async rankKernels(
         resource: Resource,
-        notebookMetadata?: nbformat.INotebookMetadata,
+        notebookMetadata?: INotebookMetadata | undefined,
 ```
 
 </details>

@@ -58,6 +58,8 @@ import { uriEquals } from '../helpers';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
+import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
+import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -74,6 +76,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
         let jupyterPaths: JupyterPaths;
         let preferredRemote: PreferredRemoteKernelIdProvider;
         let pythonExecService: IPythonExecutionService;
+        let kernelRankHelper: IKernelRankingHelper;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -104,6 +107,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
             interpreterService = mock(InterpreterService);
             remoteKernelFinder = mock(RemoteKernelFinder);
+
             when(remoteKernelFinder.listKernelsFromConnection(anything(), anything(), anything())).thenResolve([]);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
@@ -242,7 +246,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             disposables.push(onDidChangeEvent);
             when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
 
-            kernelFinder = new KernelFinder(instance(preferredRemote));
+            kernelFinder = new KernelFinder();
 
             localKernelFinder = new LocalKernelFinder(
                 nonPythonKernelSpecFinder,
@@ -260,6 +264,8 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                 instance(env),
                 kernelFinder
             );
+
+            kernelRankHelper = new KernelRankingHelper(kernelFinder, instance(preferredRemote));
         }
         teardown(() => {
             disposeAllDisposables(disposables);
@@ -1212,7 +1218,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Try an empty python Notebook without any kernelspec in metadata.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     language_info: { name: PYTHON_LANGUAGE },
@@ -1233,7 +1239,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Generic Python notebooks (without display name).
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1258,7 +1264,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Generic Python notebooks.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1283,7 +1289,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Generic Python 3 notebooks.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1308,7 +1314,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Generic Python 3 notebooks (kernels with IpyKernel installed).
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1333,7 +1339,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Python 2
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1360,7 +1366,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Julia based on language
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     language_info: { name: 'julia' },
@@ -1373,7 +1379,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Julia based on kernelspec name & display name (without any language information)
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1389,7 +1395,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // R (match a specific R kernel based on the display name & name)
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1406,7 +1412,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // R (match a specific R kernel based on the name)
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1423,7 +1429,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // R (match a specific R kernel based on the display_name)
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1440,7 +1446,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Python 2 based on name
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1457,7 +1463,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Python 2 based on display name
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1474,7 +1480,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Match conda environment based on env display name of conda env.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1491,7 +1497,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Match conda environment based on env display name of conda env.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1508,7 +1514,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Match conda environment based on env name of conda env (even if name doesn't match).
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1525,7 +1531,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Match based on interpreter hash even if name and display name do not match.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1545,7 +1551,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Match based on custom kernelspec name
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     kernelspec: {
@@ -1563,7 +1569,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 
                         // Unknown kernel language
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 nbUri,
                                 {
                                     language_info: { name: 'someunknownlanguage' },
@@ -1608,7 +1614,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
                         const kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 Uri.file('wow.py'),
                                 {
                                     language_info: { name: PYTHON_LANGUAGE },
@@ -1657,7 +1663,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
                         const kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(Uri.file('wow.py'), undefined, activePythonEnv)
+                            await kernelRankHelper.rankKernels(Uri.file('wow.py'), undefined, activePythonEnv)
                         ) as LocalKernelConnectionMetadata;
                         assert.strictEqual(
                             kernel?.kernelSpec?.language,
@@ -1699,7 +1705,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
                         const kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(
+                            await kernelRankHelper.rankKernels(
                                 Uri.file('wow.py'),
                                 {
                                     language_info: {
@@ -1740,7 +1746,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             // Set up the preferred remote id
             when(preferredRemote.getPreferredRemoteKernelId(anything())).thenReturn(activeID);
 
-            const isExactMatch = kernelFinder.isExactMatch(nbUri, liveSpec, {
+            const isExactMatch = kernelRankHelper.isExactMatch(nbUri, liveSpec, {
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
             });
@@ -1751,7 +1757,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelFinder.isExactMatch(
+            const isExactMatch = kernelRankHelper.isExactMatch(
                 nbUri,
                 { kind: 'startUsingLocalKernelSpec', id: 'hi', kernelSpec: {} as any },
                 {
@@ -1766,7 +1772,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelFinder.isExactMatch(
+            const isExactMatch = kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1793,7 +1799,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelFinder.isExactMatch(
+            const isExactMatch = kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1822,7 +1828,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelFinder.isExactMatch(
+            const isExactMatch = kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1849,7 +1855,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelFinder.isExactMatch(
+            const isExactMatch = kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1878,7 +1884,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelFinder.isExactMatch(
+            const isExactMatch = kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1903,7 +1909,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelFinder.isExactMatch(
+            const isExactMatch = kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',

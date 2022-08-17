@@ -45,6 +45,8 @@ import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { takeTopRankKernel } from './localKernelFinder.unit.test';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../../kernels/common/commonFinder';
+import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
+import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -52,6 +54,7 @@ suite(`Remote Kernel Finder`, () => {
     let remoteKernelFinder: IRemoteKernelFinder;
     let localKernelFinder: ILocalKernelFinder;
     let kernelFinder: KernelFinder;
+    let kernelRankHelper: IKernelRankingHelper;
     let fs: IFileSystemNode;
     let memento: Memento;
     let jupyterSessionManager: IJupyterSessionManager;
@@ -159,7 +162,8 @@ suite(`Remote Kernel Finder`, () => {
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(true);
         const env = mock<IApplicationEnvironment>();
         when(env.extensionVersion).thenReturn('');
-        kernelFinder = new KernelFinder(preferredRemoteKernelIdProvider);
+        kernelFinder = new KernelFinder();
+        kernelRankHelper = new KernelRankingHelper(kernelFinder, preferredRemoteKernelIdProvider);
 
         remoteKernelFinder = new RemoteKernelFinder(
             instance(jupyterSessionManagerFactory),
@@ -229,21 +233,21 @@ suite(`Remote Kernel Finder`, () => {
         ]);
 
         // Try python
-        let kernel = await kernelFinder.rankKernels(undefined, {
+        let kernel = await kernelRankHelper.rankKernels(undefined, {
             language_info: { name: PYTHON_LANGUAGE },
             orig_nbformat: 4
         });
         assert.ok(kernel, 'No python kernel found matching notebook metadata');
 
         // Julia
-        kernel = await kernelFinder.rankKernels(undefined, {
+        kernel = await kernelRankHelper.rankKernels(undefined, {
             language_info: { name: 'julia' },
             orig_nbformat: 4
         });
         assert.ok(kernel, 'No julia kernel found matching notebook metadata');
 
         // Python 2
-        kernel = await kernelFinder.rankKernels(undefined, {
+        kernel = await kernelRankHelper.rankKernels(undefined, {
             kernelspec: {
                 display_name: 'Python 2 on Disk',
                 name: 'python2'
@@ -273,7 +277,7 @@ suite(`Remote Kernel Finder`, () => {
         const uri = Uri.file('/usr/foobar/foo.ipynb');
         await preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(uri, '2');
 
-        const kernel = takeTopRankKernel(await kernelFinder.rankKernels(uri));
+        const kernel = takeTopRankKernel(await kernelRankHelper.rankKernels(uri));
         assert.ok(kernel, 'Kernel not found for uri');
         assert.equal(kernel?.kind, 'connectToLiveRemoteKernel', 'Live kernel not found');
         assert.equal(

@@ -9,7 +9,6 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { IServerConnectionType } from '../../../../kernels/jupyter/types';
 import {
-    IKernelFinder,
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
     PythonKernelConnectionMetadata
@@ -19,6 +18,7 @@ import {
     IControllerDefaultService,
     IControllerLoader,
     IControllerRegistration,
+    IKernelRankingHelper,
     IVSCodeNotebookController
 } from '../../../../notebooks/controllers/types';
 import { IPythonExtensionChecker } from '../../../../platform/api/types';
@@ -30,11 +30,11 @@ import { IInterpreterService } from '../../../../platform/interpreter/contracts'
 
 suite('Preferred Controller', () => {
     const disposables: IDisposable[] = [];
+    let kernelRankHelper: IKernelRankingHelper;
     let preferredControllerService: ControllerPreferredService;
     let controllerRegistrations: IControllerRegistration;
     let controllerLoader: IControllerLoader;
     let vscNotebook: IVSCodeNotebook;
-    let kernelFinder: IKernelFinder;
     let extensionChecker: IPythonExtensionChecker;
     let serverConnectionType: IServerConnectionType;
     let defaultControllerService: IControllerDefaultService;
@@ -43,11 +43,11 @@ suite('Preferred Controller', () => {
         controllerRegistrations = mock<IControllerRegistration>();
         controllerLoader = mock<IControllerLoader>();
         vscNotebook = mock<IVSCodeNotebook>();
-        kernelFinder = mock<IKernelFinder>();
         extensionChecker = mock<IPythonExtensionChecker>();
         serverConnectionType = mock<IServerConnectionType>();
         defaultControllerService = mock<IControllerDefaultService>();
         interpreters = mock<IInterpreterService>();
+        kernelRankHelper = mock<IKernelRankingHelper>();
         const onDidOpenNotebookDocument = new EventEmitter<NotebookDocument>();
         disposables.push(onDidOpenNotebookDocument);
         const onDidCloseNotebookDocument = new EventEmitter<NotebookDocument>();
@@ -62,9 +62,9 @@ suite('Preferred Controller', () => {
             instance(interpreters),
             instance(vscNotebook),
             disposables,
-            instance(kernelFinder),
             instance(extensionChecker),
-            instance(serverConnectionType)
+            instance(serverConnectionType),
+            instance(kernelRankHelper)
         );
     });
     teardown(() => {
@@ -110,9 +110,9 @@ suite('Preferred Controller', () => {
         when(document.metadata).thenReturn({ custom: { metadata } });
         when(serverConnectionType.isLocalLaunch).thenReturn(true);
         when(
-            kernelFinder.rankKernels(anything(), anything(), anything(), anything(), anything(), anything())
+            kernelRankHelper.rankKernels(anything(), anything(), anything(), anything(), anything(), anything())
         ).thenResolve(kernels);
-        when(kernelFinder.isExactMatch(anything(), anything(), anything())).thenReturn(false);
+        when(kernelRankHelper.isExactMatch(anything(), anything(), anything())).thenReturn(false);
         const controllers = kernels.map((kernel) => {
             const controller = mock<IVSCodeNotebookController>();
             when(controller.id).thenReturn(kernel.id);
