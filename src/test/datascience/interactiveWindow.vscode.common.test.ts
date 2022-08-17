@@ -6,12 +6,13 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { IDisposable } from '../../platform/common/types';
+import { IDisposable, InteractiveWindowMode } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
 import { IKernelProvider } from '../../platform/../kernels/types';
 import {
     captureScreenShot,
     createEventHandler,
+    createTemporaryFile,
     IExtensionTestApi,
     initialize,
     startJupyterServer,
@@ -24,6 +25,7 @@ import {
     runNewPythonFile,
     submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,
+    waitForCodeLenses,
     waitForInteractiveWindow,
     waitForLastCellToComplete
 } from './helpers';
@@ -51,6 +53,7 @@ import { generateCellRangesFromDocument } from '../../interactive-window/editor-
 import { Commands } from '../../platform/common/constants';
 import { IControllerSelection } from '../../notebooks/controllers/types';
 import { format } from 'util';
+import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
 
 suite(`Interactive window execution`, async function () {
     this.timeout(120_000);
@@ -608,5 +611,35 @@ ${actualCode}
             60_000,
             'Exported python file was not opened'
         );
+    });
+
+    test('Cells from python files and the input box are executed in correct order', async () => {
+        const source = ['# %%', 'x = 1', '# %%', 'import time', 'time.sleep(3)', '# %%', 'print(x)', ''].join('\n');
+        const tempFile = await createTemporaryFile({ contents: 'print(42)', extension: '.py' });
+        await vscode.window.showTextDocument(tempFile.file);
+        await vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows);
+
+        const edit = new vscode.WorkspaceEdit();
+        const textEdit = vscode.TextEdit.replace(new vscode.Range(0, 0, 0, 9), source);
+        edit.set(tempFile.file, [textEdit]);
+        await vscode.workspace.applyEdit(edit);
+        await waitForCodeLenses(tempFile.file, Commands.DebugCell);
+
+        let runFilePromise = vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows);
+
+        const settings = vscode.workspace.getConfiguration('jupyter', null);
+        const mode = (await settings.get('interactiveWindowMode')) as InteractiveWindowMode;
+        const interactiveWindow = interactiveWindowProvider.getExisting(tempFile.file, mode) as InteractiveWindow;
+        await runInteractiveWindowInput('x = 5', interactiveWindow, 5);
+        await runFilePromise;
+        await waitForLastCellToComplete(interactiveWindow, 5, false);
+
+        const cells = interactiveWindow.notebookDocument
+            .getCells()
+            .filter((c) => c.kind === vscode.NotebookCellKind.Code);
+        const printCell = cells[cells.length - 2];
+
+        const output = getTextOutputValue(printCell.outputs[0]);
+        assert.equal(output.trim(), '1', 'original value should have been printed');
     });
 });

@@ -56,7 +56,11 @@ import {
     InteractiveTab
 } from './types';
 import { generateInteractiveCode, isInteractiveInputTab } from './helpers';
-import { IControllerSelection, IVSCodeNotebookController } from '../notebooks/controllers/types';
+import {
+    IControllerRegistration,
+    IControllerSelection,
+    IVSCodeNotebookController
+} from '../notebooks/controllers/types';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { getInteractiveCellMetadata } from './helpers';
 import { KernelConnector } from '../notebooks/controllers/kernelConnector';
@@ -101,6 +105,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _submitters: Uri[] = [];
     private fileInKernel: Uri | undefined;
     private cellMatcher: CellMatcher;
+    private pendingCellAdd: Promise<void> | undefined;
 
     private internalDisposables: Disposable[] = [];
     private kernelDisposables: Disposable[] = [];
@@ -136,6 +141,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private readonly debuggingManager: IInteractiveWindowDebuggingManager;
     private readonly isWebExtension: boolean;
     private readonly commandManager: ICommandManager;
+    private readonly controllerRegistration: IControllerRegistration;
     constructor(
         private readonly serviceContainer: IServiceContainer,
         private _owner: Resource,
@@ -161,6 +167,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             IInteractiveWindowDebuggingManager
         );
         this.isWebExtension = this.serviceContainer.get<boolean>(IsWebExtension);
+        this.controllerRegistration = this.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         this._notebookUri = isInteractiveInputTab(notebookEditorOrTab)
             ? notebookEditorOrTab.input.uri
             : notebookEditorOrTab.notebook.uri;
@@ -222,6 +229,18 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.start();
     }
 
+    /**
+     * Inform the controller that a cell is being added and it should wait before adding any others to the execution queue.
+     * @param cellAddedPromise - Promise that resolves when the cell execution has been queued
+     */
+    private setPendingCellAdd(cellAddedPromise: Promise<void>) {
+        if (this.kernelConnectionMetadata) {
+            this.pendingCellAdd = cellAddedPromise;
+            const controller = this.controllerRegistration.get(this.kernelConnectionMetadata, 'interactive');
+            controller?.setPendingCellAddition(this.notebookDocument, cellAddedPromise);
+        }
+    }
+
     private async startKernel(
         controller: NotebookController | undefined = this.currentKernelInfo.controller,
         metadata: KernelConnectionMetadata | undefined = this.currentKernelInfo.metadata
@@ -249,6 +268,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 // Id may be different if the user switched controllers
                 this.currentKernelInfo.controller = k.controller;
                 this.currentKernelInfo.metadata = k.kernelConnectionMetadata;
+                !!this.pendingCellAdd && this.setPendingCellAdd(this.pendingCellAdd);
                 this.updateSysInfoMessage(
                     this.getSysInfoMessage(k.kernelConnectionMetadata, SysInfoReason.Start),
                     false,
@@ -558,33 +578,39 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
         // Multiple cells that have split our code.
         const promises = cells.map((c) => {
+            const deferred = createDeferred<void>();
+            this.setPendingCellAdd(deferred.promise);
             // Add the cell first. We don't need to wait for this part as we want to add them
             // as quickly as possible
             const notebookCellPromise = this.addNotebookCell(c, fileUri, line);
 
             // Queue up execution
             const promise = this.createExecutionPromise(notebookCellPromise, isDebug);
-            promise.catch((ex) => {
-                // If execution fails due to a failure in another cell, then log that error against the cell.
-                if (ex instanceof InteractiveCellResultError) {
-                    notebookCellPromise
-                        .then((cell) => {
-                            if (ex.cell !== cell) {
-                                this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell).then(noop, noop);
-                            }
-                        })
-                        .catch(noop);
-                } else {
-                    notebookCellPromise
-                        .then((cell) =>
-                            // If our cell result was a failure show an error
-                            this.errorHandler
-                                .getErrorMessageForDisplayInCell(ex, 'execution', this.owningResource)
-                                .then((message) => this.addErrorMessage(message, cell))
-                        )
-                        .catch(noop);
-                }
-            });
+            promise
+                .catch((ex) => {
+                    // If execution fails due to a failure in another cell, then log that error against the cell.
+                    if (ex instanceof InteractiveCellResultError) {
+                        notebookCellPromise
+                            .then((cell) => {
+                                if (ex.cell !== cell) {
+                                    this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell).then(noop, noop);
+                                }
+                            })
+                            .catch(noop);
+                    } else {
+                        notebookCellPromise
+                            .then((cell) =>
+                                // If our cell result was a failure show an error
+                                this.errorHandler
+                                    .getErrorMessageForDisplayInCell(ex, 'execution', this.owningResource)
+                                    .then((message) => this.addErrorMessage(message, cell))
+                            )
+                            .catch(noop);
+                    }
+                })
+                .finally(() => {
+                    deferred?.resolve();
+                });
             return promise;
         });
 
@@ -750,7 +776,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    @chainable()
     private async addNotebookCell(code: string, file: Uri, line: number): Promise<NotebookCell> {
         const notebookDocument = this.notebookEditor.notebook;
 

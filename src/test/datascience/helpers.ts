@@ -257,6 +257,8 @@ export async function runInteractiveWindowInput(
     newCellCount: number
 ) {
     await insertIntoInputEditor(code, interactiveWindow);
+    await vscode.commands.executeCommand('workbench.action.focusSecondEditorGroup');
+    await vscode.commands.executeCommand('interactive.input.focus');
     await vscode.commands.executeCommand('interactive.execute');
     return waitForLastCellToComplete(interactiveWindow, newCellCount, false);
 }

@@ -144,7 +144,7 @@ export class InteractiveWindowProvider
         if (!this.workspaceService.isTrusted) {
             // This should not happen, but if it does, then just throw an error.
             // The commands the like should be disabled.
-            throw new Error('Worksapce not trusted');
+            throw new Error('Workspace not trusted');
         }
         // Ask for a configuration change if appropriate
         const mode = await this.getInteractiveMode(resource);
