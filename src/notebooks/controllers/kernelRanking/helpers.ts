@@ -138,8 +138,7 @@ export function rankKernels(
             !notebookMetadata || isPythonNotebook(notebookMetadata) || !possibleNbMetadataLanguage
                 ? PYTHON_LANGUAGE
                 : (
-                      ((notebookMetadata?.kernelspec as any)?.language as string) ||
-                      notebookMetadata?.language_info?.name
+                      (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
                   )?.toLowerCase();
     }
 
