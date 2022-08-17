@@ -8,7 +8,7 @@ import * as url from 'url';
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, Uri } from 'vscode';
 import {
     Cancellation,

@@ -5,7 +5,7 @@
 
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { expect, use } from 'chai';
-import * as chaiPromised from 'chai-as-promised';
+import chaiPromised from 'chai-as-promised';
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';

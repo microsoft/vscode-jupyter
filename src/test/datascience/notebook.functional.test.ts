@@ -17,7 +17,7 @@ suite('Dummy9', () => {
 // import { SemVer } from 'semver';
 // import { Readable, Writable } from 'stream';
 // import { anything, instance, mock, when } from 'ts-mockito';
-// import * as uuid from 'uuid/v4';
+// import uuid from 'uuid/v4';
 // import { Disposable, Uri } from 'vscode';
 // import { CancellationToken } from 'vscode-jsonrpc';
 // import { ApplicationShell } from '../../platform/common/application/applicationShell';

@@ -3,7 +3,7 @@
 
 'use strict';
 import type { Contents, ContentsManager } from '@jupyterlab/services';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { traceError } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';

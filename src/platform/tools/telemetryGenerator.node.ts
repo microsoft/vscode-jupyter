@@ -3,7 +3,7 @@
 
 import * as ts from 'typescript';
 import * as fs from 'fs-extra';
-import * as glob from 'glob';
+import glob from 'glob';
 
 /**
  * A TypeScript language service host

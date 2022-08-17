@@ -13,7 +13,7 @@ import * as nbformat from '@jupyterlab/nbformat';
 import type { Kernel, KernelSpec } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import * as url from 'url-parse';
+import url from 'url-parse';
 import {
     KernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
