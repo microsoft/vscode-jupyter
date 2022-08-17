@@ -4,11 +4,11 @@
 import { inject, injectable } from 'inversify';
 import { workspace } from 'vscode';
 import { CancellationToken, PortAttributes, PortAttributesProvider, PortAutoForwardAction } from 'vscode';
-import { NotebookStarter } from '../jupyter/launcher/notebookStarter.node';
-import { KernelLauncher } from '../raw/launcher/kernelLauncher.node';
-import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { traceError } from '../../platform/logging';
-import { IDisposableRegistry } from '../../platform/common/types';
+import { NotebookStarter } from '../../jupyter/launcher/notebookStarter.node';
+import { KernelLauncher } from '../launcher/kernelLauncher.node';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { traceError } from '../../../platform/logging';
+import { IDisposableRegistry } from '../../../platform/common/types';
 
 /**
  * Used to determine how ports can be used when creating a raw kernel.

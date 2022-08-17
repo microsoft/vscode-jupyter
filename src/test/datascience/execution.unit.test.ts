@@ -49,7 +49,6 @@ import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/h
 import { NotebookStarter } from '../../kernels/jupyter/launcher/notebookStarter.node';
 import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from '../../kernels/raw/finder/localKernelFinder.node';
-import { ILocalKernelFinder } from '../../kernels/raw/types';
 import { IJupyterConnection, IJupyterKernelSpec, LocalKernelConnectionMetadata } from '../../kernels/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { noop } from '../core';
@@ -1009,7 +1008,6 @@ suite('Jupyter Execution', async () => {
         };
         when(kernelFinder.listKernels(anything(), anything())).thenResolve([kernelMetadata]);
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
-        when(serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder)).thenReturn(instance(kernelFinder));
         const serverFactory = mock<INotebookServerFactory>();
         const serverUriStorage = mock(JupyterServerUriStorage);
         const connection = mock<JupyterConnection>();

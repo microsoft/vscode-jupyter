@@ -24,9 +24,12 @@ import {
     IKernelSocket,
     KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
-    IKernelConnectionSession
+    IKernelConnectionSession,
+    INotebookProviderConnection,
+    RemoteKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
+import { IContributedKernelFinder } from '../internalTypes';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -332,4 +335,12 @@ export const IServerConnectionType = Symbol('IServerConnectionType');
 export interface IServerConnectionType {
     isLocalLaunch: boolean;
     onDidChange: Event<void>;
+}
+
+export interface IRemoteKernelFinder extends IContributedKernelFinder {
+    listKernelsFromConnection(
+        resource: Resource,
+        connInfo: INotebookProviderConnection | undefined,
+        cancelToken?: CancellationToken
+    ): Promise<RemoteKernelConnectionMetadata[]>;
 }

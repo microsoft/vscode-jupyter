@@ -16,7 +16,7 @@ import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry
 import { injectable } from 'inversify';
 import { IKernelFinder, IKernelProvider, IThirdPartyKernelProvider } from './types';
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.web';
-import { KernelFinder } from './kernelFinder.web';
+import { KernelFinder } from './kernelFinder';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelVariables } from './variables/kernelVariables';
