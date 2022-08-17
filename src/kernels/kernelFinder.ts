@@ -4,7 +4,6 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { isCancellationError } from '../platform/common/cancellation';
 import { Telemetry } from '../platform/common/constants';
 import { Resource } from '../platform/common/types';
 import { StopWatch } from '../platform/common/utils/stopWatch';
