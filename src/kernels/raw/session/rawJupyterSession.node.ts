@@ -294,7 +294,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
             traceVerbose('Successfully waited for Raw Session to be ready in postStartRawSession');
         } catch (ex) {
             traceError('Failed waiting for Raw Session to be ready', ex);
-            process.dispose();
+            await process.dispose();
             result.dispose().catch(noop);
             if (isCancellationError(ex) || options.token.isCancellationRequested) {
                 throw new CancellationError();
@@ -329,7 +329,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                 ]);
             } catch (ex) {
                 traceError('Failed to request kernel info', ex);
-                process.dispose();
+                await process.dispose();
                 result.dispose().catch(noop);
                 throw ex;
             } finally {
