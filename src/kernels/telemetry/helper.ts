@@ -90,6 +90,8 @@ export function trackKernelResourceInformation(resource: Resource, information: 
         if (context.previouslySelectedKernelConnectionId !== newKernelConnectionId) {
             clearInterruptCounter(resource);
             clearRestartCounter(resource);
+            currentData.userExecutedCell = information.userExecutedCell;
+            currentData.disableUI = information.disableUI;
         }
         if (
             context.previouslySelectedKernelConnectionId &&

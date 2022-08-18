@@ -769,6 +769,7 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         traceCellMessage(cell, `kernel.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
         initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.resourceUri, this.kernelConnectionMetadata);
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
+        this.sendKernelStartedTelemetry();
         const stopWatch = new StopWatch();
         const sessionPromise = this.startJupyterSession();
         const promise = this.kernelExecution.executeCell(sessionPromise, cell, codeOverride);
