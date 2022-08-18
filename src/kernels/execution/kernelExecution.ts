@@ -316,7 +316,8 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
         const newCellExecutionQueue = new CellExecutionQueue(
             sessionPromise,
             this.executionFactory,
-            this.kernel.kernelConnectionMetadata
+            this.kernel.kernelConnectionMetadata,
+            this.kernel.resourceUri
         );
         this.disposables.push(newCellExecutionQueue);
 

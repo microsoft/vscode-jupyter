@@ -7,6 +7,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from './helpers';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
 import { IKernelConnectionSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import { Resource } from '../../platform/common/types';
 
 /**
  * A queue responsible for execution of cells.
@@ -39,7 +40,8 @@ export class CellExecutionQueue implements Disposable {
     constructor(
         private readonly session: Promise<IKernelConnectionSession>,
         private readonly executionFactory: CellExecutionFactory,
-        readonly metadata: Readonly<KernelConnectionMetadata>
+        readonly metadata: Readonly<KernelConnectionMetadata>,
+        readonly resourceUri: Resource
     ) {}
 
     public dispose() {
@@ -59,7 +61,7 @@ export class CellExecutionQueue implements Disposable {
             traceCellMessage(cell, 'Use existing cell execution');
             return;
         }
-        const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata);
+        const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata, this.resourceUri);
         this.disposables.push(cellExecution);
         cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
         this.queueOfCellsToExecute.push(cellExecution);

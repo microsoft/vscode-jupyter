@@ -946,35 +946,11 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
-```typescript
-    properties?: P[E] & { waitBeforeSending?: Promise<void> },
-    ex?: Error
-) {
-    if (eventName === Telemetry.ExecuteCell) {
-        setSharedProperty('userExecutedCell', 'true');
-    }
-
-```
-
-
-[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
-```typescript
-    handleError: boolean,
-    properties?: P[E] & { [waitBeforeSending]?: Promise<void> }
-) {
-    if (eventName === Telemetry.ExecuteCell) {
-        setSharedProperty('userExecutedCell', 'true');
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-```
-
-
 [src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
-    }
     public async executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState> {
         traceCellMessage(cell, `kernel.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
+        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.resourceUri, this.kernelConnectionMetadata);
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
         const stopWatch = new StopWatch();
         const sessionPromise = this.startJupyterSession();
@@ -3102,15 +3078,15 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
 ```
 
 
-[src/kernels/jupyter/launcher/notebookProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/notebookProvider.ts)
+[src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
-
-        sendKernelTelemetryWhenDone(
-            options.resource,
-            Telemetry.NotebookStart,
-            promise || Promise.resolve(undefined),
-            false, // Error telemetry will be sent further up the chain, after we have analyzed the error, such as if dependencies are installed or not.
-            {
+        this.uiWasDisabledWhenKernelStartupTelemetryWasLastSent = this.startupUI.disableUI === true;
+        // The corresponding failure telemetry property for the `Telemetry.NotebookStart` event will be sent in the Error Handler,
+        // after we analyze the error.
+        sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookStart, undefined, {
+            disableUI: this.startupUI.disableUI
+        });
+    }
 ```
 
 
@@ -3407,13 +3383,13 @@ No properties for event
 
 [src/notebooks/notebookCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/notebookCommandListener.ts)
 ```typescript
-            return;
-        }
-
-        sendTelemetryEvent(Telemetry.RestartKernelCommand);
         const kernel = this.kernelProvider.get(document);
 
         if (kernel) {
+            sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.RestartKernelCommand);
+            trackKernelResourceInformation(kernel.resourceUri, { restartKernel: true });
+            if (await this.shouldAskForRestart(document.uri)) {
+                // Ask the user if they want us to restart or not.
 ```
 
 </details>
@@ -5537,13 +5513,13 @@ No properties for event
 
 [src/kernels/raw/session/hostRawNotebookProvider.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/hostRawNotebookProvider.node.ts)
 ```typescript
-                kernelConnection.kind === 'startUsingLocalKernelSpec'
-            ) {
                 if (!kernelConnection.interpreter) {
-                    sendTelemetryEvent(Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter, undefined, {
-                        pythonExtensionInstalled: this.extensionChecker.isPythonExtensionInstalled
-                    });
-                }
+                    sendKernelTelemetryEvent(
+                        resource,
+                        Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter,
+                        undefined,
+                        {
+                            pythonExtensionInstalled: this.extensionChecker.isPythonExtensionInstalled
 ```
 
 </details>
@@ -5568,13 +5544,13 @@ No properties for event
 
 [src/kernels/execution/cellExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/cellExecution.ts)
 ```typescript
-        const props = { notebook: this.controller.notebookType === JupyterNotebookView };
-        if (!CellExecution.sentExecuteCellTelemetry) {
             CellExecution.sentExecuteCellTelemetry = true;
-            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatchForTelemetry.elapsedTime, props);
-        } else {
-            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, this.stopWatchForTelemetry.elapsedTime, props);
-        }
+            sendKernelTelemetryEvent(
+                this.resourceUri,
+                Telemetry.ExecuteCellPerceivedCold,
+                this.stopWatchForTelemetry.elapsedTime,
+                props
+            );
 ```
 
 
@@ -5612,13 +5588,13 @@ No properties for event
 
 [src/kernels/execution/cellExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/cellExecution.ts)
 ```typescript
-            CellExecution.sentExecuteCellTelemetry = true;
-            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatchForTelemetry.elapsedTime, props);
         } else {
-            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, this.stopWatchForTelemetry.elapsedTime, props);
-        }
-    }
-    private canExecuteCell() {
+            sendKernelTelemetryEvent(
+                this.resourceUri,
+                Telemetry.ExecuteCellPerceivedWarm,
+                this.stopWatchForTelemetry.elapsedTime,
+                props
+            );
 ```
 
 
@@ -7424,25 +7400,25 @@ No properties for event
 
 [src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
-
-            sendKernelTelemetryEvent(
-                this.resourceUri,
-                Telemetry.PerceivedJupyterStartupNotebook,
-                stopWatch.elapsedTime
-            );
-            this._session = session;
+                .then((session) => {
+                    sendKernelTelemetryEvent(
+                        this.resourceUri,
+                        Telemetry.PerceivedJupyterStartupNotebook,
+                        stopWatch.elapsedTime
+                    );
+                    return session;
 ```
 
 
 [src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
-        // Setup telemetry
-        if (!this.perceivedJupyterStartupTelemetryCaptured) {
             this.perceivedJupyterStartupTelemetryCaptured = true;
-            sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
+            sendKernelTelemetryEvent(
+                this.resourceUri,
+                Telemetry.PerceivedJupyterStartupNotebook,
+                stopWatch.elapsedTime
+            );
             executionPromise
-                .finally(() =>
-                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
 ```
 
 </details>
@@ -7743,7 +7719,7 @@ No description provided
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');
         const resourceType = resource ? getResourceType(resource) : undefined;
         const resourceHash = resource ? getTelemetrySafeHashedString(resource.toString()) : undefined;
-        sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+        sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
             action: 'displayed',
             moduleName: productNameForTelemetry,
             resourceType,
@@ -7755,7 +7731,7 @@ No description provided
 
         try {
             if (!this.isCodeSpace) {
-                sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'prompted',
                     moduleName: productNameForTelemetry,
                     resourceType,
@@ -7767,7 +7743,7 @@ No description provided
                       ]);
 
                 if (selection === moreInfoOption) {
-                    sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                    sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                         action: 'moreInfo',
                         moduleName: productNameForTelemetry,
                         resourceType,
@@ -7779,7 +7755,7 @@ No description provided
                 // "More Info" isn't a full valid response here, so reprompt after showing it
             } while (selection === moreInfoOption);
             if (cancelTokenSource.token.isCancellationRequested) {
-                sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'dismissed',
                     moduleName: productNameForTelemetry,
                     resourceType,
@@ -7791,7 +7767,7 @@ No description provided
                 return KernelInterpreterDependencyResponse.cancel;
             }
             if (selection === selectKernelOption) {
-                sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'differentKernel',
                     moduleName: productNameForTelemetry,
                     resourceType,
@@ -7803,7 +7779,7 @@ No description provided
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
             } else if (selection === installOption) {
-                sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'install',
                     moduleName: productNameForTelemetry,
                     resourceType,
@@ -7815,7 +7791,7 @@ No description provided
                     cancellationPromise
                 ]);
                 if (response === InstallerResponse.Installed) {
-                    sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                    sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                         action: 'installed',
                         moduleName: productNameForTelemetry,
                         resourceType,
@@ -7827,7 +7803,7 @@ No description provided
                     });
                     return KernelInterpreterDependencyResponse.ok;
                 } else if (response === InstallerResponse.Ignore) {
-                    sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                    sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                         action: 'failed',
                         moduleName: productNameForTelemetry,
                         resourceType,
@@ -7839,7 +7815,7 @@ No description provided
                     return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
                 }
             }
-            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+            sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                 action: 'dismissed',
                 moduleName: productNameForTelemetry,
                 resourceType,
@@ -7851,7 +7827,7 @@ No description provided
             return KernelInterpreterDependencyResponse.cancel;
         } catch (ex) {
             traceError(`Failed to install ${productNameForTelemetry}`, ex);
-            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+            sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                 action: 'error',
                 moduleName: productNameForTelemetry,
                 resourceType,
@@ -8021,7 +7997,7 @@ No properties for event
         } else {
             traceWarning(`Didn't get response for requestKernelInfo after ${stopWatch.elapsedTime}ms.`);
         }
-        sendTelemetryEvent(Telemetry.RawKernelInfoResonse, stopWatch.elapsedTime, {
+        sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelInfoResonse, stopWatch.elapsedTime, {
             attempts,
             timedout: !gotIoPubMessage.completed
         });
@@ -8108,7 +8084,7 @@ No properties for event
     public async dispose() {
         // We want to know who called dispose on us
         const stacktrace = new Error().stack;
-        sendTelemetryEvent(Telemetry.RawKernelSessionDisposed, undefined, { stacktrace });
+        sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionDisposed, undefined, { stacktrace });
 
         // Now actually dispose ourselves
         this.isDisposing = true;
@@ -8139,7 +8115,7 @@ No properties for event
 
         const disposable = kernelProcess.exited(
             ({ exitCode, reason }) => {
-                sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionKernelProcessExited, undefined, {
                     exitCode,
                     exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
                 });
@@ -8151,7 +8127,7 @@ No properties for event
         traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
         // Send telemetry so we know why the kernel process exited,
         // as this affects our kernel startup success
-        sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
+        sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionKernelProcessExited, undefined, {
             exitCode: e.exitCode,
             exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(e.reason)
         });
@@ -8163,7 +8139,7 @@ No properties for event
             if (session !== this.session) {
                 return;
             }
-            sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
+            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionKernelProcessExited, undefined, {
                 exitCode,
                 exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
             });
@@ -8222,7 +8198,7 @@ No properties for event
         // We want to know why we got shut down
         const stacktrace = new Error().stack;
         return super.shutdownSession(session, statusHandler, isRequestToShutdownRestartSession).then(() => {
-            sendTelemetryEvent(Telemetry.RawKernelSessionShutdown, undefined, {
+            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionShutdown, undefined, {
                 isRequestToShutdownRestartSession,
                 stacktrace
             });
@@ -8868,13 +8844,13 @@ No properties for event
 
 [src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
-            sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
-            executionPromise
                 .finally(() =>
-                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
+                    sendKernelTelemetryEvent(
+                        this.resourceUri,
+                        Telemetry.StartExecuteNotebookCellPerceivedCold,
+                        stopWatch.elapsedTime
+                    )
                 )
-                .catch(noop);
-        }
 ```
 
 </details>

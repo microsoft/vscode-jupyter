@@ -156,10 +156,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     }
     // If stuff is already queued, then queue the rest.
     // Queue telemetry for now only in insiders.
-    if (
-        sharedProperties['isInsiderExtension'] === 'true' &&
-        (isPromise(properties?.waitBeforeSending) || queuedTelemetry.length)
-    ) {
+    if (isPromise(properties?.waitBeforeSending) || queuedTelemetry.length) {
         queuedTelemetry.push({
             eventName: eventName as string,
             durationMs,
@@ -391,14 +388,6 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
  * Map all shared properties to their data types.
  */
 export interface ISharedPropertyMapping {
-    /**
-     * Whether user ran a cell or not.
-     * Its possible we have auto start enabled, in which case things could fall over
-     * (jupyter not start, kernel not start), and these are all not user initiated events.
-     * Hence sending telemetry indicating failure in starting a kernel could be misleading.
-     * This tells us that user started the action.
-     */
-    userExecutedCell: 'true';
     /**
      * For every DS telemetry we would like to know the type of Notebook Editor used when doing something.
      */

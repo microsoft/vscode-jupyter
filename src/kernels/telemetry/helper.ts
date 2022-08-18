@@ -12,7 +12,6 @@ import { getComparisonKey } from '../../platform/vscode-path/resources';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { trackedInfo, pythonEnvironmentsByHash, updatePythonPackages } from '../../platform/telemetry/telemetry';
 import { KernelActionSource, KernelConnectionMetadata } from '../types';
-import { setSharedProperty } from '../../telemetry';
 
 /**
  * This information is sent with each telemetry event.
@@ -37,6 +36,15 @@ export type ContextualTelemetryProps = {
      */
     interpreterMatchesKernel: boolean;
     actionSource: KernelActionSource;
+    /**
+     * Whether the user executed a cell.
+     */
+    userExecutedCell?: boolean;
+    /**
+     * Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+     * If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
+     */
+    disableUI?: boolean;
 };
 
 export function trackKernelResourceInformation(resource: Resource, information: Partial<ContextualTelemetryProps>) {
@@ -68,7 +76,12 @@ export function trackKernelResourceInformation(resource: Resource, information: 
     currentData.kernelLiveCount = information.kernelLiveCount || currentData.kernelLiveCount || 0;
     currentData.kernelInterpreterCount = information.kernelInterpreterCount || currentData.kernelInterpreterCount || 0;
     currentData.pythonEnvironmentCount = InterpreterCountTracker.totalNumberOfInterpreters;
-
+    if (information.userExecutedCell) {
+        currentData.userExecutedCell = true;
+    }
+    if (typeof information.disableUI === 'boolean') {
+        currentData.disableUI = information.disableUI;
+    }
     const kernelConnection = information.kernelConnection;
     if (kernelConnection) {
         const newKernelConnectionId = kernelConnection.id;
@@ -77,6 +90,8 @@ export function trackKernelResourceInformation(resource: Resource, information: 
         if (context.previouslySelectedKernelConnectionId !== newKernelConnectionId) {
             clearInterruptCounter(resource);
             clearRestartCounter(resource);
+            currentData.userExecutedCell = information.userExecutedCell;
+            currentData.disableUI = information.disableUI;
         }
         if (
             context.previouslySelectedKernelConnectionId &&
@@ -141,8 +156,7 @@ export function initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
     resourceUri: Resource,
     kernelConnection: KernelConnectionMetadata
 ) {
-    setSharedProperty('userExecutedCell', 'true');
-    trackKernelResourceInformation(resourceUri, { kernelConnection });
+    trackKernelResourceInformation(resourceUri, { kernelConnection, userExecutedCell: true });
 }
 
 export function clearInterruptCounter(resource: Resource) {

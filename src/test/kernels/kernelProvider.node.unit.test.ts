@@ -202,12 +202,12 @@ suite('KernelProvider Node', () => {
         };
 
         // Dispose the first kernel
-        const kernel = kernelProvider.getOrCreate(sampleNotebook1, options);
+        const kernel = kernelProvider.getOrCreate(instance(sampleNotebook1), options);
         await kernel.dispose();
 
         assert.isTrue(kernel.disposed, 'Kernel should be disposed');
         assert.isUndefined(kernelProvider.get(sampleUri1), 'Should not return an instance as kernel was disposed');
-        const newKernel = kernelProvider.getOrCreate(sampleNotebook1, options);
+        const newKernel = kernelProvider.getOrCreate(instance(sampleNotebook1), options);
         asyncDisposables.push(newKernel);
         assert.notEqual(kernel, newKernel, 'Should return a different instance');
     });

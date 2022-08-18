@@ -34,6 +34,10 @@ export * from './platform/telemetry/index';
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';
     /**
+     * Whether the user executed a cell.
+     */
+    userExecutedCell?: boolean;
+    /**
      * Hash of the Kernel Connection id.
      */
     kernelId: string;
@@ -424,11 +428,11 @@ export interface IEventNamePropertyMapping {
      * Time take for jupyter server to start and be ready to run first user cell.
      * (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)
      */
-    [Telemetry.PerceivedJupyterStartupNotebook]: never | undefined;
+    [Telemetry.PerceivedJupyterStartupNotebook]: ResourceSpecificTelemetryProperties;
     /**
      * Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.
      */
-    [Telemetry.StartExecuteNotebookCellPerceivedCold]: never | undefined;
+    [Telemetry.StartExecuteNotebookCellPerceivedCold]: ResourceSpecificTelemetryProperties;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebookInteractive]: never | undefined;
     /**

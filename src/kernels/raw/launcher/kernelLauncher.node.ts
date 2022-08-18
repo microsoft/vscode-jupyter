@@ -21,7 +21,7 @@ import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../platfo
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { Telemetry } from '../../../telemetry';
 import {
     isLocalConnection,
     LocalKernelSpecConnectionMetadata,
@@ -34,7 +34,7 @@ import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { isTestExecution } from '../../../platform/common/constants';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { noop } from '../../../platform/common/utils/misc';
-import { sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
+import { sendKernelTelemetryEvent, sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
 
@@ -232,7 +232,7 @@ export class KernelLauncher implements IKernelLauncher {
 
         const disposable = kernelProcess.exited(
             ({ exitCode, reason }) => {
-                sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionKernelProcessExited, undefined, {
                     exitCode,
                     exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
                 });
