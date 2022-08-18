@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Memento, Uri } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IKernelFinder, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
@@ -16,19 +16,24 @@ import {
     traceVerbose,
     traceWarning
 } from '../../../platform/logging';
-import { GLOBAL_MEMENTO, IMemento, Resource } from '../../../platform/common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento, Resource } from '../../../platform/common/types';
 import { captureTelemetry, Telemetry } from '../../../telemetry';
 import { ILocalKernelFinder } from '../types';
 import { createPromiseFromCancellation, isCancellationError } from '../../../platform/common/cancellation';
 import { isArray } from '../../../platform/common/utils/sysTypes';
 import { deserializeKernelConnection, serializeKernelConnection } from '../../helpers';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
-import { createDeferredFromPromise } from '../../../platform/common/utils/async';
+import { createDeferredFromPromise, waitForCondition } from '../../../platform/common/utils/async';
 import { noop } from '../../../platform/common/utils/misc';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { KernelFinder } from '../../kernelFinder';
 import { LocalKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { CondaService } from '../../../platform/common/process/condaService.node';
+import { debounceAsync } from '../../../platform/common/utils/decorators';
+import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -38,6 +43,11 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
     private cache: LocalKernelConnectionMetadata[] = [];
     kind: string = 'local';
 
+    private _onDidChangeKernels = new EventEmitter<void>();
+    onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
+
+    private wasPythonInstalledWhenFetchingControllers = false;
+
     constructor(
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
         @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
@@ -45,13 +55,77 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
-        @inject(IKernelFinder) kernelFinder: KernelFinder
+        @inject(IKernelFinder) kernelFinder: KernelFinder,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
+        @inject(CondaService) private readonly condaService: CondaService,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         kernelFinder.registerKernelFinder(this);
     }
 
     async activate(): Promise<void> {
-        noop();
+        this.condaService.onCondaEnvironmentsChanged(this.onDidChangeCondaEnvironments, this, this.disposables);
+
+        this.interpreters.onDidChangeInterpreters(
+            async () => {
+                // Don't do anything if the interpreter list is still being refreshed
+                if (!this.interpreters.refreshing) {
+                    this._onDidChangeKernels.fire();
+                }
+            },
+            this,
+            this.disposables
+        );
+        this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
+        this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
+    }
+
+    private onDidChangeExtensions() {
+        // If we just installed the Python extension and we fetched the controllers, then fetch it again.
+        if (!this.wasPythonInstalledWhenFetchingControllers && this.extensionChecker.isPythonExtensionInstalled) {
+            this._onDidChangeKernels.fire();
+        }
+    }
+
+    @debounceAsync(1_000)
+    private async onDidChangeCondaEnvironments() {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
+        // A new conda environment was added or removed, hence refresh the kernels.
+        // Wait for the new env to be discovered before refreshing the kernels.
+        const previousCondaEnvCount = (await this.interpreters.getInterpreters()).filter(
+            (item) => item.envType === EnvironmentType.Conda
+        ).length;
+
+        await this.interpreters.refreshInterpreters();
+        // Possible discovering interpreters is very quick and we've already discovered it, hence refresh kernels immediately.
+        // TODO@rebornix - await updating all local kernels
+        this._onDidChangeKernels.fire();
+
+        // Possible discovering interpreters is slow, hence try for around 10s.
+        // I.e. just because we know a conda env was created doesn't necessarily mean its immediately discoverable and usable.
+        // Possible it takes some time.
+        // Wait for around 5s between each try, we know Python extension can be slow to discover interpreters.
+        await waitForCondition(
+            async () => {
+                const condaEnvCount = (await this.interpreters.getInterpreters()).filter(
+                    (item) => item.envType === EnvironmentType.Conda
+                ).length;
+                if (condaEnvCount > previousCondaEnvCount) {
+                    return true;
+                }
+                await this.interpreters.refreshInterpreters();
+                return false;
+            },
+            15_000,
+            5000
+        );
+
+        // TODO@rebornix - await updating all local kernels
+        this._onDidChangeKernels.fire();
     }
 
     async listContributedKernels(
@@ -190,7 +264,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
     ): Promise<LocalKernelConnectionMetadata[]> {
         let [nonPythonKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
             this.nonPythonKernelFinder.listKernelSpecs(false, cancelToken),
-            this.pythonKernelFinder.listKernelSpecs(resource, true, cancelToken)
+            this.pythonKernelFinder.listKernelSpecs(resource, cancelToken)
         ]);
 
         return this.filterKernels(nonPythonKernelSpecs.concat(pythonRelatedKernelSpecs));

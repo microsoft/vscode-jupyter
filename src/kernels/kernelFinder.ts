@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
-import { CancellationToken } from 'vscode';
+import { inject, injectable } from 'inversify';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { Telemetry } from '../platform/common/constants';
-import { Resource } from '../platform/common/types';
+import { IDisposableRegistry, Resource } from '../platform/common/types';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
 import { IContributedKernelFinder } from './internalTypes';
@@ -19,8 +19,14 @@ export class KernelFinder implements IKernelFinder {
     private fetchingTelemetrySent = new Set<string>();
     private _finders: IContributedKernelFinder[] = [];
 
+    private _onDidChangeKernels = new EventEmitter<void>();
+    onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
+
+    constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {}
+
     public registerKernelFinder(finder: IContributedKernelFinder) {
         this._finders.push(finder);
+        this.disposables.push(finder.onDidChangeKernels(() => this._onDidChangeKernels.fire()));
     }
 
     public async listKernels(

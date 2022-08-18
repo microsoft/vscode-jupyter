@@ -2031,12 +2031,12 @@ No description provided
 
 [src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
-            await this.executeSilently(session, startupCode, {
-                traceErrors: true,
-                traceErrorsMessage: 'Error executing jupyter extension internal startup code',
-                telemetryName: Telemetry.KernelStartupCodeFailure
-            });
-
+        await this.executeSilently(session, startupCode, {
+            traceErrors: true,
+            traceErrorsMessage: 'Error executing jupyter extension internal startup code',
+            telemetryName: Telemetry.KernelStartupCodeFailure
+        });
+        if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             // Run user specified startup commands
 ```
 
@@ -7042,7 +7042,7 @@ No description provided
         super(fs, workspaceService, extensionChecker, globalState);
     }
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
-    public async listKernelSpecs(resource: Resource, ignoreCache?: boolean, cancelToken?: CancellationToken) {
+    public async listKernelSpecs(resource: Resource, cancelToken?: CancellationToken) {
         // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
         const workspaceFolderId =
 ```
@@ -7055,8 +7055,8 @@ No description provided
     // Talk to the remote server to determine sessions
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
     public async listKernelsFromConnection(
-        _resource: Resource,
         connInfo: INotebookProviderConnection
+    ): Promise<RemoteKernelConnectionMetadata[]> {
 ```
 
 

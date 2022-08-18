@@ -5,14 +5,13 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { isPythonNotebook } from '../../kernels/helpers';
-import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernelFinder, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
-import { IDisposableRegistry, IExtensions } from '../../platform/common/types';
+import { IDisposableRegistry } from '../../platform/common/types';
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -22,16 +21,11 @@ import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { createActiveInterpreterController } from './helpers';
 import { IControllerLoader, IControllerRegistration } from './types';
 
-// Even after shutting down a kernel, the server API still returns the old information.
-// Re-query after 2 seconds to ensure we don't get stale information.
-const REMOTE_KERNEL_REFRESH_INTERVAL = 2_000;
-
 /**
  * This class finds and creates notebook controllers.
  */
 @injectable()
 export class ControllerLoader implements IControllerLoader, IExtensionSyncActivationService {
-    private wasPythonInstalledWhenFetchingControllers?: boolean;
     private refreshedEmitter = new vscode.EventEmitter<void>();
     // Promise to resolve when we have loaded our controllers
     private controllersPromise: Promise<void>;
@@ -39,54 +33,21 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IControllerRegistration) private readonly registration: IControllerRegistration
     ) {
         this.loadControllers(true).ignoreErrors();
     }
 
     public activate(): void {
-        this.interpreters.onDidChangeInterpreters(
-            async () => {
-                // Don't do anything if the interpreter list is still being refreshed
-                if (!this.interpreters.refreshing) {
-                    await this.loadControllers(true);
-                }
-            },
-            this,
-            this.disposables
-        );
-
         // Make sure to reload whenever we do something that changes state
-        const forceLoad = () => {
-            this.loadControllers(true)
-                .then(noop)
-                .catch((ex) => traceError('Error reloading notebook controllers', ex));
-        };
-        this.serverUriStorage.onDidChangeUri(forceLoad, this, this.disposables);
-
-        // If we create a new kernel, we need to refresh if the kernel is remote (because
-        // we have live sessions possible)
-        // Note, this is a perf optimization for right now. We should not need
-        // to check for remote if the future when we support live sessions on local
-        this.kernelProvider.onDidStartKernel((k) => {
-            if (isRemoteConnection(k.kernelConnectionMetadata)) {
-                forceLoad();
-            }
-        });
-
-        // For kernel dispose we need to wait a bit, otherwise the list comes back the
-        // same
-        this.kernelProvider.onDidDisposeKernel(
-            (k) => {
-                if (k && isRemoteConnection(k.kernelConnectionMetadata)) {
-                    setTimeout(forceLoad, REMOTE_KERNEL_REFRESH_INTERVAL);
-                }
+        this.kernelFinder.onDidChangeKernels(
+            () => {
+                this.loadControllers(true)
+                    .then(noop)
+                    .catch((ex) => traceError('Error reloading notebook controllers', ex));
             },
             this,
             this.disposables
@@ -96,8 +57,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
-        // Be aware of if we need to re-look for kernels on extension change
-        this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
     }
     public loadControllers(refresh?: boolean | undefined): Promise<void> {
         if (!this.controllersPromise || refresh) {
@@ -107,7 +66,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                 this.loadCancellationToken.cancel();
             }
             this.loadCancellationToken = new vscode.CancellationTokenSource();
-            this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
             this.controllersPromise = this.loadControllersImpl(this.loadCancellationToken.token)
                 .catch((e) => {
                     traceError('Error loading notebook controllers', e);
@@ -158,13 +116,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         }
     }
 
-    private async onDidChangeExtensions() {
-        // If we just installed the Python extension and we fetched the controllers, then fetch it again.
-        if (!this.wasPythonInstalledWhenFetchingControllers && this.extensionChecker.isPythonExtensionInstalled) {
-            await this.loadControllers(true);
-        }
-    }
-
     private async loadControllersImpl(cancelToken: vscode.CancellationToken) {
         let cachedConnections = await this.listKernels(cancelToken, 'useCache');
         const nonCachedConnectionsPromise = this.listKernels(cancelToken, 'ignoreCache');
@@ -176,7 +127,11 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
 
         // Do the same thing again but with non cached
         const nonCachedConnections = await nonCachedConnectionsPromise;
-        traceVerbose(`Found ${cachedConnections.length} non-cached controllers`);
+        await this.refreshControllers(nonCachedConnections);
+    }
+
+    private async refreshControllers(nonCachedConnections: KernelConnectionMetadata[]) {
+        traceVerbose(`Found ${nonCachedConnections.length} non-cached controllers`);
         this.createNotebookControllers(nonCachedConnections);
 
         // Look for any controllers that we have disposed (no longer found when fetching)

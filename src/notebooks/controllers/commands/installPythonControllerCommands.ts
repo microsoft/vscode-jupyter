@@ -186,6 +186,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
                     // Trigger a load of our notebook controllers, we want to await it here so that any in
                     // progress executions get passed to the suggested controller
+                    // TODO@rebornix, how do we wait for the extension to be loaded and refresh the kernels?
                     await this.controllerLoader.loadControllers(true);
                 } else {
                     traceError('Failed to install Python Extension via Kernel Picker command');

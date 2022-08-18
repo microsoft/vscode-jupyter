@@ -16,6 +16,7 @@ import { noop } from '../../core';
 import {
     IJupyterConnection,
     IJupyterKernelSpec,
+    IKernelProvider,
     KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata
 } from '../../../kernels/types';
@@ -47,6 +48,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../../kernels/common/commonFinder';
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
+import { IExtensions } from '../../../platform/common/types';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -162,7 +164,9 @@ suite(`Remote Kernel Finder`, () => {
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(true);
         const env = mock<IApplicationEnvironment>();
         when(env.extensionVersion).thenReturn('');
-        kernelFinder = new KernelFinder();
+        const kernelProvider = mock<IKernelProvider>();
+        const extensions = mock<IExtensions>();
+        kernelFinder = new KernelFinder([]);
         kernelRankHelper = new KernelRankingHelper(kernelFinder, preferredRemoteKernelIdProvider);
 
         remoteKernelFinder = new RemoteKernelFinder(
@@ -176,6 +180,9 @@ suite(`Remote Kernel Finder`, () => {
             instance(env),
             instance(cachedRemoteKernelValidator),
             kernelFinder,
+            [],
+            instance(kernelProvider),
+            instance(extensions),
             false
         );
     });
@@ -191,7 +198,7 @@ suite(`Remote Kernel Finder`, () => {
             juliaSpec,
             interpreterSpec
         ]);
-        const kernels = await remoteKernelFinder.listKernelsFromConnection(undefined, connInfo);
+        const kernels = await remoteKernelFinder.listKernelsFromConnection(connInfo);
         assert.equal(kernels.length, 4, 'Not enough kernels returned');
         assert.equal(
             getDisplayNameOrNameOfKernelConnection(kernels[0]),
@@ -218,7 +225,7 @@ suite(`Remote Kernel Finder`, () => {
             juliaSpec,
             interpreterSpec
         ]);
-        const kernels = await remoteKernelFinder.listKernelsFromConnection(undefined, connInfo);
+        const kernels = await remoteKernelFinder.listKernelsFromConnection(connInfo);
         const liveKernels = kernels.filter((k) => k.kind === 'connectToLiveRemoteKernel');
         assert.equal(liveKernels.length, 3, 'Live kernels not found');
     });

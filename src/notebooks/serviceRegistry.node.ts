@@ -15,7 +15,6 @@ import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms'
 import { INotebookCompletionProvider, INotebookEditorProvider } from './types';
 import { NotebookUsageTracker } from './notebookUsageTracker';
 import { IDataScienceCommandListener } from '../platform/common/types';
-import { CondaControllerRefresher } from './controllers/condaControllerRefresher.node';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 import { ITracebackFormatter } from '../kernels/types';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
@@ -59,10 +58,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     registerControllerTypes(serviceManager, isDevMode);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        CondaControllerRefresher
-    );
 
     serviceManager.addSingleton<KernelFilterService>(KernelFilterService, KernelFilterService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(

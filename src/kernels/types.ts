@@ -598,6 +598,7 @@ export interface IKernelDependencyService {
 export const IKernelFinder = Symbol('IKernelFinder');
 
 export interface IKernelFinder {
+    onDidChangeKernels: Event<void>;
     listKernels(
         resource: Resource,
         cancelToken?: CancellationToken,

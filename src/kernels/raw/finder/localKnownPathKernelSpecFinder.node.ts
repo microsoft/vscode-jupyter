@@ -74,7 +74,8 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                                 id: getKernelId(k)
                             }
                     );
-            }
+            },
+            false
         );
     }
     private async findKernelSpecs(cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {

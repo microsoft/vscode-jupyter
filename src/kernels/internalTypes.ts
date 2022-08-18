@@ -3,12 +3,13 @@
 
 'use strict';
 
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Event } from 'vscode';
 import { Resource } from '../platform/common/types';
 import { KernelConnectionMetadata } from './types';
 
 export interface IContributedKernelFinder {
     kind: string;
+    onDidChangeKernels: Event<void>;
     listContributedKernels(
         resource: Resource,
         cancelToken: CancellationToken | undefined,
