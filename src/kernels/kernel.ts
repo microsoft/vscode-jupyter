@@ -458,16 +458,14 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         // Restart sessions and retries might make this hard to do correctly otherwise.
         session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
-        // If this is a live kernel, we shouldn't be changing anything by running startup code.
+        // Gather all of the startup code at one time and execute as one cell
+        const startupCode = await this.gatherInternalStartupCode();
+        await this.executeSilently(session, startupCode, {
+            traceErrors: true,
+            traceErrorsMessage: 'Error executing jupyter extension internal startup code',
+            telemetryName: Telemetry.KernelStartupCodeFailure
+        });
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
-            // Gather all of the startup code at one time and execute as one cell
-            const startupCode = await this.gatherInternalStartupCode();
-            await this.executeSilently(session, startupCode, {
-                traceErrors: true,
-                traceErrorsMessage: 'Error executing jupyter extension internal startup code',
-                telemetryName: Telemetry.KernelStartupCodeFailure
-            });
-
             // Run user specified startup commands
             await this.executeSilently(session, this.getUserStartupCommands(), {
                 traceErrors: true,
@@ -522,16 +520,18 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         // Gather all of the startup code into a giant string array so we
         // can execute it all at once.
         const result: string[] = [];
-        if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
-            const dirs = await Promise.all(
-                this.startupCodeProviders
-                    .sort((a, b) => b.priority - a.priority)
-                    .map((provider) => provider.getCode(this))
-            );
-            for (let dir of dirs) {
-                result.push(...dir);
-            }
+        const startupCode = await Promise.all(
+            this.startupCodeProviders.sort((a, b) => b.priority - a.priority).map((provider) => provider.getCode(this))
+        );
+        for (let code of startupCode) {
+            result.push(...code);
+        }
 
+        // If this is a live kernel, we shouldn't be changing anything by running startup code.
+        if (
+            isPythonKernelConnection(this.kernelConnectionMetadata) &&
+            this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel'
+        ) {
             // Set the ipynb file
             const file = getFilePath(this.resourceUri);
             if (file) {

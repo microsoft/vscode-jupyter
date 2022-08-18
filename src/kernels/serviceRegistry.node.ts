@@ -46,6 +46,7 @@ import { KernelAutoReConnectFailedMonitor } from './kernelAutoReConnectFailedMon
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { PythonKernelInterruptDaemon } from './raw/finder/pythonKernelInterruptDaemon.node';
 import { LocalKernelFinder } from './raw/finder/localKernelFinder.node';
+import { DebugStartupCodeProvider } from './debuggerStartupCodeProvider';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
@@ -134,5 +135,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
 
     serviceManager.addSingleton<IStartupCodeProvider>(IStartupCodeProvider, KernelStartupCodeProvider);
+    serviceManager.addSingleton<IStartupCodeProvider>(IStartupCodeProvider, DebugStartupCodeProvider);
     serviceManager.addSingleton<PythonKernelInterruptDaemon>(PythonKernelInterruptDaemon, PythonKernelInterruptDaemon);
 }

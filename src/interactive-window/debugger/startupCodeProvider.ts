@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+import { isPythonKernelConnection } from '../../kernels/helpers';
 import { IKernel, isLocalConnection, IStartupCodeProvider, StartupCodePriority } from '../../kernels/types';
 import { InteractiveWindowView } from '../../platform/common/constants';
 import { IFileSystem } from '../../platform/common/platform/types';
@@ -21,6 +22,10 @@ export class InteractiveWindowDebuggingStartupCodeProvider implements IStartupCo
     ) {}
 
     async getCode(kernel: IKernel): Promise<string[]> {
+        if (!isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
+            return [];
+        }
+
         if (!this.isWebExtension) {
             const useNewDebugger = this.configService.getSettings(undefined).forceIPyKernelDebugger === true;
             if (useNewDebugger) {
