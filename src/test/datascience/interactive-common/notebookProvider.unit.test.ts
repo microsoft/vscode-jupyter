@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../../../platform/../kernels/types';
+import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../../../kernels/types';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IJupyterNotebookProvider, IServerConnectionType } from '../../../kernels/jupyter/types';

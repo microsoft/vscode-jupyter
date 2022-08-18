@@ -24,7 +24,7 @@
 // } from './helper';
 // import { ProductNames } from '../../../platform/common/installer/productNames';
 // import { INotebookControllerManager } from '../../../notebooks/types';
-// import { IKernelProvider } from '../../../platform/../kernels/types';
+// import { IKernelProvider } from '../../../kernels/types';
 // import {
 //     IJupyterKernelConnectionSession,
 //     INotebook,

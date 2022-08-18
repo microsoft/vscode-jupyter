@@ -17,7 +17,7 @@ import {
     KernelConnectionMetadata,
     KernelInterpreterDependencyResponse,
     RemoteKernelSpecConnectionMetadata
-} from '../../platform/../kernels/types';
+} from '../../kernels/types';
 import { PythonEnvironment, EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { DataScienceErrorHandler } from '../../kernels/errors/kernelErrorHandler';

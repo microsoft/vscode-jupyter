@@ -8,7 +8,7 @@ import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable, InteractiveWindowMode } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { IKernelProvider } from '../../platform/../kernels/types';
+import { IKernelProvider } from '../../kernels/types';
 import {
     captureScreenShot,
     createEventHandler,

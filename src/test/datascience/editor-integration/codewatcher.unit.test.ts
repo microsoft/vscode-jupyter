@@ -38,7 +38,7 @@ import { MockJupyterSettings } from '../mockJupyterSettings';
 import { MockEditor } from '../mockTextEditor';
 import { createDocument } from './helpers';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IKernel, IKernelProvider } from '../../../platform/../kernels/types';
+import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { InteractiveCellResultError } from '../../../platform/errors/interactiveCellResultError';
 import { ICodeWatcher, IGeneratedCodeStorageFactory } from '../../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';

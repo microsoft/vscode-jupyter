@@ -8,13 +8,13 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
-import { createInterpreterKernelSpec } from '../../../../platform/../kernels/helpers';
-import { KernelDependencyService } from '../../../../platform/../kernels/kernelDependencyService.node';
+import { createInterpreterKernelSpec } from '../../../../kernels/helpers';
+import { KernelDependencyService } from '../../../../kernels/kernelDependencyService.node';
 import {
     IKernelProvider,
     KernelInterpreterDependencyResponse,
     PythonKernelConnectionMetadata
-} from '../../../../platform/../kernels/types';
+} from '../../../../kernels/types';
 import { IServiceContainer } from '../../../../platform/ioc/types';
 import { EnvironmentType } from '../../../../platform/pythonEnvironments/info';
 import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
