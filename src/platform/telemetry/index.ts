@@ -156,10 +156,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     }
     // If stuff is already queued, then queue the rest.
     // Queue telemetry for now only in insiders.
-    if (
-        sharedProperties['isInsiderExtension'] === 'true' &&
-        (isPromise(properties?.waitBeforeSending) || queuedTelemetry.length)
-    ) {
+    if (isPromise(properties?.waitBeforeSending) || queuedTelemetry.length) {
         queuedTelemetry.push({
             eventName: eventName as string,
             durationMs,
