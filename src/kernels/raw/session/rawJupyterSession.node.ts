@@ -20,7 +20,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { sendKernelTelemetryEvent, sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
-import { sendTelemetryEvent, captureTelemetry, Telemetry } from '../../../telemetry';
+import { captureTelemetry, Telemetry } from '../../../telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { IRawKernelConnectionSession, ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
 import { BaseJupyterSession } from '../../common/baseJupyterSession';
@@ -148,7 +148,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         // We want to know why we got shut down
         const stacktrace = new Error().stack;
         return super.shutdownSession(session, statusHandler, isRequestToShutdownRestartSession).then(() => {
-            sendTelemetryEvent(Telemetry.RawKernelSessionShutdown, undefined, {
+            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionShutdown, undefined, {
                 isRequestToShutdownRestartSession,
                 stacktrace
             });
@@ -174,7 +174,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
             if (session !== this.session) {
                 return;
             }
-            sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
+            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionKernelProcessExited, undefined, {
                 exitCode,
                 exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
             });
@@ -349,7 +349,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         } else {
             traceWarning(`Didn't get response for requestKernelInfo after ${stopWatch.elapsedTime}ms.`);
         }
-        sendTelemetryEvent(Telemetry.RawKernelInfoResonse, stopWatch.elapsedTime, {
+        sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelInfoResonse, stopWatch.elapsedTime, {
             attempts,
             timedout: !gotIoPubMessage.completed
         });

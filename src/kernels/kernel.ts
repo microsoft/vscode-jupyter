@@ -41,7 +41,7 @@ import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     trackKernelResourceInformation
 } from './telemetry/helper';
-import { sendTelemetryEvent, Telemetry } from '../telemetry';
+import { Telemetry } from '../telemetry';
 import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import {
     IKernel,
@@ -799,10 +799,18 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         // Setup telemetry
         if (!this.perceivedJupyterStartupTelemetryCaptured) {
             this.perceivedJupyterStartupTelemetryCaptured = true;
-            sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
+            sendKernelTelemetryEvent(
+                this.resourceUri,
+                Telemetry.PerceivedJupyterStartupNotebook,
+                stopWatch.elapsedTime
+            );
             executionPromise
                 .finally(() =>
-                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
+                    sendKernelTelemetryEvent(
+                        this.resourceUri,
+                        Telemetry.StartExecuteNotebookCellPerceivedCold,
+                        stopWatch.elapsedTime
+                    )
                 )
                 .catch(noop);
         }

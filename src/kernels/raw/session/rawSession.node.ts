@@ -10,10 +10,11 @@ import { traceVerbose, traceInfoIfCI, traceError, traceWarning } from '../../../
 import { IDisposable, Resource } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { Telemetry } from '../../../telemetry';
 import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../../types';
 import { IKernelProcess } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel.node';
+import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 
 /*
 RawSession class implements a jupyterlab ISession object
@@ -98,7 +99,7 @@ export class RawSession implements ISessionWithSocket {
     public async dispose() {
         // We want to know who called dispose on us
         const stacktrace = new Error().stack;
-        sendTelemetryEvent(Telemetry.RawKernelSessionDisposed, undefined, { stacktrace });
+        sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionDisposed, undefined, { stacktrace });
 
         // Now actually dispose ourselves
         this.isDisposing = true;
@@ -279,7 +280,7 @@ export class RawSession implements ISessionWithSocket {
         traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
         // Send telemetry so we know why the kernel process exited,
         // as this affects our kernel startup success
-        sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
+        sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionKernelProcessExited, undefined, {
             exitCode: e.exitCode,
             exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(e.reason)
         });
