@@ -796,6 +796,10 @@ export class CellExecutionMessageHandler implements IDisposable {
         traceCellMessage(this.cell, `Kernel switching to ${msg.content.execution_state}`);
     }
     private handleStreamMessage(msg: KernelMessage.IStreamMsg) {
+        const alwaysDisable = true;
+        if (alwaysDisable as unknown) {
+            return;
+        }
         if (
             getParentHeaderMsgId(msg) &&
             this.outputsAreSpecificToAWidget.length &&
