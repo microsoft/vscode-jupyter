@@ -2278,7 +2278,7 @@
         "zeromq": "^6.0.0-beta.6"
     },
     "devDependencies": {
-        "@actions/core": "^1.2.6",
+        "@actions/core": "^1.9.1",
         "@actions/github": "^4.0.0",
         "@actions/glob": "^0.3.0",
         "@babel/cli": "^7.15.4",
