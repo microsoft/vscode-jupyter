@@ -116,7 +116,6 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     document.uri,
                     notebookMetadata,
                     preferredSearchToken.token,
-                    'useCache',
                     preferredInterpreter,
                     serverId
                 ));
@@ -128,7 +127,6 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                         document.uri,
                         notebookMetadata,
                         preferredSearchToken.token,
-                        'ignoreCache',
                         preferredInterpreter,
                         serverId
                     ));
@@ -243,7 +241,6 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         uri: Uri,
         notebookMetadata: INotebookMetadata | undefined,
         cancelToken: CancellationToken,
-        useCache: 'useCache' | 'ignoreCache' | undefined,
         preferredInterpreter: PythonEnvironment | undefined,
         serverId: string | undefined
     ): Promise<{
@@ -256,7 +253,6 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             notebookMetadata,
             preferredInterpreter,
             cancelToken,
-            useCache,
             serverId
         );
 

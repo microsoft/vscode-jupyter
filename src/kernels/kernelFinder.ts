@@ -3,10 +3,8 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
-import { Telemetry } from '../platform/common/constants';
 import { IDisposableRegistry, Resource } from '../platform/common/types';
 import { StopWatch } from '../platform/common/utils/stopWatch';
-import { sendTelemetryEvent } from '../telemetry';
 import { IContributedKernelFinder } from './internalTypes';
 import { IKernelFinder, KernelConnectionMetadata } from './types';
 
@@ -16,7 +14,6 @@ import { IKernelFinder, KernelConnectionMetadata } from './types';
 @injectable()
 export class KernelFinder implements IKernelFinder {
     private startTimeForFetching?: StopWatch;
-    private fetchingTelemetrySent = new Set<string>();
     private _finders: IContributedKernelFinder[] = [];
 
     private _onDidChangeKernels = new EventEmitter<void>();
@@ -31,8 +28,7 @@ export class KernelFinder implements IKernelFinder {
 
     public async listKernels(
         resource: Resource,
-        cancelToken: CancellationToken | undefined,
-        useCache: 'ignoreCache' | 'useCache' = 'ignoreCache'
+        cancelToken: CancellationToken | undefined
     ): Promise<KernelConnectionMetadata[]> {
         this.startTimeForFetching = this.startTimeForFetching ?? new StopWatch();
 
@@ -47,29 +43,9 @@ export class KernelFinder implements IKernelFinder {
 
         for (const finder of this._finders) {
             const contributedKernels = finder.listContributedKernels(resource);
-            this.finishListingKernels(contributedKernels, useCache, finder.kind as 'local' | 'remote');
             kernels.push(...contributedKernels);
         }
 
         return kernels;
-    }
-
-    private finishListingKernels(
-        list: KernelConnectionMetadata[],
-        useCache: 'ignoreCache' | 'useCache',
-        kind: 'local' | 'remote'
-    ) {
-        // Send the telemetry once for each type of search
-        const key = `${kind}:${useCache}`;
-        if (this.startTimeForFetching && !this.fetchingTelemetrySent.has(key)) {
-            this.fetchingTelemetrySent.add(key);
-            sendTelemetryEvent(Telemetry.FetchControllers, this.startTimeForFetching.elapsedTime, {
-                cached: useCache === 'useCache',
-                kind
-            });
-        }
-
-        // Just return the list
-        return list;
     }
 }

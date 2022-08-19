@@ -30,12 +30,11 @@ export class KernelRankingHelper implements IKernelRankingHelper {
         notebookMetadata?: INotebookMetadata | undefined,
         @logValue<PythonEnvironment>('uri') preferredInterpreter?: PythonEnvironment,
         @ignoreLogging() cancelToken?: CancellationToken,
-        useCache?: 'useCache' | 'ignoreCache',
         serverId?: string
     ): Promise<KernelConnectionMetadata[] | undefined> {
         try {
             // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
-            let kernels = await this.kernelFinder.listKernels(resource, cancelToken, useCache);
+            let kernels = await this.kernelFinder.listKernels(resource, cancelToken);
             if (serverId) {
                 kernels = kernels.filter((kernel) => !isLocalConnection(kernel) && kernel.serverId === serverId);
             }

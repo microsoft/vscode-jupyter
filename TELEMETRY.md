@@ -1356,16 +1356,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/kernelFinder.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelFinder.ts)
-```typescript
-        const key = `${kind}:${useCache}`;
-        if (this.startTimeForFetching && !this.fetchingTelemetrySent.has(key)) {
-            this.fetchingTelemetrySent.add(key);
-            sendTelemetryEvent(Telemetry.FetchControllers, this.startTimeForFetching.elapsedTime, {
-                cached: useCache === 'useCache',
-                kind
-            });
-```
+Event can be removed. Not referenced anywhere
 
 </details>
 <details>

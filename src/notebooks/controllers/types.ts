@@ -110,7 +110,6 @@ export interface IKernelRankingHelper {
         option?: INotebookMetadata,
         preferredInterpreter?: PythonEnvironment,
         cancelToken?: vscode.CancellationToken,
-        useCache?: 'useCache' | 'ignoreCache',
         serverId?: string
     ): Promise<KernelConnectionMetadata[] | undefined>;
 

@@ -117,26 +117,14 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     }
 
     private async loadControllersImpl(cancelToken: vscode.CancellationToken) {
-        let cachedConnections = await this.listKernels(cancelToken, 'useCache');
-        const nonCachedConnectionsPromise = this.listKernels(cancelToken, 'ignoreCache');
+        let connections = await this.kernelFinder.listKernels(undefined, cancelToken);
 
-        traceVerbose(`Found ${cachedConnections.length} cached controllers`);
-        // Now create or update the actual controllers from our connections. Do this for the cached connections
-        // so they show up quicker.
-        this.createNotebookControllers(cachedConnections);
-
-        // Do the same thing again but with non cached
-        const nonCachedConnections = await nonCachedConnectionsPromise;
-        await this.refreshControllers(nonCachedConnections);
-    }
-
-    private async refreshControllers(nonCachedConnections: KernelConnectionMetadata[]) {
-        traceVerbose(`Found ${nonCachedConnections.length} non-cached controllers`);
-        this.createNotebookControllers(nonCachedConnections);
+        traceVerbose(`Found ${connections.length} cached controllers`);
+        this.createNotebookControllers(connections);
 
         // Look for any controllers that we have disposed (no longer found when fetching)
         const disposedControllers = Array.from(this.registration.registered).filter((controller) => {
-            const connectionIsNoLongerValid = !nonCachedConnections.some((connection) => {
+            const connectionIsNoLongerValid = !connections.some((connection) => {
                 return connection.id === controller.connection.id;
             });
 
@@ -157,14 +145,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
 
         // Indicate a refresh
         this.refreshedEmitter.fire();
-    }
-
-    private listKernels(
-        cancelToken: vscode.CancellationToken,
-        useCache: 'ignoreCache' | 'useCache'
-    ): Promise<KernelConnectionMetadata[]> {
-        // Filtering is done in the registration layer
-        return this.kernelFinder.listKernels(undefined, cancelToken, useCache);
     }
 
     private createNotebookControllers(
