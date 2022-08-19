@@ -204,6 +204,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         if (resourceCache) {
             return resourceCache;
         } else {
+            // Trigger a cache update since we don't have a cache for this resource
             this.updateCache(resource).then(noop, noop);
             return this.cache;
         }
