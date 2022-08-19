@@ -40,6 +40,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
 
     private wasPythonInstalledWhenFetchingControllers = false;
 
+    private _cacheUpdateCancelTokenSource: CancellationTokenSource | undefined;
     private cache: LocalKernelConnectionMetadata[] = [];
     private resourceCache: Map<string, LocalKernelConnectionMetadata[]> = new Map();
     private _initializeResolve: () => void;
@@ -103,16 +104,15 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
     }
 
     private async loadCache() {
-        const loadCancellationToken = new CancellationTokenSource();
         // loading cache, which is resource agnostic
-        const kernelsFromCache = await this.getFromCache(loadCancellationToken.token);
+        const kernelsFromCache = await this.getFromCache();
         let kernels: LocalKernelConnectionMetadata[] = [];
 
         if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
             kernels = kernelsFromCache;
         } else {
             try {
-                kernels = await this.listKernels(undefined, loadCancellationToken.token);
+                kernels = await this.listKernels(undefined);
             } catch (ex) {
                 traceError(`Exception loading kernels: ${ex}`);
             }
@@ -122,13 +122,15 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
     }
 
     private async updateCache(resource: Resource) {
-        const loadCancellationToken = new CancellationTokenSource();
+        this._cacheUpdateCancelTokenSource?.dispose();
+        const updateCacheCancellationToken = new CancellationTokenSource();
+        this._cacheUpdateCancelTokenSource = updateCacheCancellationToken;
 
         if (resource) {
             let kernels: LocalKernelConnectionMetadata[];
 
             try {
-                kernels = await this.listKernels(resource, loadCancellationToken.token);
+                kernels = await this.listKernels(resource, updateCacheCancellationToken.token);
             } catch (ex) {
                 traceError(`Exception loading kernels: ${ex}`);
                 return;
@@ -144,7 +146,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
                 workspace.workspaceFolders.map((folder) => () => {
                     return new Promise<void>(async (resolve) => {
                         try {
-                            let kernels = await this.listKernels(folder.uri, loadCancellationToken.token);
+                            let kernels = await this.listKernels(folder.uri, updateCacheCancellationToken.token);
                             await this.writeToCache(kernels);
                             const resourceCacheKey = this.getResourceCacheKey(folder.uri);
                             this.resourceCache.set(resourceCacheKey, kernels);

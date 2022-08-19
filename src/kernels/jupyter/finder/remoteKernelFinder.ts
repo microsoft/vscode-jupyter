@@ -65,6 +65,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
      */
     private readonly kernelIdsToHide = new Set<string>();
     kind: string = 'remote';
+    private _cacheUpdateCancelTokenSource: CancellationTokenSource | undefined;
     private cache: RemoteKernelConnectionMetadata[] = [];
 
     private _onDidChangeKernels = new EventEmitter<void>();
@@ -158,8 +159,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
             return;
         }
 
-        const loadCancellationToken = new CancellationTokenSource();
-        const kernelsFromCache = await this.getFromCache(loadCancellationToken.token);
+        const kernelsFromCache = await this.getFromCache();
 
         let kernels: RemoteKernelConnectionMetadata[] = [];
 
@@ -168,7 +168,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
             kernels = kernelsFromCache;
         } else {
             const kernelsWithoutCachePromise = (async () => {
-                const connInfo = await this.getRemoteConnectionInfo(loadCancellationToken.token);
+                const connInfo = await this.getRemoteConnectionInfo();
                 return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
             })();
 
@@ -181,11 +181,13 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
 
     private async updateCache() {
         let kernels: RemoteKernelConnectionMetadata[] = [];
-        const loadCancellationToken = new CancellationTokenSource();
+        this._cacheUpdateCancelTokenSource?.dispose();
+        const updateCacheCancellationToken = new CancellationTokenSource();
+        this._cacheUpdateCancelTokenSource = updateCacheCancellationToken;
 
         try {
             const kernelsWithoutCachePromise = (async () => {
-                const connInfo = await this.getRemoteConnectionInfo(loadCancellationToken.token);
+                const connInfo = await this.getRemoteConnectionInfo(updateCacheCancellationToken.token);
                 return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
             })();
 
@@ -196,8 +198,12 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
             // at this point no need to display all of the kernel specs,
             // Its possible the connection is dead, just display the live kernels we had.
             // I.e. if user had a notebook connected to a remote kernel, then just display that live kernel.
-            kernels = await this.getFromCache(loadCancellationToken.token);
+            kernels = await this.getFromCache(updateCacheCancellationToken.token);
             kernels = kernels.filter((item) => item.kind === 'connectToLiveRemoteKernel');
+        }
+
+        if (updateCacheCancellationToken.token.isCancellationRequested) {
+            return;
         }
 
         await this.writeToCache(kernels);
