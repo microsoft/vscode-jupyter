@@ -109,7 +109,7 @@ import { CondaService } from '../../../platform/common/process/condaService.node
             interpreterService = mock(InterpreterService);
             remoteKernelFinder = mock(RemoteKernelFinder);
 
-            when(remoteKernelFinder.listKernelsFromConnection(anything(), anything())).thenResolve([]);
+            when(remoteKernelFinder.listKernelsFromConnection(anything())).thenResolve([]);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
                 testData.interpreters = testData.interpreters || [];

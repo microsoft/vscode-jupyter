@@ -80,7 +80,7 @@ export abstract class LocalKernelSpecFinderBase {
         cacheKey: string,
         dependsOnPythonExtension: boolean,
         finder: () => Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
-        ignoreCache: boolean
+        ignoreCache?: boolean
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         // If we have already searched for this resource, then use that.
         const result = this.kernelSpecCache.get(cacheKey);

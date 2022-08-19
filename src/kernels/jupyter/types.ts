@@ -339,7 +339,6 @@ export interface IServerConnectionType {
 
 export interface IRemoteKernelFinder extends IContributedKernelFinder {
     listKernelsFromConnection(
-        connInfo: INotebookProviderConnection | undefined,
-        cancelToken?: CancellationToken
+        connInfo: INotebookProviderConnection | undefined
     ): Promise<RemoteKernelConnectionMetadata[]>;
 }

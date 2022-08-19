@@ -57,7 +57,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         super(fs, workspaceService, extensionChecker, globalState);
     }
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
-    public async listKernelSpecs(resource: Resource, cancelToken?: CancellationToken) {
+    public async listKernelSpecs(resource: Resource, ignoreCache?: boolean, cancelToken?: CancellationToken) {
         // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
         const workspaceFolderId =
             this.workspaceService.getWorkspaceFolderIdentifier(
@@ -68,7 +68,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             workspaceFolderId,
             true,
             () => this.listKernelsImplementation(resource, cancelToken),
-            true
+            ignoreCache
         );
     }
     private async listKernelsImplementation(
