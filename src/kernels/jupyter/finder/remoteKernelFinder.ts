@@ -77,7 +77,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         return this._initializedPromise;
     }
 
-    private wasPythonInstalledWhenFetchingControllers = false;
+    private wasPythonInstalledWhenFetchingKernels = false;
 
     constructor(
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
@@ -141,17 +141,14 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         this.extensions.onDidChange(
             () => {
                 // If we just installed the Python extension and we fetched the controllers, then fetch it again.
-                if (
-                    !this.wasPythonInstalledWhenFetchingControllers &&
-                    this.extensionChecker.isPythonExtensionInstalled
-                ) {
+                if (!this.wasPythonInstalledWhenFetchingKernels && this.extensionChecker.isPythonExtensionInstalled) {
                     this.updateCache().then(noop, noop);
                 }
             },
             this,
             this.disposables
         );
-        this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
+        this.wasPythonInstalledWhenFetchingKernels = this.extensionChecker.isPythonExtensionInstalled;
     }
 
     private async loadCache() {
