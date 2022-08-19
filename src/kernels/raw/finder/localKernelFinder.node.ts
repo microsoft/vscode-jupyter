@@ -4,26 +4,19 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Memento, Uri, workspace } from 'vscode';
 import { IKernelFinder, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import {
-    traceInfo,
-    ignoreLogging,
-    traceDecoratorError,
-    traceError,
-    traceVerbose,
-    traceWarning
-} from '../../../platform/logging';
+import { traceInfo, ignoreLogging, traceDecoratorError, traceError } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento, Resource } from '../../../platform/common/types';
 import { captureTelemetry, Telemetry } from '../../../telemetry';
 import { ILocalKernelFinder } from '../types';
-import { createPromiseFromCancellation, isCancellationError } from '../../../platform/common/cancellation';
+import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { isArray } from '../../../platform/common/utils/sysTypes';
 import { deserializeKernelConnection, serializeKernelConnection } from '../../helpers';
-import { IApplicationEnvironment } from '../../../platform/common/application/types';
-import { createDeferredFromPromise, waitForCondition } from '../../../platform/common/utils/async';
+import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
+import { waitForCondition } from '../../../platform/common/utils/async';
 import { noop } from '../../../platform/common/utils/misc';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { KernelFinder } from '../../kernelFinder';
@@ -40,13 +33,21 @@ import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
 export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleActivationService {
-    private cache: LocalKernelConnectionMetadata[] = [];
     kind: string = 'local';
 
     private _onDidChangeKernels = new EventEmitter<void>();
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
 
     private wasPythonInstalledWhenFetchingControllers = false;
+
+    private cache: LocalKernelConnectionMetadata[] = [];
+    private resourceCache: Map<string, LocalKernelConnectionMetadata[]> = new Map();
+    private _initializeResolve: () => void;
+    private _initializedPromise: Promise<void>;
+
+    get initialized(): Promise<void> {
+        return this._initializedPromise;
+    }
 
     constructor(
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
@@ -60,33 +61,99 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(CondaService) private readonly condaService: CondaService,
-        @inject(IExtensions) private readonly extensions: IExtensions
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {
         kernelFinder.registerKernelFinder(this);
     }
 
     async activate(): Promise<void> {
+        this.loadCache().then(noop, noop);
+
         this.condaService.onCondaEnvironmentsChanged(this.onDidChangeCondaEnvironments, this, this.disposables);
 
         this.interpreters.onDidChangeInterpreters(
             async () => {
                 // Don't do anything if the interpreter list is still being refreshed
                 if (!this.interpreters.refreshing) {
-                    this._onDidChangeKernels.fire();
+                    this.updateCache(undefined).then(noop, noop);
                 }
             },
             this,
             this.disposables
         );
-        this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
+        this.extensions.onDidChange(
+            () => {
+                // If we just installed the Python extension and we fetched the controllers, then fetch it again.
+                if (
+                    !this.wasPythonInstalledWhenFetchingControllers &&
+                    this.extensionChecker.isPythonExtensionInstalled
+                ) {
+                    this.updateCache(undefined).then(noop, noop);
+                }
+            },
+            this,
+            this.disposables
+        );
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
     }
 
-    private onDidChangeExtensions() {
-        // If we just installed the Python extension and we fetched the controllers, then fetch it again.
-        if (!this.wasPythonInstalledWhenFetchingControllers && this.extensionChecker.isPythonExtensionInstalled) {
-            this._onDidChangeKernels.fire();
+    private async loadCache() {
+        const loadCancellationToken = new CancellationTokenSource();
+        // loading cache, which is resource agnostic
+        const kernelsFromCache = await this.getFromCache(loadCancellationToken.token);
+        let kernels: LocalKernelConnectionMetadata[] = [];
+
+        if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
+            kernels = kernelsFromCache;
+        } else {
+            try {
+                kernels = await this.listKernels(undefined, loadCancellationToken.token);
+            } catch (ex) {
+                traceError(`Exception loading kernels: ${ex}`);
+            }
         }
+        await this.writeToCache(kernels);
+        this._initializeResolve();
+    }
+
+    private async updateCache(resource: Resource) {
+        const loadCancellationToken = new CancellationTokenSource();
+
+        if (resource) {
+            let kernels: LocalKernelConnectionMetadata[];
+
+            try {
+                kernels = await this.listKernels(resource, loadCancellationToken.token);
+            } catch (ex) {
+                traceError(`Exception loading kernels: ${ex}`);
+                return;
+            }
+
+            // update resource cache
+            const resourceCacheKey = this.getResourceCacheKey(resource);
+            this.resourceCache.set(resourceCacheKey, kernels);
+
+            this._onDidChangeKernels.fire();
+        } else if (workspace.workspaceFolders) {
+            await Promise.all(
+                workspace.workspaceFolders.map((folder) => () => {
+                    return new Promise<void>(async (resolve) => {
+                        try {
+                            let kernels = await this.listKernels(folder.uri, loadCancellationToken.token);
+                            await this.writeToCache(kernels);
+                            const resourceCacheKey = this.getResourceCacheKey(folder.uri);
+                            this.resourceCache.set(resourceCacheKey, kernels);
+                        } catch (ex) {
+                            traceError(`Exception loading kernels: ${ex}`);
+                        }
+                        resolve();
+                    });
+                })
+            );
+        }
+
+        this._onDidChangeKernels.fire();
     }
 
     @debounceAsync(1_000)
@@ -102,8 +169,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
 
         await this.interpreters.refreshInterpreters();
         // Possible discovering interpreters is very quick and we've already discovered it, hence refresh kernels immediately.
-        // TODO@rebornix - await updating all local kernels
-        this._onDidChangeKernels.fire();
+        await this.updateCache(undefined);
 
         // Possible discovering interpreters is slow, hence try for around 10s.
         // I.e. just because we know a conda env was created doesn't necessarily mean its immediately discoverable and usable.
@@ -124,88 +190,28 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
             5000
         );
 
-        // TODO@rebornix - await updating all local kernels
-        this._onDidChangeKernels.fire();
+        await this.updateCache(undefined);
     }
 
-    async listContributedKernels(
-        resource: Resource,
-        cancelToken: CancellationToken | undefined,
-        useCache: 'ignoreCache' | 'useCache'
-    ): Promise<KernelConnectionMetadata[]> {
-        const kernels: KernelConnectionMetadata[] = await this.listKernelsImpl(resource, cancelToken, useCache).catch(
-            (ex) => {
-                // Sometimes we can get errors from the socket level or jupyter, with the message 'Canceled', lets ignore those
-                if (!isCancellationError(ex, true)) {
-                    traceError('Failed to get local kernels', ex);
-                }
-                return [];
-            }
-        );
-        traceVerbose(`KernelFinder discovered ${kernels.length} local`);
+    listContributedKernels(resource: Resource): KernelConnectionMetadata[] {
+        if (!resource) {
+            return this.cache;
+        }
 
-        return kernels;
+        const resourceCacheKey = this.getResourceCacheKey(resource);
+        const resourceCache = this.resourceCache.get(resourceCacheKey);
+
+        return resourceCache || this.cache;
     }
 
-    private async listKernelsImpl(
-        resource: Resource,
-        cancelToken: CancellationToken | undefined,
-        useCache: 'ignoreCache' | 'useCache'
-    ) {
-        const kernelsFromCachePromise =
-            useCache === 'ignoreCache' ? Promise.resolve([]) : this.getFromCache(cancelToken);
-        let updateCache = true;
-        const kernelsWithoutCachePromise: Promise<LocalKernelConnectionMetadata[]> = this.listKernels(
-            resource,
-            cancelToken
-        );
-        let kernels: LocalKernelConnectionMetadata[] = [];
-        if (useCache === 'ignoreCache') {
-            try {
-                kernels = await kernelsWithoutCachePromise;
-            } catch (ex) {
-                traceWarning(`Could not fetch kernels from the ${this.kind}`);
-                kernels = [];
-                updateCache = false;
-            }
-        } else {
-            let kernelsFromCache: LocalKernelConnectionMetadata[] | undefined;
-            kernelsFromCachePromise
-                .then((items) => {
-                    kernelsFromCache = items;
-                    updateCache = false;
-                })
-                .catch(noop);
+    private getResourceCacheKey(resource: Resource): string {
+        const workspaceFolderId =
+            this.workspaceService.getWorkspaceFolderIdentifier(
+                resource,
+                resource?.fsPath || this.workspaceService.rootFolder?.fsPath
+            ) || 'root';
 
-            try {
-                const kernelsWithoutCacheDeferred = createDeferredFromPromise(kernelsWithoutCachePromise);
-                try {
-                    await Promise.race([kernelsFromCachePromise, kernelsWithoutCacheDeferred.promise]);
-                } catch (ex) {
-                    // If we failed to get without cache, then await on the cache promise as a fallback.
-                    if (kernelsWithoutCacheDeferred.rejected) {
-                        await kernelsFromCachePromise;
-                    } else {
-                        throw ex;
-                    }
-                }
-                // If we finish the cache first, and we don't have any items, in the cache, then load without cache.
-                if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
-                    kernels = kernelsFromCache;
-                } else {
-                    kernels = await kernelsWithoutCachePromise;
-                    updateCache = true;
-                }
-            } catch (ex) {
-                traceError(`Exception loading kernels: ${ex}`);
-            }
-        }
-
-        // Do not update the cache if we got kernels from the cache.
-        if (updateCache) {
-            await this.writeToCache(kernels);
-        }
-        return kernels;
+        return workspaceFolderId;
     }
 
     private async getFromCache(cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]> {

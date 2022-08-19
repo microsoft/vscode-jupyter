@@ -271,7 +271,8 @@ import { CondaService } from '../../../platform/common/process/condaService.node
                 instance(extensionChecker),
                 instance(interpreterService),
                 instance(condaService),
-                instance(extensions)
+                instance(extensions),
+                instance(workspaceService)
             );
 
             kernelRankHelper = new KernelRankingHelper(kernelFinder, instance(preferredRemote));

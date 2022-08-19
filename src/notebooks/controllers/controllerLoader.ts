@@ -37,9 +37,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IControllerRegistration) private readonly registration: IControllerRegistration
-    ) {
-        this.loadControllers(true).ignoreErrors();
-    }
+    ) {}
 
     public activate(): void {
         // Make sure to reload whenever we do something that changes state
@@ -57,6 +55,8 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
+
+        this.loadControllers(true).ignoreErrors();
     }
     public loadControllers(refresh?: boolean | undefined): Promise<void> {
         if (!this.controllersPromise || refresh) {

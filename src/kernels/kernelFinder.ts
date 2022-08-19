@@ -36,20 +36,20 @@ export class KernelFinder implements IKernelFinder {
     ): Promise<KernelConnectionMetadata[]> {
         this.startTimeForFetching = this.startTimeForFetching ?? new StopWatch();
 
+        // Wait all finders to warm up their cache first
+        await Promise.all(this._finders.map((finder) => finder.initialized));
+
+        if (cancelToken?.isCancellationRequested) {
+            return [];
+        }
+
         const kernels: KernelConnectionMetadata[] = [];
 
-        const allKernels = await Promise.all(
-            this._finders.map((finder) => {
-                return finder.listContributedKernels(resource, cancelToken, useCache).then((kernels) => {
-                    this.finishListingKernels(kernels, useCache, finder.kind as 'local' | 'remote');
-                    return kernels;
-                });
-            })
-        );
-
-        allKernels.forEach((kernelList) => {
-            kernels.push(...kernelList);
-        });
+        for (const finder of this._finders) {
+            const contributedKernels = finder.listContributedKernels(resource);
+            this.finishListingKernels(contributedKernels, useCache, finder.kind as 'local' | 'remote');
+            kernels.push(...contributedKernels);
+        }
 
         return kernels;
     }
