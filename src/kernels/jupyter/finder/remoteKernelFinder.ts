@@ -207,6 +207,13 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
 
         this._onDidChangeKernels.fire();
     }
+
+    /**
+     * Used in test only
+     */
+    async _updateCacheForTest() {
+        await this.loadCache();
+    }
     /**
      *
      * Remote kernel finder is resource agnostic.

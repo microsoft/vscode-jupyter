@@ -64,6 +64,10 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {
+        this._initializedPromise = new Promise<void>((resolve) => {
+            this._initializeResolve = resolve;
+        });
+
         kernelFinder.registerKernelFinder(this);
     }
 

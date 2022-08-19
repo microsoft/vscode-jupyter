@@ -47,7 +47,6 @@ import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder
 import { loadKernelSpec } from '../../../kernels/raw/finder/localKernelSpecFinderBase.node';
 import { LocalKnownPathKernelSpecFinder } from '../../../kernels/raw/finder/localKnownPathKernelSpecFinder.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
-import { ILocalKernelFinder } from '../../../kernels/raw/types';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../../kernels/kernelFinder';
@@ -61,10 +60,11 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { CondaService } from '../../../platform/common/process/condaService.node';
+import { noop } from '../../../platform/common/utils/misc';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
-        let localKernelFinder: ILocalKernelFinder;
+        let localKernelFinder: LocalKernelFinder;
         let remoteKernelFinder: IRemoteKernelFinder;
         let kernelFinder: KernelFinder;
         let interpreterService: IInterpreterService;
@@ -274,6 +274,7 @@ import { CondaService } from '../../../platform/common/process/condaService.node
                 instance(extensions),
                 instance(workspaceService)
             );
+            localKernelFinder.activate().then(noop, noop);
 
             kernelRankHelper = new KernelRankingHelper(kernelFinder, instance(preferredRemote));
         }

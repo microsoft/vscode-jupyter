@@ -33,7 +33,6 @@ import {
     IJupyterKernel,
     IJupyterRemoteCachedKernelValidator,
     IJupyterSessionManager,
-    IRemoteKernelFinder,
     IServerConnectionType
 } from '../../../kernels/jupyter/types';
 import { KernelFinder } from '../../../kernels/kernelFinder';
@@ -53,7 +52,7 @@ import { IExtensions } from '../../../platform/common/types';
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
     let preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider;
-    let remoteKernelFinder: IRemoteKernelFinder;
+    let remoteKernelFinder: RemoteKernelFinder;
     let localKernelFinder: ILocalKernelFinder;
     let kernelFinder: KernelFinder;
     let kernelRankHelper: IKernelRankingHelper;
@@ -185,6 +184,7 @@ suite(`Remote Kernel Finder`, () => {
             instance(extensions),
             false
         );
+        remoteKernelFinder.activate().then(noop, noop);
     });
     teardown(() => {
         disposables.forEach((d) => d.dispose());
@@ -348,6 +348,7 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManager.getRunningKernels()).thenResolve([]);
         when(jupyterSessionManager.getRunningSessions()).thenResolve([]);
         when(jupyterSessionManager.getKernelSpecs()).thenResolve([]);
+        await remoteKernelFinder._updateCacheForTest();
 
         const kernels = await kernelFinder.listKernels(Uri.file('a.ipynb'), undefined, 'useCache');
         assert.lengthOf(kernels, 0);
@@ -408,6 +409,7 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManager.getRunningKernels()).thenResolve([]);
         when(jupyterSessionManager.getRunningSessions()).thenResolve([]);
         when(jupyterSessionManager.getKernelSpecs()).thenResolve([]);
+        await remoteKernelFinder._updateCacheForTest();
 
         const kernels = await kernelFinder.listKernels(Uri.file('a.ipynb'), undefined, 'useCache');
         assert.lengthOf(kernels, 1);
