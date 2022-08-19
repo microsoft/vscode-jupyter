@@ -796,10 +796,6 @@ export class CellExecutionMessageHandler implements IDisposable {
         traceCellMessage(this.cell, `Kernel switching to ${msg.content.execution_state}`);
     }
     private handleStreamMessage(msg: KernelMessage.IStreamMsg) {
-        const alwaysDisable = true;
-        if (alwaysDisable as unknown) {
-            return;
-        }
         if (
             getParentHeaderMsgId(msg) &&
             this.outputsAreSpecificToAWidget.length &&
@@ -850,7 +846,10 @@ export class CellExecutionMessageHandler implements IDisposable {
                 text: this.lastUsedStreamOutput.text
             });
             traceCellMessage(this.cell, `Replace output items '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
-            task?.replaceOutputItems(output.items, this.lastUsedStreamOutput.output).then(noop, noop);
+            const alwaysDisable = false;
+            if (alwaysDisable as unknown) {
+                task?.replaceOutputItems(output.items, this.lastUsedStreamOutput.output).then(noop, noop);
+            }
         } else if (previousValueOfClearOutputOnNextUpdateToOutput) {
             // Replace the current outputs with a single new output.
             const text = formatStreamText(concatMultilineString(msg.content.text));
@@ -861,7 +860,10 @@ export class CellExecutionMessageHandler implements IDisposable {
             });
             this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
             traceCellMessage(this.cell, `Replace output '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
-            task?.replaceOutput([output]).then(noop, noop);
+            const alwaysDisable = false;
+            if (alwaysDisable as unknown) {
+                task?.replaceOutput([output]).then(noop, noop);
+            }
         } else {
             // Create a new output
             const text = formatStreamText(concatMultilineString(msg.content.text));
@@ -872,7 +874,10 @@ export class CellExecutionMessageHandler implements IDisposable {
             });
             this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
             traceCellMessage(this.cell, `Append output '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
-            task?.appendOutput([output]).then(noop, noop);
+            const alwaysDisable = false;
+            if (alwaysDisable as unknown) {
+                task?.appendOutput([output]).then(noop, noop);
+            }
         }
         this.endTemporaryTask();
     }
