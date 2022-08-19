@@ -201,7 +201,12 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         const resourceCacheKey = this.getResourceCacheKey(resource);
         const resourceCache = this.resourceCache.get(resourceCacheKey);
 
-        return resourceCache || this.cache;
+        if (resourceCache) {
+            return resourceCache;
+        } else {
+            this.updateCache(resource).then(noop, noop);
+            return this.cache;
+        }
     }
 
     private getResourceCacheKey(resource: Resource): string {
