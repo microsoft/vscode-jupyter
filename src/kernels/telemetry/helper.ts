@@ -45,6 +45,11 @@ export type ContextualTelemetryProps = {
      * If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
      */
     disableUI?: boolean;
+    /**
+     * Whether we managed to capture the environment variables or not.
+     * In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
+     */
+    capturedEnvVars?: boolean;
 };
 
 export function trackKernelResourceInformation(resource: Resource, information: Partial<ContextualTelemetryProps>) {
@@ -76,6 +81,9 @@ export function trackKernelResourceInformation(resource: Resource, information: 
     currentData.kernelLiveCount = information.kernelLiveCount || currentData.kernelLiveCount || 0;
     currentData.kernelInterpreterCount = information.kernelInterpreterCount || currentData.kernelInterpreterCount || 0;
     currentData.pythonEnvironmentCount = InterpreterCountTracker.totalNumberOfInterpreters;
+    if (typeof information.capturedEnvVars === 'boolean') {
+        currentData.capturedEnvVars = information.capturedEnvVars;
+    }
     if (information.userExecutedCell) {
         currentData.userExecutedCell = true;
     }
