@@ -56,7 +56,7 @@ async function createTempDir() {
 /**
  * Smoke tests & tests running in VSCode require Python extension to be installed.
  */
-async function installPythonExtension(vscodeExecutablePath: string) {
+async function installPythonExtension(vscodeExecutablePath: string, extensionsDir: string) {
     // Pick python extension to use based on environment variable. Insiders can be flakey so
     // have the capability to turn it off/on.
     const pythonVSIX =
@@ -67,16 +67,16 @@ async function installPythonExtension(vscodeExecutablePath: string) {
         console.info('Python Extension not required');
         return;
     }
-    console.info(`Installing Python Extension ${pythonVSIX}`);
+    console.info(`Installing Python Extension ${pythonVSIX} to ${extensionsDir}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
-    spawnSync(cliPath, ['--install-extension', pythonVSIX], {
+    spawnSync(cliPath, ['--install-extension', pythonVSIX, '--extensions-dir', extensionsDir], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
 
     // Make sure pylance is there too as we'll use it for intellisense tests
-    console.info('Installing Pylance Extension');
-    spawnSync(cliPath, ['--install-extension', PylanceExtension], {
+    console.info(`Installing Pylance Extension to ${extensionsDir}`);
+    spawnSync(cliPath, ['--install-extension', PylanceExtension, '--extensions-dir', extensionsDir], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
@@ -121,6 +121,24 @@ async function createSettings(): Promise<string> {
     fs.writeFileSync(settingsFile, JSON.stringify(defaultSettings, undefined, 4));
     return userDataDirectory;
 }
+
+async function getExtensionsDir(): Promise<string> {
+    const name = 'vscode_jupyter_exts';
+    const extDirPath = path.join(tmp.tmpdir, name);
+    if (fs.existsSync(extDirPath)) {
+        return extDirPath;
+    }
+
+    return new Promise<string>((resolve, reject) => {
+        tmp.dir({ name, keep: true }, (err, dir) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(dir);
+        });
+    });
+}
+
 async function start() {
     console.log('*'.repeat(100));
     console.log('Start Standard tests');
@@ -128,7 +146,8 @@ async function start() {
     const vscodeExecutablePath = await downloadAndUnzipVSCode(channel, platform);
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];
     const userDataDirectory = await createSettings();
-    await installPythonExtension(vscodeExecutablePath);
+    const extensionsDir = await getExtensionsDir();
+    await installPythonExtension(vscodeExecutablePath, extensionsDir);
     await updatePackageJson();
     await runTests({
         vscodeExecutablePath,
@@ -140,6 +159,7 @@ async function start() {
             .concat(['--skip-release-notes'])
             .concat(['--enable-proposed-api'])
             .concat(['--timeout', '5000'])
+            .concat(['--extensions-dir', extensionsDir])
             .concat(['--user-data-dir', userDataDirectory]),
         // .concat(['--verbose']), // Too much logging from VS Code, enable this to see what's going on in VSC.
         version: channel,
