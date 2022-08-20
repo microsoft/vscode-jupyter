@@ -141,7 +141,8 @@ module.exports = {
         'src/test/workspaceSymbols/common.ts',
         'src/test/workspaceSymbols/main.unit.test.ts',
         'src/test/workspaceSymbols/generator.unit.test.ts',
-        'src/test/datascience/extensionapi/exampleextension/ms-ai-tools-test/src/serverPicker.ts'
+        'src/test/datascience/extensionapi/exampleextension/ms-ai-tools-test/src/serverPicker.ts',
+        'vscode.d.ts'
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
@@ -287,22 +288,26 @@ module.exports = {
                     {
                         target: './src/kernels/**/*.ts',
                         from: './src/**[!platform,telemetry,kernels]**/**/*.ts',
-                        message: 'Only modules from ./src/platform and ./src/telemetry can be imported into ./src/kernels.'
+                        message:
+                            'Only modules from ./src/platform and ./src/telemetry can be imported into ./src/kernels.'
                     },
                     {
                         target: './src/notebooks/**/*.ts',
                         from: './src/**[!platform,telemetry,kernels,notebooks]**/**/*.ts',
-                        message: 'Only modules from ./src/platform, ./src/telemetry and ./src/kernels can be imported into ./src/notebooks.'
+                        message:
+                            'Only modules from ./src/platform, ./src/telemetry and ./src/kernels can be imported into ./src/notebooks.'
                     },
                     {
                         target: './src/interactive-window/**/*.ts',
                         from: './src/**webview**/**/*.ts',
-                        message: 'Only modules from ./src/platform, ./src/telemetry, ./src/kernels and ./src/notebooks can be imported into ./src/interactive-window.'
+                        message:
+                            'Only modules from ./src/platform, ./src/telemetry, ./src/kernels and ./src/notebooks can be imported into ./src/interactive-window.'
                     },
                     {
                         target: './src/**[!test,standalone,webviews]**/**/*.ts',
                         from: './src/webviews/**/*.ts',
-                        message: 'Importing modules from ./src/webviews into core components (platform, kernels, notebooks, interactive-window) is not allowed.'
+                        message:
+                            'Importing modules from ./src/webviews into core components (platform, kernels, notebooks, interactive-window) is not allowed.'
                     },
                     {
                         target: './src/**[!test,standalone]**/*.ts',
@@ -330,10 +335,7 @@ module.exports = {
         'header/header': [
             'error',
             'line',
-            [
-                ' Copyright (c) Microsoft Corporation.',
-                ' Licensed under the MIT License.',
-            ],
+            [' Copyright (c) Microsoft Corporation.', ' Licensed under the MIT License.'],
             2
         ]
     },
