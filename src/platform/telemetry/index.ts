@@ -5,7 +5,7 @@
 import TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, JVSC_EXTENSION_ID } from '../common/constants';
-import { traceError, traceEverything } from '../logging';
+import { traceError } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { noop } from '../common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
@@ -255,11 +255,11 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
 
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
-    traceEverything(
-        `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
-            customProperties
-        )} `
-    );
+    // traceEverything(
+    //     `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
+    //         customProperties
+    //     )} `
+    // );
 }
 
 // Type-parameterized form of MethodDecorator in lib.es5.d.ts.
