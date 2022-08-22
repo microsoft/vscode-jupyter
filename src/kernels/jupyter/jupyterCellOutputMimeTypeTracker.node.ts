@@ -121,7 +121,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         this.pendingChecks.set(id, setTimeout(check, 5000));
     }
 
-    @captureTelemetry(Telemetry.HashedCellOutputMimeTypePerf)
+    // @captureTelemetry(Telemetry.HashedCellOutputMimeTypePerf)
     private checkCell(cell: NotebookCell) {
         this.pendingChecks.delete(cell.document.uri.toString());
         this.getCellOutputMimeTypes(cell).forEach(this.sendTelemetry.bind(this));
