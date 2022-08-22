@@ -21,7 +21,6 @@ import {
 import { JupyterInterpreterSubCommandExecutionService } from './interpreter/jupyterInterpreterSubCommandExecutionService.node';
 import { NbConvertExportToPythonService } from './interpreter/nbconvertExportToPythonService.node';
 import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertInterpreterDependencyChecker.node';
-import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker.node';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterDetectionTelemetry } from './jupyterDetectionTelemetry.node';
 import { JupyterKernelService } from './jupyterKernelService.node';
@@ -73,10 +72,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         RemoteKernelFinder
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        CellOutputMimeTypeTracker
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
