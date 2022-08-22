@@ -2337,7 +2337,7 @@
         "@types/strip-comments": "^2.0.1",
         "@types/tcp-port-used": "^1.0.0",
         "@types/temp": "^0.8.32",
-        "@types/tmp": "0.0.33",
+        "@types/tmp": "^0.2.3",
         "@types/untildify": "^3.0.0",
         "@types/url-parse": "^1.4.8",
         "@types/uuid": "^3.4.3",

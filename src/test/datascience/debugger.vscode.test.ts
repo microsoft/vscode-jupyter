@@ -193,7 +193,7 @@ suite('VSCode Notebook - Run By Line', function () {
         );
     });
 
-    test.skip('Stops in same-cell function called from last line', async function () {
+    test('Stops in same-cell function called from last line', async function () {
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
 
@@ -204,9 +204,7 @@ suite('VSCode Notebook - Run By Line', function () {
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!); // foo()
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
-        await waitForStoppedEvent(debugAdapter!); // def foo
-        await commandManager.executeCommand(Commands.RunByLineNext, cell);
-        const stoppedEvent = await waitForStoppedEvent(debugAdapter!); // print(1)
+        const stoppedEvent = await waitForStoppedEvent(debugAdapter!); // print(1) inside def foo
         const stack: DebugProtocol.StackTraceResponse['body'] = await session!.customRequest('stackTrace', {
             threadId: stoppedEvent.body.threadId
         });
@@ -224,7 +222,7 @@ suite('VSCode Notebook - Run By Line', function () {
         assert.equal(stack2.stackFrames[0].line, 4, 'Stopped at the wrong line');
     });
 
-    test.skip('Does not stop in other cell', async function () {
+    test('Does not stop in other cell', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
         const cell0 = await insertCodeCell('def foo():\n    print(1)');
         const cell1 = await insertCodeCell('foo()');
@@ -247,10 +245,10 @@ suite('VSCode Notebook - Run By Line', function () {
         );
     });
 
-    test.skip('Run a second time after interrupt', async function () {
+    test('Run a second time after interrupt', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8753
         await insertCodeCell(
-            'import time\nfor i in range(0,50):\n  time.sleep(.1)\n  print("sleepy")\nprint("final output")',
+            'import time\nfor i in range(0,50):\n  time.sleep(.1)\n  print("sleepy")\nprint("final " + "output")',
             {
                 index: 0
             }
@@ -283,7 +281,8 @@ suite('VSCode Notebook - Run By Line', function () {
                 return getCellOutputs(cell).includes('sleepy');
             },
             defaultNotebookTestTimeout,
-            'Print during time loop is not working'
+            'Print during time loop is not working',
+            1000
         );
         await commandManager.executeCommand(Commands.RunByLineStop);
         await waitForCondition(

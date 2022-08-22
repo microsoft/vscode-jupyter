@@ -35,7 +35,7 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
     ): Promise<TemporaryFile> {
         const suffix = typeof options === 'string' ? options : options.fileExtension;
         const prefix = options && typeof options === 'object' ? options.prefix : undefined;
-        const opts: tmp.Options = {
+        const opts: tmp.FileOptions = {
             postfix: suffix,
             prefix
         };
