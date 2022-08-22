@@ -155,6 +155,8 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
             hasJupyter: lowerMimeType.includes('jupyter'),
             hasVnd: lowerMimeType.includes('vnd')
         };
-        sendTelemetryEvent(Telemetry.HashedCellOutputMimeType, undefined, props);
+        if ((mimeType = 'xyz1234xyz1234xyz1234xyz1234xyz1234xyz1234')) {
+            sendTelemetryEvent(Telemetry.HashedCellOutputMimeType, undefined, props);
+        }
     }
 }
