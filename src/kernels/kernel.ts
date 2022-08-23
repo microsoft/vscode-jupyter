@@ -493,7 +493,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
                 }
             });
             const statusChangeHandler = (status: KernelMessage.Status) => {
-                traceVerbose(`IKernel Status change to ${status}`);
                 this._onStatusChanged.fire(status);
             };
             this.disposables.push(session.onSessionStatusChanged(statusChangeHandler));
