@@ -17,6 +17,7 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../../types';
 import { Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { trackKernelResourceInformation } from '../../telemetry/helper';
 
 /**
  * Class used to fetch environment variables for a kernel.
@@ -74,6 +75,10 @@ export class KernelEnvironmentVariablesService {
                       })
                 : undefined
         ]);
+        trackKernelResourceInformation(resource, {
+            capturedEnvVars: Object.keys(interpreterEnv || {}).length > 0
+        });
+
         if (!interpreterEnv && Object.keys(customEnvVars || {}).length === 0) {
             traceInfo('No custom variables nor do we have a conda environment');
         }

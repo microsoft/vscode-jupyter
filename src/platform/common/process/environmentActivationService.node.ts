@@ -29,7 +29,7 @@ import { CondaService } from './condaService.node';
 import { condaVersionSupportsLiveStreaming, createCondaEnv } from './pythonEnvironment.node';
 import { printEnvVariablesToFile } from './internal/scripts/index.node';
 import { ProcessService } from './proc.node';
-import { testOnlyMethod } from '../utils/decorators';
+import { swallowExceptions, testOnlyMethod } from '../utils/decorators';
 import { DataScience } from '../utils/localize';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { Telemetry } from '../constants';
@@ -208,6 +208,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         'Getting activated env variables from Python',
         TraceOptions.BeforeCall | TraceOptions.Arguments
     )
+    @swallowExceptions('Get activated env variables from Python')
     public async getActivatedEnvironmentVariablesFromPython(
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
@@ -286,6 +287,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         'Getting activated env variables ourselves',
         TraceOptions.BeforeCall | TraceOptions.Arguments
     )
+    @swallowExceptions('Get activated env variables from Jupyter')
     public async getActivatedEnvironmentVariablesOurselves(
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment

@@ -121,6 +121,11 @@ export type ResourceSpecificTelemetryProperties = Partial<{
      * Whether this was started by Jupyter extension or a 3rd party.
      */
     actionSource: KernelActionSource;
+    /**
+     * Whether we managed to capture the environment variables or not.
+     * In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
+     */
+    capturedEnvVars?: boolean;
 }>;
 
 export interface IEventNamePropertyMapping {
