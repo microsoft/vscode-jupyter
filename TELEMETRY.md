@@ -952,9 +952,9 @@ No properties for event
         traceCellMessage(cell, `kernel.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
         initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.resourceUri, this.kernelConnectionMetadata);
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
+        this.sendKernelStartedTelemetry();
         const stopWatch = new StopWatch();
         const sessionPromise = this.startJupyterSession();
-        const promise = this.kernelExecution.executeCell(sessionPromise, cell, codeOverride);
 ```
 
 
@@ -2007,12 +2007,12 @@ No description provided
 
 [src/kernels/kernel.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts)
 ```typescript
-            await this.executeSilently(session, startupCode, {
-                traceErrors: true,
-                traceErrorsMessage: 'Error executing jupyter extension internal startup code',
-                telemetryName: Telemetry.KernelStartupCodeFailure
-            });
-
+        await this.executeSilently(session, startupCode, {
+            traceErrors: true,
+            traceErrorsMessage: 'Error executing jupyter extension internal startup code',
+            telemetryName: Telemetry.KernelStartupCodeFailure
+        });
+        if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             // Run user specified startup commands
 ```
 
