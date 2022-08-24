@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { assert } from 'chai';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';

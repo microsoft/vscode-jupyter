@@ -196,7 +196,6 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             return;
         }
         const displayMsg = payload as KernelMessage.IDisplayDataMsg | KernelMessage.IExecuteResultMsg;
-
         if (displayMsg.content && displayMsg.content.data && displayMsg.content.data[WIDGET_MIMETYPE]) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data = displayMsg.content.data[WIDGET_MIMETYPE] as any;

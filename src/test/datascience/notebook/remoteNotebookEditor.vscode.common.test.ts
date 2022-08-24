@@ -35,7 +35,8 @@ import { setIntellisenseTimeout } from '../../../standalone/intellisense/pythonK
 import {
     IControllerDefaultService,
     IControllerLoader,
-    IControllerRegistration
+    IControllerRegistration,
+    IControllerSelection
 } from '../../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -157,6 +158,13 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
+
+        // Ensure the kernel points to a live connection.
+        const controllerSelection = api.serviceManager.get<IControllerSelection>(IControllerSelection);
+        assert.strictEqual(
+            controllerSelection.getSelected(vscodeNotebook.activeNotebookEditor!.notebook!)?.connection.kind,
+            'connectToLiveRemoteKernel'
+        );
     });
 
     test('Remote kernels support completions', async function () {

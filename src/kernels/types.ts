@@ -262,6 +262,10 @@ export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
     getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
+    /**
+     * Updates the Kernel with a new Kernel Connection Metadata & a new Controller.
+     */
+    updateKernel(kernel: IKernel, metadata: KernelConnectionMetadata, controller: NotebookController): void;
 }
 
 /**
