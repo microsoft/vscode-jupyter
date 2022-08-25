@@ -74,7 +74,6 @@ import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
 import { IServiceContainer } from '../platform/ioc/types';
-import { KernelConnector } from '../notebooks/controllers/kernelConnector';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
@@ -255,6 +254,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             await this.currentKernelInfo.kernelStarted.promise;
             return this.currentKernelInfo.kernel!;
         }
+        const vscController = this.controllerRegistration.registered.find(
+            (item) => item.controller.id === controller.id
+        );
+        if (!vscController) {
+            // This cannot happen, but we need to make typescript happy.
+            throw new Error('VSCController not available');
+        }
         const kernelStarted = createDeferred<void>();
         kernelStarted.promise.catch(noop);
         this.currentKernelInfo = { controller, metadata, kernelStarted };
@@ -287,13 +293,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             };
             // When connecting, we need to update the sys info message
             this.updateSysInfoMessage(this.getSysInfoMessage(metadata, SysInfoReason.Start), false, sysInfoCell);
-            const kernel = await KernelConnector.connectToNotebookKernel(
-                metadata,
-                this.serviceContainer,
-                { resource: this.owner, notebook: this.notebookDocument, controller },
+            const kernel = await vscController.connectToKernel(
+                { resource: this.owner, notebook: this.notebookDocument },
                 new DisplayOptions(false),
-                this.internalDisposables,
-                'jupyterExtension',
                 onKernelStarted,
                 onKernelStartCompleted
             );
