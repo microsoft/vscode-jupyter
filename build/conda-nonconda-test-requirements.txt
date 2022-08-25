@@ -3,7 +3,7 @@ packaging
 # List of requirements for conda environments that cannot be installed using conda
 livelossplot
 versioneer
-pythreejs==2.3.0
+pythreejs
 ipysheet
 ipyvolume
 beakerx
