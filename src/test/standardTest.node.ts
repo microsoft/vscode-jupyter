@@ -9,6 +9,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_PERF_TEST, IS_SMOKE_TEST } from './con
 import * as tmp from 'tmp';
 import { PythonExtension, PylanceExtension, setTestExecution } from '../platform/common/constants';
 import * as jsonc from 'jsonc-parser';
+import { DownloadPlatform } from '@vscode/test-electron/out/download';
 
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_JUPYTER_CI_TEST = '1';
@@ -56,7 +57,7 @@ async function createTempDir() {
 /**
  * Smoke tests & tests running in VSCode require Python extension to be installed.
  */
-async function installPythonExtension(vscodeExecutablePath: string, extensionsDir: string) {
+async function installPythonExtension(vscodeExecutablePath: string, extensionsDir: string, platform: DownloadPlatform) {
     // Pick python extension to use based on environment variable. Insiders can be flakey so
     // have the capability to turn it off/on.
     const pythonVSIX =
@@ -68,7 +69,7 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
         return;
     }
     console.info(`Installing Python Extension ${pythonVSIX} to ${extensionsDir}`);
-    const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
+    const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
     spawnSync(cliPath, ['--install-extension', pythonVSIX, '--extensions-dir', extensionsDir], {
         encoding: 'utf-8',
         stdio: 'inherit'
@@ -147,7 +148,7 @@ async function start() {
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];
     const userDataDirectory = await createSettings();
     const extensionsDir = await getExtensionsDir();
-    await installPythonExtension(vscodeExecutablePath, extensionsDir);
+    await installPythonExtension(vscodeExecutablePath, extensionsDir, platform);
     await updatePackageJson();
     await runTests({
         vscodeExecutablePath,
