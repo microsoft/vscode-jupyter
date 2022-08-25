@@ -156,8 +156,6 @@ export interface IEventNamePropertyMapping {
          */
         hashedNamev2: string;
     };
-    [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
-
     /**
      * Telemetry sent for local Python Kernels.
      * Tracking whether we have managed to launch the kernel that matches the interpreter.
