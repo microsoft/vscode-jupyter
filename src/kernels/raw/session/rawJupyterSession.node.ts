@@ -18,7 +18,7 @@ import { IDisplayOptions, IDisposable, Resource } from '../../../platform/common
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { sendKernelTelemetryEvent, sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
+import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { captureTelemetry, Telemetry } from '../../../telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
@@ -265,15 +265,20 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                     options.token
                 )
         );
+        const stopwatch = new StopWatch();
         const promise = KernelProgressReporter.wrapAndReportProgress(
             this.resource,
             DataScience.waitingForJupyterSessionToBeIdle(),
             () => this.postStartRawSession(options, process)
         );
         if (options.purpose === 'restart') {
-            sendKernelTelemetryWhenDone(this.resource, Telemetry.NotebookRestart, promise, false, {
-                startTimeOnly: true
-            });
+            promise
+                .then(() =>
+                    sendKernelTelemetryEvent(this.resource, Telemetry.NotebookRestart, stopwatch.elapsedTime, {
+                        startTimeOnly: true
+                    })
+                )
+                .ignoreErrors();
         }
         return promise;
     }

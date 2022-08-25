@@ -34,9 +34,10 @@ import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { isTestExecution } from '../../../platform/common/constants';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { noop } from '../../../platform/common/utils/misc';
-import { sendKernelTelemetryEvent, sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
+import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -112,18 +113,19 @@ export class KernelLauncher implements IKernelLauncher {
         workingDirectory: string,
         cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
+        const stopWatch = new StopWatch();
         const promise = (async () => {
             this.logIPyKernelPath(resource, kernelConnectionMetadata, cancelToken).catch(noop);
 
             // Should be available now, wait with a timeout
             return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
         })();
-        sendKernelTelemetryWhenDone(
-            resource,
-            Telemetry.KernelLauncherPerf,
-            promise,
-            false /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
-        );
+        promise
+            .then(() =>
+                /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
+                sendKernelTelemetryEvent(resource, Telemetry.KernelLauncherPerf, stopWatch.elapsedTime)
+            )
+            .ignoreErrors();
         return promise;
     }
 

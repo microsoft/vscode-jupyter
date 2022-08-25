@@ -6,8 +6,6 @@ import { Telemetry } from '../../platform/common/constants';
 import { sendTelemetryEvent, waitBeforeSending, IEventNamePropertyMapping } from '../../telemetry';
 import { getContextualPropsForTelemetry } from '../../platform/telemetry/telemetry';
 import { clearInterruptCounter, trackKernelResourceInformation } from './helper';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { populateTelemetryWithErrorInfo } from '../../platform/errors';
 import { InterruptResult } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,7 +30,7 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     resource: Resource,
     eventName: E,
     durationMs?: Record<string, number> | number,
-    properties?: P[E] & { waitBeforeSending?: Promise<void> },
+    properties?: P[E] & { [waitBeforeSending]?: Promise<void> },
     ex?: Error
 ) {
     const props = getContextualPropsForTelemetry(resource);
@@ -51,70 +49,6 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     incrementStartFailureCount(resource, eventName as any, props);
-}
-
-/**
- * Send this & subsequent telemetry only after this promise has been resolved.
- * We have a default timeout of 30s.
- * @param {P[E]} [properties]
- * Can optionally contain a property `waitBeforeSending` referencing a promise.
- * Which must be awaited before sending the telemetry.
- */
-export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
-    resource: Resource,
-    eventName: E,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    promise: Promise<any> | Thenable<any>,
-    handleError: boolean,
-    properties?: P[E] & { [waitBeforeSending]?: Promise<void> }
-) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const props: any = properties || {};
-    const stopWatch = new StopWatch();
-    if (typeof promise.then === 'function') {
-        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
-        (promise as Promise<any>)
-            .then(
-                (data) => {
-                    const props = getContextualPropsForTelemetry(resource);
-                    Object.assign(props, properties || {});
-                    sendTelemetryEvent(
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        eventName as any,
-                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                        stopWatch!.elapsedTime,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        props as any
-                    );
-                    return data;
-                    // eslint-disable-next-line @typescript-eslint/promise-function-async
-                },
-                (ex) => {
-                    if (!handleError) {
-                        return;
-                    }
-                    const props = getContextualPropsForTelemetry(resource);
-                    Object.assign(props, properties || {});
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    populateTelemetryWithErrorInfo(props as any, ex);
-                    sendTelemetryEvent(
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        eventName as any,
-                        stopWatch.elapsedTime,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        props as any,
-                        ex,
-                        true
-                    );
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    incrementStartFailureCount(resource, eventName as any, props);
-                }
-            )
-            .finally(() => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                resetData(resource, eventName as any, props);
-            });
-    }
 }
 
 /**
