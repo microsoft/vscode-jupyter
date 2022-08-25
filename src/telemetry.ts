@@ -474,9 +474,11 @@ export interface IEventNamePropertyMapping {
      * Export fails
      */
     [Telemetry.ExportNotebookAsFailed]: { format: ExportFormat };
-    [Telemetry.GetPasswordAttempt]: never | undefined;
+    [Telemetry.GetPasswordOrKerberosAttempt]: never | undefined;
     [Telemetry.GetPasswordFailure]: never | undefined;
     [Telemetry.GetPasswordSuccess]: never | undefined;
+    [Telemetry.GetKerberosFailure]: never | undefined;
+    [Telemetry.GetKerberosSuccess]: never | undefined;
     [Telemetry.GotoSourceCode]: never | undefined;
     [Telemetry.HiddenCellTime]: never | undefined;
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
