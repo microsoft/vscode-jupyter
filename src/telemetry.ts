@@ -6,7 +6,7 @@
 import type { JSONObject } from '@lumino/coreutils';
 // eslint-disable-next-line
 import { Telemetry } from './platform/common/constants';
-import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './platform/telemetry/constants';
+import { CheckboxState, EventName, SliceOperationSource } from './platform/telemetry/constants';
 import { DebuggingTelemetry } from './notebooks/debugger/constants';
 import { EnvironmentType } from './platform/pythonEnvironments/info';
 import { TelemetryErrorProperties, ErrorCategory } from './platform/errors/types';
@@ -276,23 +276,6 @@ export interface IEventNamePropertyMapping {
             | 'failedToGetCustomEnvVariables';
     };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
-    /**
-     * Telemetry event sent after fetching the OS version
-     */
-    [EventName.PLATFORM_INFO]: {
-        /**
-         * If fetching OS version fails, list the failure type
-         *
-         * @type {PlatformErrors}
-         */
-        failureType?: PlatformErrors;
-        /**
-         * The OS version of the platform
-         *
-         * @type {string}
-         */
-        osVersion?: string;
-    };
     [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: {
         /**
          * Carries `true` if environment variables are present, `false` otherwise

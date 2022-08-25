@@ -99,44 +99,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DATASCIENCE.COLLAPSE_ALL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.COPY_SOURCE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DATASCIENCE.CREATE_NEW_INTERACTIVE</summary>
 
 ## Description
@@ -700,120 +662,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DATASCIENCE.DEBUGPY_INSTALL_CANCELLED</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.DEBUGPY_INSTALL_FAILED</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.DEBUGPY_PROMPT_TO_INSTALL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.DEBUGPY_SUCCESSFULLY_INSTALLED</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.DELETE_ALL_CELLS</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.DELETE_CELL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER</summary>
 
 ## Description
@@ -980,63 +828,6 @@ No properties for event
         assertEvent(Telemetry.NotebookStart);
     });
 ```
-
-</details>
-<details>
-  <summary>DATASCIENCE.EXECUTE_CELL_TIME</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.EXPAND_ALL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.EXPORT_NOTEBOOK</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -1275,46 +1066,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DATASCIENCE.FAILED_TO_FIND_INTERPRETER_KERNEL_CONNECTION_FOR_INTERACTIVE</summary>
-
-## Description
-
-
-
-
- Telemetry sent when we're unable to find a KernelSpec connection for Interactive window that can be started usig Python interpreter.
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.FAILED_TO_INSTALL_PANDAS</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DATASCIENCE.FETCH_CONTROLLERS</summary>
 
 ## Description
@@ -1429,25 +1180,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DATASCIENCE.GOTO_SOURCE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DATASCIENCE.IMPORT_NOTEBOOK</summary>
 
 ## Description
@@ -1469,9 +1201,9 @@ No properties for event
 
 [src/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry.ts)
 ```typescript
+    [Telemetry.GetPasswordAttempt]: never | undefined;
+    [Telemetry.GetPasswordFailure]: never | undefined;
     [Telemetry.GetPasswordSuccess]: never | undefined;
-    [Telemetry.GotoSourceCode]: never | undefined;
-    [Telemetry.HiddenCellTime]: never | undefined;
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     /**
      * User interrupts a cell
@@ -1659,26 +1391,6 @@ No properties for event
     private async interruptExecution(
         session: IKernelConnectionSession,
 ```
-
-</details>
-<details>
-  <summary>DATASCIENCE.JUPYTER_COMMAND_SEARCH</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-- 
-        where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere';
-- 
-        command: JupyterCommands;
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -2018,25 +1730,6 @@ No description provided
 
 </details>
 <details>
-  <summary>DATASCIENCE.NATIVE.CONVERT_NOTEBOOK_TO_PYTHON</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK</summary>
 
 ## Description
@@ -2062,612 +1755,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         // contents will be ignored
         const language = options?.defaultCellLanguage ?? PYTHON_LANGUAGE;
 ```
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.ARROW_DOWN</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.ARROW_UP</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.CHANGE_TO_CODE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.CHANGE_TO_MARKDOWN</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.DELETE_CELL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.INSERT_ABOVE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.INSERT_BELOW</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.REDO</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.RUN</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_ADD</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_MOVE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.SAVE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_LINE_NUMBERS</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_OUTPUT</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.UNDO</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.KEYBOARD.UNFOCUS</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.ADD_TO_END</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_CODE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_MARKDOWN</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.DELETE_CELL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.INSERT_BELOW</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.MOVE_CELL_DOWN</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.MOVE_CELL_UP</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.RUN</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.RUN_ABOVE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.RUN_ALL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.RUN_BELOW</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.SAVE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.SELECT_KERNEL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.SELECT_SERVER</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.MOUSE.TOGGLE_VARIABLE_EXPLORER</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.OPEN_NOTEBOOK</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
--  scope: 'command' | 'file'
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -2708,49 +1795,6 @@ No properties for event
     });
     test('Run interactive window', async () => {
 ```
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.OPEN_NOTEBOOK_SELECTION</summary>
-
-## Description
-
-
-
-
- Telemetry sent with details of the selection of the quick pick for when user creates new notebook.
- This only applies with other extensions like .NET registers with us.
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.NATIVE.OPEN_NOTEBOOK_SELECTION_REGISTERED</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-- 
-        /**
-         * The id of the extension registering with us to be displayed the dropdown list for notebook creation.
-         */
-        extensionId: string;
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -3131,25 +2175,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DATASCIENCE.OPENED_INTERACTIVE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE</summary>
 
 ## Description
@@ -3315,25 +2340,6 @@ No description provided
 
 </details>
 <details>
-  <summary>DATASCIENCE.REDO</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DATASCIENCE.REFRESH_DATA_VIEWER</summary>
 
 ## Description
@@ -3391,27 +2397,6 @@ No properties for event
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
 ```
-
-</details>
-<details>
-  <summary>DATASCIENCE.RUN_ADD_EMPTY_CELL_TO_BOTTOM</summary>
-
-## Description
-
-
-
-
- Misc
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -3475,70 +2460,13 @@ No properties for event
 
 </details>
 <details>
-  <summary>DATASCIENCE.RUN_BY_LINE</summary>
+  <summary>DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER</summary>
 
 ## Description
 
 
 
  Run by line events
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.RUN_BY_LINE_STEP</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.RUN_BY_LINE_STOP</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER</summary>
-
-## Description
-
-
-No description provided
 
 ## Properties
 
@@ -3558,27 +2486,6 @@ No properties for event
             return result;
         }
 ```
-
-</details>
-<details>
-  <summary>DATASCIENCE.RUN_CELL</summary>
-
-## Description
-
-
-
-
- Run a Cell in Interactive Python
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -4166,44 +3073,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DATASCIENCE.SAVE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.SCROLLED_TO_CELL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command</summary>
 
 ## Description
@@ -4661,44 +3530,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DATASCIENCE.SUBMITCELLFROMREPL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DATASCIENCE.UNDO</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER</summary>
 
 ## Description
@@ -4807,30 +3638,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DATASCIENCE.USER_INSTALLED_MODULE</summary>
-
-## Description
-
-
-
-
- Telemetry event sent when installing a jupyter dependency
-
- @type {product: string}
- @memberof IEventNamePropertyMapping
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DATASCIENCE.USER_INSTALLED_PANDAS</summary>
 
 ## Description
@@ -4909,24 +3716,6 @@ No description provided
         }
 
 ```
-
-</details>
-<details>
-  <summary>DATASCIENCE.VARIABLE_EXPLORER_TOGGLE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
--  open: boolean;
--  runByLine: boolean
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -5022,44 +3811,6 @@ No description provided
 
 </details>
 <details>
-  <summary>DS_INTERNAL.ASK_USER_FOR_NEW_KERNEL_JUPYTER</summary>
-
-## Description
-
-
-
-
- Sent when a jupyter session fails to start and we ask the user for a new kernel
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DS_INTERNAL.CELL_COUNT</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
--  count: number
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DS_INTERNAL.CODE_LENS_ACQ_TIME</summary>
 
 ## Description
@@ -5139,56 +3890,6 @@ No properties for event
         return commands.executeCommand<T>(command, ...rest);
     }
 ```
-
-</details>
-<details>
-  <summary>DS_INTERNAL.COMPLETION_TIME_FROM_JUPYTER</summary>
-
-## Description
-
-
-
-
- Telemetry event sent to capture total time taken for completions list to be provided by Jupyter.
- This is used to compare against time taken by LS.
-
- @type {(undefined | never)}
- @memberof IEventNamePropertyMapping
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DS_INTERNAL.COMPLETION_TIME_FROM_LS</summary>
-
-## Description
-
-
-
-
- Telemetry event sent to capture total time taken for completions list to be provided by LS.
- This is used to compare against time taken by Jupyter.
-
- @type {(undefined | never)}
- @memberof IEventNamePropertyMapping
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -5663,69 +4364,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DS_INTERNAL.FIND_JUPYTER_COMMAND</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
--  command: string
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DS_INTERNAL.FIND_JUPYTER_KERNEL_SPEC</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DS_INTERNAL.FIND_KERNEL_FOR_LOCAL_CONNECTION</summary>
-
-## Description
-
-
-
-
- Telemetry event sent once done searching for kernel spec and interpreter for a local connection.
-
- @type {{
-         kernelSpecFound: boolean;
-         interpreterFound: boolean;
-     }}
- @memberof IEventNamePropertyMapping
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES</summary>
 
 ## Description
@@ -5885,46 +4523,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DS_INTERNAL.GET_PREFERRED_KERNEL_PERF</summary>
-
-## Description
-
-
-
-
- Total time taken to get the preferred kernel for notebook.
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DS_INTERNAL.HASHED_NOTEBOOK_OUTPUT_MIME_TYPE_PERF</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE</summary>
 
 ## Description
@@ -6008,25 +4606,6 @@ No properties for event
         this.pendingChecks.delete(cell.document.uri.toString());
         this.getCellOutputMimeTypes(cell).forEach(this.sendTelemetry.bind(this));
 ```
-
-</details>
-<details>
-  <summary>DS_INTERNAL.HIDDEN_EXECUTION_TIME</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -6301,27 +4880,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DS_INTERNAL.IPYWIDGET_LOAD_DISABLED</summary>
-
-## Description
-
-
-
-
- Telemetry event sent when an loading of 3rd party ipywidget JS scripts from 3rd party source has been disabled.
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DS_INTERNAL.IPYWIDGET_LOAD_FAILURE</summary>
 
 ## Description
@@ -6500,27 +5058,6 @@ No properties for event
             // Do nothing on a failure
         }
 ```
-
-</details>
-<details>
-  <summary>DS_INTERNAL.IPYWIDGET_TEST_AVAILABILITY_ON_CDN</summary>
-
-## Description
-
-
-
-
- Total time taken to discover a widget script on CDN.
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -6756,30 +5293,6 @@ export class JupyterWaitForIdleError extends BaseKernelError {
 
 </details>
 <details>
-  <summary>DS_INTERNAL.JUPYTER_INSTALL_FAILED</summary>
-
-## Description
-
-
-
-
- Telemetry event sent if there's an error installing a jupyter required dependency
-
- @type { product: string }
- @memberof IEventNamePropertyMapping
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE</summary>
 
 ## Description
@@ -6841,29 +5354,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DS_INTERNAL.JUPYTER_START_TIMEOUT</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-- 
-        /**
-         * Total time spent in attempting to start and connect to jupyter before giving up.
-         *
-         * @type {number}
-         */
-        timeout: number;
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DS_INTERNAL.JUPYTERSTARTUPCOST</summary>
 
 ## Description
@@ -6918,30 +5408,6 @@ No properties for event
 }
 
 ```
-
-</details>
-<details>
-  <summary>DS_INTERNAL.KERNEL_ENUMERATION</summary>
-
-## Description
-
-
-
-
- Telemetry event sent to every time a kernel enumeration is done
-
- @type {...}
- @memberof IEventNamePropertyMapping
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -7049,29 +5515,6 @@ No description provided
 
 </details>
 <details>
-  <summary>DS_INTERNAL.KERNEL_NOT_INSTALLED</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-- 
-        action: 'displayed';
--  // Message displayed.
-        /**
-         * Language found in the notebook if a known language. Otherwise 'unknown'
-         */
-        language: string;
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DS_INTERNAL.KERNEL_PROVIDER_PERF</summary>
 
 ## Description
@@ -7080,30 +5523,6 @@ Event can be removed. Not referenced anywhere
 
 
  Total time taken to list kernels for VS Code.
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DS_INTERNAL.KERNEL_REGISTER_FAILED</summary>
-
-## Description
-
-
-
-
- Telemetry event sent to indicate registering a kernel with jupyter failed.
-
- @type {(undefined | never)}
- @memberof IEventNamePropertyMapping
 
 ## Properties
 
@@ -7258,25 +5677,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_TIME</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT</summary>
 
 ## Description
@@ -7304,27 +5704,6 @@ No properties for event
             });
         }
 ```
-
-</details>
-<details>
-  <summary>DS_INTERNAL.NATIVE.OPEN_NOTEBOOK_FAILURE</summary>
-
-## Description
-
-
-
-
- Telemetry event fired if a failure occurs loading a notebook
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -8315,25 +6694,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DS_INTERNAL.RAWKERNEL_SESSION_START_TIMEOUT</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL</summary>
 
 ## Description
@@ -8883,26 +7243,6 @@ No properties for event
 
 </details>
 <details>
-  <summary>DS_INTERNAL.START_RAW_FAILED_UI_DISABLED</summary>
-
-## Description
-
-
-
- Telemetry sent when starting auto starting Native Notebook kernel fails silently.
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
   <summary>DS_INTERNAL.START_SESSION_FAILED_JUPYTER</summary>
 
 ## Description
@@ -9073,13 +7413,13 @@ No properties for event
 
 [src/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry.ts)
 ```typescript
+     */
+    [Telemetry.ConnectRemoteExpiredCertFailedJupyter]: never | undefined;
     [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
-    [Telemetry.UseInterpreterAsKernel]: never | undefined;
-    [Telemetry.UseExistingKernel]: never | undefined;
     [Telemetry.SwitchToExistingKernel]: { language: string };
     [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
-    [Telemetry.ConvertToPythonFile]: never | undefined;
-    [Telemetry.CopySourceCode]: never | undefined;
+    [Telemetry.CreateNewNotebook]: never | undefined;
+    [Telemetry.DataScienceSettings]: JSONObject;
 ```
 
 
@@ -9177,91 +7517,14 @@ No properties for event
 
 [src/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry.ts)
 ```typescript
-    [Telemetry.UseInterpreterAsKernel]: never | undefined;
-    [Telemetry.UseExistingKernel]: never | undefined;
+    [Telemetry.ConnectRemoteExpiredCertFailedJupyter]: never | undefined;
+    [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
     [Telemetry.SwitchToExistingKernel]: { language: string };
     [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
-    [Telemetry.ConvertToPythonFile]: never | undefined;
-    [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.CreateNewNotebook]: never | undefined;
+    [Telemetry.DataScienceSettings]: JSONObject;
+    /**
 ```
-
-</details>
-<details>
-  <summary>DS_INTERNAL.SYNC_ALL_CELLS</summary>
-
-## Description
-
-
-
- Sync events
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DS_INTERNAL.SYNC_SINGLE_CELL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DS_INTERNAL.USE_EXISTING_KERNEL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
-
-</details>
-<details>
-  <summary>DS_INTERNAL.USE_INTERPRETER_AS_KERNEL</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -9439,25 +7702,6 @@ No description provided
             // Resolve our started promise. This means the webpanel is ready to go.
             this.webviewInit.resolve();
 ```
-
-</details>
-<details>
-  <summary>DS_INTERNAL.WEBVIEW_STYLE_UPDATE</summary>
-
-## Description
-
-
-No description provided
-
-## Properties
-
-
-No properties for event
-
-
-## Locations Used
-
-Event can be removed. Not referenced anywhere
 
 </details>
 <details>
