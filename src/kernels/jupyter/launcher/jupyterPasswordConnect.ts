@@ -17,6 +17,7 @@ import {
     IJupyterRequestCreator,
     IJupyterServerUriStorage
 } from '../types';
+import { initializeClient } from 'kerberos';
 
 /**
  * Responsible for intercepting connections to a remote server and asking for a password if necessary
@@ -40,7 +41,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
     }
 
-    @captureTelemetry(Telemetry.GetPasswordAttempt)
+    @captureTelemetry(Telemetry.GetPasswordOrKerberosAttempt)
     public getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
         if (!url || url.length < 1) {
             return Promise.resolve(undefined);
@@ -226,9 +227,35 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         let xsrfCookie: string | undefined;
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
+        let authType: string | undefined;
+        // First determine if we need to use kerberos or a password.
+        authType = await this.needKerberosOrPassword(url);
+        if (authType === 'kerberos') {
+            let _url = new URL(url);
 
-        // First determine if we need a password. A request for the base URL with /tree? should return a 302 if we do.
-        if (await this.needPassword(url)) {
+            // Initialize a kerberos client and get a ticket
+            const client = await initializeClient('HTTP@' + _url.hostname);
+
+            const ticket = await client.step('');
+
+            // Make a request to the server with the kerberos ticket to get user cookie
+            var resp = await this.makeRequest('https://' + _url.hostname + '/login?next=/tree', {
+                headers: {
+                    Authorization: 'Negotiate ' + ticket,
+                    Connection: 'keep-alive'
+                },
+                redirect: 'manual'
+            });
+
+            // Check whether the server returned a user cookie and redirected us
+            if (resp.status === 302 && resp.headers.has('set-cookie')) {
+                sessionCookieName = resp.headers.get('set-cookie')!.split('=')[0];
+                sessionCookieValue = resp.headers.get('set-cookie')!.split('=')[1];
+
+                // Get an xsrf cookie for that user token
+                xsrfCookie = await this.getXSRFToken(url, `${sessionCookieName}=${sessionCookieValue}`);
+            }
+        } else if (authType === 'password') {
             // Get password first
             let userPassword = await this.getUserPassword();
 
@@ -237,7 +264,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
                 // Then get the session cookie by hitting that same page with the xsrftoken and the password
                 if (xsrfCookie) {
-                    const sessionResult = await this.getSessionCookie(url, xsrfCookie, userPassword);
+                    const sessionResult = await this.getPasswordSessionCookie(url, xsrfCookie, userPassword);
                     sessionCookieName = sessionResult.sessionCookieName;
                     sessionCookieValue = sessionResult.sessionCookieValue;
                 } else {
@@ -260,12 +287,16 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
         // If we found everything return it all back if not, undefined as partial is useless
         if (xsrfCookie && sessionCookieName && sessionCookieValue) {
-            sendTelemetryEvent(Telemetry.GetPasswordSuccess);
+            authType === 'password'
+                ? sendTelemetryEvent(Telemetry.GetPasswordSuccess)
+                : sendTelemetryEvent(Telemetry.GetKerberosSuccess);
             const cookieString = this.getSessionCookieString(xsrfCookie, sessionCookieName, sessionCookieValue);
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
             return { requestHeaders };
         } else {
-            sendTelemetryEvent(Telemetry.GetPasswordFailure);
+            authType === 'password'
+                ? sendTelemetryEvent(Telemetry.GetPasswordFailure)
+                : sendTelemetryEvent(Telemetry.GetKerberosFailure);
             return undefined;
         }
     }
@@ -361,15 +392,24 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return xsrfCookie;
     }
 
-    private async needPassword(url: string): Promise<boolean> {
+    private async needKerberosOrPassword(url: string): Promise<string | undefined> {
         // A jupyter server will redirect if you ask for the tree when a login is required
         const response = await this.makeRequest(`${url}tree?`, {
             method: 'get',
-            redirect: 'manual',
+            redirect: 'follow',
             headers: { Connection: 'keep-alive' }
         });
 
-        return response.status !== 200;
+        // If the redirect is followed we get a 200 status code, then we're in
+        // If instead we get a 401 status code and a 'www-authenticate': 'Negiotiate' header
+        // then Kerberos is required; otherwise, a password is required
+        if (response.status !== 200) {
+            return response.status === 401 && response.headers.get('www-authenticate') === 'Negotiate'
+                ? 'kerberos'
+                : 'password';
+        }
+
+        return undefined;
     }
 
     private async makeRequest(url: string, options: RequestInit): Promise<Response> {
@@ -433,7 +473,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     // This workflow can be seen by running fiddler and hitting the login page with a browser
     // First you need a get at the login page to get the xsrf token, then you send back that token along with the password in a post
     // That will return back the session cookie. This session cookie then needs to be added to our requests and websockets for @jupyterlab/services
-    private async getSessionCookie(
+    private async getPasswordSessionCookie(
         url: string,
         xsrfCookie: string,
         password: string
