@@ -20,7 +20,6 @@ import {
 // eslint-disable-next-line
 import { IExportedKernelService } from './standalone/api/extension';
 import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
-import { TerminalShellType } from './platform/terminals/types';
 import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { KernelFailureReason } from './platform/errors/errorUtils';
 
@@ -1205,12 +1204,10 @@ export interface IEventNamePropertyMapping {
             | 'getWorkspace'
             | 'terminalCreation'
             | 'fileCreation'
-            | 'shellDetection'
             | 'commandExecution'
             | 'waitForCommand'
             | 'parseOutput'
             | undefined;
-        shellType: TerminalShellType | undefined;
     };
     [Telemetry.JupyterInstalled]:
         | {
@@ -1224,19 +1221,6 @@ export interface IEventNamePropertyMapping {
                * I.e. jupyter can be found in the path as defined by the env variable process.env['PATH'].
                */
               detection: 'process';
-              frontEnd: 'notebook' | 'lab';
-              /**
-               * Version of the form 6.11, 4.8
-               */
-              frontEndVersion: number;
-          }
-        | {
-              /**
-               * Jupyter is in current path of terminal owned by VS Code.
-               * I.e. jupyter can be found in the path as defined by the env variable in a terminal of VS Code.
-               */
-              detection: 'shell';
-              shellType: TerminalShellType;
               frontEnd: 'notebook' | 'lab';
               /**
                * Version of the form 6.11, 4.8

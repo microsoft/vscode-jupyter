@@ -9,7 +9,6 @@ import { IProcessServiceFactory } from '../../platform/common/process/types.node
 import { GLOBAL_MEMENTO, IMemento } from '../../platform/common/types';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
-import { TerminalShellType } from '../../platform/terminals/types';
 import { sendTelemetryEvent } from '../../telemetry';
 
 const JupyterDetectionTelemetrySentMementoKey = 'JupyterDetectionTelemetrySentMementoKey';
@@ -39,11 +38,7 @@ export class JupyterDetectionTelemetry implements IExtensionSyncActivationServic
         this.detectJupyter('notebook', process.env).catch(noop);
         this.detectJupyter('lab', process.env).catch(noop);
     }
-    private async detectJupyter(
-        frontEnd: 'notebook' | 'lab',
-        env: NodeJS.ProcessEnv,
-        shell?: TerminalShellType
-    ): Promise<void> {
+    private async detectJupyter(frontEnd: 'notebook' | 'lab', env: NodeJS.ProcessEnv): Promise<void> {
         try {
             const processService = await this.processFactory.create(undefined);
             const output = await processService.exec('jupyter', [frontEnd, '--version'], {
@@ -59,20 +54,11 @@ export class JupyterDetectionTelemetry implements IExtensionSyncActivationServic
                 const major = parseInt(versionMatch[1], 10);
                 const minor = parseInt(versionMatch[2], 10);
                 const frontEndVersion = parseFloat(`${major}.${minor}`);
-                if (shell) {
-                    sendTelemetryEvent(Telemetry.JupyterInstalled, undefined, {
-                        frontEnd,
-                        frontEndVersion,
-                        detection: 'shell',
-                        shellType: shell
-                    });
-                } else {
-                    sendTelemetryEvent(Telemetry.JupyterInstalled, undefined, {
-                        frontEnd,
-                        frontEndVersion,
-                        detection: 'process'
-                    });
-                }
+                sendTelemetryEvent(Telemetry.JupyterInstalled, undefined, {
+                    frontEnd,
+                    frontEndVersion,
+                    detection: 'process'
+                });
             } else {
                 sendTelemetryEvent(Telemetry.JupyterInstalled, undefined, {
                     failed: true,
