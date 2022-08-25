@@ -1,0 +1,1 @@
+Added support for authenticating with Jupyter Servers that support Kerberos Authentication. A [gist](https://gist.github.com/mlucool/8c9dfb5767269c1ab2603d173576dea1) showcasing how to add support for Kerberos to a Jupyter Server is also provided. Thanks [@pangav2001](https://github.com/pangav2001) for the feature addition, and [@mlucool](https://github.com/mlucool) for the gist.
