@@ -232,7 +232,7 @@ export async function createTemporaryNotebookFromFile(
 export async function createTemporaryNotebook(
     cells: (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | nbformat.IUnrecognizedCell)[],
     disposables: IDisposable[],
-    kernelName: string = 'Python 3',
+    kernelSpec: nbformat.IKernelspecMetadata = { display_name: 'Python 3', name: 'python3' },
     rootFolder?: Uri,
     prefix?: string
 ): Promise<Uri> {
@@ -251,13 +251,11 @@ export async function createTemporaryNotebook(
     const data: nbformat.INotebookContent = {
         cells,
         metadata: {
-            orig_nbformat: 4
+            orig_nbformat: 4,
+            kernelspec: kernelSpec
         },
         nbformat: 4,
-        nbformat_minor: 2,
-        kernel: {
-            display_name: kernelName
-        }
+        nbformat_minor: 2
     };
     return createTemporaryNotebookFromNotebook(data, disposables, rootFolder, prefix);
 }
@@ -280,7 +278,7 @@ export async function createEmptyPythonNotebook(
     const serverConnectionType = serviceContainer.get<IServerConnectionType>(IServerConnectionType);
     // Don't use same file (due to dirty handling, we might save in dirty.)
     // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-    const nbFile = await createTemporaryNotebook([], disposables, 'Python 3', rootFolder, 'emptyPython');
+    const nbFile = await createTemporaryNotebook([], disposables, undefined, rootFolder, 'emptyPython');
     // Open a python notebook and use this for all tests in this test suite.
     await openAndShowNotebook(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
