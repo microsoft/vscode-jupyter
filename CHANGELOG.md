@@ -1,9 +1,6 @@
 # Changelog
 
-## 2022.8.100 (26 August 2022)
-
-### Enhancements
-
+## 2022.8.100 (30 August 2022)
 
 ### Fixes
 
@@ -16,7 +13,7 @@
 1. Pass `--user` flag when installing dependencies into a `Global` Python environment such as the one installed from Windows Store.
    ([#10478](https://github.com/Microsoft/vscode-jupyter/issues/10478))
 1. Handle situations when the connection to a remote Kernel is lost after executing a cell.
-   This also fixes the issue [Unable to interrupt a kernel when the remote kernel connection is lost #9828](https://github.com/microsoft/vscode-jupyter/issues/9828)
+   This also fixes the issue [Unable to interrupt a kernel when the remote kernel connection is lost #9828](https://github.com/microsoft/vscode-jupyter/issues/9828).
    ([#10568](https://github.com/Microsoft/vscode-jupyter/issues/10568))
 1. Ensure cells in Interactive Window are executed in correct order when executing from both code lenses and the input box.
    ([#10671](https://github.com/Microsoft/vscode-jupyter/issues/10671))
@@ -42,6 +39,23 @@
    ([#11190](https://github.com/Microsoft/vscode-jupyter/issues/11190))
 1. Fix the macOS smoke test which is failing every time on CI.
    ([#11193](https://github.com/Microsoft/vscode-jupyter/issues/11193))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
 
 
 ## 2022.7.110 (12 Aug 2022)
