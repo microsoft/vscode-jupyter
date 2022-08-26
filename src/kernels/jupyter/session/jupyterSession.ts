@@ -161,9 +161,14 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
             const stopWatch = new StopWatch();
             result = await this.createSession({ token: cancelToken, ui });
             await this.waitForIdleOnSession(result, this.idleTimeout, cancelToken);
-            sendKernelTelemetryEvent(this.resource, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
-                startTimeOnly: true
-            });
+            sendKernelTelemetryEvent(
+                this.resource,
+                Telemetry.NotebookRestart,
+                { duration: stopWatch.elapsedTime },
+                {
+                    startTimeOnly: true
+                }
+            );
             return result;
         } catch (exc) {
             traceInfo(`Error waiting for restart session: ${exc}`);

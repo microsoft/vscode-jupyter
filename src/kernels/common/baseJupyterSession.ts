@@ -205,9 +205,14 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
         if (this.session?.isRemoteSession && this.session.kernel) {
             const stopWatch = new StopWatch();
             await this.session.kernel.restart();
-            sendKernelTelemetryEvent(this.resource, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
-                startTimeOnly: true
-            });
+            sendKernelTelemetryEvent(
+                this.resource,
+                Telemetry.NotebookRestart,
+                { duration: stopWatch.elapsedTime },
+                {
+                    startTimeOnly: true
+                }
+            );
             this.setSession(this.session, true);
             return;
         }

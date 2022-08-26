@@ -184,7 +184,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             const response = await this.variables.getVariables(args, activeNotebook);
 
             this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
-            sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, {
+            sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, {
                 variableCount: response.totalCount
             });
         } else {

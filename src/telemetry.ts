@@ -24,103 +24,117 @@ import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { KernelFailureReason } from './platform/errors/errorUtils';
 
 export * from './platform/telemetry/index';
+export type DurationMeasurement = {
+    /**
+     * Duration of a measure in milliseconds.
+     * Common measurement used across a number of events.
+     */
+    duration: number;
+};
+export type ResourceTypeTelemetryProperty = {
+    /**
+     * Used to determine whether this event is related to a Notebooks or Interactive window.
+     */
+    resourceType?: 'notebook' | 'interactive';
+};
 
-export type ResourceSpecificTelemetryProperties = Partial<{
-    resourceType: 'notebook' | 'interactive';
-    /**
-     * Whether the user executed a cell.
-     */
-    userExecutedCell?: boolean;
-    /**
-     * Hash of the Kernel Connection id.
-     */
-    kernelId: string;
-    /**
-     * Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
-     * If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
-     */
-    disableUI?: boolean;
-    /**
-     * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-     * If we run the same notebook tomorrow, the hash will be the same.
-     */
-    resourceHash?: string;
-    /**
-     * Unique identifier for an instance of a notebook session.
-     * If we restart or run this notebook tomorrow, this id will be different.
-     * Id could be something as simple as a hash of the current Epoch time.
-     */
-    kernelSessionId: string;
-    /**
-     * Whether this resource is using the active Python interpreter or not.
-     */
-    isUsingActiveInterpreter?: boolean;
-    /**
-     * Found plenty of issues when starting kernels with conda, hence useful to capture this info.
-     */
-    pythonEnvironmentType?: EnvironmentType;
-    /**
-     * A key, so that rest of the information is tied to this. (hash)
-     */
-    pythonEnvironmentPath?: string;
-    /**
-     * Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
-     */
-    pythonEnvironmentVersion?: string;
-    /**
-     * Total number of python environments.
-     */
-    pythonEnvironmentCount?: number;
-    /**
-     * Comma delimited list of hashed packages & their versions.
-     */
-    pythonEnvironmentPackages?: string;
-    /**
-     * Whether kernel was started using kernel spec, interpreter, etc.
-     */
-    kernelConnectionType?: KernelConnectionMetadata['kind'];
-    /**
-     * Language of the kernel connection.
-     */
-    kernelLanguage: string;
-    /**
-     * This number gets reset after we attempt a restart or change kernel.
-     */
-    interruptCount?: number;
-    /**
-     * This number gets reset after change the kernel.
-     */
-    restartCount?: number;
-    /**
-     * Number of times starting the kernel failed.
-     */
-    startFailureCount?: number;
-    /**
-     * Number of times the kernel was changed.
-     */
-    switchKernelCount?: number;
-    /**
-     * Total number of kernel specs in the kernel spec list.
-     */
-    kernelSpecCount: number;
-    /**
-     * Total number of interpreters in the kernel spec list.
-     */
-    kernelInterpreterCount: number;
-    /**
-     * Total number of live kernels in the kernel spec list.
-     */
-    kernelLiveCount: number;
-    /**
-     * Whether this was started by Jupyter extension or a 3rd party.
-     */
-    actionSource: KernelActionSource;
-    /**
-     * Whether we managed to capture the environment variables or not.
-     * In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
-     */
-    capturedEnvVars?: boolean;
-}>;
+export type ResourceSpecificTelemetryProperties = Partial<
+    ResourceTypeTelemetryProperty & {
+        /**
+         * Whether the user executed a cell.
+         */
+        userExecutedCell?: boolean;
+        /**
+         * Hash of the Kernel Connection id.
+         */
+        kernelId: string;
+        /**
+         * Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+         * If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
+         */
+        disableUI?: boolean;
+        /**
+         * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+         * If we run the same notebook tomorrow, the hash will be the same.
+         */
+        resourceHash?: string;
+        /**
+         * Unique identifier for an instance of a notebook session.
+         * If we restart or run this notebook tomorrow, this id will be different.
+         * Id could be something as simple as a hash of the current Epoch time.
+         */
+        kernelSessionId: string;
+        /**
+         * Whether this resource is using the active Python interpreter or not.
+         */
+        isUsingActiveInterpreter?: boolean;
+        /**
+         * Found plenty of issues when starting kernels with conda, hence useful to capture this info.
+         */
+        pythonEnvironmentType?: EnvironmentType;
+        /**
+         * A key, so that rest of the information is tied to this. (hash)
+         */
+        pythonEnvironmentPath?: string;
+        /**
+         * Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
+         */
+        pythonEnvironmentVersion?: string;
+        /**
+         * Total number of python environments.
+         */
+        pythonEnvironmentCount?: number;
+        /**
+         * Comma delimited list of hashed packages & their versions.
+         */
+        pythonEnvironmentPackages?: string;
+        /**
+         * Whether kernel was started using kernel spec, interpreter, etc.
+         */
+        kernelConnectionType?: KernelConnectionMetadata['kind'];
+        /**
+         * Language of the kernel connection.
+         */
+        kernelLanguage: string;
+        /**
+         * This number gets reset after we attempt a restart or change kernel.
+         */
+        interruptCount?: number;
+        /**
+         * This number gets reset after change the kernel.
+         */
+        restartCount?: number;
+        /**
+         * Number of times starting the kernel failed.
+         */
+        startFailureCount?: number;
+        /**
+         * Number of times the kernel was changed.
+         */
+        switchKernelCount?: number;
+        /**
+         * Total number of kernel specs in the kernel spec list.
+         */
+        kernelSpecCount: number;
+        /**
+         * Total number of interpreters in the kernel spec list.
+         */
+        kernelInterpreterCount: number;
+        /**
+         * Total number of live kernels in the kernel spec list.
+         */
+        kernelLiveCount: number;
+        /**
+         * Whether this was started by Jupyter extension or a 3rd party.
+         */
+        actionSource: KernelActionSource;
+        /**
+         * Whether we managed to capture the environment variables or not.
+         * In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
+         */
+        capturedEnvVars?: boolean;
+    }
+>;
 
 export interface IEventNamePropertyMapping {
     /**
@@ -131,6 +145,10 @@ export interface IEventNamePropertyMapping {
          * Number of workspace folders opened
          */
         workspaceFolderCount: number;
+        totalActivateTime: number;
+        codeLoadingTime: number;
+        startActivateTime: number;
+        endActivateTime: number;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables
@@ -151,8 +169,6 @@ export interface IEventNamePropertyMapping {
     [EventName.HASHED_PACKAGE_NAME]: {
         /**
          * Hash of the package name
-         *
-         * @type {string}
          */
         hashedNamev2: string;
     };
@@ -323,7 +339,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when user adds a cell below the current cell for IW.
      */
     [Telemetry.AddCellBelow]: never | undefined;
-    [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
+    [Telemetry.CodeLensAverageAcquisitionTime]: DurationMeasurement;
     [Telemetry.ConnectFailedJupyter]: TelemetryErrorProperties;
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
@@ -378,22 +394,22 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent to capture first time execution of a cell.
      * If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.
      */
-    [Telemetry.ExecuteCellPerceivedCold]: undefined | { notebook: boolean };
+    [Telemetry.ExecuteCellPerceivedCold]: DurationMeasurement & ResourceTypeTelemetryProperty;
     /**
      * Telemetry sent to capture subsequent execution of a cell.
      * If `notebook = true`, this its telemetry for native editor/notebooks.
      * (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)
      */
-    [Telemetry.ExecuteCellPerceivedWarm]: undefined | { notebook: boolean };
+    [Telemetry.ExecuteCellPerceivedWarm]: DurationMeasurement & ResourceTypeTelemetryProperty;
     /**
      * Time take for jupyter server to start and be ready to run first user cell.
      * (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)
      */
-    [Telemetry.PerceivedJupyterStartupNotebook]: ResourceSpecificTelemetryProperties;
+    [Telemetry.PerceivedJupyterStartupNotebook]: DurationMeasurement & ResourceSpecificTelemetryProperties;
     /**
      * Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.
      */
-    [Telemetry.StartExecuteNotebookCellPerceivedCold]: ResourceSpecificTelemetryProperties;
+    [Telemetry.StartExecuteNotebookCellPerceivedCold]: DurationMeasurement & ResourceSpecificTelemetryProperties;
     /**
      * User exports a .py file with cells as a Jupyter Notebook.
      */
@@ -469,7 +485,7 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when IW or Notebook is restarted.
      */
-    [Telemetry.RestartKernelCommand]: never | undefined;
+    [Telemetry.RestartKernelCommand]: ResourceSpecificTelemetryProperties;
     /**
      * Run all Cell Commands in Interactive Python
      */
@@ -525,8 +541,8 @@ export interface IEventNamePropertyMapping {
      * Captures the telemetry when the Uri is manually entered by the user as part of the workflow when selecting a Kernel.
      */
     [Telemetry.EnterJupyterURI]: never | undefined;
-    [Telemetry.SelectLocalJupyterKernel]: never | undefined;
-    [Telemetry.SelectRemoteJupyterKernel]: never | undefined;
+    [Telemetry.SelectLocalJupyterKernel]: ResourceSpecificTelemetryProperties;
+    [Telemetry.SelectRemoteJupyterKernel]: ResourceSpecificTelemetryProperties;
     [Telemetry.SessionIdleTimeout]: never | undefined;
     [Telemetry.JupyterNotInstalledErrorShown]: never | undefined;
     [Telemetry.UserInstalledJupyter]: never | undefined;
@@ -573,14 +589,13 @@ export interface IEventNamePropertyMapping {
             | 'failedToInstallInJupyter' // Failed to install the package in Jupyter as well as Python ext.
             | 'dismissed' // User chose to dismiss the prompt.
             | 'moreInfo'; // User requested more information on the module in question
-        resourceType?: 'notebook' | 'interactive';
         /**
          * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
          * If we run the same notebook tomorrow, the hash will be the same.
          */
         resourceHash?: string;
         pythonEnvType?: EnvironmentType;
-    };
+    } & ResourceTypeTelemetryProperty;
     /**
      * This telemetry tracks the display of the Picker for Jupyter Remote servers.
      */
@@ -609,7 +624,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RefreshDataViewer]: never | undefined;
     [Telemetry.CreateNewInteractive]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
-    [Telemetry.StartJupyterProcess]: never | undefined;
+    [Telemetry.StartJupyterProcess]: DurationMeasurement;
     /**
      * Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.
      *
@@ -685,7 +700,9 @@ export interface IEventNamePropertyMapping {
     /**
      * Total time taken to Launch a raw kernel.
      */
-    [Telemetry.KernelLauncherPerf]: undefined | never | TelemetryErrorProperties;
+    [Telemetry.KernelLauncherPerf]:
+        | (DurationMeasurement & ResourceSpecificTelemetryProperties)
+        | TelemetryErrorProperties;
     /**
      * Total time taken to find a kernel on disc or on a remote machine.
      */
@@ -700,9 +717,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.PreferredKernel]: {
         result: 'found' | 'notfound' | 'failed'; // Whether a preferred kernel was found or not.
         language: string; // Language of the associated notebook or interactive window.
-        resourceType: 'notebook' | 'interactive'; // Whether its a notebook or interactive window.
         hasActiveInterpreter?: boolean; // Whether we have an active interpreter or not.
-    };
+    } & ResourceTypeTelemetryProperty;
     /**
      * Telemetry event sent to when user customizes the jupyter command line
      * @type {(undefined | never)}
@@ -839,11 +855,14 @@ export interface IEventNamePropertyMapping {
          * Whether we timedout while waiting for response for Kernel info request.
          */
         timedout: boolean;
-    };
-    [Telemetry.JupyterCreatingNotebook]: never | undefined | TelemetryErrorProperties;
+    } & DurationMeasurement &
+        ResourceSpecificTelemetryProperties;
+    [Telemetry.JupyterCreatingNotebook]:
+        | (DurationMeasurement & ResourceSpecificTelemetryProperties & TelemetryErrorProperties)
+        | (DurationMeasurement & ResourceSpecificTelemetryProperties);
 
     // Raw kernel timing events
-    [Telemetry.RawKernelSessionConnect]: never | undefined;
+    [Telemetry.RawKernelSessionConnect]: DurationMeasurement & ResourceSpecificTelemetryProperties;
     [Telemetry.RawKernelStartRawSession]: never | undefined;
     [Telemetry.RawKernelProcessLaunch]: never | undefined;
 
@@ -885,21 +904,23 @@ export interface IEventNamePropertyMapping {
                * The result of the interrupt,
                */
               result: InterruptResult;
-          } & ResourceSpecificTelemetryProperties) // If successful (interrupted, timeout, restart).
-        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
+          } & DurationMeasurement &
+              ResourceSpecificTelemetryProperties) // If successful (interrupted, timeout, restart).
+        | (DurationMeasurement & ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
     /**
      * Restarts the Kernel.
      * Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
      */
     [Telemetry.NotebookRestart]:
-        | {
+        | ({
               /**
                * If true, this is the total time taken to restart the kernel (excluding times to stop current cells and the like).
                * Also in the case of raw kernels, we keep a separate process running, and when restarting we just switch to that process.
                * In such cases this value will be `undefined`. In the case of raw kernels this will be true only when starting a new kernel process from scratch.
                */
               startTimeOnly: true;
-          }
+          } & DurationMeasurement &
+              ResourceSpecificTelemetryProperties)
         | ({
               failed: true;
               failureCategory: ErrorCategory;
@@ -908,15 +929,15 @@ export interface IEventNamePropertyMapping {
 
     // Raw kernel single events
     [Telemetry.RawKernelSessionStart]:
-        | ResourceSpecificTelemetryProperties
+        | (DurationMeasurement & ResourceSpecificTelemetryProperties)
         | ({
               failed: true;
               failureCategory: ErrorCategory;
           } & ResourceSpecificTelemetryProperties)
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
-    [Telemetry.RawKernelSessionStartSuccess]: never | undefined;
-    [Telemetry.RawKernelSessionStartException]: never | undefined;
-    [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
+    [Telemetry.RawKernelSessionStartSuccess]: ResourceSpecificTelemetryProperties;
+    [Telemetry.RawKernelSessionStartException]: ResourceSpecificTelemetryProperties;
+    [Telemetry.RawKernelSessionStartUserCancel]: ResourceSpecificTelemetryProperties;
     [Telemetry.RawKernelSessionStartNoIpykernel]: {
         reason: KernelInterpreterDependencyResponse;
     } & TelemetryErrorProperties;
@@ -934,7 +955,7 @@ export interface IEventNamePropertyMapping {
          * The kernel process's exit code.
          */
         exitCode: number | undefined;
-    };
+    } & ResourceSpecificTelemetryProperties;
     /**
      * This event is sent when a RawJupyterSession's `shutdownSession`
      * method is called.
@@ -951,7 +972,7 @@ export interface IEventNamePropertyMapping {
          * tried to shutdown the session.
          */
         stacktrace: string | undefined;
-    };
+    } & ResourceSpecificTelemetryProperties;
     /**
      * This event is sent when a RawSession's `dispose` method is called.
      */
@@ -962,7 +983,7 @@ export interface IEventNamePropertyMapping {
          * `dispose` on the RawSession.
          */
         stacktrace: string | undefined;
-    };
+    } & ResourceSpecificTelemetryProperties;
 
     // Run by line events
     [Telemetry.RunByLineVariableHover]: never | undefined;
@@ -979,7 +1000,8 @@ export interface IEventNamePropertyMapping {
          * Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.
          */
         condaEnvsSharingSameInterpreter: number;
-    } & ResourceSpecificTelemetryProperties;
+    } & DurationMeasurement &
+        ResourceSpecificTelemetryProperties;
 
     [Telemetry.VSCNotebookCellTranslationFailed]: {
         isErrorOutput: boolean; // Whether we're trying to translate an error output when we shuldn't be.
@@ -999,7 +1021,7 @@ export interface IEventNamePropertyMapping {
          * If its `false`, then we can ignore this telemetry.
          */
         pythonExtensionInstalled: boolean;
-    };
+    } & ResourceSpecificTelemetryProperties;
     // Capture telemetry re: how long returning a tooltip takes
     [Telemetry.InteractiveFileTooltipsPerf]: {
         // Result is null if user signalled cancellation or if we timed out
@@ -1128,7 +1150,7 @@ export interface IEventNamePropertyMapping {
         ename: string;
         evalue: string;
     };
-    [Telemetry.KernelCrash]: never | undefined;
+    [Telemetry.KernelCrash]: ResourceSpecificTelemetryProperties;
     [Telemetry.JupyterKernelHiddenViaFilter]: never | undefined;
     [Telemetry.JupyterKernelFilterUsed]: never | undefined;
     /**
@@ -1259,7 +1281,7 @@ export interface IEventNamePropertyMapping {
     /**
      * Total time take to copy the nb extensions folder.
      */
-    [Telemetry.IPyWidgetNbExtensionCopyTime]: never | undefined;
+    [Telemetry.IPyWidgetNbExtensionCopyTime]: DurationMeasurement;
     /**
      * Useful when we need an active kernel session in order to execute commands silently.
      * Used by the dataViewerDependencyService.

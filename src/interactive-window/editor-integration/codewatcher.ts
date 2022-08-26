@@ -22,8 +22,7 @@ import { IDocumentManager } from '../../platform/common/application/types';
 import { ICellRange, IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
 import { chainable } from '../../platform/common/utils/decorators';
 import { isUri, noop } from '../../platform/common/utils/misc';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
 import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError';
 import { Telemetry, Commands, Identifiers } from '../../platform/common/constants';
@@ -60,7 +59,6 @@ function getIndex(index: number, length: number): number {
  */
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
-    private static sentExecuteCellTelemetry: boolean = false;
     private document?: TextDocument;
     private version: number = -1;
     private codeLenses: CodeLens[] = [];
@@ -999,7 +997,6 @@ export class CodeWatcher implements ICodeWatcher {
         debug?: boolean
     ): Promise<boolean> {
         let result = false;
-        const stopWatch = new StopWatch();
         try {
             if (debug) {
                 result = await interactiveWindow.debugCode(code, file, line);
@@ -1010,23 +1007,10 @@ export class CodeWatcher implements ICodeWatcher {
             if (!(err instanceof InteractiveCellResultError)) {
                 await this.dataScienceErrorHandler.handleError(err);
             }
-        } finally {
-            this.sendPerceivedCellExecute(stopWatch);
         }
 
         return result;
     }
-    private sendPerceivedCellExecute(runningStopWatch?: StopWatch) {
-        if (runningStopWatch) {
-            if (!CodeWatcher.sentExecuteCellTelemetry) {
-                CodeWatcher.sentExecuteCellTelemetry = true;
-                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, runningStopWatch.elapsedTime);
-            } else {
-                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, runningStopWatch.elapsedTime);
-            }
-        }
-    }
-
     private async runMatchingCell(range: Range, advance?: boolean, debug?: boolean) {
         const currentRunCellLens = this.getCurrentCellLens(range.start);
         const nextRunCellLens = this.getNextCellLens(range.start);

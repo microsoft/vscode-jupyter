@@ -84,7 +84,9 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
             Cancellation.throwIfCanceled(options.token);
             // Only connect our session if we didn't cancel or timeout
             sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime);
+            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStart, {
+                duration: stopWatch.elapsedTime
+            });
             traceInfo(
                 `${DataScience.kernelStarted().format(
                     getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
@@ -100,7 +102,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                 sendKernelTelemetryEvent(
                     this.resource,
                     Telemetry.RawKernelSessionStart,
-                    stopWatch.elapsedTime,
+                    { duration: stopWatch.elapsedTime },
                     undefined,
                     error
                 );
@@ -112,7 +114,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                 sendKernelTelemetryEvent(
                     this.resource,
                     Telemetry.RawKernelSessionStart,
-                    stopWatch.elapsedTime,
+                    { duration: stopWatch.elapsedTime },
                     undefined,
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     error as any
@@ -130,7 +132,9 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                 throw error;
             }
         } finally {
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionConnect, stopWatch.elapsedTime);
+            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionConnect, {
+                duration: stopWatch.elapsedTime
+            });
         }
 
         this.connected = true;
@@ -274,9 +278,14 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         if (options.purpose === 'restart') {
             promise
                 .then(() =>
-                    sendKernelTelemetryEvent(this.resource, Telemetry.NotebookRestart, stopwatch.elapsedTime, {
-                        startTimeOnly: true
-                    })
+                    sendKernelTelemetryEvent(
+                        this.resource,
+                        Telemetry.NotebookRestart,
+                        { duration: stopwatch.elapsedTime },
+                        {
+                            startTimeOnly: true
+                        }
+                    )
                 )
                 .ignoreErrors();
         }
@@ -354,10 +363,14 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         } else {
             traceWarning(`Didn't get response for requestKernelInfo after ${stopWatch.elapsedTime}ms.`);
         }
-        sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelInfoResonse, stopWatch.elapsedTime, {
-            attempts,
-            timedout: !gotIoPubMessage.completed
-        });
+        sendKernelTelemetryEvent(
+            this.resource,
+            Telemetry.RawKernelInfoResonse,
+            { duration: stopWatch.elapsedTime, attempts },
+            {
+                timedout: !gotIoPubMessage.completed
+            }
+        );
 
         /**
          * To get a better understanding of the way Jupyter works, we need to look at Jupyter Client code.

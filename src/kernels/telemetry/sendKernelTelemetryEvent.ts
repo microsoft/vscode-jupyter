@@ -7,6 +7,7 @@ import { sendTelemetryEvent, waitBeforeSending, IEventNamePropertyMapping } from
 import { getContextualPropsForTelemetry } from '../../platform/telemetry/telemetry';
 import { clearInterruptCounter, trackKernelResourceInformation } from './helper';
 import { InterruptResult } from '../types';
+import { ExcludeType, PickType, UnionToIntersection } from '../../platform/common/utils/misc';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function incrementStartFailureCount(resource: Resource, eventName: any, properties: any) {
@@ -29,20 +30,13 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
 export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,
-    durationMs?: Record<string, number> | number,
-    properties?: P[E] & { [waitBeforeSending]?: Promise<void> },
-    ex?: Error
+    measures?: Partial<PickType<Required<UnionToIntersection<P[E]>>, number>> | undefined,
+    properties?: (ExcludeType<P[E], number> & { [waitBeforeSending]?: Promise<void> }) | undefined,
+    ex?: Error | undefined
 ) {
     const props = getContextualPropsForTelemetry(resource);
     Object.assign(props, properties || {});
-    sendTelemetryEvent(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        eventName as any,
-        durationMs,
-        props,
-        ex,
-        true
-    );
+    sendTelemetryEvent(eventName, measures, props as typeof properties, ex, true);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resetData(resource, eventName as any, props);

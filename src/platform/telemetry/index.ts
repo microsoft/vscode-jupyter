@@ -7,7 +7,7 @@ import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, JVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceEverything } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
-import { noop } from '../common/utils/misc';
+import { ExcludeType, noop, PickType, UnionToIntersection } from '../common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
 import { populateTelemetryWithErrorInfo } from '../errors';
 import { IEventNamePropertyMapping } from '../../telemetry';
@@ -125,11 +125,11 @@ function sanitizeProperties(eventName: string, data: Record<string, any>) {
 
 const queuedTelemetry: {
     eventName: string;
-    durationMs?: Record<string, number> | number;
-    properties?: Record<string, any>;
-    ex?: Error;
-    sendOriginalEventWithErrors?: boolean;
-    queueEverythingUntilCompleted?: Promise<any>;
+    measures?: Record<string, number> | undefined;
+    properties?: Record<string, any> | undefined;
+    ex?: Error | undefined;
+    sendOriginalEventWithErrors?: boolean | undefined;
+    queueEverythingUntilCompleted?: Promise<any> | undefined;
 }[] = [];
 
 /**
@@ -141,8 +141,8 @@ const queuedTelemetry: {
  */
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
-    durationMs?: Record<string, number> | number,
-    properties?: P[E] & { [waitBeforeSending]?: Promise<void> },
+    measures?: Partial<PickType<Required<UnionToIntersection<P[E]>>, number>> | undefined,
+    properties?: ExcludeType<P[E], number> & { [waitBeforeSending]?: Promise<void> },
     ex?: Error,
     sendOriginalEventWithErrors?: boolean
 ) {
@@ -154,7 +154,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     if (isPromise(properties?.waitBeforeSending) || queuedTelemetry.length) {
         queuedTelemetry.push({
             eventName: eventName as string,
-            durationMs,
+            measures: measures as unknown as Record<string, number> | undefined,
             properties,
             ex,
             sendOriginalEventWithErrors,
@@ -162,7 +162,14 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         });
         sendNextTelemetryItem();
     } else {
-        sendTelemetryEventInternal(eventName as any, durationMs, properties, ex, sendOriginalEventWithErrors);
+        sendTelemetryEventInternal(
+            eventName as any,
+            // Because of exactOptionalPropertyTypes we have to cast.
+            measures as unknown as Record<string, number> | undefined,
+            properties,
+            ex,
+            sendOriginalEventWithErrors
+        );
     }
 }
 
@@ -184,7 +191,7 @@ function sendNextTelemetryItem(): void {
         queuedTelemetry.shift();
         sendTelemetryEventInternal(
             nextItem.eventName as any,
-            nextItem.durationMs,
+            nextItem.measures,
             nextItem.properties,
             nextItem.ex,
             nextItem.sendOriginalEventWithErrors
@@ -203,13 +210,12 @@ function sendNextTelemetryItem(): void {
 
 function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
-    durationMs?: Record<string, number> | number,
+    measures?: Record<string, number>,
     properties?: P[E],
     ex?: Error,
     sendOriginalEventWithErrors?: boolean
 ) {
     const reporter = getTelemetryReporter();
-    const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
     let customProperties: Record<string, string> = {};
     let eventNameSent = eventName as string;
 
@@ -276,10 +282,9 @@ const timesSeenThisEventWithSameProperties = new Set<string>();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any,
 export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
-    properties?: P[E],
+    properties?: ExcludeType<P[E], number>,
     captureDuration: boolean = true,
-    failureEventName?: E,
-    lazyProperties?: (obj: This) => P[E]
+    failureEventName?: E
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
     // eslint-disable-next-line , @typescript-eslint/no-explicit-any
     return function (
@@ -292,22 +297,17 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
         descriptor.value = function (this: This, ...args: any[]) {
             // Legacy case; fast path that sends event before method executes.
             // Does not set "failed" if the result is a Promise and throws an exception.
-            if (!captureDuration && !lazyProperties) {
+            if (!captureDuration) {
                 sendTelemetryEvent(eventName, undefined, properties);
                 // eslint-disable-next-line no-invalid-this
                 return originalMethod.apply(this, args);
             }
 
-            const props = () => {
-                if (lazyProperties) {
-                    return { ...properties, ...lazyProperties(this) };
-                }
-                return properties;
-            };
+            const props = properties || {};
 
             // Determine if this is the first time we're sending this telemetry event for this same (class/method).
             const stopWatch = captureDuration ? new StopWatch() : undefined;
-            const key = `${eventName.toString()}${JSON.stringify(props() || {})}`;
+            const key = `${eventName.toString()}${JSON.stringify(props)}`;
             const firstTime = !timesSeenThisEventWithSameProperties.has(key);
             timesSeenThisEventWithSameProperties.add(key);
 
@@ -320,27 +320,35 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
                 // eslint-disable-next-line
                 (result as Promise<void>)
                     .then((data) => {
-                        const propsToSend = { ...(props() || {}) };
+                        const propsToSend = { ...props };
                         if (firstTime) {
                             (propsToSend as any)['firstTime'] = firstTime;
                         }
-                        sendTelemetryEvent(eventName, stopWatch?.elapsedTime, propsToSend as typeof properties);
+                        sendTelemetryEvent(
+                            eventName,
+                            stopWatch ? ({ duration: stopWatch?.elapsedTime } as any) : undefined,
+                            propsToSend as typeof properties
+                        );
                         return data;
                     })
                     // eslint-disable-next-line @typescript-eslint/promise-function-async
                     .catch((ex) => {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const failedProps: P[E] = { ...(props() || ({} as any)) };
+                        const failedProps: P[E] = { ...props } as any;
                         (failedProps as any).failed = true;
                         sendTelemetryEvent(
-                            failureEventName ? failureEventName : eventName,
-                            stopWatch?.elapsedTime,
-                            failedProps,
+                            failureEventName ? failureEventName : (eventName as any),
+                            stopWatch ? { duration: stopWatch?.elapsedTime } : {},
+                            failedProps as any,
                             ex
                         );
                     });
             } else {
-                sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
+                sendTelemetryEvent(
+                    eventName,
+                    stopWatch ? ({ duration: stopWatch?.elapsedTime } as any) : undefined,
+                    props as typeof properties
+                );
             }
 
             return result;

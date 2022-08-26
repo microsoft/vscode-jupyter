@@ -70,10 +70,9 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     public dispose() {
         // On shutdown send how long on average we spent parsing code lens
         if (this.totalGetCodeLensCalls > 0) {
-            sendTelemetryEvent(
-                Telemetry.CodeLensAverageAcquisitionTime,
-                this.totalExecutionTimeInMs / this.totalGetCodeLensCalls
-            );
+            sendTelemetryEvent(Telemetry.CodeLensAverageAcquisitionTime, {
+                duration: this.totalExecutionTimeInMs / this.totalGetCodeLensCalls
+            });
         }
     }
 

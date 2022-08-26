@@ -160,7 +160,7 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
                 sendKernelTelemetryEvent(
                     this.kernel.resourceUri,
                     Telemetry.NotebookInterrupt,
-                    stopWatch.elapsedTime,
+                    { duration: stopWatch.elapsedTime },
                     undefined,
                     exc
                 );
@@ -171,9 +171,14 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
         })();
 
         return promise.then((result) => {
-            sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.NotebookInterrupt, stopWatch.elapsedTime, {
-                result
-            });
+            sendKernelTelemetryEvent(
+                this.kernel.resourceUri,
+                Telemetry.NotebookInterrupt,
+                { duration: stopWatch.elapsedTime },
+                {
+                    result
+                }
+            );
             return result;
         });
     }

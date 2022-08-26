@@ -54,11 +54,14 @@ export class JupyterDetectionTelemetry implements IExtensionSyncActivationServic
                 const major = parseInt(versionMatch[1], 10);
                 const minor = parseInt(versionMatch[2], 10);
                 const frontEndVersion = parseFloat(`${major}.${minor}`);
-                sendTelemetryEvent(Telemetry.JupyterInstalled, undefined, {
-                    frontEnd,
-                    frontEndVersion,
-                    detection: 'process'
-                });
+                sendTelemetryEvent(
+                    Telemetry.JupyterInstalled,
+                    { frontEndVersion },
+                    {
+                        frontEnd,
+                        detection: 'process'
+                    }
+                );
             } else {
                 sendTelemetryEvent(Telemetry.JupyterInstalled, undefined, {
                     failed: true,

@@ -123,7 +123,7 @@ export class KernelLauncher implements IKernelLauncher {
         promise
             .then(() =>
                 /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
-                sendKernelTelemetryEvent(resource, Telemetry.KernelLauncherPerf, stopWatch.elapsedTime)
+                sendKernelTelemetryEvent(resource, Telemetry.KernelLauncherPerf, { duration: stopWatch.elapsedTime })
             )
             .ignoreErrors();
         return promise;

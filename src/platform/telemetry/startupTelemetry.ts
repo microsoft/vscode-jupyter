@@ -7,7 +7,6 @@ import { traceError } from '../logging';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '.';
 import { EventName } from './constants';
-import { IEventNamePropertyMapping } from '../../telemetry';
 
 interface IStopWatch {
     elapsedTime: number;
@@ -16,7 +15,10 @@ interface IStopWatch {
 export async function sendStartupTelemetry(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     activatedPromise: Promise<any>,
-    durations: Record<string, number>,
+    durations: {
+        totalActivateTime: number;
+        workspaceFolderCount: number;
+    },
     stopWatch: IStopWatch,
     serviceContainer: IServiceContainer
 ) {
@@ -27,8 +29,8 @@ export async function sendStartupTelemetry(
     try {
         await activatedPromise;
         durations.totalActivateTime = stopWatch.elapsedTime;
-        const props = await getActivationTelemetryProps(serviceContainer);
-        sendTelemetryEvent(EventName.EXTENSION_LOAD, durations, props);
+        await updateActivationTelemetryProps(serviceContainer, durations);
+        sendTelemetryEvent(EventName.EXTENSION_LOAD, durations);
     } catch (ex) {
         traceError('sendStartupTelemetry() failed.', ex);
     }
@@ -36,7 +38,7 @@ export async function sendStartupTelemetry(
 
 export async function sendErrorTelemetry(
     ex: Error,
-    durations: Record<string, number>,
+    durations: { workspaceFolderCount: number },
     serviceContainer?: IServiceContainer
 ) {
     try {
@@ -44,7 +46,7 @@ export async function sendErrorTelemetry(
         let props: any = {};
         if (serviceContainer) {
             try {
-                props = await getActivationTelemetryProps(serviceContainer);
+                await updateActivationTelemetryProps(serviceContainer, durations);
             } catch (ex) {
                 traceError('getActivationTelemetryProps() failed.', ex);
             }
@@ -55,9 +57,10 @@ export async function sendErrorTelemetry(
     }
 }
 
-async function getActivationTelemetryProps(
-    serviceContainer: IServiceContainer
-): Promise<IEventNamePropertyMapping[EventName.EXTENSION_LOAD]> {
+async function updateActivationTelemetryProps(
+    serviceContainer: IServiceContainer,
+    durations: { workspaceFolderCount: number }
+) {
     // eslint-disable-next-line
     // TODO: Not all of this data is showing up in the database...
     // eslint-disable-next-line
@@ -66,7 +69,5 @@ async function getActivationTelemetryProps(
     // (through granular try-catch statements).
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
-    return {
-        workspaceFolderCount
-    };
+    durations.workspaceFolderCount = workspaceFolderCount;
 }
