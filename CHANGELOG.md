@@ -1,5 +1,63 @@
 # Changelog
 
+## 2022.8.100 (30 August 2022)
+
+### Fixes
+
+1. Display a prompt when Python environment used to start Jupyter cannot, providing the user with the ability to select a Python Environment.
+   ([#1110](https://github.com/Microsoft/vscode-jupyter/issues/1110))
+1. Start and maintain a single Python process for interrupting Python kernels (one process per session).
+   ([#9909](https://github.com/Microsoft/vscode-jupyter/issues/9909))
+1. Don't save an incorrect server password in our cached password list, and keep displaying the server input prompt after a failed password attempt.
+   ([#10300](https://github.com/Microsoft/vscode-jupyter/issues/10300))
+1. Pass `--user` flag when installing dependencies into a `Global` Python environment such as the one installed from Windows Store.
+   ([#10478](https://github.com/Microsoft/vscode-jupyter/issues/10478))
+1. Handle situations when the connection to a remote Kernel is lost after executing a cell.
+   This also fixes the issue [Unable to interrupt a kernel when the remote kernel connection is lost #9828](https://github.com/microsoft/vscode-jupyter/issues/9828).
+   ([#10568](https://github.com/Microsoft/vscode-jupyter/issues/10568))
+1. Ensure cells in Interactive Window are executed in correct order when executing from both code lenses and the input box.
+   ([#10671](https://github.com/Microsoft/vscode-jupyter/issues/10671))
+1. Do not append/prepend path values unnecessarily.
+   ([#10906](https://github.com/Microsoft/vscode-jupyter/issues/10906))
+1. Ensure user variables overriding `builtins` do not break the dataframe viewer.
+   ([#10941](https://github.com/Microsoft/vscode-jupyter/issues/10941))
+1. Remove duplicate `Cancel` button from modal dialog for interrupting kernels.
+   ([#10999](https://github.com/Microsoft/vscode-jupyter/issues/10999))
+1. Kill all of the child processes spawned by a local kernel when the kernel is shutdown.
+   ([#11018](https://github.com/Microsoft/vscode-jupyter/issues/11018))
+1. Initialize the environment variable `PYDEVD_IPYTHON_COMPATIBLE_DEBUGGING` for the `Python` debugger when debugging `Interactive Window` and `Notebooks`.
+   This also addresses the following issues [10600](https://github.com/microsoft/vscode-jupyter/issues/10600), [10106](https://github.com/microsoft/vscode-jupyter/issues/10106)
+   ([#11033](https://github.com/Microsoft/vscode-jupyter/issues/11033))
+1. Ensure users can connect to `Azure ML Jupyter Server`.
+   ([#11084](https://github.com/Microsoft/vscode-jupyter/issues/11084))
+
+### Code Health
+
+1. Stop creating hidden terminals to look for Jupyter Notebook application.
+   ([#10935](https://github.com/Microsoft/vscode-jupyter/issues/10935))
+1. Fix the test "Export a basic notebook document with nbconvert" CI failure.
+   ([#11190](https://github.com/Microsoft/vscode-jupyter/issues/11190))
+1. Fix the macOS smoke test which is failing every time on CI.
+   ([#11193](https://github.com/Microsoft/vscode-jupyter/issues/11193))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+
 ## 2022.7.110 (12 Aug 2022)
 
 ### Fixes
