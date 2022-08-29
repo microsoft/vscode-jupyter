@@ -292,7 +292,6 @@ export type PickPropertiesOnly<T> = {
  * @param eventName The event name to send.
  * @param properties Properties to send with the event; must be valid for the event.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any,
 export function capturePerfTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof PickPropertiesOnly<P>>(
     eventName: E,
     properties?: P[E] extends TelemetryEventInfo<infer R>
@@ -301,7 +300,6 @@ export function capturePerfTelemetry<This, P extends IEventNamePropertyMapping, 
             : ExcludeType<R, number>
         : undefined
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
-    // eslint-disable-next-line , @typescript-eslint/no-explicit-any
     return function (
         _target: Object,
         _propertyKey: string | symbol,
@@ -370,7 +368,6 @@ export function capturePerfTelemetry<This, P extends IEventNamePropertyMapping, 
  * @param eventName The event name to send.
  * @param properties Properties to send with the event; must be valid for the event.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any,
 export function captureUsageTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     properties?: P[E] extends TelemetryEventInfo<infer R>
@@ -379,7 +376,6 @@ export function captureUsageTelemetry<This, P extends IEventNamePropertyMapping,
             : ExcludeType<R, number>
         : undefined
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
-    // eslint-disable-next-line , @typescript-eslint/no-explicit-any
     return function (
         _target: Object,
         _propertyKey: string | symbol,
