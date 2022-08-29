@@ -5,23 +5,6 @@
 import { IJupyterExtraSettings } from '../../../platform/webviews/types';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
 
-export enum CursorPos {
-    Top,
-    Bottom,
-    Current
-}
-
-// The state we are in for run by line debugging
-export enum DebugState {
-    Break,
-    Design,
-    Run
-}
-
-export function activeDebugState(state: DebugState): boolean {
-    return state === DebugState.Break || state === DebugState.Run;
-}
-
 export type IMainState = {
     busy: boolean;
     skipNextScroll?: boolean;

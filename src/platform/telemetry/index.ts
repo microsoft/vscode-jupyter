@@ -16,12 +16,7 @@ import { IEventNamePropertyMapping } from '../../telemetry';
  * TODO@rebornix
  * `../platform/common/constants/Telemetry` is a re-export from `webview`, it should be moved into `src/telemetry`
  */
-export {
-    JupyterCommands,
-    NativeKeyboardCommandTelemetry,
-    NativeMouseCommandTelemetry,
-    Telemetry
-} from '../common/constants';
+export { JupyterCommands, Telemetry } from '../common/constants';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */

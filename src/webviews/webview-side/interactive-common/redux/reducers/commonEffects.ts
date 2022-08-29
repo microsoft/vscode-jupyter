@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { InteractiveWindowMessages, LoadIPyWidgetClassLoadAction } from '../../../../../messageTypes';
+import { InteractiveWindowMessages } from '../../../../../messageTypes';
 import { IMainState } from '../../../interactive-common/mainState';
 import { storeLocStrings } from '../../../react-common/locReactSide';
 import { postActionToExtension } from '../helpers';
-import { CommonActionType, CommonReducerArg, IOpenSettingsAction } from './types';
+import { CommonActionType, CommonReducerArg } from './types';
 
 export namespace CommonEffects {
     export function activate(arg: CommonReducerArg): IMainState {
@@ -26,19 +26,6 @@ export namespace CommonEffects {
             // This is only applicable for interactive window & not native editor.
             focusPending: prevState.focusPending + 1
         };
-    }
-
-    export function openSettings(arg: CommonReducerArg<CommonActionType, IOpenSettingsAction>): IMainState {
-        postActionToExtension(arg, InteractiveWindowMessages.OpenSettings, arg.payload.data.setting);
-        return arg.prevState;
-    }
-
-    export function handleLoadIPyWidgetClassSuccess(
-        arg: CommonReducerArg<CommonActionType, LoadIPyWidgetClassLoadAction>
-    ): IMainState {
-        // Make sure to tell the extension so it can log telemetry.
-        postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetLoadSuccess, arg.payload.data);
-        return arg.prevState;
     }
 
     // Extension has requested HTML for the webview, get it by ID and send it back as a message

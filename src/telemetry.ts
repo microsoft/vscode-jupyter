@@ -5,12 +5,7 @@
 
 import type { JSONObject } from '@lumino/coreutils';
 // eslint-disable-next-line
-import {
-    JupyterCommands,
-    NativeKeyboardCommandTelemetry,
-    NativeMouseCommandTelemetry,
-    Telemetry
-} from './platform/common/constants';
+import { Telemetry } from './platform/common/constants';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './platform/telemetry/constants';
 import { DebuggingTelemetry } from './notebooks/debugger/constants';
 import { EnvironmentType } from './platform/pythonEnvironments/info';
@@ -165,10 +160,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
 
     /**
-     * Telemetry sent when we're unable to find a KernelSpec connection for Interactive window that can be started usig Python interpreter.
-     */
-    [Telemetry.FailedToFindKernelSpecInterpreterForInteractive]: never | undefined;
-    /**
      * Telemetry sent for local Python Kernels.
      * Tracking whether we have managed to launch the kernel that matches the interpreter.
      * If match=false, then this means we have failed to launch the right kernel.
@@ -180,10 +171,6 @@ export interface IEventNamePropertyMapping {
             | 'startUsingPythonInterpreter'
             | 'startUsingRemoteKernelSpec';
     };
-    /**
-     * Sent when a jupyter session fails to start and we ask the user for a new kernel
-     */
-    [Telemetry.AskUserForNewJupyterKernel]: never | undefined;
     /**
      * Time taken to list the Python interpreters.
      */
@@ -228,7 +215,6 @@ export interface IEventNamePropertyMapping {
          */
         count: number;
     };
-    [Telemetry.HashedNotebookCellOutputMimeTypePerf]: never | undefined;
     [Telemetry.HashedCellOutputMimeType]: {
         /**
          * Hash of the cell output mimetype
@@ -358,7 +344,6 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.AddCellBelow]: never | undefined;
     [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
-    [Telemetry.CollapseAll]: never | undefined;
     [Telemetry.ConnectFailedJupyter]: TelemetryErrorProperties;
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
@@ -376,12 +361,8 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.ConnectRemoteExpiredCertFailedJupyter]: never | undefined;
     [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
-    [Telemetry.UseInterpreterAsKernel]: never | undefined;
-    [Telemetry.UseExistingKernel]: never | undefined;
     [Telemetry.SwitchToExistingKernel]: { language: string };
     [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
-    [Telemetry.ConvertToPythonFile]: never | undefined;
-    [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.CreateNewNotebook]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
     /**
@@ -404,10 +385,6 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when user debugs the file in the IW
      */
     [Telemetry.DebugFileInteractive]: never | undefined;
-    [Telemetry.DeleteAllCells]: never | undefined;
-    [Telemetry.DeleteCell]: never | undefined;
-    [Telemetry.FindJupyterCommand]: { command: string };
-    [Telemetry.FindJupyterKernelSpec]: never | undefined;
     [Telemetry.FailedToUpdateKernelSpec]: never | undefined;
     /**
      * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
@@ -417,7 +394,6 @@ export interface IEventNamePropertyMapping {
      * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
      */
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
-    [Telemetry.ExecuteCellTime]: never | undefined;
     /**
      * Telemetry sent to capture first time execution of a cell.
      * If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.
@@ -438,8 +414,6 @@ export interface IEventNamePropertyMapping {
      * Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.
      */
     [Telemetry.StartExecuteNotebookCellPerceivedCold]: ResourceSpecificTelemetryProperties;
-    [Telemetry.ExpandAll]: never | undefined;
-    [Telemetry.ExportNotebookInteractive]: never | undefined;
     /**
      * User exports a .py file with cells as a Jupyter Notebook.
      */
@@ -477,8 +451,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.GetPasswordAttempt]: never | undefined;
     [Telemetry.GetPasswordFailure]: never | undefined;
     [Telemetry.GetPasswordSuccess]: never | undefined;
-    [Telemetry.GotoSourceCode]: never | undefined;
-    [Telemetry.HiddenCellTime]: never | undefined;
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     /**
      * User interrupts a cell
@@ -498,37 +470,12 @@ export interface IEventNamePropertyMapping {
      * Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.
      */
     [Telemetry.NotebookOpenCount]: { count: number };
-    [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
     [Telemetry.PandasOK]: never | undefined;
     [Telemetry.PandasInstallCanceled]: { version: string };
-    [Telemetry.DebugpyInstallCancelled]: never | undefined;
-    [Telemetry.DebugpyInstallFailed]: never | undefined;
-    [Telemetry.DebugpyPromptToInstall]: never | undefined;
-    [Telemetry.DebugpySuccessfullyInstalled]: never | undefined;
-    [Telemetry.OpenNotebook]: { scope: 'command' | 'file' };
     [Telemetry.OpenNotebookAll]: never | undefined;
-    /**
-     * Telemetry sent with details of the selection of the quick pick for when user creates new notebook.
-     * This only applies with other extensions like .NET registers with us.
-     */
-    [Telemetry.OpenNotebookSelection]: {
-        /**
-         * The id of the extension selected from the dropdown list.
-         * If empty, the user didn't select anything & didn't create a new notebook.
-         */
-        extensionId?: string;
-    };
-    [Telemetry.OpenNotebookSelectionRegistered]: {
-        /**
-         * The id of the extension registering with us to be displayed the dropdown list for notebook creation.
-         */
-        extensionId: string;
-    };
-    [Telemetry.OpenedInteractiveWindow]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
-    [Telemetry.Redo]: never | undefined;
     /**
      * Total time taken to restart a kernel.
      * Identical to `Telemetry.RestartKernel`
@@ -552,10 +499,6 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.RunSelectionOrLine]: never | undefined;
     /**
-     * Run a Cell in Interactive Python
-     */
-    [Telemetry.RunCell]: never | undefined;
-    /**
      * Run the current Cell in Interactive Python
      */
     [Telemetry.RunCurrentCell]: never | undefined;
@@ -577,7 +520,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunToLine]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
-    [Telemetry.ScrolledToCell]: never | undefined;
     /**
      * Cell Edit Commands in Interactive Python
      */
@@ -595,13 +537,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ChangeCellToCode]: never | undefined;
     [Telemetry.GotoNextCellInFile]: never | undefined;
     [Telemetry.GotoPrevCellInFile]: never | undefined;
-    /**
-     * Misc
-     */
-    [Telemetry.AddEmptyCellToBottom]: never | undefined;
     [Telemetry.RunCurrentCellAndAddBelow]: never | undefined;
-    [Telemetry.CellCount]: { count: number };
-    [Telemetry.Save]: never | undefined;
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
@@ -613,15 +549,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SelectRemoteJupyterKernel]: never | undefined;
     [Telemetry.SessionIdleTimeout]: never | undefined;
     [Telemetry.JupyterNotInstalledErrorShown]: never | undefined;
-    [Telemetry.JupyterCommandSearch]: {
-        where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere';
-        command: JupyterCommands;
-    };
     [Telemetry.UserInstalledJupyter]: never | undefined;
     [Telemetry.UserInstalledPandas]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
-    [Telemetry.FailedToInstallPandas]: never | undefined;
     [Telemetry.PythonNotInstalled]: {
         action:
             | 'displayed' // Message displayed.
@@ -638,13 +569,6 @@ export interface IEventNamePropertyMapping {
         action:
             | 'success' // Correctly installed and hooked the API
             | 'failed'; // Failed to install correctly
-    };
-    [Telemetry.KernelNotInstalled]: {
-        action: 'displayed'; // Message displayed.
-        /**
-         * Language found in the notebook if a known language. Otherwise 'unknown'
-         */
-        language: string;
     };
     [Telemetry.PythonModuleInstall]: {
         moduleName: string;
@@ -713,22 +637,10 @@ export interface IEventNamePropertyMapping {
      * @memberof IEventNamePropertyMapping
      */
     [Telemetry.JupyterInstalledButNotKernelSpecModule]: never | undefined;
-    [Telemetry.JupyterStartTimeout]: {
-        /**
-         * Total time spent in attempting to start and connect to jupyter before giving up.
-         *
-         * @type {number}
-         */
-        timeout: number;
-    };
-    [Telemetry.SubmitCellThroughInput]: never | undefined;
-    [Telemetry.Undo]: never | undefined;
     [Telemetry.VariableExplorerFetchTime]: never | undefined;
-    [Telemetry.VariableExplorerToggled]: { open: boolean; runByLine: boolean };
     [Telemetry.VariableExplorerVariableCount]: { variableCount: number };
     [Telemetry.WaitForIdleJupyter]: never | undefined;
     [Telemetry.WebviewStartup]: { type: string };
-    [Telemetry.WebviewStyleUpdate]: never | undefined;
     [Telemetry.RegisterInterpreterAsKernel]: never | undefined;
     /**
      * Telemetry sent when user selects an interpreter to start jupyter server.
@@ -749,66 +661,6 @@ export interface IEventNamePropertyMapping {
         result?: 'notSelected' | 'selected' | 'installationCancelled';
     };
     [Telemetry.SelectJupyterInterpreterMessageDisplayed]: undefined | never;
-    [NativeKeyboardCommandTelemetry.ArrowDown]: never | undefined;
-    [NativeKeyboardCommandTelemetry.ArrowUp]: never | undefined;
-    [NativeKeyboardCommandTelemetry.ChangeToCode]: never | undefined;
-    [NativeKeyboardCommandTelemetry.ChangeToMarkdown]: never | undefined;
-    [NativeKeyboardCommandTelemetry.DeleteCell]: never | undefined;
-    [NativeKeyboardCommandTelemetry.InsertAbove]: never | undefined;
-    [NativeKeyboardCommandTelemetry.InsertBelow]: never | undefined;
-    [NativeKeyboardCommandTelemetry.Redo]: never | undefined;
-    [NativeKeyboardCommandTelemetry.Run]: never | undefined;
-    [NativeKeyboardCommandTelemetry.RunAndAdd]: never | undefined;
-    [NativeKeyboardCommandTelemetry.RunAndMove]: never | undefined;
-    [NativeKeyboardCommandTelemetry.Save]: never | undefined;
-    [NativeKeyboardCommandTelemetry.ToggleLineNumbers]: never | undefined;
-    [NativeKeyboardCommandTelemetry.ToggleOutput]: never | undefined;
-    [NativeKeyboardCommandTelemetry.Undo]: never | undefined;
-    [NativeKeyboardCommandTelemetry.Unfocus]: never | undefined;
-    [NativeMouseCommandTelemetry.AddToEnd]: never | undefined;
-    [NativeMouseCommandTelemetry.ChangeToCode]: never | undefined;
-    [NativeMouseCommandTelemetry.ChangeToMarkdown]: never | undefined;
-    [NativeMouseCommandTelemetry.DeleteCell]: never | undefined;
-    [NativeMouseCommandTelemetry.InsertBelow]: never | undefined;
-    [NativeMouseCommandTelemetry.MoveCellDown]: never | undefined;
-    [NativeMouseCommandTelemetry.MoveCellUp]: never | undefined;
-    [NativeMouseCommandTelemetry.Run]: never | undefined;
-    [NativeMouseCommandTelemetry.RunAbove]: never | undefined;
-    [NativeMouseCommandTelemetry.RunAll]: never | undefined;
-    [NativeMouseCommandTelemetry.RunBelow]: never | undefined;
-    [NativeMouseCommandTelemetry.Save]: never | undefined;
-    [NativeMouseCommandTelemetry.SelectKernel]: never | undefined;
-    [NativeMouseCommandTelemetry.SelectServer]: never | undefined;
-    [NativeMouseCommandTelemetry.ToggleVariableExplorer]: never | undefined;
-    /**
-     * Telemetry event sent once done searching for kernel spec and interpreter for a local connection.
-     *
-     * @type {{
-     *         kernelSpecFound: boolean;
-     *         interpreterFound: boolean;
-     *     }}
-     * @memberof IEventNamePropertyMapping
-     */
-    [Telemetry.FindKernelForLocalConnection]: {
-        /**
-         * Whether a kernel spec was found.
-         *
-         * @type {boolean}
-         */
-        kernelSpecFound: boolean;
-        /**
-         * Whether an interpreter was found.
-         *
-         * @type {boolean}
-         */
-        interpreterFound: boolean;
-        /**
-         * Whether user was prompted to select a kernel spec.
-         *
-         * @type {boolean}
-         */
-        promptedToSelect?: boolean;
-    };
     /**
      * Telemetry event sent when starting a session for a local connection failed.
      *
@@ -816,26 +668,6 @@ export interface IEventNamePropertyMapping {
      * @memberof IEventNamePropertyMapping
      */
     [Telemetry.StartSessionFailedJupyter]: undefined | never;
-    /**
-     * Telemetry event fired if a failure occurs loading a notebook
-     */
-    [Telemetry.OpenNotebookFailure]: undefined | never;
-    /**
-     * Telemetry event sent to capture total time taken for completions list to be provided by LS.
-     * This is used to compare against time taken by Jupyter.
-     *
-     * @type {(undefined | never)}
-     * @memberof IEventNamePropertyMapping
-     */
-    [Telemetry.CompletionTimeFromLS]: undefined | never;
-    /**
-     * Telemetry event sent to capture total time taken for completions list to be provided by Jupyter.
-     * This is used to compare against time taken by LS.
-     *
-     * @type {(undefined | never)}
-     * @memberof IEventNamePropertyMapping
-     */
-    [Telemetry.CompletionTimeFromJupyter]: undefined | never;
     /**
      * Telemetry event sent to indicate the language used in a notebook
      *
@@ -871,33 +703,6 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.KernelSpecNotFound]: undefined | never;
     /**
-     * Telemetry event sent to indicate registering a kernel with jupyter failed.
-     *
-     * @type {(undefined | never)}
-     * @memberof IEventNamePropertyMapping
-     */
-    [Telemetry.KernelRegisterFailed]: undefined | never;
-    /**
-     * Telemetry event sent to every time a kernel enumeration is done
-     *
-     * @type {...}
-     * @memberof IEventNamePropertyMapping
-     */
-    [Telemetry.KernelEnumeration]: {
-        /**
-         * Count of the number of kernels found
-         */
-        count: number;
-        /**
-         * Boolean indicating if any are python or not
-         */
-        isPython: boolean;
-        /**
-         * Indicates how the enumeration was acquired.
-         */
-        source: 'cli' | 'connection';
-    };
-    /**
      * Total time taken to Launch a raw kernel.
      */
     [Telemetry.KernelLauncherPerf]: undefined | never | TelemetryErrorProperties;
@@ -910,10 +715,6 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.KernelProviderPerf]: undefined | never;
     /**
-     * Total time taken to get the preferred kernel for notebook.
-     */
-    [Telemetry.GetPreferredKernelPerf]: undefined | never;
-    /**
      * Telemetry sent when we have attempted to find the preferred kernel.
      */
     [Telemetry.PreferredKernel]: {
@@ -922,25 +723,6 @@ export interface IEventNamePropertyMapping {
         resourceType: 'notebook' | 'interactive'; // Whether its a notebook or interactive window.
         hasActiveInterpreter?: boolean; // Whether we have an active interpreter or not.
     };
-    /**
-     * Telemetry event sent if there's an error installing a jupyter required dependency
-     *
-     * @type { product: string }
-     * @memberof IEventNamePropertyMapping
-     */
-    [Telemetry.JupyterInstallFailed]: {
-        /**
-         * Product being installed (jupyter or ipykernel or other)
-         */
-        product: string;
-    };
-    /**
-     * Telemetry event sent when installing a jupyter dependency
-     *
-     * @type {product: string}
-     * @memberof IEventNamePropertyMapping
-     */
-    [Telemetry.UserInstalledModule]: { product: string };
     /**
      * Telemetry event sent to when user customizes the jupyter command line
      * @type {(undefined | never)}
@@ -1030,19 +812,6 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure]: { moduleHash: string; moduleVersion: string };
     /**
-     * Telemetry event sent when an loading of 3rd party ipywidget JS scripts from 3rd party source has been disabled.
-     */
-    [Telemetry.IPyWidgetLoadDisabled]: { moduleHash: string; moduleVersion: string };
-    /**
-     * Total time taken to discover a widget script on CDN.
-     */
-    [Telemetry.DiscoverIPyWidgetNamesCDNPerf]: {
-        // The CDN we were testing.
-        cdn: string;
-        // Whether we managed to find the widget on the CDN or not.
-        exists: boolean;
-    };
-    /**
      * Telemetry sent when we prompt user to use a CDN for IPyWidget scripts.
      * This is always sent when we display a prompt.
      */
@@ -1092,8 +861,6 @@ export interface IEventNamePropertyMapping {
         timedout: boolean;
     };
     [Telemetry.JupyterCreatingNotebook]: never | undefined | TelemetryErrorProperties;
-    // Telemetry sent when starting auto starting Native Notebook kernel fails silently.
-    [Telemetry.KernelStartFailedAndUIDisabled]: never | undefined;
 
     // Raw kernel timing events
     [Telemetry.RawKernelSessionConnect]: never | undefined;
@@ -1169,7 +936,6 @@ export interface IEventNamePropertyMapping {
         | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
     [Telemetry.RawKernelSessionStartSuccess]: never | undefined;
     [Telemetry.RawKernelSessionStartException]: never | undefined;
-    [Telemetry.RawKernelSessionStartTimeout]: never | undefined;
     [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
     [Telemetry.RawKernelSessionStartNoIpykernel]: {
         reason: KernelInterpreterDependencyResponse;
@@ -1219,9 +985,6 @@ export interface IEventNamePropertyMapping {
     };
 
     // Run by line events
-    [Telemetry.RunByLineStart]: never | undefined;
-    [Telemetry.RunByLineStep]: never | undefined;
-    [Telemetry.RunByLineStop]: never | undefined;
     [Telemetry.RunByLineVariableHover]: never | undefined;
 
     // Misc
@@ -1241,10 +1004,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.VSCNotebookCellTranslationFailed]: {
         isErrorOutput: boolean; // Whether we're trying to translate an error output when we shuldn't be.
     };
-
-    // Sync events
-    [Telemetry.SyncAllCells]: never | undefined;
-    [Telemetry.SyncSingleCell]: never | undefined;
 
     // When users connect to a remote kernel, we store the kernel id so we can re-connect to that
     // when user opens the same notebook. We only store the last 100.

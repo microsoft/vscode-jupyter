@@ -28,7 +28,6 @@ import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
-import { SysInfoReason } from '../messageTypes';
 import { getNormalizedInterpreterPath, getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../platform/telemetry/helpers';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
@@ -225,27 +224,6 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
     return `${prefixForRemoteKernels}${
         spec.id || ''
     }.${specName}.${specPath}.${interpreterPath}.${argsForGenerationOfId}`;
-}
-
-export function getSysInfoReasonHeader(
-    reason: SysInfoReason,
-    connection: KernelConnectionMetadata | undefined
-): string {
-    const displayName = getDisplayNameOrNameOfKernelConnection(connection);
-    switch (reason) {
-        case SysInfoReason.Start:
-        case SysInfoReason.New:
-            return DataScience.startedNewKernelHeader().format(displayName);
-        case SysInfoReason.Restart:
-            return DataScience.restartedKernelHeader().format(displayName);
-        case SysInfoReason.Interrupt:
-            return DataScience.pythonInterruptFailedHeader();
-        case SysInfoReason.Connect:
-            return DataScience.connectKernelHeader().format(displayName);
-        default:
-            traceError('Invalid SysInfoReason');
-            return '';
-    }
 }
 
 export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelConnectionMetadata | undefined) {
