@@ -302,6 +302,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -497,11 +502,11 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.GET_PASSWORD_ATTEMPT  (Telemetry.GetPasswordAttempt)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DATASCIENCE.GOTO_NEXT_CELL_IN_FILE  (Telemetry.GotoNextCellInFile)  
@@ -563,11 +568,11 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DATASCIENCE.JUPYTER_KERNEL_API_ACCESS  (Telemetry.JupyterKernelApiAccess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `extensionId`: `string`  
         - `allowed`: `<see below>`  
@@ -578,7 +583,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.JUPYTER_KERNEL_API_USAGE  (Telemetry.JupyterKernelApiUsage)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `extensionId`: `string`  
         - `pemUsed`: `keyof IExportedKernelService`  
@@ -598,7 +602,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN  (Telemetry.JupyterNotInstalledErrorShown)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.KERNEL_CRASH  (Telemetry.KernelCrash)  
@@ -619,6 +622,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -678,7 +686,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.KERNEL_SPEC_LANGUAGE  (Telemetry.KernelSpecLanguage)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `language`: `string`  
         Language of the kernelSpec.  
@@ -701,11 +708,11 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK  (Telemetry.CreateNewNotebook)  
       Owner: [@unknown](https://github.com/unknown)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken.  
 
 
 * DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL  (Telemetry.OpenNotebookAll)  
@@ -755,6 +762,11 @@ Expand each section to see more information about that event.
             - `resourceHash`?: `string`  
             Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
             If we run the same notebook tomorrow, the hash will be the same.  
+            Used to check whether a particular notebook fails across time or not.  
+            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+            and have a better understanding of what is going on, e.g. why something failed.  
             - `kernelSessionId`: `string`  
             Unique identifier for an instance of a notebook session.  
             If we restart or run this notebook tomorrow, this id will be different.  
@@ -797,6 +809,7 @@ Expand each section to see more information about that event.
             - `duration`: `number`  
             Duration of a measure in milliseconds.  
             Common measurement used across a number of events.  
+            Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
             - `pythonEnvironmentCount`?: `number`  
             Total number of python environments.  
             - `interruptCount`?: `number`  
@@ -830,6 +843,11 @@ Expand each section to see more information about that event.
             - `resourceHash`?: `string`  
             Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
             If we run the same notebook tomorrow, the hash will be the same.  
+            Used to check whether a particular notebook fails across time or not.  
+            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+            and have a better understanding of what is going on, e.g. why something failed.  
             - `kernelSessionId`: `string`  
             Unique identifier for an instance of a notebook session.  
             If we restart or run this notebook tomorrow, this id will be different.  
@@ -876,6 +894,7 @@ Expand each section to see more information about that event.
             A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
             - `failureSubCategory`?: `string`  
             Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
+            Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
             - `pythonErrorFile`?: `string`  
             Hash of the file name that contains the file in the last frame (from Python stack trace).  
             - `pythonErrorFolder`?: `string`  
@@ -886,6 +905,7 @@ Expand each section to see more information about that event.
             - `duration`: `number`  
             Duration of a measure in milliseconds.  
             Common measurement used across a number of events.  
+            Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
             - `pythonEnvironmentCount`?: `number`  
             Total number of python environments.  
             - `interruptCount`?: `number`  
@@ -906,7 +926,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.NOTEBOOK_LANGUAGE  (Telemetry.NotebookLanguage)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent to indicate the language used in a notebook  
     ```
@@ -944,6 +963,11 @@ Expand each section to see more information about that event.
             - `resourceHash`?: `string`  
             Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
             If we run the same notebook tomorrow, the hash will be the same.  
+            Used to check whether a particular notebook fails across time or not.  
+            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+            and have a better understanding of what is going on, e.g. why something failed.  
             - `kernelSessionId`: `string`  
             Unique identifier for an instance of a notebook session.  
             If we restart or run this notebook tomorrow, this id will be different.  
@@ -986,6 +1010,7 @@ Expand each section to see more information about that event.
             - `duration`: `number`  
             Duration of a measure in milliseconds.  
             Common measurement used across a number of events.  
+            Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
             - `pythonEnvironmentCount`?: `number`  
             Total number of python environments.  
             - `interruptCount`?: `number`  
@@ -1019,6 +1044,11 @@ Expand each section to see more information about that event.
             - `resourceHash`?: `string`  
             Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
             If we run the same notebook tomorrow, the hash will be the same.  
+            Used to check whether a particular notebook fails across time or not.  
+            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+            and have a better understanding of what is going on, e.g. why something failed.  
             - `kernelSessionId`: `string`  
             Unique identifier for an instance of a notebook session.  
             If we restart or run this notebook tomorrow, this id will be different.  
@@ -1065,6 +1095,7 @@ Expand each section to see more information about that event.
             A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
             - `failureSubCategory`?: `string`  
             Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
+            Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
             - `pythonErrorFile`?: `string`  
             Hash of the file name that contains the file in the last frame (from Python stack trace).  
             - `pythonErrorFolder`?: `string`  
@@ -1114,6 +1145,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -1160,6 +1196,7 @@ Expand each section to see more information about that event.
         A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
+        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorFolder`?: `string`  
@@ -1235,7 +1272,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RESTART_KERNEL_COMMAND  (Telemetry.RestartKernelCommand)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when IW or Notebook is restarted.  
     ```
@@ -1256,6 +1292,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -1573,7 +1614,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command  (Telemetry.SelectJupyterInterpreterCommand)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry sent when user selects an interpreter to start jupyter server.  
     ```
@@ -1609,6 +1649,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -1685,6 +1730,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -1744,12 +1794,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SELFCERTSMESSAGECLOSE  (Telemetry.SelfCertsMessageClose)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.SELFCERTSMESSAGEENABLED  (Telemetry.SelfCertsMessageEnabled)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.SET_JUPYTER_URI_LOCAL  (Telemetry.SetJupyterURIToLocal)  
@@ -1824,7 +1872,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER  (Telemetry.UserDidNotInstallJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS  (Telemetry.UserDidNotInstallPandas)  
@@ -1835,7 +1882,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.USER_INSTALLED_JUPYTER  (Telemetry.UserInstalledJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.USER_INSTALLED_PANDAS  (Telemetry.UserInstalledPandas)  
@@ -1873,7 +1919,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF  (Telemetry.ActiveInterpreterListingPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `firstTime`?: `boolean`  
         Whether this is the first time in the session.  
@@ -1896,7 +1941,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.COMMAND_EXECUTED  (Telemetry.CommandExecuted)  
       Owner: [@unknown](https://github.com/unknown)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry sent when a command is executed.  
     ```
@@ -1908,7 +1952,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTFAILEDJUPYTER  (Telemetry.ConnectFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `failed`: `true`  
         Whether there was a failure.  
@@ -1918,6 +1961,7 @@ Expand each section to see more information about that event.
         A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
+        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorFolder`?: `string`  
@@ -1928,12 +1972,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTLOCALJUPYTER  (Telemetry.ConnectLocalJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.CONNECTREMOTEEXPIREDCERTFAILEDJUPYTER  (Telemetry.ConnectRemoteExpiredCertFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Jupyter server's certificate has expired.  
     ```
@@ -1942,7 +1984,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER  (Telemetry.ConnectRemoteFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `failed`: `true`  
         Whether there was a failure.  
@@ -1952,6 +1993,7 @@ Expand each section to see more information about that event.
         A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
+        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorFolder`?: `string`  
@@ -1962,12 +2004,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTREMOTEJUPYTER  (Telemetry.ConnectRemoteJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST  (Telemetry.ConnectRemoteJupyterViaLocalHost)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Connecting to an existing Jupyter server, but connecting to localhost.  
     ```
@@ -1976,7 +2016,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER  (Telemetry.ConnectRemoteSelfCertFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Jupyter server's certificate is not from a trusted authority.  
     ```
@@ -1985,7 +2024,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER  (Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `pythonExtensionInstalled`: `boolean`  
         Indicates whether the python extension is installed.  
@@ -2006,6 +2044,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -2080,6 +2123,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM  (Telemetry.ExecuteCellPerceivedWarm)  
@@ -2100,16 +2144,15 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC  (Telemetry.FailedToUpdateKernelSpec)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES  (Telemetry.GetActivatedEnvironmentVariables)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Used to capture time taken to get environment variables for a python environment.  
     Also lets us know whether it worked or not.  
@@ -2169,21 +2212,19 @@ Expand each section to see more information about that event.
     - Measures:  
         - `duration`: `number`  
         Time taken.  
+        Total time taken to list interpreters. Total time taken to list kernels.  
 
 
 * DS_INTERNAL.GET_PASSWORD_FAILURE  (Telemetry.GetPasswordFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.GET_PASSWORD_SUCCESS  (Telemetry.GetPasswordSuccess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE  (Telemetry.HashedCellOutputMimeType)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Hash of the mime type of a cell output.  
     Used to detect the popularity of a mime type, that would help determine which mime types are most common.  
@@ -2233,7 +2274,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.INTERPRETER_LISTING_PERF  (Telemetry.InterpreterListingPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Time taken to list the Python interpreters.  
     ```
@@ -2250,7 +2290,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.INTERRUPT_JUPYTER_TIME  (Telemetry.InterruptJupyterTime)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     User interrupts a cell  
     Identical to `Telemetry.Interrupt`  
@@ -2260,11 +2299,11 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.INVALID_KERNEL_USED  (Telemetry.KernelInvalid)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when a kernel picked crashes on startup  
     ```
@@ -2422,6 +2461,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE  (Telemetry.IPyWidgetUnhandledMessage)  
@@ -2483,6 +2523,11 @@ Expand each section to see more information about that event.
             - `resourceHash`?: `string`  
             Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
             If we run the same notebook tomorrow, the hash will be the same.  
+            Used to check whether a particular notebook fails across time or not.  
+            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+            and have a better understanding of what is going on, e.g. why something failed.  
             - `kernelSessionId`: `string`  
             Unique identifier for an instance of a notebook session.  
             If we restart or run this notebook tomorrow, this id will be different.  
@@ -2529,6 +2574,7 @@ Expand each section to see more information about that event.
             A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
             - `failureSubCategory`?: `string`  
             Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
+            Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
             - `pythonErrorFile`?: `string`  
             Hash of the file name that contains the file in the last frame (from Python stack trace).  
             - `pythonErrorFolder`?: `string`  
@@ -2539,6 +2585,7 @@ Expand each section to see more information about that event.
             - `duration`: `number`  
             Duration of a measure in milliseconds.  
             Common measurement used across a number of events.  
+            Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
             - `pythonEnvironmentCount`?: `number`  
             Total number of python environments.  
             - `interruptCount`?: `number`  
@@ -2572,6 +2619,11 @@ Expand each section to see more information about that event.
             - `resourceHash`?: `string`  
             Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
             If we run the same notebook tomorrow, the hash will be the same.  
+            Used to check whether a particular notebook fails across time or not.  
+            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+            and have a better understanding of what is going on, e.g. why something failed.  
             - `kernelSessionId`: `string`  
             Unique identifier for an instance of a notebook session.  
             If we restart or run this notebook tomorrow, this id will be different.  
@@ -2614,6 +2666,7 @@ Expand each section to see more information about that event.
             - `duration`: `number`  
             Duration of a measure in milliseconds.  
             Common measurement used across a number of events.  
+            Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
             - `pythonEnvironmentCount`?: `number`  
             Total number of python environments.  
             - `interruptCount`?: `number`  
@@ -2634,7 +2687,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE  (Telemetry.JupyterCommandLineNonDefault)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent to when user customizes the jupyter command line  
     ```
@@ -2643,12 +2695,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTER_IDLE_TIMEOUT  (Telemetry.SessionIdleTimeout)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE  (Telemetry.JupyterInstalledButNotKernelSpecModule)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.  
     ```
@@ -2657,25 +2707,24 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL  (Telemetry.RegisterInterpreterAsKernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.JUPYTERSTARTUPCOST  (Telemetry.StartJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.KERNEL_COUNT  (Telemetry.KernelCount)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -2692,6 +2741,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -2745,6 +2799,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
         - `pythonEnvironmentCount`?: `number`  
         Total number of python environments.  
         - `interruptCount`?: `number`  
@@ -2757,15 +2812,17 @@ Expand each section to see more information about that event.
         Number of times the kernel was changed.  
         - `kernelSpecCount`: `number`  
         Total number of kernel specs in the kernel spec list.  
+        Total number of kernel specs in the kernel list.  
         - `kernelInterpreterCount`: `number`  
         Total number of interpreters in the kernel spec list.  
+        Total number of interpreters in the kernel list.  
         - `kernelLiveCount`: `number`  
         Total number of live kernels in the kernel spec list.  
+        Total number of live kernels in the kernel list.  
 
 
 * DS_INTERNAL.KERNEL_LAUNCHER_PERF  (Telemetry.KernelLauncherPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total time taken to Launch a raw kernel.  
     ```
@@ -2787,6 +2844,11 @@ Expand each section to see more information about that event.
             - `resourceHash`?: `string`  
             Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
             If we run the same notebook tomorrow, the hash will be the same.  
+            Used to check whether a particular notebook fails across time or not.  
+            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+            and have a better understanding of what is going on, e.g. why something failed.  
             - `kernelSessionId`: `string`  
             Unique identifier for an instance of a notebook session.  
             If we restart or run this notebook tomorrow, this id will be different.  
@@ -2829,6 +2891,7 @@ Expand each section to see more information about that event.
             - `duration`: `number`  
             Duration of a measure in milliseconds.  
             Common measurement used across a number of events.  
+            Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
             - `pythonEnvironmentCount`?: `number`  
             Total number of python environments.  
             - `interruptCount`?: `number`  
@@ -2855,6 +2918,7 @@ Expand each section to see more information about that event.
             A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
             - `failureSubCategory`?: `string`  
             Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
+            Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
             - `pythonErrorFile`?: `string`  
             Hash of the file name that contains the file in the last frame (from Python stack trace).  
             - `pythonErrorFolder`?: `string`  
@@ -2865,7 +2929,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.KERNEL_LISTING_PERF  (Telemetry.KernelListingPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `firstTime`?: `boolean`  
         Whether this is the first time in the session.  
@@ -2882,11 +2945,11 @@ Expand each section to see more information about that event.
     - Measures:  
         - `duration`: `number`  
         Total time taken to list kernels.  
+        Total time taken to list interpreters.  
 
 
 * DS_INTERNAL.KERNEL_PROVIDER_PERF  (Telemetry.KernelProviderPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total time taken to list kernels for VS Code.  
     ```
@@ -2895,7 +2958,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.KERNEL_SPEC_NOT_FOUND  (Telemetry.KernelSpecNotFound)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent to indicate 'jupyter kernelspec' is not possible.  
     ```
@@ -2904,7 +2966,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT  (Telemetry.NumberOfLocalKernelSpecs)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total number of Local kernel specifications.  
     ```
@@ -2932,7 +2993,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT  (Telemetry.NotebookOpenCount)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.  
     ```
@@ -2943,7 +3003,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT  (Telemetry.NotebookRunCount)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total number of cells executed. Telemetry Sent when VS Code is closed.  
     ```
@@ -2994,6 +3053,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -3036,6 +3100,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
         - `pythonEnvironmentCount`?: `number`  
         Total number of python environments.  
         - `interruptCount`?: `number`  
@@ -3111,7 +3176,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES  (Telemetry.PythonKerneExecutableMatches)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry sent for local Python Kernels.  
     Tracking whether we have managed to launch the kernel that matches the interpreter.  
@@ -3134,7 +3198,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_MODULE_INSTALL  (Telemetry.PythonModuleInstall)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `moduleName`: `string`  
         - `isModulePresent`?: `<see below>`  
@@ -3185,6 +3248,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.PYTHON_NOT_INSTALLED  (Telemetry.PythonNotInstalled)  
@@ -3220,6 +3284,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.RAWKERNEL_INFO_RESPONSE  (Telemetry.RawKernelInfoResponse)  
@@ -3249,6 +3314,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -3293,6 +3363,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
         - `pythonEnvironmentCount`?: `number`  
         Total number of python environments.  
         - `interruptCount`?: `number`  
@@ -3317,6 +3388,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.RAWKERNEL_SESSION_CONNECT  (Telemetry.RawKernelSessionConnect)  
@@ -3337,6 +3409,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -3379,6 +3456,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
         - `pythonEnvironmentCount`?: `number`  
         Total number of python environments.  
         - `interruptCount`?: `number`  
@@ -3425,6 +3503,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -3510,6 +3593,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -3588,6 +3676,7 @@ Expand each section to see more information about that event.
         A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
+        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorFolder`?: `string`  
@@ -3637,6 +3726,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -3713,6 +3807,11 @@ Expand each section to see more information about that event.
             - `resourceHash`?: `string`  
             Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
             If we run the same notebook tomorrow, the hash will be the same.  
+            Used to check whether a particular notebook fails across time or not.  
+            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+            and have a better understanding of what is going on, e.g. why something failed.  
             - `kernelSessionId`: `string`  
             Unique identifier for an instance of a notebook session.  
             If we restart or run this notebook tomorrow, this id will be different.  
@@ -3755,6 +3854,7 @@ Expand each section to see more information about that event.
             - `duration`: `number`  
             Duration of a measure in milliseconds.  
             Common measurement used across a number of events.  
+            Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
             - `pythonEnvironmentCount`?: `number`  
             Total number of python environments.  
             - `interruptCount`?: `number`  
@@ -3774,7 +3874,9 @@ Expand each section to see more information about that event.
     - `Sent when we fail to restart a kernel and have a failureCategory.`:  
         - Properties:  
             - `failed`: `true`  
+            Whether there was a failure.  
             - `failureCategory`: `<see below>`  
+            A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
             Possible values include:  
                 - `cancelled`  
                 - `timeout`  
@@ -3817,6 +3919,11 @@ Expand each section to see more information about that event.
             - `resourceHash`?: `string`  
             Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
             If we run the same notebook tomorrow, the hash will be the same.  
+            Used to check whether a particular notebook fails across time or not.  
+            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+            and have a better understanding of what is going on, e.g. why something failed.  
             - `kernelSessionId`: `string`  
             Unique identifier for an instance of a notebook session.  
             If we restart or run this notebook tomorrow, this id will be different.  
@@ -3889,6 +3996,11 @@ Expand each section to see more information about that event.
             - `resourceHash`?: `string`  
             Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
             If we run the same notebook tomorrow, the hash will be the same.  
+            Used to check whether a particular notebook fails across time or not.  
+            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+            and have a better understanding of what is going on, e.g. why something failed.  
             - `kernelSessionId`: `string`  
             Unique identifier for an instance of a notebook session.  
             If we restart or run this notebook tomorrow, this id will be different.  
@@ -3935,6 +4047,7 @@ Expand each section to see more information about that event.
             A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
             - `failureSubCategory`?: `string`  
             Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
+            Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
             - `pythonErrorFile`?: `string`  
             Hash of the file name that contains the file in the last frame (from Python stack trace).  
             - `pythonErrorFolder`?: `string`  
@@ -3978,6 +4091,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -4053,6 +4171,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -4128,6 +4251,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -4191,16 +4319,15 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL  (Telemetry.RegisterAndUseInterpreterAsKernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT  (Telemetry.NumberOfRemoteKernelSpecs)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total number of Remote kernel specifications.  
     ```
@@ -4221,6 +4348,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.RESTART_KERNEL  (Telemetry.RestartKernel)  
@@ -4234,6 +4362,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.RUNTEST  (Telemetry.RunTest)  
@@ -4251,7 +4380,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.SELECT_JUPYTER_INTERPRETER  (Telemetry.SelectJupyterInterpreter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `result`?: `<see below>`  
         The result of the selection.  
@@ -4266,7 +4394,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.SELECT_JUPYTER_INTERPRETER_MESSAGE_DISPLAYED  (Telemetry.SelectJupyterInterpreterMessageDisplayed)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.SHIFTENTER_BANNER_SHOWN  (Telemetry.ShiftEnterBannerShown)  
@@ -4324,6 +4451,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -4366,6 +4498,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
         - `pythonEnvironmentCount`?: `number`  
         Total number of python environments.  
         - `interruptCount`?: `number`  
@@ -4386,16 +4519,15 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.START_JUPYTER_PROCESS  (Telemetry.StartJupyterProcess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.START_SESSION_FAILED_JUPYTER  (Telemetry.StartSessionFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when starting a session for a local connection failed.  
     ```
@@ -4425,6 +4557,11 @@ Expand each section to see more information about that event.
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
         - `kernelSessionId`: `string`  
         Unique identifier for an instance of a notebook session.  
         If we restart or run this notebook tomorrow, this id will be different.  
@@ -4524,11 +4661,11 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER  (Telemetry.WaitForIdleJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.WEB_FETCH_ERROR  (Telemetry.FetchError)  
@@ -4556,7 +4693,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING  (Telemetry.ZMQSupported)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when the ZMQ native binaries do work.  
     ```
@@ -4565,7 +4701,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.ZMQ_NATIVE_BINARIES_NOT_LOADING  (Telemetry.ZMQNotSupported)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when the ZMQ native binaries do not work.  
     ```
@@ -4574,7 +4709,6 @@ Expand each section to see more information about that event.
 
 * ENVFILE_VARIABLE_SUBSTITUTION  (EventName.ENVFILE_VARIABLE_SUBSTITUTION)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when substituting Environment variables to calculate value of variables.  
     E.g. user has a a .env file with tokens that need to be replaced with env variables.  
@@ -4586,7 +4720,6 @@ Expand each section to see more information about that event.
 
 * ENVFILE_WORKSPACE  (EventName.ENVFILE_WORKSPACE)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when an environment file is detected in the workspace.  
     ```
@@ -4598,7 +4731,6 @@ Expand each section to see more information about that event.
 
 * ERROR  (ERROR)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `failureCategory`: `'methodException'`  
         - `failureSubCategory`: `string`  
@@ -4611,6 +4743,7 @@ Expand each section to see more information about that event.
         A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
+        Name of the method in the extension that threw the exception.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorFolder`?: `string`  
@@ -4621,7 +4754,6 @@ Expand each section to see more information about that event.
 
 * EXTENSION.LOAD  (EventName.EXTENSION_LOAD)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent with perf measures related to activation and loading of extension.  
     ```
@@ -4641,7 +4773,6 @@ Expand each section to see more information about that event.
 
 * HASHED_PACKAGE_NAME  (EventName.HASHED_PACKAGE_NAME)  
       Owner: [@unknown](https://github.com/unknown)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent with hash of an imported python package.  
     Used to detect the popularity of a package, that would help determine which packages  
@@ -4655,14 +4786,13 @@ Expand each section to see more information about that event.
 
 * HASHED_PACKAGE_PERF  (EventName.HASHED_PACKAGE_PERF)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken.  
 
 
 * JUPYTER_EXPERIMENTS_OPT_IN_OUT  (EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT)  
       Owner: [@unknown](https://github.com/unknown)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent with details when a user has requested to opt it or out of an experiment group  
     ```
@@ -4722,7 +4852,6 @@ Expand each section to see more information about that event.
 
 * PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES  (EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `hasEnvVars`?: `boolean`  
         Carries `true` if environment variables are present, `false` otherwise  

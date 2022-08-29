@@ -126,7 +126,7 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
         if (m.kind === ts.SyntaxKind.PropertySignature && ts.isPropertySignature(m)) {
             const name = m.name.getText();
             const anyM = m as unknown as { jsDoc?: { comment: string }[] };
-            const descriptions = Array.isArray(anyM.jsDoc) ? anyM.jsDoc[0].comment.split(/\r?\n/) || '' : '';
+            const descriptions = Array.isArray(anyM.jsDoc) ? anyM.jsDoc[0].comment.split(/\r?\n/) || [] : [];
             let possibleValues: { value: string; comment?: string | string[] }[] = [];
             let typeValue = '';
             if (
@@ -206,9 +206,38 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
                 if (gdprEntry) {
                     const comment = (descriptions || []).join(' ').split(/\r?\n/).join();
                     gdprEntry.comment = (gdprEntry.comment || '').trim();
-                    gdprEntry.comment = `${gdprEntry.comment}${
-                        gdprEntry.comment.trim().length === 0 || gdprEntry.comment.trim().endsWith('.') ? ' ' : '. '
-                    }${comment}`.trim();
+                    if (gdprEntry.comment) {
+                        if (
+                            !comment
+                                .split(/\r?\n/)
+                                .map((line) => line.trim())
+                                .join()
+                                .includes(
+                                    gdprEntry.comment
+                                        .split(/\r?\n/)
+                                        .map((line) => line.trim())
+                                        .join()
+                                )
+                        ) {
+                            descriptions.push(gdprEntry.comment);
+                        }
+                    }
+                    if (
+                        !gdprEntry.comment
+                            .split(/\r?\n/)
+                            .map((line) => line.trim())
+                            .join()
+                            .includes(
+                                comment
+                                    .split(/\r?\n/)
+                                    .map((line) => line.trim())
+                                    .join()
+                            )
+                    ) {
+                        gdprEntry.comment = `${gdprEntry.comment}${
+                            gdprEntry.comment.trim().length === 0 || gdprEntry.comment.trim().endsWith('.') ? ' ' : '. '
+                        }${comment}`.trim();
+                    }
                 } else {
                     console.error(
                         new Error(

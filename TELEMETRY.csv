@@ -58,7 +58,12 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DATASCIENCE.EXECUTE_CELL","Executes a cell, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.ExecuteCell","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DATASCIENCE.EXECUTE_CELL","Executes a cell, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.ExecuteCell","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
@@ -150,7 +155,8 @@ ipynb ",false
 "DATASCIENCE.FETCH_CONTROLLERS","Telemetry sent when we have loaded some controllers.","Telemetry.FetchControllers","","kind","Whether we've loaded local or remote controllers.","","'local' 
 'remote' ",false
 "DATASCIENCE.GET_PASSWORD_ATTEMPT","","Telemetry.GetPasswordAttempt","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DATASCIENCE.GOTO_NEXT_CELL_IN_FILE","","Telemetry.GotoNextCellInFile","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.GOTO_PREV_CELL_IN_FILE","","Telemetry.GotoPrevCellInFile","","duration","Duration of a measure in milliseconds.
@@ -163,7 +169,8 @@ Basically user is exporting some jupyter notebook into a Python file.","Telemetr
 "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","","Telemetry.InteractiveWindowDebugSetupCodeFailure","","evalue","","string","",false
 "DATASCIENCE.INTERRUPT","User interrupts a cell
 Identical to `Telemetry.InterruptJupyterTime`","Telemetry.Interrupt","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","","Telemetry.JupyterKernelApiAccess","","extensionId","","string","",false
 "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","","Telemetry.JupyterKernelApiAccess","","allowed","","","'yes' 
 'no' ",false
@@ -176,7 +183,12 @@ Common measurement used across a number of events.","number","",false
 "DATASCIENCE.KERNEL_CRASH","","Telemetry.KernelCrash","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DATASCIENCE.KERNEL_CRASH","","Telemetry.KernelCrash","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DATASCIENCE.KERNEL_CRASH","","Telemetry.KernelCrash","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -217,14 +229,16 @@ OCaml is one such kernel.","boolean","",true
 "DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","","Telemetry.KernelStartupCodeFailure","","ename","","string","",false
 "DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","","Telemetry.KernelStartupCodeFailure","","evalue","","string","",false
 "DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK","","Telemetry.CreateNewNotebook","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","When interrupt is a success ","result","The result of the interrupt,","","success 
 timeout 
 restart ",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","When interrupt is a success ","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","When interrupt is a success ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -237,7 +251,12 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","When interrupt is a success ","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","When interrupt is a success ","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
@@ -290,7 +309,8 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","If there are unhandled exceptions ","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","If there are unhandled exceptions ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -303,7 +323,12 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","If there are unhandled exceptions ","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","If there are unhandled exceptions ","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
@@ -361,7 +386,8 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","If there are unhandled exceptions ","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","If there are unhandled exceptions ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","If there are unhandled exceptions ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","If there are unhandled exceptions ","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
@@ -375,7 +401,8 @@ Also in the case of raw kernels, we keep a separate process running, and when re
 In such cases this value will be `undefined`. In the case of raw kernels this will be true only when starting a new kernel process from scratch.","true","",false
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","Sent to capture just the time taken to restart, see comments. ","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","Sent to capture just the time taken to restart, see comments. ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -388,7 +415,12 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","Sent to capture just the time taken to restart, see comments. ","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","Sent to capture just the time taken to restart, see comments. ","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
@@ -451,7 +483,12 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","If there are unhandled exceptions. ","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","If there are unhandled exceptions. ","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
@@ -509,7 +546,8 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","If there are unhandled exceptions. ","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","If there are unhandled exceptions. ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","If there are unhandled exceptions. ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","If there are unhandled exceptions. ","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
@@ -533,7 +571,12 @@ If its not displayed, then its considered an auto start (start in the background
 "DATASCIENCE.NOTEBOOK_START","Starts a kernel, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 If `failed` is false, then its a success, else startup failed.","Telemetry.NotebookStart","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DATASCIENCE.NOTEBOOK_START","Starts a kernel, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 If `failed` is false, then its a success, else startup failed.","Telemetry.NotebookStart","","kernelSessionId","Unique identifier for an instance of a notebook session.
@@ -613,7 +656,8 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 If `failed` is false, then its a success, else startup failed.","Telemetry.NotebookStart","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
 "DATASCIENCE.NOTEBOOK_START","Starts a kernel, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
-If `failed` is false, then its a success, else startup failed.","Telemetry.NotebookStart","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+If `failed` is false, then its a success, else startup failed.","Telemetry.NotebookStart","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DATASCIENCE.NOTEBOOK_START","Starts a kernel, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 If `failed` is false, then its a success, else startup failed.","Telemetry.NotebookStart","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
@@ -642,7 +686,12 @@ If `failed` is false, then its a success, else startup failed.","Telemetry.Noteb
 "DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted.","Telemetry.RestartKernelCommand","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted.","Telemetry.RestartKernelCommand","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted.","Telemetry.RestartKernelCommand","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -728,7 +777,12 @@ Common measurement used across a number of events.","number","",false
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -768,7 +822,12 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -832,14 +891,16 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","","failed","Whether there was a failure.","true","",false
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","","stackTrace","Node stacktrace without PII.","string","",false
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","","failed","Whether there was a failure.","true","",false
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","","stackTrace","Node stacktrace without PII.","string","",false
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
@@ -853,7 +914,12 @@ If its `false`, then we can ignore this telemetry.","boolean","",false
 "DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -888,14 +954,16 @@ System ",true
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD","Telemetry sent to capture first time execution of a cell.
 If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.","Telemetry.ExecuteCellPerceivedCold","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD","Telemetry sent to capture first time execution of a cell.
 If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.","Telemetry.ExecuteCellPerceivedCold","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM","Telemetry sent to capture subsequent execution of a cell.
 If `notebook = true`, this its telemetry for native editor/notebooks.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.ExecuteCellPerceivedWarm","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM","Telemetry sent to capture subsequent execution of a cell.
 If `notebook = true`, this its telemetry for native editor/notebooks.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.ExecuteCellPerceivedWarm","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
@@ -943,7 +1011,8 @@ Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentV
 'failedToGetActivatedEnvVariablesFromPython' 
 'failedToGetCustomEnvVariables' ",true
 "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
-Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentVariables","","duration","Time taken.","number","",false
+Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentVariables","","duration","Time taken.
+Total time taken to list interpreters. Total time taken to list kernels.","number","",false
 "DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
 Used to detect the popularity of a mime type, that would help determine which mime types are most common.
 E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
@@ -1007,7 +1076,8 @@ This is a generic property supported for all telemetry (sent by decorators).","b
 "DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","","duration","Total time taken to list interpreters.","number","",false
 "DS_INTERNAL.INTERRUPT_JUPYTER_TIME","User interrupts a cell
 Identical to `Telemetry.Interrupt`","Telemetry.InterruptJupyterTime","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS","Total time taken to discover all IPyWidgets.
 This is how long it takes to discover all widgets on disc (from python environment).","Telemetry.DiscoverIPyWidgetNamesPerf","","type","Whether we're looking for widgets on local Jupyter environment (local connections) or remote.","","'local' 
 'remote' ",false
@@ -1046,7 +1116,8 @@ E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/i
 'dismissed' 
 'doNotShowAgain' ",false
 "DS_INTERNAL.IPYWIDGET_TIME_TO_COPY_NBEXTENSIONS_DIR","Total time take to copy the nb extensions folder.","Telemetry.IPyWidgetNbExtensionCopyTime","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE","Telemetry event sent when the widget tries to send a kernel message but nothing was listening","Telemetry.IPyWidgetUnhandledMessage","","msg_type","","string","",false
 "DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.","Telemetry.HashedIPyWidgetNameUsed","","hashedName","Hash of the widget","string","",false
 "DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.","Telemetry.HashedIPyWidgetNameUsed","","source","Where did we find the hashed name (CDN or user environment or remote jupyter).","","'cdn' 
@@ -1056,7 +1127,8 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE","Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.","Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure","","moduleHash","","string","",false
 "DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE","Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.","Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure","","moduleVersion","","string","",false
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -1064,7 +1136,12 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -1100,12 +1177,14 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","failed","Whether there was a failure.","true","",false
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","stackTrace","Node stacktrace without PII.","string","",false
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When things fail ","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When successfully created ","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When successfully created ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When successfully created ","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -1113,7 +1192,12 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When successfully created ","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When successfully created ","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When successfully created ","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -1147,9 +1231,11 @@ System ",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","When successfully created ","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL","","Telemetry.RegisterInterpreterAsKernel","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.JUPYTERSTARTUPCOST","","Telemetry.StartJupyter","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","kernelSpecCount","Total number of kernel specs in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","kernelInterpreterCount","Total number of interpreters in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","kernelLiveCount","Total number of live kernels in the kernel list.","number","",false
@@ -1158,7 +1244,8 @@ This happens when we create conda envs without the `python` argument.
 Such conda envs don't work today in the extension.
 Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -1166,7 +1253,12 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -1192,15 +1284,19 @@ System ",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","restartCount","This number gets reset after change the kernel.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","startFailureCount","Number of times starting the kernel failed.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
+Total number of kernel specs in the kernel list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
+Total number of interpreters in the kernel list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","kernelLiveCount","Total number of live kernels in the kernel spec list.
+Total number of live kernels in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -1208,7 +1304,12 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -1244,7 +1345,8 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","failed","Whether there was a failure.","true","",false
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","stackTrace","Node stacktrace without PII.","string","",false
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
@@ -1256,7 +1358,8 @@ This is a generic property supported for all telemetry (sent by decorators).","b
 'local' 
 'localKernelSpec' 
 'localPython' ",false
-"DS_INTERNAL.KERNEL_LISTING_PERF","","Telemetry.KernelListingPerf","","duration","Total time taken to list kernels.","number","",false
+"DS_INTERNAL.KERNEL_LISTING_PERF","","Telemetry.KernelListingPerf","","duration","Total time taken to list kernels.
+Total time taken to list interpreters.","number","",false
 "DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT","Total number of Local kernel specifications.","Telemetry.NumberOfLocalKernelSpecs","","count","Number of kernel specs found on disc.","number","",false
 "DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED","","Telemetry.NativeVariableViewLoaded","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
@@ -1265,7 +1368,8 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED","","Telemetry.NumberOfSavedRemoteKernelIds","","count","","number","",false
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -1278,7 +1382,12 @@ Common measurement used across a number of events.","number","",false
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
@@ -1386,14 +1495,16 @@ System ",true
 "DS_INTERNAL.PYTHON_MODULE_INSTALL","","Telemetry.PythonModuleInstall","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.PYTHON_MODULE_INSTALL","","Telemetry.PythonModuleInstall","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.PYTHON_NOT_INSTALLED","","Telemetry.PythonNotInstalled","","action","","","'displayed' 
 'dismissed' 
 'download' ",false
 "DS_INTERNAL.RANK_KERNELS_PERF","Total time taken to find a kernel on disc or on a remote machine.","Telemetry.RankKernelsPerf","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK","","Telemetry.RawKernelCreatingNotebook","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
@@ -1406,7 +1517,8 @@ or we need more attempts.","Telemetry.RawKernelInfoResponse","","timedout","Whet
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
 or we need more attempts.","Telemetry.RawKernelInfoResponse","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
@@ -1429,7 +1541,12 @@ If its not displayed, then its considered an auto start (start in the background
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
 or we need more attempts.","Telemetry.RawKernelInfoResponse","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
@@ -1517,9 +1634,11 @@ If we timeout and later we find successful comms for this session, then timeout 
 or we need more attempts.","Telemetry.RawKernelInfoResponse","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH","","Telemetry.RawKernelProcessLaunch","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_CONNECT","","Telemetry.RawKernelSessionConnect","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_CONNECT","","Telemetry.RawKernelSessionConnect","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.RAWKERNEL_SESSION_CONNECT","","Telemetry.RawKernelSessionConnect","","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -1527,7 +1646,12 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_CONNECT","","Telemetry.RawKernelSessionConnect","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_CONNECT","","Telemetry.RawKernelSessionConnect","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_CONNECT","","Telemetry.RawKernelSessionConnect","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -1570,7 +1694,12 @@ is called, intended for us to be able to identify who called
 "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -1620,7 +1749,12 @@ RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","","di
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
 RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
 RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
@@ -1679,7 +1813,8 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","","failed","Whether there was a failure.","true","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","","stackTrace","Node stacktrace without PII.","string","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
@@ -1706,7 +1841,12 @@ method is called.","Telemetry.RawKernelSessionShutdown","","disableUI","Whether 
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
 method is called.","Telemetry.RawKernelSessionShutdown","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
 method is called.","Telemetry.RawKernelSessionShutdown","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
@@ -1758,7 +1898,8 @@ method is called.","Telemetry.RawKernelSessionShutdown","","actionSource","Wheth
 method is called.","Telemetry.RawKernelSessionShutdown","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","When started successfully. ","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","When started successfully. ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","When started successfully. ","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -1766,7 +1907,12 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","When started successfully. ","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","When started successfully. ","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","When started successfully. ","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -1799,8 +1945,8 @@ System ",true
 3rdPartyExtension ",false
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","When started successfully. ","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","Sent when we fail to restart a kernel and have a failureCategory. ","failed","","true","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","Sent when we fail to restart a kernel and have a failureCategory. ","failureCategory","","","cancelled 
+"DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","Sent when we fail to restart a kernel and have a failureCategory. ","failed","Whether there was a failure.","true","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","Sent when we fail to restart a kernel and have a failureCategory. ","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","","cancelled 
 timeout 
 daemon 
 zmq 
@@ -1833,7 +1979,12 @@ unknown ",false
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","Sent when we fail to restart a kernel and have a failureCategory. ","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","Sent when we fail to restart a kernel and have a failureCategory. ","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","Sent when we fail to restart a kernel and have a failureCategory. ","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -1873,7 +2024,12 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","If there are unhandled exceptions. ","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","If there are unhandled exceptions. ","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","If there are unhandled exceptions. ","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -1909,7 +2065,8 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","If there are unhandled exceptions. ","failed","Whether there was a failure.","true","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","If there are unhandled exceptions. ","stackTrace","Node stacktrace without PII.","string","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","If there are unhandled exceptions. ","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","If there are unhandled exceptions. ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","If there are unhandled exceptions. ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","If there are unhandled exceptions. ","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","If there are unhandled exceptions. ","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","If there are unhandled exceptions. ","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
@@ -1920,7 +2077,12 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -1960,7 +2122,12 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS","","Telemetry.RawKernelSessionStartSuccess","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS","","Telemetry.RawKernelSessionStartSuccess","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS","","Telemetry.RawKernelSessionStartSuccess","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -2000,7 +2167,12 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -2034,14 +2206,17 @@ System ",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_START_RAW_SESSION","","Telemetry.RawKernelStartRawSession","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT","Total number of Remote kernel specifications.","Telemetry.NumberOfRemoteKernelSpecs","","count","Number of remote kernel specs.","number","",false
 "DS_INTERNAL.RESTART_JUPYTER_TIME","Total time taken to restart a kernel.
 Identical to `Telemetry.RestartKernel`","Telemetry.RestartJupyterTime","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RESTART_KERNEL","Total time taken to restart a kernel.
 Identical to `Telemetry.RestartJupyterTime`","Telemetry.RestartKernel","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RUNTEST","","Telemetry.RunTest","","testName","","string","",false
 "DS_INTERNAL.RUNTEST","","Telemetry.RunTest","","testResult","","string","",false
 "DS_INTERNAL.RUNTEST","","Telemetry.RunTest","","perfWarmup","","'true'","",true
@@ -2055,7 +2230,8 @@ installationCancelled - Installation of jupyter and/or notebook was cancelled fo
 'installationCancelled' ",true
 "DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED","","Telemetry.PandasInstallCanceled","","version","","string","",false
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -2063,7 +2239,12 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
@@ -2097,7 +2278,8 @@ System ",true
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.START_JUPYTER_PROCESS","","Telemetry.StartJupyterProcess","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -2110,7 +2292,12 @@ WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence 
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.","string","",true
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.","string","",true
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
@@ -2167,7 +2354,8 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT","","Telemetry.VariableExplorerVariableCount","","variableCount","","number","",false
 "DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED","","Telemetry.VSCNotebookCellTranslationFailed","","isErrorOutput","","boolean","",false
 "DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER","","Telemetry.WaitForIdleJupyter","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.WEB_FETCH_ERROR","Event sent when trying to talk to a remote server and the browser gives us a generic fetch error","Telemetry.FetchError","","currentTask","What we were doing when the fetch error occurred","'connecting'","",false
 "DS_INTERNAL.WEBVIEW_STARTUP","","Telemetry.WebviewStartup","","type","","string","",false
 "ENVFILE_WORKSPACE","Telemetry event sent when an environment file is detected in the workspace.","EventName.ENVFILE_WORKSPACE","","hasCustomEnvPath","If there's a custom path specified in the python.envFile workspace settings.","boolean","",false
@@ -2176,7 +2364,8 @@ Common measurement used across a number of events.","number","",false
 "ERROR","","ERROR","","failed","Whether there was a failure.","true","",false
 "ERROR","","ERROR","","stackTrace","Node stacktrace without PII.","string","",false
 "ERROR","","ERROR","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"ERROR","","ERROR","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"ERROR","","ERROR","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+Name of the method in the extension that threw the exception.","string","",true
 "ERROR","","ERROR","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "ERROR","","ERROR","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "ERROR","","ERROR","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
@@ -2188,7 +2377,7 @@ Common measurement used across a number of events.","number","",false
 "HASHED_PACKAGE_NAME","Telemetry event sent with hash of an imported python package.
 Used to detect the popularity of a package, that would help determine which packages
 need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.","EventName.HASHED_PACKAGE_NAME","","hashedNamev2","Hash of the package name","string","",false
-"HASHED_PACKAGE_PERF","","EventName.HASHED_PACKAGE_PERF","","duration","","number","",false
+"HASHED_PACKAGE_PERF","","EventName.HASHED_PACKAGE_PERF","","duration","Total time taken to list interpreters. Total time taken to list kernels. Time taken.","number","",false
 "JUPYTER_EXPERIMENTS_OPT_IN_OUT","Telemetry event sent with details when a user has requested to opt it or out of an experiment group","EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT","","expNameOptedInto","Carries the name of the experiment user has been opted into manually","string","",true
 "JUPYTER_EXPERIMENTS_OPT_IN_OUT","Telemetry event sent with details when a user has requested to opt it or out of an experiment group","EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT","","expNameOptedOutOf","Carries the name of the experiment user has been opted out of manually","string","",true
 "JUPYTER_IS_INSTALLED","","Telemetry.JupyterInstalled","/* Detection of jupyter failed ","failed","","true","",false

@@ -161,7 +161,6 @@ type GdprEventDefinition<P> = P extends never
 const commonClassificationForDurationProperties: AllEventPropertiesData<DurationMeasurement> = {
     duration: {
         classification: 'PublicNonPersonalData',
-        comment: 'Time taken to perform an operation',
         purpose: 'PerformanceAndHealth',
         isMeasurement: true
     }
@@ -253,11 +252,6 @@ const commonClassificationForResourceSpecificTelemetryProperties: AllEventProper
         },
         resourceHash: {
             classification: 'PublicNonPersonalData',
-            comment: `Hash of the Notebook or Interactive Window URI. Used to check whether a particular notebook fails across time or not.
-            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
-            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
-            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
-            and have a better understanding of what is going on, e.g. why something failed.`,
             purpose: 'PerformanceAndHealth'
         },
         pythonEnvironmentVersion: {
@@ -370,6 +364,11 @@ export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty 
         /**
          * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
          * If we run the same notebook tomorrow, the hash will be the same.
+         * Used to check whether a particular notebook fails across time or not.
+         * This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+         * and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+         * we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+         * and have a better understanding of what is going on, e.g. why something failed.
          */
         resourceHash?: string;
         /**
@@ -550,7 +549,7 @@ export class IEventNamePropertyMapping {
         properties: {
             hasCustomEnvPath: {
                 classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
+                purpose: 'FeatureInsight'
             }
         }
     };
@@ -571,8 +570,7 @@ export class IEventNamePropertyMapping {
         properties: {
             hashedNamev2: {
                 classification: 'SystemMetaData',
-                purpose: 'FeatureInsight',
-                comment: 'Hash of the package name'
+                purpose: 'FeatureInsight'
             }
         }
     };
