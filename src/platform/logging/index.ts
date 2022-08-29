@@ -275,8 +275,7 @@ function logResult(info: LogInfo, traced: TraceInfo, call?: CallInfo) {
     } else {
         logTo(LogLevel.Error, formatted, traced.err);
         sendTelemetryEvent(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            'ERROR' as any,
+            'ERROR',
             undefined,
             {
                 failureCategory: 'methodException',

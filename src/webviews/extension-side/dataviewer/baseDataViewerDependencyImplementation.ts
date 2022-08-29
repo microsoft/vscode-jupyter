@@ -11,7 +11,7 @@ import { pandasMinimumVersionSupportedByVariableViewer } from './constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { parseSemVer } from '../../../platform/common/utils';
 import { SemVer } from 'semver';
-import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
@@ -39,7 +39,7 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
         }
     }
 
-    @captureTelemetry(Telemetry.PythonModuleInstall, {
+    @capturePerfTelemetry(Telemetry.PythonModuleInstall, {
         action: 'displayed',
         moduleName: ProductNames.get(Product.pandas)!
     })

@@ -17,7 +17,7 @@ import {
     InputStep,
     IQuickPickParameters
 } from '../../../platform/common/utils/multiStepInput';
-import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 
 /**
  * Provide a quick pick to let a user select command line options for starting jupyter
@@ -36,7 +36,7 @@ export class JupyterCommandLineSelector {
         workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
     }
 
-    @captureTelemetry(Telemetry.SelectJupyterURI)
+    @capturePerfTelemetry(Telemetry.SelectJupyterURI)
     public async selectJupyterCommandLine(file: Uri): Promise<void> {
         const multiStep = this.multiStepFactory.create<{}>();
         await multiStep.run(this.startSelectingCommandLine.bind(this, file), {});

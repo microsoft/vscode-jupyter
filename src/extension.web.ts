@@ -26,7 +26,14 @@ require('./platform/logging');
 // locations at which we record various Intervals are marked below in
 // the same way as this.
 
-const durations: Record<string, number> = {};
+const durations = {
+    totalActivateTime: 0,
+    codeLoadingTime: 0,
+    startActivateTime: 0,
+    endActivateTime: 0,
+    workspaceFolderCount: 0
+};
+
 import { StopWatch } from './platform/common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
@@ -199,7 +206,7 @@ function displayProgress(promise: Promise<any>) {
 /////////////////////////////
 // error handling
 
-async function handleError(ex: Error, startupDurations: Record<string, number>) {
+async function handleError(ex: Error, startupDurations: typeof durations) {
     notifyUser(Common.handleExtensionActivationError());
     // Possible logger hasn't initialized either.
     console.error('extension activation failed', ex);

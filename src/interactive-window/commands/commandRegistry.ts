@@ -35,7 +35,7 @@ import {
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
-import { captureTelemetry } from '../../telemetry';
+import { capturePerfTelemetry, captureUsageTelemetry } from '../../telemetry';
 import {
     Commands,
     CommandSource,
@@ -418,7 +418,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.DebugStepOver)
+    @capturePerfTelemetry(Telemetry.DebugStepOver)
     private async debugStepOver(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession) {
@@ -426,7 +426,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.DebugStop)
+    @capturePerfTelemetry(Telemetry.DebugStop)
     private async debugStop(uri: Uri): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession && this.interactiveWindowProvider) {
@@ -444,7 +444,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.DebugContinue)
+    @capturePerfTelemetry(Telemetry.DebugContinue)
     private async debugContinue(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession) {
@@ -452,7 +452,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.AddCellBelow)
+    @capturePerfTelemetry(Telemetry.AddCellBelow)
     private async addCellBelow(): Promise<void> {
         await this.getCurrentCodeWatcher()?.addEmptyCellToBottom();
     }
@@ -627,7 +627,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         return result;
     }
 
-    @captureTelemetry(Telemetry.ExportPythonFileInteractive, undefined, false)
+    @captureUsageTelemetry(Telemetry.ExportPythonFileInteractive)
     private async exportFile(file: Uri): Promise<void> {
         const filePath = getFilePath(file);
         if (filePath && filePath.length > 0 && this.jupyterExporter) {
@@ -667,7 +667,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.ExportPythonFileAndOutputInteractive, undefined, false)
+    @captureUsageTelemetry(Telemetry.ExportPythonFileAndOutputInteractive)
     private async exportFileAndOutput(file: Uri): Promise<Uri | undefined> {
         const filePath = getFilePath(file);
         if (
@@ -764,7 +764,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.CreateNewInteractive, undefined, false)
+    @captureUsageTelemetry(Telemetry.CreateNewInteractive)
     private async createNewInteractiveWindow(connection?: KernelConnectionMetadata): Promise<void> {
         await this.interactiveWindowProvider?.getOrCreate(undefined, connection);
     }
@@ -779,7 +779,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
     }
 
-    @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)
+    @captureUsageTelemetry(Telemetry.ImportNotebook, { scope: 'command' })
     private async importNotebook(): Promise<void> {
         const filtersKey = DataScience.importDialogFilter();
         const filtersObject: { [name: string]: string[] } = {};
@@ -802,7 +802,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.ImportNotebook, { scope: 'file' }, false)
+    @captureUsageTelemetry(Telemetry.ImportNotebook, { scope: 'file' })
     private async importNotebookOnFile(file: Uri): Promise<void> {
         const filepath = getFilePath(file);
         if (filepath && filepath.length > 0) {

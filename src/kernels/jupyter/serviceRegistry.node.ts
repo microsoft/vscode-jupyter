@@ -74,8 +74,8 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IExtensionSingleActivationService,
         RemoteKernelFinder
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         CellOutputMimeTypeTracker
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(

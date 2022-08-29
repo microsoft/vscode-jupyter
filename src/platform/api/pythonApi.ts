@@ -14,7 +14,7 @@ import {
 } from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
-import { captureTelemetry, sendTelemetryEvent, sendTelemetryWhenDone } from '../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
@@ -27,6 +27,7 @@ import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter'
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { TraceOptions } from '../logging/types';
 import { noop } from '../common/utils/misc';
+import { StopWatch } from '../common/utils/stopWatch';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined
@@ -328,6 +329,7 @@ export class InterpreterService implements IInterpreterService {
 
     @traceDecoratorVerbose('Get Interpreters', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
+        const stopWatch = new StopWatch();
         this.hookupOnDidChangeInterpreterEvent();
         // Cache result as it only changes when the interpreter list changes or we add more workspace folders
         const firstTime = !!this.interpretersFetchedOnceBefore;
@@ -335,9 +337,17 @@ export class InterpreterService implements IInterpreterService {
         if (!this.interpreterListCachePromise) {
             this.interpreterListCachePromise = this.getInterpretersImpl(resource);
         }
-        sendTelemetryWhenDone(Telemetry.InterpreterListingPerf, this.interpreterListCachePromise, undefined, {
-            firstTime
-        });
+        this.interpreterListCachePromise
+            .then(() => {
+                sendTelemetryEvent(
+                    Telemetry.InterpreterListingPerf,
+                    { duration: stopWatch.elapsedTime },
+                    {
+                        firstTime
+                    }
+                );
+            })
+            .ignoreErrors();
         return this.interpreterListCachePromise;
     }
 
@@ -360,7 +370,7 @@ export class InterpreterService implements IInterpreterService {
         }
     }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
-    @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
+    @capturePerfTelemetry(Telemetry.ActiveInterpreterListingPerf)
     @traceDecoratorVerbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         this.hookupOnDidChangeInterpreterEvent();

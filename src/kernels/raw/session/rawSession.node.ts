@@ -280,10 +280,14 @@ export class RawSession implements ISessionWithSocket {
         traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
         // Send telemetry so we know why the kernel process exited,
         // as this affects our kernel startup success
-        sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-            exitCode: e.exitCode,
-            exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(e.reason)
-        });
+        sendKernelTelemetryEvent(
+            this.resource,
+            Telemetry.RawKernelSessionKernelProcessExited,
+            e.exitCode ? { exitCode: e.exitCode } : undefined,
+            {
+                exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(e.reason)
+            }
+        );
 
         // Just kill the session.
         this.dispose().ignoreErrors();
