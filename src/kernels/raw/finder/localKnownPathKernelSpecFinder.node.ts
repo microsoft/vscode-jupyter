@@ -19,7 +19,7 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
-import { captureTelemetry, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { sendKernelSpecTelemetry } from './helper';
 
 /**
@@ -46,7 +46,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
     /**
      * @param {boolean} includePythonKernels Include/exclude Python kernels in the result.
      */
-    @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'localKernelSpec' })
+    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localKernelSpec' })
     public async listKernelSpecs(
         includePythonKernels: boolean,
         cancelToken?: CancellationToken

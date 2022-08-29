@@ -18,7 +18,7 @@ import {
     IQuickPickParameters,
     InputFlowAction
 } from '../../platform/common/utils/multiStepInput';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../telemetry';
 import {
     IJupyterUriProvider,
@@ -161,7 +161,7 @@ class JupyterServerSelector_Experimental implements IJupyterServerSelector {
         private readonly isWebExtension: boolean
     ) {}
 
-    @captureTelemetry(Telemetry.SelectJupyterURI)
+    @capturePerfTelemetry(Telemetry.SelectJupyterURI)
     public selectJupyterURI(
         commandSource: SelectJupyterUriCommandSource = 'nonUser',
         existingMultiStep?: IMultiStepInput<{}>
@@ -177,12 +177,12 @@ class JupyterServerSelector_Experimental implements IJupyterServerSelector {
         }
     }
 
-    @captureTelemetry(Telemetry.SetJupyterURIToLocal)
+    @capturePerfTelemetry(Telemetry.SetJupyterURIToLocal)
     public async setJupyterURIToLocal(): Promise<void> {
         await this.serverUriStorage.setUriToLocal();
     }
 
-    @captureTelemetry(Telemetry.EnterJupyterURI)
+    @capturePerfTelemetry(Telemetry.EnterJupyterURI)
     @traceDecoratorError('Failed to enter Jupyter Uri')
     public async setJupyterURIToRemote(userURI: string | undefined, ignoreValidation?: boolean): Promise<void> {
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
@@ -411,7 +411,7 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {}
 
-    @captureTelemetry(Telemetry.SelectJupyterURI)
+    @capturePerfTelemetry(Telemetry.SelectJupyterURI)
     @traceDecoratorError('Failed to select Jupyter Uri')
     public selectJupyterURI(
         commandSource: SelectJupyterUriCommandSource = 'nonUser'
@@ -424,7 +424,7 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         return multiStep.run(this.startSelectingURI.bind(this, allowLocal), {});
     }
 
-    @captureTelemetry(Telemetry.SetJupyterURIToLocal)
+    @capturePerfTelemetry(Telemetry.SetJupyterURIToLocal)
     public async setJupyterURIToLocal(): Promise<void> {
         await this.serverUriStorage.setUriToLocal();
     }

@@ -9,7 +9,7 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } 
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
 import { traceInfo } from '../../../platform/logging';
-import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import {
     IJupyterPasswordConnect,
     IJupyterPasswordConnectInfo,
@@ -40,7 +40,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
     }
 
-    @captureTelemetry(Telemetry.GetPasswordAttempt)
+    @capturePerfTelemetry(Telemetry.GetPasswordAttempt)
     public getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
         if (!url || url.length < 1) {
             return Promise.resolve(undefined);
