@@ -85,6 +85,9 @@ export type ErrorCategory =
 
 // If there are errors, then the are added to the telementry properties.
 export type TelemetryErrorProperties = {
+    /**
+     * Whether there was a failure.
+     */
     failed: true;
     /**
      * Node stacktrace without PII.

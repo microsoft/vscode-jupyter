@@ -397,6 +397,13 @@ export const CommonProperties = {
     ...commonClassificationForResourceSpecificTelemetryProperties,
     ...commonClassificationForResourceType
 };
+export const CommonPropertyAndMeasureTypeNames = [
+    'ResourceSpecificTelemetryProperties',
+    'DurationMeasurement',
+    'ResourceTypeTelemetryProperty',
+    'TelemetryErrorProperties'
+];
+
 export type TelemetryEventInfo<P> = GdprEventDefinition<P>;
 
 export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty &

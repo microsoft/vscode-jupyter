@@ -470,6 +470,7 @@ Expand each section to see more information about that event.
             - `'startUsingRemoteKernelSpec'`  
             - `'connectToLiveRemoteKernel'`  
         - `failed`: `true`  
+        Whether there was a failure.  
         - `stackTrace`: `string`  
         Node stacktrace without PII.  
         - `failureCategory`?: `string`  
@@ -891,6 +892,7 @@ Expand each section to see more information about that event.
             Whether we managed to capture the environment variables or not.  
             In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
             - `failed`: `true`  
+            Whether there was a failure.  
             - `stackTrace`: `string`  
             Node stacktrace without PII.  
             - `failureCategory`?: `string`  
@@ -1082,6 +1084,7 @@ Expand each section to see more information about that event.
             Whether we managed to capture the environment variables or not.  
             In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
             - `failed`: `true`  
+            Whether there was a failure.  
             - `stackTrace`: `string`  
             Node stacktrace without PII.  
             - `failureCategory`?: `string`  
@@ -1178,6 +1181,7 @@ Expand each section to see more information about that event.
         Whether we managed to capture the environment variables or not.  
         In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
         - `failed`: `true`  
+        Whether there was a failure.  
         - `stackTrace`: `string`  
         Node stacktrace without PII.  
         - `failureCategory`?: `string`  
@@ -1948,6 +1952,7 @@ Expand each section to see more information about that event.
        <span style="color:red">effectiveVersion not set</span>  
     - Properties:  
         - `failed`: `true`  
+        Whether there was a failure.  
         - `stackTrace`: `string`  
         Node stacktrace without PII.  
         - `failureCategory`?: `string`  
@@ -1984,6 +1989,7 @@ Expand each section to see more information about that event.
        <span style="color:red">effectiveVersion not set</span>  
     - Properties:  
         - `failed`: `true`  
+        Whether there was a failure.  
         - `stackTrace`: `string`  
         Node stacktrace without PII.  
         - `failureCategory`?: `string`  
@@ -2606,6 +2612,7 @@ Expand each section to see more information about that event.
             Whether we managed to capture the environment variables or not.  
             In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
             - `failed`: `true`  
+            Whether there was a failure.  
             - `stackTrace`: `string`  
             Node stacktrace without PII.  
             - `failureCategory`?: `string`  
@@ -2938,6 +2945,7 @@ Expand each section to see more information about that event.
     -  Group 2:  
         - Properties:  
             - `failed`: `true`  
+            Whether there was a failure.  
             - `stackTrace`: `string`  
             Node stacktrace without PII.  
             - `failureCategory`?: `string`  
@@ -3696,6 +3704,7 @@ Expand each section to see more information about that event.
             - `3`  
             - `4`  
         - `failed`: `true`  
+        Whether there was a failure.  
         - `stackTrace`: `string`  
         Node stacktrace without PII.  
         - `failureCategory`?: `string`  
@@ -4046,6 +4055,7 @@ Expand each section to see more information about that event.
             Whether we managed to capture the environment variables or not.  
             In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
             - `failed`: `true`  
+            Whether there was a failure.  
             - `stackTrace`: `string`  
             Node stacktrace without PII.  
             - `failureCategory`?: `string`  
@@ -4751,6 +4761,7 @@ Expand each section to see more information about that event.
         - `failureSubCategory`: `string`  
         Name of the method in the extension that threw the exception.  
         - `failed`: `true`  
+        Whether there was a failure.  
         - `stackTrace`: `string`  
         Node stacktrace without PII.  
         - `failureCategory`?: `string`  

@@ -16,7 +16,8 @@ import {
     CommonProperties,
     IPropertyDataNonMeasurement,
     IPropertyDataMeasurement,
-    TelemetryEventInfo
+    TelemetryEventInfo,
+    CommonPropertyAndMeasureTypeNames
 } from './telemetry';
 const GDPRData = new IEventNamePropertyMapping();
 let gdprEntryOfCurrentlyComputingTelemetryEventName: [name: string, gdpr: TelemetryEventInfo<unknown>] | undefined;
@@ -184,38 +185,37 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
                 typeValue.includes(' | undefined') ||
                 typeValue.includes('undefined | ');
 
-            if (!gdprEntryOfCurrentlyComputingTelemetryEventName) {
-                throw new Error('gdprEntryOfCurrentlyComputingTelemetryEventName is not set');
-            }
             let gdprEntry: undefined | IPropertyDataMeasurement | IPropertyDataNonMeasurement;
-            if (
-                'properties' in gdprEntryOfCurrentlyComputingTelemetryEventName[1] &&
-                name in gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties']
-            ) {
-                gdprEntry = gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'][
-                    name
-                ] as IPropertyDataNonMeasurement;
-            }
-            if (
-                'measures' in gdprEntryOfCurrentlyComputingTelemetryEventName[1] &&
-                name in gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures']
-            ) {
-                gdprEntry = gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'][
-                    name
-                ] as IPropertyDataNonMeasurement;
-            }
-            if (gdprEntry) {
-                const comment = (descriptions || []).join(' ').split(/\r?\n/).join();
-                gdprEntry.comment = (gdprEntry.comment || '').trim();
-                gdprEntry.comment = `${gdprEntry.comment}${
-                    gdprEntry.comment.trim().length === 0 || gdprEntry.comment.trim().endsWith('.') ? ' ' : '. '
-                }${comment}`.trim();
-            } else {
-                console.error(
-                    new Error(
-                        `Gdpr entry for ${name} not found in ${gdprEntryOfCurrentlyComputingTelemetryEventName[0]}`
-                    ).message
-                );
+            if (gdprEntryOfCurrentlyComputingTelemetryEventName) {
+                if (
+                    'properties' in gdprEntryOfCurrentlyComputingTelemetryEventName[1] &&
+                    name in gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties']
+                ) {
+                    gdprEntry = gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'][
+                        name
+                    ] as IPropertyDataNonMeasurement;
+                }
+                if (
+                    'measures' in gdprEntryOfCurrentlyComputingTelemetryEventName[1] &&
+                    name in gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures']
+                ) {
+                    gdprEntry = gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'][
+                        name
+                    ] as IPropertyDataNonMeasurement;
+                }
+                if (gdprEntry) {
+                    const comment = (descriptions || []).join(' ').split(/\r?\n/).join();
+                    gdprEntry.comment = (gdprEntry.comment || '').trim();
+                    gdprEntry.comment = `${gdprEntry.comment}${
+                        gdprEntry.comment.trim().length === 0 || gdprEntry.comment.trim().endsWith('.') ? ' ' : '. '
+                    }${comment}`.trim();
+                } else {
+                    console.error(
+                        new Error(
+                            `Gdpr entry for ${name} not found in ${gdprEntryOfCurrentlyComputingTelemetryEventName[0]}`
+                        ).message
+                    );
+                }
             }
             properties.push({ name, descriptions, possibleValues, type: typeValue, isNullable, gdpr: gdprEntry! });
         } else {
@@ -481,6 +481,8 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
     writeOutput(`\n`);
 }
 
+const commonPropertyComments = new Map<string, string>();
+
 /** Generate documentation for all classes in a set of .ts files */
 function generateDocumentation(fileNames: string[], options: ts.CompilerOptions): void {
     let host = new TypeScriptLanguageServiceHost(fileNames, options);
@@ -509,9 +511,19 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
             ts.forEachChild(node, visit.bind(undefined, sourceFile));
             return;
         }
+
+        if (ts.isTypeAliasDeclaration(node) && CommonPropertyAndMeasureTypeNames.includes(node.name.text)) {
+            computePropertyForType(node, typeChecker).forEach((prop) => {
+                const comment =
+                    typeof prop.descriptions === 'string' ? prop.descriptions : (prop.descriptions || []).join(' ');
+                commonPropertyComments.set(prop.name, comment.split(/\n?\r/).join(' '));
+            });
+            return;
+        }
         if (!ts.isClassDeclaration(node) || node.name?.text !== 'IEventNamePropertyMapping') {
             return;
         }
+
         try {
             node.members.forEach((m) => {
                 if (ts.isPropertyDeclaration(m)) {
@@ -700,7 +712,15 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
     Object.keys(CommonProperties).forEach((key) => {
         const entry = (CommonProperties as any)[key] as IPropertyDataMeasurement | IPropertyDataNonMeasurement;
         const isMeasurement = entry.isMeasurement === true;
-        const comment = (entry.comment || '').split(/\r?\n/).join(' ');
+        const jsDocComment = commonPropertyComments.get(key) || '';
+        let comment = (entry.comment || '').split(/\r?\n/).join(' ').trim();
+        comment = `${comment}${comment.length === 0 || comment.endsWith('.') ? '' : '. '}${jsDocComment}`.trim();
+        if (!comment) {
+            console.error(
+                `No comments for common property ${key}, Update CommonPropertyAndMeasureTypeNames in telemetry.ts`
+            );
+        }
+
         // Do not include `__GDPR__` in the string with JSON comments, else telemetry tool treats this as a valid GDPR annotation.
         const gdpr = '__GDPR__COMMON__';
         fs.appendFileSync(
@@ -729,7 +749,7 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
             const json: Record<string, string> = {
                 classification: prop.classification,
                 purpose: prop.classification,
-                comment: prop.comment || '',
+                comment : prop.comment || '',
                 owner: item.gdpr.owner
             };
             if (prop.expiration) {
