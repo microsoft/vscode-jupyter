@@ -40,223 +40,267 @@
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.CREATE_NEW_INTERACTIVE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DATA_VIEWER_DATA_DIMENSIONALITY" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DATA_VIEWER_SLICE_ENABLEMENT_STATE_CHANGED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DATA_VIEWER_SLICE_OPERATION" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUG_CONTINUE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUG_CURRENT_CELL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUG_FILE_INTERACTIVE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUG_STEP_OVER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUG_STOP" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.CLICKED_ON_SETUP" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.CLICKED_RUN_AND_DEBUG_CELL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.CLICKED_RUNBYLINE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.CLOSED_MODAL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.ENDED_SESSION" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.IPYKERNEL6_STATUS" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_IW_JUPYTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_RUN_AND_DEBUG_CELL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_RUNBYLINE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.ENTER_JUPYTER_URI" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.EXECUTE_CELL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.EXPORT_NOTEBOOK_AS" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.EXPORT_NOTEBOOK_AS_COMMAND" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.EXPORT_PYTHON_FILE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.FAILED_SHOW_DATA_EXPLORER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.FETCH_CONTROLLERS" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.GET_PASSWORD_ATTEMPT" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.GOTO_NEXT_CELL_IN_FILE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.GOTO_PREV_CELL_IN_FILE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.IMPORT_NOTEBOOK" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.INTERRUPT" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS" : {
      "extensionId": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"","owner":"donjayamanne"},
      "allowed": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.JUPYTER_KERNEL_API_USAGE" : {
      "extensionId": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"","owner":"donjayamanne"},
      "pemUsed": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.JUPYTER_KERNEL_FILTER_USED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.JUPYTER_KERNEL_HIDDEN_VIA_FILTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.KERNEL_CRASH" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.KERNEL_SPEC_LANGUAGE" : {
      "kind": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether this is a local or remote kernel.","owner":"donjayamanne"},
@@ -264,348 +308,417 @@
      "usesShell": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether shell is used to start the kernel. E.g. `\"/bin/sh\"` is used in the argv of the kernelSpec. OCaml is one such kernel.","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE" : {
      "ename": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"","owner":"donjayamanne"},
      "evalue": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.NO_ACTIVE_KERNEL_SESSION" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.NOTEBOOK_INTERRUPT" : {
      "result": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"The result of the interrupt,","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.NOTEBOOK_LANGUAGE" : {
      "language": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Language found in the notebook if a known language. Otherwise 'unknown'","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.NOTEBOOK_RESTART" : {
      "startTimeOnly": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"If true, this is the total time taken to restart the kernel (excluding times to stop current cells and the like). Also in the case of raw kernels, we keep a separate process running, and when restarting we just switch to that process. In such cases this value will be `undefined`. In the case of raw kernels this will be true only when starting a new kernel process from scratch.","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.NOTEBOOK_START" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.OPEN_PLOT_VIEWER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RECOMMENT_EXTENSION" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.REFRESH_DATA_VIEWER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RESTART_KERNEL_COMMAND" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_ALL_CELLS" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_ALL_CELLS_ABOVE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_CELL_AND_ALL_BELOW" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_CHANGE_CELL_TO_CODE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_CHANGE_CELL_TO_MARKDOWN" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_CURRENT_CELL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_CURRENT_CELL_AND_ADD_BELOW" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_DELETE_CELLS" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_ABOVE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_BELOW" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_FILE_INTERACTIVE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_FROM_LINE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_INSERT_CELL_ABOVE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_INSERT_CELL_BELOW" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_INSERT_CELL_BELOW_POSITION" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_MOVE_CELLS_DOWN" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_MOVE_CELLS_UP" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_SELECT_CELL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_SELECT_CELL_CONTENTS" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_SELECTION_OR_LINE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.RUN_TO_LINE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.SELECT_JUPYTER_URI" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.SELFCERTSMESSAGECLOSE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.SELFCERTSMESSAGEENABLED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.SET_JUPYTER_URI_LOCAL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.SHOW_DATA_EXPLORER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.START_SHOW_DATA_EXPLORER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.USER_INSTALLED_JUPYTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.USER_INSTALLED_PANDAS" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATASCIENCE.USER_STARTUP_CODE_FAILURE" : {
      "ename": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"","owner":"donjayamanne"},
      "evalue": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DATAVIEWER.USING_INTERPRETER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DATAVIEWER.USING_KERNEL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF" : {
      "firstTime": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether this is the first time in the session. (fetching kernels first time in the session is slower, later its cached). This is a generic property supported for all telemetry (sent by decorators).","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.CODE_LENS_ACQ_TIME" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.COMMAND_EXECUTED" : {
      "command": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Name of the command executed.","owner":"unknown"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.CONNECTFAILEDJUPYTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.CONNECTLOCALJUPYTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTEEXPIREDCERTFAILEDJUPYTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTEJUPYTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER" : {
      "pythonExtensionInstalled": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Indicates whether the python extension is installed. If we send telemetry fro this & this is `true`, then we have a bug. If its `false`, then we can ignore this telemetry.","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES" : {
      "envType": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Type of the Python environment.","owner":"donjayamanne"},
@@ -614,16 +727,19 @@
      "source": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Source where the env variables were fetched from. If `python`, then env variables were fetched from Python extension. If `jupyter`, then env variables were fetched from Jupyter extension.","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.GET_PASSWORD_FAILURE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.GET_PASSWORD_SUCCESS" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE" : {
      "hasGeo": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'geo' in it.","owner":"donjayamanne"},
@@ -642,42 +758,50 @@
      "hasXml": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'xml' in it.","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.INTERPRETER_LISTING_PERF" : {
      "firstTime": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether this is the first time in the session. (fetching kernels first time in the session is slower, later its cached). This is a generic property supported for all telemetry (sent by decorators).","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.INTERRUPT_JUPYTER_TIME" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.INVALID_KERNEL_USED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS" : {
      "type": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether we're looking for widgets on local Jupyter environment (local connections) or remote.","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_DISCOVERED" : {
      "hashedName": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"Hash of the widget","owner":"donjayamanne"},
      "source": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Where did we find the hashed name (CDN or user environment or remote jupyter).","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_DISCOVERY_ERRORED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO" : {
      "failure": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"","owner":"donjayamanne"},
@@ -686,6 +810,7 @@
      "requireEntryPointCount": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Total number of entries in the require config.","owner":"donjayamanne","isMeasurement":true}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_LOAD_FAILURE" : {
      "timedout": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"","owner":"donjayamanne"},
@@ -694,12 +819,14 @@
      "moduleVersion": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_LOAD_SUCCESS" : {
      "moduleHash": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"","owner":"donjayamanne"},
      "moduleVersion": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_OVERHEAD" : {
      "totalOverheadInMs": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"","owner":"donjayamanne","isMeasurement":true},
@@ -708,31 +835,37 @@
      "numberOfRegisteredHooks": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"","owner":"donjayamanne","isMeasurement":true}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN_SELECTION" : {
      "selection": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_RENDER_FAILURE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_TIME_TO_COPY_NBEXTENSIONS_DIR" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE" : {
      "msg_type": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_USED_BY_USER" : {
      "cdnSearched": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether we searched CDN or not.","owner":"donjayamanne"},
@@ -740,108 +873,129 @@
      "source": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Where did we find the hashed name (CDN or user environment or remote jupyter).","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE" : {
      "moduleHash": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"","owner":"donjayamanne"},
      "moduleVersion": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_IDLE_TIMEOUT" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.JUPYTERSTARTUPCOST" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.KERNEL_COUNT" : {
      "condaEnvsSharingSameInterpreter": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Total number of conda environments that share the same interpreter This happens when we create conda envs without the `python` argument. Such conda envs don't work today in the extension. Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.","owner":"donjayamanne","isMeasurement":true}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.KERNEL_LAUNCHER_PERF" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.KERNEL_LISTING_PERF" : {
      "firstTime": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether this is the first time in the session. (fetching kernels first time in the session is slower, later its cached). This is a generic property supported for all telemetry (sent by decorators).","owner":"donjayamanne"},
      "kind": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether this telemetry is for listing of all kernels or just python or just non-python. (fetching kernels first time in the session is slower, later its cached).","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.KERNEL_PROVIDER_PERF" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.KERNEL_SPEC_NOT_FOUND" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT" : {
      "count": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Number of kernel specs found on disc.","owner":"donjayamanne","isMeasurement":true}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT" : {
      "count": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"","owner":"donjayamanne","isMeasurement":true}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT" : {
      "count": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"","owner":"donjayamanne","isMeasurement":true}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.PREFERRED_KERNEL" : {
      "hasActiveInterpreter": {"comment":"","owner":"IanMatthewHuff"},
@@ -849,26 +1003,31 @@
      "result": {"comment":"","owner":"IanMatthewHuff"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES" : {
      "match": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether we've managed to correctly identify the Python Environment.","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.PYTHON_MODULE_INSTALL" : {
      "action": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"","owner":"donjayamanne"},
@@ -877,229 +1036,274 @@
      "pythonEnvType": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.PYTHON_NOT_INSTALLED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RANK_KERNELS_PERF" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE" : {
      "timedout": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether we timedout while waiting for response for Kernel info request.","owner":"donjayamanne"},
      "attempts": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Total number of attempts and sending a request and waiting for response.","owner":"donjayamanne","isMeasurement":true}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_CONNECT" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED" : {
      "stacktrace": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"This is the callstack at the time that the `dispose` method is called, intended for us to be able to identify who called `dispose` on the RawSession.","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED" : {
      "exitReason": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"The kernel process's exit reason, based on the error object's reason","owner":"donjayamanne"},
      "exitCode": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"The kernel process's exit code.","owner":"donjayamanne","isMeasurement":true}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL" : {
      "reason": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"","owner":"donjayamanne","isMeasurement":true}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN" : {
      "isRequestToShutdownRestartSession": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"This indicates whether the session being shutdown is a restart session.","owner":"donjayamanne"},
      "stacktrace": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"This is the callstack at the time that the `shutdownSession` method is called, intended for us to be ale to identify who tried to shutdown the session.","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_START" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_START_RAW_SESSION" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT" : {
      "count": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Number of remote kernel specs.","owner":"donjayamanne","isMeasurement":true}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RESTART_JUPYTER_TIME" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RESTART_KERNEL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.RUNTEST" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.SELECT_JUPYTER_INTERPRETER" : {
      "result": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"The result of the selection. notSelected - No interpreter was selected. selected - An interpreter was selected (and configured to have jupyter and notebook). installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter.","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.SELECT_JUPYTER_INTERPRETER_MESSAGE_DISPLAYED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.SHIFTENTER_BANNER_SHOWN" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_NO_PANDAS" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_PANDAS_OK" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.START_JUPYTER_PROCESS" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.START_SESSION_FAILED_JUPYTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.SWITCH_KERNEL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.SWITCH_TO_EXISTING_KERNEL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.SWITCH_TO_INTERPRETER_AS_KERNEL" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED" : {
      "isErrorOutput": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.WEB_FETCH_ERROR" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.WEBVIEW_STARTUP" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "DS_INTERNAL.ZMQ_NATIVE_BINARIES_NOT_LOADING" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "ENVFILE_VARIABLE_SUBSTITUTION" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "ENVFILE_WORKSPACE" : {
      "hasCustomEnvPath": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"If there's a custom path specified in the python.envFile workspace settings.","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "ERROR" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "EXTENSION.LOAD" : {
      "codeLoadingTime": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Time taken to load the code.","owner":"donjayamanne","isMeasurement":true},
@@ -1109,22 +1313,26 @@
      "startActivateTime": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Time when activation started.","owner":"donjayamanne","isMeasurement":true}   }
  */
 
+.trim()
 /* __GDPR__
    "HASHED_PACKAGE_NAME" : {
      "hashedNamev2": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Hash of the package name. Hash of the package name","owner":"unknown"}   }
  */
 
+.trim()
 /* __GDPR__
    "HASHED_PACKAGE_PERF" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "JUPYTER_EXPERIMENTS_OPT_IN_OUT" : {
      "expNameOptedInto": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Carries the name of the experiment user has been opted into manually","owner":"unknown"},
      "expNameOptedOutOf": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Carries the name of the experiment user has been opted out of manually","owner":"unknown"}   }
  */
 
+.trim()
 /* __GDPR__
    "JUPYTER_IS_INSTALLED" : {
      "detection": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Jupyter is in current path of process owned by VS Code. I.e. jupyter can be found in the path as defined by the env variable process.env['PATH'].","owner":"donjayamanne"},
@@ -1133,21 +1341,25 @@
      "frontEndVersion": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Version of the form 6.11, 4.8","owner":"donjayamanne","isMeasurement":true}   }
  */
 
+.trim()
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES" : {
      "activatedByWrapper": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the environment was activated by the wrapper class. If `true`, this telemetry is sent by the class that wraps the two activation providers   .","owner":"donjayamanne"},
@@ -1155,13 +1367,16 @@
      "hasEnvVars": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Carries `true` if environment variables are present, `false` otherwise","owner":"donjayamanne"}   }
  */
 
+.trim()
 /* __GDPR__
    "TERMINAL_ENV_VAR_EXTRACTION" : {
    }
  */
 
+.trim()
 /* __GDPR__
    "TERMINAL_SHELL_IDENTIFICATION" : {
    }
  */
 
+.trim()

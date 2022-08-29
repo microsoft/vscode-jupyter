@@ -774,7 +774,8 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
             entries.push(`     "${key}": ${JSON.stringify(json)}`);
         });
 
-        fs.appendFileSync(file, `${header.join('\n')}\n${entries.join(',\n')}${footer.join('\n')}`);
+        fs.appendFileSync(file, `${header.join('\n')}\n${entries.join(',\n')}${footer.join('\n')}`.trim());
+        fs.appendFileSync(file, `\n`);
     });
 }
 
