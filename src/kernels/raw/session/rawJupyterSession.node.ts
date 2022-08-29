@@ -20,7 +20,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
-import { captureTelemetry, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { IRawKernelConnectionSession, ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
 import { BaseJupyterSession } from '../../common/baseJupyterSession';
@@ -178,10 +178,14 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
             if (session !== this.session) {
                 return;
             }
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-                exitCode,
-                exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
-            });
+            sendKernelTelemetryEvent(
+                this.resource,
+                Telemetry.RawKernelSessionKernelProcessExited,
+                exitCode ? { exitCode } : undefined,
+                {
+                    exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
+                }
+            );
             traceError(`Raw kernel process exited code: ${exitCode}`);
 
             // If the raw kernel process dies, then send the terminating event, and shutdown the session.
@@ -232,7 +236,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI), purpose: 'restart' });
     }
 
-    @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
+    @capturePerfTelemetry(Telemetry.RawKernelStartRawSession)
     private async startRawSession(options: {
         token: CancellationToken;
         ui: IDisplayOptions;
@@ -365,7 +369,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         }
         sendKernelTelemetryEvent(
             this.resource,
-            Telemetry.RawKernelInfoResonse,
+            Telemetry.RawKernelInfoResponse,
             { duration: stopWatch.elapsedTime, attempts },
             {
                 timedout: !gotIoPubMessage.completed

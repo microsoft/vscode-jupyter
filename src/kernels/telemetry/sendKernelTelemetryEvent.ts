@@ -3,7 +3,7 @@
 
 import { Resource } from '../../platform/common/types';
 import { Telemetry } from '../../platform/common/constants';
-import { sendTelemetryEvent, waitBeforeSending, IEventNamePropertyMapping } from '../../telemetry';
+import { sendTelemetryEvent, waitBeforeSending, IEventNamePropertyMapping, TelemetryEventInfo } from '../../telemetry';
 import { getContextualPropsForTelemetry } from '../../platform/telemetry/telemetry';
 import { clearInterruptCounter, trackKernelResourceInformation } from './helper';
 import { InterruptResult } from '../types';
@@ -15,7 +15,7 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
         let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookStart>;
         const data: undefined | typeof kv[Telemetry.NotebookStart] = properties;
         // Check start failed.
-        if (data && 'failed' in data && data.failed) {
+        if (data && 'failed' in data && data['failed'] === true) {
             trackKernelResourceInformation(resource, { startFailed: true });
         }
     }
@@ -30,13 +30,20 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
 export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,
-    measures?: Partial<PickType<Required<UnionToIntersection<P[E]>>, number>> | undefined,
-    properties?: (ExcludeType<P[E], number> & { [waitBeforeSending]?: Promise<void> }) | undefined,
+    measures?:
+        | (P[E] extends TelemetryEventInfo<infer R> ? Partial<PickType<UnionToIntersection<R>, number>> : undefined)
+        | undefined,
+    properties?: P[E] extends TelemetryEventInfo<infer R>
+        ? ExcludeType<R, number> extends never | undefined
+            ? undefined | { [waitBeforeSending]?: Promise<void> }
+            : Partial<ExcludeType<R, number>> & { [waitBeforeSending]?: Promise<void> }
+        : undefined | { [waitBeforeSending]?: Promise<void> } | (undefined | { [waitBeforeSending]?: Promise<void> }),
     ex?: Error | undefined
 ) {
     const props = getContextualPropsForTelemetry(resource);
     Object.assign(props, properties || {});
-    sendTelemetryEvent(eventName, measures, props as typeof properties, ex, true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sendTelemetryEvent(eventName as any, measures as any, props as any, ex, true);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resetData(resource, eventName as any, props);
@@ -56,7 +63,7 @@ function resetData(resource: Resource, eventName: string, properties: any) {
         let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookInterrupt>;
         const data: undefined | typeof kv[Telemetry.NotebookInterrupt] = properties;
         // Check result to determine if success.
-        if (data && 'result' in data && data.result === InterruptResult.Success) {
+        if (data && 'result' in data && data['result'] === InterruptResult.Success) {
             clearInterruptCounter(resource);
         }
     }
@@ -65,7 +72,7 @@ function resetData(resource: Resource, eventName: string, properties: any) {
         let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookRestart>;
         const data: undefined | typeof kv[Telemetry.NotebookRestart] = properties;
         // For restart to be successful, we should not have `failed`
-        const failed = data && 'failed' in data ? data.failed : false;
+        const failed = data && 'failed' in data ? data['failed'] : false;
         if (!failed) {
             clearInterruptCounter(resource);
         }

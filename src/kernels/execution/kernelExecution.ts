@@ -14,7 +14,7 @@ import { createDeferred, waitForPromise } from '../../platform/common/utils/asyn
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 import { trackKernelResourceInformation } from '../telemetry/helper';
-import { captureTelemetry, Telemetry } from '../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../telemetry';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import {
     IKernelConnectionSession,
@@ -103,8 +103,8 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
         traceInfoIfCI(`Dispose KernelExecution`);
         this.disposables.forEach((d) => d.dispose());
     }
-    @captureTelemetry(Telemetry.Interrupt)
-    @captureTelemetry(Telemetry.InterruptJupyterTime)
+    @capturePerfTelemetry(Telemetry.Interrupt)
+    @capturePerfTelemetry(Telemetry.InterruptJupyterTime)
     private async interruptExecution(
         session: IKernelConnectionSession,
         pendingExecutions: Promise<unknown>
@@ -183,8 +183,8 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
         });
     }
 
-    @captureTelemetry(Telemetry.RestartKernel)
-    @captureTelemetry(Telemetry.RestartJupyterTime)
+    @capturePerfTelemetry(Telemetry.RestartKernel)
+    @capturePerfTelemetry(Telemetry.RestartJupyterTime)
     private async restartExecution(session: IKernelConnectionSession): Promise<void> {
         // Just use the internal session. Pending cells should have been canceled by the caller
         await session.restart();

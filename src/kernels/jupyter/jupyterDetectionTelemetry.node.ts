@@ -56,7 +56,7 @@ export class JupyterDetectionTelemetry implements IExtensionSyncActivationServic
                 const frontEndVersion = parseFloat(`${major}.${minor}`);
                 sendTelemetryEvent(
                     Telemetry.JupyterInstalled,
-                    { frontEndVersion },
+                    {frontEndVersion},
                     {
                         frontEnd,
                         detection: 'process'

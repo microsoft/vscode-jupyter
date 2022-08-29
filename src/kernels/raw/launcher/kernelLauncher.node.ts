@@ -234,10 +234,14 @@ export class KernelLauncher implements IKernelLauncher {
 
         const disposable = kernelProcess.exited(
             ({ exitCode, reason }) => {
-                sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-                    exitCode,
-                    exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
-                });
+                sendKernelTelemetryEvent(
+                    resource,
+                    Telemetry.RawKernelSessionKernelProcessExited,
+                    exitCode ? { exitCode } : undefined,
+                    {
+                        exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
+                    }
+                );
                 KernelLauncher._usedPorts.delete(connection.control_port);
                 KernelLauncher._usedPorts.delete(connection.hb_port);
                 KernelLauncher._usedPorts.delete(connection.iopub_port);

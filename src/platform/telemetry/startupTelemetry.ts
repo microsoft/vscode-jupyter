@@ -16,8 +16,11 @@ export async function sendStartupTelemetry(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     activatedPromise: Promise<any>,
     durations: {
-        totalActivateTime: number;
         workspaceFolderCount: number;
+        totalActivateTime: number;
+        codeLoadingTime: number;
+        startActivateTime: number;
+        endActivateTime: number;
     },
     stopWatch: IStopWatch,
     serviceContainer: IServiceContainer
@@ -38,7 +41,13 @@ export async function sendStartupTelemetry(
 
 export async function sendErrorTelemetry(
     ex: Error,
-    durations: { workspaceFolderCount: number },
+    durations: {
+        workspaceFolderCount: number;
+        totalActivateTime: number;
+        codeLoadingTime: number;
+        startActivateTime: number;
+        endActivateTime: number;
+    },
     serviceContainer?: IServiceContainer
 ) {
     try {

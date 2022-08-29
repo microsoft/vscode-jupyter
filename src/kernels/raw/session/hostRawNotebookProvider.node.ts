@@ -21,7 +21,7 @@ import {
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
-import { captureTelemetry, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { isPythonKernelConnection } from '../../helpers';
 import { IRawKernelConnectionSession, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
@@ -71,7 +71,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         return this.rawNotebookSupportedService.isSupported;
     }
 
-    @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
+    @capturePerfTelemetry(Telemetry.RawKernelCreatingNotebook)
     public async createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
