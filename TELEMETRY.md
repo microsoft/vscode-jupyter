@@ -4,8 +4,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.ADD_CELL_BELOW  (Telemetry.AddCellBelow)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when user adds a cell below the current cell for IW.  
     ```
@@ -18,9 +18,9 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK  (Telemetry.ClickedExportNotebookAsQuickPick)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR format</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR format. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     User exports the IW or Notebook to a specific format.  
     ```
@@ -36,15 +36,15 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.CREATE_NEW_INTERACTIVE  (Telemetry.CreateNewInteractive)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.DATA_VIEWER_DATA_DIMENSIONALITY  (Telemetry.DataViewerDataDimensionality)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Measures not documented in GDPR numberOfDimensions</span>  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry event sent when a slice is first applied in a  
     data viewer instance to a sliceable Python variable.  
@@ -59,9 +59,9 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DATA_VIEWER_SLICE_ENABLEMENT_STATE_CHANGED  (Telemetry.DataViewerSliceEnablementStateChanged)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR newState</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR newState. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Telemetry event sent whenever the user toggles the checkbox  
     controlling whether a slice is currently being applied to an  
@@ -81,9 +81,9 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DATA_VIEWER_SLICE_OPERATION  (Telemetry.DataViewerSliceOperation)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR source</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR source. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Telemetry event sent whenever the user applies a valid slice  
     to a sliceable Python variable in the data viewer.  
@@ -103,8 +103,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUG_CONTINUE  (Telemetry.DebugContinue)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when user hits the `continue` button while debugging IW  
     ```
@@ -117,8 +116,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUG_CURRENT_CELL  (Telemetry.DebugCurrentCell)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when user debugs the cell in the IW  
     ```
@@ -131,8 +129,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUG_FILE_INTERACTIVE  (Telemetry.DebugFileInteractive)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when user debugs the file in the IW  
     ```
@@ -145,8 +142,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUG_STEP_OVER  (Telemetry.DebugStepOver)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when user hits the `step over` button while debugging IW  
     ```
@@ -159,8 +155,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUG_STOP  (Telemetry.DebugStop)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when user hits the `stop` button while debugging IW  
     ```
@@ -173,33 +168,33 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUGGING.CLICKED_ON_SETUP  (DebuggingTelemetry.clickedOnSetup)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.DEBUGGING.CLICKED_RUN_AND_DEBUG_CELL  (DebuggingTelemetry.clickedRunAndDebugCell)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.DEBUGGING.CLICKED_RUNBYLINE  (DebuggingTelemetry.clickedRunByLine)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.DEBUGGING.CLOSED_MODAL  (DebuggingTelemetry.closedModal)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.DEBUGGING.ENDED_SESSION  (DebuggingTelemetry.endedSession)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR reason</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR reason. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `reason`: `<see below>`  
         Possible values include:  
@@ -212,9 +207,9 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUGGING.IPYKERNEL6_STATUS  (DebuggingTelemetry.ipykernel6Status)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR status</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR status. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `status`: `<see below>`  
         Possible values include:  
@@ -224,8 +219,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_IW_JUPYTER  (DebuggingTelemetry.successfullyStartedIWJupyterDebugger)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry sent when we have managed to successfully start the Interactive Window debugger using the Jupyter protocol.  
     ```
@@ -234,20 +229,19 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_RUN_AND_DEBUG_CELL  (DebuggingTelemetry.successfullyStartedRunAndDebugCell)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_RUNBYLINE  (DebuggingTelemetry.successfullyStartedRunByLine)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER  (Telemetry.DisableInteractiveShiftEnter)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)  
     ```
@@ -260,8 +254,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER  (Telemetry.EnableInteractiveShiftEnter)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)  
     ```
@@ -274,8 +267,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.ENTER_JUPYTER_URI  (Telemetry.EnterJupyterURI)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Captures the telemetry when the Uri is manually entered by the user as part of the workflow when selecting a Kernel.  
     ```
@@ -288,8 +281,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.EXECUTE_CELL  (Telemetry.ExecuteCell)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Executes a cell, applies to IW and Notebook.  
     Check the `resourceType` to determine whether its a Jupyter Notebook or IW.  
@@ -370,9 +361,9 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.EXPORT_NOTEBOOK_AS  (Telemetry.ExportNotebookAs)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR format, cancelled, successful, opened</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR format, cancelled, successful, opened. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Called when user imports a Jupyter Notebook into a Python file.  
     Command is `Jupyter: Import Jupyter Notebook`  
@@ -393,9 +384,9 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.EXPORT_NOTEBOOK_AS_COMMAND  (Telemetry.ExportNotebookAsCommand)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR format</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR format. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Called when user exports a Jupyter Notebook or IW into a Python file, HTML, PDF, etc.  
     Command is `Jupyter: Export to Python Script` or `Jupyter: Export to HTML`  
@@ -413,9 +404,9 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED  (Telemetry.ExportNotebookAsFailed)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR format</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR format. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Export fails  
     ```
@@ -431,8 +422,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.EXPORT_PYTHON_FILE  (Telemetry.ExportPythonFileInteractive)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     User exports a .py file with cells as a Jupyter Notebook.  
     ```
@@ -441,8 +432,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT  (Telemetry.ExportPythonFileAndOutputInteractive)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     User exports a .py file with cells along with the outputs from the current IW as a Jupyter Notebook.  
     ```
@@ -451,15 +442,15 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.FAILED_SHOW_DATA_EXPLORER  (Telemetry.FailedShowDataViewer)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.FAILED_TO_CREATE_CONTROLLER  (Telemetry.FailedToCreateNotebookController)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR kind</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR kind. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `kind`: `<see below>`  
         What kind of kernel spec did we fail to create.  
@@ -487,9 +478,9 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.FETCH_CONTROLLERS  (Telemetry.FetchControllers)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR cached, kind</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR cached, kind. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Telemetry sent when we have loaded some controllers.  
     ```
@@ -506,8 +497,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.GET_PASSWORD_ATTEMPT  (Telemetry.GetPasswordAttempt)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -516,8 +506,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.GOTO_NEXT_CELL_IN_FILE  (Telemetry.GotoNextCellInFile)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -526,8 +516,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.GOTO_PREV_CELL_IN_FILE  (Telemetry.GotoPrevCellInFile)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -536,9 +526,9 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.IMPORT_NOTEBOOK  (Telemetry.ImportNotebook)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR scope</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR scope. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Called when user imports a Jupyter Notebook into a Python file.  
     Command is `Jupyter: Import Jupyter Notebook`  
@@ -554,9 +544,9 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE  (Telemetry.InteractiveWindowDebugSetupCodeFailure)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR ename, evalue</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR ename, evalue. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `ename`: `string`  
         - `evalue`: `string`  
@@ -564,8 +554,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.INTERRUPT  (Telemetry.Interrupt)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     User interrupts a cell  
     Identical to `Telemetry.InterruptJupyterTime`  
@@ -579,8 +567,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.JUPYTER_KERNEL_API_ACCESS  (Telemetry.JupyterKernelApiAccess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `extensionId`: `string`  
         - `allowed`: `<see below>`  
@@ -591,8 +578,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.JUPYTER_KERNEL_API_USAGE  (Telemetry.JupyterKernelApiUsage)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `extensionId`: `string`  
         - `pemUsed`: `keyof IExportedKernelService`  
@@ -600,26 +586,23 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.JUPYTER_KERNEL_FILTER_USED  (Telemetry.JupyterKernelFilterUsed)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.JUPYTER_KERNEL_HIDDEN_VIA_FILTER  (Telemetry.JupyterKernelHiddenViaFilter)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN  (Telemetry.JupyterNotInstalledErrorShown)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.KERNEL_CRASH  (Telemetry.KernelCrash)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -695,8 +678,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.KERNEL_SPEC_LANGUAGE  (Telemetry.KernelSpecLanguage)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `language`: `string`  
         Language of the kernelSpec.  
@@ -712,8 +694,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE  (Telemetry.KernelStartupCodeFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - Properties:  
         - `ename`: `string`  
         - `evalue`: `string`  
@@ -721,8 +701,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK  (Telemetry.CreateNewNotebook)  
       Owner: [@unknown](https://github.com/unknown)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -731,14 +710,14 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL  (Telemetry.OpenNotebookAll)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.NO_ACTIVE_KERNEL_SESSION  (Telemetry.NoActiveKernelSession)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Useful when we need an active kernel session in order to execute commands silently.  
     Used by the dataViewerDependencyService.  
@@ -748,8 +727,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.NOTEBOOK_INTERRUPT  (Telemetry.NotebookInterrupt)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Total time taken to interrupt a kernel  
     Check the `resourceType` to determine whether its a Jupyter Notebook or IW.  
@@ -929,8 +906,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.NOTEBOOK_LANGUAGE  (Telemetry.NotebookLanguage)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent to indicate the language used in a notebook  
     ```
@@ -942,8 +918,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.NOTEBOOK_RESTART  (Telemetry.NotebookRestart)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Restarts the Kernel.  
     Check the `resourceType` to determine whether its a Jupyter Notebook or IW.  
@@ -1118,8 +1092,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.NOTEBOOK_START  (Telemetry.NotebookStart)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Starts a kernel, applies to IW and Notebook.  
     Check the `resourceType` to determine whether its a Jupyter Notebook or IW.  
@@ -1215,15 +1187,15 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.OPEN_PLOT_VIEWER  (Telemetry.OpenPlotViewer)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE  (Telemetry.PythonVariableFetchingCodeFailure)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR ename, evalue</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR ename, evalue. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `ename`: `string`  
         - `evalue`: `string`  
@@ -1231,9 +1203,9 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RECOMMENT_EXTENSION  (Telemetry.RecommendExtension)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR extensionId, action</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR extensionId, action. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `extensionId`: `string`  
         Extension we recommended the user to install.  
@@ -1253,8 +1225,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.REFRESH_DATA_VIEWER  (Telemetry.RefreshDataViewer)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Sent when the jupyter.refreshDataViewer command is invoked  
     ```
@@ -1263,8 +1235,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RESTART_KERNEL_COMMAND  (Telemetry.RestartKernelCommand)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when IW or Notebook is restarted.  
     ```
@@ -1344,8 +1315,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_ALL_CELLS  (Telemetry.RunAllCells)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Run all Cell Commands in Interactive Python  
     ```
@@ -1358,8 +1329,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_ALL_CELLS_ABOVE  (Telemetry.RunAllCellsAbove)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Run all the above cells in Interactive Python  
     ```
@@ -1372,14 +1343,14 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER  (Telemetry.RunByLineVariableHover)  
       Owner: [@roblourens](https://github.com/roblourens)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.RUN_CELL_AND_ALL_BELOW  (Telemetry.RunCellAndAllBelow)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Run current cell and all below in Interactive Python  
     ```
@@ -1392,8 +1363,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_CHANGE_CELL_TO_CODE  (Telemetry.ChangeCellToCode)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1402,8 +1373,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_CHANGE_CELL_TO_MARKDOWN  (Telemetry.ChangeCellToMarkdown)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1412,8 +1383,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_CURRENT_CELL  (Telemetry.RunCurrentCell)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Run the current Cell in Interactive Python  
     ```
@@ -1426,8 +1397,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_CURRENT_CELL_AND_ADD_BELOW  (Telemetry.RunCurrentCellAndAddBelow)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1436,8 +1407,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE  (Telemetry.RunCurrentCellAndAdvance)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Run current cell and advance cursor in Interactive Python  
     ```
@@ -1450,8 +1421,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_DELETE_CELLS  (Telemetry.DeleteCells)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1460,8 +1431,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_ABOVE  (Telemetry.ExtendSelectionByCellAbove)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1470,8 +1441,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_BELOW  (Telemetry.ExtendSelectionByCellBelow)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1480,8 +1451,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_FILE_INTERACTIVE  (Telemetry.RunFileInteractive)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Run file in Interactive Python  
     ```
@@ -1494,8 +1465,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_FROM_LINE  (Telemetry.RunFromLine)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1504,8 +1475,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_INSERT_CELL_ABOVE  (Telemetry.InsertCellAbove)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1514,8 +1485,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_INSERT_CELL_BELOW  (Telemetry.InsertCellBelow)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1524,8 +1495,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_INSERT_CELL_BELOW_POSITION  (Telemetry.InsertCellBelowPosition)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Cell Edit Commands in Interactive Python  
     ```
@@ -1538,8 +1509,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_MOVE_CELLS_DOWN  (Telemetry.MoveCellsDown)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1548,8 +1519,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_MOVE_CELLS_UP  (Telemetry.MoveCellsUp)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1558,8 +1529,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_SELECT_CELL  (Telemetry.SelectCell)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1568,8 +1539,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_SELECT_CELL_CONTENTS  (Telemetry.SelectCellContents)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1578,8 +1549,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_SELECTION_OR_LINE  (Telemetry.RunSelectionOrLine)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Run a Selection or Line in Interactive Python  
     ```
@@ -1592,8 +1563,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_TO_LINE  (Telemetry.RunToLine)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1602,8 +1573,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command  (Telemetry.SelectJupyterInterpreterCommand)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry sent when user selects an interpreter to start jupyter server.  
     ```
@@ -1612,8 +1582,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SELECT_JUPYTER_URI  (Telemetry.SelectJupyterURI)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1622,8 +1592,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL  (Telemetry.SelectLocalJupyterKernel)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -1699,8 +1668,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL  (Telemetry.SelectRemoteJupyterKernel)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -1776,20 +1744,18 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SELFCERTSMESSAGECLOSE  (Telemetry.SelfCertsMessageClose)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.SELFCERTSMESSAGEENABLED  (Telemetry.SelfCertsMessageEnabled)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.SET_JUPYTER_URI_LOCAL  (Telemetry.SetJupyterURIToLocal)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1798,9 +1764,9 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED  (Telemetry.SetJupyterURIUIDisplayed)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR commandSource</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR commandSource. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     This telemetry tracks the display of the Picker for Jupyter Remote servers.  
     ```
@@ -1825,18 +1791,18 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED  (Telemetry.SetJupyterURIToUserSpecified)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR azure</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR azure. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `azure`: `boolean`  
 
 
 * DATASCIENCE.SHOW_DATA_EXPLORER  (Telemetry.ShowDataViewer)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR rows, columns</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR rows, columns. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `rows`: `<see below>`  
         Possible values include:  
@@ -1848,8 +1814,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.START_SHOW_DATA_EXPLORER  (Telemetry.StartShowDataViewer)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1858,32 +1824,28 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER  (Telemetry.UserDidNotInstallJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS  (Telemetry.UserDidNotInstallPandas)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.USER_INSTALLED_JUPYTER  (Telemetry.UserInstalledJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.USER_INSTALLED_PANDAS  (Telemetry.UserInstalledPandas)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DATASCIENCE.USER_STARTUP_CODE_FAILURE  (Telemetry.UserStartupCodeFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - Properties:  
         - `ename`: `string`  
         - `evalue`: `string`  
@@ -1891,8 +1853,8 @@ Expand each section to see more information about that event.
 
 * DATAVIEWER.USING_INTERPRETER  (Telemetry.DataViewerUsingInterpreter)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     When the Data Viewer installer is using the Python interpreter.  
     ```
@@ -1901,8 +1863,8 @@ Expand each section to see more information about that event.
 
 * DATAVIEWER.USING_KERNEL  (Telemetry.DataViewerUsingKernel)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     When the Data Viewer installer is using the Kernel.  
     ```
@@ -1911,8 +1873,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF  (Telemetry.ActiveInterpreterListingPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `firstTime`?: `boolean`  
         Whether this is the first time in the session.  
@@ -1925,8 +1886,8 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CODE_LENS_ACQ_TIME  (Telemetry.CodeLensAverageAcquisitionTime)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1935,8 +1896,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.COMMAND_EXECUTED  (Telemetry.CommandExecuted)  
       Owner: [@unknown](https://github.com/unknown)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry sent when a command is executed.  
     ```
@@ -1948,8 +1908,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTFAILEDJUPYTER  (Telemetry.ConnectFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `failed`: `true`  
         Whether there was a failure.  
@@ -1969,14 +1928,12 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTLOCALJUPYTER  (Telemetry.ConnectLocalJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.CONNECTREMOTEEXPIREDCERTFAILEDJUPYTER  (Telemetry.ConnectRemoteExpiredCertFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Jupyter server's certificate has expired.  
     ```
@@ -1985,8 +1942,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER  (Telemetry.ConnectRemoteFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `failed`: `true`  
         Whether there was a failure.  
@@ -2006,14 +1962,12 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTREMOTEJUPYTER  (Telemetry.ConnectRemoteJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST  (Telemetry.ConnectRemoteJupyterViaLocalHost)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Connecting to an existing Jupyter server, but connecting to localhost.  
     ```
@@ -2022,8 +1976,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER  (Telemetry.ConnectRemoteSelfCertFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Jupyter server's certificate is not from a trusted authority.  
     ```
@@ -2032,8 +1985,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER  (Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `pythonExtensionInstalled`: `boolean`  
         Indicates whether the python extension is installed.  
@@ -2113,8 +2065,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD  (Telemetry.ExecuteCellPerceivedCold)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry sent to capture first time execution of a cell.  
     If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.  
@@ -2134,8 +2084,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM  (Telemetry.ExecuteCellPerceivedWarm)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry sent to capture subsequent execution of a cell.  
     If `notebook = true`, this its telemetry for native editor/notebooks.  
@@ -2156,14 +2104,12 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC  (Telemetry.FailedToUpdateKernelSpec)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES  (Telemetry.GetActivatedEnvironmentVariables)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Used to capture time taken to get environment variables for a python environment.  
     Also lets us know whether it worked or not.  
@@ -2227,20 +2173,17 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.GET_PASSWORD_FAILURE  (Telemetry.GetPasswordFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.GET_PASSWORD_SUCCESS  (Telemetry.GetPasswordSuccess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE  (Telemetry.HashedCellOutputMimeType)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Hash of the mime type of a cell output.  
     Used to detect the popularity of a mime type, that would help determine which mime types are most common.  
@@ -2281,17 +2224,16 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF  (Telemetry.InteractiveFileTooltipsPerf)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR isResultNull</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR isResultNull. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `isResultNull`: `boolean`  
 
 
 * DS_INTERNAL.INTERPRETER_LISTING_PERF  (Telemetry.InterpreterListingPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Time taken to list the Python interpreters.  
     ```
@@ -2308,8 +2250,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.INTERRUPT_JUPYTER_TIME  (Telemetry.InterruptJupyterTime)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     User interrupts a cell  
     Identical to `Telemetry.Interrupt`  
@@ -2323,8 +2264,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.INVALID_KERNEL_USED  (Telemetry.KernelInvalid)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when a kernel picked crashes on startup  
     ```
@@ -2333,8 +2273,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS  (Telemetry.DiscoverIPyWidgetNamesPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Total time taken to discover all IPyWidgets.  
     This is how long it takes to discover all widgets on disc (from python environment).  
@@ -2350,8 +2288,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_DISCOVERED  (Telemetry.HashedIPyWidgetNameDiscovered)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry event sent with name of a Widget found.  
     ```
@@ -2369,8 +2305,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_DISCOVERY_ERRORED  (Telemetry.HashedIPyWidgetScriptDiscoveryError)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Something went wrong in looking for a widget.  
     ```
@@ -2379,8 +2313,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO  (Telemetry.IPyWidgetExtensionJsInfo)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.  
     E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.  
@@ -2413,8 +2345,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_LOAD_FAILURE  (Telemetry.IPyWidgetLoadFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry event sent when an ipywidget module fails to load. Module name is hashed.  
     ```
@@ -2428,8 +2358,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_LOAD_SUCCESS  (Telemetry.IPyWidgetLoadSuccess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry event sent when an ipywidget module loads. Module name is hashed.  
     ```
@@ -2441,8 +2369,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_OVERHEAD  (Telemetry.IPyWidgetOverhead)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry event sent to indicate the overhead of syncing the kernel with the UI.  
     ```
@@ -2456,8 +2382,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN  (Telemetry.IPyWidgetPromptToUseCDN)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry sent when we prompt user to use a CDN for IPyWidget scripts.  
     This is always sent when we display a prompt.  
@@ -2467,8 +2391,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN_SELECTION  (Telemetry.IPyWidgetPromptToUseCDNSelection)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry sent when user does something with the prompt displayed to user about using CDN for IPyWidget scripts.  
     ```
@@ -2484,8 +2406,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_RENDER_FAILURE  (Telemetry.IPyWidgetRenderFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).  
     ```
@@ -2494,8 +2414,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_TIME_TO_COPY_NBEXTENSIONS_DIR  (Telemetry.IPyWidgetNbExtensionCopyTime)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Total time take to copy the nb extensions folder.  
     ```
@@ -2508,8 +2426,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE  (Telemetry.IPyWidgetUnhandledMessage)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry event sent when the widget tries to send a kernel message but nothing was listening  
     ```
@@ -2520,8 +2436,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_USED_BY_USER  (Telemetry.HashedIPyWidgetNameUsed)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry event sent with name of a Widget that is used.  
     ```
@@ -2541,8 +2455,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE  (Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.  
     ```
@@ -2554,8 +2466,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK  (Telemetry.JupyterCreatingNotebook)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - `When things fail`:  
         - Properties:  
             - `resourceType`?: `<see below>`  
@@ -2724,8 +2634,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE  (Telemetry.JupyterCommandLineNonDefault)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent to when user customizes the jupyter command line  
     ```
@@ -2734,14 +2643,12 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTER_IDLE_TIMEOUT  (Telemetry.SessionIdleTimeout)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE  (Telemetry.JupyterInstalledButNotKernelSpecModule)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.  
     ```
@@ -2750,8 +2657,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL  (Telemetry.RegisterInterpreterAsKernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -2760,8 +2666,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTERSTARTUPCOST  (Telemetry.StartJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -2770,8 +2675,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.KERNEL_COUNT  (Telemetry.KernelCount)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -2861,8 +2765,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.KERNEL_LAUNCHER_PERF  (Telemetry.KernelLauncherPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total time taken to Launch a raw kernel.  
     ```
@@ -2962,8 +2865,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.KERNEL_LISTING_PERF  (Telemetry.KernelListingPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `firstTime`?: `boolean`  
         Whether this is the first time in the session.  
@@ -2984,8 +2886,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.KERNEL_PROVIDER_PERF  (Telemetry.KernelProviderPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total time taken to list kernels for VS Code.  
     ```
@@ -2994,8 +2895,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.KERNEL_SPEC_NOT_FOUND  (Telemetry.KernelSpecNotFound)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent to indicate 'jupyter kernelspec' is not possible.  
     ```
@@ -3004,8 +2904,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT  (Telemetry.NumberOfLocalKernelSpecs)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total number of Local kernel specifications.  
     ```
@@ -3017,8 +2916,8 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED  (Telemetry.NativeVariableViewLoaded)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -3027,14 +2926,13 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE  (Telemetry.NativeVariableViewMadeVisible)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT  (Telemetry.NotebookOpenCount)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.  
     ```
@@ -3045,8 +2943,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT  (Telemetry.NotebookRunCount)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total number of cells executed. Telemetry Sent when VS Code is closed.  
     ```
@@ -3057,8 +2954,8 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE  (Telemetry.NewFileForInteractiveWindow)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when a user runs the interactive window with a new file  
     ```
@@ -3067,17 +2964,15 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED  (Telemetry.NumberOfSavedRemoteKernelIds)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Measures not documented in GDPR count</span>  
-       <span style="color:red">effectiveVersion not set</span>  
     - Measures:  
         - `count`: `number`  
 
 
 * DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK  (Telemetry.PerceivedJupyterStartupNotebook)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Time take for jupyter server to start and be ready to run first user cell.  
     (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)  
@@ -3161,8 +3056,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PREFERRED_KERNEL  (Telemetry.PreferredKernel)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Telemetry sent when we have attempted to find the preferred kernel.  
     ```
@@ -3184,18 +3077,18 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH  (Telemetry.PreferredKernelExactMatch)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR matchedReason</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR matchedReason. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `matchedReason`: `<see below>`  
 
 
 * DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER  (Telemetry.PythonExtensionInstalledViaKernelPicker)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR action</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR action. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `action`: `<see below>`  
         Possible values include:  
@@ -3205,9 +3098,9 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED  (Telemetry.PythonExtensionNotInstalled)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR action</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR action. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `action`: `<see below>`  
         Possible values include:  
@@ -3218,8 +3111,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES  (Telemetry.PythonKerneExecutableMatches)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry sent for local Python Kernels.  
     Tracking whether we have managed to launch the kernel that matches the interpreter.  
@@ -3242,8 +3134,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_MODULE_INSTALL  (Telemetry.PythonModuleInstall)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `moduleName`: `string`  
         - `isModulePresent`?: `<see below>`  
@@ -3298,9 +3189,9 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_NOT_INSTALLED  (Telemetry.PythonNotInstalled)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR action</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR action. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `action`: `<see below>`  
         Possible values include:  
@@ -3311,8 +3202,8 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RANK_KERNELS_PERF  (Telemetry.RankKernelsPerf)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total time taken to find a kernel on disc or on a remote machine.  
     ```
@@ -3325,8 +3216,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK  (Telemetry.RawKernelCreatingNotebook)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -3335,8 +3224,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_INFO_RESPONSE  (Telemetry.RawKernelInfoResponse)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     After starting a kernel we send a request to get the kernel info.  
     This tracks the total time taken to get the response back (or wether we timedout).  
@@ -3426,8 +3313,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH  (Telemetry.RawKernelProcessLaunch)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -3436,8 +3321,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_CONNECT  (Telemetry.RawKernelSessionConnect)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -3516,8 +3399,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED  (Telemetry.RawKernelSessionDisposed)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     This event is sent when a RawSession's `dispose` method is called.  
     ```
@@ -3603,8 +3484,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED  (Telemetry.RawKernelSessionKernelProcessExited)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     This event is sent when the underlying kernelProcess for a  
     RawJupyterSession exits.  
@@ -3692,9 +3571,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL  (Telemetry.RawKernelSessionStartNoIpykernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR reason</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Properties not documented in GDPR reason. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `reason`: `<see below>`  
         Possible values include:  
@@ -3726,8 +3603,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN  (Telemetry.RawKernelSessionShutdown)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     This event is sent when a RawJupyterSession's `shutdownSession`  
     method is called.  
@@ -3821,8 +3696,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_START  (Telemetry.RawKernelSessionStart)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - `When started successfully.`:  
         - Properties:  
             - `resourceType`?: `<see below>`  
@@ -4089,8 +3962,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION  (Telemetry.RawKernelSessionStartException)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -4166,8 +4037,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS  (Telemetry.RawKernelSessionStartSuccess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -4243,8 +4112,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL  (Telemetry.RawKernelSessionStartUserCancel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -4320,8 +4187,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_START_RAW_SESSION  (Telemetry.RawKernelStartRawSession)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -4330,14 +4195,12 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL  (Telemetry.RegisterAndUseInterpreterAsKernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT  (Telemetry.NumberOfRemoteKernelSpecs)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Total number of Remote kernel specifications.  
     ```
@@ -4349,8 +4212,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RESTART_JUPYTER_TIME  (Telemetry.RestartJupyterTime)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Total time taken to restart a kernel.  
     Identical to `Telemetry.RestartKernel`  
@@ -4364,8 +4225,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RESTART_KERNEL  (Telemetry.RestartKernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Total time taken to restart a kernel.  
     Identical to `Telemetry.RestartJupyterTime`  
@@ -4379,9 +4238,9 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RUNTEST  (Telemetry.RunTest)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR testName, testResult, perfWarmup, commitHash, timedCheckpoints</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR testName, testResult, perfWarmup, commitHash, timedCheckpoints. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `testName`: `string`  
         - `testResult`: `string`  
@@ -4392,8 +4251,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.SELECT_JUPYTER_INTERPRETER  (Telemetry.SelectJupyterInterpreter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `result`?: `<see below>`  
         The result of the selection.  
@@ -4408,47 +4266,44 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.SELECT_JUPYTER_INTERPRETER_MESSAGE_DISPLAYED  (Telemetry.SelectJupyterInterpreterMessageDisplayed)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.SHIFTENTER_BANNER_SHOWN  (Telemetry.ShiftEnterBannerShown)  
       Owner: [@amunger](https://github.com/amunger)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.SHOW_DATA_NO_PANDAS  (Telemetry.PandasNotInstalled)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED  (Telemetry.PandasInstallCanceled)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR version</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR version. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `version`: `string`  
 
 
 * DS_INTERNAL.SHOW_DATA_PANDAS_OK  (Telemetry.PandasOK)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD  (Telemetry.PandasTooOld)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD  (Telemetry.StartExecuteNotebookCellPerceivedCold)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.  
     ```
@@ -4531,8 +4386,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.START_JUPYTER_PROCESS  (Telemetry.StartJupyterProcess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -4541,8 +4395,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.START_SESSION_FAILED_JUPYTER  (Telemetry.StartSessionFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when starting a session for a local connection failed.  
     ```
@@ -4551,8 +4404,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.SWITCH_KERNEL  (Telemetry.SwitchKernel)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     ```
     Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).  
     WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.  
@@ -4633,23 +4484,23 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.SWITCH_TO_EXISTING_KERNEL  (Telemetry.SwitchToExistingKernel)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR language</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR language. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `language`: `string`  
 
 
 * DS_INTERNAL.SWITCH_TO_INTERPRETER_AS_KERNEL  (Telemetry.SwitchToInterpreterAsKernel)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME  (Telemetry.VariableExplorerFetchTime)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -4658,25 +4509,22 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT  (Telemetry.VariableExplorerVariableCount)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Measures not documented in GDPR variableCount</span>  
-       <span style="color:red">effectiveVersion not set</span>  
     - Measures:  
         - `variableCount`: `number`  
 
 
 * DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED  (Telemetry.VSCNotebookCellTranslationFailed)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - Properties:  
         - `isErrorOutput`: `boolean`  
 
 
 * DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER  (Telemetry.WaitForIdleJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -4685,9 +4533,9 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.WEB_FETCH_ERROR  (Telemetry.FetchError)  
       Owner: [@unknown](https://github.com/unknown)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR currentTask</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR currentTask. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Event sent when trying to talk to a remote server and the browser gives us a generic fetch error  
     ```
@@ -4699,17 +4547,16 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.WEBVIEW_STARTUP  (Telemetry.WebviewStartup)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR type</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR type. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `type`: `string`  
 
 
 * DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING  (Telemetry.ZMQSupported)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when the ZMQ native binaries do work.  
     ```
@@ -4718,8 +4565,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.ZMQ_NATIVE_BINARIES_NOT_LOADING  (Telemetry.ZMQNotSupported)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when the ZMQ native binaries do not work.  
     ```
@@ -4728,8 +4574,7 @@ Expand each section to see more information about that event.
 
 * ENVFILE_VARIABLE_SUBSTITUTION  (EventName.ENVFILE_VARIABLE_SUBSTITUTION)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when substituting Environment variables to calculate value of variables.  
     E.g. user has a a .env file with tokens that need to be replaced with env variables.  
@@ -4741,8 +4586,7 @@ Expand each section to see more information about that event.
 
 * ENVFILE_WORKSPACE  (EventName.ENVFILE_WORKSPACE)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when an environment file is detected in the workspace.  
     ```
@@ -4754,8 +4598,7 @@ Expand each section to see more information about that event.
 
 * ERROR  (ERROR)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `failureCategory`: `'methodException'`  
         - `failureSubCategory`: `string`  
@@ -4778,7 +4621,7 @@ Expand each section to see more information about that event.
 
 * EXTENSION.LOAD  (EventName.EXTENSION_LOAD)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added before 2022.9.  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent with perf measures related to activation and loading of extension.  
     ```
@@ -4798,8 +4641,7 @@ Expand each section to see more information about that event.
 
 * HASHED_PACKAGE_NAME  (EventName.HASHED_PACKAGE_NAME)  
       Owner: [@unknown](https://github.com/unknown)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent with hash of an imported python package.  
     Used to detect the popularity of a package, that would help determine which packages  
@@ -4813,16 +4655,14 @@ Expand each section to see more information about that event.
 
 * HASHED_PACKAGE_PERF  (EventName.HASHED_PACKAGE_PERF)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Measures:  
         - `duration`: `number`  
 
 
 * JUPYTER_EXPERIMENTS_OPT_IN_OUT  (EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT)  
       Owner: [@unknown](https://github.com/unknown)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent with details when a user has requested to opt it or out of an experiment group  
     ```
@@ -4836,8 +4676,6 @@ Expand each section to see more information about that event.
 
 * JUPYTER_IS_INSTALLED  (Telemetry.JupyterInstalled)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
     - `/* Detection of jupyter failed`:  
         - Properties:  
             - `failed`: `true`  
@@ -4862,14 +4700,14 @@ Expand each section to see more information about that event.
 
 * OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX  (EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX  (EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when user opens the data viewer.  
     ```
@@ -4878,14 +4716,13 @@ Expand each section to see more information about that event.
 
 * OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX  (EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
 
 
 * PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES  (EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     - Properties:  
         - `hasEnvVars`?: `boolean`  
         Carries `true` if environment variables are present, `false` otherwise  
@@ -4900,9 +4737,9 @@ Expand each section to see more information about that event.
 
 * TERMINAL_ENV_VAR_EXTRACTION  (Telemetry.TerminalEnvVariableExtraction)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR reason</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR reason. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Telemetry sent only when we fail to extract the env variables for a shell.  
     ```
@@ -4922,9 +4759,9 @@ Expand each section to see more information about that event.
 
 * TERMINAL_SHELL_IDENTIFICATION  (Telemetry.TerminalShellIdentification)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-      Added in undefined.  
-       <span style="color:red">Properties not documented in GDPR reason, terminalProvided, shellIdentificationSource, hasCustomShell, hasShellInEnv</span>  
-       <span style="color:red">effectiveVersion not set</span>  
+       <span style="color:red">Feature not defined.</span>  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Properties not documented in GDPR reason, terminalProvided, shellIdentificationSource, hasCustomShell, hasShellInEnv. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     - Properties:  
         - `failed`: `boolean`  
         - `reason`: `<see below>`  

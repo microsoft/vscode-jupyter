@@ -39,10 +39,6 @@ export type ResourceTypeTelemetryProperty = {
 };
 
 type Owner = 'donjayamanne' | 'amunger' | 'IanMatthewHuff' | 'rebornix' | 'roblourens' | 'unknown';
-type YearsOf2020 = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
-type FullYear = `202${YearsOf2020}`;
-type Months = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12';
-type ExtensionVersions = `${FullYear}.${Months}`;
 type Feature =
     | 'Notebook'
     | 'InteractiveWindow'
@@ -53,7 +49,7 @@ type Feature =
     | 'Import-Export'
     | 'VariableViewer';
 type EventTag = 'Cell Execution' | 'Remote' | 'Widgets' | 'KernelStartup';
-type EventSource = 'User Action' | 'Non-UserAction' | 'Either' | 'N/A';
+type EventSource = 'User Action' | 'N/A';
 type IGdprEventData = {
     owner: Owner;
     // We extract the jsdoc comments from IEvenNamePropertyMapping found in in telemetry.ts.
@@ -67,13 +63,6 @@ type IGdprEventData = {
     comment?: string;
 };
 type ICustomEventData = {
-    /**
-     * Extension Version when this event was defined.
-     * E.g. during development if we add a new event, this will contain the current dev version from package.json.
-     * This will provide a timeline for when we can expect to see this event.
-     * (Specific to Jupyter extension, non-gdpr).
-     */
-    effectiveVersion?: 'unknown' | ExtensionVersions;
     /**
      * General feature area of the event.
      */
@@ -130,16 +119,6 @@ type IBasePropertyData = {
      * @memberof IPropertyData
      */
     endpoint?: string;
-    /**
-     * Extension Version when this event was defined.
-     * E.g. during development if we add a new event, this will contain the current dev version from package.json.
-     * This will provide a timeline for when we can expect to see this event.
-     * (Specific to Jupyter extension, non-gdpr).
-     *
-     * If undefined, then this means this was added along with the event.
-     * If this is an existing event and we add new data, then this must have a value.
-     */
-    effectiveVersion?: 'SameAsEvent' | ExtensionVersions;
 };
 
 export type IPropertyDataNonMeasurement = IBasePropertyData & {
@@ -186,60 +165,51 @@ const commonClassificationForDurationProperties: AllEventPropertiesData<Duration
         classification: 'PublicNonPersonalData',
         comment: 'Time taken to perform an operation',
         purpose: 'PerformanceAndHealth',
-        isMeasurement: true,
-        effectiveVersion: 'SameAsEvent'
+        isMeasurement: true
     }
 };
 const commonClassificationForResourceType: AllEventPropertiesData<ResourceTypeTelemetryProperty> = {
     resourceType: {
         classification: 'PublicNonPersonalData',
         comment: '',
-        purpose: 'FeatureInsight',
-        effectiveVersion: 'SameAsEvent'
+        purpose: 'FeatureInsight'
     }
 };
 const commonClassificationForErrorProperties: AllEventPropertiesData<TelemetryErrorProperties> = {
     failed: {
         classification: 'PublicNonPersonalData',
         comment: '',
-        purpose: 'PerformanceAndHealth',
-        effectiveVersion: 'SameAsEvent'
+        purpose: 'PerformanceAndHealth'
     },
     failureCategory: {
         classification: 'PublicNonPersonalData',
         comment: '',
-        purpose: 'PerformanceAndHealth',
-        effectiveVersion: 'SameAsEvent'
+        purpose: 'PerformanceAndHealth'
     },
     failureSubCategory: {
         classification: 'PublicNonPersonalData',
         comment: '',
-        purpose: 'PerformanceAndHealth',
-        effectiveVersion: 'SameAsEvent'
+        purpose: 'PerformanceAndHealth'
     },
     pythonErrorFile: {
         classification: 'PublicNonPersonalData',
         comment: '',
-        purpose: 'PerformanceAndHealth',
-        effectiveVersion: 'SameAsEvent'
+        purpose: 'PerformanceAndHealth'
     },
     pythonErrorFolder: {
         classification: 'PublicNonPersonalData',
         comment: '',
-        purpose: 'PerformanceAndHealth',
-        effectiveVersion: 'SameAsEvent'
+        purpose: 'PerformanceAndHealth'
     },
     pythonErrorPackage: {
         classification: 'PublicNonPersonalData',
         comment: '',
-        purpose: 'PerformanceAndHealth',
-        effectiveVersion: 'SameAsEvent'
+        purpose: 'PerformanceAndHealth'
     },
     stackTrace: {
         classification: 'PublicNonPersonalData',
         comment: '',
-        purpose: 'PerformanceAndHealth',
-        effectiveVersion: 'SameAsEvent'
+        purpose: 'PerformanceAndHealth'
     }
 };
 const commonClassificationForResourceSpecificTelemetryProperties: AllEventPropertiesData<ResourceSpecificTelemetryProperties> =
@@ -247,48 +217,41 @@ const commonClassificationForResourceSpecificTelemetryProperties: AllEventProper
         actionSource: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         disableUI: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         interruptCount: {
             classification: 'PublicNonPersonalData',
             comment: '',
             purpose: 'PerformanceAndHealth',
-            isMeasurement: true,
-            effectiveVersion: 'SameAsEvent'
+            isMeasurement: true
         },
         userExecutedCell: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         switchKernelCount: {
             classification: 'PublicNonPersonalData',
             comment: '',
             purpose: 'PerformanceAndHealth',
-            isMeasurement: true,
-            effectiveVersion: 'SameAsEvent'
+            isMeasurement: true
         },
         startFailureCount: {
             classification: 'PublicNonPersonalData',
             comment: '',
             purpose: 'PerformanceAndHealth',
-            isMeasurement: true,
-            effectiveVersion: 'SameAsEvent'
+            isMeasurement: true
         },
         restartCount: {
             classification: 'PublicNonPersonalData',
             comment: '',
             purpose: 'PerformanceAndHealth',
-            isMeasurement: true,
-            effectiveVersion: 'SameAsEvent'
+            isMeasurement: true
         },
         resourceHash: {
             classification: 'PublicNonPersonalData',
@@ -297,96 +260,81 @@ const commonClassificationForResourceSpecificTelemetryProperties: AllEventProper
             and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
             we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
             and have a better understanding of what is going on, e.g. why something failed.`,
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         pythonEnvironmentVersion: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         pythonEnvironmentType: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         pythonEnvironmentPath: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         pythonEnvironmentPackages: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         pythonEnvironmentCount: {
             classification: 'PublicNonPersonalData',
             comment: '',
             purpose: 'PerformanceAndHealth',
-            isMeasurement: true,
-            effectiveVersion: 'SameAsEvent'
+            isMeasurement: true
         },
         kernelSpecCount: {
             classification: 'PublicNonPersonalData',
             comment: '',
             purpose: 'PerformanceAndHealth',
-            isMeasurement: true,
-            effectiveVersion: 'SameAsEvent'
+            isMeasurement: true
         },
         kernelSessionId: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         kernelLiveCount: {
             classification: 'PublicNonPersonalData',
             comment: '',
             purpose: 'PerformanceAndHealth',
-            isMeasurement: true,
-            effectiveVersion: 'SameAsEvent'
+            isMeasurement: true
         },
         kernelLanguage: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         kernelInterpreterCount: {
             classification: 'PublicNonPersonalData',
             comment: '',
             purpose: 'PerformanceAndHealth',
-            isMeasurement: true,
-            effectiveVersion: 'SameAsEvent'
+            isMeasurement: true
         },
         kernelId: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         kernelConnectionType: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         isUsingActiveInterpreter: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         capturedEnvVars: {
             classification: 'PublicNonPersonalData',
             comment: '',
-            purpose: 'PerformanceAndHealth',
-            effectiveVersion: 'SameAsEvent'
+            purpose: 'PerformanceAndHealth'
         },
         ...commonClassificationForResourceType
     };
@@ -547,7 +495,6 @@ export class IEventNamePropertyMapping {
         endActivateTime: number;
     }> = {
         owner: 'donjayamanne',
-        effectiveVersion: 'unknown',
         feature: 'N/A',
         measures: {
             codeLoadingTime: {
@@ -1219,7 +1166,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: 'N/A',
         tags: ['KernelStartup'],
-        source: 'Either',
+        source: 'N/A',
         properties: commonClassificationForResourceSpecificTelemetryProperties,
         measures: commonClassificationForDurationProperties
     };
@@ -1232,7 +1179,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: 'N/A',
         tags: ['KernelStartup'],
-        source: 'Either',
+        source: 'N/A',
         properties: commonClassificationForResourceSpecificTelemetryProperties,
         measures: commonClassificationForDurationProperties
     };
@@ -1848,7 +1795,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'IanMatthewHuff',
         feature: ['InteractiveWindow', 'Notebook'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             ...commonClassificationForResourceSpecificTelemetryProperties,
             ...commonClassificationForResourceType,
@@ -1926,7 +1873,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             cdnSearched: {
                 classification: 'SystemMetaData',
@@ -1958,7 +1905,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             hashedName: {
                 classification: 'PublicNonPersonalData',
@@ -1983,7 +1930,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             type: {
                 classification: 'SystemMetaData',
@@ -1998,7 +1945,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
-        source: 'Either'
+        source: 'N/A'
     };
     /**
      * Telemetry event sent when an ipywidget module loads. Module name is hashed.
@@ -2007,7 +1954,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             moduleHash: {
                 classification: 'PublicNonPersonalData',
@@ -2032,7 +1979,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             timedout: {
                 classification: 'SystemMetaData',
@@ -2062,7 +2009,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             moduleHash: {
                 classification: 'PublicNonPersonalData',
@@ -2082,7 +2029,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
-        source: 'Either'
+        source: 'N/A'
     };
     /**
      * Telemetry sent when user does something with the prompt displayed to user about using CDN for IPyWidget scripts.
@@ -2093,7 +2040,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
-        source: 'Non-UserAction',
+        source: 'N/A',
         properties: {
             selection: {
                 classification: 'PublicNonPersonalData',
@@ -2113,7 +2060,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
-        source: 'Either',
+        source: 'N/A',
         measures: {
             totalOverheadInMs: {
                 classification: 'SystemMetaData',
@@ -2144,7 +2091,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
-        source: 'Either'
+        source: 'N/A'
     };
     /**
      * Telemetry event sent when the widget tries to send a kernel message but nothing was listening
@@ -2155,7 +2102,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             msg_type: {
                 classification: 'PublicNonPersonalData',
@@ -2168,7 +2115,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.RawKernelCreatingNotebook]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         tags: ['KernelStartup'],
         measures: commonClassificationForDurationProperties
     };
@@ -2193,7 +2140,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         tags: ['KernelStartup'],
         measures: {
             ...commonClassificationForDurationProperties,
@@ -2217,7 +2164,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         tags: ['KernelStartup'],
         measures: commonClassificationForDurationProperties,
         properties: {
@@ -2231,7 +2178,7 @@ export class IEventNamePropertyMapping {
         {
             owner: 'donjayamanne',
             feature: ['Notebook', 'InteractiveWindow'],
-            source: 'Either',
+            source: 'N/A',
             tags: ['KernelStartup'],
             measures: commonClassificationForDurationProperties,
             properties: {
@@ -2242,14 +2189,14 @@ export class IEventNamePropertyMapping {
     [Telemetry.RawKernelStartRawSession]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         tags: ['KernelStartup'],
         measures: commonClassificationForDurationProperties
     };
     [Telemetry.RawKernelProcessLaunch]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         tags: ['KernelStartup'],
         measures: commonClassificationForDurationProperties
     };
@@ -2279,7 +2226,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         tags: ['KernelStartup'],
         properties: {
             ...commonClassificationForResourceSpecificTelemetryProperties,
@@ -2293,7 +2240,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.SwitchKernel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
         owner: 'IanMatthewHuff',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: commonClassificationForResourceSpecificTelemetryProperties
     };
     /**
@@ -2374,7 +2321,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             ...commonClassificationForResourceType,
             ...commonClassificationForErrorProperties,
@@ -2385,7 +2332,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionStartSuccess]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             ...commonClassificationForResourceType,
             ...commonClassificationForResourceSpecificTelemetryProperties
@@ -2394,7 +2341,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionStartException]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             ...commonClassificationForResourceType,
             ...commonClassificationForResourceSpecificTelemetryProperties
@@ -2403,7 +2350,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionStartUserCancel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             ...commonClassificationForResourceType,
             ...commonClassificationForResourceSpecificTelemetryProperties
@@ -2417,7 +2364,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             ...commonClassificationForResourceType,
             ...commonClassificationForErrorProperties
@@ -2449,7 +2396,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             exitReason: {
                 classification: 'SystemMetaData',
@@ -2488,7 +2435,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             isRequestToShutdownRestartSession: {
                 classification: 'SystemMetaData',
@@ -2517,7 +2464,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             stacktrace: {
                 classification: 'CallstackOrException',
@@ -2592,7 +2539,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             isErrorOutput: {
                 classification: 'SystemMetaData',
@@ -2794,7 +2741,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             ename: {
                 classification: 'CallstackOrException',
@@ -2812,7 +2759,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             ename: {
                 classification: 'CallstackOrException',
@@ -2835,7 +2782,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.KernelCrash]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
-        source: 'Either',
+        source: 'N/A',
         properties: {
             ...commonClassificationForResourceSpecificTelemetryProperties,
             ...commonClassificationForResourceType

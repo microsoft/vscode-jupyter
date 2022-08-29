@@ -330,10 +330,13 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
     if (gdprInfo) {
         writeOutput(`* ${entry.name}  (${entry.constantName})  `);
         writeOutput(`${indent()}  Owner: [@${gdprInfo.owner}](https://github.com/${gdprInfo.owner})  `);
-        if (gdprInfo.effectiveVersion === 'unknown') {
-            writeOutput(`${indent()}  Added before 2022.9.  `);
-        } else {
-            writeOutput(`${indent()}  Added in ${gdprInfo.effectiveVersion}.  `);
+        if (!gdprInfo.feature) {
+            writeOutput(`${indent()}   <span style="color:red">Feature not defined.</span>  `);
+        }
+        if (!gdprInfo.source) {
+            writeOutput(
+                `${indent()}   <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  `
+            );
         }
 
         Object.keys((gdprInfo as any).properties || {}).forEach((key) => {
@@ -360,7 +363,7 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
             writeOutput(
                 `${indent()}   <span style="color:red">Properties not documented in GDPR ${undocumentedProperties.join(
                     ', '
-                )}</span>  `
+                )}. Add jsDoc comments for the properties in telemetry.ts file.</span>  `
             );
         }
         const undocumentedMeasures = Array.from(discoveredMeasures)
@@ -372,9 +375,6 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
                     ', '
                 )}</span>  `
             );
-        }
-        if (!gdprInfo.effectiveVersion) {
-            writeOutput(`${indent()}   <span style="color:red">effectiveVersion not set</span>  `);
         }
     } else {
         writeOutput(`* <span style="color:red">${entry.name}  (${entry.constantName})</span>  `);
@@ -570,9 +570,6 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
                         if (entries.has(name)) {
                             return;
                         }
-                        if (name === 'TERMINAL_SHELL_IDENTIFICATION') {
-                            debugger;
-                        }
                         let jsDocNode: ts.JSDoc | undefined;
                         let stopSearching = false;
                         m.getChildren().forEach((c) => {
@@ -705,6 +702,8 @@ const gdprHeader = `// Copyright (c) Microsoft Corporation.
 `;
 
 function generateTelemetryGdpr(output: TelemetryEntry[]) {
+    // Until we have property GDPR data in telemetry.ts.
+    return;
     const file = './src/gdpr.ts';
     fs.writeFileSync(file, '');
     fs.appendFileSync(file, gdprHeader);
