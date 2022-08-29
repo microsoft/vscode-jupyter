@@ -14,7 +14,7 @@ import {
 } from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
@@ -370,7 +370,7 @@ export class InterpreterService implements IInterpreterService {
         }
     }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
-    @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
+    @capturePerfTelemetry(Telemetry.ActiveInterpreterListingPerf)
     @traceDecoratorVerbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         this.hookupOnDidChangeInterpreterEvent();

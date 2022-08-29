@@ -3,8 +3,8 @@
 
 'use strict';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { JSONObject } from '@lumino/coreutils';
-// eslint-disable-next-line
 import { Telemetry } from './platform/common/constants';
 import { CheckboxState, EventName, SliceOperationSource } from './platform/telemetry/constants';
 import { DebuggingTelemetry } from './notebooks/debugger/constants';
@@ -21,173 +21,691 @@ import {
 import { IExportedKernelService } from './standalone/api/extension';
 import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
 import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
-import { KernelFailureReason } from './platform/errors/errorUtils';
+import { ExcludeType, PickType } from './platform/common/utils/misc';
 
 export * from './platform/telemetry/index';
+export type DurationMeasurement = {
+    /**
+     * Duration of a measure in milliseconds.
+     * Common measurement used across a number of events.
+     */
+    duration: number;
+};
+export type ResourceTypeTelemetryProperty = {
+    /**
+     * Used to determine whether this event is related to a Notebooks or Interactive window.
+     */
+    resourceType?: 'notebook' | 'interactive';
+};
 
-export type ResourceSpecificTelemetryProperties = Partial<{
-    resourceType: 'notebook' | 'interactive';
+type Owner = 'donjayamanne' | 'amunger' | 'IanMatthewHuff' | 'rebornix' | 'roblourens' | 'unknown';
+type YearsOf2020 = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
+type FullYear = `202${YearsOf2020}`;
+type Months = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12';
+type ExtensionVersions = `${FullYear}.${Months}`;
+type Feature =
+    | 'Notebook'
+    | 'InteractiveWindow'
+    | 'PlotViewer'
+    | 'DataFrameViewer'
+    | 'Debugger'
+    | 'KernelPicker'
+    | 'Import-Export'
+    | 'VariableViewer';
+type EventTag = 'Cell Execution' | 'Remote' | 'Widgets' | 'KernelStartup';
+type EventSource = 'User Action' | 'Non-UserAction' | 'Either' | 'N/A';
+type IGdprEventData = {
+    owner: Owner;
+    // We extract the jsdoc comments from IEvenNamePropertyMapping found in in telemetry.ts.
+    // comment: string;
+    expiration?: string;
     /**
-     * Whether the user executed a cell.
+     * We extract the jsdoc comments from IEvenNamePropertyMapping found in in telemetry.ts.
+     * If this as well as jsDoc is empty, we'll generate an error. At least one of them must be provided.
+     * jsDoc comments have been around for a while, hence will be the default.
      */
-    userExecutedCell?: boolean;
+    comment?: string;
+};
+type ICustomEventData = {
     /**
-     * Hash of the Kernel Connection id.
+     * Extension Version when this event was defined.
+     * E.g. during development if we add a new event, this will contain the current dev version from package.json.
+     * This will provide a timeline for when we can expect to see this event.
+     * (Specific to Jupyter extension, non-gdpr).
      */
-    kernelId: string;
+    effectiveVersion?: 'unknown' | ExtensionVersions;
     /**
-     * Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
-     * If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
+     * General feature area of the event.
      */
-    disableUI?: boolean;
+    feature: 'N/A' | Feature[];
     /**
-     * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-     * If we run the same notebook tomorrow, the hash will be the same.
+     * Useful way to categorize events.
      */
-    resourceHash?: string;
+    tags?: EventTag[];
     /**
-     * Unique identifier for an instance of a notebook session.
-     * If we restart or run this notebook tomorrow, this id will be different.
-     * Id could be something as simple as a hash of the current Epoch time.
+     * What is the source of this telemetry event.
+     * Did the user perform an action that triggered this event, or was it something running in the background,
+     * or either one.
+     * Useful for others to determine whether this is a user action or not.
      */
-    kernelSessionId: string;
+    source?: EventSource;
+};
+export type IEventData = IGdprEventData & ICustomEventData;
+/**
+ * Used to define an individual property (data item) of an Event.
+ */
+type IBasePropertyData = {
     /**
-     * Whether this resource is using the active Python interpreter or not.
+     * EndUserPseudonymizedInformation is what allows us to identify a particular user across time, although we don't know the actual identity of the user. machineId or instanceId fall in this category.
+     * PublicPersonalData and PublicNonPersonalData is information that users provide us with, for example, publisher information on the marketplace.
+     * CustomerContent is information the user generated such as urls of repositories or custom snippets.
+     * CallstackOrException is for error data like callbacks and exceptions. Everything else is SystemMetaData.
      */
-    isUsingActiveInterpreter?: boolean;
+    classification:
+        | 'SystemMetaData'
+        | 'CallstackOrException'
+        | 'CustomerContent'
+        | 'PublicNonPersonalData'
+        | 'EndUserPseudonymizedInformation';
     /**
-     * Found plenty of issues when starting kernels with conda, hence useful to capture this info.
+     * FeatureInsight or PerformanceAndHealth.
+     * We only use BusinessInsight for events generated by surveys.
      */
-    pythonEnvironmentType?: EnvironmentType;
+    purpose: 'PerformanceAndHealth' | 'FeatureInsight' | 'BusinessInsight';
     /**
-     * A key, so that rest of the information is tied to this. (hash)
+     * Used to specify a reason for collecting the event. This is meant to be more descriptive than `classification` & `purpose`.
+     * (if not specified here, then we need jsDoc comments for the corresponding property).
+     * The telemetry generation tool will ensure we have necessary comments.
      */
-    pythonEnvironmentPath?: string;
+    comment?: string;
     /**
-     * Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
+     * Used if you would like to dictate the max product version this telemetry event should be sent in.
+     * This allows external tools to specify which events should be removed from the codebase.
      */
-    pythonEnvironmentVersion?: string;
+    expiration?: string;
     /**
-     * Total number of python environments.
+     * Defaults to none. That's appropriate for pretty much all properties rather than a couple of common properties.
+     *
+     * @type {string}
+     * @memberof IPropertyData
      */
-    pythonEnvironmentCount?: number;
+    endpoint?: string;
     /**
-     * Comma delimited list of hashed packages & their versions.
+     * Extension Version when this event was defined.
+     * E.g. during development if we add a new event, this will contain the current dev version from package.json.
+     * This will provide a timeline for when we can expect to see this event.
+     * (Specific to Jupyter extension, non-gdpr).
+     *
+     * If undefined, then this means this was added along with the event.
+     * If this is an existing event and we add new data, then this must have a value.
      */
-    pythonEnvironmentPackages?: string;
-    /**
-     * Whether kernel was started using kernel spec, interpreter, etc.
-     */
-    kernelConnectionType?: KernelConnectionMetadata['kind'];
-    /**
-     * Language of the kernel connection.
-     */
-    kernelLanguage: string;
-    /**
-     * This number gets reset after we attempt a restart or change kernel.
-     */
-    interruptCount?: number;
-    /**
-     * This number gets reset after change the kernel.
-     */
-    restartCount?: number;
-    /**
-     * Number of times starting the kernel failed.
-     */
-    startFailureCount?: number;
-    /**
-     * Number of times the kernel was changed.
-     */
-    switchKernelCount?: number;
-    /**
-     * Total number of kernel specs in the kernel spec list.
-     */
-    kernelSpecCount: number;
-    /**
-     * Total number of interpreters in the kernel spec list.
-     */
-    kernelInterpreterCount: number;
-    /**
-     * Total number of live kernels in the kernel spec list.
-     */
-    kernelLiveCount: number;
-    /**
-     * Whether this was started by Jupyter extension or a 3rd party.
-     */
-    actionSource: KernelActionSource;
-    /**
-     * Whether we managed to capture the environment variables or not.
-     * In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
-     */
-    capturedEnvVars?: boolean;
-}>;
+    effectiveVersion?: 'SameAsEvent' | ExtensionVersions;
+};
 
-export interface IEventNamePropertyMapping {
+export type IPropertyDataNonMeasurement = IBasePropertyData & {
     /**
-     * Telemetry event sent with details just after editor loads
+     * If numbers to are to be sent, they must be sent as measures.
      */
-    [EventName.EXTENSION_LOAD]: {
+    isMeasurement?: false;
+};
+export type IPropertyDataMeasurement = IBasePropertyData & {
+    /**
+     * Numbers are handled differently in the telemetry system.
+     */
+    isMeasurement: true;
+};
+
+/**
+ * This will include all of the properties for an Event.
+ * This will also include common properties such as error properties, duration, etc.
+ */
+type AllEventPropertiesData<T> = {
+    [P in keyof Required<T>]: Required<T>[P] extends number ? IPropertyDataMeasurement : IPropertyDataNonMeasurement;
+};
+
+/**
+ * This will include all of the properties for an Event, excluding the common properties.
+ * These are the properties that need to be documented and defined.
+ */
+type EventPropertiesData<T> = AllEventPropertiesData<T>;
+
+type GdprEventDefinition<P> = P extends never
+    ? IEventData
+    : keyof EventPropertiesData<ExcludeType<P, number>> extends never
+    ? keyof EventPropertiesData<PickType<P, number>> extends never
+        ? IEventData
+        : IEventData & { measures: EventPropertiesData<PickType<P, number>> }
+    : keyof EventPropertiesData<PickType<P, number>> extends never | undefined
+    ? IEventData & { properties: EventPropertiesData<ExcludeType<P, number>> }
+    : IEventData & { properties: EventPropertiesData<ExcludeType<P, number>> } & {
+          measures: EventPropertiesData<PickType<P, number>>;
+      };
+
+const commonClassificationForDurationProperties: AllEventPropertiesData<DurationMeasurement> = {
+    duration: {
+        classification: 'PublicNonPersonalData',
+        comment: 'Time taken to perform an operation',
+        purpose: 'PerformanceAndHealth',
+        isMeasurement: true,
+        effectiveVersion: 'SameAsEvent'
+    }
+};
+const commonClassificationForResourceType: AllEventPropertiesData<ResourceTypeTelemetryProperty> = {
+    resourceType: {
+        classification: 'PublicNonPersonalData',
+        comment: '',
+        purpose: 'FeatureInsight',
+        effectiveVersion: 'SameAsEvent'
+    }
+};
+const commonClassificationForErrorProperties: AllEventPropertiesData<TelemetryErrorProperties> = {
+    failed: {
+        classification: 'PublicNonPersonalData',
+        comment: '',
+        purpose: 'PerformanceAndHealth',
+        effectiveVersion: 'SameAsEvent'
+    },
+    failureCategory: {
+        classification: 'PublicNonPersonalData',
+        comment: '',
+        purpose: 'PerformanceAndHealth',
+        effectiveVersion: 'SameAsEvent'
+    },
+    failureSubCategory: {
+        classification: 'PublicNonPersonalData',
+        comment: '',
+        purpose: 'PerformanceAndHealth',
+        effectiveVersion: 'SameAsEvent'
+    },
+    pythonErrorFile: {
+        classification: 'PublicNonPersonalData',
+        comment: '',
+        purpose: 'PerformanceAndHealth',
+        effectiveVersion: 'SameAsEvent'
+    },
+    pythonErrorFolder: {
+        classification: 'PublicNonPersonalData',
+        comment: '',
+        purpose: 'PerformanceAndHealth',
+        effectiveVersion: 'SameAsEvent'
+    },
+    pythonErrorPackage: {
+        classification: 'PublicNonPersonalData',
+        comment: '',
+        purpose: 'PerformanceAndHealth',
+        effectiveVersion: 'SameAsEvent'
+    },
+    stackTrace: {
+        classification: 'PublicNonPersonalData',
+        comment: '',
+        purpose: 'PerformanceAndHealth',
+        effectiveVersion: 'SameAsEvent'
+    }
+};
+const commonClassificationForResourceSpecificTelemetryProperties: AllEventPropertiesData<ResourceSpecificTelemetryProperties> =
+    {
+        actionSource: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        disableUI: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        interruptCount: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            isMeasurement: true,
+            effectiveVersion: 'SameAsEvent'
+        },
+        userExecutedCell: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        switchKernelCount: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            isMeasurement: true,
+            effectiveVersion: 'SameAsEvent'
+        },
+        startFailureCount: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            isMeasurement: true,
+            effectiveVersion: 'SameAsEvent'
+        },
+        restartCount: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            isMeasurement: true,
+            effectiveVersion: 'SameAsEvent'
+        },
+        resourceHash: {
+            classification: 'PublicNonPersonalData',
+            comment: `Hash of the Notebook or Interactive Window URI. Used to check whether a particular notebook fails across time or not.
+            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+            and have a better understanding of what is going on, e.g. why something failed.`,
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        pythonEnvironmentVersion: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        pythonEnvironmentType: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        pythonEnvironmentPath: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        pythonEnvironmentPackages: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        pythonEnvironmentCount: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            isMeasurement: true,
+            effectiveVersion: 'SameAsEvent'
+        },
+        kernelSpecCount: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            isMeasurement: true,
+            effectiveVersion: 'SameAsEvent'
+        },
+        kernelSessionId: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        kernelLiveCount: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            isMeasurement: true,
+            effectiveVersion: 'SameAsEvent'
+        },
+        kernelLanguage: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        kernelInterpreterCount: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            isMeasurement: true,
+            effectiveVersion: 'SameAsEvent'
+        },
+        kernelId: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        kernelConnectionType: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        isUsingActiveInterpreter: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        capturedEnvVars: {
+            classification: 'PublicNonPersonalData',
+            comment: '',
+            purpose: 'PerformanceAndHealth',
+            effectiveVersion: 'SameAsEvent'
+        },
+        ...commonClassificationForResourceType
+    };
+
+export const CommonProperties = {
+    ...commonClassificationForDurationProperties,
+    ...commonClassificationForErrorProperties,
+    ...commonClassificationForResourceSpecificTelemetryProperties,
+    ...commonClassificationForResourceType
+};
+export const CommonPropertyAndMeasureTypeNames = [
+    'ResourceSpecificTelemetryProperties',
+    'DurationMeasurement',
+    'ResourceTypeTelemetryProperty',
+    'TelemetryErrorProperties'
+];
+
+export type TelemetryEventInfo<P> = GdprEventDefinition<P>;
+
+export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty &
+    Partial<{
+        /**
+         * Whether the user executed a cell.
+         */
+        userExecutedCell?: boolean;
+        /**
+         * Hash of the Kernel Connection id.
+         */
+        kernelId: string;
+        /**
+         * Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+         * If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
+         */
+        disableUI?: boolean;
+        /**
+         * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+         * If we run the same notebook tomorrow, the hash will be the same.
+         */
+        resourceHash?: string;
+        /**
+         * Unique identifier for an instance of a notebook session.
+         * If we restart or run this notebook tomorrow, this id will be different.
+         * Id could be something as simple as a hash of the current Epoch time.
+         */
+        kernelSessionId: string;
+        /**
+         * Whether this resource is using the active Python interpreter or not.
+         */
+        isUsingActiveInterpreter?: boolean;
+        /**
+         * Found plenty of issues when starting kernels with conda, hence useful to capture this info.
+         */
+        pythonEnvironmentType?: EnvironmentType;
+        /**
+         * A key, so that rest of the information is tied to this. (hash)
+         */
+        pythonEnvironmentPath?: string;
+        /**
+         * Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
+         */
+        pythonEnvironmentVersion?: string;
+        /**
+         * Total number of python environments.
+         */
+        pythonEnvironmentCount?: number;
+        /**
+         * Comma delimited list of hashed packages & their versions.
+         */
+        pythonEnvironmentPackages?: string;
+        /**
+         * Whether kernel was started using kernel spec, interpreter, etc.
+         */
+        kernelConnectionType?: KernelConnectionMetadata['kind'];
+        /**
+         * Language of the kernel connection.
+         */
+        kernelLanguage: string;
+        /**
+         * This number gets reset after we attempt a restart or change kernel.
+         */
+        interruptCount?: number;
+        /**
+         * This number gets reset after change the kernel.
+         */
+        restartCount?: number;
+        /**
+         * Number of times starting the kernel failed.
+         */
+        startFailureCount?: number;
+        /**
+         * Number of times the kernel was changed.
+         */
+        switchKernelCount?: number;
+        /**
+         * Total number of kernel specs in the kernel spec list.
+         */
+        kernelSpecCount: number;
+        /**
+         * Total number of interpreters in the kernel spec list.
+         */
+        kernelInterpreterCount: number;
+        /**
+         * Total number of live kernels in the kernel spec list.
+         */
+        kernelLiveCount: number;
+        /**
+         * Whether this was started by Jupyter extension or a 3rd party.
+         */
+        actionSource: KernelActionSource;
+        /**
+         * Whether we managed to capture the environment variables or not.
+         * In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
+         */
+        capturedEnvVars?: boolean;
+    }>;
+
+export class IEventNamePropertyMapping {
+    'ERROR': TelemetryEventInfo<
+        Partial<
+            {
+                failureCategory: 'methodException';
+                /**
+                 * Name of the method in the extension that threw the exception.
+                 */
+                failureSubCategory: string;
+            } & TelemetryErrorProperties
+        >
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            ...commonClassificationForErrorProperties
+        }
+    };
+    /**
+     * Telemetry event sent with perf measures related to activation and loading of extension.
+     */
+    public [EventName.EXTENSION_LOAD]: TelemetryEventInfo<{
         /**
          * Number of workspace folders opened
          */
         workspaceFolderCount: number;
+        /**
+         * Time taken to activate the extension.
+         */
+        totalActivateTime: number;
+        /**
+         * Time taken to load the code.
+         */
+        codeLoadingTime: number;
+        /**
+         * Time when activation started.
+         */
+        startActivateTime: number;
+        /**
+         * Time when activation completed.
+         */
+        endActivateTime: number;
+    }> = {
+        owner: 'donjayamanne',
+        effectiveVersion: 'unknown',
+        feature: 'N/A',
+        measures: {
+            codeLoadingTime: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            totalActivateTime: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            workspaceFolderCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            endActivateTime: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            startActivateTime: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            }
+        }
     };
     /**
-     * Telemetry event sent when substituting Environment variables to calculate value of variables
+     * Telemetry event sent when substituting Environment variables to calculate value of variables.
+     * E.g. user has a a .env file with tokens that need to be replaced with env variables.
+     * such as an env file having the variable `${HOME}`.
+     * Gives us an idea of whether users have variable references in their .env files or not.
      */
-    [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
+    [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A'
+    };
     /**
      * Telemetry event sent when an environment file is detected in the workspace.
      */
-    [EventName.ENVFILE_WORKSPACE]: {
+    [EventName.ENVFILE_WORKSPACE]: TelemetryEventInfo<{
         /**
          * If there's a custom path specified in the python.envFile workspace settings.
          */
         hasCustomEnvPath: boolean;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            hasCustomEnvPath: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
     };
     /**
-     * Telemetry event sent with details when tracking imports
+     * Telemetry event sent with hash of an imported python package.
+     * Used to detect the popularity of a package, that would help determine which packages
+     * need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.
      */
-    [EventName.HASHED_PACKAGE_NAME]: {
+    [EventName.HASHED_PACKAGE_NAME]: TelemetryEventInfo<{
         /**
          * Hash of the package name
-         *
-         * @type {string}
          */
         hashedNamev2: string;
+    }> = {
+        owner: 'unknown',
+        feature: 'N/A',
+        properties: {
+            hashedNamev2: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'Hash of the package name'
+            }
+        }
     };
     /**
      * Telemetry sent for local Python Kernels.
      * Tracking whether we have managed to launch the kernel that matches the interpreter.
      * If match=false, then this means we have failed to launch the right kernel.
      */
-    [Telemetry.PythonKerneExecutableMatches]: {
+    [Telemetry.PythonKerneExecutableMatches]: TelemetryEventInfo<{
+        /**
+         * Whether we've managed to correctly identify the Python Environment.
+         */
         match: 'true' | 'false';
+        /**
+         * Type of kernel connection, whether its local, remote or a python environment.
+         */
         kernelConnectionType:
             | 'startUsingLocalKernelSpec'
             | 'startUsingPythonInterpreter'
             | 'startUsingRemoteKernelSpec';
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup'],
+        properties: {
+            kernelConnectionType: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            match: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
     };
     /**
      * Time taken to list the Python interpreters.
      */
-    [Telemetry.InterpreterListingPerf]: {
+    [Telemetry.InterpreterListingPerf]: TelemetryEventInfo<{
         /**
          * Whether this is the first time in the session.
          * (fetching kernels first time in the session is slower, later its cached).
          * This is a generic property supported for all telemetry (sent by decorators).
          */
         firstTime?: boolean;
+        /**
+         * Total time taken to list interpreters.
+         */
+        duration: number;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            firstTime: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        },
+        measures: commonClassificationForDurationProperties
     };
-    [Telemetry.ActiveInterpreterListingPerf]: {
+    [Telemetry.ActiveInterpreterListingPerf]: TelemetryEventInfo<{
         /**
          * Whether this is the first time in the session.
          * (fetching kernels first time in the session is slower, later its cached).
          * This is a generic property supported for all telemetry (sent by decorators).
          */
         firstTime?: boolean;
+        /**
+         * Total time taken to list interpreters.
+         */
+        duration: number;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            firstTime: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        },
+        measures: commonClassificationForDurationProperties
     };
-    [Telemetry.KernelListingPerf]: {
+    [Telemetry.KernelListingPerf]: TelemetryEventInfo<{
         /**
          * Whether this is the first time in the session.
          * (fetching kernels first time in the session is slower, later its cached).
@@ -199,46 +717,193 @@ export interface IEventNamePropertyMapping {
          * (fetching kernels first time in the session is slower, later its cached).
          */
         kind: 'remote' | 'local' | 'localKernelSpec' | 'localPython';
-    };
-    [Telemetry.NumberOfLocalKernelSpecs]: {
         /**
-         * Number of kernel specs.
+         * Total time taken to list kernels.
+         */
+        duration: number;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            firstTime: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            kind: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        },
+        measures: commonClassificationForDurationProperties
+    };
+    /**
+     * Total number of Local kernel specifications.
+     */
+    [Telemetry.NumberOfLocalKernelSpecs]: TelemetryEventInfo<{
+        /**
+         * Number of kernel specs found on disc.
          */
         count: number;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        measures: {
+            count: {
+                classification: 'SystemMetaData',
+                isMeasurement: true,
+                purpose: 'FeatureInsight'
+            }
+        }
     };
-    [Telemetry.NumberOfRemoteKernelSpecs]: {
+    /**
+     * Total number of Remote kernel specifications.
+     */
+    [Telemetry.NumberOfRemoteKernelSpecs]: TelemetryEventInfo<{
         /**
-         * Number of kernel specs.
+         * Number of remote kernel specs.
          */
         count: number;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        measures: {
+            count: {
+                classification: 'SystemMetaData',
+                isMeasurement: true,
+                purpose: 'FeatureInsight'
+            }
+        }
     };
-    [Telemetry.HashedCellOutputMimeType]: {
+    /**
+     * Hash of the mime type of a cell output.
+     * Used to detect the popularity of a mime type, that would help determine which mime types are most common.
+     * E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
+     * or prioritize rendering of widgets when opening an existing notebook or the like.
+     */
+    [Telemetry.HashedCellOutputMimeType]: TelemetryEventInfo<{
         /**
          * Hash of the cell output mimetype
-         *
-         * @type {string}
          */
         hashedName: string;
+        /**
+         * Whether the mime type has the word 'text' in it.
+         */
         hasText: boolean;
+        /**
+         * Whether the mime type has the word 'latex' in it.
+         */
         hasLatex: boolean;
+        /**
+         * Whether the mime type has the word 'html' in it.
+         */
         hasHtml: boolean;
+        /**
+         * Whether the mime type has the word 'svg' in it.
+         */
         hasSvg: boolean;
+        /**
+         * Whether the mime type has the word 'xml' in it.
+         */
         hasXml: boolean;
+        /**
+         * Whether the mime type has the word 'json' in it.
+         */
         hasJson: boolean;
+        /**
+         * Whether the mime type has the word 'image' in it.
+         */
         hasImage: boolean;
+        /**
+         * Whether the mime type has the word 'geo' in it.
+         */
         hasGeo: boolean;
+        /**
+         * Whether the mime type has the word 'plotly' in it.
+         */
         hasPlotly: boolean;
+        /**
+         * Whether the mime type has the word 'vega' in it.
+         */
         hasVega: boolean;
+        /**
+         * Whether the mime type has the word 'widget' in it.
+         */
         hasWidget: boolean;
+        /**
+         * Whether the mime type has the word 'jupyter' in it.
+         */
         hasJupyter: boolean;
+        /**
+         * Whether the mime type has the word 'vnd' in it.
+         */
         hasVnd: boolean;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            hasGeo: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hashedName: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasHtml: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasImage: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasJson: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasLatex: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasJupyter: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasPlotly: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasSvg: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasText: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasVega: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasVnd: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasWidget: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasXml: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
-
     /**
-     * Used to capture time taken to get enviornment variables for a python environment.
+     * Used to capture time taken to get environment variables for a python environment.
      * Also lets us know whether it worked or not.
      */
-    [Telemetry.GetActivatedEnvironmentVariables]: {
+    [Telemetry.GetActivatedEnvironmentVariables]: TelemetryEventInfo<{
         /**
          * Type of the Python environment.
          */
@@ -271,9 +936,43 @@ export interface IEventNamePropertyMapping {
             | 'emptyFromPython'
             | 'failedToGetActivatedEnvVariablesFromPython'
             | 'failedToGetCustomEnvVariables';
+        /**
+         * Time taken.
+         */
+        duration: number;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            envType: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            pythonEnvType: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            reason: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            source: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        },
+        measures: commonClassificationForDurationProperties
     };
-    [EventName.HASHED_PACKAGE_PERF]: never | undefined;
-    [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: {
+    [EventName.HASHED_PACKAGE_PERF]: TelemetryEventInfo<{ duration: number }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        measures: commonClassificationForDurationProperties
+    };
+    [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: TelemetryEventInfo<{
         /**
          * Carries `true` if environment variables are present, `false` otherwise
          *
@@ -295,15 +994,34 @@ export interface IEventNamePropertyMapping {
         /**
          * Whether the environment was activated by the wrapper class.
          * If `true`, this telemetry is sent by the class that wraps the two activation providers   .
-         *
-         * @type {boolean}
          */
         activatedByWrapper?: boolean;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            activatedByWrapper: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            activatedInTerminal: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            hasEnvVars: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
     };
     /**
      * Telemetry event sent with details when a user has requested to opt it or out of an experiment group
      */
-    [EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT]: {
+    [EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT]: TelemetryEventInfo<{
         /**
          * Carries the name of the experiment user has been opted into manually
          */
@@ -312,279 +1030,610 @@ export interface IEventNamePropertyMapping {
          * Carries the name of the experiment user has been opted out of manually
          */
         expNameOptedOutOf?: string;
+    }> = {
+        owner: 'unknown',
+        feature: 'N/A',
+        properties: {
+            expNameOptedInto: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            expNameOptedOutOf: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * Telemetry event sent when user opens the data viewer.
      */
-    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: never | undefined;
-    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR]: never | undefined;
-    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS]: never | undefined;
+    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
     /**
      * Telemetry event sent when user adds a cell below the current cell for IW.
      */
-    [Telemetry.AddCellBelow]: never | undefined;
-    [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
-    [Telemetry.ConnectFailedJupyter]: TelemetryErrorProperties;
-    [Telemetry.ConnectLocalJupyter]: never | undefined;
-    [Telemetry.ConnectRemoteJupyter]: never | undefined;
+    [Telemetry.AddCellBelow]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.CodeLensAverageAcquisitionTime]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.ConnectFailedJupyter]: TelemetryEventInfo<TelemetryErrorProperties> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup'],
+        properties: commonClassificationForErrorProperties
+    };
+    [Telemetry.ConnectLocalJupyter]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
+    [Telemetry.ConnectRemoteJupyter]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
     /**
      * Connecting to an existing Jupyter server, but connecting to localhost.
      */
-    [Telemetry.ConnectRemoteJupyterViaLocalHost]: never | undefined;
-    [Telemetry.ConnectRemoteFailedJupyter]: TelemetryErrorProperties;
+    [Telemetry.ConnectRemoteJupyterViaLocalHost]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
+    [Telemetry.ConnectRemoteFailedJupyter]: TelemetryEventInfo<TelemetryErrorProperties> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup'],
+        properties: commonClassificationForErrorProperties
+    };
     /**
      * Jupyter server's certificate is not from a trusted authority.
      */
-    [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
+    [Telemetry.ConnectRemoteSelfCertFailedJupyter]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
     /**
      * Jupyter server's certificate has expired.
      */
-    [Telemetry.ConnectRemoteExpiredCertFailedJupyter]: never | undefined;
-    [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
-    [Telemetry.SwitchToExistingKernel]: { language: string };
-    [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
-    [Telemetry.CreateNewNotebook]: never | undefined;
-    [Telemetry.DataScienceSettings]: JSONObject;
+    [Telemetry.ConnectRemoteExpiredCertFailedJupyter]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
+    [Telemetry.RegisterAndUseInterpreterAsKernel]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
+    [Telemetry.SwitchToExistingKernel]: TelemetryEventInfo<{ language: string }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.SwitchToInterpreterAsKernel]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.CreateNewNotebook]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'unknown',
+        feature: 'N/A',
+        measures: commonClassificationForDurationProperties
+    };
+    [Telemetry.DataScienceSettings]: JSONObject = {
+        owner: 'unknown',
+        feature: 'N/A'
+    };
     /**
      * Telemetry event sent when user hits the `continue` button while debugging IW
      */
-    [Telemetry.DebugContinue]: never | undefined;
+    [Telemetry.DebugContinue]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'roblourens',
+        feature: ['Debugger']
+    } as any;
     /**
      * Telemetry event sent when user debugs the cell in the IW
      */
-    [Telemetry.DebugCurrentCell]: never | undefined;
+    [Telemetry.DebugCurrentCell]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'roblourens',
+        feature: ['Debugger']
+    } as any;
     /**
      * Telemetry event sent when user hits the `step over` button while debugging IW
      */
-    [Telemetry.DebugStepOver]: never | undefined;
+    [Telemetry.DebugStepOver]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'roblourens',
+        feature: ['Debugger']
+    } as any;
     /**
      * Telemetry event sent when user hits the `stop` button while debugging IW
      */
-    [Telemetry.DebugStop]: never | undefined;
+    [Telemetry.DebugStop]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'roblourens',
+        feature: ['Debugger']
+    } as any;
     /**
      * Telemetry event sent when user debugs the file in the IW
      */
-    [Telemetry.DebugFileInteractive]: never | undefined;
-    [Telemetry.FailedToUpdateKernelSpec]: never | undefined;
+    [Telemetry.DebugFileInteractive]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'roblourens',
+        feature: ['Debugger']
+    } as any;
+    [Telemetry.FailedToUpdateKernelSpec]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A'
+    };
     /**
      * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
      */
-    [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
+    [Telemetry.DisableInteractiveShiftEnter]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow']
+    } as any;
     /**
      * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
      */
-    [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
+    [Telemetry.EnableInteractiveShiftEnter]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow']
+    } as any;
     /**
      * Telemetry sent to capture first time execution of a cell.
      * If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.
      */
-    [Telemetry.ExecuteCellPerceivedCold]: undefined | { notebook: boolean };
+    [Telemetry.ExecuteCellPerceivedCold]: TelemetryEventInfo<DurationMeasurement & ResourceTypeTelemetryProperty> = {
+        owner: 'donjayamanne',
+        feature: ['InteractiveWindow', 'Notebook'],
+        tags: ['Cell Execution'],
+        source: 'User Action',
+        properties: commonClassificationForResourceSpecificTelemetryProperties,
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * Telemetry sent to capture subsequent execution of a cell.
      * If `notebook = true`, this its telemetry for native editor/notebooks.
      * (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)
      */
-    [Telemetry.ExecuteCellPerceivedWarm]: undefined | { notebook: boolean };
+    [Telemetry.ExecuteCellPerceivedWarm]: TelemetryEventInfo<DurationMeasurement & ResourceTypeTelemetryProperty> = {
+        owner: 'donjayamanne',
+        feature: ['InteractiveWindow', 'Notebook'],
+        tags: ['Cell Execution'],
+        source: 'User Action',
+        properties: commonClassificationForResourceSpecificTelemetryProperties,
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * Time take for jupyter server to start and be ready to run first user cell.
      * (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)
      */
-    [Telemetry.PerceivedJupyterStartupNotebook]: ResourceSpecificTelemetryProperties;
+    [Telemetry.PerceivedJupyterStartupNotebook]: TelemetryEventInfo<
+        DurationMeasurement & ResourceSpecificTelemetryProperties
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup'],
+        source: 'Either',
+        properties: commonClassificationForResourceSpecificTelemetryProperties,
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.
      */
-    [Telemetry.StartExecuteNotebookCellPerceivedCold]: ResourceSpecificTelemetryProperties;
+    [Telemetry.StartExecuteNotebookCellPerceivedCold]: TelemetryEventInfo<
+        DurationMeasurement & ResourceSpecificTelemetryProperties
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup'],
+        source: 'Either',
+        properties: commonClassificationForResourceSpecificTelemetryProperties,
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * User exports a .py file with cells as a Jupyter Notebook.
      */
-    [Telemetry.ExportPythonFileInteractive]: never | undefined;
+    [Telemetry.ExportPythonFileInteractive]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
     /**
      * User exports a .py file with cells along with the outputs from the current IW as a Jupyter Notebook.
      */
-    [Telemetry.ExportPythonFileAndOutputInteractive]: never | undefined;
+    [Telemetry.ExportPythonFileAndOutputInteractive]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
     /**
      * User exports the IW or Notebook to a specific format.
      */
-    [Telemetry.ClickedExportNotebookAsQuickPick]: { format: ExportFormat };
+    [Telemetry.ClickedExportNotebookAsQuickPick]: TelemetryEventInfo<{ format: ExportFormat }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
     /**
      * Called when user imports a Jupyter Notebook into a Python file.
      * Command is `Jupyter: Import Jupyter Notebook`
      * Basically user is exporting some jupyter notebook into a Python file or other.
      */
-    [Telemetry.ExportNotebookAs]: { format: ExportFormat; cancelled?: boolean; successful?: boolean; opened?: boolean };
+    [Telemetry.ExportNotebookAs]: TelemetryEventInfo<{
+        format: ExportFormat;
+        cancelled?: boolean;
+        successful?: boolean;
+        opened?: boolean;
+    }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
     /**
      * Called when user imports a Jupyter Notebook into a Python file.
      * Command is `Jupyter: Import Jupyter Notebook`
      * Basically user is exporting some jupyter notebook into a Python file.
      */
-    [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
+    [Telemetry.ImportNotebook]: TelemetryEventInfo<{ scope: 'command' | 'file' }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
     /**
      * Called when user exports a Jupyter Notebook or IW into a Python file, HTML, PDF, etc.
      * Command is `Jupyter: Export to Python Script` or `Jupyter: Export to HTML`
      * Basically user is exporting some jupyter notebook or IW into a Python file or other.
      */
-    [Telemetry.ExportNotebookAsCommand]: { format: ExportFormat };
+    [Telemetry.ExportNotebookAsCommand]: TelemetryEventInfo<{ format: ExportFormat }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
     /**
      * Export fails
      */
-    [Telemetry.ExportNotebookAsFailed]: { format: ExportFormat };
-    [Telemetry.GetPasswordAttempt]: never | undefined;
-    [Telemetry.GetPasswordFailure]: never | undefined;
-    [Telemetry.GetPasswordSuccess]: never | undefined;
-    [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
+    [Telemetry.ExportNotebookAsFailed]: TelemetryEventInfo<{ format: ExportFormat }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.GetPasswordAttempt]: TelemetryEventInfo<DurationMeasurement> = {
+        feature: 'N/A',
+        owner: 'donjayamanne',
+        measures: commonClassificationForDurationProperties
+    };
+    [Telemetry.GetPasswordFailure]: TelemetryEventInfo<never | undefined> = {
+        feature: 'N/A',
+        owner: 'donjayamanne'
+    };
+    [Telemetry.GetPasswordSuccess]: TelemetryEventInfo<never | undefined> = {
+        feature: 'N/A',
+        owner: 'donjayamanne'
+    };
+    [Telemetry.ImportNotebook]: TelemetryEventInfo<{ scope: 'command' | 'file' }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
     /**
      * User interrupts a cell
      * Identical to `Telemetry.InterruptJupyterTime`
      */
-    [Telemetry.Interrupt]: never | undefined;
+    [Telemetry.Interrupt]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: ['InteractiveWindow', 'Notebook'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * User interrupts a cell
      * Identical to `Telemetry.Interrupt`
      */
-    [Telemetry.InterruptJupyterTime]: never | undefined;
+    [Telemetry.InterruptJupyterTime]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: ['InteractiveWindow', 'Notebook'],
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * Total number of cells executed. Telemetry Sent when VS Code is closed.
      */
-    [Telemetry.NotebookRunCount]: { count: number };
+    [Telemetry.NotebookRunCount]: TelemetryEventInfo<{ count: number }> = {
+        owner: 'donjayamanne',
+        feature: ['InteractiveWindow', 'Notebook'],
+        measures: {
+            count: {
+                classification: 'SystemMetaData',
+                isMeasurement: true,
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
      * Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.
      */
-    [Telemetry.NotebookOpenCount]: { count: number };
-    [Telemetry.PandasNotInstalled]: never | undefined;
-    [Telemetry.PandasTooOld]: never | undefined;
-    [Telemetry.PandasOK]: never | undefined;
-    [Telemetry.PandasInstallCanceled]: { version: string };
-    [Telemetry.OpenNotebookAll]: never | undefined;
-    [Telemetry.OpenPlotViewer]: never | undefined;
+    [Telemetry.NotebookOpenCount]: TelemetryEventInfo<{ count: number }> = {
+        owner: 'donjayamanne',
+        feature: ['InteractiveWindow', 'Notebook'],
+        measures: {
+            count: {
+                classification: 'SystemMetaData',
+                isMeasurement: true,
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    [Telemetry.PandasNotInstalled]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.PandasTooOld]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.PandasOK]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.PandasInstallCanceled]: TelemetryEventInfo<{ version: string }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.OpenNotebookAll]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.OpenPlotViewer]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
     /**
      * Total time taken to restart a kernel.
      * Identical to `Telemetry.RestartKernel`
      */
-    [Telemetry.RestartJupyterTime]: never | undefined;
+    [Telemetry.RestartJupyterTime]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: ['InteractiveWindow', 'Notebook'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * Total time taken to restart a kernel.
      * Identical to `Telemetry.RestartJupyterTime`
      */
-    [Telemetry.RestartKernel]: never | undefined;
+    [Telemetry.RestartKernel]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: ['InteractiveWindow', 'Notebook'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * Telemetry event sent when IW or Notebook is restarted.
      */
-    [Telemetry.RestartKernelCommand]: never | undefined;
+    [Telemetry.RestartKernelCommand]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
+        owner: 'donjayamanne',
+        feature: ['InteractiveWindow', 'Notebook'],
+        properties: commonClassificationForResourceSpecificTelemetryProperties
+    };
     /**
      * Run all Cell Commands in Interactive Python
      */
-    [Telemetry.RunAllCells]: never | undefined;
+    [Telemetry.RunAllCells]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
     /**
      * Run a Selection or Line in Interactive Python
      */
-    [Telemetry.RunSelectionOrLine]: never | undefined;
+    [Telemetry.RunSelectionOrLine]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
     /**
      * Run the current Cell in Interactive Python
      */
-    [Telemetry.RunCurrentCell]: never | undefined;
+    [Telemetry.RunCurrentCell]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
     /**
      * Run all the above cells in Interactive Python
      */
-    [Telemetry.RunAllCellsAbove]: never | undefined;
+    [Telemetry.RunAllCellsAbove]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
     /**
      * Run current cell and all below in Interactive Python
      */
-    [Telemetry.RunCellAndAllBelow]: never | undefined;
+    [Telemetry.RunCellAndAllBelow]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
     /**
      * Run current cell and advance cursor in Interactive Python
      */
-    [Telemetry.RunCurrentCellAndAdvance]: never | undefined;
+    [Telemetry.RunCurrentCellAndAdvance]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
     /**
      * Run file in Interactive Python
      */
-    [Telemetry.RunFileInteractive]: never | undefined;
-    [Telemetry.RunToLine]: never | undefined;
-    [Telemetry.RunFromLine]: never | undefined;
+    [Telemetry.RunFileInteractive]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.RunToLine]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.RunFromLine]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
     /**
      * Cell Edit Commands in Interactive Python
      */
-    [Telemetry.InsertCellBelowPosition]: never | undefined;
-    [Telemetry.InsertCellBelow]: never | undefined;
-    [Telemetry.InsertCellAbove]: never | undefined;
-    [Telemetry.DeleteCells]: never | undefined;
-    [Telemetry.SelectCell]: never | undefined;
-    [Telemetry.SelectCellContents]: never | undefined;
-    [Telemetry.ExtendSelectionByCellAbove]: never | undefined;
-    [Telemetry.ExtendSelectionByCellBelow]: never | undefined;
-    [Telemetry.MoveCellsUp]: never | undefined;
-    [Telemetry.MoveCellsDown]: never | undefined;
-    [Telemetry.ChangeCellToMarkdown]: never | undefined;
-    [Telemetry.ChangeCellToCode]: never | undefined;
-    [Telemetry.GotoNextCellInFile]: never | undefined;
-    [Telemetry.GotoPrevCellInFile]: never | undefined;
-    [Telemetry.RunCurrentCellAndAddBelow]: never | undefined;
-    [Telemetry.SelfCertsMessageClose]: never | undefined;
-    [Telemetry.SelfCertsMessageEnabled]: never | undefined;
-    [Telemetry.SelectJupyterURI]: never | undefined;
+    [Telemetry.InsertCellBelowPosition]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.InsertCellBelow]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.InsertCellAbove]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.DeleteCells]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.SelectCell]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.SelectCellContents]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.ExtendSelectionByCellAbove]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.ExtendSelectionByCellBelow]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.MoveCellsUp]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.MoveCellsDown]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.ChangeCellToMarkdown]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.ChangeCellToCode]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.GotoNextCellInFile]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.GotoPrevCellInFile]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.RunCurrentCellAndAddBelow]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.SelfCertsMessageClose]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A'
+    };
+    [Telemetry.SelfCertsMessageEnabled]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A'
+    };
+    [Telemetry.SelectJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'IanMatthewHuff'
+    } as any;
     /**
      * Captures the telemetry when the Uri is manually entered by the user as part of the workflow when selecting a Kernel.
      */
-    [Telemetry.EnterJupyterURI]: never | undefined;
-    [Telemetry.SelectLocalJupyterKernel]: never | undefined;
-    [Telemetry.SelectRemoteJupyterKernel]: never | undefined;
-    [Telemetry.SessionIdleTimeout]: never | undefined;
-    [Telemetry.JupyterNotInstalledErrorShown]: never | undefined;
-    [Telemetry.UserInstalledJupyter]: never | undefined;
-    [Telemetry.UserInstalledPandas]: never | undefined;
-    [Telemetry.UserDidNotInstallJupyter]: never | undefined;
-    [Telemetry.UserDidNotInstallPandas]: never | undefined;
-    [Telemetry.PythonNotInstalled]: {
+    [Telemetry.EnterJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.SelectLocalJupyterKernel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
+        owner: 'IanMatthewHuff',
+        feature: 'N/A',
+        properties: commonClassificationForResourceSpecificTelemetryProperties
+    };
+    [Telemetry.SelectRemoteJupyterKernel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
+        owner: 'IanMatthewHuff',
+        feature: 'N/A',
+        properties: commonClassificationForResourceSpecificTelemetryProperties
+    };
+    [Telemetry.SessionIdleTimeout]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
+    [Telemetry.JupyterNotInstalledErrorShown]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
+    [Telemetry.UserInstalledJupyter]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
+    [Telemetry.UserInstalledPandas]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.UserDidNotInstallJupyter]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
+    [Telemetry.UserDidNotInstallPandas]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.PythonNotInstalled]: TelemetryEventInfo<{
         action:
             | 'displayed' // Message displayed.
             | 'dismissed' // user dismissed the message.
             | 'download'; // User chose click the download link.
-    };
-    [Telemetry.PythonExtensionNotInstalled]: {
+    }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.PythonExtensionNotInstalled]: TelemetryEventInfo<{
         action:
             | 'displayed' // Message displayed.
             | 'dismissed' // user dismissed the message.
             | 'download'; // User chose click the download link.
-    };
-    [Telemetry.PythonExtensionInstalledViaKernelPicker]: {
+    }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.PythonExtensionInstalledViaKernelPicker]: TelemetryEventInfo<{
         action:
             | 'success' // Correctly installed and hooked the API
             | 'failed'; // Failed to install correctly
-    };
-    [Telemetry.PythonModuleInstall]: {
-        moduleName: string;
-        /**
-         * Whether the module was already (once before) installed into the python environment or
-         * whether this already exists (detected via `pip list`)
-         */
-        isModulePresent?: 'true' | undefined;
-        action:
-            | 'cancelled' // User cancelled the installation or closed the notebook or the like.
-            | 'displayed' // Install prompt may have been displayed.
-            | 'prompted' // Install prompt was displayed.
-            | 'installed' // Installation disabled (this is what python extension returns).
-            | 'ignored' // Installation disabled (this is what python extension returns).
-            | 'disabled' // Installation disabled (this is what python extension returns).
-            | 'failed' // Installation disabled (this is what python extension returns).
-            | 'install' // User chose install from prompt.
-            | 'donotinstall' // User chose not to install from prompt.
-            | 'differentKernel' // User chose to select a different kernel.
-            | 'error' // Some other error.
-            | 'installedInJupyter' // The package was successfully installed in Jupyter whilst failed to install in Python ext.
-            | 'failedToInstallInJupyter' // Failed to install the package in Jupyter as well as Python ext.
-            | 'dismissed' // User chose to dismiss the prompt.
-            | 'moreInfo'; // User requested more information on the module in question
-        resourceType?: 'notebook' | 'interactive';
-        /**
-         * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-         * If we run the same notebook tomorrow, the hash will be the same.
-         */
-        resourceHash?: string;
-        pythonEnvType?: EnvironmentType;
+    }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.PythonModuleInstall]: TelemetryEventInfo<
+        {
+            moduleName: string;
+            /**
+             * Whether the module was already (once before) installed into the python environment or
+             * whether this already exists (detected via `pip list`)
+             */
+            isModulePresent?: 'true' | undefined;
+            action:
+                | 'cancelled' // User cancelled the installation or closed the notebook or the like.
+                | 'displayed' // Install prompt may have been displayed.
+                | 'prompted' // Install prompt was displayed.
+                | 'installed' // Installation disabled (this is what python extension returns).
+                | 'ignored' // Installation disabled (this is what python extension returns).
+                | 'disabled' // Installation disabled (this is what python extension returns).
+                | 'failed' // Installation disabled (this is what python extension returns).
+                | 'install' // User chose install from prompt.
+                | 'donotinstall' // User chose not to install from prompt.
+                | 'differentKernel' // User chose to select a different kernel.
+                | 'error' // Some other error.
+                | 'installedInJupyter' // The package was successfully installed in Jupyter whilst failed to install in Python ext.
+                | 'failedToInstallInJupyter' // Failed to install the package in Jupyter as well as Python ext.
+                | 'dismissed' // User chose to dismiss the prompt.
+                | 'moreInfo'; // User requested more information on the module in question
+            /**
+             * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+             * If we run the same notebook tomorrow, the hash will be the same.
+             */
+            resourceHash?: string;
+            pythonEnvType?: EnvironmentType;
+        } & ResourceTypeTelemetryProperty &
+            DurationMeasurement
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            action: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            isModulePresent: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            moduleName: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            pythonEnvType: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            resourceHash: {
+                classification: 'EndUserPseudonymizedInformation',
+                purpose: 'FeatureInsight'
+            },
+            ...commonClassificationForResourceType
+        },
+        measures: commonClassificationForDurationProperties
     };
     /**
      * This telemetry tracks the display of the Picker for Jupyter Remote servers.
      */
-    [Telemetry.SetJupyterURIUIDisplayed]: {
+    [Telemetry.SetJupyterURIUIDisplayed]: TelemetryEventInfo<{
         /**
          * This telemetry tracks the source of this UI.
          * nonUser - Invoked internally by our code.
@@ -594,42 +1643,72 @@ export interface IEventNamePropertyMapping {
          * nativeNotebookToolbar - Invoked from Native notebook toolbar.
          */
         commandSource: SelectJupyterUriCommandSource;
-    };
-    [Telemetry.SetJupyterURIToLocal]: never | undefined;
-    [Telemetry.SetJupyterURIToUserSpecified]: {
+    }> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.SetJupyterURIToLocal]: TelemetryEventInfo<DurationMeasurement> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.SetJupyterURIToUserSpecified]: TelemetryEventInfo<{
         azure: boolean;
-    };
-    [Telemetry.ShiftEnterBannerShown]: never | undefined;
-    [Telemetry.StartShowDataViewer]: never | undefined;
-    [Telemetry.ShowDataViewer]: { rows: number | undefined; columns: number | undefined };
-    [Telemetry.FailedShowDataViewer]: never | undefined;
+    }> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.ShiftEnterBannerShown]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger'
+    } as any;
+    [Telemetry.StartShowDataViewer]: TelemetryEventInfo<DurationMeasurement> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.ShowDataViewer]: TelemetryEventInfo<{ rows: number | undefined; columns: number | undefined }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.FailedShowDataViewer]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
     /**
      * Sent when the jupyter.refreshDataViewer command is invoked
      */
-    [Telemetry.RefreshDataViewer]: never | undefined;
-    [Telemetry.CreateNewInteractive]: never | undefined;
-    [Telemetry.StartJupyter]: never | undefined;
-    [Telemetry.StartJupyterProcess]: never | undefined;
+    [Telemetry.RefreshDataViewer]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.CreateNewInteractive]: TelemetryEventInfo<never | undefined> = { owner: 'amunger' } as any;
+    [Telemetry.StartJupyter]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        measures: commonClassificationForDurationProperties
+    };
+    [Telemetry.StartJupyterProcess]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.
-     *
-     * @type {(never | undefined)}
-     * @memberof IEventNamePropertyMapping
      */
-    [Telemetry.JupyterInstalledButNotKernelSpecModule]: never | undefined;
-    [Telemetry.VariableExplorerFetchTime]: never | undefined;
-    [Telemetry.VariableExplorerVariableCount]: { variableCount: number };
-    [Telemetry.WaitForIdleJupyter]: never | undefined;
-    [Telemetry.WebviewStartup]: { type: string };
-    [Telemetry.RegisterInterpreterAsKernel]: never | undefined;
+    [Telemetry.JupyterInstalledButNotKernelSpecModule]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A'
+    };
+    [Telemetry.VariableExplorerFetchTime]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.VariableExplorerVariableCount]: TelemetryEventInfo<{ variableCount: number }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.WaitForIdleJupyter]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup'],
+        measures: commonClassificationForDurationProperties
+    };
+    [Telemetry.WebviewStartup]: TelemetryEventInfo<{ type: string }> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.RegisterInterpreterAsKernel]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup'],
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * Telemetry sent when user selects an interpreter to start jupyter server.
      *
      * @type {(never | undefined)}
      * @memberof IEventNamePropertyMapping
      */
-    [Telemetry.SelectJupyterInterpreterCommand]: never | undefined;
-    [Telemetry.SelectJupyterInterpreter]: {
+    [Telemetry.SelectJupyterInterpreterCommand]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
+    [Telemetry.SelectJupyterInterpreter]: TelemetryEventInfo<{
         /**
          * The result of the selection.
          * notSelected - No interpreter was selected.
@@ -639,28 +1718,55 @@ export interface IEventNamePropertyMapping {
          * @type {('notSelected' | 'selected' | 'installationCancelled')}
          */
         result?: 'notSelected' | 'selected' | 'installationCancelled';
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup'],
+        properties: {
+            result: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
-    [Telemetry.SelectJupyterInterpreterMessageDisplayed]: undefined | never;
+    [Telemetry.SelectJupyterInterpreterMessageDisplayed]: TelemetryEventInfo<undefined | never> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
     /**
      * Telemetry event sent when starting a session for a local connection failed.
      *
      * @type {(undefined | never)}
      * @memberof IEventNamePropertyMapping
      */
-    [Telemetry.StartSessionFailedJupyter]: undefined | never;
+    [Telemetry.StartSessionFailedJupyter]: TelemetryEventInfo<undefined | never> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
     /**
      * Telemetry event sent to indicate the language used in a notebook
      *
      * @type { language: string }
      * @memberof IEventNamePropertyMapping
      */
-    [Telemetry.NotebookLanguage]: {
+    [Telemetry.NotebookLanguage]: TelemetryEventInfo<{
         /**
          * Language found in the notebook if a known language. Otherwise 'unknown'
          */
         language: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            language: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
-    [Telemetry.KernelSpecLanguage]: {
+    [Telemetry.KernelSpecLanguage]: TelemetryEventInfo<{
         /**
          * Language of the kernelSpec.
          */
@@ -674,6 +1780,24 @@ export interface IEventNamePropertyMapping {
          * OCaml is one such kernel.
          */
         usesShell?: boolean;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup'],
+        properties: {
+            kind: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            language: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            usesShell: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * Telemetry event sent to indicate 'jupyter kernelspec' is not possible.
@@ -681,58 +1805,111 @@ export interface IEventNamePropertyMapping {
      * @type {(undefined | never)}
      * @memberof IEventNamePropertyMapping
      */
-    [Telemetry.KernelSpecNotFound]: undefined | never;
+    [Telemetry.KernelSpecNotFound]: TelemetryEventInfo<undefined | never> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
     /**
      * Total time taken to Launch a raw kernel.
      */
-    [Telemetry.KernelLauncherPerf]: undefined | never | TelemetryErrorProperties;
+    [Telemetry.KernelLauncherPerf]: TelemetryEventInfo<
+        (DurationMeasurement & ResourceSpecificTelemetryProperties) | TelemetryErrorProperties
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup'],
+        properties: {
+            ...commonClassificationForErrorProperties,
+            ...commonClassificationForResourceSpecificTelemetryProperties
+        },
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * Total time taken to find a kernel on disc or on a remote machine.
      */
-    [Telemetry.RankKernelsPerf]: never | undefined;
+    [Telemetry.RankKernelsPerf]: TelemetryEventInfo<DurationMeasurement> = { owner: 'IanMatthewHuff' } as any;
     /**
      * Total time taken to list kernels for VS Code.
      */
-    [Telemetry.KernelProviderPerf]: undefined | never;
+    [Telemetry.KernelProviderPerf]: TelemetryEventInfo<undefined | never> = {
+        owner: 'donjayamanne',
+        feature: 'N/A'
+    };
     /**
      * Telemetry sent when we have attempted to find the preferred kernel.
      */
-    [Telemetry.PreferredKernel]: {
-        result: 'found' | 'notfound' | 'failed'; // Whether a preferred kernel was found or not.
-        language: string; // Language of the associated notebook or interactive window.
-        resourceType: 'notebook' | 'interactive'; // Whether its a notebook or interactive window.
-        hasActiveInterpreter?: boolean; // Whether we have an active interpreter or not.
-    };
+    [Telemetry.PreferredKernel]: TelemetryEventInfo<
+        {
+            result: 'found' | 'notfound' | 'failed'; // Whether a preferred kernel was found or not.
+            language: string; // Language of the associated notebook or interactive window.
+            hasActiveInterpreter?: boolean; // Whether we have an active interpreter or not.
+        } & ResourceTypeTelemetryProperty
+    > = {
+        owner: 'IanMatthewHuff',
+        feature: ['InteractiveWindow', 'Notebook'],
+        source: 'Either',
+        properties: {
+            ...commonClassificationForResourceSpecificTelemetryProperties,
+            ...commonClassificationForResourceType,
+            hasActiveInterpreter: {
+                //
+            },
+            language: {
+                //
+            },
+            result: {
+                //
+            }
+        }
+    } as any;
     /**
      * Telemetry event sent to when user customizes the jupyter command line
      * @type {(undefined | never)}
      * @memberof IEventNamePropertyMapping
      */
-    [Telemetry.JupyterCommandLineNonDefault]: undefined | never;
+    [Telemetry.JupyterCommandLineNonDefault]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A'
+    };
     /**
      * Telemetry event sent when a user runs the interactive window with a new file
      * @type {(undefined | never)}
      * @memberof IEventNamePropertyMapping
      */
-    [Telemetry.NewFileForInteractiveWindow]: undefined | never;
+    [Telemetry.NewFileForInteractiveWindow]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger'
+    } as any;
     /**
      * Telemetry event sent when a kernel picked crashes on startup
      * @type {(undefined | never)}
      * @memberof IEventNamePropertyMapping
      */
-    [Telemetry.KernelInvalid]: undefined | never;
+    [Telemetry.KernelInvalid]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
     /**
      * Telemetry event sent when the ZMQ native binaries do not work.
      */
-    [Telemetry.ZMQNotSupported]: undefined | never;
+    [Telemetry.ZMQNotSupported]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
     /**
      * Telemetry event sent when the ZMQ native binaries do work.
      */
-    [Telemetry.ZMQSupported]: undefined | never;
+    [Telemetry.ZMQSupported]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        tags: ['KernelStartup']
+    };
     /**
      * Telemetry event sent with name of a Widget that is used.
      */
-    [Telemetry.HashedIPyWidgetNameUsed]: {
+    [Telemetry.HashedIPyWidgetNameUsed]: TelemetryEventInfo<{
         /**
          * Hash of the widget
          */
@@ -745,11 +1922,30 @@ export interface IEventNamePropertyMapping {
          * Whether we searched CDN or not.
          */
         cdnSearched: boolean;
+    }> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        tags: ['Widgets'],
+        source: 'Either',
+        properties: {
+            cdnSearched: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hashedName: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            source: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * Telemetry event sent with name of a Widget found.
      */
-    [Telemetry.HashedIPyWidgetNameDiscovered]: {
+    [Telemetry.HashedIPyWidgetNameDiscovered]: TelemetryEventInfo<{
         /**
          * Hash of the widget
          */
@@ -758,272 +1954,718 @@ export interface IEventNamePropertyMapping {
          * Where did we find the hashed name (CDN or user environment or remote jupyter).
          */
         source?: 'cdn' | 'local' | 'remote';
+    }> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        tags: ['Widgets'],
+        source: 'Either',
+        properties: {
+            hashedName: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            source: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * Total time taken to discover all IPyWidgets.
      * This is how long it takes to discover all widgets on disc (from python environment).
      */
-    [Telemetry.DiscoverIPyWidgetNamesPerf]: {
+    [Telemetry.DiscoverIPyWidgetNamesPerf]: TelemetryEventInfo<{
         /**
          * Whether we're looking for widgets on local Jupyter environment (local connections) or remote.
          */
         type: 'local' | 'remote';
+    }> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        tags: ['Widgets'],
+        source: 'Either',
+        properties: {
+            type: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * Something went wrong in looking for a widget.
      */
-    [Telemetry.HashedIPyWidgetScriptDiscoveryError]: never | undefined;
+    [Telemetry.HashedIPyWidgetScriptDiscoveryError]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        tags: ['Widgets'],
+        source: 'Either'
+    };
     /**
      * Telemetry event sent when an ipywidget module loads. Module name is hashed.
      */
-    [Telemetry.IPyWidgetLoadSuccess]: { moduleHash: string; moduleVersion: string };
+    [Telemetry.IPyWidgetLoadSuccess]: TelemetryEventInfo<{ moduleHash: string; moduleVersion: string }> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        tags: ['Widgets'],
+        source: 'Either',
+        properties: {
+            moduleHash: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            moduleVersion: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
      * Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
      */
-    [Telemetry.IPyWidgetLoadFailure]: {
+    [Telemetry.IPyWidgetLoadFailure]: TelemetryEventInfo<{
         isOnline: boolean;
         moduleHash: string;
         moduleVersion: string;
         // Whether we timedout getting the source of the script (fetching script source in extension code).
         timedout: boolean;
+    }> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        tags: ['Widgets'],
+        source: 'Either',
+        properties: {
+            timedout: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            isOnline: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            moduleHash: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            moduleVersion: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.
      */
-    [Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure]: { moduleHash: string; moduleVersion: string };
+    [Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure]: TelemetryEventInfo<{
+        moduleHash: string;
+        moduleVersion: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        tags: ['Widgets'],
+        source: 'Either',
+        properties: {
+            moduleHash: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            moduleVersion: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
      * Telemetry sent when we prompt user to use a CDN for IPyWidget scripts.
      * This is always sent when we display a prompt.
      */
-    [Telemetry.IPyWidgetPromptToUseCDN]: never | undefined;
+    [Telemetry.IPyWidgetPromptToUseCDN]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        tags: ['Widgets'],
+        source: 'Either'
+    };
     /**
      * Telemetry sent when user does something with the prompt displayed to user about using CDN for IPyWidget scripts.
      */
-    [Telemetry.IPyWidgetPromptToUseCDNSelection]: {
+    [Telemetry.IPyWidgetPromptToUseCDNSelection]: TelemetryEventInfo<{
         selection: 'ok' | 'cancel' | 'dismissed' | 'doNotShowAgain';
+    }> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        tags: ['Widgets'],
+        source: 'Non-UserAction',
+        properties: {
+            selection: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * Telemetry event sent to indicate the overhead of syncing the kernel with the UI.
      */
-    [Telemetry.IPyWidgetOverhead]: {
+    [Telemetry.IPyWidgetOverhead]: TelemetryEventInfo<{
         totalOverheadInMs: number;
         numberOfMessagesWaitedOn: number;
         averageWaitTime: number;
         numberOfRegisteredHooks: number;
+    }> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        tags: ['Widgets'],
+        source: 'Either',
+        measures: {
+            totalOverheadInMs: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            numberOfMessagesWaitedOn: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            averageWaitTime: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            numberOfRegisteredHooks: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            }
+        }
     };
     /**
      * Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
      */
-    [Telemetry.IPyWidgetRenderFailure]: never | undefined;
+    [Telemetry.IPyWidgetRenderFailure]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        tags: ['Widgets'],
+        source: 'Either'
+    };
     /**
      * Telemetry event sent when the widget tries to send a kernel message but nothing was listening
      */
-    [Telemetry.IPyWidgetUnhandledMessage]: {
+    [Telemetry.IPyWidgetUnhandledMessage]: TelemetryEventInfo<{
         msg_type: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        tags: ['Widgets'],
+        source: 'Either',
+        properties: {
+            msg_type: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
     };
 
     // Telemetry send when we create a notebook for a raw kernel or jupyter
-    [Telemetry.RawKernelCreatingNotebook]: never | undefined;
+    [Telemetry.RawKernelCreatingNotebook]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        tags: ['KernelStartup'],
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * After starting a kernel we send a request to get the kernel info.
      * This tracks the total time taken to get the response back (or wether we timedout).
      * If we timeout and later we find successful comms for this session, then timeout is too low
      * or we need more attempts.
      */
-    [Telemetry.RawKernelInfoResonse]: {
-        /**
-         * Total number of attempts and sending a request and waiting for response.
-         */
-        attempts: number;
-        /**
-         * Whether we timedout while waiting for response for Kernel info request.
-         */
-        timedout: boolean;
+    [Telemetry.RawKernelInfoResponse]: TelemetryEventInfo<
+        {
+            /**
+             * Total number of attempts and sending a request and waiting for response.
+             */
+            attempts: number;
+            /**
+             * Whether we timedout while waiting for response for Kernel info request.
+             */
+            timedout: boolean;
+        } & DurationMeasurement &
+            ResourceSpecificTelemetryProperties
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        tags: ['KernelStartup'],
+        measures: {
+            ...commonClassificationForDurationProperties,
+            attempts: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            }
+        },
+        properties: {
+            ...commonClassificationForResourceSpecificTelemetryProperties,
+            timedout: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
     };
-    [Telemetry.JupyterCreatingNotebook]: never | undefined | TelemetryErrorProperties;
+    [Telemetry.JupyterCreatingNotebook]: TelemetryEventInfo<
+        | /** When things fail */ (DurationMeasurement & ResourceSpecificTelemetryProperties & TelemetryErrorProperties)
+        | /** When successfully created */ (DurationMeasurement & ResourceSpecificTelemetryProperties)
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        tags: ['KernelStartup'],
+        measures: commonClassificationForDurationProperties,
+        properties: {
+            ...commonClassificationForResourceSpecificTelemetryProperties,
+            ...commonClassificationForErrorProperties
+        }
+    };
 
     // Raw kernel timing events
-    [Telemetry.RawKernelSessionConnect]: never | undefined;
-    [Telemetry.RawKernelStartRawSession]: never | undefined;
-    [Telemetry.RawKernelProcessLaunch]: never | undefined;
+    [Telemetry.RawKernelSessionConnect]: TelemetryEventInfo<DurationMeasurement & ResourceSpecificTelemetryProperties> =
+        {
+            owner: 'donjayamanne',
+            feature: ['Notebook', 'InteractiveWindow'],
+            source: 'Either',
+            tags: ['KernelStartup'],
+            measures: commonClassificationForDurationProperties,
+            properties: {
+                ...commonClassificationForResourceSpecificTelemetryProperties,
+                ...commonClassificationForErrorProperties
+            }
+        };
+    [Telemetry.RawKernelStartRawSession]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        tags: ['KernelStartup'],
+        measures: commonClassificationForDurationProperties
+    };
+    [Telemetry.RawKernelProcessLaunch]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        tags: ['KernelStartup'],
+        measures: commonClassificationForDurationProperties
+    };
 
     // Applies to everything (interactive+Notebooks & local+remote)
     /**
      * Executes a cell, applies to IW and Notebook.
      * Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
      */
-    [Telemetry.ExecuteCell]: ResourceSpecificTelemetryProperties;
+    [Telemetry.ExecuteCell]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'User Action',
+        tags: ['Cell Execution'],
+        properties: {
+            ...commonClassificationForResourceSpecificTelemetryProperties,
+            ...commonClassificationForErrorProperties
+        }
+    };
     /**
      * Starts a kernel, applies to IW and Notebook.
      * Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
+     * If `failed` is false, then its a success, else startup failed.
      */
-    [Telemetry.NotebookStart]:
-        | ResourceSpecificTelemetryProperties // If successful.
-        | ({
-              failed: true;
-              failureCategory: ErrorCategory | KernelFailureReason;
-          } & ResourceSpecificTelemetryProperties)
-        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there any any unhandled exceptions.
+    [Telemetry.NotebookStart]: TelemetryEventInfo<
+        Partial<ResourceSpecificTelemetryProperties & TelemetryErrorProperties>
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        tags: ['KernelStartup'],
+        properties: {
+            ...commonClassificationForResourceSpecificTelemetryProperties,
+            ...commonClassificationForErrorProperties
+        }
+    };
     /**
      * Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
      * WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.
      */
-    [Telemetry.SwitchKernel]: ResourceSpecificTelemetryProperties; // If there are unhandled exceptions;
+    [Telemetry.SwitchKernel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
+        owner: 'IanMatthewHuff',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: commonClassificationForResourceSpecificTelemetryProperties
+    };
     /**
      * Similar to Telemetry.SwitchKernel, but doesn't contain as much information as Telemetry.SwitchKernel.
      * WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.
      */
-    [Telemetry.SwitchToExistingKernel]: { language: string };
-    [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
+    [Telemetry.SwitchToExistingKernel]: TelemetryEventInfo<{ language: string }> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.SwitchToInterpreterAsKernel]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
     /**
      * Total time taken to interrupt a kernel
      * Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
      */
-    [Telemetry.NotebookInterrupt]:
-        | ({
+    [Telemetry.NotebookInterrupt]: TelemetryEventInfo<
+        | /** When interrupt is a success */ ({
               /**
                * The result of the interrupt,
                */
               result: InterruptResult;
-          } & ResourceSpecificTelemetryProperties) // If successful (interrupted, timeout, restart).
-        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
+          } & DurationMeasurement &
+              ResourceSpecificTelemetryProperties) // If successful (interrupted, timeout, restart).
+        | /** If there are unhandled exceptions */ (DurationMeasurement &
+              ResourceSpecificTelemetryProperties &
+              TelemetryErrorProperties)
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'User Action',
+        properties: {
+            result: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            ...commonClassificationForResourceType,
+            ...commonClassificationForErrorProperties,
+            ...commonClassificationForResourceSpecificTelemetryProperties
+        },
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * Restarts the Kernel.
      * Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
      */
-    [Telemetry.NotebookRestart]:
-        | {
+    [Telemetry.NotebookRestart]: TelemetryEventInfo<
+        | /** Sent to capture just the time taken to restart, see comments. */ ({
               /**
                * If true, this is the total time taken to restart the kernel (excluding times to stop current cells and the like).
                * Also in the case of raw kernels, we keep a separate process running, and when restarting we just switch to that process.
                * In such cases this value will be `undefined`. In the case of raw kernels this will be true only when starting a new kernel process from scratch.
                */
               startTimeOnly: true;
-          }
-        | ({
-              failed: true;
-              failureCategory: ErrorCategory;
-          } & ResourceSpecificTelemetryProperties)
-        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
+          } & DurationMeasurement &
+              ResourceSpecificTelemetryProperties)
+        | /** If there are unhandled exceptions. */ (ResourceSpecificTelemetryProperties & TelemetryErrorProperties)
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'User Action',
+        properties: {
+            startTimeOnly: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            ...commonClassificationForResourceType,
+            ...commonClassificationForErrorProperties,
+            ...commonClassificationForResourceSpecificTelemetryProperties
+        },
+        measures: commonClassificationForDurationProperties
+    };
 
     // Raw kernel single events
-    [Telemetry.RawKernelSessionStart]:
-        | ResourceSpecificTelemetryProperties
-        | ({
+    [Telemetry.RawKernelSessionStart]: TelemetryEventInfo<
+        | /** When started successfully. */ (DurationMeasurement & ResourceSpecificTelemetryProperties)
+        | /** Sent when we fail to restart a kernel and have a failureCategory. */ ({
               failed: true;
               failureCategory: ErrorCategory;
           } & ResourceSpecificTelemetryProperties)
-        | (ResourceSpecificTelemetryProperties & TelemetryErrorProperties); // If there are unhandled exceptions;
-    [Telemetry.RawKernelSessionStartSuccess]: never | undefined;
-    [Telemetry.RawKernelSessionStartException]: never | undefined;
-    [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
-    [Telemetry.RawKernelSessionStartNoIpykernel]: {
-        reason: KernelInterpreterDependencyResponse;
-    } & TelemetryErrorProperties;
+        | /** If there are unhandled exceptions. */ (ResourceSpecificTelemetryProperties & TelemetryErrorProperties)
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: {
+            ...commonClassificationForResourceType,
+            ...commonClassificationForErrorProperties,
+            ...commonClassificationForResourceSpecificTelemetryProperties
+        },
+        measures: commonClassificationForDurationProperties
+    };
+    [Telemetry.RawKernelSessionStartSuccess]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: {
+            ...commonClassificationForResourceType,
+            ...commonClassificationForResourceSpecificTelemetryProperties
+        }
+    };
+    [Telemetry.RawKernelSessionStartException]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: {
+            ...commonClassificationForResourceType,
+            ...commonClassificationForResourceSpecificTelemetryProperties
+        }
+    };
+    [Telemetry.RawKernelSessionStartUserCancel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: {
+            ...commonClassificationForResourceType,
+            ...commonClassificationForResourceSpecificTelemetryProperties
+        }
+    };
+    [Telemetry.RawKernelSessionStartNoIpykernel]: TelemetryEventInfo<
+        {
+            reason: KernelInterpreterDependencyResponse;
+        } & TelemetryErrorProperties &
+            ResourceTypeTelemetryProperty
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: {
+            ...commonClassificationForResourceType,
+            ...commonClassificationForErrorProperties
+        },
+        measures: {
+            reason: {
+                classification: 'SystemMetaData',
+                isMeasurement: true,
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
     /**
      * This event is sent when the underlying kernelProcess for a
      * RawJupyterSession exits.
      */
-    [Telemetry.RawKernelSessionKernelProcessExited]: {
-        /**
-         * The kernel process's exit reason, based on the error
-         * object's reason
-         */
-        exitReason: string | undefined;
-        /**
-         * The kernel process's exit code.
-         */
-        exitCode: number | undefined;
+    [Telemetry.RawKernelSessionKernelProcessExited]: TelemetryEventInfo<
+        {
+            /**
+             * The kernel process's exit reason, based on the error
+             * object's reason
+             */
+            exitReason: string | undefined;
+            /**
+             * The kernel process's exit code.
+             */
+            exitCode: number;
+        } & ResourceSpecificTelemetryProperties
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: {
+            exitReason: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            ...commonClassificationForResourceType,
+            ...commonClassificationForResourceSpecificTelemetryProperties
+        },
+        measures: {
+            exitCode: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            }
+        }
     };
+
     /**
      * This event is sent when a RawJupyterSession's `shutdownSession`
      * method is called.
      */
-    [Telemetry.RawKernelSessionShutdown]: {
-        /**
-         * This indicates whether the session being shutdown
-         * is a restart session.
-         */
-        isRequestToShutdownRestartSession: boolean | undefined;
-        /**
-         * This is the callstack at the time that the `shutdownSession`
-         * method is called, intended for us to be ale to identify who
-         * tried to shutdown the session.
-         */
-        stacktrace: string | undefined;
+    [Telemetry.RawKernelSessionShutdown]: TelemetryEventInfo<
+        {
+            /**
+             * This indicates whether the session being shutdown
+             * is a restart session.
+             */
+            isRequestToShutdownRestartSession: boolean | undefined;
+            /**
+             * This is the callstack at the time that the `shutdownSession`
+             * method is called, intended for us to be ale to identify who
+             * tried to shutdown the session.
+             */
+            stacktrace: string | undefined;
+        } & ResourceSpecificTelemetryProperties
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: {
+            isRequestToShutdownRestartSession: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            stacktrace: {
+                classification: 'CallstackOrException',
+                purpose: 'PerformanceAndHealth'
+            },
+            ...commonClassificationForResourceType,
+            ...commonClassificationForResourceSpecificTelemetryProperties
+        }
     };
     /**
      * This event is sent when a RawSession's `dispose` method is called.
      */
-    [Telemetry.RawKernelSessionDisposed]: {
-        /**
-         * This is the callstack at the time that the `dispose` method
-         * is called, intended for us to be able to identify who called
-         * `dispose` on the RawSession.
-         */
-        stacktrace: string | undefined;
+    [Telemetry.RawKernelSessionDisposed]: TelemetryEventInfo<
+        {
+            /**
+             * This is the callstack at the time that the `dispose` method
+             * is called, intended for us to be able to identify who called
+             * `dispose` on the RawSession.
+             */
+            stacktrace: string | undefined;
+        } & ResourceSpecificTelemetryProperties
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: {
+            stacktrace: {
+                classification: 'CallstackOrException',
+                purpose: 'PerformanceAndHealth'
+            },
+            ...commonClassificationForResourceType,
+            ...commonClassificationForResourceSpecificTelemetryProperties
+        }
     };
 
     // Run by line events
-    [Telemetry.RunByLineVariableHover]: never | undefined;
+    [Telemetry.RunByLineVariableHover]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
 
     // Misc
-    [Telemetry.KernelCount]: {
-        kernelSpecCount: number; // Total number of kernel specs in the kernel list.
-        kernelInterpreterCount: number; // Total number of interpreters in the kernel list.
-        kernelLiveCount: number; // Total number of live kernels in the kernel list.
-        /**
-         * Total number of conda environments that share the same interpreter
-         * This happens when we create conda envs without the `python` argument.
-         * Such conda envs don't work today in the extension.
-         * Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.
-         */
-        condaEnvsSharingSameInterpreter: number;
-    } & ResourceSpecificTelemetryProperties;
+    [Telemetry.KernelCount]: TelemetryEventInfo<
+        {
+            /**
+             * Total number of kernel specs in the kernel list.
+             */
+            kernelSpecCount: number;
+            /**
+             * Total number of interpreters in the kernel list.
+             */
+            kernelInterpreterCount: number;
+            /**
+             * Total number of live kernels in the kernel list.
+             */
+            kernelLiveCount: number;
+            /**
+             * Total number of conda environments that share the same interpreter
+             * This happens when we create conda envs without the `python` argument.
+             * Such conda envs don't work today in the extension.
+             * Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.
+             */
+            condaEnvsSharingSameInterpreter: number;
+        } & DurationMeasurement &
+            ResourceSpecificTelemetryProperties
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            ...commonClassificationForResourceType,
+            ...commonClassificationForResourceSpecificTelemetryProperties
+        },
+        measures: {
+            ...commonClassificationForDurationProperties,
+            kernelSpecCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            condaEnvsSharingSameInterpreter: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            kernelInterpreterCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            },
+            kernelLiveCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            }
+        }
+    };
 
-    [Telemetry.VSCNotebookCellTranslationFailed]: {
-        isErrorOutput: boolean; // Whether we're trying to translate an error output when we shuldn't be.
+    [Telemetry.VSCNotebookCellTranslationFailed]: TelemetryEventInfo<{
+        isErrorOutput: boolean; // Whether we're trying to translate an error output when we shouldn't be.
+    }> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: {
+            isErrorOutput: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
     };
 
     // When users connect to a remote kernel, we store the kernel id so we can re-connect to that
     // when user opens the same notebook. We only store the last 100.
     // Count is the number of entries saved in the list.
-    [Telemetry.NumberOfSavedRemoteKernelIds]: { count: number };
+    [Telemetry.NumberOfSavedRemoteKernelIds]: TelemetryEventInfo<{ count: number }> = {
+        owner: 'IanMatthewHuff'
+    } as any;
 
     // Whether we've attempted to start a raw Python kernel without any interpreter information.
     // If we don't detect such telemetry in a few months, then we can remove this along with the temporary code associated with this telemetry.
-    [Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter]: {
-        /**
-         * Indicates whether the python extension is installed.
-         * If we send telemetry fro this & this is `true`, then we have a bug.
-         * If its `false`, then we can ignore this telemetry.
-         */
-        pythonExtensionInstalled: boolean;
+    [Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter]: TelemetryEventInfo<
+        {
+            /**
+             * Indicates whether the python extension is installed.
+             * If we send telemetry fro this & this is `true`, then we have a bug.
+             * If its `false`, then we can ignore this telemetry.
+             */
+            pythonExtensionInstalled: boolean;
+        } & ResourceSpecificTelemetryProperties
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            pythonExtensionInstalled: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            ...commonClassificationForResourceType,
+            ...commonClassificationForResourceSpecificTelemetryProperties
+        }
     };
     // Capture telemetry re: how long returning a tooltip takes
-    [Telemetry.InteractiveFileTooltipsPerf]: {
+    [Telemetry.InteractiveFileTooltipsPerf]: TelemetryEventInfo<{
         // Result is null if user signalled cancellation or if we timed out
         isResultNull: boolean;
-    };
+    }> = { owner: 'IanMatthewHuff' } as any;
 
     // Native variable view events
-    [Telemetry.NativeVariableViewLoaded]: never | undefined;
-    [Telemetry.NativeVariableViewMadeVisible]: never | undefined;
+    [Telemetry.NativeVariableViewLoaded]: TelemetryEventInfo<DurationMeasurement> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.NativeVariableViewMadeVisible]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
     /**
      * Telemetry sent when a command is executed.
      */
-    [Telemetry.CommandExecuted]: {
+    [Telemetry.CommandExecuted]: TelemetryEventInfo<{
         /**
          * Name of the command executed.
          */
         command: string;
+    }> = {
+        owner: 'unknown',
+        feature: 'N/A',
+        properties: {
+            command: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * Telemetry event sent whenever the user toggles the checkbox
      * controlling whether a slice is currently being applied to an
      * n-dimensional variable.
      */
-    [Telemetry.DataViewerSliceEnablementStateChanged]: {
+    [Telemetry.DataViewerSliceEnablementStateChanged]: TelemetryEventInfo<{
         /**
          * This property is either 'checked' when the result of toggling
          * the checkbox is for slicing to be enabled, or 'unchecked'
@@ -1031,24 +2673,24 @@ export interface IEventNamePropertyMapping {
          * to be disabled.
          */
         newState: CheckboxState;
-    };
+    }> = { owner: 'IanMatthewHuff' } as any;
     /**
      * Telemetry event sent when a slice is first applied in a
      * data viewer instance to a sliceable Python variable.
      */
-    [Telemetry.DataViewerDataDimensionality]: {
+    [Telemetry.DataViewerDataDimensionality]: TelemetryEventInfo<{
         /**
          * This property represents the number of dimensions
          * on the target variable being sliced. This should
          * always be 2 at minimum.
          */
         numberOfDimensions: number;
-    };
+    }> = { owner: 'IanMatthewHuff' } as any;
     /**
      * Telemetry event sent whenever the user applies a valid slice
      * to a sliceable Python variable in the data viewer.
      */
-    [Telemetry.DataViewerSliceOperation]: {
+    [Telemetry.DataViewerSliceOperation]: TelemetryEventInfo<{
         /**
          * This property indicates whether the slice operation
          * was triggered using the dropdown or the textbox in
@@ -1056,25 +2698,27 @@ export interface IEventNamePropertyMapping {
          * `textbox`, or `checkbox`.
          */
         source: SliceOperationSource;
-    };
+    }> = { owner: 'IanMatthewHuff' } as any;
     /*
      * Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).
      */
-    [Telemetry.FailedToCreateNotebookController]: {
-        /**
-         * What kind of kernel spec did we fail to create.
-         */
-        kind:
-            | 'startUsingPythonInterpreter'
-            | 'startUsingDefaultKernel'
-            | 'startUsingLocalKernelSpec'
-            | 'startUsingRemoteKernelSpec'
-            | 'connectToLiveRemoteKernel';
-    } & Partial<TelemetryErrorProperties>;
+    [Telemetry.FailedToCreateNotebookController]: TelemetryEventInfo<
+        {
+            /**
+             * What kind of kernel spec did we fail to create.
+             */
+            kind:
+                | 'startUsingPythonInterpreter'
+                | 'startUsingDefaultKernel'
+                | 'startUsingLocalKernelSpec'
+                | 'startUsingRemoteKernelSpec'
+                | 'connectToLiveRemoteKernel';
+        } & Partial<TelemetryErrorProperties>
+    > = { owner: 'IanMatthewHuff' } as any;
     /*
      * Telemetry sent when we recommend installing an extension.
      */
-    [Telemetry.RecommendExtension]: {
+    [Telemetry.RecommendExtension]: TelemetryEventInfo<{
         /**
          * Extension we recommended the user to install.
          */
@@ -1087,54 +2731,124 @@ export interface IEventNamePropertyMapping {
          * `doNotShowAgain` - If prompt was displayed & doNotShowAgain clicked by the user
          */
         action: 'displayed' | 'dismissed' | 'ok' | 'cancel' | 'doNotShowAgain';
-    };
-    [DebuggingTelemetry.clickedOnSetup]: never | undefined;
-    [DebuggingTelemetry.closedModal]: never | undefined;
-    [DebuggingTelemetry.ipykernel6Status]: {
+    }> = { owner: 'IanMatthewHuff' } as any;
+    [DebuggingTelemetry.clickedOnSetup]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
+    [DebuggingTelemetry.closedModal]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
+    [DebuggingTelemetry.ipykernel6Status]: TelemetryEventInfo<{
         status: 'installed' | 'notInstalled';
-    };
-    [DebuggingTelemetry.clickedRunByLine]: never | undefined;
-    [DebuggingTelemetry.successfullyStartedRunByLine]: never | undefined;
+    }> = { owner: 'roblourens' } as any;
+    [DebuggingTelemetry.clickedRunByLine]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
+    [DebuggingTelemetry.successfullyStartedRunByLine]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens'
+    } as any;
     /**
      * Telemetry sent when we have managed to successfully start the Interactive Window debugger using the Jupyter protocol.
      */
-    [DebuggingTelemetry.successfullyStartedIWJupyterDebugger]: never | undefined;
-    [DebuggingTelemetry.clickedRunAndDebugCell]: never | undefined;
-    [DebuggingTelemetry.successfullyStartedRunAndDebugCell]: never | undefined;
-    [DebuggingTelemetry.endedSession]: {
+    [DebuggingTelemetry.successfullyStartedIWJupyterDebugger]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens'
+    } as any;
+    [DebuggingTelemetry.clickedRunAndDebugCell]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
+    [DebuggingTelemetry.successfullyStartedRunAndDebugCell]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens'
+    } as any;
+    [DebuggingTelemetry.endedSession]: TelemetryEventInfo<{
         reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
-    };
-    [Telemetry.JupyterKernelApiUsage]: {
+    }> = { owner: 'roblourens' } as any;
+    [Telemetry.JupyterKernelApiUsage]: TelemetryEventInfo<{
         extensionId: string;
         pemUsed: keyof IExportedKernelService;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            extensionId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            pemUsed: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
-    [Telemetry.JupyterKernelApiAccess]: {
+    [Telemetry.JupyterKernelApiAccess]: TelemetryEventInfo<{
         extensionId: string;
         allowed: 'yes' | 'no';
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        properties: {
+            extensionId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            allowed: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
-    [Telemetry.KernelStartupCodeFailure]: {
+    [Telemetry.KernelStartupCodeFailure]: TelemetryEventInfo<{
         ename: string;
         evalue: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: {
+            ename: {
+                classification: 'CallstackOrException',
+                purpose: 'PerformanceAndHealth'
+            },
+            evalue: {
+                classification: 'CallstackOrException',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
     };
-    [Telemetry.UserStartupCodeFailure]: {
+    [Telemetry.UserStartupCodeFailure]: TelemetryEventInfo<{
         ename: string;
         evalue: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: {
+            ename: {
+                classification: 'CallstackOrException',
+                purpose: 'PerformanceAndHealth'
+            },
+            evalue: {
+                classification: 'CallstackOrException',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
     };
-    [Telemetry.PythonVariableFetchingCodeFailure]: {
+    [Telemetry.PythonVariableFetchingCodeFailure]: TelemetryEventInfo<{
         ename: string;
         evalue: string;
-    };
-    [Telemetry.InteractiveWindowDebugSetupCodeFailure]: {
+    }> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.InteractiveWindowDebugSetupCodeFailure]: TelemetryEventInfo<{
         ename: string;
         evalue: string;
+    }> = { owner: 'amunger' } as any;
+    [Telemetry.KernelCrash]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'Either',
+        properties: {
+            ...commonClassificationForResourceSpecificTelemetryProperties,
+            ...commonClassificationForResourceType
+        }
     };
-    [Telemetry.KernelCrash]: never | undefined;
-    [Telemetry.JupyterKernelHiddenViaFilter]: never | undefined;
-    [Telemetry.JupyterKernelFilterUsed]: never | undefined;
+    [Telemetry.JupyterKernelHiddenViaFilter]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff'
+    } as any;
+    [Telemetry.JupyterKernelFilterUsed]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
     /**
      * Telemetry sent when we have loaded some controllers.
      */
-    [Telemetry.FetchControllers]: {
+    [Telemetry.FetchControllers]: TelemetryEventInfo<{
         /**
          * Whether this is from a cached result or not
          */
@@ -1143,26 +2857,28 @@ export interface IEventNamePropertyMapping {
          * Whether we've loaded local or remote controllers.
          */
         kind: 'local' | 'remote';
-    };
-    [Telemetry.RunTest]: {
+    }> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.RunTest]: TelemetryEventInfo<{
         testName: string;
         testResult: string;
         perfWarmup?: 'true';
         commitHash?: string;
         timedCheckpoints?: string;
-    };
-    [Telemetry.PreferredKernelExactMatch]: {
+    }> = { owner: 'amunger' } as any;
+    [Telemetry.PreferredKernelExactMatch]: TelemetryEventInfo<{
         matchedReason: PreferredKernelExactMatchReason;
-    };
+    }> = { owner: 'IanMatthewHuff' } as any;
     /**
      * Event sent when trying to talk to a remote server and the browser gives us a generic fetch error
      */
-    [Telemetry.FetchError]: {
+    [Telemetry.FetchError]: TelemetryEventInfo<{
         /**
          * What we were doing when the fetch error occurred
          */
         currentTask: 'connecting';
-    };
+    }> = {
+        owner: 'unknown'
+    } as any;
     /*
      * Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
      * This information is useful in determining how well we identify shells on users machines.
@@ -1183,19 +2899,19 @@ export interface IEventNamePropertyMapping {
      *                 If true, user has a shell in their environment.
      *                 If false, user does not have a shell in their environment.
      */
-    [Telemetry.TerminalShellIdentification]: {
+    [Telemetry.TerminalShellIdentification]: TelemetryEventInfo<{
         failed: boolean;
         reason: 'unknownShell' | undefined;
         terminalProvided: boolean;
         shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default' | 'vscode';
         hasCustomShell: undefined | boolean;
         hasShellInEnv: undefined | boolean;
-    };
+    }> = { owner: 'donjayamanne' } as any;
 
     /**
      * Telemetry sent only when we fail to extract the env variables for a shell.
      */
-    [Telemetry.TerminalEnvVariableExtraction]: {
+    [Telemetry.TerminalEnvVariableExtraction]: TelemetryEventInfo<{
         failed: true;
         reason:
             | 'unknownOs'
@@ -1206,14 +2922,14 @@ export interface IEventNamePropertyMapping {
             | 'waitForCommand'
             | 'parseOutput'
             | undefined;
-    };
-    [Telemetry.JupyterInstalled]:
-        | {
+    }> = { owner: 'donjayamanne' } as any;
+    [Telemetry.JupyterInstalled]: TelemetryEventInfo<
+        | /* Detection of jupyter failed */ {
               failed: true;
               reason: 'notInstalled';
               frontEnd: 'notebook' | 'lab';
           }
-        | {
+        | /** Jupyter was successfully detected */ {
               /**
                * Jupyter is in current path of process owned by VS Code.
                * I.e. jupyter can be found in the path as defined by the env variable process.env['PATH'].
@@ -1224,13 +2940,43 @@ export interface IEventNamePropertyMapping {
                * Version of the form 6.11, 4.8
                */
               frontEndVersion: number;
-          };
+          }
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        measures: {
+            frontEndVersion: {
+                classification: 'SystemMetaData',
+                isMeasurement: true,
+                purpose: 'PerformanceAndHealth'
+            }
+        },
+        properties: {
+            detection: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            frontEnd: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            reason: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
     /**
      * Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.
      * E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.
      */
-    [Telemetry.IPyWidgetExtensionJsInfo]:
-        | {
+    [Telemetry.IPyWidgetExtensionJsInfo]: TelemetryEventInfo<
+        | /** Successfully parsed extension.js*/ {
               /**
                * Hash of the widget folder name.
                */
@@ -1244,7 +2990,7 @@ export interface IEventNamePropertyMapping {
                */
               patternUsedToRegisterRequireConfig: string;
           }
-        | {
+        | /** Failed to parse extension.js. */ {
               /**
                * Hash of the widget folder name.
                */
@@ -1255,22 +3001,59 @@ export interface IEventNamePropertyMapping {
                * Pattern (code style) used to register require.config enties.
                */
               patternUsedToRegisterRequireConfig: string | undefined;
-          };
+          }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'Notebook'],
+        tags: ['Widgets'],
+        source: 'N/A',
+        measures: {
+            requireEntryPointCount: {
+                classification: 'SystemMetaData',
+                isMeasurement: true,
+                purpose: 'PerformanceAndHealth'
+            }
+        },
+        properties: {
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            failure: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            patternUsedToRegisterRequireConfig: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            widgetFolderNameHash: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
      * Total time take to copy the nb extensions folder.
      */
-    [Telemetry.IPyWidgetNbExtensionCopyTime]: never | undefined;
+    [Telemetry.IPyWidgetNbExtensionCopyTime]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'Notebook'],
+        tags: ['Widgets'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * Useful when we need an active kernel session in order to execute commands silently.
      * Used by the dataViewerDependencyService.
      */
-    [Telemetry.NoActiveKernelSession]: never | undefined;
+    [Telemetry.NoActiveKernelSession]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
     /**
      * When the Data Viewer installer is using the Python interpreter.
      */
-    [Telemetry.DataViewerUsingInterpreter]: never | undefined;
+    [Telemetry.DataViewerUsingInterpreter]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
     /**
      * When the Data Viewer installer is using the Kernel.
      */
-    [Telemetry.DataViewerUsingKernel]: never | undefined;
+    [Telemetry.DataViewerUsingKernel]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
 }

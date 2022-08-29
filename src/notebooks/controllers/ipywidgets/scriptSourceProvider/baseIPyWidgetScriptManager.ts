@@ -103,11 +103,14 @@ export function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderNa
         });
         return;
     }
-    sendTelemetryEvent(Telemetry.IPyWidgetExtensionJsInfo, undefined, {
-        widgetFolderNameHash,
-        patternUsedToRegisterRequireConfig,
-        requireEntryPointCount: Object.keys(requireConfig).length
-    });
+    sendTelemetryEvent(
+        Telemetry.IPyWidgetExtensionJsInfo,
+        { requireEntryPointCount: Object.keys(requireConfig).length },
+        {
+            widgetFolderNameHash,
+            patternUsedToRegisterRequireConfig
+        }
+    );
 
     return requireConfig;
 }

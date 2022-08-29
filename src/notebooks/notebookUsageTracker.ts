@@ -42,10 +42,10 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
     public dispose() {
         // Send a bunch of telemetry
         if (this.openedNotebookCount) {
-            sendTelemetryEvent(Telemetry.NotebookOpenCount, undefined, { count: this.openedNotebookCount });
+            sendTelemetryEvent(Telemetry.NotebookOpenCount, { count: this.openedNotebookCount });
         }
         if (this.executedNotebooksIndexedByUri.size) {
-            sendTelemetryEvent(Telemetry.NotebookRunCount, undefined, {
+            sendTelemetryEvent(Telemetry.NotebookRunCount, {
                 count: this.executedNotebooksIndexedByUri.size
             });
         }

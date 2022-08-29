@@ -295,7 +295,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             topMatchIsPreferredInterpreter && (matchReason |= PreferredKernelExactMatchReason.WasPreferredInterpreter);
             isExactMatch && (matchReason |= PreferredKernelExactMatchReason.IsExactMatch);
             isNonPythonLanguageMatch && (matchReason |= PreferredKernelExactMatchReason.IsNonPythonKernelLanguageMatch);
-            sendTelemetryEvent(Telemetry.PreferredKernelExactMatch, undefined, {
+            sendTelemetryEvent(Telemetry.PreferredKernelExactMatch, {
                 matchedReason: matchReason
             });
         }
