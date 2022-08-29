@@ -17,7 +17,7 @@ import {
     traceWarning
 } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IMemento, Resource } from '../../../platform/common/types';
-import { captureTelemetry, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { ILocalKernelFinder } from '../types';
 import { createPromiseFromCancellation, isCancellationError } from '../../../platform/common/cancellation';
 import { isArray } from '../../../platform/common/utils/sysTypes';
@@ -183,7 +183,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
      * Search all our local file system locations for installed kernel specs and return them
      */
     @traceDecoratorError('List kernels failed')
-    @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
+    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
     public async listKernels(
         resource: Resource,
         @ignoreLogging() cancelToken?: CancellationToken

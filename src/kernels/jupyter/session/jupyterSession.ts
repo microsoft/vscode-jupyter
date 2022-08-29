@@ -13,7 +13,7 @@ import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
-import { captureTelemetry, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
 import { getNameOfKernelConnection } from '../../helpers';
 import {
@@ -60,7 +60,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         return true;
     }
 
-    @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
+    @capturePerfTelemetry(Telemetry.WaitForIdleJupyter)
     public waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         // Wait for idle on this session
         return this.waitForIdleOnSession(this.session, timeout, token);
@@ -161,9 +161,14 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
             const stopWatch = new StopWatch();
             result = await this.createSession({ token: cancelToken, ui });
             await this.waitForIdleOnSession(result, this.idleTimeout, cancelToken);
-            sendKernelTelemetryEvent(this.resource, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
-                startTimeOnly: true
-            });
+            sendKernelTelemetryEvent(
+                this.resource,
+                Telemetry.NotebookRestart,
+                { duration: stopWatch.elapsedTime },
+                {
+                    startTimeOnly: true
+                }
+            );
             return result;
         } catch (exc) {
             traceInfo(`Error waiting for restart session: ${exc}`);

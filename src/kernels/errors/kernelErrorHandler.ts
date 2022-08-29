@@ -58,7 +58,7 @@ import { RemoteJupyterServerConnectionError } from '../../platform/errors/remote
 import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriProviderError';
 import { InvalidRemoteJupyterServerUriHandleError } from './invalidRemoteJupyterServerUriHandleError';
 import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from './types';
-import { sendKernelTelemetryWhenDone } from '../telemetry/sendKernelTelemetryEvent';
+import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 
 /***
  * Common code for handling errors.
@@ -393,10 +393,16 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         }
         this.handledKernelErrors.add(err);
         if (errorContext === 'start') {
-            sendKernelTelemetryWhenDone(resource, Telemetry.NotebookStart, Promise.reject(err), true, {
-                disableUI: false,
-                failureCategory
-            });
+            sendKernelTelemetryEvent(
+                resource,
+                Telemetry.NotebookStart,
+                undefined,
+                {
+                    disableUI: false,
+                    failureCategory
+                },
+                err
+            );
         }
     }
     protected abstract addErrorMessageIfPythonArePossiblyOverridingPythonModules(

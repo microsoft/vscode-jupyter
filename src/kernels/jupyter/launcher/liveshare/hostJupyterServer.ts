@@ -185,13 +185,13 @@ export class HostJupyterServer implements INotebookServer {
             this.throwIfDisposedOrCancelled(cancelToken);
             const baseUrl = this.connection?.baseUrl || '';
             this.logRemoteOutput(DataScience.createdNewNotebook().format(baseUrl));
-            sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime);
+            sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, { duration: stopWatch.elapsedTime });
             return session;
         } catch (ex) {
             sendKernelTelemetryEvent(
                 resource,
                 Telemetry.JupyterCreatingNotebook,
-                stopWatch.elapsedTime,
+                { duration: stopWatch.elapsedTime },
                 undefined,
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 ex as any

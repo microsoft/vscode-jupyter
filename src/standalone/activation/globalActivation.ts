@@ -142,7 +142,7 @@ export class GlobalActivation implements IExtensionSingleActivationService {
                     resultSettings[k] = currentValue;
                 }
             }
-            sendTelemetryEvent(Telemetry.DataScienceSettings, 0, resultSettings);
+            sendTelemetryEvent(Telemetry.DataScienceSettings, undefined, resultSettings);
         }
     }
 }

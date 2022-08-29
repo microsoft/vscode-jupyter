@@ -7,7 +7,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import { NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { isCI, isTestExecution, PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -162,14 +162,14 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         }
     }
 
-    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
+    @capturePerfTelemetry(EventName.HASHED_PACKAGE_PERF)
     private checkNotebookDocument(e: NotebookDocument) {
         this.pendingChecks.delete(e.uri.fsPath);
         const lines = this.getNotebookDocumentLines(e);
         this.lookForImports(lines);
     }
 
-    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
+    @capturePerfTelemetry(EventName.HASHED_PACKAGE_PERF)
     private checkNotebookCell(e: NotebookCellExecutionStateChangeEvent) {
         if (!isJupyterNotebook(e.cell.notebook)) {
             return;
@@ -193,7 +193,7 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         this.lookForImports(result);
     }
 
-    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
+    @capturePerfTelemetry(EventName.HASHED_PACKAGE_PERF)
     private checkDocument(document: TextDocument) {
         this.pendingChecks.delete(document.fileName);
         const lines = this.getDocumentLines(document);
