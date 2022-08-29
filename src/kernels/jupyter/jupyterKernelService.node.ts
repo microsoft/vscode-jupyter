@@ -22,7 +22,7 @@ import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-p
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { Resource, ReadWrite, IDisplayOptions } from '../../platform/common/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { JupyterKernelDependencyError } from '../errors/jupyterKernelDependencyError';
 import { cleanEnvironment } from '../helpers';
 import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
@@ -153,7 +153,7 @@ export class JupyterKernelService implements IJupyterKernelService {
      */
     // eslint-disable-next-line
     // eslint-disable-next-line complexity
-    @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
+    @capturePerfTelemetry(Telemetry.RegisterInterpreterAsKernel)
     @traceDecoratorError('Failed to register an interpreter as a kernel')
     // eslint-disable-next-line
     private async registerKernel(

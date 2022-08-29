@@ -52,6 +52,6 @@ export function sendKernelListTelemetry(
     });
     trackKernelResourceInformation(resource, counters);
     if (stopWatch) {
-        sendKernelTelemetryEvent(resource, Telemetry.KernelCount, stopWatch.elapsedTime, counters);
+        sendKernelTelemetryEvent(resource, Telemetry.KernelCount, { duration: stopWatch.elapsedTime, ...counters });
     }
 }

@@ -489,7 +489,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     private sendOverheadTelemetry() {
-        sendTelemetryEvent(Telemetry.IPyWidgetOverhead, 0, {
+        sendTelemetryEvent(Telemetry.IPyWidgetOverhead, {
             totalOverheadInMs: this.totalWaitTime,
             numberOfMessagesWaitedOn: this.totalWaitedMessages,
             averageWaitTime: this.totalWaitTime / this.totalWaitedMessages,

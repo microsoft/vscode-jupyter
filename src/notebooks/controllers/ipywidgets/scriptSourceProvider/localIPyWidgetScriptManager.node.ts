@@ -97,7 +97,7 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
             LocalIPyWidgetScriptManager.nbExtensionsCopiedKernelConnectionList.add(
                 this.kernel.kernelConnectionMetadata.id
             );
-            sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, stopWatch.elapsedTime);
+            sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, { duration: stopWatch.elapsedTime });
             return baseUrl;
         } catch (ex) {
             sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, undefined, undefined, ex);

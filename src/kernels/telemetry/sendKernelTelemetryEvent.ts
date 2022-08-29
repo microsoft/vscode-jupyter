@@ -3,12 +3,11 @@
 
 import { Resource } from '../../platform/common/types';
 import { Telemetry } from '../../platform/common/constants';
-import { sendTelemetryEvent, waitBeforeSending, IEventNamePropertyMapping } from '../../telemetry';
+import { sendTelemetryEvent, waitBeforeSending, IEventNamePropertyMapping, TelemetryEventInfo } from '../../telemetry';
 import { getContextualPropsForTelemetry } from '../../platform/telemetry/telemetry';
 import { clearInterruptCounter, trackKernelResourceInformation } from './helper';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { populateTelemetryWithErrorInfo } from '../../platform/errors';
 import { InterruptResult } from '../types';
+import { ExcludeType, PickType, UnionToIntersection } from '../../platform/common/utils/misc';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function incrementStartFailureCount(resource: Resource, eventName: any, properties: any) {
@@ -16,7 +15,7 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
         let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookStart>;
         const data: undefined | typeof kv[Telemetry.NotebookStart] = properties;
         // Check start failed.
-        if (data && 'failed' in data && data.failed) {
+        if (data && 'failed' in data && data['failed'] === true) {
             trackKernelResourceInformation(resource, { startFailed: true });
         }
     }
@@ -31,90 +30,26 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
 export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     resource: Resource,
     eventName: E,
-    durationMs?: Record<string, number> | number,
-    properties?: P[E] & { waitBeforeSending?: Promise<void> },
-    ex?: Error
+    measures?:
+        | (P[E] extends TelemetryEventInfo<infer R> ? Partial<PickType<UnionToIntersection<R>, number>> : undefined)
+        | undefined,
+    properties?: P[E] extends TelemetryEventInfo<infer R>
+        ? ExcludeType<R, number> extends never | undefined
+            ? undefined | { [waitBeforeSending]?: Promise<void> }
+            : Partial<ExcludeType<R, number>> & { [waitBeforeSending]?: Promise<void> }
+        : undefined | { [waitBeforeSending]?: Promise<void> } | (undefined | { [waitBeforeSending]?: Promise<void> }),
+    ex?: Error | undefined
 ) {
     const props = getContextualPropsForTelemetry(resource);
     Object.assign(props, properties || {});
-    sendTelemetryEvent(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        eventName as any,
-        durationMs,
-        props,
-        ex,
-        true
-    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sendTelemetryEvent(eventName as any, measures as any, props as any, ex, true);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resetData(resource, eventName as any, props);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     incrementStartFailureCount(resource, eventName as any, props);
-}
-
-/**
- * Send this & subsequent telemetry only after this promise has been resolved.
- * We have a default timeout of 30s.
- * @param {P[E]} [properties]
- * Can optionally contain a property `waitBeforeSending` referencing a promise.
- * Which must be awaited before sending the telemetry.
- */
-export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
-    resource: Resource,
-    eventName: E,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    promise: Promise<any> | Thenable<any>,
-    handleError: boolean,
-    properties?: P[E] & { [waitBeforeSending]?: Promise<void> }
-) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const props: any = properties || {};
-    const stopWatch = new StopWatch();
-    if (typeof promise.then === 'function') {
-        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
-        (promise as Promise<any>)
-            .then(
-                (data) => {
-                    const props = getContextualPropsForTelemetry(resource);
-                    Object.assign(props, properties || {});
-                    sendTelemetryEvent(
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        eventName as any,
-                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                        stopWatch!.elapsedTime,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        props as any
-                    );
-                    return data;
-                    // eslint-disable-next-line @typescript-eslint/promise-function-async
-                },
-                (ex) => {
-                    if (!handleError) {
-                        return;
-                    }
-                    const props = getContextualPropsForTelemetry(resource);
-                    Object.assign(props, properties || {});
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    populateTelemetryWithErrorInfo(props as any, ex);
-                    sendTelemetryEvent(
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        eventName as any,
-                        stopWatch.elapsedTime,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        props as any,
-                        ex,
-                        true
-                    );
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    incrementStartFailureCount(resource, eventName as any, props);
-                }
-            )
-            .finally(() => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                resetData(resource, eventName as any, props);
-            });
-    }
 }
 
 /**
@@ -128,7 +63,7 @@ function resetData(resource: Resource, eventName: string, properties: any) {
         let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookInterrupt>;
         const data: undefined | typeof kv[Telemetry.NotebookInterrupt] = properties;
         // Check result to determine if success.
-        if (data && 'result' in data && data.result === InterruptResult.Success) {
+        if (data && 'result' in data && data['result'] === InterruptResult.Success) {
             clearInterruptCounter(resource);
         }
     }
@@ -137,7 +72,7 @@ function resetData(resource: Resource, eventName: string, properties: any) {
         let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookRestart>;
         const data: undefined | typeof kv[Telemetry.NotebookRestart] = properties;
         // For restart to be successful, we should not have `failed`
-        const failed = data && 'failed' in data ? data.failed : false;
+        const failed = data && 'failed' in data ? data['failed'] : false;
         if (!failed) {
             clearInterruptCounter(resource);
         }
