@@ -72,12 +72,10 @@ type ICustomEventData = {
      */
     tags?: EventTag[];
     /**
-     * What is the source of this telemetry event.
-     * Did the user perform an action that triggered this event, or was it something running in the background,
-     * or either one.
+     * Did the user perform an action that triggered this event, or was it something something else.
      * Useful for others to determine whether this is a user action or not.
      */
-    source?: EventSource;
+    source: EventSource;
 };
 export type IEventData = IGdprEventData & ICustomEventData;
 /**
@@ -465,6 +463,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             ...commonClassificationForErrorProperties
         }
@@ -496,6 +495,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         measures: {
             codeLoadingTime: {
                 classification: 'SystemMetaData',
@@ -532,7 +532,8 @@ export class IEventNamePropertyMapping {
      */
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
-        feature: 'N/A'
+        feature: 'N/A',
+        source: 'N/A'
     };
     /**
      * Telemetry event sent when an environment file is detected in the workspace.
@@ -545,6 +546,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             hasCustomEnvPath: {
                 classification: 'SystemMetaData',
@@ -565,6 +567,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'unknown',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             hashedNamev2: {
                 classification: 'SystemMetaData',
@@ -593,6 +596,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup'],
         properties: {
             kernelConnectionType: {
@@ -622,6 +626,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             firstTime: {
                 classification: 'SystemMetaData',
@@ -644,6 +649,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             firstTime: {
                 classification: 'SystemMetaData',
@@ -671,6 +677,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             firstTime: {
                 classification: 'SystemMetaData',
@@ -694,6 +701,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         measures: {
             count: {
                 classification: 'SystemMetaData',
@@ -713,6 +721,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         measures: {
             count: {
                 classification: 'SystemMetaData',
@@ -787,6 +796,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             hasGeo: {
                 classification: 'SystemMetaData',
@@ -890,6 +900,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             envType: {
                 classification: 'SystemMetaData',
@@ -917,6 +928,7 @@ export class IEventNamePropertyMapping {
     [EventName.HASHED_PACKAGE_PERF]: TelemetryEventInfo<{ duration: number }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         measures: commonClassificationForDurationProperties
     };
     [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: TelemetryEventInfo<{
@@ -946,6 +958,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             activatedByWrapper: {
                 classification: 'SystemMetaData',
@@ -980,6 +993,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'unknown',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             expNameOptedInto: {
                 classification: 'SystemMetaData',
@@ -1015,17 +1029,20 @@ export class IEventNamePropertyMapping {
     [Telemetry.ConnectFailedJupyter]: TelemetryEventInfo<TelemetryErrorProperties> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup'],
         properties: commonClassificationForErrorProperties
     };
     [Telemetry.ConnectLocalJupyter]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     [Telemetry.ConnectRemoteJupyter]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     /**
@@ -1034,11 +1051,13 @@ export class IEventNamePropertyMapping {
     [Telemetry.ConnectRemoteJupyterViaLocalHost]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     [Telemetry.ConnectRemoteFailedJupyter]: TelemetryEventInfo<TelemetryErrorProperties> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup'],
         properties: commonClassificationForErrorProperties
     };
@@ -1048,6 +1067,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     /**
@@ -1056,11 +1076,13 @@ export class IEventNamePropertyMapping {
     [Telemetry.ConnectRemoteExpiredCertFailedJupyter]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     [Telemetry.RegisterAndUseInterpreterAsKernel]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     [Telemetry.SwitchToExistingKernel]: TelemetryEventInfo<{ language: string }> = {
@@ -1072,6 +1094,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.CreateNewNotebook]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'unknown',
         feature: 'N/A',
+        source: 'N/A',
         measures: commonClassificationForDurationProperties
     };
     [Telemetry.DataScienceSettings]: JSONObject = {
@@ -1115,7 +1138,8 @@ export class IEventNamePropertyMapping {
     } as any;
     [Telemetry.FailedToUpdateKernelSpec]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
-        feature: 'N/A'
+        feature: 'N/A',
+        source: 'N/A'
     };
     /**
      * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
@@ -1165,8 +1189,8 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: 'N/A',
-        tags: ['KernelStartup'],
         source: 'N/A',
+        tags: ['KernelStartup'],
         properties: commonClassificationForResourceSpecificTelemetryProperties,
         measures: commonClassificationForDurationProperties
     };
@@ -1178,8 +1202,8 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: 'N/A',
-        tags: ['KernelStartup'],
         source: 'N/A',
+        tags: ['KernelStartup'],
         properties: commonClassificationForResourceSpecificTelemetryProperties,
         measures: commonClassificationForDurationProperties
     };
@@ -1237,17 +1261,20 @@ export class IEventNamePropertyMapping {
         owner: 'IanMatthewHuff'
     } as any;
     [Telemetry.GetPasswordAttempt]: TelemetryEventInfo<DurationMeasurement> = {
-        feature: 'N/A',
         owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
         measures: commonClassificationForDurationProperties
     };
     [Telemetry.GetPasswordFailure]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
         feature: 'N/A',
-        owner: 'donjayamanne'
+        source: 'N/A'
     };
     [Telemetry.GetPasswordSuccess]: TelemetryEventInfo<never | undefined> = {
+        owner: 'donjayamanne',
         feature: 'N/A',
-        owner: 'donjayamanne'
+        source: 'N/A'
     };
     [Telemetry.ImportNotebook]: TelemetryEventInfo<{ scope: 'command' | 'file' }> = {
         owner: 'IanMatthewHuff'
@@ -1269,6 +1296,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.InterruptJupyterTime]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: ['InteractiveWindow', 'Notebook'],
+        source: 'N/A',
         measures: commonClassificationForDurationProperties
     };
     /**
@@ -1277,6 +1305,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.NotebookRunCount]: TelemetryEventInfo<{ count: number }> = {
         owner: 'donjayamanne',
         feature: ['InteractiveWindow', 'Notebook'],
+        source: 'N/A',
         measures: {
             count: {
                 classification: 'SystemMetaData',
@@ -1291,6 +1320,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.NotebookOpenCount]: TelemetryEventInfo<{ count: number }> = {
         owner: 'donjayamanne',
         feature: ['InteractiveWindow', 'Notebook'],
+        source: 'N/A',
         measures: {
             count: {
                 classification: 'SystemMetaData',
@@ -1343,6 +1373,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.RestartKernelCommand]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
         owner: 'donjayamanne',
         feature: ['InteractiveWindow', 'Notebook'],
+        source: 'N/A',
         properties: commonClassificationForResourceSpecificTelemetryProperties
     };
     /**
@@ -1443,11 +1474,13 @@ export class IEventNamePropertyMapping {
     } as any;
     [Telemetry.SelfCertsMessageClose]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
-        feature: 'N/A'
+        feature: 'N/A',
+        source: 'N/A'
     };
     [Telemetry.SelfCertsMessageEnabled]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
-        feature: 'N/A'
+        feature: 'N/A',
+        source: 'N/A'
     };
     [Telemetry.SelectJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'IanMatthewHuff'
@@ -1462,25 +1495,28 @@ export class IEventNamePropertyMapping {
         owner: 'IanMatthewHuff',
         feature: 'N/A',
         properties: commonClassificationForResourceSpecificTelemetryProperties
-    };
+    } as any;
     [Telemetry.SelectRemoteJupyterKernel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
         owner: 'IanMatthewHuff',
         feature: 'N/A',
         properties: commonClassificationForResourceSpecificTelemetryProperties
-    };
+    } as any;
     [Telemetry.SessionIdleTimeout]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     [Telemetry.JupyterNotInstalledErrorShown]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     [Telemetry.UserInstalledJupyter]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     [Telemetry.UserInstalledPandas]: TelemetryEventInfo<never | undefined> = {
@@ -1489,6 +1525,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.UserDidNotInstallJupyter]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     [Telemetry.UserDidNotInstallPandas]: TelemetryEventInfo<never | undefined> = {
@@ -1552,6 +1589,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             action: {
                 classification: 'SystemMetaData',
@@ -1611,11 +1649,13 @@ export class IEventNamePropertyMapping {
     [Telemetry.StartJupyter]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         measures: commonClassificationForDurationProperties
     };
     [Telemetry.StartJupyterProcess]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         measures: commonClassificationForDurationProperties
     };
     /**
@@ -1623,7 +1663,8 @@ export class IEventNamePropertyMapping {
      */
     [Telemetry.JupyterInstalledButNotKernelSpecModule]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
-        feature: 'N/A'
+        feature: 'N/A',
+        source: 'N/A'
     };
     [Telemetry.VariableExplorerFetchTime]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'IanMatthewHuff'
@@ -1634,6 +1675,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.WaitForIdleJupyter]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup'],
         measures: commonClassificationForDurationProperties
     };
@@ -1641,6 +1683,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.RegisterInterpreterAsKernel]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup'],
         measures: commonClassificationForDurationProperties
     };
@@ -1653,6 +1696,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.SelectJupyterInterpreterCommand]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     [Telemetry.SelectJupyterInterpreter]: TelemetryEventInfo<{
@@ -1668,6 +1712,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup'],
         properties: {
             result: {
@@ -1679,6 +1724,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.SelectJupyterInterpreterMessageDisplayed]: TelemetryEventInfo<undefined | never> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     /**
@@ -1690,6 +1736,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.StartSessionFailedJupyter]: TelemetryEventInfo<undefined | never> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     /**
@@ -1706,6 +1753,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             language: {
                 classification: 'SystemMetaData',
@@ -1730,6 +1778,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup'],
         properties: {
             kind: {
@@ -1755,6 +1804,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.KernelSpecNotFound]: TelemetryEventInfo<undefined | never> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     /**
@@ -1765,6 +1815,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup'],
         properties: {
             ...commonClassificationForErrorProperties,
@@ -1781,7 +1832,8 @@ export class IEventNamePropertyMapping {
      */
     [Telemetry.KernelProviderPerf]: TelemetryEventInfo<undefined | never> = {
         owner: 'donjayamanne',
-        feature: 'N/A'
+        feature: 'N/A',
+        source: 'N/A'
     };
     /**
      * Telemetry sent when we have attempted to find the preferred kernel.
@@ -1817,7 +1869,8 @@ export class IEventNamePropertyMapping {
      */
     [Telemetry.JupyterCommandLineNonDefault]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
-        feature: 'N/A'
+        feature: 'N/A',
+        source: 'N/A'
     };
     /**
      * Telemetry event sent when a user runs the interactive window with a new file
@@ -1835,6 +1888,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.KernelInvalid]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     /**
@@ -1843,6 +1897,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.ZMQNotSupported]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     /**
@@ -1851,6 +1906,7 @@ export class IEventNamePropertyMapping {
     [Telemetry.ZMQSupported]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         tags: ['KernelStartup']
     };
     /**
@@ -2505,6 +2561,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             ...commonClassificationForResourceType,
             ...commonClassificationForResourceSpecificTelemetryProperties
@@ -2569,6 +2626,7 @@ export class IEventNamePropertyMapping {
     > = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             pythonExtensionInstalled: {
                 classification: 'SystemMetaData',
@@ -2600,6 +2658,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'unknown',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             command: {
                 classification: 'SystemMetaData',
@@ -2707,6 +2766,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             extensionId: {
                 classification: 'PublicNonPersonalData',
@@ -2724,6 +2784,7 @@ export class IEventNamePropertyMapping {
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
+        source: 'N/A',
         properties: {
             extensionId: {
                 classification: 'PublicNonPersonalData',
