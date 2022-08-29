@@ -350,35 +350,6 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
     };
 }
 
-// function sendTelemetryWhenDone<T extends IDSMappings, K extends keyof T>(eventName: K, properties?: T[K]);
-export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
-    eventName: E,
-    promise: Promise<any> | Thenable<any>,
-    stopWatch?: StopWatch,
-    properties?: P[E],
-    sendOriginalEventWithErrors?: boolean
-) {
-    stopWatch = stopWatch ? stopWatch : new StopWatch();
-    if (typeof promise.then === 'function') {
-        // eslint-disable-next-line , @typescript-eslint/no-explicit-any
-        (promise as Promise<any>).then(
-            (data) => {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
-                return data;
-                // eslint-disable-next-line @typescript-eslint/promise-function-async
-            },
-            (ex) => {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex, sendOriginalEventWithErrors);
-                return Promise.reject(ex);
-            }
-        );
-    } else {
-        throw new Error('Method is neither a Promise nor a Theneable');
-    }
-}
-
 /**
  * Map all shared properties to their data types.
  */
