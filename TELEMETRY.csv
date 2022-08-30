@@ -1,23 +1,23 @@
 "eventName","eventDescription","eventConstant","owner","feature","tags","groupDescription","propertyName","propertyDescription","propertyType","propertyPossibleValues","propertyIsNullable"
 "DATASCIENCE.ADD_CELL_BELOW","Telemetry event sent when user adds a cell below the current cell for IW.","Telemetry.AddCellBelow","amunger","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK","User exports the IW or Notebook to a specific format.","Telemetry.ClickedExportNotebookAsQuickPick","IanMatthewHuff","","","","format","","","pdf 
+"DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK","User exports the IW or Notebook to a specific format.","Telemetry.ClickedExportNotebookAsQuickPick","IanMatthewHuff","Import-Export, InteractiveWindow","","","format","What format to export to was selected in the quick pick.","","pdf 
 html 
 python 
 ipynb ",false
 "DATASCIENCE.DATA_VIEWER_DATA_DIMENSIONALITY","Telemetry event sent when a slice is first applied in a
-data viewer instance to a sliceable Python variable.","Telemetry.DataViewerDataDimensionality","IanMatthewHuff","","","","numberOfDimensions","This property represents the number of dimensions
+data viewer instance to a sliceable Python variable.","Telemetry.DataViewerDataDimensionality","IanMatthewHuff","DataFrameViewer","","","numberOfDimensions","This property represents the number of dimensions
 on the target variable being sliced. This should
 always be 2 at minimum.","number","",false
 "DATASCIENCE.DATA_VIEWER_SLICE_ENABLEMENT_STATE_CHANGED","Telemetry event sent whenever the user toggles the checkbox
 controlling whether a slice is currently being applied to an
-n-dimensional variable.","Telemetry.DataViewerSliceEnablementStateChanged","IanMatthewHuff","","","","newState","This property is either 'checked' when the result of toggling
+n-dimensional variable.","Telemetry.DataViewerSliceEnablementStateChanged","IanMatthewHuff","DataFrameViewer","","","newState","This property is either 'checked' when the result of toggling
 the checkbox is for slicing to be enabled, or 'unchecked'
 when the result of toggling the checkbox is for slicing
 to be disabled.","","checked 
 unchecked ",false
 "DATASCIENCE.DATA_VIEWER_SLICE_OPERATION","Telemetry event sent whenever the user applies a valid slice
-to a sliceable Python variable in the data viewer.","Telemetry.DataViewerSliceOperation","IanMatthewHuff","","","","source","This property indicates whether the slice operation
+to a sliceable Python variable in the data viewer.","Telemetry.DataViewerSliceOperation","IanMatthewHuff","DataFrameViewer","","","source","This property indicates whether the slice operation
 was triggered using the dropdown or the textbox in
 the slice control panel. `source` is one of `dropdown`,
 `textbox`, or `checkbox`.","","dropdown 
@@ -44,8 +44,9 @@ Common measurement used across a number of events.","number","",false
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER","Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)","Telemetry.EnableInteractiveShiftEnter","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.ENTER_JUPYTER_URI","Captures the telemetry when the Uri is manually entered by the user as part of the workflow when selecting a Kernel.","Telemetry.EnterJupyterURI","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+"DATASCIENCE.ENTER_JUPYTER_URI","A URI has been selected and is being checked for validity.","Telemetry.EnterJupyterURI","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DATASCIENCE.EXECUTE_CELL","Executes a cell, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -114,45 +115,46 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 "DATASCIENCE.EXECUTE_CELL","Executes a cell, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called when user imports a Jupyter Notebook into a Python file.
-Command is `Jupyter: Import Jupyter Notebook`
-Basically user is exporting some jupyter notebook into a Python file or other.","Telemetry.ExportNotebookAs","IanMatthewHuff","","","","format","","","pdf 
+"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called on the completion of exporting a Jupyter notebook into a new format
+This is the result of the operation, so it's not tagged as a user action as that
+comes from ExportNotebookAsCommand or ExportNotebookAsQuickPick","Telemetry.ExportNotebookAs","IanMatthewHuff","Import-Export","","","format","What format was the export performed to.","","pdf 
 html 
 python 
 ipynb ",false
-"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called when user imports a Jupyter Notebook into a Python file.
-Command is `Jupyter: Import Jupyter Notebook`
-Basically user is exporting some jupyter notebook into a Python file or other.","Telemetry.ExportNotebookAs","IanMatthewHuff","","","","cancelled","","boolean","",true
-"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called when user imports a Jupyter Notebook into a Python file.
-Command is `Jupyter: Import Jupyter Notebook`
-Basically user is exporting some jupyter notebook into a Python file or other.","Telemetry.ExportNotebookAs","IanMatthewHuff","","","","successful","","boolean","",true
-"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called when user imports a Jupyter Notebook into a Python file.
-Command is `Jupyter: Import Jupyter Notebook`
-Basically user is exporting some jupyter notebook into a Python file or other.","Telemetry.ExportNotebookAs","IanMatthewHuff","","","","opened","","boolean","",true
+"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called on the completion of exporting a Jupyter notebook into a new format
+This is the result of the operation, so it's not tagged as a user action as that
+comes from ExportNotebookAsCommand or ExportNotebookAsQuickPick","Telemetry.ExportNotebookAs","IanMatthewHuff","Import-Export","","","cancelled","Was the export operation cancelled.","boolean","",true
+"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called on the completion of exporting a Jupyter notebook into a new format
+This is the result of the operation, so it's not tagged as a user action as that
+comes from ExportNotebookAsCommand or ExportNotebookAsQuickPick","Telemetry.ExportNotebookAs","IanMatthewHuff","Import-Export","","","successful","Was the export operation successful.","boolean","",true
+"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called on the completion of exporting a Jupyter notebook into a new format
+This is the result of the operation, so it's not tagged as a user action as that
+comes from ExportNotebookAsCommand or ExportNotebookAsQuickPick","Telemetry.ExportNotebookAs","IanMatthewHuff","Import-Export","","","opened","Did the user end with opening the file in VS Code.","boolean","",true
 "DATASCIENCE.EXPORT_NOTEBOOK_AS_COMMAND","Called when user exports a Jupyter Notebook or IW into a Python file, HTML, PDF, etc.
 Command is `Jupyter: Export to Python Script` or `Jupyter: Export to HTML`
-Basically user is exporting some jupyter notebook or IW into a Python file or other.","Telemetry.ExportNotebookAsCommand","IanMatthewHuff","","","","format","","","pdf 
+Basically user is exporting some jupyter notebook or IW into a Python file or other.","Telemetry.ExportNotebookAsCommand","IanMatthewHuff","Import-Export","","","format","What format was the export performed to.","","pdf 
 html 
 python 
 ipynb ",false
-"DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED","Export fails","Telemetry.ExportNotebookAsFailed","IanMatthewHuff","","","","format","","","pdf 
+"DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED","The Export Notebook operation failed.","Telemetry.ExportNotebookAsFailed","IanMatthewHuff","Import-Export","","","format","What format was the export performed to.","","pdf 
 html 
 python 
 ipynb ",false
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","kind","What kind of kernel spec did we fail to create.","","'startUsingPythonInterpreter' 
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","kind","What kind of kernel spec did we fail to create.","","'startUsingPythonInterpreter' 
 'startUsingDefaultKernel' 
 'startUsingLocalKernelSpec' 
 'startUsingRemoteKernelSpec' 
 'connectToLiveRemoteKernel' ",false
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","failed","Whether there was a failure.","true","",false
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","stackTrace","Node stacktrace without PII.","string","",false
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
-"DATASCIENCE.FETCH_CONTROLLERS","Telemetry sent when we have loaded some controllers.","Telemetry.FetchControllers","IanMatthewHuff","","","","cached","Whether this is from a cached result or not","boolean","",false
-"DATASCIENCE.FETCH_CONTROLLERS","Telemetry sent when we have loaded some controllers.","Telemetry.FetchControllers","IanMatthewHuff","","","","kind","Whether we've loaded local or remote controllers.","","'local' 
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","failed","Whether there was a failure.","true","",false
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","stackTrace","Node stacktrace without PII.","string","",false
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
+"DATASCIENCE.FETCH_CONTROLLERS","Telemetry sent when we have loaded some controllers.","Telemetry.FetchControllers","donjayamanne","","","","cached","Whether this is from a cached result or not","boolean","",false
+"DATASCIENCE.FETCH_CONTROLLERS","Telemetry sent when we have loaded some controllers.","Telemetry.FetchControllers","donjayamanne","","","","kind","Whether we've loaded local or remote controllers.","","'local' 
 'remote' ",false
 "DATASCIENCE.GET_PASSWORD_ATTEMPT","","Telemetry.GetPasswordAttempt","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
@@ -163,7 +165,8 @@ Common measurement used across a number of events.","number","",false
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.IMPORT_NOTEBOOK","Called when user imports a Jupyter Notebook into a Python file.
 Command is `Jupyter: Import Jupyter Notebook`
-Basically user is exporting some jupyter notebook into a Python file.","Telemetry.ImportNotebook","IanMatthewHuff","","","","scope","","","'command' 
+Basically user is exporting some jupyter notebook into a Python file.","Telemetry.ImportNotebook","IanMatthewHuff","Import-Export","","","scope","The command can be called as a command, in which a file then needs to be selected, or with a file
+as the context already, in which case the import command doesn't ask for selection.","","'command' 
 'file' ",false
 "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","","Telemetry.InteractiveWindowDebugSetupCodeFailure","amunger","","","","ename","","string","",false
 "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","","Telemetry.InteractiveWindowDebugSetupCodeFailure","amunger","","","","evalue","","string","",false
@@ -230,7 +233,7 @@ OCaml is one such kernel.","boolean","",true
 "DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","","string","",false
 "DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK","","Telemetry.CreateNewNotebook","unknown","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken.","number","",false
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","result","The result of the interrupt,","","success 
 timeout 
@@ -667,10 +670,10 @@ If `failed` is false, then its a success, else startup failed.","Telemetry.Noteb
 "DATASCIENCE.NOTEBOOK_START","Starts a kernel, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 If `failed` is false, then its a success, else startup failed.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
-"DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE","","Telemetry.PythonVariableFetchingCodeFailure","IanMatthewHuff","","","","ename","","string","",false
-"DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE","","Telemetry.PythonVariableFetchingCodeFailure","IanMatthewHuff","","","","evalue","","string","",false
-"DATASCIENCE.RECOMMENT_EXTENSION","","Telemetry.RecommendExtension","IanMatthewHuff","","","","extensionId","Extension we recommended the user to install.","string","",false
-"DATASCIENCE.RECOMMENT_EXTENSION","","Telemetry.RecommendExtension","IanMatthewHuff","","","","action","`displayed` - If prompt was displayed
+"DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE","","Telemetry.PythonVariableFetchingCodeFailure","IanMatthewHuff","VariableViewer","","","ename","","string","",false
+"DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE","","Telemetry.PythonVariableFetchingCodeFailure","IanMatthewHuff","VariableViewer","","","evalue","","string","",false
+"DATASCIENCE.RECOMMENT_EXTENSION","","Telemetry.RecommendExtension","IanMatthewHuff","N/A","","","extensionId","Extension we recommended the user to install.","string","",false
+"DATASCIENCE.RECOMMENT_EXTENSION","","Telemetry.RecommendExtension","IanMatthewHuff","N/A","","","action","`displayed` - If prompt was displayed
 `dismissed` - If prompt was displayed & dismissed by the user
 `ok` - If prompt was displayed & ok clicked by the user
 `cancel` - If prompt was displayed & cancel clicked by the user
@@ -768,26 +771,28 @@ Common measurement used across a number of events.","number","",false
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.RUN_TO_LINE","","Telemetry.RunToLine","amunger","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.SELECT_JUPYTER_URI","","Telemetry.SelectJupyterURI","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
+"DATASCIENCE.SELECT_JUPYTER_URI","User has triggered selection of a Jupyter URI for a remote connection.
+Note: Might not come from a direct user action.","Telemetry.SelectJupyterURI","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelId","Hash of the Kernel Connection id.","string","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelId","Hash of the Kernel Connection id.","string","",false
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
 If we run the same notebook tomorrow, the hash will be the same.
 Used to check whether a particular notebook fails across time or not.
 This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
 and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
 we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
 and have a better understanding of what is going on, e.g. why something failed.","string","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelSessionId","Unique identifier for an instance of a notebook session.
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
 Conda 
 VirtualEnv 
 PipEnv 
@@ -798,41 +803,41 @@ Poetry
 VirtualEnvWrapper 
 Global 
 System ",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentCount","Total number of python environments.","number","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelLanguage","Language of the kernel connection.","string","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","restartCount","This number gets reset after change the kernel.","number","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","startFailureCount","Number of times starting the kernel failed.","number","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentCount","Total number of python environments.","number","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelLanguage","Language of the kernel connection.","string","",false
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","restartCount","This number gets reset after change the kernel.","number","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","startFailureCount","Number of times starting the kernel failed.","number","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","switchKernelCount","Number of times the kernel was changed.","number","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelId","Hash of the Kernel Connection id.","string","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelId","Hash of the Kernel Connection id.","string","",false
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
 If we run the same notebook tomorrow, the hash will be the same.
 Used to check whether a particular notebook fails across time or not.
 This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
 and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
 we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
 and have a better understanding of what is going on, e.g. why something failed.","string","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelSessionId","Unique identifier for an instance of a notebook session.
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
 Conda 
 VirtualEnv 
 PipEnv 
@@ -843,26 +848,27 @@ Poetry
 VirtualEnvWrapper 
 Global 
 System ",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentCount","Total number of python environments.","number","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelLanguage","Language of the kernel connection.","string","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","restartCount","This number gets reset after change the kernel.","number","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","startFailureCount","Number of times starting the kernel failed.","number","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentCount","Total number of python environments.","number","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelLanguage","Language of the kernel connection.","string","",false
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","restartCount","This number gets reset after change the kernel.","number","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","startFailureCount","Number of times starting the kernel failed.","number","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","switchKernelCount","Number of times the kernel was changed.","number","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DATASCIENCE.SET_JUPYTER_URI_LOCAL","","Telemetry.SetJupyterURIToLocal","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED","This telemetry tracks the display of the Picker for Jupyter Remote servers.","Telemetry.SetJupyterURIUIDisplayed","IanMatthewHuff","","","","commandSource","This telemetry tracks the source of this UI.
+"DATASCIENCE.SET_JUPYTER_URI_LOCAL","Jupyter URI was set to local.","Telemetry.SetJupyterURIToLocal","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+"DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED","This telemetry tracks the display of the Picker for Jupyter Remote servers.","Telemetry.SetJupyterURIUIDisplayed","IanMatthewHuff","KernelPicker","","","commandSource","This telemetry tracks the source of this UI.
 nonUser - Invoked internally by our code.
 toolbar - Invoked by user from Native or Interactive window toolbar.
 commandPalette - Invoked from command palette by the user.
@@ -874,17 +880,20 @@ nativeNotebookStatusBar
 nativeNotebookToolbar 
 errorHandler 
 prompt ",false
-"DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED","","Telemetry.SetJupyterURIToUserSpecified","IanMatthewHuff","","","","azure","","boolean","",false
-"DATASCIENCE.SHOW_DATA_EXPLORER","","Telemetry.ShowDataViewer","IanMatthewHuff","","","","rows","","","null or <empty> ",false
-"DATASCIENCE.SHOW_DATA_EXPLORER","","Telemetry.ShowDataViewer","IanMatthewHuff","","","","columns","","","null or <empty> ",false
-"DATASCIENCE.START_SHOW_DATA_EXPLORER","","Telemetry.StartShowDataViewer","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+"DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED","Jupyter URI was valid and set to a remote setting.","Telemetry.SetJupyterURIToUserSpecified","IanMatthewHuff","KernelPicker","","","azure","","boolean","",false
+"DATASCIENCE.SHOW_DATA_EXPLORER","Request was made to show the data viewer with specific data frame info.","Telemetry.ShowDataViewer","IanMatthewHuff","DataFrameViewer","","","rows","Count of rows in the target data frame.","","null or <empty> ",false
+"DATASCIENCE.SHOW_DATA_EXPLORER","Request was made to show the data viewer with specific data frame info.","Telemetry.ShowDataViewer","IanMatthewHuff","DataFrameViewer","","","columns","Count of columns in the target data frame.","","null or <empty> ",false
+"DATASCIENCE.SHOW_DATA_EXPLORER_ROWS_LOADED","Data viewer loads rows in chunks, this event is sent when the rows have all been loaded","Telemetry.ShowDataViewerRowsLoaded","IanMatthewHuff","DataFrameViewer","","","rowsTimer","Timer to indicate how long it took to load all the rows","","null or <empty> ",false
+"DATASCIENCE.START_SHOW_DATA_EXPLORER","User requested to open the data frame viewer.","Telemetry.StartShowDataViewer","IanMatthewHuff","DataFrameViewer","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DATASCIENCE.USER_STARTUP_CODE_FAILURE","","Telemetry.UserStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","ename","","string","",false
 "DATASCIENCE.USER_STARTUP_CODE_FAILURE","","Telemetry.UserStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","","string","",false
 "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
-"DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.","number","",false
+"DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.CODE_LENS_ACQ_TIME","","Telemetry.CodeLensAverageAcquisitionTime","amunger","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.COMMAND_EXECUTED","Telemetry sent when a command is executed.","Telemetry.CommandExecuted","unknown","N/A","","","command","Name of the command executed.","string","",false
@@ -1012,7 +1021,7 @@ Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentV
 'failedToGetCustomEnvVariables' ",true
 "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
 Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentVariables","donjayamanne","N/A","","","duration","Time taken.
-Total time taken to list interpreters. Total time taken to list kernels.","number","",false
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
 Used to detect the popularity of a mime type, that would help determine which mime types are most common.
 E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
@@ -1069,11 +1078,15 @@ or prioritize rendering of widgets when opening an existing notebook or the like
 Used to detect the popularity of a mime type, that would help determine which mime types are most common.
 E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
 or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasVnd","Whether the mime type has the word 'vnd' in it.","boolean","",false
-"DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","","","","isResultNull","","boolean","",false
+"DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","InteractiveWindow","IntelliSense","","isResultNull","Result is null if user signalled cancellation or if we timed out","boolean","",false
+"DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","InteractiveWindow","IntelliSense","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
-"DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.","number","",false
+"DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.INTERRUPT_JUPYTER_TIME","User interrupts a cell
 Identical to `Telemetry.Interrupt`","Telemetry.InterruptJupyterTime","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
@@ -1236,9 +1249,12 @@ Total time taken to list interpreters. Total time taken to list kernels. Time ta
 "DS_INTERNAL.JUPYTERSTARTUPCOST","","Telemetry.StartJupyter","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
 Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel list.
+Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel list.
+Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel list.
+Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","condaEnvsSharingSameInterpreter","Total number of conda environments that share the same interpreter
 This happens when we create conda envs without the `python` argument.
 Such conda envs don't work today in the extension.
@@ -1285,11 +1301,11 @@ System ",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","startFailureCount","Number of times starting the kernel failed.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","switchKernelCount","Number of times the kernel was changed.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Total number of kernel specs in the kernel list.","number","",false
+Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Total number of interpreters in the kernel list.","number","",false
+Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Total number of live kernels in the kernel list.","number","",false
+Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
@@ -1359,13 +1375,16 @@ This is a generic property supported for all telemetry (sent by decorators).","b
 'localKernelSpec' 
 'localPython' ",false
 "DS_INTERNAL.KERNEL_LISTING_PERF","","Telemetry.KernelListingPerf","donjayamanne","N/A","","","duration","Total time taken to list kernels.
-Total time taken to list interpreters.","number","",false
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT","Total number of Local kernel specifications.","Telemetry.NumberOfLocalKernelSpecs","donjayamanne","N/A","","","count","Number of kernel specs found on disc.","number","",false
-"DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED","","Telemetry.NativeVariableViewLoaded","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+"DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED","The Variable View webview was loaded.","Telemetry.NativeVariableViewLoaded","IanMatthewHuff","VariableViewer","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT","Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.","Telemetry.NotebookOpenCount","donjayamanne","InteractiveWindow, Notebook","","","count","","number","",false
 "DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT","Total number of cells executed. Telemetry Sent when VS Code is closed.","Telemetry.NotebookRunCount","donjayamanne","InteractiveWindow, Notebook","","","count","","number","",false
-"DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED","","Telemetry.NumberOfSavedRemoteKernelIds","IanMatthewHuff","","","","count","","number","",false
+"DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED","When users connect to a remote kernel, we store the kernel id so we can re-connect to that
+when user opens the same notebook. We only store the last 100.
+Count is the number of kernels saved in the list.","Telemetry.NumberOfSavedRemoteKernelIds","IanMatthewHuff","KernelPicker","","","count","Count is the number of kernels saved in the list.","number","",false
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
@@ -1438,17 +1457,17 @@ System ",true
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook","","","result","","","'found' 
+"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook, KernelPicker","","","result","Note if we did or did not find a preferred kernel.","","'found' 
 'notfound' 
 'failed' ",false
-"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook","","","language","","string","",false
-"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook","","","hasActiveInterpreter","","boolean","",true
-"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
+"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook, KernelPicker","","","language","Language of the target notebook or interactive window","string","",false
+"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook, KernelPicker","","","hasActiveInterpreter","If we have an active interpreter or not.","boolean","",true
+"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook, KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH","","Telemetry.PreferredKernelExactMatch","IanMatthewHuff","","","","matchedReason","","","",false
-"DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER","","Telemetry.PythonExtensionInstalledViaKernelPicker","IanMatthewHuff","","","","action","","","'success' 
+"DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH","Send we we complete our preferred kernel match. Matched reason might be 'no match'.","Telemetry.PreferredKernelExactMatch","IanMatthewHuff","KernelPicker","","","matchedReason","","","null or <empty> ",false
+"DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER","","Telemetry.PythonExtensionInstalledViaKernelPicker","IanMatthewHuff","KernelPicker","","","action","","","'success' 
 'failed' ",false
-"DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED","","Telemetry.PythonExtensionNotInstalled","IanMatthewHuff","","","","action","","","'displayed' 
+"DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED","","Telemetry.PythonExtensionNotInstalled","IanMatthewHuff","KernelPicker","","","action","","","'displayed' 
 'dismissed' 
 'download' ",false
 "DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES","Telemetry sent for local Python Kernels.
@@ -1497,11 +1516,12 @@ System ",true
 "DS_INTERNAL.PYTHON_MODULE_INSTALL","","Telemetry.PythonModuleInstall","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
 Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.PYTHON_NOT_INSTALLED","","Telemetry.PythonNotInstalled","IanMatthewHuff","","","","action","","","'displayed' 
+"DS_INTERNAL.PYTHON_NOT_INSTALLED","","Telemetry.PythonNotInstalled","IanMatthewHuff","KernelPicker","","","action","","","'displayed' 
 'dismissed' 
 'download' ",false
-"DS_INTERNAL.RANK_KERNELS_PERF","Total time taken to find a kernel on disc or on a remote machine.","Telemetry.RankKernelsPerf","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+"DS_INTERNAL.RANK_KERNELS_PERF","Time taken to load kernels if needed and rank them all.","Telemetry.RankKernelsPerf","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK","","Telemetry.RawKernelCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
 Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
@@ -2228,7 +2248,6 @@ selected - An interpreter was selected (and configured to have jupyter and noteb
 installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter.","","'notSelected' 
 'selected' 
 'installationCancelled' ",true
-"DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED","","Telemetry.PandasInstallCanceled","IanMatthewHuff","","","","version","","string","",false
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
 Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
@@ -2348,24 +2367,28 @@ WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence 
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DS_INTERNAL.SWITCH_TO_EXISTING_KERNEL","","Telemetry.SwitchToExistingKernel","IanMatthewHuff","","","","language","","string","",false
-"DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME","","Telemetry.VariableExplorerFetchTime","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT","","Telemetry.VariableExplorerVariableCount","IanMatthewHuff","","","","variableCount","","number","",false
+"DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME","How long did it take for a single variable request to be resolved.","Telemetry.VariableExplorerFetchTime","IanMatthewHuff","VariableViewer","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+"DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT","Count how many variables were in a variable request.","Telemetry.VariableExplorerVariableCount","IanMatthewHuff","VariableViewer","","","variableCount","Count of variables requested","number","",false
 "DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED","","Telemetry.VSCNotebookCellTranslationFailed","donjayamanne","Notebook, InteractiveWindow","","","isErrorOutput","","boolean","",false
 "DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER","","Telemetry.WaitForIdleJupyter","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
 Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.WEB_FETCH_ERROR","Event sent when trying to talk to a remote server and the browser gives us a generic fetch error","Telemetry.FetchError","unknown","","","","currentTask","What we were doing when the fetch error occurred","'connecting'","",false
-"DS_INTERNAL.WEBVIEW_STARTUP","","Telemetry.WebviewStartup","IanMatthewHuff","","","","type","","string","",false
+"DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","type","","string","",false
+"DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "ENVFILE_WORKSPACE","Telemetry event sent when an environment file is detected in the workspace.","EventName.ENVFILE_WORKSPACE","donjayamanne","N/A","","","hasCustomEnvPath","If there's a custom path specified in the python.envFile workspace settings.","boolean","",false
-"ERROR","","ERROR","donjayamanne","N/A","","","failureCategory","","'methodException'","",false
-"ERROR","","ERROR","donjayamanne","N/A","","","failureSubCategory","Name of the method in the extension that threw the exception.","string","",false
+"ERROR","","ERROR","donjayamanne","N/A","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","'methodException'","",false
+"ERROR","","ERROR","donjayamanne","N/A","","","failureSubCategory","Name of the method in the extension that threw the exception.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",false
 "ERROR","","ERROR","donjayamanne","N/A","","","failed","Whether there was a failure.","true","",false
 "ERROR","","ERROR","donjayamanne","N/A","","","stackTrace","Node stacktrace without PII.","string","",false
 "ERROR","","ERROR","donjayamanne","N/A","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
 "ERROR","","ERROR","donjayamanne","N/A","","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception.","string","",true
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "ERROR","","ERROR","donjayamanne","N/A","","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "ERROR","","ERROR","donjayamanne","N/A","","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "ERROR","","ERROR","donjayamanne","N/A","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
@@ -2377,7 +2400,7 @@ Name of the method in the extension that threw the exception.","string","",true
 "HASHED_PACKAGE_NAME","Telemetry event sent with hash of an imported python package.
 Used to detect the popularity of a package, that would help determine which packages
 need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.","EventName.HASHED_PACKAGE_NAME","unknown","N/A","","","hashedNamev2","Hash of the package name","string","",false
-"HASHED_PACKAGE_PERF","","EventName.HASHED_PACKAGE_PERF","donjayamanne","N/A","","","duration","Total time taken to list interpreters. Total time taken to list kernels. Time taken.","number","",false
+"HASHED_PACKAGE_PERF","","EventName.HASHED_PACKAGE_PERF","donjayamanne","N/A","","","duration","Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "JUPYTER_EXPERIMENTS_OPT_IN_OUT","Telemetry event sent with details when a user has requested to opt it or out of an experiment group","EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT","unknown","N/A","","","expNameOptedInto","Carries the name of the experiment user has been opted into manually","string","",true
 "JUPYTER_EXPERIMENTS_OPT_IN_OUT","Telemetry event sent with details when a user has requested to opt it or out of an experiment group","EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT","unknown","N/A","","","expNameOptedOutOf","Carries the name of the experiment user has been opted out of manually","string","",true
 "JUPYTER_IS_INSTALLED","","Telemetry.JupyterInstalled","donjayamanne","N/A","","/* Detection of jupyter failed ","failed","","true","",false

@@ -80,9 +80,13 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         const timeoutHandler = sleep(300).then(() => undefined);
         this.stopWatch.reset();
         const result = await Promise.race([timeoutHandler, this.getVariableHover(document, position, token)]);
-        sendTelemetryEvent(Telemetry.InteractiveFileTooltipsPerf, this.stopWatch.elapsedTime, {
-            isResultNull: !!result
-        });
+        sendTelemetryEvent(
+            Telemetry.InteractiveFileTooltipsPerf,
+            { duration: this.stopWatch.elapsedTime },
+            {
+                isResultNull: !!result
+            }
+        );
         return result;
     }
 

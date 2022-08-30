@@ -424,8 +424,6 @@ export enum Telemetry {
     ConnectRemoteSelfCertFailedJupyter = 'DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER',
     ConnectRemoteExpiredCertFailedJupyter = 'DS_INTERNAL.CONNECTREMOTEEXPIREDCERTFAILEDJUPYTER',
     RegisterAndUseInterpreterAsKernel = 'DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL',
-    SwitchToInterpreterAsKernel = 'DS_INTERNAL.SWITCH_TO_INTERPRETER_AS_KERNEL',
-    SwitchToExistingKernel = 'DS_INTERNAL.SWITCH_TO_EXISTING_KERNEL',
     SelfCertsMessageEnabled = 'DATASCIENCE.SELFCERTSMESSAGEENABLED',
     SelfCertsMessageClose = 'DATASCIENCE.SELFCERTSMESSAGECLOSE',
     ShiftEnterBannerShown = 'DS_INTERNAL.SHIFTENTER_BANNER_SHOWN',
@@ -433,6 +431,7 @@ export enum Telemetry {
     DisableInteractiveShiftEnter = 'DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER',
     StartShowDataViewer = 'DATASCIENCE.START_SHOW_DATA_EXPLORER', // Called by the factory when attempting to load the data viewer
     ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER', // Called by the data viewer itself when it is actually loaded
+    ShowDataViewerRowsLoaded = 'DATASCIENCE.SHOW_DATA_EXPLORER_ROWS_LOADED',
     FailedShowDataViewer = 'DATASCIENCE.FAILED_SHOW_DATA_EXPLORER', // Called by the factory when the data viewer fails to load
     RefreshDataViewer = 'DATASCIENCE.REFRESH_DATA_VIEWER',
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
