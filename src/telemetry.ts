@@ -1230,7 +1230,12 @@ export class IEventNamePropertyMapping {
     /**
      * User exports the IW or Notebook to a specific format.
      */
-    [Telemetry.ClickedExportNotebookAsQuickPick]: TelemetryEventInfo<{ format: ExportFormat }> = {
+    [Telemetry.ClickedExportNotebookAsQuickPick]: TelemetryEventInfo<{
+        /**
+         * What format to export to was selected in the quick pick.
+         */
+        format: ExportFormat;
+    }> = {
         owner: 'IanMatthewHuff',
         feature: ['Import-Export', 'InteractiveWindow'],
         source: 'User Action',
@@ -1242,40 +1247,112 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Called when user imports a Jupyter Notebook into a Python file.
-     * Command is `Jupyter: Import Jupyter Notebook`
-     * Basically user is exporting some jupyter notebook into a Python file or other.
+     * Called on the completion of exporting a Jupyter notebook into a new format
+     * This is the result of the operation, so it's not tagged as a user action as that
+     * comes from ExportNotebookAsCommand or ExportNotebookAsQuickPick
      */
     [Telemetry.ExportNotebookAs]: TelemetryEventInfo<{
+        /**
+         * What format was the export performed to.
+         */
         format: ExportFormat;
+        /**
+         * Was the export operation cancelled.
+         */
         cancelled?: boolean;
+        /**
+         * Was the export operation successful.
+         */
         successful?: boolean;
+        /**
+         * Did the user end with opening the file in VS Code.
+         */
         opened?: boolean;
     }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['Import-Export'],
+        source: 'N/A',
+        properties: {
+            format: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            cancelled: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            successful: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            opened: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
      * Called when user imports a Jupyter Notebook into a Python file.
      * Command is `Jupyter: Import Jupyter Notebook`
      * Basically user is exporting some jupyter notebook into a Python file.
      */
-    [Telemetry.ImportNotebook]: TelemetryEventInfo<{ scope: 'command' | 'file' }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+    [Telemetry.ImportNotebook]: TelemetryEventInfo<{
+        /**
+         * The command can be called as a command, in which a file then needs to be selected, or with a file
+         * as the context already, in which case the import command doesn't ask for selection.
+         */
+        scope: 'command' | 'file';
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: ['Import-Export'],
+        source: 'User Action',
+        properties: {
+            scope: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
      * Called when user exports a Jupyter Notebook or IW into a Python file, HTML, PDF, etc.
      * Command is `Jupyter: Export to Python Script` or `Jupyter: Export to HTML`
      * Basically user is exporting some jupyter notebook or IW into a Python file or other.
      */
-    [Telemetry.ExportNotebookAsCommand]: TelemetryEventInfo<{ format: ExportFormat }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+    [Telemetry.ExportNotebookAsCommand]: TelemetryEventInfo<{
+        /**
+         * What format was the export performed to.
+         */
+        format: ExportFormat;
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: ['Import-Export'],
+        source: 'User Action',
+        properties: {
+            format: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
-     * Export fails
+     * The Export Notebook operation failed.
      */
-    [Telemetry.ExportNotebookAsFailed]: TelemetryEventInfo<{ format: ExportFormat }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+    [Telemetry.ExportNotebookAsFailed]: TelemetryEventInfo<{
+        /**
+         * What format was the export performed to.
+         */
+        format: ExportFormat;
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: ['Import-Export'],
+        source: 'N/A',
+        properties: {
+            format: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     [Telemetry.GetPasswordAttempt]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -1292,9 +1369,6 @@ export class IEventNamePropertyMapping {
         feature: 'N/A',
         source: 'N/A'
     };
-    [Telemetry.ImportNotebook]: TelemetryEventInfo<{ scope: 'command' | 'file' }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
     /**
      * User interrupts a cell
      * Identical to `Telemetry.InterruptJupyterTime`
@@ -1347,7 +1421,7 @@ export class IEventNamePropertyMapping {
     };
     [Telemetry.PandasNotInstalled]: TelemetryEventInfo<never | undefined> = {
         owner: 'IanMatthewHuff'
-    } as any;
+    };
     [Telemetry.PandasTooOld]: TelemetryEventInfo<never | undefined> = {
         owner: 'IanMatthewHuff'
     } as any;

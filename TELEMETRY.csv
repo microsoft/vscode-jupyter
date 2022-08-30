@@ -1,7 +1,7 @@
 "eventName","eventDescription","eventConstant","owner","feature","tags","groupDescription","propertyName","propertyDescription","propertyType","propertyPossibleValues","propertyIsNullable"
 "DATASCIENCE.ADD_CELL_BELOW","Telemetry event sent when user adds a cell below the current cell for IW.","Telemetry.AddCellBelow","amunger","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK","User exports the IW or Notebook to a specific format.","Telemetry.ClickedExportNotebookAsQuickPick","IanMatthewHuff","","","","format","","","pdf 
+"DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK","User exports the IW or Notebook to a specific format.","Telemetry.ClickedExportNotebookAsQuickPick","IanMatthewHuff","Import-Export, InteractiveWindow","","","format","","","pdf 
 html 
 python 
 ipynb ",false

@@ -18,9 +18,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK  (Telemetry.ClickedExportNotebookAsQuickPick)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR format. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     User exports the IW or Notebook to a specific format.  
     ```
@@ -436,8 +433,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.EXPORT_PYTHON_FILE  (Telemetry.ExportPythonFileInteractive)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     User exports a .py file with cells as a Jupyter Notebook.  
     ```
@@ -446,10 +441,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT  (Telemetry.ExportPythonFileAndOutputInteractive)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    User exports a .py file with cells along with the outputs from the current IW as a Jupyter Notebook.  
+    User exports a .py file with cells along with the outputs which that file would generate in the Interactive Windows as a Jupyter Notebook.  
     ```
 
 
