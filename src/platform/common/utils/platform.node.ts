@@ -28,5 +28,5 @@ export function getUserHomeDir(): Uri {
     const homeVar = getEnvironmentVariable('HOME') || getEnvironmentVariable('HOMEPATH') || homePath;
 
     // Make sure if linux, it uses linux separators
-    return Uri.file(homeVar?.replace(/\\/g, '/'));
+    return Uri.file(homeVar.replace(/\\/g, '/'));
 }

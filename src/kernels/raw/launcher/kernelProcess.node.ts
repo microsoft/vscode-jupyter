@@ -547,6 +547,6 @@ export class KernelProcess implements IKernelProcess {
                 this.resource
             );
         }
-        return this.interrupter?.handle;
+        return this.interrupter.handle;
     }
 }

@@ -76,7 +76,7 @@ export abstract class Webview implements IWebview {
             throw new Error('WebView not initialized, too early to get a Uri');
         }
 
-        const uriBase = this.webviewHost?.webview.asWebviewUri(this.options.cwd).toString();
+        const uriBase = this.webviewHost.webview.asWebviewUri(this.options.cwd).toString();
         const uris = this.options.scripts.map((script) => this.webviewHost!.webview!.asWebviewUri(script));
 
         const rootPath = this.webviewHost.webview.asWebviewUri(this.options.rootPath).toString();
