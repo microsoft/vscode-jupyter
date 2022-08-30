@@ -1957,12 +1957,35 @@ export class IEventNamePropertyMapping {
         feature: 'N/A',
         source: 'N/A'
     };
+    /**
+     * How long did it take for a single variable request to be resolved.
+     */
     [Telemetry.VariableExplorerFetchTime]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'IanMatthewHuff'
-    } as any;
-    [Telemetry.VariableExplorerVariableCount]: TelemetryEventInfo<{ variableCount: number }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['VariableViewer'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties
+    };
+    /**
+     * Count how many variables were in a variable request.
+     */
+    [Telemetry.VariableExplorerVariableCount]: TelemetryEventInfo<{
+        /**
+         * Count of variables requested
+         */
+        variableCount: number;
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: ['VariableViewer'],
+        source: 'N/A',
+        measures: {
+            variableCount: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            }
+        }
+    };
     [Telemetry.WaitForIdleJupyter]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -1970,7 +1993,7 @@ export class IEventNamePropertyMapping {
         tags: ['KernelStartup'],
         measures: commonClassificationForDurationProperties
     };
-    [Telemetry.WebviewStartup]: TelemetryEventInfo<{ type: string }> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.WebviewStartup]: TelemetryEventInfo<{ type: string }> = { owner: 'IanMatthewHuff' };
     [Telemetry.RegisterInterpreterAsKernel]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -2115,9 +2138,14 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties
     };
     /**
-     * Total time taken to find a kernel on disc or on a remote machine.
+     * Time taken to load kernels if needed and rank them all.
      */
-    [Telemetry.RankKernelsPerf]: TelemetryEventInfo<DurationMeasurement> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.RankKernelsPerf]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'IanMatthewHuff',
+        feature: ['KernelPicker'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties
+    };
     /**
      * Total time taken to list kernels for VS Code.
      */
@@ -2131,28 +2159,40 @@ export class IEventNamePropertyMapping {
      */
     [Telemetry.PreferredKernel]: TelemetryEventInfo<
         {
-            result: 'found' | 'notfound' | 'failed'; // Whether a preferred kernel was found or not.
-            language: string; // Language of the associated notebook or interactive window.
-            hasActiveInterpreter?: boolean; // Whether we have an active interpreter or not.
+            /**
+             * Note if we did or did not find a preferred kernel.
+             */
+            result: 'found' | 'notfound' | 'failed';
+            /**
+             * Language of the target notebook or interactive window
+             */
+            language: string;
+            /**
+             * If we have an active interpreter or not.
+             */
+            hasActiveInterpreter?: boolean;
         } & ResourceTypeTelemetryProperty
     > = {
         owner: 'IanMatthewHuff',
-        feature: ['InteractiveWindow', 'Notebook'],
+        feature: ['InteractiveWindow', 'Notebook', 'KernelPicker'],
         source: 'N/A',
         properties: {
             ...commonClassificationForResourceSpecificTelemetryProperties,
             ...commonClassificationForResourceType,
             hasActiveInterpreter: {
-                //
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
             },
             language: {
-                //
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
             },
             result: {
-                //
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
             }
         }
-    } as any;
+    };
     /**
      * Telemetry event sent to when user customizes the jupyter command line
      * @type {(undefined | never)}
@@ -2890,12 +2930,27 @@ export class IEventNamePropertyMapping {
         }
     };
 
-    // When users connect to a remote kernel, we store the kernel id so we can re-connect to that
-    // when user opens the same notebook. We only store the last 100.
-    // Count is the number of entries saved in the list.
-    [Telemetry.NumberOfSavedRemoteKernelIds]: TelemetryEventInfo<{ count: number }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+    /** When users connect to a remote kernel, we store the kernel id so we can re-connect to that
+     * when user opens the same notebook. We only store the last 100.
+     * Count is the number of kernels saved in the list.
+     */
+    [Telemetry.NumberOfSavedRemoteKernelIds]: TelemetryEventInfo<{
+        /**
+         * Count is the number of kernels saved in the list.
+         */
+        count: number;
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: ['KernelPicker'],
+        source: 'N/A',
+        measures: {
+            count: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            }
+        }
+    };
 
     // Whether we've attempted to start a raw Python kernel without any interpreter information.
     // If we don't detect such telemetry in a few months, then we can remove this along with the temporary code associated with this telemetry.
@@ -2921,17 +2976,33 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForResourceSpecificTelemetryProperties
         }
     };
-    // Capture telemetry re: how long returning a tooltip takes
+    /**
+     * How long it took to return our hover tooltips for a .py file.
+     */
     [Telemetry.InteractiveFileTooltipsPerf]: TelemetryEventInfo<{
-        // Result is null if user signalled cancellation or if we timed out
+        /**
+         * Result is null if user signalled cancellation or if we timed out
+         */
         isResultNull: boolean;
-    }> = { owner: 'IanMatthewHuff' } as any;
+    }> = { owner: 'IanMatthewHuff' };
 
-    // Native variable view events
-    [Telemetry.NativeVariableViewLoaded]: TelemetryEventInfo<DurationMeasurement> = { owner: 'IanMatthewHuff' } as any;
+    /**
+     * The Variable View webview was loaded.
+     */
+    [Telemetry.NativeVariableViewLoaded]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'IanMatthewHuff',
+        feature: ['VariableViewer'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties
+    };
+    /**
+     * The Variable View webview was made visible.
+     */
     [Telemetry.NativeVariableViewMadeVisible]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['VariableViewer'],
+        source: 'N/A'
+    };
     /**
      * Telemetry sent when a command is executed.
      */
@@ -2964,7 +3035,17 @@ export class IEventNamePropertyMapping {
          * to be disabled.
          */
         newState: CheckboxState;
-    }> = { owner: 'IanMatthewHuff' } as any;
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'User Action',
+        properties: {
+            newState: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
      * Telemetry event sent when a slice is first applied in a
      * data viewer instance to a sliceable Python variable.
@@ -2976,7 +3057,18 @@ export class IEventNamePropertyMapping {
          * always be 2 at minimum.
          */
         numberOfDimensions: number;
-    }> = { owner: 'IanMatthewHuff' } as any;
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'N/A',
+        measures: {
+            numberOfDimensions: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            }
+        }
+    };
     /**
      * Telemetry event sent whenever the user applies a valid slice
      * to a sliceable Python variable in the data viewer.
@@ -2989,7 +3081,17 @@ export class IEventNamePropertyMapping {
          * `textbox`, or `checkbox`.
          */
         source: SliceOperationSource;
-    }> = { owner: 'IanMatthewHuff' } as any;
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'User Action',
+        properties: {
+            source: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /*
      * Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).
      */

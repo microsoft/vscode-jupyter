@@ -446,9 +446,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.FAILED_SHOW_DATA_EXPLORER  (Telemetry.FailedShowDataViewer)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Failed to show the data viewer via the variable view.  
+    ```
+
 
 
 * DATASCIENCE.FAILED_TO_CREATE_CONTROLLER  (Telemetry.FailedToCreateNotebookController)  
@@ -1283,8 +1284,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.REFRESH_DATA_VIEWER  (Telemetry.RefreshDataViewer)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Sent when the jupyter.refreshDataViewer command is invoked  
     ```
@@ -1850,20 +1849,19 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SET_JUPYTER_URI_LOCAL  (Telemetry.SetJupyterURIToLocal)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Jupyter URI was set to local.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED  (Telemetry.SetJupyterURIUIDisplayed)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR commandSource. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     This telemetry tracks the display of the Picker for Jupyter Remote servers.  
     ```
@@ -1888,38 +1886,55 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED  (Telemetry.SetJupyterURIToUserSpecified)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR azure. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Jupyter URI was valid and set to a remote setting.  
+    ```
+
     - Properties:  
         - `azure`: `boolean`  
 
 
 * DATASCIENCE.SHOW_DATA_EXPLORER  (Telemetry.ShowDataViewer)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR rows, columns. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Request was made to show the data viewer with specific data frame info.  
+    ```
+
     - Properties:  
         - `rows`: `<see below>`  
+        Count of rows in the target data frame.  
         Possible values include:  
             - `null or <empty>`  
         - `columns`: `<see below>`  
+        Count of columns in the target data frame.  
+        Possible values include:  
+            - `null or <empty>`  
+
+
+* DATASCIENCE.SHOW_DATA_EXPLORER_ROWS_LOADED  (Telemetry.ShowDataViewerRowsLoaded)  
+      Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
+    ```
+    Data viewer loads rows in chunks, this event is sent when the rows have all been loaded  
+    ```
+
+    - Properties:  
+        - `rowsTimer`: `<see below>`  
+        Timer to indicate how long it took to load all the rows  
         Possible values include:  
             - `null or <empty>`  
 
 
 * DATASCIENCE.START_SHOW_DATA_EXPLORER  (Telemetry.StartShowDataViewer)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    User requested to open the data frame viewer.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER  (Telemetry.UserDidNotInstallJupyter)  

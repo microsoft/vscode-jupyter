@@ -864,9 +864,10 @@ System ",true
 3rdPartyExtension ",false
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DATASCIENCE.SET_JUPYTER_URI_LOCAL","","Telemetry.SetJupyterURIToLocal","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED","This telemetry tracks the display of the Picker for Jupyter Remote servers.","Telemetry.SetJupyterURIUIDisplayed","IanMatthewHuff","","","","commandSource","This telemetry tracks the source of this UI.
+"DATASCIENCE.SET_JUPYTER_URI_LOCAL","Jupyter URI was set to local.","Telemetry.SetJupyterURIToLocal","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+"DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED","This telemetry tracks the display of the Picker for Jupyter Remote servers.","Telemetry.SetJupyterURIUIDisplayed","IanMatthewHuff","KernelPicker","","","commandSource","This telemetry tracks the source of this UI.
 nonUser - Invoked internally by our code.
 toolbar - Invoked by user from Native or Interactive window toolbar.
 commandPalette - Invoked from command palette by the user.
@@ -878,11 +879,13 @@ nativeNotebookStatusBar
 nativeNotebookToolbar 
 errorHandler 
 prompt ",false
-"DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED","","Telemetry.SetJupyterURIToUserSpecified","IanMatthewHuff","","","","azure","","boolean","",false
-"DATASCIENCE.SHOW_DATA_EXPLORER","","Telemetry.ShowDataViewer","IanMatthewHuff","","","","rows","","","null or <empty> ",false
-"DATASCIENCE.SHOW_DATA_EXPLORER","","Telemetry.ShowDataViewer","IanMatthewHuff","","","","columns","","","null or <empty> ",false
-"DATASCIENCE.START_SHOW_DATA_EXPLORER","","Telemetry.StartShowDataViewer","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+"DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED","Jupyter URI was valid and set to a remote setting.","Telemetry.SetJupyterURIToUserSpecified","IanMatthewHuff","KernelPicker","","","azure","","boolean","",false
+"DATASCIENCE.SHOW_DATA_EXPLORER","Request was made to show the data viewer with specific data frame info.","Telemetry.ShowDataViewer","IanMatthewHuff","DataFrameViewer","","","rows","Count of rows in the target data frame.","","null or <empty> ",false
+"DATASCIENCE.SHOW_DATA_EXPLORER","Request was made to show the data viewer with specific data frame info.","Telemetry.ShowDataViewer","IanMatthewHuff","DataFrameViewer","","","columns","Count of columns in the target data frame.","","null or <empty> ",false
+"DATASCIENCE.SHOW_DATA_EXPLORER_ROWS_LOADED","Data viewer loads rows in chunks, this event is sent when the rows have all been loaded","Telemetry.ShowDataViewerRowsLoaded","IanMatthewHuff","DataFrameViewer","","","rowsTimer","Timer to indicate how long it took to load all the rows","","null or <empty> ",false
+"DATASCIENCE.START_SHOW_DATA_EXPLORER","User requested to open the data frame viewer.","Telemetry.StartShowDataViewer","IanMatthewHuff","DataFrameViewer","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DATASCIENCE.USER_STARTUP_CODE_FAILURE","","Telemetry.UserStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","ename","","string","",false
 "DATASCIENCE.USER_STARTUP_CODE_FAILURE","","Telemetry.UserStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","","string","",false
 "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
