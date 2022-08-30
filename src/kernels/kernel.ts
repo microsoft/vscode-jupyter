@@ -255,7 +255,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             await (this._jupyterSessionPromise
                 ? this.kernelExecution.restart(this._jupyterSessionPromise)
                 : this.start(new DisplayOptions(false)));
-            sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
+            sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, { duration: stopWatch.elapsedTime });
         } catch (ex) {
             traceError(`Restart failed ${getDisplayPath(this.uri)}`, ex);
             this._ignoreJupyterSessionDisposedErrors = true;
@@ -265,7 +265,13 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             this._jupyterSessionPromise = undefined;
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
-            sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime, undefined, ex);
+            sendKernelTelemetryEvent(
+                this.resourceUri,
+                Telemetry.NotebookRestart,
+                { duration: stopWatch.elapsedTime },
+                undefined,
+                ex
+            );
             await session?.dispose().catch(noop);
             this._ignoreJupyterSessionDisposedErrors = false;
             throw ex;
@@ -325,11 +331,9 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
 
             this._jupyterSessionPromise = this.createJupyterSession()
                 .then((session) => {
-                    sendKernelTelemetryEvent(
-                        this.resourceUri,
-                        Telemetry.PerceivedJupyterStartupNotebook,
-                        stopWatch.elapsedTime
-                    );
+                    sendKernelTelemetryEvent(this.resourceUri, Telemetry.PerceivedJupyterStartupNotebook, {
+                        duration: stopWatch.elapsedTime
+                    });
                     return session;
                 })
                 .catch((ex) => {
@@ -799,18 +803,14 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         // Setup telemetry
         if (!this.perceivedJupyterStartupTelemetryCaptured) {
             this.perceivedJupyterStartupTelemetryCaptured = true;
-            sendKernelTelemetryEvent(
-                this.resourceUri,
-                Telemetry.PerceivedJupyterStartupNotebook,
-                stopWatch.elapsedTime
-            );
+            sendKernelTelemetryEvent(this.resourceUri, Telemetry.PerceivedJupyterStartupNotebook, {
+                duration: stopWatch.elapsedTime
+            });
             executionPromise
                 .finally(() =>
-                    sendKernelTelemetryEvent(
-                        this.resourceUri,
-                        Telemetry.StartExecuteNotebookCellPerceivedCold,
-                        stopWatch.elapsedTime
-                    )
+                    sendKernelTelemetryEvent(this.resourceUri, Telemetry.StartExecuteNotebookCellPerceivedCold, {
+                        duration: stopWatch.elapsedTime
+                    })
                 )
                 .catch(noop);
         }

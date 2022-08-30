@@ -153,7 +153,7 @@ export class NotebookStarter implements INotebookStarter {
             }
 
             // Fire off telemetry for the process being talkable
-            sendTelemetryEvent(Telemetry.StartJupyterProcess, stopWatch.elapsedTime);
+            sendTelemetryEvent(Telemetry.StartJupyterProcess, { duration: stopWatch.elapsedTime });
 
             try {
                 const port = parseInt(url.parse(connection.baseUrl).port || '0', 10);

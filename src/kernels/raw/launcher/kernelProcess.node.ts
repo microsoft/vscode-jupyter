@@ -55,7 +55,7 @@ import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { KernelDiedError } from '../../errors/kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from '../../errors/kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError';
-import { captureTelemetry, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { Interrupter, PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
 import { TraceOptions } from '../../../platform/logging/types';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
@@ -136,7 +136,7 @@ export class KernelProcess implements IKernelProcess {
         }
     }
 
-    @captureTelemetry(Telemetry.RawKernelProcessLaunch, undefined, true)
+    @capturePerfTelemetry(Telemetry.RawKernelProcessLaunch)
     public async launch(workingDirectory: string, timeout: number, cancelToken: CancellationToken): Promise<void> {
         if (this.launchedOnce) {
             throw new Error('Kernel has already been launched.');

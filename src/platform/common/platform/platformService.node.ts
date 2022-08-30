@@ -7,8 +7,6 @@ import { injectable } from 'inversify';
 import * as os from 'os';
 import { coerce, SemVer } from 'semver';
 import { Uri } from 'vscode';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName, PlatformErrors } from '../../telemetry/constants';
 import { getOSType, OSType } from '../utils/platform';
 import { getUserHomeDir } from '../utils/platform.node';
 import { parseVersion } from '../utils/version.node';
@@ -32,9 +30,6 @@ export class PlatformService implements IPlatformService {
     public version?: SemVer;
     constructor() {
         if (this.osType === OSType.Unknown) {
-            sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
-                failureType: PlatformErrors.FailedToDetermineOS
-            });
         }
     }
     public get pathVariableName() {
@@ -56,16 +51,10 @@ export class PlatformService implements IPlatformService {
                 try {
                     const ver = coerce(os.release());
                     if (ver) {
-                        sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
-                            osVersion: `${ver.major}.${ver.minor}.${ver.patch}`
-                        });
                         return (this.version = ver);
                     }
                     throw new Error('Unable to parse version');
                 } catch (ex) {
-                    sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
-                        failureType: PlatformErrors.FailedToParseVersion
-                    });
                     return parseVersion(os.release());
                 }
             default:
