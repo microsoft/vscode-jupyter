@@ -38,6 +38,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.DATA_VIEWER_DATA_DIMENSIONALITY  (Telemetry.DataViewerDataDimensionality)  
@@ -170,24 +171,28 @@ Expand each section to see more information about that event.
       Owner: [@roblourens](https://github.com/roblourens)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.DEBUGGING.CLICKED_RUN_AND_DEBUG_CELL  (DebuggingTelemetry.clickedRunAndDebugCell)  
       Owner: [@roblourens](https://github.com/roblourens)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.DEBUGGING.CLICKED_RUNBYLINE  (DebuggingTelemetry.clickedRunByLine)  
       Owner: [@roblourens](https://github.com/roblourens)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.DEBUGGING.CLOSED_MODAL  (DebuggingTelemetry.closedModal)  
       Owner: [@roblourens](https://github.com/roblourens)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.DEBUGGING.ENDED_SESSION  (DebuggingTelemetry.endedSession)  
@@ -195,6 +200,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR reason. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `reason`: `<see below>`  
         Possible values include:  
@@ -210,6 +216,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR status. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `status`: `<see below>`  
         Possible values include:  
@@ -231,12 +238,14 @@ Expand each section to see more information about that event.
       Owner: [@roblourens](https://github.com/roblourens)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_RUNBYLINE  (DebuggingTelemetry.successfullyStartedRunByLine)  
       Owner: [@roblourens](https://github.com/roblourens)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER  (Telemetry.DisableInteractiveShiftEnter)  
@@ -449,6 +458,7 @@ Expand each section to see more information about that event.
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.FAILED_TO_CREATE_CONTROLLER  (Telemetry.FailedToCreateNotebookController)  
@@ -456,6 +466,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR kind. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `kind`: `<see below>`  
         What kind of kernel spec did we fail to create.  
@@ -502,6 +513,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.GET_PASSWORD_ATTEMPT  (Telemetry.GetPasswordAttempt)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -513,6 +525,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -523,6 +536,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -552,6 +566,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR ename, evalue. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `ename`: `string`  
         - `evalue`: `string`  
@@ -573,6 +588,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.JUPYTER_KERNEL_API_ACCESS  (Telemetry.JupyterKernelApiAccess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `extensionId`: `string`  
         - `allowed`: `<see below>`  
@@ -583,6 +599,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.JUPYTER_KERNEL_API_USAGE  (Telemetry.JupyterKernelApiUsage)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `extensionId`: `string`  
         - `pemUsed`: `keyof IExportedKernelService`  
@@ -592,20 +609,24 @@ Expand each section to see more information about that event.
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.JUPYTER_KERNEL_HIDDEN_VIA_FILTER  (Telemetry.JupyterKernelHiddenViaFilter)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN  (Telemetry.JupyterNotInstalledErrorShown)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.KERNEL_CRASH  (Telemetry.KernelCrash)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -686,6 +707,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.KERNEL_SPEC_LANGUAGE  (Telemetry.KernelSpecLanguage)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `language`: `string`  
         Language of the kernelSpec.  
@@ -701,6 +723,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE  (Telemetry.KernelStartupCodeFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `ename`: `string`  
         - `evalue`: `string`  
@@ -708,6 +731,7 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK  (Telemetry.CreateNewNotebook)  
       Owner: [@unknown](https://github.com/unknown)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -719,6 +743,7 @@ Expand each section to see more information about that event.
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.NO_ACTIVE_KERNEL_SESSION  (Telemetry.NoActiveKernelSession)  
@@ -1226,6 +1251,7 @@ Expand each section to see more information about that event.
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE  (Telemetry.PythonVariableFetchingCodeFailure)  
@@ -1233,6 +1259,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR ename, evalue. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `ename`: `string`  
         - `evalue`: `string`  
@@ -1243,6 +1270,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR extensionId, action. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `extensionId`: `string`  
         Extension we recommended the user to install.  
@@ -1386,6 +1414,7 @@ Expand each section to see more information about that event.
       Owner: [@roblourens](https://github.com/roblourens)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.RUN_CELL_AND_ALL_BELOW  (Telemetry.RunCellAndAllBelow)  
@@ -1406,6 +1435,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1416,6 +1446,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1440,6 +1471,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1464,6 +1496,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1474,6 +1507,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1484,6 +1518,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1508,6 +1543,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1518,6 +1554,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1528,6 +1565,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1552,6 +1590,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1562,6 +1601,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1572,6 +1612,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1582,6 +1623,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1606,6 +1648,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1624,6 +1667,7 @@ Expand each section to see more information about that event.
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1633,6 +1677,7 @@ Expand each section to see more information about that event.
 * DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL  (Telemetry.SelectLocalJupyterKernel)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -1714,6 +1759,7 @@ Expand each section to see more information about that event.
 * DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL  (Telemetry.SelectRemoteJupyterKernel)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -1794,16 +1840,19 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SELFCERTSMESSAGECLOSE  (Telemetry.SelfCertsMessageClose)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.SELFCERTSMESSAGEENABLED  (Telemetry.SelfCertsMessageEnabled)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.SET_JUPYTER_URI_LOCAL  (Telemetry.SetJupyterURIToLocal)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1842,6 +1891,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR azure. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `azure`: `boolean`  
 
@@ -1851,6 +1901,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR rows, columns. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `rows`: `<see below>`  
         Possible values include:  
@@ -1864,6 +1915,7 @@ Expand each section to see more information about that event.
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1872,26 +1924,31 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER  (Telemetry.UserDidNotInstallJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS  (Telemetry.UserDidNotInstallPandas)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.USER_INSTALLED_JUPYTER  (Telemetry.UserInstalledJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.USER_INSTALLED_PANDAS  (Telemetry.UserInstalledPandas)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DATASCIENCE.USER_STARTUP_CODE_FAILURE  (Telemetry.UserStartupCodeFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `ename`: `string`  
         - `evalue`: `string`  
@@ -1919,6 +1976,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF  (Telemetry.ActiveInterpreterListingPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `firstTime`?: `boolean`  
         Whether this is the first time in the session.  
@@ -1933,6 +1991,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1952,6 +2011,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTFAILEDJUPYTER  (Telemetry.ConnectFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `failed`: `true`  
         Whether there was a failure.  
@@ -1972,6 +2032,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTLOCALJUPYTER  (Telemetry.ConnectLocalJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.CONNECTREMOTEEXPIREDCERTFAILEDJUPYTER  (Telemetry.ConnectRemoteExpiredCertFailedJupyter)  
@@ -1984,6 +2045,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER  (Telemetry.ConnectRemoteFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `failed`: `true`  
         Whether there was a failure.  
@@ -2004,6 +2066,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTREMOTEJUPYTER  (Telemetry.ConnectRemoteJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST  (Telemetry.ConnectRemoteJupyterViaLocalHost)  
@@ -2024,6 +2087,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER  (Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `pythonExtensionInstalled`: `boolean`  
         Indicates whether the python extension is installed.  
@@ -2149,6 +2213,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC  (Telemetry.FailedToUpdateKernelSpec)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES  (Telemetry.GetActivatedEnvironmentVariables)  
@@ -2217,10 +2282,12 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.GET_PASSWORD_FAILURE  (Telemetry.GetPasswordFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.GET_PASSWORD_SUCCESS  (Telemetry.GetPasswordSuccess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE  (Telemetry.HashedCellOutputMimeType)  
@@ -2268,6 +2335,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR isResultNull. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `isResultNull`: `boolean`  
 
@@ -2506,6 +2574,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK  (Telemetry.JupyterCreatingNotebook)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - `When things fail`:  
         - Properties:  
             - `resourceType`?: `<see below>`  
@@ -2695,6 +2764,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTER_IDLE_TIMEOUT  (Telemetry.SessionIdleTimeout)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE  (Telemetry.JupyterInstalledButNotKernelSpecModule)  
@@ -2707,6 +2777,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL  (Telemetry.RegisterInterpreterAsKernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -2716,6 +2787,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTERSTARTUPCOST  (Telemetry.StartJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -2725,6 +2797,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.KERNEL_COUNT  (Telemetry.KernelCount)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -2929,6 +3002,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.KERNEL_LISTING_PERF  (Telemetry.KernelListingPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `firstTime`?: `boolean`  
         Whether this is the first time in the session.  
@@ -2979,6 +3053,7 @@ Expand each section to see more information about that event.
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -2989,6 +3064,7 @@ Expand each section to see more information about that event.
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT  (Telemetry.NotebookOpenCount)  
@@ -3026,6 +3102,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Measures not documented in GDPR count</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `count`: `number`  
 
@@ -3145,6 +3222,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR matchedReason. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `matchedReason`: `<see below>`  
 
@@ -3154,6 +3232,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR action. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `action`: `<see below>`  
         Possible values include:  
@@ -3166,6 +3245,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR action. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `action`: `<see below>`  
         Possible values include:  
@@ -3198,6 +3278,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_MODULE_INSTALL  (Telemetry.PythonModuleInstall)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `moduleName`: `string`  
         - `isModulePresent`?: `<see below>`  
@@ -3256,6 +3337,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR action. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `action`: `<see below>`  
         Possible values include:  
@@ -3280,6 +3362,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK  (Telemetry.RawKernelCreatingNotebook)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -3384,6 +3467,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH  (Telemetry.RawKernelProcessLaunch)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -3393,6 +3477,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_CONNECT  (Telemetry.RawKernelSessionConnect)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -3660,6 +3745,7 @@ Expand each section to see more information about that event.
 * DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL  (Telemetry.RawKernelSessionStartNoIpykernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
        <span style="color:red">Properties not documented in GDPR reason. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `reason`: `<see below>`  
         Possible values include:  
@@ -3790,6 +3876,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_START  (Telemetry.RawKernelSessionStart)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - `When started successfully.`:  
         - Properties:  
             - `resourceType`?: `<see below>`  
@@ -4075,6 +4162,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION  (Telemetry.RawKernelSessionStartException)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -4155,6 +4243,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS  (Telemetry.RawKernelSessionStartSuccess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -4235,6 +4324,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL  (Telemetry.RawKernelSessionStartUserCancel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -4315,6 +4405,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_START_RAW_SESSION  (Telemetry.RawKernelStartRawSession)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -4324,6 +4415,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL  (Telemetry.RegisterAndUseInterpreterAsKernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT  (Telemetry.NumberOfRemoteKernelSpecs)  
@@ -4370,6 +4462,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR testName, testResult, perfWarmup, commitHash, timedCheckpoints. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `testName`: `string`  
         - `testResult`: `string`  
@@ -4380,6 +4473,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.SELECT_JUPYTER_INTERPRETER  (Telemetry.SelectJupyterInterpreter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `result`?: `<see below>`  
         The result of the selection.  
@@ -4394,18 +4488,21 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.SELECT_JUPYTER_INTERPRETER_MESSAGE_DISPLAYED  (Telemetry.SelectJupyterInterpreterMessageDisplayed)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.SHIFTENTER_BANNER_SHOWN  (Telemetry.ShiftEnterBannerShown)  
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.SHOW_DATA_NO_PANDAS  (Telemetry.PandasNotInstalled)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED  (Telemetry.PandasInstallCanceled)  
@@ -4413,6 +4510,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR version. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `version`: `string`  
 
@@ -4421,12 +4519,14 @@ Expand each section to see more information about that event.
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD  (Telemetry.PandasTooOld)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD  (Telemetry.StartExecuteNotebookCellPerceivedCold)  
@@ -4519,6 +4619,7 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.START_JUPYTER_PROCESS  (Telemetry.StartJupyterProcess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -4624,6 +4725,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR language. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `language`: `string`  
 
@@ -4632,12 +4734,14 @@ Expand each section to see more information about that event.
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME  (Telemetry.VariableExplorerFetchTime)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -4649,18 +4753,21 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Measures not documented in GDPR variableCount</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `variableCount`: `number`  
 
 
 * DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED  (Telemetry.VSCNotebookCellTranslationFailed)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `isErrorOutput`: `boolean`  
 
 
 * DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER  (Telemetry.WaitForIdleJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -4687,6 +4794,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR type. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `type`: `string`  
 
@@ -4731,6 +4839,7 @@ Expand each section to see more information about that event.
 
 * ERROR  (ERROR)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `failureCategory`: `'methodException'`  
         - `failureSubCategory`: `string`  
@@ -4786,6 +4895,7 @@ Expand each section to see more information about that event.
 
 * HASHED_PACKAGE_PERF  (EventName.HASHED_PACKAGE_PERF)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
         Total time taken to list interpreters. Total time taken to list kernels. Time taken.  
@@ -4806,6 +4916,7 @@ Expand each section to see more information about that event.
 
 * JUPYTER_IS_INSTALLED  (Telemetry.JupyterInstalled)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - `/* Detection of jupyter failed`:  
         - Properties:  
             - `failed`: `true`  
@@ -4832,6 +4943,7 @@ Expand each section to see more information about that event.
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX  (EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST)  
@@ -4848,10 +4960,12 @@ Expand each section to see more information about that event.
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES  (EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `hasEnvVars`?: `boolean`  
         Carries `true` if environment variables are present, `false` otherwise  
@@ -4891,6 +5005,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR reason, terminalProvided, shellIdentificationSource, hasCustomShell, hasShellInEnv. Add jsDoc comments for the properties in telemetry.ts file.</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `failed`: `boolean`  
         - `reason`: `<see below>`  
