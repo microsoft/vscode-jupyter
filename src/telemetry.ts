@@ -1823,23 +1823,119 @@ export class IEventNamePropertyMapping {
          * nativeNotebookToolbar - Invoked from Native notebook toolbar.
          */
         commandSource: SelectJupyterUriCommandSource;
-    }> = { owner: 'IanMatthewHuff' } as any;
-    [Telemetry.SetJupyterURIToLocal]: TelemetryEventInfo<DurationMeasurement> = { owner: 'IanMatthewHuff' } as any;
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: ['KernelPicker'],
+        source: 'N/A',
+        properties: {
+            commandSource: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
+     * Jupyter URI was set to local.
+     */
+    [Telemetry.SetJupyterURIToLocal]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'IanMatthewHuff',
+        feature: ['KernelPicker'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties
+    };
+    /**
+     * Jupyter URI was valid and set to a remote setting.
+     */
     [Telemetry.SetJupyterURIToUserSpecified]: TelemetryEventInfo<{
+        /*
+         * Was the URI set to an Azure uri.
+         */
         azure: boolean;
-    }> = { owner: 'IanMatthewHuff' } as any;
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: ['KernelPicker'],
+        source: 'N/A',
+        properties: {
+            azure: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     [Telemetry.ShiftEnterBannerShown]: TelemetryEventInfo<never | undefined> = {
         owner: 'amunger'
     } as any;
-    [Telemetry.StartShowDataViewer]: TelemetryEventInfo<DurationMeasurement> = { owner: 'IanMatthewHuff' } as any;
-    [Telemetry.ShowDataViewer]: TelemetryEventInfo<{ rows: number | undefined; columns: number | undefined }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
-    [Telemetry.FailedShowDataViewer]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
+    /**
+     * User requested to open the data frame viewer.
+     */
+    [Telemetry.StartShowDataViewer]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties
+    };
+    /**
+     * Request was made to show the data viewer with specific data frame info.
+     */
+    [Telemetry.ShowDataViewer]: TelemetryEventInfo<{
+        /**
+         * Count of rows in the target data frame.
+         */
+        rows: number | undefined;
+        /**
+         * Count of columns in the target data frame.
+         */
+        columns: number | undefined;
+    }> = {
+        owner: 'IanMatthewHuff',
+        source: 'N/A',
+        feature: ['DataFrameViewer'],
+        properties: {
+            rows: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            columns: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
+     * Data viewer loads rows in chunks, this event is sent when the rows have all been loaded
+     */
+    [Telemetry.ShowDataViewerRowsLoaded]: TelemetryEventInfo<{
+        /**
+         * Timer to indicate how long it took to load all the rows
+         */
+        rowsTimer: number | undefined;
+    }> = {
+        owner: 'IanMatthewHuff',
+        source: 'N/A',
+        feature: ['DataFrameViewer'],
+        properties: {
+            rowsTimer: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
+    /**
+     * Failed to show the data viewer via the variable view.
+     */
+    [Telemetry.FailedShowDataViewer]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer', 'VariableViewer'],
+        source: 'N/A'
+    };
     /**
      * Sent when the jupyter.refreshDataViewer command is invoked
      */
-    [Telemetry.RefreshDataViewer]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.RefreshDataViewer]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'User Action'
+    };
     [Telemetry.CreateNewInteractive]: TelemetryEventInfo<never | undefined> = { owner: 'amunger' } as any;
     [Telemetry.StartJupyter]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',

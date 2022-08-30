@@ -1929,8 +1929,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS  (Telemetry.UserDidNotInstallPandas)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
@@ -1941,8 +1939,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.USER_INSTALLED_PANDAS  (Telemetry.UserInstalledPandas)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
@@ -3234,9 +3230,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER  (Telemetry.PythonExtensionInstalledViaKernelPicker)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR action. Add jsDoc comments for the properties in telemetry.ts file.</span>  
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `action`: `<see below>`  
@@ -3247,9 +3240,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED  (Telemetry.PythonExtensionNotInstalled)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR action. Add jsDoc comments for the properties in telemetry.ts file.</span>  
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `action`: `<see below>`  
@@ -3339,9 +3329,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_NOT_INSTALLED  (Telemetry.PythonNotInstalled)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR action. Add jsDoc comments for the properties in telemetry.ts file.</span>  
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `action`: `<see below>`  

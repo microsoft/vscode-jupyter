@@ -1455,9 +1455,9 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH","","Telemetry.PreferredKernelExactMatch","IanMatthewHuff","","","","matchedReason","","","",false
-"DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER","","Telemetry.PythonExtensionInstalledViaKernelPicker","IanMatthewHuff","","","","action","","","'success' 
+"DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER","","Telemetry.PythonExtensionInstalledViaKernelPicker","IanMatthewHuff","KernelPicker","","","action","","","'success' 
 'failed' ",false
-"DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED","","Telemetry.PythonExtensionNotInstalled","IanMatthewHuff","","","","action","","","'displayed' 
+"DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED","","Telemetry.PythonExtensionNotInstalled","IanMatthewHuff","KernelPicker","","","action","","","'displayed' 
 'dismissed' 
 'download' ",false
 "DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES","Telemetry sent for local Python Kernels.
@@ -1506,7 +1506,7 @@ System ",true
 "DS_INTERNAL.PYTHON_MODULE_INSTALL","","Telemetry.PythonModuleInstall","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
 Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.PYTHON_NOT_INSTALLED","","Telemetry.PythonNotInstalled","IanMatthewHuff","","","","action","","","'displayed' 
+"DS_INTERNAL.PYTHON_NOT_INSTALLED","","Telemetry.PythonNotInstalled","IanMatthewHuff","KernelPicker","","","action","","","'displayed' 
 'dismissed' 
 'download' ",false
 "DS_INTERNAL.RANK_KERNELS_PERF","Total time taken to find a kernel on disc or on a remote machine.","Telemetry.RankKernelsPerf","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
