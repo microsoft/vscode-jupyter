@@ -6,18 +6,18 @@ html
 python 
 ipynb ",false
 "DATASCIENCE.DATA_VIEWER_DATA_DIMENSIONALITY","Telemetry event sent when a slice is first applied in a
-data viewer instance to a sliceable Python variable.","Telemetry.DataViewerDataDimensionality","IanMatthewHuff","","","","numberOfDimensions","This property represents the number of dimensions
+data viewer instance to a sliceable Python variable.","Telemetry.DataViewerDataDimensionality","IanMatthewHuff","DataFrameViewer","","","numberOfDimensions","This property represents the number of dimensions
 on the target variable being sliced. This should
 always be 2 at minimum.","number","",false
 "DATASCIENCE.DATA_VIEWER_SLICE_ENABLEMENT_STATE_CHANGED","Telemetry event sent whenever the user toggles the checkbox
 controlling whether a slice is currently being applied to an
-n-dimensional variable.","Telemetry.DataViewerSliceEnablementStateChanged","IanMatthewHuff","","","","newState","This property is either 'checked' when the result of toggling
+n-dimensional variable.","Telemetry.DataViewerSliceEnablementStateChanged","IanMatthewHuff","DataFrameViewer","","","newState","This property is either 'checked' when the result of toggling
 the checkbox is for slicing to be enabled, or 'unchecked'
 when the result of toggling the checkbox is for slicing
 to be disabled.","","checked 
 unchecked ",false
 "DATASCIENCE.DATA_VIEWER_SLICE_OPERATION","Telemetry event sent whenever the user applies a valid slice
-to a sliceable Python variable in the data viewer.","Telemetry.DataViewerSliceOperation","IanMatthewHuff","","","","source","This property indicates whether the slice operation
+to a sliceable Python variable in the data viewer.","Telemetry.DataViewerSliceOperation","IanMatthewHuff","DataFrameViewer","","","source","This property indicates whether the slice operation
 was triggered using the dropdown or the textbox in
 the slice control panel. `source` is one of `dropdown`,
 `textbox`, or `checkbox`.","","dropdown 
@@ -1077,7 +1077,7 @@ or prioritize rendering of widgets when opening an existing notebook or the like
 Used to detect the popularity of a mime type, that would help determine which mime types are most common.
 E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
 or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasVnd","Whether the mime type has the word 'vnd' in it.","boolean","",false
-"DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","","","","isResultNull","","boolean","",false
+"DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","","","","isResultNull","Result is null if user signalled cancellation or if we timed out","boolean","",false
 "DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
@@ -1373,11 +1373,14 @@ This is a generic property supported for all telemetry (sent by decorators).","b
 "DS_INTERNAL.KERNEL_LISTING_PERF","","Telemetry.KernelListingPerf","donjayamanne","N/A","","","duration","Total time taken to list kernels.
 Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT","Total number of Local kernel specifications.","Telemetry.NumberOfLocalKernelSpecs","donjayamanne","N/A","","","count","Number of kernel specs found on disc.","number","",false
-"DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED","","Telemetry.NativeVariableViewLoaded","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+"DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED","The Variable View webview was loaded.","Telemetry.NativeVariableViewLoaded","IanMatthewHuff","VariableViewer","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT","Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.","Telemetry.NotebookOpenCount","donjayamanne","InteractiveWindow, Notebook","","","count","","number","",false
 "DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT","Total number of cells executed. Telemetry Sent when VS Code is closed.","Telemetry.NotebookRunCount","donjayamanne","InteractiveWindow, Notebook","","","count","","number","",false
-"DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED","","Telemetry.NumberOfSavedRemoteKernelIds","IanMatthewHuff","","","","count","","number","",false
+"DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED","When users connect to a remote kernel, we store the kernel id so we can re-connect to that
+when user opens the same notebook. We only store the last 100.
+Count is the number of kernels saved in the list.","Telemetry.NumberOfSavedRemoteKernelIds","IanMatthewHuff","KernelPicker","","","count","Count is the number of kernels saved in the list.","number","",false
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
@@ -1450,12 +1453,12 @@ System ",true
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook","","","result","","","'found' 
+"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook, KernelPicker","","","result","Note if we did or did not find a preferred kernel.","","'found' 
 'notfound' 
 'failed' ",false
-"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook","","","language","","string","",false
-"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook","","","hasActiveInterpreter","","boolean","",true
-"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
+"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook, KernelPicker","","","language","Language of the target notebook or interactive window","string","",false
+"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook, KernelPicker","","","hasActiveInterpreter","If we have an active interpreter or not.","boolean","",true
+"DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook, KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH","","Telemetry.PreferredKernelExactMatch","IanMatthewHuff","","","","matchedReason","","","",false
 "DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER","","Telemetry.PythonExtensionInstalledViaKernelPicker","IanMatthewHuff","KernelPicker","","","action","","","'success' 
@@ -1512,8 +1515,9 @@ Total time taken to list interpreters. Total time taken to list kernels. Time ta
 "DS_INTERNAL.PYTHON_NOT_INSTALLED","","Telemetry.PythonNotInstalled","IanMatthewHuff","KernelPicker","","","action","","","'displayed' 
 'dismissed' 
 'download' ",false
-"DS_INTERNAL.RANK_KERNELS_PERF","Total time taken to find a kernel on disc or on a remote machine.","Telemetry.RankKernelsPerf","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+"DS_INTERNAL.RANK_KERNELS_PERF","Time taken to load kernels if needed and rank them all.","Telemetry.RankKernelsPerf","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK","","Telemetry.RawKernelCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
 Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
@@ -2359,9 +2363,10 @@ WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence 
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME","","Telemetry.VariableExplorerFetchTime","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT","","Telemetry.VariableExplorerVariableCount","IanMatthewHuff","","","","variableCount","","number","",false
+"DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME","How long did it take for a single variable request to be resolved.","Telemetry.VariableExplorerFetchTime","IanMatthewHuff","VariableViewer","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+"DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT","Count how many variables were in a variable request.","Telemetry.VariableExplorerVariableCount","IanMatthewHuff","VariableViewer","","","variableCount","Count of variables requested","number","",false
 "DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED","","Telemetry.VSCNotebookCellTranslationFailed","donjayamanne","Notebook, InteractiveWindow","","","isErrorOutput","","boolean","",false
 "DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER","","Telemetry.WaitForIdleJupyter","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.

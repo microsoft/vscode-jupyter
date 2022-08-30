@@ -48,7 +48,7 @@ type Feature =
     | 'KernelPicker'
     | 'Import-Export'
     | 'VariableViewer';
-type EventTag = 'Cell Execution' | 'Remote' | 'Widgets' | 'KernelStartup';
+type EventTag = 'Cell Execution' | 'Remote' | 'Widgets' | 'KernelStartup' | 'IntelliSense';
 type EventSource = 'User Action' | 'N/A';
 type IGdprEventData = {
     owner: Owner;
@@ -1993,7 +1993,28 @@ export class IEventNamePropertyMapping {
         tags: ['KernelStartup'],
         measures: commonClassificationForDurationProperties
     };
-    [Telemetry.WebviewStartup]: TelemetryEventInfo<{ type: string }> = { owner: 'IanMatthewHuff' };
+    /**
+     * We started up a webview.
+     */
+    [Telemetry.WebviewStartup]: TelemetryEventInfo<
+        {
+            /*
+             * The type of webview started up.
+             */
+            type: string;
+        } & DurationMeasurement
+    > = {
+        owner: 'IanMatthewHuff',
+        feature: 'N/A',
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties,
+        properties: {
+            type: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     [Telemetry.RegisterInterpreterAsKernel]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -2979,12 +3000,26 @@ export class IEventNamePropertyMapping {
     /**
      * How long it took to return our hover tooltips for a .py file.
      */
-    [Telemetry.InteractiveFileTooltipsPerf]: TelemetryEventInfo<{
-        /**
-         * Result is null if user signalled cancellation or if we timed out
-         */
-        isResultNull: boolean;
-    }> = { owner: 'IanMatthewHuff' };
+    [Telemetry.InteractiveFileTooltipsPerf]: TelemetryEventInfo<
+        {
+            /**
+             * Result is null if user signalled cancellation or if we timed out
+             */
+            isResultNull: boolean;
+        } & DurationMeasurement
+    > = {
+        owner: 'IanMatthewHuff',
+        feature: ['InteractiveWindow'],
+        tags: ['IntelliSense'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties,
+        properties: {
+            isResultNull: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
 
     /**
      * The Variable View webview was loaded.
@@ -3107,7 +3142,18 @@ export class IEventNamePropertyMapping {
                 | 'startUsingRemoteKernelSpec'
                 | 'connectToLiveRemoteKernel';
         } & Partial<TelemetryErrorProperties>
-    > = { owner: 'IanMatthewHuff' } as any;
+    > = {
+        owner: 'IanMatthewHuff',
+        feature: ['KernelPicker'],
+        source: 'N/A',
+        properties: {
+            ...commonClassificationForErrorProperties,
+            kind: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
     /*
      * Telemetry sent when we recommend installing an extension.
      */
@@ -3124,7 +3170,21 @@ export class IEventNamePropertyMapping {
          * `doNotShowAgain` - If prompt was displayed & doNotShowAgain clicked by the user
          */
         action: 'displayed' | 'dismissed' | 'ok' | 'cancel' | 'doNotShowAgain';
-    }> = { owner: 'IanMatthewHuff' } as any;
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            extensionId: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            action: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     [DebuggingTelemetry.clickedOnSetup]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
     [DebuggingTelemetry.closedModal]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
     [DebuggingTelemetry.ipykernel6Status]: TelemetryEventInfo<{
@@ -3219,10 +3279,33 @@ export class IEventNamePropertyMapping {
             }
         }
     };
+    /*
+     * The Python code that we ran to fetch variables had a failure.
+     */
     [Telemetry.PythonVariableFetchingCodeFailure]: TelemetryEventInfo<{
+        /*
+         * The error name of the failure.
+         */
         ename: string;
+        /*
+         * The error value of the failure
+         */
         evalue: string;
-    }> = { owner: 'IanMatthewHuff' } as any;
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: ['VariableViewer'],
+        source: 'N/A',
+        properties: {
+            ename: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            },
+            evalue: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
     [Telemetry.InteractiveWindowDebugSetupCodeFailure]: TelemetryEventInfo<{
         ename: string;
         evalue: string;
@@ -3236,10 +3319,22 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForResourceType
         }
     };
+    /**
+     * Called when a controller that would have been shown is hidden by a filter.
+     */
     [Telemetry.JupyterKernelHiddenViaFilter]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
-    [Telemetry.JupyterKernelFilterUsed]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
+        owner: 'IanMatthewHuff',
+        source: 'N/A',
+        feature: ['KernelPicker']
+    };
+    /**
+     * Called when the user clicks accept on the kernel filter UI.
+     */
+    [Telemetry.JupyterKernelFilterUsed]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff',
+        source: 'User Action',
+        feature: ['KernelPicker']
+    };
     /**
      * Telemetry sent when we have loaded some controllers.
      */
@@ -3252,7 +3347,7 @@ export class IEventNamePropertyMapping {
          * Whether we've loaded local or remote controllers.
          */
         kind: 'local' | 'remote';
-    }> = { owner: 'IanMatthewHuff' } as any;
+    }> = { owner: 'donjayamanne' } as any;
     [Telemetry.RunTest]: TelemetryEventInfo<{
         testName: string;
         testResult: string;
@@ -3260,9 +3355,22 @@ export class IEventNamePropertyMapping {
         commitHash?: string;
         timedCheckpoints?: string;
     }> = { owner: 'amunger' } as any;
+    /**
+     * Send we we complete our preferred kernel match. Matched reason might be 'no match'.
+     */
     [Telemetry.PreferredKernelExactMatch]: TelemetryEventInfo<{
-        matchedReason: PreferredKernelExactMatchReason;
-    }> = { owner: 'IanMatthewHuff' } as any;
+        matchedReason: PreferredKernelExactMatchReason | undefined;
+    }> = {
+        owner: 'IanMatthewHuff',
+        feature: ['KernelPicker'],
+        source: 'N/A',
+        properties: {
+            matchedReason: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
      * Event sent when trying to talk to a remote server and the browser gives us a generic fetch error
      */
@@ -3439,16 +3547,28 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties
     };
     /**
-     * Useful when we need an active kernel session in order to execute commands silently.
+     * Send when we want to install data viewer dependendies, but don't have an active kernel session.
      * Used by the dataViewerDependencyService.
      */
-    [Telemetry.NoActiveKernelSession]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.NoActiveKernelSession]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'N/A'
+    };
     /**
-     * When the Data Viewer installer is using the Python interpreter.
+     * When the Data Viewer installer is using a Python interpreter to do the install.
      */
-    [Telemetry.DataViewerUsingInterpreter]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.DataViewerUsingInterpreter]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'N/A'
+    };
     /**
-     * When the Data Viewer installer is using the Kernel.
+     * When the Data Viewer installer is using the Kernel to do the install.
      */
-    [Telemetry.DataViewerUsingKernel]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
+    [Telemetry.DataViewerUsingKernel]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'N/A'
+    };
 }

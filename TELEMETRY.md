@@ -41,9 +41,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DATA_VIEWER_DATA_DIMENSIONALITY  (Telemetry.DataViewerDataDimensionality)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Measures not documented in GDPR numberOfDimensions</span>  
     ```
     Telemetry event sent when a slice is first applied in a  
     data viewer instance to a sliceable Python variable.  
@@ -58,9 +55,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DATA_VIEWER_SLICE_ENABLEMENT_STATE_CHANGED  (Telemetry.DataViewerSliceEnablementStateChanged)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR newState. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Telemetry event sent whenever the user toggles the checkbox  
     controlling whether a slice is currently being applied to an  
@@ -80,9 +74,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DATA_VIEWER_SLICE_OPERATION  (Telemetry.DataViewerSliceOperation)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR source. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Telemetry event sent whenever the user applies a valid slice  
     to a sliceable Python variable in the data viewer.  
@@ -2347,9 +2338,13 @@ Expand each section to see more information about that event.
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR isResultNull. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    How long it took to return our hover tooltips for a .py file.  
+    ```
+
     - Properties:  
         - `isResultNull`: `boolean`  
+        Result is null if user signalled cancellation or if we timed out  
 
 
 * DS_INTERNAL.INTERPRETER_LISTING_PERF  (Telemetry.InterpreterListingPerf)  
@@ -3067,20 +3062,23 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED  (Telemetry.NativeVariableViewLoaded)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    The Variable View webview was loaded.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE  (Telemetry.NativeVariableViewMadeVisible)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    The Variable View webview was made visible.  
+    ```
+
 
 
 * DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT  (Telemetry.NotebookOpenCount)  
@@ -3115,12 +3113,15 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED  (Telemetry.NumberOfSavedRemoteKernelIds)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Measures not documented in GDPR count</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    When users connect to a remote kernel, we store the kernel id so we can re-connect to that  
+    when user opens the same notebook. We only store the last 100.  
+    Count is the number of kernels saved in the list.  
+    ```
+
     - Measures:  
         - `count`: `number`  
+        Count is the number of kernels saved in the list.  
 
 
 * DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK  (Telemetry.PerceivedJupyterStartupNotebook)  
@@ -3220,12 +3221,15 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `result`: `<see below>`  
+        Note if we did or did not find a preferred kernel.  
         Possible values include:  
             - `'found'`  
             - `'notfound'`  
             - `'failed'`  
         - `language`: `string`  
+        Language of the target notebook or interactive window  
         - `hasActiveInterpreter`?: `boolean`  
+        If we have an active interpreter or not.  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
         Possible values include:  
@@ -3355,16 +3359,15 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RANK_KERNELS_PERF  (Telemetry.RankKernelsPerf)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Total time taken to find a kernel on disc or on a remote machine.  
+    Time taken to load kernels if needed and rank them all.  
     ```
 
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK  (Telemetry.RawKernelCreatingNotebook)  
@@ -4732,23 +4735,26 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME  (Telemetry.VariableExplorerFetchTime)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    How long did it take for a single variable request to be resolved.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT  (Telemetry.VariableExplorerVariableCount)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Measures not documented in GDPR variableCount</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Count how many variables were in a variable request.  
+    ```
+
     - Measures:  
         - `variableCount`: `number`  
+        Count of variables requested  
 
 
 * DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED  (Telemetry.VSCNotebookCellTranslationFailed)  
