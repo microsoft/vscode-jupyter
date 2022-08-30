@@ -1004,17 +1004,29 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Telemetry event sent when user opens the data viewer.
+     * Telemetry event sent when user opens the data viewer via the variable view.
      */
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        source: 'User Action',
+        feature: ['DataFrameViewer', 'VariableViewer']
+    };
+    /**
+     * Telemetry event sent when user opens the data viewer via the variable view and there is an error in doing so.
+     */
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        source: 'N/A',
+        feature: ['DataFrameViewer', 'VariableViewer']
+    };
+    /**
+     * Telemetry event sent when user opens the data viewer via the variable view and we successfully open the view.
+     */
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        source: 'User Action',
+        feature: ['DataFrameViewer', 'VariableViewer']
+    };
     /**
      * Telemetry event sent when user adds a cell below the current cell for IW.
      */
@@ -1083,12 +1095,6 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         tags: ['KernelStartup']
     };
-    [Telemetry.SwitchToExistingKernel]: TelemetryEventInfo<{ language: string }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
-    [Telemetry.SwitchToInterpreterAsKernel]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
     [Telemetry.CreateNewNotebook]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'unknown',
         feature: 'N/A',
@@ -2297,12 +2303,6 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         properties: commonClassificationForResourceSpecificTelemetryProperties
     };
-    /**
-     * Similar to Telemetry.SwitchKernel, but doesn't contain as much information as Telemetry.SwitchKernel.
-     * WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.
-     */
-    [Telemetry.SwitchToExistingKernel]: TelemetryEventInfo<{ language: string }> = { owner: 'IanMatthewHuff' } as any;
-    [Telemetry.SwitchToInterpreterAsKernel]: TelemetryEventInfo<never | undefined> = { owner: 'IanMatthewHuff' } as any;
     /**
      * Total time taken to interrupt a kernel
      * Check the `resourceType` to determine whether its a Jupyter Notebook or IW.

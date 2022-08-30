@@ -82,7 +82,6 @@ import { KernelMessage } from '@jupyterlab/services';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../kernels/telemetry/helper';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
-import { sendNotebookOrKernelLanguageTelemetry } from '../telemetry/notebookOrKernelLanguageTelemetry';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -580,26 +579,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             traceInfo('Switch kernel did not change kernel.');
             return;
         }
-        switch (this.connection.kind) {
-            case 'startUsingPythonInterpreter':
-                sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, PYTHON_LANGUAGE);
-                break;
-            case 'connectToLiveRemoteKernel':
-                sendNotebookOrKernelLanguageTelemetry(
-                    Telemetry.SwitchToExistingKernel,
-                    this.connection.kernelModel.language
-                );
-                break;
-            case 'startUsingLocalKernelSpec':
-            case 'startUsingRemoteKernelSpec':
-                sendNotebookOrKernelLanguageTelemetry(
-                    Telemetry.SwitchToExistingKernel,
-                    this.connection.kernelSpec.language
-                );
-                break;
-            default:
-            // We don't know as its the default kernel on Jupyter server.
-        }
+
+        // Send our SwitchKernel telemetry
         sendKernelTelemetryEvent(document.uri, Telemetry.SwitchKernel);
         // If we have an existing kernel, then we know for a fact the user is changing the kernel.
         // Else VSC is just setting a kernel for a notebook after it has opened.
