@@ -5,7 +5,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Disposable, Uri } from 'vscode';
-import { sendTelemetryEvent } from '../../telemetry';
 import { isCI } from '../common/constants';
 import { Arguments, ILogger, LogLevel, TraceDecoratorType, TraceOptions } from './types';
 import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
@@ -274,16 +273,6 @@ function logResult(info: LogInfo, traced: TraceInfo, call?: CallInfo) {
         }
     } else {
         logTo(LogLevel.Error, formatted, traced.err);
-        sendTelemetryEvent(
-            'ERROR',
-            undefined,
-            {
-                failureCategory: 'methodException',
-                failureSubCategory: call ? `${call.name}:${call.methodName}` : 'unknown'
-            },
-            traced.err,
-            true
-        );
     }
 }
 

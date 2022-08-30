@@ -155,7 +155,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                         // Something else went wrong
                         if (!options.localJupyter) {
-                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err, true);
+                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err);
 
                             // Check for the self signed certs error specifically
                             if (JupyterSelfCertsError.isSelfCertsError(err)) {
@@ -168,7 +168,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 throw new RemoteJupyterServerConnectionError(connection.baseUrl, options.serverId, err);
                             }
                         } else {
-                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err, true);
+                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err);
                             throw new LocalJupyterServerConnectionError(err);
                         }
                     } else {

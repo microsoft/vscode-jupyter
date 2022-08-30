@@ -463,7 +463,6 @@ Expand each section to see more information about that event.
         A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorFolder`?: `string`  
@@ -901,7 +900,6 @@ Expand each section to see more information about that event.
             A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
             - `failureSubCategory`?: `string`  
             Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-            Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
             - `pythonErrorFile`?: `string`  
             Hash of the file name that contains the file in the last frame (from Python stack trace).  
             - `pythonErrorFolder`?: `string`  
@@ -1102,7 +1100,6 @@ Expand each section to see more information about that event.
             A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
             - `failureSubCategory`?: `string`  
             Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-            Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
             - `pythonErrorFile`?: `string`  
             Hash of the file name that contains the file in the last frame (from Python stack trace).  
             - `pythonErrorFolder`?: `string`  
@@ -1203,7 +1200,6 @@ Expand each section to see more information about that event.
         A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorFolder`?: `string`  
@@ -2012,7 +2008,6 @@ Expand each section to see more information about that event.
         A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorFolder`?: `string`  
@@ -2046,7 +2041,6 @@ Expand each section to see more information about that event.
         A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorFolder`?: `string`  
@@ -2641,7 +2635,6 @@ Expand each section to see more information about that event.
             A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
             - `failureSubCategory`?: `string`  
             Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-            Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
             - `pythonErrorFile`?: `string`  
             Hash of the file name that contains the file in the last frame (from Python stack trace).  
             - `pythonErrorFolder`?: `string`  
@@ -2992,7 +2985,6 @@ Expand each section to see more information about that event.
             A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
             - `failureSubCategory`?: `string`  
             Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-            Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
             - `pythonErrorFile`?: `string`  
             Hash of the file name that contains the file in the last frame (from Python stack trace).  
             - `pythonErrorFolder`?: `string`  
@@ -3764,7 +3756,6 @@ Expand each section to see more information about that event.
         A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorFolder`?: `string`  
@@ -4136,7 +4127,6 @@ Expand each section to see more information about that event.
             A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
             - `failureSubCategory`?: `string`  
             Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-            Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
             - `pythonErrorFile`?: `string`  
             Hash of the file name that contains the file in the last frame (from Python stack trace).  
             - `pythonErrorFolder`?: `string`  
@@ -4831,32 +4821,6 @@ Expand each section to see more information about that event.
     - Properties:  
         - `hasCustomEnvPath`: `boolean`  
         If there's a custom path specified in the python.envFile workspace settings.  
-
-
-* ERROR  (ERROR)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Properties:  
-        - `failureCategory`: `'methodException'`  
-        A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
-        - `failureSubCategory`: `string`  
-        Name of the method in the extension that threw the exception.  
-        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-        - `failed`: `true`  
-        Whether there was a failure.  
-        - `stackTrace`: `string`  
-        Node stacktrace without PII.  
-        - `failureCategory`?: `string`  
-        A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
-        - `failureSubCategory`?: `string`  
-        Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-        - `pythonErrorFile`?: `string`  
-        Hash of the file name that contains the file in the last frame (from Python stack trace).  
-        - `pythonErrorFolder`?: `string`  
-        Hash of the folder that contains the file in the last frame (from Python stack trace).  
-        - `pythonErrorPackage`?: `string`  
-        Hash of the module that contains the file in the last frame (from Python stack trace).  
 
 
 * EXTENSION.LOAD  (EventName.EXTENSION_LOAD)  

@@ -128,7 +128,6 @@ const queuedTelemetry: {
     measures?: Record<string, number> | undefined;
     properties?: Record<string, any> | undefined;
     ex?: Error | undefined;
-    sendOriginalEventWithErrors?: boolean | undefined;
     queueEverythingUntilCompleted?: Promise<any> | undefined;
 }[] = [];
 
@@ -149,8 +148,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             ? undefined | { [waitBeforeSending]?: Promise<void> }
             : ExcludeType<R, number> & { [waitBeforeSending]?: Promise<void> }
         : undefined | { [waitBeforeSending]?: Promise<void> } | (undefined | { [waitBeforeSending]?: Promise<void> }),
-    ex?: Error,
-    sendOriginalEventWithErrors?: boolean
+    ex?: Error
 ) {
     if (!isTelemetrySupported() || isTestExecution()) {
         return;
@@ -163,7 +161,6 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             measures: measures as unknown as Record<string, number> | undefined,
             properties,
             ex,
-            sendOriginalEventWithErrors,
             queueEverythingUntilCompleted: properties?.waitBeforeSending
         });
         sendNextTelemetryItem();
@@ -173,8 +170,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             // Because of exactOptionalPropertyTypes we have to cast.
             measures as unknown as Record<string, number> | undefined,
             properties,
-            ex,
-            sendOriginalEventWithErrors
+            ex
         );
     }
 }
@@ -195,13 +191,7 @@ function sendNextTelemetryItem(): void {
             return;
         }
         queuedTelemetry.shift();
-        sendTelemetryEventInternal(
-            nextItem.eventName as any,
-            nextItem.measures,
-            nextItem.properties,
-            nextItem.ex,
-            nextItem.sendOriginalEventWithErrors
-        );
+        sendTelemetryEventInternal(nextItem.eventName as any, nextItem.measures, nextItem.properties, nextItem.ex);
         sendNextTelemetryItem();
     }
 
@@ -218,40 +208,22 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
     eventName: E,
     measures?: Record<string, number>,
     properties?: P[E],
-    ex?: Error,
-    sendOriginalEventWithErrors?: boolean
+    ex?: Error
 ) {
     const reporter = getTelemetryReporter();
     let customProperties: Record<string, string> = {};
     let eventNameSent = eventName as string;
 
     if (ex) {
-        if (!sendOriginalEventWithErrors) {
-            // When sending telemetry events for exceptions no need to send custom properties.
-            // Else we have to review all properties every time as part of GDPR.
-            // Assume we have 10 events all with their own properties.
-            // As we have errors for each event, those properties are treated as new data items.
-            // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
-            eventNameSent = 'ERROR';
-            customProperties = {
-                originalEventName: eventName as string
-            };
-            // Add shared properties to telemetry props (we may overwrite existing ones).
-            Object.assign(customProperties, sharedProperties);
-            populateTelemetryWithErrorInfo(customProperties, ex);
-            customProperties = sanitizeProperties(eventNameSent, customProperties);
-            reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures);
-        } else {
-            // Include a property failed, to indicate there are errors.
-            // Lets pay the price for better data.
-            customProperties = {};
-            // Add shared properties to telemetry props (we may overwrite existing ones).
-            Object.assign(customProperties, sharedProperties);
-            Object.assign(customProperties, properties || {});
-            populateTelemetryWithErrorInfo(customProperties, ex);
-            customProperties = sanitizeProperties(eventNameSent, customProperties);
-            reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
-        }
+        // Include a property failed, to indicate there are errors.
+        // Lets pay the price for better data.
+        customProperties = {};
+        // Add shared properties to telemetry props (we may overwrite existing ones).
+        Object.assign(customProperties, sharedProperties);
+        Object.assign(customProperties, properties || {});
+        populateTelemetryWithErrorInfo(customProperties, ex);
+        customProperties = sanitizeProperties(eventNameSent, customProperties);
+        reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     } else {
         if (properties) {
             customProperties = sanitizeProperties(eventNameSent, properties);

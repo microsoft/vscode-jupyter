@@ -82,7 +82,7 @@ export function suppressShutdownErrors(realKernel: any) {
 export class JupyterSessionStartError extends WrappedError {
     constructor(originalException: Error) {
         super(originalException.message, originalException);
-        sendTelemetryEvent(Telemetry.StartSessionFailedJupyter, undefined, undefined, originalException, true);
+        sendTelemetryEvent(Telemetry.StartSessionFailedJupyter, undefined, undefined, originalException);
     }
 }
 

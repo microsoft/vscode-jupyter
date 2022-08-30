@@ -178,10 +178,11 @@ suite('Telemetry', () => {
             failed: 'true',
             failureCategory: 'unknown',
             failureSubCategory: '',
-            originalEventName: eventName
+            hello: 'world',
+            foo: 'bar'
         };
 
-        expect(Reporter.eventName).to.deep.equal(['ERROR']);
+        expect(Reporter.eventName).to.deep.equal([eventName]);
         expect(Reporter.measures).to.deep.equal([measures]);
         expect(Reporter.properties[0].stackTrace).to.be.length.greaterThan(1);
         delete Reporter.properties[0].stackTrace;
@@ -224,13 +225,14 @@ suite('Telemetry', () => {
             failed: 'true',
             failureCategory: 'unknown',
             failureSubCategory: '',
-            originalEventName: eventName
+            hello: 'world',
+            foo: 'bar'
         };
 
         const stackTrace = Reporter.properties[0].stackTrace;
         delete Reporter.properties[0].stackTrace;
 
-        expect(Reporter.eventName).to.deep.equal(['ERROR']);
+        expect(Reporter.eventName).to.deep.equal([eventName]);
         expect(Reporter.measures).to.deep.equal([measures]);
         expect(Reporter.properties).to.deep.equal([expectedErrorProperties]);
         expect(stackTrace).to.be.length.greaterThan(1);
