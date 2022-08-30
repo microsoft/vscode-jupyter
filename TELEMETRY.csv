@@ -1,7 +1,7 @@
 "eventName","eventDescription","eventConstant","owner","feature","tags","groupDescription","propertyName","propertyDescription","propertyType","propertyPossibleValues","propertyIsNullable"
 "DATASCIENCE.ADD_CELL_BELOW","Telemetry event sent when user adds a cell below the current cell for IW.","Telemetry.AddCellBelow","amunger","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK","User exports the IW or Notebook to a specific format.","Telemetry.ClickedExportNotebookAsQuickPick","IanMatthewHuff","Import-Export, InteractiveWindow","","","format","","","pdf 
+"DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK","User exports the IW or Notebook to a specific format.","Telemetry.ClickedExportNotebookAsQuickPick","IanMatthewHuff","Import-Export, InteractiveWindow","","","format","What format to export to was selected in the quick pick.","","pdf 
 html 
 python 
 ipynb ",false
@@ -114,28 +114,28 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 "DATASCIENCE.EXECUTE_CELL","Executes a cell, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called when user imports a Jupyter Notebook into a Python file.
-Command is `Jupyter: Import Jupyter Notebook`
-Basically user is exporting some jupyter notebook into a Python file or other.","Telemetry.ExportNotebookAs","IanMatthewHuff","","","","format","","","pdf 
+"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called on the completion of exporting a Jupyter notebook into a new format
+This is the result of the operation, so it's not tagged as a user action as that
+comes from ExportNotebookAsCommand or ExportNotebookAsQuickPick","Telemetry.ExportNotebookAs","IanMatthewHuff","Import-Export","","","format","What format was the export performed to.","","pdf 
 html 
 python 
 ipynb ",false
-"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called when user imports a Jupyter Notebook into a Python file.
-Command is `Jupyter: Import Jupyter Notebook`
-Basically user is exporting some jupyter notebook into a Python file or other.","Telemetry.ExportNotebookAs","IanMatthewHuff","","","","cancelled","","boolean","",true
-"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called when user imports a Jupyter Notebook into a Python file.
-Command is `Jupyter: Import Jupyter Notebook`
-Basically user is exporting some jupyter notebook into a Python file or other.","Telemetry.ExportNotebookAs","IanMatthewHuff","","","","successful","","boolean","",true
-"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called when user imports a Jupyter Notebook into a Python file.
-Command is `Jupyter: Import Jupyter Notebook`
-Basically user is exporting some jupyter notebook into a Python file or other.","Telemetry.ExportNotebookAs","IanMatthewHuff","","","","opened","","boolean","",true
+"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called on the completion of exporting a Jupyter notebook into a new format
+This is the result of the operation, so it's not tagged as a user action as that
+comes from ExportNotebookAsCommand or ExportNotebookAsQuickPick","Telemetry.ExportNotebookAs","IanMatthewHuff","Import-Export","","","cancelled","Was the export operation cancelled.","boolean","",true
+"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called on the completion of exporting a Jupyter notebook into a new format
+This is the result of the operation, so it's not tagged as a user action as that
+comes from ExportNotebookAsCommand or ExportNotebookAsQuickPick","Telemetry.ExportNotebookAs","IanMatthewHuff","Import-Export","","","successful","Was the export operation successful.","boolean","",true
+"DATASCIENCE.EXPORT_NOTEBOOK_AS","Called on the completion of exporting a Jupyter notebook into a new format
+This is the result of the operation, so it's not tagged as a user action as that
+comes from ExportNotebookAsCommand or ExportNotebookAsQuickPick","Telemetry.ExportNotebookAs","IanMatthewHuff","Import-Export","","","opened","Did the user end with opening the file in VS Code.","boolean","",true
 "DATASCIENCE.EXPORT_NOTEBOOK_AS_COMMAND","Called when user exports a Jupyter Notebook or IW into a Python file, HTML, PDF, etc.
 Command is `Jupyter: Export to Python Script` or `Jupyter: Export to HTML`
-Basically user is exporting some jupyter notebook or IW into a Python file or other.","Telemetry.ExportNotebookAsCommand","IanMatthewHuff","","","","format","","","pdf 
+Basically user is exporting some jupyter notebook or IW into a Python file or other.","Telemetry.ExportNotebookAsCommand","IanMatthewHuff","Import-Export","","","format","What format was the export performed to.","","pdf 
 html 
 python 
 ipynb ",false
-"DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED","Export fails","Telemetry.ExportNotebookAsFailed","IanMatthewHuff","","","","format","","","pdf 
+"DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED","The Export Notebook operation failed.","Telemetry.ExportNotebookAsFailed","IanMatthewHuff","Import-Export","","","format","What format was the export performed to.","","pdf 
 html 
 python 
 ipynb ",false
@@ -163,7 +163,8 @@ Common measurement used across a number of events.","number","",false
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.IMPORT_NOTEBOOK","Called when user imports a Jupyter Notebook into a Python file.
 Command is `Jupyter: Import Jupyter Notebook`
-Basically user is exporting some jupyter notebook into a Python file.","Telemetry.ImportNotebook","IanMatthewHuff","","","","scope","","","'command' 
+Basically user is exporting some jupyter notebook into a Python file.","Telemetry.ImportNotebook","IanMatthewHuff","Import-Export","","","scope","The command can be called as a command, in which a file then needs to be selected, or with a file
+as the context already, in which case the import command doesn't ask for selection.","","'command' 
 'file' ",false
 "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","","Telemetry.InteractiveWindowDebugSetupCodeFailure","amunger","","","","ename","","string","",false
 "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","","Telemetry.InteractiveWindowDebugSetupCodeFailure","amunger","","","","evalue","","string","",false

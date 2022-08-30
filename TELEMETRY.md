@@ -24,6 +24,7 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `format`: `<see below>`  
+        What format to export to was selected in the quick pick.  
         Possible values include:  
             - `pdf`  
             - `html`  
@@ -372,32 +373,30 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.EXPORT_NOTEBOOK_AS  (Telemetry.ExportNotebookAs)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR format, cancelled, successful, opened. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
-    Called when user imports a Jupyter Notebook into a Python file.  
-    Command is `Jupyter: Import Jupyter Notebook`  
-    Basically user is exporting some jupyter notebook into a Python file or other.  
+    Called on the completion of exporting a Jupyter notebook into a new format  
+    This is the result of the operation, so it's not tagged as a user action as that  
+    comes from ExportNotebookAsCommand or ExportNotebookAsQuickPick  
     ```
 
     - Properties:  
         - `format`: `<see below>`  
+        What format was the export performed to.  
         Possible values include:  
             - `pdf`  
             - `html`  
             - `python`  
             - `ipynb`  
         - `cancelled`?: `boolean`  
+        Was the export operation cancelled.  
         - `successful`?: `boolean`  
+        Was the export operation successful.  
         - `opened`?: `boolean`  
+        Did the user end with opening the file in VS Code.  
 
 
 * DATASCIENCE.EXPORT_NOTEBOOK_AS_COMMAND  (Telemetry.ExportNotebookAsCommand)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR format. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Called when user exports a Jupyter Notebook or IW into a Python file, HTML, PDF, etc.  
     Command is `Jupyter: Export to Python Script` or `Jupyter: Export to HTML`  
@@ -406,6 +405,7 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `format`: `<see below>`  
+        What format was the export performed to.  
         Possible values include:  
             - `pdf`  
             - `html`  
@@ -415,15 +415,13 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED  (Telemetry.ExportNotebookAsFailed)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR format. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
-    Export fails  
+    The Export Notebook operation failed.  
     ```
 
     - Properties:  
         - `format`: `<see below>`  
+        What format was the export performed to.  
         Possible values include:  
             - `pdf`  
             - `html`  
@@ -538,9 +536,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.IMPORT_NOTEBOOK  (Telemetry.ImportNotebook)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR scope. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     Called when user imports a Jupyter Notebook into a Python file.  
     Command is `Jupyter: Import Jupyter Notebook`  
@@ -549,6 +544,8 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `scope`: `<see below>`  
+        The command can be called as a command, in which a file then needs to be selected, or with a file  
+        as the context already, in which case the import command doesn't ask for selection.  
         Possible values include:  
             - `'command'`  
             - `'file'`  

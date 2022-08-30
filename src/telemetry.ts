@@ -1419,18 +1419,40 @@ export class IEventNamePropertyMapping {
             }
         }
     };
+    /**
+     * User tried to open the data viewer and Pandas package was not installed.
+     * Note: Not a failure state, as we prompt for install after this.
+     */
     [Telemetry.PandasNotInstalled]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'N/A'
     };
+    /**
+     * When opening the data viewer the version of Pandas installed was too old.
+     */
     [Telemetry.PandasTooOld]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'N/A'
+    };
+    /**
+     * When opening the data viewer the version of Pandas installed was ok.
+     */
     [Telemetry.PandasOK]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
-    [Telemetry.PandasInstallCanceled]: TelemetryEventInfo<{ version: string }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'N/A'
+    };
+    /**
+     * When opening the data viewer the user was prompted to install / upgrade
+     * pandas and choose to cancel the operation.
+     */
+    [Telemetry.PandasInstallCanceled]: TelemetryEventInfo<never | undefined> = {
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'N/A'
+    };
     [Telemetry.OpenNotebookAll]: TelemetryEventInfo<never | undefined> = {
         owner: 'IanMatthewHuff'
     } as any;
