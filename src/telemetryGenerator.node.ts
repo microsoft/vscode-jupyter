@@ -812,7 +812,7 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
     });
 }
 
-export default async function generateTelemetryOutput() {
+async function generateTelemetryOutput() {
     const files = await new Promise<string[]>((resolve, reject) => {
         glob('./src/**/*.ts', (ex, res) => {
             if (ex) {
@@ -829,9 +829,12 @@ export default async function generateTelemetryOutput() {
     });
 }
 
-generateTelemetryOutput().then(
+const promise = generateTelemetryOutput().then(
     () => {
         //
     },
     (ex) => console.error(`Failed to generate telemetry`, ex)
 );
+export default async function () {
+    await promise;
+}

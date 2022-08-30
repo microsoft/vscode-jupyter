@@ -716,7 +716,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
-        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken.  
 
 
 * DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL  (Telemetry.OpenNotebookAll)  
@@ -1971,7 +1971,6 @@ Expand each section to see more information about that event.
     - Measures:  
         - `duration`: `number`  
         Total time taken to list interpreters.  
-        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.CODE_LENS_ACQ_TIME  (Telemetry.CodeLensAverageAcquisitionTime)  
@@ -2262,7 +2261,7 @@ Expand each section to see more information about that event.
     - Measures:  
         - `duration`: `number`  
         Time taken.  
-        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels.  
 
 
 * DS_INTERNAL.GET_PASSWORD_FAILURE  (Telemetry.GetPasswordFailure)  
@@ -2345,7 +2344,6 @@ Expand each section to see more information about that event.
     - Measures:  
         - `duration`: `number`  
         Total time taken to list interpreters.  
-        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.INTERRUPT_JUPYTER_TIME  (Telemetry.InterruptJupyterTime)  
@@ -2851,13 +2849,10 @@ Expand each section to see more information about that event.
     - Measures:  
         - `kernelSpecCount`: `number`  
         Total number of kernel specs in the kernel list.  
-        Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list.  
         - `kernelInterpreterCount`: `number`  
         Total number of interpreters in the kernel list.  
-        Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list.  
         - `kernelLiveCount`: `number`  
         Total number of live kernels in the kernel list.  
-        Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list.  
         - `condaEnvsSharingSameInterpreter`: `number`  
         Total number of conda environments that share the same interpreter  
         This happens when we create conda envs without the `python` argument.  
@@ -2879,13 +2874,13 @@ Expand each section to see more information about that event.
         Number of times the kernel was changed.  
         - `kernelSpecCount`: `number`  
         Total number of kernel specs in the kernel spec list.  
-        Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list.  
+        Total number of kernel specs in the kernel list.  
         - `kernelInterpreterCount`: `number`  
         Total number of interpreters in the kernel spec list.  
-        Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list.  
+        Total number of interpreters in the kernel list.  
         - `kernelLiveCount`: `number`  
         Total number of live kernels in the kernel spec list.  
-        Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list.  
+        Total number of live kernels in the kernel list.  
 
 
 * DS_INTERNAL.KERNEL_LAUNCHER_PERF  (Telemetry.KernelLauncherPerf)  
@@ -3012,7 +3007,7 @@ Expand each section to see more information about that event.
     - Measures:  
         - `duration`: `number`  
         Total time taken to list kernels.  
-        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
+        Total time taken to list interpreters.  
 
 
 * DS_INTERNAL.KERNEL_PROVIDER_PERF  (Telemetry.KernelProviderPerf)  
@@ -4860,7 +4855,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
-        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken.  
 
 
 * JUPYTER_EXPERIMENTS_OPT_IN_OUT  (EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT)  
