@@ -1215,20 +1215,32 @@ export class IEventNamePropertyMapping {
      * User exports a .py file with cells as a Jupyter Notebook.
      */
     [Telemetry.ExportPythonFileInteractive]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['Import-Export', 'InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * User exports a .py file with cells along with the outputs from the current IW as a Jupyter Notebook.
+     * User exports a .py file with cells along with the outputs which that file would generate in the Interactive Windows as a Jupyter Notebook.
      */
     [Telemetry.ExportPythonFileAndOutputInteractive]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['Import-Export', 'InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
      * User exports the IW or Notebook to a specific format.
      */
     [Telemetry.ClickedExportNotebookAsQuickPick]: TelemetryEventInfo<{ format: ExportFormat }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['Import-Export', 'InteractiveWindow'],
+        source: 'User Action',
+        properties: {
+            format: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
      * Called when user imports a Jupyter Notebook into a Python file.
      * Command is `Jupyter: Import Jupyter Notebook`

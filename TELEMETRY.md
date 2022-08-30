@@ -736,7 +736,7 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
-        Total time taken to list interpreters. Total time taken to list kernels. Time taken.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL  (Telemetry.OpenNotebookAll)  
@@ -1985,6 +1985,7 @@ Expand each section to see more information about that event.
     - Measures:  
         - `duration`: `number`  
         Total time taken to list interpreters.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.CODE_LENS_ACQ_TIME  (Telemetry.CodeLensAverageAcquisitionTime)  
@@ -2277,7 +2278,7 @@ Expand each section to see more information about that event.
     - Measures:  
         - `duration`: `number`  
         Time taken.  
-        Total time taken to list interpreters. Total time taken to list kernels.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.GET_PASSWORD_FAILURE  (Telemetry.GetPasswordFailure)  
@@ -2354,6 +2355,7 @@ Expand each section to see more information about that event.
     - Measures:  
         - `duration`: `number`  
         Total time taken to list interpreters.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.INTERRUPT_JUPYTER_TIME  (Telemetry.InterruptJupyterTime)  
@@ -2860,10 +2862,13 @@ Expand each section to see more information about that event.
     - Measures:  
         - `kernelSpecCount`: `number`  
         Total number of kernel specs in the kernel list.  
+        Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list.  
         - `kernelInterpreterCount`: `number`  
         Total number of interpreters in the kernel list.  
+        Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list.  
         - `kernelLiveCount`: `number`  
         Total number of live kernels in the kernel list.  
+        Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list.  
         - `condaEnvsSharingSameInterpreter`: `number`  
         Total number of conda environments that share the same interpreter  
         This happens when we create conda envs without the `python` argument.  
@@ -2885,13 +2890,13 @@ Expand each section to see more information about that event.
         Number of times the kernel was changed.  
         - `kernelSpecCount`: `number`  
         Total number of kernel specs in the kernel spec list.  
-        Total number of kernel specs in the kernel list.  
+        Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list.  
         - `kernelInterpreterCount`: `number`  
         Total number of interpreters in the kernel spec list.  
-        Total number of interpreters in the kernel list.  
+        Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list.  
         - `kernelLiveCount`: `number`  
         Total number of live kernels in the kernel spec list.  
-        Total number of live kernels in the kernel list.  
+        Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list.  
 
 
 * DS_INTERNAL.KERNEL_LAUNCHER_PERF  (Telemetry.KernelLauncherPerf)  
@@ -3019,7 +3024,7 @@ Expand each section to see more information about that event.
     - Measures:  
         - `duration`: `number`  
         Total time taken to list kernels.  
-        Total time taken to list interpreters.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.KERNEL_PROVIDER_PERF  (Telemetry.KernelProviderPerf)  
@@ -4720,23 +4725,6 @@ Expand each section to see more information about that event.
         Total number of live kernels in the kernel spec list.  
 
 
-* DS_INTERNAL.SWITCH_TO_EXISTING_KERNEL  (Telemetry.SwitchToExistingKernel)  
-      Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR language. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Properties:  
-        - `language`: `string`  
-
-
-* DS_INTERNAL.SWITCH_TO_INTERPRETER_AS_KERNEL  (Telemetry.SwitchToInterpreterAsKernel)  
-      Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-
-
 * DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME  (Telemetry.VariableExplorerFetchTime)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Feature not defined.</span>  
@@ -4842,8 +4830,10 @@ Expand each section to see more information about that event.
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `failureCategory`: `'methodException'`  
+        A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`: `string`  
         Name of the method in the extension that threw the exception.  
+        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         - `failed`: `true`  
         Whether there was a failure.  
         - `stackTrace`: `string`  
@@ -4852,7 +4842,7 @@ Expand each section to see more information about that event.
         A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-        Name of the method in the extension that threw the exception.  
+        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorFolder`?: `string`  
@@ -4898,7 +4888,7 @@ Expand each section to see more information about that event.
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Measures:  
         - `duration`: `number`  
-        Total time taken to list interpreters. Total time taken to list kernels. Time taken.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * JUPYTER_EXPERIMENTS_OPT_IN_OUT  (EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT)  
@@ -4941,26 +4931,26 @@ Expand each section to see more information about that event.
 
 * OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX  (EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry event sent when user opens the data viewer via the variable view and there is an error in doing so.  
+    ```
+
 
 
 * OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX  (EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Telemetry event sent when user opens the data viewer.  
+    Telemetry event sent when user opens the data viewer via the variable view.  
     ```
 
 
 
 * OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX  (EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry event sent when user opens the data viewer via the variable view and we successfully open the view.  
+    ```
+
 
 
 * PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES  (EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES)  

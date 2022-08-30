@@ -230,7 +230,7 @@ OCaml is one such kernel.","boolean","",true
 "DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","","string","",false
 "DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK","","Telemetry.CreateNewNotebook","unknown","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken.","number","",false
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","result","The result of the interrupt,","","success 
 timeout 
@@ -884,7 +884,8 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
-"DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.","number","",false
+"DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.CODE_LENS_ACQ_TIME","","Telemetry.CodeLensAverageAcquisitionTime","amunger","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.COMMAND_EXECUTED","Telemetry sent when a command is executed.","Telemetry.CommandExecuted","unknown","N/A","","","command","Name of the command executed.","string","",false
@@ -1012,7 +1013,7 @@ Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentV
 'failedToGetCustomEnvVariables' ",true
 "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
 Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentVariables","donjayamanne","N/A","","","duration","Time taken.
-Total time taken to list interpreters. Total time taken to list kernels.","number","",false
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
 Used to detect the popularity of a mime type, that would help determine which mime types are most common.
 E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
@@ -1073,7 +1074,8 @@ or prioritize rendering of widgets when opening an existing notebook or the like
 "DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
-"DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.","number","",false
+"DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.INTERRUPT_JUPYTER_TIME","User interrupts a cell
 Identical to `Telemetry.Interrupt`","Telemetry.InterruptJupyterTime","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
@@ -1236,9 +1238,12 @@ Total time taken to list interpreters. Total time taken to list kernels. Time ta
 "DS_INTERNAL.JUPYTERSTARTUPCOST","","Telemetry.StartJupyter","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
 Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel list.
+Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel list.
+Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel list.
+Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","condaEnvsSharingSameInterpreter","Total number of conda environments that share the same interpreter
 This happens when we create conda envs without the `python` argument.
 Such conda envs don't work today in the extension.
@@ -1285,11 +1290,11 @@ System ",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","startFailureCount","Number of times starting the kernel failed.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","switchKernelCount","Number of times the kernel was changed.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Total number of kernel specs in the kernel list.","number","",false
+Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Total number of interpreters in the kernel list.","number","",false
+Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Total number of live kernels in the kernel list.","number","",false
+Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
@@ -1359,7 +1364,7 @@ This is a generic property supported for all telemetry (sent by decorators).","b
 'localKernelSpec' 
 'localPython' ",false
 "DS_INTERNAL.KERNEL_LISTING_PERF","","Telemetry.KernelListingPerf","donjayamanne","N/A","","","duration","Total time taken to list kernels.
-Total time taken to list interpreters.","number","",false
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT","Total number of Local kernel specifications.","Telemetry.NumberOfLocalKernelSpecs","donjayamanne","N/A","","","count","Number of kernel specs found on disc.","number","",false
 "DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED","","Telemetry.NativeVariableViewLoaded","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
@@ -2348,7 +2353,6 @@ WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence 
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DS_INTERNAL.SWITCH_TO_EXISTING_KERNEL","","Telemetry.SwitchToExistingKernel","IanMatthewHuff","","","","language","","string","",false
 "DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME","","Telemetry.VariableExplorerFetchTime","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT","","Telemetry.VariableExplorerVariableCount","IanMatthewHuff","","","","variableCount","","number","",false
@@ -2359,13 +2363,14 @@ Total time taken to list interpreters. Total time taken to list kernels. Time ta
 "DS_INTERNAL.WEB_FETCH_ERROR","Event sent when trying to talk to a remote server and the browser gives us a generic fetch error","Telemetry.FetchError","unknown","","","","currentTask","What we were doing when the fetch error occurred","'connecting'","",false
 "DS_INTERNAL.WEBVIEW_STARTUP","","Telemetry.WebviewStartup","IanMatthewHuff","","","","type","","string","",false
 "ENVFILE_WORKSPACE","Telemetry event sent when an environment file is detected in the workspace.","EventName.ENVFILE_WORKSPACE","donjayamanne","N/A","","","hasCustomEnvPath","If there's a custom path specified in the python.envFile workspace settings.","boolean","",false
-"ERROR","","ERROR","donjayamanne","N/A","","","failureCategory","","'methodException'","",false
-"ERROR","","ERROR","donjayamanne","N/A","","","failureSubCategory","Name of the method in the extension that threw the exception.","string","",false
+"ERROR","","ERROR","donjayamanne","N/A","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","'methodException'","",false
+"ERROR","","ERROR","donjayamanne","N/A","","","failureSubCategory","Name of the method in the extension that threw the exception.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",false
 "ERROR","","ERROR","donjayamanne","N/A","","","failed","Whether there was a failure.","true","",false
 "ERROR","","ERROR","donjayamanne","N/A","","","stackTrace","Node stacktrace without PII.","string","",false
 "ERROR","","ERROR","donjayamanne","N/A","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
 "ERROR","","ERROR","donjayamanne","N/A","","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception.","string","",true
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "ERROR","","ERROR","donjayamanne","N/A","","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "ERROR","","ERROR","donjayamanne","N/A","","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "ERROR","","ERROR","donjayamanne","N/A","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
@@ -2377,7 +2382,7 @@ Name of the method in the extension that threw the exception.","string","",true
 "HASHED_PACKAGE_NAME","Telemetry event sent with hash of an imported python package.
 Used to detect the popularity of a package, that would help determine which packages
 need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.","EventName.HASHED_PACKAGE_NAME","unknown","N/A","","","hashedNamev2","Hash of the package name","string","",false
-"HASHED_PACKAGE_PERF","","EventName.HASHED_PACKAGE_PERF","donjayamanne","N/A","","","duration","Total time taken to list interpreters. Total time taken to list kernels. Time taken.","number","",false
+"HASHED_PACKAGE_PERF","","EventName.HASHED_PACKAGE_PERF","donjayamanne","N/A","","","duration","Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "JUPYTER_EXPERIMENTS_OPT_IN_OUT","Telemetry event sent with details when a user has requested to opt it or out of an experiment group","EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT","unknown","N/A","","","expNameOptedInto","Carries the name of the experiment user has been opted into manually","string","",true
 "JUPYTER_EXPERIMENTS_OPT_IN_OUT","Telemetry event sent with details when a user has requested to opt it or out of an experiment group","EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT","unknown","N/A","","","expNameOptedOutOf","Carries the name of the experiment user has been opted out of manually","string","",true
 "JUPYTER_IS_INSTALLED","","Telemetry.JupyterInstalled","donjayamanne","N/A","","/* Detection of jupyter failed ","failed","","true","",false
