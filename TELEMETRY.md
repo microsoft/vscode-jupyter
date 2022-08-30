@@ -2984,14 +2984,6 @@ Expand each section to see more information about that event.
         Total time taken to list kernels.  
 
 
-* DS_INTERNAL.KERNEL_PROVIDER_PERF  (Telemetry.KernelProviderPerf)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Total time taken to list kernels for VS Code.  
-    ```
-
-
-
 * DS_INTERNAL.KERNEL_SPEC_NOT_FOUND  (Telemetry.KernelSpecNotFound)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
@@ -4887,59 +4879,5 @@ Expand each section to see more information about that event.
         - `activatedByWrapper`?: `boolean`  
         Whether the environment was activated by the wrapper class.  
         If `true`, this telemetry is sent by the class that wraps the two activation providers   .  
-
-
-* TERMINAL_ENV_VAR_EXTRACTION  (Telemetry.TerminalEnvVariableExtraction)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR reason. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-    ```
-    Telemetry sent only when we fail to extract the env variables for a shell.  
-    ```
-
-    - Properties:  
-        - `failed`: `true`  
-        - `reason`: `<see below>`  
-        Possible values include:  
-            - `unknownOs`  
-            - `getWorkspace`  
-            - `terminalCreation`  
-            - `fileCreation`  
-            - `commandExecution`  
-            - `waitForCommand`  
-            - `parseOutput`  
-
-
-* TERMINAL_SHELL_IDENTIFICATION  (Telemetry.TerminalShellIdentification)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR reason, terminalProvided, shellIdentificationSource, hasCustomShell, hasShellInEnv. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Properties:  
-        - `failed`: `boolean`  
-        - `reason`: `<see below>`  
-        Possible values include:  
-            - `'unknownShell'`  
-            - `null or <empty>`  
-        - `terminalProvided`: `boolean`  
-        - `shellIdentificationSource`: `<see below>`  
-        Possible values include:  
-            - `'terminalName'`  
-            - `'settings'`  
-            - `'environment'`  
-            - `'default'`  
-            - `'vscode'`  
-        - `hasCustomShell`: `<see below>`  
-        Possible values include:  
-            - `null or <empty>`  
-            - `true`  
-            - `false`  
-        - `hasShellInEnv`: `<see below>`  
-        Possible values include:  
-            - `null or <empty>`  
-            - `true`  
-            - `false`  
 
 

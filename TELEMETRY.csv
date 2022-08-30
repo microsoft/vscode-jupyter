@@ -2348,26 +2348,3 @@ I.e. jupyter can be found in the path as defined by the env variable process.env
 "PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","","EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","donjayamanne","N/A","","","activatedInTerminal","Whether the environment was activated within a terminal or not.","boolean","",true
 "PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","","EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","donjayamanne","N/A","","","activatedByWrapper","Whether the environment was activated by the wrapper class.
 If `true`, this telemetry is sent by the class that wraps the two activation providers   .","boolean","",true
-"TERMINAL_ENV_VAR_EXTRACTION","Telemetry sent only when we fail to extract the env variables for a shell.","Telemetry.TerminalEnvVariableExtraction","donjayamanne","","","","failed","","true","",false
-"TERMINAL_ENV_VAR_EXTRACTION","Telemetry sent only when we fail to extract the env variables for a shell.","Telemetry.TerminalEnvVariableExtraction","donjayamanne","","","","reason","","","unknownOs 
-getWorkspace 
-terminalCreation 
-fileCreation 
-commandExecution 
-waitForCommand 
-parseOutput ",false
-"TERMINAL_SHELL_IDENTIFICATION","","Telemetry.TerminalShellIdentification","donjayamanne","","","","failed","","boolean","",false
-"TERMINAL_SHELL_IDENTIFICATION","","Telemetry.TerminalShellIdentification","donjayamanne","","","","reason","","","'unknownShell' 
-null or <empty> ",false
-"TERMINAL_SHELL_IDENTIFICATION","","Telemetry.TerminalShellIdentification","donjayamanne","","","","terminalProvided","","boolean","",false
-"TERMINAL_SHELL_IDENTIFICATION","","Telemetry.TerminalShellIdentification","donjayamanne","","","","shellIdentificationSource","","","'terminalName' 
-'settings' 
-'environment' 
-'default' 
-'vscode' ",false
-"TERMINAL_SHELL_IDENTIFICATION","","Telemetry.TerminalShellIdentification","donjayamanne","","","","hasCustomShell","","","null or <empty> 
-true 
-false ",false
-"TERMINAL_SHELL_IDENTIFICATION","","Telemetry.TerminalShellIdentification","donjayamanne","","","","hasShellInEnv","","","null or <empty> 
-true 
-false ",false
