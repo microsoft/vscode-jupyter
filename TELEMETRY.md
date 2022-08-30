@@ -274,16 +274,15 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.ENTER_JUPYTER_URI  (Telemetry.EnterJupyterURI)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Captures the telemetry when the Uri is manually entered by the user as part of the workflow when selecting a Kernel.  
+    A URI has been selected and is being checked for validity.  
     ```
 
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DATASCIENCE.EXECUTE_CELL  (Telemetry.ExecuteCell)  
@@ -731,9 +730,12 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL  (Telemetry.OpenNotebookAll)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when we have opened any Jupyter notebook in a VS Code session.  
+    Not tagging as a user action as this could be something like auto opening a file  
+    from a previous session and not a direct user action.  
+    ```
+
 
 
 * DATASCIENCE.NO_ACTIVE_KERNEL_SESSION  (Telemetry.NoActiveKernelSession)  
@@ -1239,9 +1241,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.OPEN_PLOT_VIEWER  (Telemetry.OpenPlotViewer)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    A new instance of the plot viewer was opened.  
+    ```
+
 
 
 * DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE  (Telemetry.PythonVariableFetchingCodeFailure)  
@@ -1655,19 +1658,24 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SELECT_JUPYTER_URI  (Telemetry.SelectJupyterURI)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    User has triggered selection of a Jupyter URI for a remote connection.  
+    Note: Might not come from a direct user action.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL  (Telemetry.SelectLocalJupyterKernel)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Kernel was switched to a local kernel connection.  
+    ```
+
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -1748,8 +1756,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL  (Telemetry.SelectRemoteJupyterKernel)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Kernel was switched to a remote kernel connection.  
+    ```
+
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  

@@ -44,8 +44,9 @@ Common measurement used across a number of events.","number","",false
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER","Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)","Telemetry.EnableInteractiveShiftEnter","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.ENTER_JUPYTER_URI","Captures the telemetry when the Uri is manually entered by the user as part of the workflow when selecting a Kernel.","Telemetry.EnterJupyterURI","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+"DATASCIENCE.ENTER_JUPYTER_URI","A URI has been selected and is being checked for validity.","Telemetry.EnterJupyterURI","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DATASCIENCE.EXECUTE_CELL","Executes a cell, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -769,26 +770,28 @@ Common measurement used across a number of events.","number","",false
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.RUN_TO_LINE","","Telemetry.RunToLine","amunger","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.SELECT_JUPYTER_URI","","Telemetry.SelectJupyterURI","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
+"DATASCIENCE.SELECT_JUPYTER_URI","User has triggered selection of a Jupyter URI for a remote connection.
+Note: Might not come from a direct user action.","Telemetry.SelectJupyterURI","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelId","Hash of the Kernel Connection id.","string","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelId","Hash of the Kernel Connection id.","string","",false
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
 If we run the same notebook tomorrow, the hash will be the same.
 Used to check whether a particular notebook fails across time or not.
 This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
 and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
 we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
 and have a better understanding of what is going on, e.g. why something failed.","string","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelSessionId","Unique identifier for an instance of a notebook session.
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
 Conda 
 VirtualEnv 
 PipEnv 
@@ -799,41 +802,41 @@ Poetry
 VirtualEnvWrapper 
 Global 
 System ",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentCount","Total number of python environments.","number","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelLanguage","Language of the kernel connection.","string","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","restartCount","This number gets reset after change the kernel.","number","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","startFailureCount","Number of times starting the kernel failed.","number","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentCount","Total number of python environments.","number","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelLanguage","Language of the kernel connection.","string","",false
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","restartCount","This number gets reset after change the kernel.","number","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","startFailureCount","Number of times starting the kernel failed.","number","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","switchKernelCount","Number of times the kernel was changed.","number","",true
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","N/A","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
+"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelId","Hash of the Kernel Connection id.","string","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelId","Hash of the Kernel Connection id.","string","",false
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
 If we run the same notebook tomorrow, the hash will be the same.
 Used to check whether a particular notebook fails across time or not.
 This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
 and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
 we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
 and have a better understanding of what is going on, e.g. why something failed.","string","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelSessionId","Unique identifier for an instance of a notebook session.
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
 Conda 
 VirtualEnv 
 PipEnv 
@@ -844,22 +847,22 @@ Poetry
 VirtualEnvWrapper 
 Global 
 System ",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentCount","Total number of python environments.","number","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelLanguage","Language of the kernel connection.","string","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","restartCount","This number gets reset after change the kernel.","number","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","startFailureCount","Number of times starting the kernel failed.","number","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentCount","Total number of python environments.","number","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelLanguage","Language of the kernel connection.","string","",false
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","restartCount","This number gets reset after change the kernel.","number","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","startFailureCount","Number of times starting the kernel failed.","number","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","switchKernelCount","Number of times the kernel was changed.","number","",true
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","N/A","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
+"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DATASCIENCE.SET_JUPYTER_URI_LOCAL","","Telemetry.SetJupyterURIToLocal","IanMatthewHuff","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false

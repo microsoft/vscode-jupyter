@@ -1661,41 +1661,94 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         tags: ['KernelStartup']
     };
+    /*
+     * Installed the python Pandas package.
+     */
     [Telemetry.UserInstalledPandas]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'N/A'
+    };
     [Telemetry.UserDidNotInstallJupyter]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
         tags: ['KernelStartup']
     };
+    /*
+     * Prompted to install Pandas and chose not to install
+     * Note: This could be just ignoring the UI so not a user action.
+     */
     [Telemetry.UserDidNotInstallPandas]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'N/A'
+    };
+    /*
+     * The kernel picker command to install python was shown.
+     */
     [Telemetry.PythonNotInstalled]: TelemetryEventInfo<{
+        /*
+         * The message was displayed, or indicate that the user dismissed or downloaded the message.
+         */
         action:
             | 'displayed' // Message displayed.
             | 'dismissed' // user dismissed the message.
             | 'download'; // User chose click the download link.
     }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['KernelPicker'],
+        source: 'User Action',
+        properties: {
+            action: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /*
+     * The kernel picker command to install python extension was shown.
+     */
     [Telemetry.PythonExtensionNotInstalled]: TelemetryEventInfo<{
+        /*
+         * The message was displayed, or indicate that the user dismissed or downloaded the message.
+         */
         action:
             | 'displayed' // Message displayed.
             | 'dismissed' // user dismissed the message.
             | 'download'; // User chose click the download link.
     }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['KernelPicker'],
+        source: 'User Action',
+        properties: {
+            action: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /*
+     * Python extension was attempted to be installed via the kernel picker command.
+     */
     [Telemetry.PythonExtensionInstalledViaKernelPicker]: TelemetryEventInfo<{
+        /*
+         * Did the Extension install succeed or fail?
+         */
         action:
             | 'success' // Correctly installed and hooked the API
             | 'failed'; // Failed to install correctly
     }> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['KernelPicker'],
+        source: 'User Action',
+        properties: {
+            action: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     [Telemetry.PythonModuleInstall]: TelemetryEventInfo<
         {
             moduleName: string;
