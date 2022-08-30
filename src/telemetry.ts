@@ -1453,12 +1453,24 @@ export class IEventNamePropertyMapping {
         feature: ['DataFrameViewer'],
         source: 'N/A'
     };
+    /**
+     * Sent when we have opened any Jupyter notebook in a VS Code session.
+     * Not tagging as a user action as this could be something like auto opening a file
+     * from a previous session and not a direct user action.
+     */
     [Telemetry.OpenNotebookAll]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: 'N/A',
+        source: 'N/A'
+    };
+    /**
+     * A new instance of the plot viewer was opened.
+     */
     [Telemetry.OpenPlotViewer]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        feature: ['PlotViewer'],
+        source: 'User Action'
+    };
     /**
      * Total time taken to restart a kernel.
      * Identical to `Telemetry.RestartKernel`
@@ -1594,25 +1606,43 @@ export class IEventNamePropertyMapping {
         feature: 'N/A',
         source: 'N/A'
     };
-    [Telemetry.SelectJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'IanMatthewHuff'
-    } as any;
     /**
-     * Captures the telemetry when the Uri is manually entered by the user as part of the workflow when selecting a Kernel.
+     * User has triggered selection of a Jupyter URI for a remote connection.
+     * Note: Might not come from a direct user action.
+     */
+    [Telemetry.SelectJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'IanMatthewHuff',
+        source: 'N/A',
+        feature: ['KernelPicker'],
+        measures: commonClassificationForDurationProperties
+    };
+    /**
+     * A URI has been selected and is being checked for validity.
      */
     [Telemetry.EnterJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'IanMatthewHuff'
-    } as any;
+        owner: 'IanMatthewHuff',
+        source: 'N/A',
+        feature: ['KernelPicker'],
+        measures: commonClassificationForDurationProperties
+    };
+    /**
+     * Kernel was switched to a local kernel connection.
+     */
     [Telemetry.SelectLocalJupyterKernel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
         owner: 'IanMatthewHuff',
-        feature: 'N/A',
+        source: 'N/A',
+        feature: ['KernelPicker'],
         properties: commonClassificationForResourceSpecificTelemetryProperties
-    } as any;
+    };
+    /**
+     * Kernel was switched to a remote kernel connection.
+     */
     [Telemetry.SelectRemoteJupyterKernel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
         owner: 'IanMatthewHuff',
-        feature: 'N/A',
+        source: 'N/A',
+        feature: ['KernelPicker'],
         properties: commonClassificationForResourceSpecificTelemetryProperties
-    } as any;
+    };
     [Telemetry.SessionIdleTimeout]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',

@@ -4495,33 +4495,36 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.SHOW_DATA_NO_PANDAS  (Telemetry.PandasNotInstalled)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    User tried to open the data viewer and Pandas package was not installed.  
+    Note: Not a failure state, as we prompt for install after this.  
+    ```
+
 
 
 * DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED  (Telemetry.PandasInstallCanceled)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR version. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Properties:  
-        - `version`: `string`  
+    ```
+    When opening the data viewer the user was prompted to install / upgrade  
+    pandas and choose to cancel the operation.  
+    ```
+
 
 
 * DS_INTERNAL.SHOW_DATA_PANDAS_OK  (Telemetry.PandasOK)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    When opening the data viewer the version of Pandas installed was ok.  
+    ```
+
 
 
 * DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD  (Telemetry.PandasTooOld)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    When opening the data viewer the version of Pandas installed was too old.  
+    ```
+
 
 
 * DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD  (Telemetry.StartExecuteNotebookCellPerceivedCold)  

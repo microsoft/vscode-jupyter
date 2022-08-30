@@ -2234,7 +2234,6 @@ selected - An interpreter was selected (and configured to have jupyter and noteb
 installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter.","","'notSelected' 
 'selected' 
 'installationCancelled' ",true
-"DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED","","Telemetry.PandasInstallCanceled","IanMatthewHuff","","","","version","","string","",false
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
 Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
