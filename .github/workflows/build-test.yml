@@ -676,7 +676,7 @@ jobs:
         with:
           name: TestResult-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
           path: testresults.json
-          retention-days: 1
+          retention-days: 60
 
       - name: Upload test failure notebook file
         uses: actions/upload-artifact@v2
