@@ -140,20 +140,21 @@ ipynb ",false
 html 
 python 
 ipynb ",false
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","kind","What kind of kernel spec did we fail to create.","","'startUsingPythonInterpreter' 
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","kind","What kind of kernel spec did we fail to create.","","'startUsingPythonInterpreter' 
 'startUsingDefaultKernel' 
 'startUsingLocalKernelSpec' 
 'startUsingRemoteKernelSpec' 
 'connectToLiveRemoteKernel' ",false
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","failed","Whether there was a failure.","true","",false
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","stackTrace","Node stacktrace without PII.","string","",false
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
-"DATASCIENCE.FETCH_CONTROLLERS","Telemetry sent when we have loaded some controllers.","Telemetry.FetchControllers","IanMatthewHuff","","","","cached","Whether this is from a cached result or not","boolean","",false
-"DATASCIENCE.FETCH_CONTROLLERS","Telemetry sent when we have loaded some controllers.","Telemetry.FetchControllers","IanMatthewHuff","","","","kind","Whether we've loaded local or remote controllers.","","'local' 
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","failed","Whether there was a failure.","true","",false
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","stackTrace","Node stacktrace without PII.","string","",false
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
+"DATASCIENCE.FETCH_CONTROLLERS","Telemetry sent when we have loaded some controllers.","Telemetry.FetchControllers","donjayamanne","","","","cached","Whether this is from a cached result or not","boolean","",false
+"DATASCIENCE.FETCH_CONTROLLERS","Telemetry sent when we have loaded some controllers.","Telemetry.FetchControllers","donjayamanne","","","","kind","Whether we've loaded local or remote controllers.","","'local' 
 'remote' ",false
 "DATASCIENCE.GET_PASSWORD_ATTEMPT","","Telemetry.GetPasswordAttempt","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.
@@ -669,10 +670,10 @@ If `failed` is false, then its a success, else startup failed.","Telemetry.Noteb
 "DATASCIENCE.NOTEBOOK_START","Starts a kernel, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 If `failed` is false, then its a success, else startup failed.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
-"DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE","","Telemetry.PythonVariableFetchingCodeFailure","IanMatthewHuff","","","","ename","","string","",false
-"DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE","","Telemetry.PythonVariableFetchingCodeFailure","IanMatthewHuff","","","","evalue","","string","",false
-"DATASCIENCE.RECOMMENT_EXTENSION","","Telemetry.RecommendExtension","IanMatthewHuff","","","","extensionId","Extension we recommended the user to install.","string","",false
-"DATASCIENCE.RECOMMENT_EXTENSION","","Telemetry.RecommendExtension","IanMatthewHuff","","","","action","`displayed` - If prompt was displayed
+"DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE","","Telemetry.PythonVariableFetchingCodeFailure","IanMatthewHuff","VariableViewer","","","ename","","string","",false
+"DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE","","Telemetry.PythonVariableFetchingCodeFailure","IanMatthewHuff","VariableViewer","","","evalue","","string","",false
+"DATASCIENCE.RECOMMENT_EXTENSION","","Telemetry.RecommendExtension","IanMatthewHuff","N/A","","","extensionId","Extension we recommended the user to install.","string","",false
+"DATASCIENCE.RECOMMENT_EXTENSION","","Telemetry.RecommendExtension","IanMatthewHuff","N/A","","","action","`displayed` - If prompt was displayed
 `dismissed` - If prompt was displayed & dismissed by the user
 `ok` - If prompt was displayed & ok clicked by the user
 `cancel` - If prompt was displayed & cancel clicked by the user
@@ -1077,7 +1078,10 @@ or prioritize rendering of widgets when opening an existing notebook or the like
 Used to detect the popularity of a mime type, that would help determine which mime types are most common.
 E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
 or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasVnd","Whether the mime type has the word 'vnd' in it.","boolean","",false
-"DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","","","","isResultNull","Result is null if user signalled cancellation or if we timed out","boolean","",false
+"DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","InteractiveWindow","IntelliSense","","isResultNull","Result is null if user signalled cancellation or if we timed out","boolean","",false
+"DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","InteractiveWindow","IntelliSense","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
@@ -1460,7 +1464,7 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook, KernelPicker","","","hasActiveInterpreter","If we have an active interpreter or not.","boolean","",true
 "DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook, KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH","","Telemetry.PreferredKernelExactMatch","IanMatthewHuff","","","","matchedReason","","","",false
+"DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH","Send we we complete our preferred kernel match. Matched reason might be 'no match'.","Telemetry.PreferredKernelExactMatch","IanMatthewHuff","KernelPicker","","","matchedReason","","","null or <empty> ",false
 "DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER","","Telemetry.PythonExtensionInstalledViaKernelPicker","IanMatthewHuff","KernelPicker","","","action","","","'success' 
 'failed' ",false
 "DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED","","Telemetry.PythonExtensionNotInstalled","IanMatthewHuff","KernelPicker","","","action","","","'displayed' 
@@ -2372,7 +2376,10 @@ Total time taken to list interpreters. Total time taken to list kernels. Time ta
 Common measurement used across a number of events.
 Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.WEB_FETCH_ERROR","Event sent when trying to talk to a remote server and the browser gives us a generic fetch error","Telemetry.FetchError","unknown","","","","currentTask","What we were doing when the fetch error occurred","'connecting'","",false
-"DS_INTERNAL.WEBVIEW_STARTUP","","Telemetry.WebviewStartup","IanMatthewHuff","","","","type","","string","",false
+"DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","type","","string","",false
+"DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.
+Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
 "ENVFILE_WORKSPACE","Telemetry event sent when an environment file is detected in the workspace.","EventName.ENVFILE_WORKSPACE","donjayamanne","N/A","","","hasCustomEnvPath","If there's a custom path specified in the python.envFile workspace settings.","boolean","",false
 "ERROR","","ERROR","donjayamanne","N/A","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","'methodException'","",false
 "ERROR","","ERROR","donjayamanne","N/A","","","failureSubCategory","Name of the method in the extension that threw the exception.

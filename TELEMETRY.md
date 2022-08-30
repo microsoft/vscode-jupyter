@@ -445,9 +445,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.FAILED_TO_CREATE_CONTROLLER  (Telemetry.FailedToCreateNotebookController)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR kind. Add jsDoc comments for the properties in telemetry.ts file.</span>  
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `kind`: `<see below>`  
@@ -466,6 +463,7 @@ Expand each section to see more information about that event.
         A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
+        Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorFolder`?: `string`  
@@ -475,7 +473,7 @@ Expand each section to see more information about that event.
 
 
 * DATASCIENCE.FETCH_CONTROLLERS  (Telemetry.FetchControllers)  
-      Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
+      Owner: [@donjayamanne](https://github.com/donjayamanne)  
        <span style="color:red">Feature not defined.</span>  
        <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Properties not documented in GDPR cached, kind. Add jsDoc comments for the properties in telemetry.ts file.</span>  
@@ -588,16 +586,18 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.JUPYTER_KERNEL_FILTER_USED  (Telemetry.JupyterKernelFilterUsed)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Called when the user clicks accept on the kernel filter UI.  
+    ```
+
 
 
 * DATASCIENCE.JUPYTER_KERNEL_HIDDEN_VIA_FILTER  (Telemetry.JupyterKernelHiddenViaFilter)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Called when a controller that would have been shown is hidden by a filter.  
+    ```
+
 
 
 * DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN  (Telemetry.JupyterNotInstalledErrorShown)  
@@ -732,10 +732,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.NO_ACTIVE_KERNEL_SESSION  (Telemetry.NoActiveKernelSession)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Useful when we need an active kernel session in order to execute commands silently.  
+    Send when we want to install data viewer dependendies, but don't have an active kernel session.  
     Used by the dataViewerDependencyService.  
     ```
 
@@ -1241,9 +1239,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE  (Telemetry.PythonVariableFetchingCodeFailure)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR ename, evalue. Add jsDoc comments for the properties in telemetry.ts file.</span>  
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `ename`: `string`  
@@ -1252,9 +1247,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RECOMMENT_EXTENSION  (Telemetry.RecommendExtension)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR extensionId, action. Add jsDoc comments for the properties in telemetry.ts file.</span>  
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
     - Properties:  
         - `extensionId`: `string`  
@@ -1958,20 +1950,16 @@ Expand each section to see more information about that event.
 
 * DATAVIEWER.USING_INTERPRETER  (Telemetry.DataViewerUsingInterpreter)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    When the Data Viewer installer is using the Python interpreter.  
+    When the Data Viewer installer is using a Python interpreter to do the install.  
     ```
 
 
 
 * DATAVIEWER.USING_KERNEL  (Telemetry.DataViewerUsingKernel)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    When the Data Viewer installer is using the Kernel.  
+    When the Data Viewer installer is using the Kernel to do the install.  
     ```
 
 
@@ -2335,9 +2323,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF  (Telemetry.InteractiveFileTooltipsPerf)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR isResultNull. Add jsDoc comments for the properties in telemetry.ts file.</span>  
     ```
     How long it took to return our hover tooltips for a .py file.  
     ```
@@ -2345,6 +2330,11 @@ Expand each section to see more information about that event.
     - Properties:  
         - `isResultNull`: `boolean`  
         Result is null if user signalled cancellation or if we timed out  
+    - Measures:  
+        - `duration`: `number`  
+        Duration of a measure in milliseconds.  
+        Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.INTERPRETER_LISTING_PERF  (Telemetry.InterpreterListingPerf)  
@@ -3239,12 +3229,14 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH  (Telemetry.PreferredKernelExactMatch)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR matchedReason. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Send we we complete our preferred kernel match. Matched reason might be 'no match'.  
+    ```
+
     - Properties:  
         - `matchedReason`: `<see below>`  
+        Possible values include:  
+            - `null or <empty>`  
 
 
 * DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER  (Telemetry.PythonExtensionInstalledViaKernelPicker)  
@@ -4790,12 +4782,17 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.WEBVIEW_STARTUP  (Telemetry.WebviewStartup)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR type. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    We started up a webview.  
+    ```
+
     - Properties:  
         - `type`: `string`  
+    - Measures:  
+        - `duration`: `number`  
+        Duration of a measure in milliseconds.  
+        Common measurement used across a number of events.  
+        Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING  (Telemetry.ZMQSupported)  
