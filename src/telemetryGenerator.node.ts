@@ -422,6 +422,8 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
             });
         writeOutput(`${indent()}\`\`\``);
         writeOutput(``);
+    } else {
+        writeOutput(`${indent()}   <span style="color:red">Add jsDoc comments to describe this event.</span>  `);
     }
     if (!entry.propertyGroups || entry.propertyGroups.length === 0) {
     } else {
@@ -706,6 +708,9 @@ function generateTelemetryCSV(output: TelemetryEntry[]) {
                     eventName: o.name,
                     eventDescription: o.description,
                     eventConstant: o.constantName,
+                    owner: o.gdpr.owner,
+                    feature: Array.isArray(o.gdpr.feature) ? o.gdpr.feature.join(', ') : o.gdpr.feature || '',
+                    tags: Array.isArray(o.gdpr.tags) ? o.gdpr.tags.join(', ') : o.gdpr.tags || '',
                     groupDescription,
                     propertyName: p.name,
                     propertyDescription: description,
