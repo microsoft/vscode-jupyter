@@ -204,9 +204,6 @@ class JupyterServerSelector_Experimental implements IJupyterServerSelector {
                     return;
                 }
             } else if (userURI) {
-                if (err.message.includes('Failed to fetch') && this.isWebExtension) {
-                    sendTelemetryEvent(Telemetry.FetchError, undefined, { currentTask: 'connecting' });
-                }
                 const serverId = await computeServerId(userURI);
                 await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, serverId, err));
                 // Can't set the URI in this case.
@@ -449,9 +446,6 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
                     return;
                 }
             } else {
-                if (err.message.includes('Failed to fetch') && this.isWebExtension) {
-                    sendTelemetryEvent(Telemetry.FetchError, undefined, { currentTask: 'connecting' });
-                }
                 const serverId = await computeServerId(userURI);
                 await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, serverId, err));
                 // Can't set the URI in this case.

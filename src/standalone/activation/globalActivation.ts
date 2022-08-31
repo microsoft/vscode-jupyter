@@ -125,14 +125,21 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         const settings = this.configuration.getSettings() as any;
 
         // Translate all of the 'string' based settings into known values or not.
-        const pythonConfig = this.workspace.getConfiguration('jupyter');
-        if (pythonConfig) {
+        const jupyterConfig = this.workspace.getConfiguration('jupyter');
+        if (jupyterConfig) {
             const keys = Object.keys(settings);
             const resultSettings: JSONObject = {};
             for (const k of keys) {
                 const currentValue = settings[k];
+                // We don't have properties starting with '_'
+                if (k.startsWith('_')) {
+                    continue;
+                }
+                if (typeof currentValue === 'function') {
+                    continue;
+                }
                 if (typeof currentValue === 'string' && k !== 'interactiveWindowMode') {
-                    const inspectResult = pythonConfig.inspect<string>(`${k}`);
+                    const inspectResult = jupyterConfig.inspect<string>(`${k}`);
                     if (inspectResult && inspectResult.defaultValue !== currentValue) {
                         resultSettings[k] = 'non-default';
                     } else {

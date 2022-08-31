@@ -567,7 +567,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             const outputType: nbformat.OutputType =
                 <nbformat.OutputType>customMetadata?.outputType || (isStream ? 'stream' : 'display_data');
             sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
-                isErrorOutput: outputType === 'error'
+                outputType
             });
 
             let unknownOutput: nbformat.IUnrecognizedOutput | nbformat.IDisplayData | nbformat.IStream;

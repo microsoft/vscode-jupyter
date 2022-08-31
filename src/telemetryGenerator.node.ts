@@ -7,6 +7,7 @@ import * as fs from 'fs-extra';
 import glob from 'glob';
 import { initialize } from './test/vscode-mock';
 import { Parser } from 'json2csv';
+import colors from 'colors';
 
 initialize();
 
@@ -21,6 +22,8 @@ import {
 } from './telemetry';
 const GDPRData = new IEventNamePropertyMapping();
 let gdprEntryOfCurrentlyComputingTelemetryEventName: [name: string, gdpr: TelemetryEventInfo<unknown>] | undefined;
+const errorsByOwners: Record<string, Record<string, EventProblem>> = {};
+
 /**
  * A TypeScript language service host
  */
@@ -135,15 +138,23 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
             ) {
                 const type = typeChecker.getTypeAtLocation(m.type);
                 if (type.isUnion()) {
+                    const isEnum = type
+                        .getSymbol()
+                        ?.getDeclarations()
+                        ?.some((d) => d.kind === ts.SyntaxKind.EnumDeclaration);
+                    const enumName = type.getSymbol()?.escapedName;
                     type.types.forEach((t) => {
                         if (t.isLiteral()) {
                             const value = t.value.toString();
                             const declaration = t.symbol?.declarations?.length
                                 ? (t.symbol.declarations[0] as unknown as { jsDoc?: { comment: string }[] })
                                 : undefined;
-                            let comment = '';
+                            const comment = [];
+                            if (isEnum && parseInt(value, 10).toString() === value.trim()) {
+                                comment.push(`Enum Member: ${enumName}.${t.symbol.escapedName}`);
+                            }
                             if (declaration && Array.isArray(declaration.jsDoc) && declaration.jsDoc.length > 0) {
-                                comment = declaration.jsDoc[0].comment;
+                                comment.push(declaration.jsDoc[0].comment);
                             }
                             possibleValues.push({ value, comment });
                         }
@@ -196,6 +207,7 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
                     gdprEntry = JSON.parse(
                         JSON.stringify(gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'][name])
                     ) as IPropertyDataNonMeasurement;
+                    (gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'] as any)[name] = gdprEntry as any;
                 }
                 if (
                     'measures' in gdprEntryOfCurrentlyComputingTelemetryEventName[1] &&
@@ -206,6 +218,7 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
                     gdprEntry = JSON.parse(
                         JSON.stringify(gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'][name])
                     ) as IPropertyDataNonMeasurement;
+                    (gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'] as any)[name] = gdprEntry as any;
                 }
                 if (gdprEntry) {
                     const comment = (descriptions || []).join(' ').split(/\r?\n/).join();
@@ -243,11 +256,15 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
                         }${comment}`.trim();
                     }
                 } else {
-                    console.error(
-                        new Error(
-                            `Gdpr entry for ${name} not found in ${gdprEntryOfCurrentlyComputingTelemetryEventName[0]}`
-                        ).message
-                    );
+                    const gdprInfo = gdprEntryOfCurrentlyComputingTelemetryEventName[1];
+                    const eventName = gdprEntryOfCurrentlyComputingTelemetryEventName[0];
+                    const ownerIssues: Record<string, EventProblem> = (errorsByOwners[gdprInfo.owner] =
+                        errorsByOwners[gdprInfo.owner] || {});
+                    const eventIssues: EventProblem = (ownerIssues[eventName] = ownerIssues[eventName] || {
+                        eventConstantName: '',
+                        problems: []
+                    });
+                    eventIssues.problems.push(`Gdpr entry for ${name} not found.`);
                 }
             }
             properties.push({ name, descriptions, possibleValues, type: typeValue, isNullable, gdpr: gdprEntry! });
@@ -354,19 +371,22 @@ function getCommentForUnions(t: ts.TypeNode) {
 function indent(count: number = 1) {
     return ''.padEnd(count * 4, ' ');
 }
+type EventProblem = { eventConstantName: string; problems: string[] };
 function writeTelemetryEntry(entry: TelemetryEntry) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const gdprInfo = (GDPRData as any)[entry.name] as IEventData | undefined;
     const gdprProperties = new Map<string, IPropertyDataNonMeasurement>();
     const gdprMeasures = new Map<string, IPropertyDataMeasurement>();
-
+    const eventErrorMessages: string[] = [];
     if (gdprInfo) {
         writeOutput(`* ${entry.name}  (${entry.constantName})  `);
         writeOutput(`${indent()}  Owner: [@${gdprInfo.owner}](https://github.com/${gdprInfo.owner})  `);
         if (!gdprInfo.feature) {
+            eventErrorMessages.push(`Feature not defined`);
             writeOutput(`${indent()}   <span style="color:red">Feature not defined.</span>  `);
         }
         if (!gdprInfo.source) {
+            eventErrorMessages.push(`Source not defined`);
             writeOutput(
                 `${indent()}   <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  `
             );
@@ -383,16 +403,41 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
         const commonProperties = new Set(Object.keys(CommonProperties));
 
         entry.propertyGroups.forEach((g) =>
-            g.properties.filter((p) => p.type !== 'number').forEach((p) => discoveredProperties.add(p.name))
+            g.properties
+                .filter((p) => {
+                    if (p.type === 'number') {
+                        return false;
+                    }
+                    if (p.gdpr?.isMeasurement === true) {
+                        return false;
+                    }
+                    return true;
+                })
+                .forEach((p) => discoveredProperties.add(p.name))
         );
         entry.propertyGroups.forEach((g) =>
-            g.properties.filter((p) => p.type === 'number').forEach((p) => discoveredMeasures.add(p.name))
+            g.properties
+                .filter((p) => {
+                    if (p.type === 'number') {
+                        return true;
+                    }
+                    if (p.gdpr?.isMeasurement === true) {
+                        return true;
+                    }
+                    return false;
+                })
+                .forEach((p) => discoveredMeasures.add(p.name))
         );
 
         const undocumentedProperties = Array.from(discoveredProperties)
             .filter((p) => !commonProperties.has(p))
             .filter((p) => !gdprProperties.has(p));
         if (undocumentedProperties.length) {
+            eventErrorMessages.push(
+                `Properties not documented in GDPR ${undocumentedProperties.join(
+                    ', '
+                )}. Add jsDoc comments for the properties in telemetry.ts file.`
+            );
             writeOutput(
                 `${indent()}   <span style="color:red">Properties not documented in GDPR ${undocumentedProperties.join(
                     ', '
@@ -403,13 +448,19 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
             .filter((p) => !commonProperties.has(p))
             .filter((p) => !gdprMeasures.has(p));
         if (undocumentedMeasures.length) {
+            eventErrorMessages.push(
+                `Measures not documented in GDPR ${undocumentedMeasures.join(
+                    ', '
+                )}. Add jsDoc comments for the properties in telemetry.ts file.`
+            );
             writeOutput(
                 `${indent()}   <span style="color:red">Measures not documented in GDPR ${undocumentedMeasures.join(
                     ', '
-                )}</span>  `
+                )}. Add jsDoc comments for the measures in telemetry.ts file.</span>  `
             );
         }
     } else {
+        eventErrorMessages.push(`Missing GDPR Info`);
         writeOutput(`* <span style="color:red">${entry.name}  (${entry.constantName})</span>  `);
         writeOutput(`${indent()}  `);
         writeOutput(`${indent()}<h3><span style="color:red"> Warning: Missing GDPR Info</span></h3>  `);
@@ -427,6 +478,7 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
         writeOutput(`${indent()}\`\`\``);
         writeOutput(``);
     } else {
+        eventErrorMessages.push(`Add jsDoc comments to describe this event.`);
         writeOutput(`${indent()}   <span style="color:red">Add jsDoc comments to describe this event.</span>  `);
     }
     if (!entry.propertyGroups || entry.propertyGroups.length === 0) {
@@ -464,9 +516,14 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
                     const description = Array.isArray(p.descriptions)
                         ? p.descriptions
                         : p.descriptions
-                        ? [p.descriptions]
+                        ? p.descriptions.length
+                            ? [p.descriptions]
+                            : []
                         : [];
-
+                    const isEmpty = description.join('').trim().length === 0;
+                    if (isEmpty) {
+                        eventErrorMessages.push(`Add jsDoc comments to describe this property = ${p.name}.`);
+                    }
                     if (description.length || typeof p.type === 'string') {
                         const type = p.type ? `\`${p.type}\`` : '`<see below>`';
                         const nullable = p.isNullable ? '?' : '';
@@ -514,6 +571,20 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
         });
     }
     writeOutput(`\n`);
+
+    if (entry.gdpr.owner === 'unknown') {
+        eventErrorMessages.push('No owner specified for this event');
+    }
+    if (eventErrorMessages.length) {
+        const ownerIssues: Record<string, EventProblem> = (errorsByOwners[entry.gdpr.owner] =
+            errorsByOwners[entry.gdpr.owner] || []);
+        const eventProblem = (ownerIssues[entry.name] = ownerIssues[entry.name] || {
+            eventConstantName: entry.constantName,
+            problems: []
+        });
+        eventProblem.eventConstantName = entry.constantName;
+        eventProblem.problems.push(...eventErrorMessages);
+    }
 }
 
 const commonPropertyComments = new Map<string, string>();
@@ -565,7 +636,7 @@ function generateDocumentationForCommonTypes(fileNames: string[], options: ts.Co
     }
 }
 
-function generateDocumentation(fileNames: string[], options: ts.CompilerOptions): void {
+function generateDocumentation(fileNames: string[], options: ts.CompilerOptions): string | undefined {
     let host = new TypeScriptLanguageServiceHost(fileNames, options);
     let languageService = ts.createLanguageService(host, undefined, ts.LanguageServiceMode.Semantic);
     let program = languageService.getProgram()!;
@@ -605,7 +676,7 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
                 if (ts.isPropertyDeclaration(m)) {
                     const typeNode = m.type;
                     if (!typeNode || typeNode.kind !== ts.SyntaxKind.TypeReference) {
-                        console.error(m.name.getText());
+                        console.error(`Unrecognized type ${m.name.getText()}`);
                     } else if (
                         typeNode &&
                         ts.isTypeReferenceNode(typeNode) &&
@@ -673,12 +744,6 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
                             currentGdprComment.length === 0 || currentGdprComment.endsWith('.') ? ' ' : '. '
                         }${description}`.trim();
                         const type = typeNode.typeArguments[0];
-                        if (name === 'DATASCIENCE.GET_PASSWORD_ATTEMPT') {
-                            debugger;
-                        }
-                        if (name === 'DS_INTERNAL.INTERPRETER_LISTING_PERF') {
-                            debugger;
-                        }
                         const groups: TelemetryPropertyGroup[] = [];
                         if (ts.isTypeLiteralNode(type)) {
                             const properties = computePropertiesForLiteralType(type, typeChecker);
@@ -723,6 +788,22 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
     generateTelemetryMd(values);
     generateTelemetryCSV(values);
     generateTelemetryGdpr(values);
+
+    if (Object.keys(errorsByOwners).length) {
+        Object.keys(errorsByOwners).forEach((owner) => {
+            console.error(colors.red(`Problems for ${owner}:`));
+            const eventProblems: Record<string, EventProblem> = errorsByOwners[owner];
+            Object.keys(eventProblems).forEach((eventName) => {
+                const problems: EventProblem = eventProblems[eventName];
+                console.error(colors.red(`    ${eventName} (${problems.eventConstantName}):`));
+                problems.problems.forEach((error, index) => {
+                    console.error(colors.red(`        ${index + 1}. ${error}`));
+                });
+            });
+        });
+        // return 'Has errors, check the logs';
+        return '';
+    }
 }
 
 function generateTelemetryMd(output: TelemetryEntry[]) {
@@ -778,8 +859,6 @@ const gdprHeader = `// Copyright (c) Microsoft Corporation.
 `;
 
 function generateTelemetryGdpr(output: TelemetryEntry[]) {
-    // Until we have property GDPR data in telemetry.ts.
-    return;
     const file = './src/gdpr.ts';
     fs.writeFileSync(file, '');
     fs.appendFileSync(file, gdprHeader);
@@ -809,7 +888,7 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
     output.forEach((item) => {
         // Do not include `__GDPR__` in the string with JSON comments, else telemetry tool treats this as a valid GDPR annotation.
         const gdpr = '__GDPR__';
-        const header = [`/* ${gdpr}`, `   "${item.name}" : {`];
+        const header = [`//${item.constantName}`, `/* ${gdpr}`, `   "${item.name}" : {`];
         const footer = ['   }', ' */', '', ''];
         const properties: Record<string, IPropertyDataNonMeasurement> =
             'properties' in item.gdpr ? item.gdpr['properties'] : {};
@@ -865,18 +944,19 @@ async function generateTelemetryOutput() {
         });
     });
     // Print out the source tree
-    generateDocumentation(files, {
+    return generateDocumentation(files, {
         target: ts.ScriptTarget.ES5,
         module: ts.ModuleKind.CommonJS
     });
 }
 
-const promise = generateTelemetryOutput().then(
-    () => {
-        //
-    },
-    (ex) => console.error(`Failed to generate telemetry`, ex)
-);
-export default async function () {
-    await promise;
+const promise = generateTelemetryOutput().catch((ex) => {
+    console.error(`Failed to generate telemetry`, ex);
+    return 'Failed';
+});
+/**
+ * Returns an error message if there are any errors, else returns undefined.
+ */
+export default async function (): Promise<string | undefined> {
+    return await promise;
 }

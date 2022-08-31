@@ -12,7 +12,6 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
@@ -74,28 +73,6 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
             return;
         }
         this.sentMimeTypes.add(mimeType);
-        // Hash the package name so that we will never accidentally see a
-        // user's private package name.
-        const hashedName = getTelemetrySafeHashedString(mimeType);
-
-        const lowerMimeType = mimeType.toLowerCase();
-        // The following gives us clues of the mimetype.
-        const props = {
-            hashedName,
-            hasText: lowerMimeType.includes('text'),
-            hasLatex: lowerMimeType.includes('latex'),
-            hasHtml: lowerMimeType.includes('html'),
-            hasSvg: lowerMimeType.includes('svg'),
-            hasXml: lowerMimeType.includes('xml'),
-            hasJson: lowerMimeType.includes('json'),
-            hasImage: lowerMimeType.includes('image'),
-            hasGeo: lowerMimeType.includes('geo'),
-            hasPlotly: lowerMimeType.includes('plotly'),
-            hasVega: lowerMimeType.includes('vega'),
-            hasWidget: lowerMimeType.includes('widget'),
-            hasJupyter: lowerMimeType.includes('jupyter'),
-            hasVnd: lowerMimeType.includes('vnd')
-        };
-        sendTelemetryEvent(Telemetry.HashedCellOutputMimeType, undefined, props);
+        sendTelemetryEvent(Telemetry.CellOutputMimeType, undefined, { mimeType });
     }
 }

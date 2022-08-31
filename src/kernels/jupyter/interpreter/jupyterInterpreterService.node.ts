@@ -85,6 +85,7 @@ export class JupyterInterpreterService {
      * @memberof JupyterInterpreterService
      */
     public async selectInterpreter(): Promise<PythonEnvironment | undefined> {
+        sendTelemetryEvent(Telemetry.SelectJupyterInterpreter);
         const interpreter = await this.jupyterInterpreterSelector.selectInterpreter();
         if (!interpreter) {
             sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'notSelected' });
@@ -101,6 +102,9 @@ export class JupyterInterpreterService {
                 sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'installationCancelled' });
                 return;
             default:
+                sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, {
+                    result: 'selectAnotherInterpreter'
+                });
                 return this.selectInterpreter();
         }
     }

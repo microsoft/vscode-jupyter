@@ -144,18 +144,9 @@ export class JupyterKernelService implements IJupyterKernelService {
      * - display_name = Display name of the interpreter.
      * - metadata.interpreter = Interpreter information (useful in finding a kernel that matches a given interpreter)
      * - env = Will have environment variables of the activated environment.
-     *
-     * @param {PythonEnvironment} interpreter
-     * @param {boolean} [disableUI]
-     * @param {CancellationToken} [cancelToken]
-     * @returns {Promise<IJupyterKernelSpec>}
-     * @memberof KernelService
      */
-    // eslint-disable-next-line
-    // eslint-disable-next-line complexity
     @capturePerfTelemetry(Telemetry.RegisterInterpreterAsKernel)
     @traceDecoratorError('Failed to register an interpreter as a kernel')
-    // eslint-disable-next-line
     private async registerKernel(
         kernel: LocalKernelConnectionMetadata,
         cancelToken: CancellationToken

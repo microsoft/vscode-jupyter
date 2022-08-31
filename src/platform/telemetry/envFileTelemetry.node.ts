@@ -15,12 +15,6 @@ import { IFileSystem } from '../common/platform/types';
 let _defaultEnvFileSetting: string | undefined;
 let envFileTelemetrySent = false;
 
-export function sendSettingTelemetry(workspaceService: IWorkspaceService, envFileSetting?: string) {
-    if (shouldSendTelemetry() && envFileSetting !== defaultEnvFileSetting(workspaceService)) {
-        sendTelemetry(true);
-    }
-}
-
 export function sendFileCreationTelemetry() {
     if (shouldSendTelemetry()) {
         sendTelemetry();
@@ -43,8 +37,8 @@ export async function sendActivationTelemetry(
     }
 }
 
-function sendTelemetry(hasCustomEnvPath: boolean = false) {
-    sendTelemetryEvent(EventName.ENVFILE_WORKSPACE, undefined, { hasCustomEnvPath });
+function sendTelemetry() {
+    sendTelemetryEvent(EventName.ENVFILE_WORKSPACE);
 
     envFileTelemetrySent = true;
 }
