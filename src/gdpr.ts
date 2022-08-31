@@ -288,11 +288,6 @@
    "DATASCIENCE.NOTEBOOK_INTERRUPT" : {
      "result": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"The result of the interrupt,","owner":"donjayamanne"}   }
  */
-//Telemetry.NotebookLanguage
-/* __GDPR__
-   "DATASCIENCE.NOTEBOOK_LANGUAGE" : {
-     "language": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Language found in the notebook if a known language. Otherwise 'unknown'","owner":"donjayamanne"}   }
- */
 //Telemetry.NotebookRestart
 /* __GDPR__
    "DATASCIENCE.NOTEBOOK_RESTART" : {
@@ -605,7 +600,6 @@
 /* __GDPR__
    "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES" : {
      "envType": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Type of the Python environment.","owner":"donjayamanne"},
-     "pythonEnvType": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Duplicate of `envType`, the property `envType` doesn't seem to be coming through. If we can get `envType`, then we'll deprecate this new property. Else we just deprecate & remote the old property.","owner":"donjayamanne"},
      "reason": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Reason for not being able to get the env variables.","owner":"donjayamanne"},
      "source": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Source where the env variables were fetched from. If `python`, then env variables were fetched from Python extension. If `jupyter`, then env variables were fetched from Jupyter extension.","owner":"donjayamanne"}   }
  */
@@ -661,12 +655,6 @@
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS" : {
      "type": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether we're looking for widgets on local Jupyter environment (local connections) or remote.","owner":"donjayamanne"}   }
- */
-//Telemetry.HashedIPyWidgetNameDiscovered
-/* __GDPR__
-   "DS_INTERNAL.IPYWIDGET_DISCOVERED" : {
-     "hashedName": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"Hash of the widget","owner":"donjayamanne"},
-     "source": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Where did we find the hashed name (CDN or user environment or remote jupyter).","owner":"donjayamanne"}   }
  */
 //Telemetry.HashedIPyWidgetScriptDiscoveryError
 /* __GDPR__
@@ -786,18 +774,12 @@
 //Telemetry.KernelListingPerf
 /* __GDPR__
    "DS_INTERNAL.KERNEL_LISTING_PERF" : {
-     "firstTime": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether this is the first time in the session. (fetching kernels first time in the session is slower, later its cached). This is a generic property supported for all telemetry (sent by decorators).","owner":"donjayamanne"},
      "kind": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether this telemetry is for listing of all kernels or just python or just non-python. (fetching kernels first time in the session is slower, later its cached).","owner":"donjayamanne"}   }
  */
 //Telemetry.KernelSpecNotFound
 /* __GDPR__
    "DS_INTERNAL.KERNEL_SPEC_NOT_FOUND" : {
    }
- */
-//Telemetry.NumberOfLocalKernelSpecs
-/* __GDPR__
-   "DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT" : {
-     "count": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Number of kernel specs found on disc.","owner":"donjayamanne","isMeasurement":true}   }
  */
 //Telemetry.NativeVariableViewLoaded
 /* __GDPR__
@@ -942,11 +924,6 @@
    "DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL" : {
    }
  */
-//Telemetry.NumberOfRemoteKernelSpecs
-/* __GDPR__
-   "DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT" : {
-     "count": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Number of remote kernel specs.","owner":"donjayamanne","isMeasurement":true}   }
- */
 //Telemetry.RestartJupyterTime
 /* __GDPR__
    "DS_INTERNAL.RESTART_JUPYTER_TIME" : {
@@ -1055,7 +1032,7 @@
 //EventName.ENVFILE_WORKSPACE
 /* __GDPR__
    "ENVFILE_WORKSPACE" : {
-     "hasCustomEnvPath": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"If there's a custom path specified in the python.envFile workspace settings.","owner":"donjayamanne"}   }
+   }
  */
 //EventName.EXTENSION_LOAD
 /* __GDPR__

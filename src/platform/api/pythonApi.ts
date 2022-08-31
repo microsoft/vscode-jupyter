@@ -14,7 +14,7 @@ import {
 } from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
-import { capturePerfTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
@@ -370,9 +370,9 @@ export class InterpreterService implements IInterpreterService {
         }
     }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
-    @capturePerfTelemetry(Telemetry.ActiveInterpreterListingPerf)
     @traceDecoratorVerbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
+        const stopWatch = new StopWatch();
         this.hookupOnDidChangeInterpreterEvent();
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
         let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
@@ -384,11 +384,19 @@ export class InterpreterService implements IInterpreterService {
             if (promise) {
                 this.workspaceCachedActiveInterpreter.set(workspaceId, promise);
                 // If there was a problem in getting the details, remove the cached info.
-                promise.catch(() => {
-                    if (this.workspaceCachedActiveInterpreter.get(workspaceId) === promise) {
-                        this.workspaceCachedActiveInterpreter.delete(workspaceId);
-                    }
-                });
+                promise
+                    .then(() => {
+                        sendTelemetryEvent(
+                            Telemetry.ActiveInterpreterListingPerf,
+                            { duration: stopWatch.elapsedTime },
+                            { firstTime: true }
+                        );
+                    })
+                    .catch(() => {
+                        if (this.workspaceCachedActiveInterpreter.get(workspaceId) === promise) {
+                            this.workspaceCachedActiveInterpreter.delete(workspaceId);
+                        }
+                    });
                 if (isCI || [ExtensionMode.Development, ExtensionMode.Test].includes(this.context.extensionMode)) {
                     promise
                         .then((item) =>

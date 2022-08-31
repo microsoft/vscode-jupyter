@@ -556,21 +556,10 @@ export class IEventNamePropertyMapping {
     /**
      * Telemetry event sent when an environment file is detected in the workspace.
      */
-    [EventName.ENVFILE_WORKSPACE]: TelemetryEventInfo<{
-        /**
-         * If there's a custom path specified in the python.envFile workspace settings.
-         */
-        hasCustomEnvPath: boolean;
-    }> = {
+    [EventName.ENVFILE_WORKSPACE]: TelemetryEventInfo<undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            hasCustomEnvPath: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
+        source: 'N/A'
     };
     /**
      * Telemetry event sent with hash of an imported python package.
@@ -683,12 +672,6 @@ export class IEventNamePropertyMapping {
      */
     [Telemetry.KernelListingPerf]: TelemetryEventInfo<{
         /**
-         * Whether this is the first time in the session.
-         * (fetching kernels first time in the session is slower, later its cached).
-         * This is a generic property supported for all telemetry (sent by decorators).
-         */
-        firstTime?: boolean;
-        /**
          * Whether this telemetry is for listing of all kernels or just python or just non-python.
          * (fetching kernels first time in the session is slower, later its cached).
          */
@@ -702,56 +685,12 @@ export class IEventNamePropertyMapping {
         feature: 'N/A',
         source: 'N/A',
         properties: {
-            firstTime: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
             kind: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
         },
         measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * Total number of Local kernel specifications.
-     */
-    [Telemetry.NumberOfLocalKernelSpecs]: TelemetryEventInfo<{
-        /**
-         * Number of kernel specs found on disc.
-         */
-        count: number;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        measures: {
-            count: {
-                classification: 'SystemMetaData',
-                isMeasurement: true,
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
-     * Total number of Remote kernel specifications.
-     */
-    [Telemetry.NumberOfRemoteKernelSpecs]: TelemetryEventInfo<{
-        /**
-         * Number of remote kernel specs.
-         */
-        count: number;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        measures: {
-            count: {
-                classification: 'SystemMetaData',
-                isMeasurement: true,
-                purpose: 'FeatureInsight'
-            }
-        }
     };
     /**
      * Hash of the mime type of a cell output.
@@ -889,12 +828,6 @@ export class IEventNamePropertyMapping {
          */
         envType?: EnvironmentType;
         /**
-         * Duplicate of `envType`, the property `envType` doesn't seem to be coming through.
-         * If we can get `envType`, then we'll deprecate this new property.
-         * Else we just deprecate & remote the old property.
-         */
-        pythonEnvType?: EnvironmentType;
-        /**
          * Whether the env variables were fetched successfully or not.
          */
         failed: boolean;
@@ -932,10 +865,6 @@ export class IEventNamePropertyMapping {
             failed: {
                 classification: 'SystemMetaData',
                 purpose: 'PerformanceAndHealth'
-            },
-            pythonEnvType: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
             },
             reason: {
                 classification: 'SystemMetaData',
@@ -2176,28 +2105,6 @@ export class IEventNamePropertyMapping {
         tags: ['KernelStartup']
     };
     /**
-     * Telemetry event sent to indicate the language used in a notebook
-     *
-     * @type { language: string }
-     * @memberof IEventNamePropertyMapping
-     */
-    [Telemetry.NotebookLanguage]: TelemetryEventInfo<{
-        /**
-         * Language found in the notebook if a known language. Otherwise 'unknown'
-         */
-        language: string;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            language: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * Sent to detect the different languages of kernel specs used.
      */
     [Telemetry.KernelSpecLanguage]: TelemetryEventInfo<{
@@ -2377,34 +2284,6 @@ export class IEventNamePropertyMapping {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             },
-            hashedName: {
-                classification: 'PublicNonPersonalData',
-                purpose: 'FeatureInsight'
-            },
-            source: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
-     * Telemetry event sent with name of a Widget found.
-     */
-    [Telemetry.HashedIPyWidgetNameDiscovered]: TelemetryEventInfo<{
-        /**
-         * Hash of the widget
-         */
-        hashedName: string;
-        /**
-         * Where did we find the hashed name (CDN or user environment or remote jupyter).
-         */
-        source?: 'cdn' | 'local' | 'remote';
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        tags: ['Widgets'],
-        source: 'N/A',
-        properties: {
             hashedName: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'

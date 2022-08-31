@@ -361,7 +361,6 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
-"DATASCIENCE.NOTEBOOK_LANGUAGE","Telemetry event sent to indicate the language used in a notebook","Telemetry.NotebookLanguage","donjayamanne","N/A","","","language","Language found in the notebook if a known language. Otherwise 'unknown'","string","",false
 "DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","startTimeOnly","If true, this is the total time taken to restart the kernel (excluding times to stop current cells and the like).
 Also in the case of raw kernels, we keep a separate process running, and when restarting we just switch to that process.
@@ -840,20 +839,6 @@ VirtualEnvWrapper ()
 Global ()
 System ()",true
 "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
-Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentVariables","donjayamanne","N/A","","","pythonEnvType","Duplicate of `envType`, the property `envType` doesn't seem to be coming through.
-If we can get `envType`, then we'll deprecate this new property.
-Else we just deprecate & remote the old property.","","Unknown ()
-Conda ()
-VirtualEnv ()
-PipEnv ()
-Pyenv ()
-Venv ()
-WindowsStore ()
-Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
-"DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
 Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentVariables","donjayamanne","N/A","","","failed","Whether the env variables were fetched successfully or not.","boolean","",false
 "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
 Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentVariables","donjayamanne","N/A","","","source","Source where the env variables were fetched from.
@@ -940,10 +925,6 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS","Total time taken to discover all IPyWidgets.
 This is how long it takes to discover all widgets on disc (from python environment).","Telemetry.DiscoverIPyWidgetNamesPerf","donjayamanne","Notebook, InteractiveWindow","Widgets","","type","Whether we're looking for widgets on local Jupyter environment (local connections) or remote.","","'local' 
 'remote' ",false
-"DS_INTERNAL.IPYWIDGET_DISCOVERED","Telemetry event sent with name of a Widget found.","Telemetry.HashedIPyWidgetNameDiscovered","donjayamanne","Notebook, InteractiveWindow","Widgets","","hashedName","Hash of the widget","string","",false
-"DS_INTERNAL.IPYWIDGET_DISCOVERED","Telemetry event sent with name of a Widget found.","Telemetry.HashedIPyWidgetNameDiscovered","donjayamanne","Notebook, InteractiveWindow","Widgets","","source","Where did we find the hashed name (CDN or user environment or remote jupyter).","","'cdn' 
-'local' 
-'remote' ",true
 "DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO","Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.
 E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.","Telemetry.IPyWidgetExtensionJsInfo","donjayamanne","Notebook, Notebook","Widgets","Successfully parsed extension.js","widgetFolderNameHash","Hash of the widget folder name.","string","",false
 "DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO","Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.
@@ -1202,16 +1183,12 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
-"DS_INTERNAL.KERNEL_LISTING_PERF","Time taken to list the kernels.","Telemetry.KernelListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
-(fetching kernels first time in the session is slower, later its cached).
-This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
 "DS_INTERNAL.KERNEL_LISTING_PERF","Time taken to list the kernels.","Telemetry.KernelListingPerf","donjayamanne","N/A","","","kind","Whether this telemetry is for listing of all kernels or just python or just non-python.
 (fetching kernels first time in the session is slower, later its cached).","","'remote' 
 'local' 
 'localKernelSpec' 
 'localPython' ",false
 "DS_INTERNAL.KERNEL_LISTING_PERF","Time taken to list the kernels.","Telemetry.KernelListingPerf","donjayamanne","N/A","","","duration","Total time taken to list kernels.","number","",false
-"DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT","Total number of Local kernel specifications.","Telemetry.NumberOfLocalKernelSpecs","donjayamanne","N/A","","","count","Number of kernel specs found on disc.","number","",false
 "DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED","The Variable View webview was loaded.","Telemetry.NativeVariableViewLoaded","IanMatthewHuff","VariableViewer","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT","Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.","Telemetry.NotebookOpenCount","donjayamanne","InteractiveWindow, Notebook","","","count","Total number of notebooks opened in a session.
@@ -1943,7 +1920,6 @@ E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSe
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_START_RAW_SESSION","Sent to measure the time taken to start a raw kernel session.","Telemetry.RawKernelStartRawSession","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT","Total number of Remote kernel specifications.","Telemetry.NumberOfRemoteKernelSpecs","donjayamanne","N/A","","","count","Number of remote kernel specs.","number","",false
 "DS_INTERNAL.RESTART_JUPYTER_TIME","Total time taken to restart a kernel.
 Identical to `Telemetry.RestartKernel`","Telemetry.RestartJupyterTime","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
@@ -2093,7 +2069,6 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","type","The type of webview started up.","string","",false
 "DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"ENVFILE_WORKSPACE","Telemetry event sent when an environment file is detected in the workspace.","EventName.ENVFILE_WORKSPACE","donjayamanne","N/A","","","hasCustomEnvPath","If there's a custom path specified in the python.envFile workspace settings.","boolean","",false
 "EXTENSION.LOAD","Telemetry event sent with perf measures related to activation and loading of extension.","EventName.EXTENSION_LOAD","donjayamanne","N/A","","","workspaceFolderCount","Number of workspace folders opened","number","",false
 "EXTENSION.LOAD","Telemetry event sent with perf measures related to activation and loading of extension.","EventName.EXTENSION_LOAD","donjayamanne","N/A","","","totalActivateTime","Time taken to activate the extension.","number","",false
 "EXTENSION.LOAD","Telemetry event sent with perf measures related to activation and loading of extension.","EventName.EXTENSION_LOAD","donjayamanne","N/A","","","codeLoadingTime","Time taken to load the code.","number","",false

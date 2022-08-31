@@ -255,7 +255,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             { duration: stopWatch.elapsedTime },
             {
                 envType,
-                pythonEnvType: envType,
                 source: 'python',
                 failed: Object.keys(env || {}).length === 0,
                 reason: reasonForFailure
@@ -314,7 +313,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             );
             sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, undefined, {
                 envType,
-                pythonEnvType: envType,
                 source: 'jupyter',
                 failed: true,
                 reason: 'unknownOS'
@@ -332,7 +330,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                         { duration: stopWatch.elapsedTime },
                         {
                             envType,
-                            pythonEnvType: envType,
                             source: 'jupyter',
                             failed: Object.keys(env || {}).length === 0,
                             reason: Object.keys(env || {}).length === 0 ? 'emptyFromCondaRun' : undefined
@@ -345,7 +342,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                         { duration: stopWatch.elapsedTime },
                         {
                             envType,
-                            pythonEnvType: envType,
                             source: 'jupyter',
                             failed: true,
                             reason: 'unhandledError'
@@ -394,7 +390,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     { duration: stopWatch.elapsedTime },
                     {
                         envType,
-                        pythonEnvType: envType,
                         source: 'jupyter',
                         failed: true,
                         reason: 'noActivationCommands'
@@ -488,7 +483,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 { duration: stopWatch.elapsedTime },
                 {
                     envType,
-                    pythonEnvType: envType,
                     source: 'jupyter',
                     failed: Object.keys(env || {}).length === 0,
                     reason: Object.keys(env || {}).length === 0 ? 'emptyFromPython' : undefined
@@ -502,7 +496,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 { duration: stopWatch.elapsedTime },
                 {
                     envType,
-                    pythonEnvType: envType,
                     source: 'jupyter',
                     failed: true,
                     reason: 'unhandledError'

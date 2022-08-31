@@ -921,17 +921,6 @@ Expand each section to see more information about that event.
             Total number of live kernels in the kernel spec list.  
 
 
-* DATASCIENCE.NOTEBOOK_LANGUAGE  (Telemetry.NotebookLanguage)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Telemetry event sent to indicate the language used in a notebook  
-    ```
-
-    - Properties:  
-        - `language`: `string`  
-        Language found in the notebook if a known language. Otherwise 'unknown'  
-
-
 * DATASCIENCE.NOTEBOOK_RESTART  (Telemetry.NotebookRestart)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
@@ -2175,22 +2164,6 @@ Expand each section to see more information about that event.
             - `VirtualEnvWrapper`  
             - `Global`  
             - `System`  
-        - `pythonEnvType`?: `<see below>`  
-        Duplicate of `envType`, the property `envType` doesn't seem to be coming through.  
-        If we can get `envType`, then we'll deprecate this new property.  
-        Else we just deprecate & remote the old property.  
-        Possible values include:  
-            - `Unknown`  
-            - `Conda`  
-            - `VirtualEnv`  
-            - `PipEnv`  
-            - `Pyenv`  
-            - `Venv`  
-            - `WindowsStore`  
-            - `Poetry`  
-            - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `failed`: `boolean`  
         Whether the env variables were fetched successfully or not.  
         - `source`: `<see below>`  
@@ -2335,23 +2308,6 @@ Expand each section to see more information about that event.
         - `type`: `<see below>`  
         Whether we're looking for widgets on local Jupyter environment (local connections) or remote.  
         Possible values include:  
-            - `'local'`  
-            - `'remote'`  
-
-
-* DS_INTERNAL.IPYWIDGET_DISCOVERED  (Telemetry.HashedIPyWidgetNameDiscovered)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Telemetry event sent with name of a Widget found.  
-    ```
-
-    - Properties:  
-        - `hashedName`: `string`  
-        Hash of the widget  
-        - `source`?: `<see below>`  
-        Where did we find the hashed name (CDN or user environment or remote jupyter).  
-        Possible values include:  
-            - `'cdn'`  
             - `'local'`  
             - `'remote'`  
 
@@ -2979,10 +2935,6 @@ Expand each section to see more information about that event.
     ```
 
     - Properties:  
-        - `firstTime`?: `boolean`  
-        Whether this is the first time in the session.  
-        (fetching kernels first time in the session is slower, later its cached).  
-        This is a generic property supported for all telemetry (sent by decorators).  
         - `kind`: `<see below>`  
         Whether this telemetry is for listing of all kernels or just python or just non-python.  
         (fetching kernels first time in the session is slower, later its cached).  
@@ -3002,17 +2954,6 @@ Expand each section to see more information about that event.
     Telemetry event sent to indicate 'jupyter kernelspec' is not possible.  
     ```
 
-
-
-* DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT  (Telemetry.NumberOfLocalKernelSpecs)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Total number of Local kernel specifications.  
-    ```
-
-    - Measures:  
-        - `count`: `number`  
-        Number of kernel specs found on disc.  
 
 
 * DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED  (Telemetry.NativeVariableViewLoaded)  
@@ -4151,17 +4092,6 @@ In such cases we do not notify user of any failures or the like.
 
 
 
-* DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT  (Telemetry.NumberOfRemoteKernelSpecs)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Total number of Remote kernel specifications.  
-    ```
-
-    - Measures:  
-        - `count`: `number`  
-        Number of remote kernel specs.  
-
-
 * DS_INTERNAL.RESTART_JUPYTER_TIME  (Telemetry.RestartJupyterTime)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
@@ -4552,9 +4482,6 @@ In such cases we do not notify user of any failures or the like.
     Telemetry event sent when an environment file is detected in the workspace.  
     ```
 
-    - Properties:  
-        - `hasCustomEnvPath`: `boolean`  
-        If there's a custom path specified in the python.envFile workspace settings.  
 
 
 * EXTENSION.LOAD  (EventName.EXTENSION_LOAD)  
