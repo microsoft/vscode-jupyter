@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
-import { traceInfo, traceError } from '../../platform/logging';
+import { traceInfo, traceError, traceVerbose } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from './helpers';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
@@ -81,7 +81,7 @@ export class CellExecutionQueue implements Disposable {
      */
     public async cancel(forced?: boolean): Promise<void> {
         this.cancelledOrCompletedWithErrors = true;
-        traceInfo('Cancel pending cells');
+        traceVerbose('Cancel pending cells');
         await Promise.all(this.queueOfCellsToExecute.map((item) => item.cancel(forced)));
         this.lastCellExecution?.dispose();
         this.queueOfCellsToExecute.splice(0, this.queueOfCellsToExecute.length);

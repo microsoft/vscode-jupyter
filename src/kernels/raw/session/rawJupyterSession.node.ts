@@ -13,7 +13,6 @@ import {
 } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisplayOptions, IDisposable, Resource } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -87,9 +86,9 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                 duration: stopWatch.elapsedTime
             });
             traceInfo(
-                `${DataScience.kernelStarted().format(
-                    getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-                )}, (Raw session started and connected)`
+                `Started Kernel ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)} (pid: ${
+                    newSession.kernelProcess.pid
+                })`
             );
             this.setSession(newSession);
 
@@ -241,12 +240,6 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                 `Unable to start Raw Kernels for Kernel Connection of type ${this.kernelConnectionMetadata.kind}`
             );
         }
-
-        traceInfo(
-            `Starting raw kernel '${getDisplayNameOrNameOfKernelConnection(
-                this.kernelConnectionMetadata
-            )}' for interpreter ${getDisplayPath(this.kernelConnectionMetadata.interpreter?.uri)}`
-        );
 
         this.terminatingStatus = undefined;
         const process = await KernelProgressReporter.wrapAndReportProgress(

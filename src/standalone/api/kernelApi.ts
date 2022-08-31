@@ -11,7 +11,7 @@ import {
     IBaseKernel
 } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceInfo } from '../../platform/logging';
+import { traceVerbose } from '../../platform/logging';
 import { IDisposable, IDisposableRegistry, IExtensions } from '../../platform/common/types';
 import { PromiseChain } from '../../platform/common/utils/async';
 import { IKernelSocket as ExtensionKernelSocket } from '../../kernels/types';
@@ -85,7 +85,7 @@ class JupyterKernelService implements IExportedKernelService {
             extensionId: this.callingExtensionId,
             pemUsed: 'onDidChangeKernelSpecifications'
         });
-        traceInfo(`API called from ${this.callingExtensionId}`);
+        traceVerbose(`API called from ${this.callingExtensionId}`);
         return this._onDidChangeKernelSpecifications.event;
     }
     public get onDidChangeKernels(): Event<void> {

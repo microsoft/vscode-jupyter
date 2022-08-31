@@ -25,7 +25,7 @@ import {
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
 import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
-import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
 import { getNormalizedInterpreterPath, getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
@@ -578,7 +578,7 @@ export async function executeSilently(
     code: string,
     errorOptions?: SilentExecutionErrorOptions
 ): Promise<nbformat.IOutput[]> {
-    traceInfo(`Executing silently Code (${session.status}) = ${code.substring(0, 100).splitLines().join('\\n')}`);
+    traceVerbose(`Executing silently Code (${session.status}) = ${code.substring(0, 100).splitLines().join('\\n')}`);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
@@ -654,7 +654,7 @@ export async function executeSilently(
         handleExecuteSilentErrors(outputs, errorOptions, codeForLogging);
     }
 
-    traceInfo(`Executing silently Code (completed) = ${codeForLogging} with ${outputs.length} output(s)`);
+    traceVerbose(`Executing silently Code (completed) = ${codeForLogging} with ${outputs.length} output(s)`);
 
     return outputs;
 }

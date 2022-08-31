@@ -363,9 +363,9 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
                 pythonInfo = ` (${info.join(', ')})`;
             }
             traceInfo(
-                `Starting Jupyter Session id = '${this.kernelConnectionMetadata.kind}:${
+                `Starting Jupyter Session ${this.kernelConnectionMetadata.kind}, ${
                     this.kernelConnectionMetadata.id
-                }'${pythonInfo} for '${getDisplayPath(this.uri)}' (disableUI=${this.startupUI.disableUI})`
+                }${pythonInfo} for '${getDisplayPath(this.uri)}' (disableUI=${this.startupUI.disableUI})`
             );
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
@@ -608,7 +608,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
 
             const matplotInit = CodeSnippets.MatplotLibInit;
 
-            traceInfo(`Initialize matplotlib for ${getDisplayPath(this.resourceUri || this.uri)}`);
+            traceVerbose(`Initialize matplotlib for ${getDisplayPath(this.resourceUri || this.uri)}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             results.push(...matplotInit.splitLines({ trim: false }));
@@ -628,7 +628,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         // Add in SVG to the figure formats if needed
         if (settings.generateSVGPlots) {
             results.push(...CodeSnippets.AppendSVGFigureFormat.splitLines({ trim: false }));
-            traceInfo('Add SVG to matplotlib figure formats');
+            traceVerbose('Add SVG to matplotlib figure formats');
         }
 
         return results;
@@ -774,7 +774,7 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         const promise = this.kernelExecution.executeCell(sessionPromise, cell, codeOverride);
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
         promise.finally(() => (this._visibleExecutionCount += 1));
-        promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`), noop);
+        promise.then((state) => traceVerbose(`Cell ${cell.index} executed with state ${state}`), noop);
         return promise;
     }
     public async executeHidden(code: string): Promise<nbformat.IOutput[]> {

@@ -1170,8 +1170,6 @@ export namespace DataScience {
             "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1."
         );
 
-    export const kernelStarted = () =>
-        localize({ key: 'DataScience.kernelStarted', comment: ['{Locked="kernel"}'] }, 'Started kernel {0}.');
     export const runByLine = () => localize('DataScience.runByLine', 'Run by line (F10)');
     export const step = () => localize('DataScience.step', 'Run next line (F10)');
     export const stopRunByLine = () => localize('DataScience.stopRunByLine', 'Stop');

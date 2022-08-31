@@ -967,10 +967,6 @@
         "comment": ["{Locked='kernel'}"]
     },
     "DataScience.qgridWidgetScriptVersionCompatibilityWarning": "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1.",
-    "DataScience.kernelStarted": {
-        "message": "Started kernel {0}",
-        "comment": ["{Locked='kernel'}"]
-    },
     "DataScience.kernelStarting": {
         "message": "_Connecting to kernel..._",
         "comment": ["{Locked='kernel'}"]

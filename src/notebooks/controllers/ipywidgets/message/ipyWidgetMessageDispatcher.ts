@@ -7,7 +7,7 @@ import type { KernelMessage } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
-import { traceVerbose, traceError, traceInfo } from '../../../../platform/logging';
+import { traceVerbose, traceError } from '../../../../platform/logging';
 import { Identifiers, WIDGET_MIMETYPE } from '../../../../platform/common/constants';
 import { IDisposable } from '../../../../platform/common/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
@@ -104,7 +104,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     public receiveMessage(message: IPyWidgetMessage): void {
         switch (message.message) {
             case IPyWidgetMessages.IPyWidgets_logMessage:
-                traceInfo(`Widget Message: ${message.payload}`);
+                traceVerbose(`Widget Message: ${message.payload}`);
                 break;
             case IPyWidgetMessages.IPyWidgets_Ready:
                 this.sendKernelOptions();

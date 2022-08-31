@@ -350,7 +350,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 disposables.push(progress);
             }
             try {
-                traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+                traceVerbose(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
                 // When our kernel connects and gets a status message it triggers the ready promise
                 const kernelStatus = createDeferred<string>();
@@ -392,7 +392,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                     throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
                 }
 
-                traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+                traceVerbose(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
                 if (typeof result === 'string' && result.toString() == 'idle') {
                     return;
