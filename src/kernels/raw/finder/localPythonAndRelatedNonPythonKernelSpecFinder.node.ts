@@ -266,19 +266,17 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         if (
                             k.language === PYTHON_LANGUAGE &&
                             k.metadata?.interpreter?.path &&
-                            !areInterpreterPathsSame(Uri.file(k.metadata?.interpreter?.path), activeInterpreter?.uri)
+                            !areInterpreterPathsSame(Uri.file(k.metadata.interpreter.path), activeInterpreter?.uri)
                         ) {
                             try {
                                 interpreter = await this.interpreterService.getInterpreterDetails(
-                                    Uri.file(k.metadata?.interpreter?.path)
+                                    Uri.file(k.metadata.interpreter.path)
                                 );
                             } catch (ex) {
                                 traceError(
                                     `Failed to get interpreter details for Kernel Spec ${getDisplayPathFromLocalFile(
                                         k.specFile
-                                    )} with interpreter path ${getDisplayPath(
-                                        Uri.file(k.metadata?.interpreter?.path)
-                                    )}`,
+                                    )} with interpreter path ${getDisplayPath(Uri.file(k.metadata.interpreter.path))}`,
                                     ex
                                 );
                                 return;
@@ -346,7 +344,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const exactMatch = interpreters.find((i) => {
             if (
                 kernelSpec.metadata?.interpreter?.path &&
-                areInterpreterPathsSame(Uri.file(kernelSpec.metadata?.interpreter?.path), i.uri)
+                areInterpreterPathsSame(Uri.file(kernelSpec.metadata.interpreter.path), i.uri)
             ) {
                 traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
                 return true;
@@ -455,7 +453,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const originalSpecFiles = new Set<string>();
         results.forEach((r) => {
             if (r.metadata?.originalSpecFile) {
-                originalSpecFiles.add(r.metadata?.originalSpecFile);
+                originalSpecFiles.add(r.metadata.originalSpecFile);
             }
         });
         results = results.filter((r) => !r.specFile || !originalSpecFiles.has(r.specFile));

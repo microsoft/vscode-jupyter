@@ -741,7 +741,7 @@ export function updateNotebookMetadata(
                 break;
             case 'registeredByNewVersionOfExtForCustomKernelSpec': {
                 const originalNameFromOriginalSpecFile = kernelSpec.metadata?.vscode?.originalSpecFile
-                    ? path.basename(path.dirname(kernelSpec.metadata?.vscode?.originalSpecFile))
+                    ? path.basename(path.dirname(kernelSpec.metadata.vscode.originalSpecFile))
                     : undefined;
 
                 name = originalNameFromOriginalSpecFile || kernelSpec.name;
@@ -792,7 +792,7 @@ export function updateNotebookMetadata(
         }
     } else if (kernelSpecOrModel && !metadata.kernelspec) {
         const originalNameFromOriginalSpecFile = kernelSpecOrModel.metadata?.vscode?.originalSpecFile
-            ? path.basename(path.dirname(kernelSpecOrModel.metadata?.vscode?.originalSpecFile))
+            ? path.basename(path.dirname(kernelSpecOrModel.metadata.vscode.originalSpecFile))
             : undefined;
         // Add a new spec in this case
         metadata.kernelspec = {
@@ -810,7 +810,7 @@ export function updateNotebookMetadata(
         changed = true;
     } else if (kernelSpecOrModel && metadata.kernelspec) {
         const originalNameFromOriginalSpecFile = kernelSpecOrModel.metadata?.vscode?.originalSpecFile
-            ? path.basename(path.dirname(kernelSpecOrModel.metadata?.vscode?.originalSpecFile))
+            ? path.basename(path.dirname(kernelSpecOrModel.metadata.vscode.originalSpecFile))
             : undefined;
         // Spec exists, just update name and display_name
         const name = originalNameFromOriginalSpecFile || kernelSpecOrModel.name || kernelSpecOrModel.display_name || '';

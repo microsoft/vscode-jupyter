@@ -72,7 +72,7 @@ export class KernelAutoReConnectFailedMonitor implements IExtensionSyncActivatio
                 return;
             }
             this.kernelsStartedSuccessfully.add(kernel);
-            this.kernelConnectionToKernelMapping.set(kernel.session?.kernel, kernel);
+            this.kernelConnectionToKernelMapping.set(kernel.session.kernel, kernel);
             kernel.session?.kernel?.connectionStatusChanged.connect(this.onKernelStatusChanged, this);
             kernel.addEventHook(async (e) => {
                 if (e === 'willRestart') {

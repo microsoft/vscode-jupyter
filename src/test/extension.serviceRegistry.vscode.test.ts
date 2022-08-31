@@ -93,9 +93,9 @@ async function getInjectableClasses(fileNames: string[], options: ts.CompilerOpt
             return;
         }
 
-        if (ts.isClassDeclaration(node) && node.decorators) {
+        if (ts.isClassDeclaration(node) && node.modifiers) {
             // See if it has the 'injectable' decorator or not
-            if (node.decorators.find((d) => d.getText(sourceFile).includes('injectable'))) {
+            if (node.modifiers.find((d) => d.getText(sourceFile).includes('injectable'))) {
                 classes.add(node.name?.escapedText.toString().trim() || '');
             }
         } else if (ts.isModuleDeclaration(node)) {
