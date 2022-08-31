@@ -10,7 +10,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAnd
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { traceInfo, ignoreLogging, traceDecoratorError, traceError } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento, Resource } from '../../../platform/common/types';
-import { captureTelemetry, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { ILocalKernelFinder } from '../types';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { isArray } from '../../../platform/common/utils/sysTypes';
@@ -275,7 +275,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
      * Search all our local file system locations for installed kernel specs and return them
      */
     @traceDecoratorError('List kernels failed')
-    @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
+    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
     public async listKernels(
         resource: Resource,
         @ignoreLogging() cancelToken?: CancellationToken

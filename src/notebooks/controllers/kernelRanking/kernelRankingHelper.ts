@@ -12,7 +12,7 @@ import { Resource } from '../../../platform/common/types';
 import { ignoreLogging, logValue, traceDecoratorVerbose, traceError } from '../../../platform/logging';
 import { TraceOptions } from '../../../platform/logging/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { captureTelemetry, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { isExactMatch, rankKernels } from './helpers';
 import { IKernelRankingHelper } from '../types';
 
@@ -24,7 +24,7 @@ export class KernelRankingHelper implements IKernelRankingHelper {
     ) {}
 
     @traceDecoratorVerbose('Rank Kernels', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    @captureTelemetry(Telemetry.RankKernelsPerf)
+    @capturePerfTelemetry(Telemetry.RankKernelsPerf)
     public async rankKernels(
         resource: Resource,
         notebookMetadata?: INotebookMetadata | undefined,

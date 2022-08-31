@@ -82,7 +82,7 @@ export function suppressShutdownErrors(realKernel: any) {
 export class JupyterSessionStartError extends WrappedError {
     constructor(originalException: Error) {
         super(originalException.message, originalException);
-        sendTelemetryEvent(Telemetry.StartSessionFailedJupyter, undefined, undefined, originalException, true);
+        sendTelemetryEvent(Telemetry.StartSessionFailedJupyter, undefined, undefined, originalException);
     }
 }
 
@@ -205,9 +205,14 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
         if (this.session?.isRemoteSession && this.session.kernel) {
             const stopWatch = new StopWatch();
             await this.session.kernel.restart();
-            sendKernelTelemetryEvent(this.resource, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
-                startTimeOnly: true
-            });
+            sendKernelTelemetryEvent(
+                this.resource,
+                Telemetry.NotebookRestart,
+                { duration: stopWatch.elapsedTime },
+                {
+                    startTimeOnly: true
+                }
+            );
             this.setSession(this.session, true);
             return;
         }

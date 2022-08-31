@@ -29,7 +29,7 @@ import { CondaService } from './condaService.node';
 import { condaVersionSupportsLiveStreaming, createCondaEnv } from './pythonEnvironment.node';
 import { printEnvVariablesToFile } from './internal/scripts/index.node';
 import { ProcessService } from './proc.node';
-import { testOnlyMethod } from '../utils/decorators';
+import { swallowExceptions, testOnlyMethod } from '../utils/decorators';
 import { DataScience } from '../utils/localize';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { Telemetry } from '../constants';
@@ -208,6 +208,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         'Getting activated env variables from Python',
         TraceOptions.BeforeCall | TraceOptions.Arguments
     )
+    @swallowExceptions('Get activated env variables from Python')
     public async getActivatedEnvironmentVariablesFromPython(
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
@@ -249,13 +250,17 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         ]);
 
         const envType = interpreter.envType;
-        sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
-            envType,
-            pythonEnvType: envType,
-            source: 'python',
-            failed: Object.keys(env || {}).length === 0,
-            reason: reasonForFailure
-        });
+        sendTelemetryEvent(
+            Telemetry.GetActivatedEnvironmentVariables,
+            { duration: stopWatch.elapsedTime },
+            {
+                envType,
+                pythonEnvType: envType,
+                source: 'python',
+                failed: Object.keys(env || {}).length === 0,
+                reason: reasonForFailure
+            }
+        );
         // We must get activated env variables for Conda env, if not running stuff against conda will not work.
         // Hence we must log these as errors (so we can see them in jupyter logs).
         if (!env && envType === EnvironmentType.Conda) {
@@ -286,6 +291,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         'Getting activated env variables ourselves',
         TraceOptions.BeforeCall | TraceOptions.Arguments
     )
+    @swallowExceptions('Get activated env variables from Jupyter')
     public async getActivatedEnvironmentVariablesOurselves(
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
@@ -306,7 +312,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     interpreter?.uri
                 )}, shell cannot be determined.`
             );
-            sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, 0, {
+            sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, undefined, {
                 envType,
                 pythonEnvType: envType,
                 source: 'jupyter',
@@ -321,22 +327,30 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 const stopWatch = new StopWatch();
                 try {
                     const env = await this.getCondaEnvVariables(resource, interpreter);
-                    sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
-                        envType,
-                        pythonEnvType: envType,
-                        source: 'jupyter',
-                        failed: Object.keys(env || {}).length === 0,
-                        reason: Object.keys(env || {}).length === 0 ? 'emptyFromCondaRun' : undefined
-                    });
+                    sendTelemetryEvent(
+                        Telemetry.GetActivatedEnvironmentVariables,
+                        { duration: stopWatch.elapsedTime },
+                        {
+                            envType,
+                            pythonEnvType: envType,
+                            source: 'jupyter',
+                            failed: Object.keys(env || {}).length === 0,
+                            reason: Object.keys(env || {}).length === 0 ? 'emptyFromCondaRun' : undefined
+                        }
+                    );
                     return env;
                 } catch (ex) {
-                    sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
-                        envType,
-                        pythonEnvType: envType,
-                        source: 'jupyter',
-                        failed: true,
-                        reason: 'unhandledError'
-                    });
+                    sendTelemetryEvent(
+                        Telemetry.GetActivatedEnvironmentVariables,
+                        { duration: stopWatch.elapsedTime },
+                        {
+                            envType,
+                            pythonEnvType: envType,
+                            source: 'jupyter',
+                            failed: true,
+                            reason: 'unhandledError'
+                        }
+                    );
                     traceError('Failed to get activated environment variables ourselves', ex);
                 } finally {
                     traceVerbose(`getCondaEnvVariables and send telemetry took: ${stopWatch.elapsedTime}ms`);
@@ -375,13 +389,17 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const processService = await processServicePromise;
             const hasCustomEnvVars = Object.keys(customEnvVars).length;
             if (!activationCommands || activationCommands.length === 0) {
-                sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
-                    envType,
-                    pythonEnvType: envType,
-                    source: 'jupyter',
-                    failed: true,
-                    reason: 'noActivationCommands'
-                });
+                sendTelemetryEvent(
+                    Telemetry.GetActivatedEnvironmentVariables,
+                    { duration: stopWatch.elapsedTime },
+                    {
+                        envType,
+                        pythonEnvType: envType,
+                        source: 'jupyter',
+                        failed: true,
+                        reason: 'noActivationCommands'
+                    }
+                );
                 return hasCustomEnvVars ? { ...this.processEnv, ...customEnvVars } : undefined;
             }
             traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
@@ -465,23 +483,31 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             } else if (returnedEnv) {
                 delete returnedEnv[PYTHON_WARNINGS];
             }
-            sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
-                envType,
-                pythonEnvType: envType,
-                source: 'jupyter',
-                failed: Object.keys(env || {}).length === 0,
-                reason: Object.keys(env || {}).length === 0 ? 'emptyFromPython' : undefined
-            });
+            sendTelemetryEvent(
+                Telemetry.GetActivatedEnvironmentVariables,
+                { duration: stopWatch.elapsedTime },
+                {
+                    envType,
+                    pythonEnvType: envType,
+                    source: 'jupyter',
+                    failed: Object.keys(env || {}).length === 0,
+                    reason: Object.keys(env || {}).length === 0 ? 'emptyFromPython' : undefined
+                }
+            );
 
             return returnedEnv;
         } catch (e) {
-            sendTelemetryEvent(Telemetry.GetActivatedEnvironmentVariables, stopWatch.elapsedTime, {
-                envType,
-                pythonEnvType: envType,
-                source: 'jupyter',
-                failed: true,
-                reason: 'unhandledError'
-            });
+            sendTelemetryEvent(
+                Telemetry.GetActivatedEnvironmentVariables,
+                { duration: stopWatch.elapsedTime },
+                {
+                    envType,
+                    pythonEnvType: envType,
+                    source: 'jupyter',
+                    failed: true,
+                    reason: 'unhandledError'
+                }
+            );
             traceError('Failed to get activated environment variables ourselves', e);
             return;
         }

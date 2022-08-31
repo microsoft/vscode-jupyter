@@ -12,7 +12,7 @@ import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { getDefaultSettings } from '../../react-common/settingsReactSide';
 import { generateTestState } from '../mainState';
-import { isAllowedAction, isAllowedMessage, postActionToExtension } from './helpers';
+import { isAllowedMessage, postActionToExtension } from './helpers';
 import { generatePostOfficeSendReducer } from './postOffice';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
 
@@ -204,21 +204,6 @@ export interface IMainWithVariables extends IMainState {
     variableState: IVariableState;
 }
 
-/**
- * Middleware that will ensure all actions have `messageDirection` property.
- */
-const addMessageDirectionMiddleware: Redux.Middleware = (_store) => (next) => (action: Redux.AnyAction) => {
-    if (isAllowedAction(action)) {
-        // Ensure all dispatched messages have been flagged as `incoming`.
-        const payload: BaseReduxActionPayload<{}> = action.payload || {};
-        if (!payload.messageDirection) {
-            action.payload = { ...payload, messageDirection: 'incoming' };
-        }
-    }
-
-    return next(action);
-};
-
 export function createStore<M>(
     skipDefault: boolean,
     baseTheme: string,
@@ -247,7 +232,7 @@ export function createStore<M>(
     });
 
     // Create our middleware
-    const middleware = createMiddleWare(testMode, postOffice, transformLoad).concat([addMessageDirectionMiddleware]);
+    const middleware = createMiddleWare(testMode, postOffice, transformLoad);
 
     // Use this reducer and middle ware to create a store
     const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));
@@ -260,14 +245,6 @@ export function createStore<M>(
             // Double check this is one of our messages. React will actually post messages here too during development
             if (isAllowedMessage(message)) {
                 const basePayload: BaseReduxActionPayload = { data: payload };
-                if (message === InteractiveWindowMessages.Sync) {
-                    // This is a message that has been sent from extension purely for synchronization purposes.
-                    // Unwrap the message.
-                    message = payload.type;
-                    // This is a message that came in as a result of an outgoing message from another view.
-                    basePayload.messageDirection = 'outgoing';
-                    basePayload.data = payload.payload.data;
-                }
                 store.dispatch({ type: message, payload: basePayload });
             }
             return true;

@@ -20,7 +20,7 @@ import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource, IDisplayOptions } from
 import { DataScience, Common } from '../platform/common/utils/localize';
 import { IServiceContainer } from '../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, Telemetry } from '../telemetry';
+import { Telemetry } from '../telemetry';
 import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
 import { isModulePresentInEnvironmentCache, trackPackageInstalledIntoInterpreter } from './installer/productInstaller';
 import { ProductNames } from './installer/productNames';
@@ -32,6 +32,7 @@ import { KernelProgressReporter } from '../platform/progress/kernelProgressRepor
 import { IRawNotebookSupportedService } from './raw/types';
 import { getComparisonKey } from '../platform/vscode-path/resources';
 import { isModulePresentInEnvironment } from './installer/productInstaller.node';
+import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -216,7 +217,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');
         const resourceType = resource ? getResourceType(resource) : undefined;
         const resourceHash = resource ? getTelemetrySafeHashedString(resource.toString()) : undefined;
-        sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+        sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
             action: 'displayed',
             moduleName: productNameForTelemetry,
             resourceType,
@@ -243,7 +244,7 @@ export class KernelDependencyService implements IKernelDependencyService {
 
         try {
             if (!this.isCodeSpace) {
-                sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'prompted',
                     moduleName: productNameForTelemetry,
                     resourceType,
@@ -262,7 +263,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                       ]);
 
                 if (selection === moreInfoOption) {
-                    sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                    sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                         action: 'moreInfo',
                         moduleName: productNameForTelemetry,
                         resourceType,
@@ -277,7 +278,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 // "More Info" isn't a full valid response here, so reprompt after showing it
             } while (selection === moreInfoOption);
             if (cancelTokenSource.token.isCancellationRequested) {
-                sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'dismissed',
                     moduleName: productNameForTelemetry,
                     resourceType,
@@ -287,7 +288,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 return KernelInterpreterDependencyResponse.cancel;
             }
             if (selection === selectKernelOption) {
-                sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'differentKernel',
                     moduleName: productNameForTelemetry,
                     resourceType,
@@ -296,7 +297,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
             } else if (selection === installOption) {
-                sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'install',
                     moduleName: productNameForTelemetry,
                     resourceType,
@@ -320,7 +321,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     cancellationPromise
                 ]);
                 if (response === InstallerResponse.Installed) {
-                    sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                    sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                         action: 'installed',
                         moduleName: productNameForTelemetry,
                         resourceType,
@@ -329,7 +330,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     });
                     return KernelInterpreterDependencyResponse.ok;
                 } else if (response === InstallerResponse.Ignore) {
-                    sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                    sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                         action: 'failed',
                         moduleName: productNameForTelemetry,
                         resourceType,
@@ -339,7 +340,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
                 }
             }
-            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+            sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                 action: 'dismissed',
                 moduleName: productNameForTelemetry,
                 resourceType,
@@ -349,7 +350,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             return KernelInterpreterDependencyResponse.cancel;
         } catch (ex) {
             traceError(`Failed to install ${productNameForTelemetry}`, ex);
-            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+            sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                 action: 'error',
                 moduleName: productNameForTelemetry,
                 resourceType,

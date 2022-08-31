@@ -11,7 +11,7 @@ import '../platform/common/extensions';
 import { Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { getComparisonKey } from '../platform/vscode-path/resources';
-import { captureTelemetry, Telemetry } from '../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../telemetry';
 import { defaultNotebookFormat } from '../platform/common/constants';
 import { IEmbedNotebookEditorProvider, INotebookEditorProvider } from './types';
 import { getOSType, OSType } from '../platform/common/utils/platform';
@@ -27,7 +27,7 @@ import { getOSType, OSType } from '../platform/common/utils/platform';
 export class NotebookEditorProvider implements INotebookEditorProvider {
     private providers: Set<IEmbedNotebookEditorProvider> = new Set();
     constructor(@inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook) {}
-    @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
+    @capturePerfTelemetry(Telemetry.CreateNewNotebook)
     public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<void> {
         // contents will be ignored
         const language = options?.defaultCellLanguage ?? PYTHON_LANGUAGE;

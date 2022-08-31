@@ -69,7 +69,7 @@ export class PreferredRemoteKernelIdProvider {
         }
 
         // Prune list if too big
-        sendTelemetryEvent(Telemetry.NumberOfSavedRemoteKernelIds, undefined, { count: list.length });
+        sendTelemetryEvent(Telemetry.NumberOfSavedRemoteKernelIds, { count: list.length });
         while (list.length > MaximumKernelIdListSize) {
             requiresUpdate = true;
             list.shift();

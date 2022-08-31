@@ -14,7 +14,7 @@ import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCerts
 import { JupyterWaitForIdleError } from '../../errors/jupyterWaitForIdleError';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, captureTelemetry, Telemetry } from '../../../telemetry';
+import { sendTelemetryEvent, capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { expandWorkingDir } from '../jupyterUtils';
 import { IJupyterConnection } from '../../types';
 import {
@@ -155,7 +155,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                         // Something else went wrong
                         if (!options.localJupyter) {
-                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err, true);
+                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err);
 
                             // Check for the self signed certs error specifically
                             if (JupyterSelfCertsError.isSelfCertsError(err)) {
@@ -168,7 +168,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 throw new RemoteJupyterServerConnectionError(connection.baseUrl, options.serverId, err);
                             }
                         } else {
-                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err, true);
+                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err);
                             throw new LocalJupyterServerConnectionError(err);
                         }
                     } else {
@@ -219,7 +219,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     // eslint-disable-next-line
-    @captureTelemetry(Telemetry.StartJupyter)
+    @capturePerfTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(
         resource: Resource,
         useDefaultConfig: boolean,

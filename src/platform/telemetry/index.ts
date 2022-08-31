@@ -7,21 +7,16 @@ import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, JVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceEverything } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
-import { noop } from '../common/utils/misc';
+import { ExcludeType, noop, PickType, UnionToIntersection } from '../common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
 import { populateTelemetryWithErrorInfo } from '../errors';
-import { IEventNamePropertyMapping } from '../../telemetry';
+import { TelemetryEventInfo, IEventNamePropertyMapping } from '../../telemetry';
 
 /**
  * TODO@rebornix
  * `../platform/common/constants/Telemetry` is a re-export from `webview`, it should be moved into `src/telemetry`
  */
-export {
-    JupyterCommands,
-    NativeKeyboardCommandTelemetry,
-    NativeMouseCommandTelemetry,
-    Telemetry
-} from '../common/constants';
+export { JupyterCommands, Telemetry } from '../common/constants';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -130,11 +125,10 @@ function sanitizeProperties(eventName: string, data: Record<string, any>) {
 
 const queuedTelemetry: {
     eventName: string;
-    durationMs?: Record<string, number> | number;
-    properties?: Record<string, any>;
-    ex?: Error;
-    sendOriginalEventWithErrors?: boolean;
-    queueEverythingUntilCompleted?: Promise<any>;
+    measures?: Record<string, number> | undefined;
+    properties?: Record<string, any> | undefined;
+    ex?: Error | undefined;
+    queueEverythingUntilCompleted?: Promise<any> | undefined;
 }[] = [];
 
 /**
@@ -146,31 +140,38 @@ const queuedTelemetry: {
  */
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
-    durationMs?: Record<string, number> | number,
-    properties?: P[E] & { [waitBeforeSending]?: Promise<void> },
-    ex?: Error,
-    sendOriginalEventWithErrors?: boolean
+    measures?:
+        | (P[E] extends TelemetryEventInfo<infer R> ? PickType<UnionToIntersection<R>, number> : undefined)
+        | undefined,
+    properties?: P[E] extends TelemetryEventInfo<infer R>
+        ? ExcludeType<R, number> extends never | undefined
+            ? undefined | { [waitBeforeSending]?: Promise<void> }
+            : ExcludeType<R, number> & { [waitBeforeSending]?: Promise<void> }
+        : undefined | { [waitBeforeSending]?: Promise<void> } | (undefined | { [waitBeforeSending]?: Promise<void> }),
+    ex?: Error
 ) {
     if (!isTelemetrySupported() || isTestExecution()) {
         return;
     }
     // If stuff is already queued, then queue the rest.
     // Queue telemetry for now only in insiders.
-    if (
-        sharedProperties['isInsiderExtension'] === 'true' &&
-        (isPromise(properties?.waitBeforeSending) || queuedTelemetry.length)
-    ) {
+    if (isPromise(properties?.waitBeforeSending) || queuedTelemetry.length) {
         queuedTelemetry.push({
             eventName: eventName as string,
-            durationMs,
+            measures: measures as unknown as Record<string, number> | undefined,
             properties,
             ex,
-            sendOriginalEventWithErrors,
             queueEverythingUntilCompleted: properties?.waitBeforeSending
         });
         sendNextTelemetryItem();
     } else {
-        sendTelemetryEventInternal(eventName as any, durationMs, properties, ex, sendOriginalEventWithErrors);
+        sendTelemetryEventInternal(
+            eventName as any,
+            // Because of exactOptionalPropertyTypes we have to cast.
+            measures as unknown as Record<string, number> | undefined,
+            properties,
+            ex
+        );
     }
 }
 
@@ -190,13 +191,7 @@ function sendNextTelemetryItem(): void {
             return;
         }
         queuedTelemetry.shift();
-        sendTelemetryEventInternal(
-            nextItem.eventName as any,
-            nextItem.durationMs,
-            nextItem.properties,
-            nextItem.ex,
-            nextItem.sendOriginalEventWithErrors
-        );
+        sendTelemetryEventInternal(nextItem.eventName as any, nextItem.measures, nextItem.properties, nextItem.ex);
         sendNextTelemetryItem();
     }
 
@@ -211,43 +206,24 @@ function sendNextTelemetryItem(): void {
 
 function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
-    durationMs?: Record<string, number> | number,
+    measures?: Record<string, number>,
     properties?: P[E],
-    ex?: Error,
-    sendOriginalEventWithErrors?: boolean
+    ex?: Error
 ) {
     const reporter = getTelemetryReporter();
-    const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
     let customProperties: Record<string, string> = {};
     let eventNameSent = eventName as string;
 
     if (ex) {
-        if (!sendOriginalEventWithErrors) {
-            // When sending telemetry events for exceptions no need to send custom properties.
-            // Else we have to review all properties every time as part of GDPR.
-            // Assume we have 10 events all with their own properties.
-            // As we have errors for each event, those properties are treated as new data items.
-            // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
-            eventNameSent = 'ERROR';
-            customProperties = {
-                originalEventName: eventName as string
-            };
-            // Add shared properties to telemetry props (we may overwrite existing ones).
-            Object.assign(customProperties, sharedProperties);
-            populateTelemetryWithErrorInfo(customProperties, ex);
-            customProperties = sanitizeProperties(eventNameSent, customProperties);
-            reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures);
-        } else {
-            // Include a property failed, to indicate there are errors.
-            // Lets pay the price for better data.
-            customProperties = {};
-            // Add shared properties to telemetry props (we may overwrite existing ones).
-            Object.assign(customProperties, sharedProperties);
-            Object.assign(customProperties, properties || {});
-            populateTelemetryWithErrorInfo(customProperties, ex);
-            customProperties = sanitizeProperties(eventNameSent, customProperties);
-            reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
-        }
+        // Include a property failed, to indicate there are errors.
+        // Lets pay the price for better data.
+        customProperties = {};
+        // Add shared properties to telemetry props (we may overwrite existing ones).
+        Object.assign(customProperties, sharedProperties);
+        Object.assign(customProperties, properties || {});
+        populateTelemetryWithErrorInfo(customProperties, ex);
+        customProperties = sanitizeProperties(eventNameSent, customProperties);
+        reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     } else {
         if (properties) {
             customProperties = sanitizeProperties(eventNameSent, properties);
@@ -272,24 +248,30 @@ type TypedMethodDescriptor<T> = (
     descriptor: TypedPropertyDescriptor<T>
 ) => TypedPropertyDescriptor<T> | void;
 const timesSeenThisEventWithSameProperties = new Set<string>();
+export type PickTypeNumberProps<T, Value> = {
+    [P in keyof T as T[P] extends Value ? P : never]: T[P];
+};
+export type PickPropertiesOnly<T> = {
+    [P in keyof T as T[P] extends TelemetryEventInfo<infer R>
+        ? keyof PickType<R, number> extends never
+            ? never
+            : P
+        : never]: T[P];
+};
+
 /**
  * Decorates a method, sending a telemetry event with the given properties.
  * @param eventName The event name to send.
  * @param properties Properties to send with the event; must be valid for the event.
- * @param captureDuration True if the method's execution duration should be captured.
- * @param failureEventName If the decorated method returns a Promise and fails, send this event instead of eventName.
- * @param lazyProperties A static function on the decorated class which returns extra properties to add to the event.
- * This can be used to provide properties which are only known at runtime (after the decorator has executed).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any,
-export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
+export function capturePerfTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof PickPropertiesOnly<P>>(
     eventName: E,
-    properties?: P[E],
-    captureDuration: boolean = true,
-    failureEventName?: E,
-    lazyProperties?: (obj: This) => P[E]
+    properties?: P[E] extends TelemetryEventInfo<infer R>
+        ? ExcludeType<R, number> extends never | undefined
+            ? undefined
+            : ExcludeType<R, number>
+        : undefined
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
-    // eslint-disable-next-line , @typescript-eslint/no-explicit-any
     return function (
         _target: Object,
         _propertyKey: string | symbol,
@@ -298,24 +280,11 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
         const originalMethod = descriptor.value!;
         // eslint-disable-next-line , @typescript-eslint/no-explicit-any
         descriptor.value = function (this: This, ...args: any[]) {
-            // Legacy case; fast path that sends event before method executes.
-            // Does not set "failed" if the result is a Promise and throws an exception.
-            if (!captureDuration && !lazyProperties) {
-                sendTelemetryEvent(eventName, undefined, properties);
-                // eslint-disable-next-line no-invalid-this
-                return originalMethod.apply(this, args);
-            }
-
-            const props = () => {
-                if (lazyProperties) {
-                    return { ...properties, ...lazyProperties(this) };
-                }
-                return properties;
-            };
+            const props = properties || {};
 
             // Determine if this is the first time we're sending this telemetry event for this same (class/method).
-            const stopWatch = captureDuration ? new StopWatch() : undefined;
-            const key = `${eventName.toString()}${JSON.stringify(props() || {})}`;
+            const stopWatch = new StopWatch();
+            const key = `${eventName.toString()}${JSON.stringify(props)}`;
             const firstTime = !timesSeenThisEventWithSameProperties.has(key);
             timesSeenThisEventWithSameProperties.add(key);
 
@@ -328,27 +297,35 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
                 // eslint-disable-next-line
                 (result as Promise<void>)
                     .then((data) => {
-                        const propsToSend = { ...(props() || {}) };
+                        const propsToSend = { ...props };
                         if (firstTime) {
                             (propsToSend as any)['firstTime'] = firstTime;
                         }
-                        sendTelemetryEvent(eventName, stopWatch?.elapsedTime, propsToSend as typeof properties);
+                        sendTelemetryEvent(
+                            eventName,
+                            stopWatch ? ({ duration: stopWatch?.elapsedTime } as any) : undefined,
+                            propsToSend as typeof properties
+                        );
                         return data;
                     })
                     // eslint-disable-next-line @typescript-eslint/promise-function-async
                     .catch((ex) => {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const failedProps: P[E] = { ...(props() || ({} as any)) };
+                        const failedProps: P[E] = { ...props } as any;
                         (failedProps as any).failed = true;
                         sendTelemetryEvent(
-                            failureEventName ? failureEventName : eventName,
-                            stopWatch?.elapsedTime,
-                            failedProps,
+                            eventName as any,
+                            stopWatch ? { duration: stopWatch?.elapsedTime } : {},
+                            failedProps as any,
                             ex
                         );
                     });
             } else {
-                sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
+                sendTelemetryEvent(
+                    eventName,
+                    stopWatch ? ({ duration: stopWatch?.elapsedTime } as any) : undefined,
+                    props as typeof properties
+                );
             }
 
             return result;
@@ -358,47 +335,42 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
     };
 }
 
-// function sendTelemetryWhenDone<T extends IDSMappings, K extends keyof T>(eventName: K, properties?: T[K]);
-export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E extends keyof P>(
+/**
+ * Decorates a method, sending a telemetry event with the given properties.
+ * @param eventName The event name to send.
+ * @param properties Properties to send with the event; must be valid for the event.
+ */
+export function captureUsageTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
-    promise: Promise<any> | Thenable<any>,
-    stopWatch?: StopWatch,
-    properties?: P[E],
-    sendOriginalEventWithErrors?: boolean
-) {
-    stopWatch = stopWatch ? stopWatch : new StopWatch();
-    if (typeof promise.then === 'function') {
+    properties?: P[E] extends TelemetryEventInfo<infer R>
+        ? ExcludeType<R, number> extends never | undefined
+            ? undefined
+            : ExcludeType<R, number>
+        : undefined
+): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
+    return function (
+        _target: Object,
+        _propertyKey: string | symbol,
+        descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>
+    ) {
+        const originalMethod = descriptor.value!;
         // eslint-disable-next-line , @typescript-eslint/no-explicit-any
-        (promise as Promise<any>).then(
-            (data) => {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
-                return data;
-                // eslint-disable-next-line @typescript-eslint/promise-function-async
-            },
-            (ex) => {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex, sendOriginalEventWithErrors);
-                return Promise.reject(ex);
-            }
-        );
-    } else {
-        throw new Error('Method is neither a Promise nor a Theneable');
-    }
+        descriptor.value = function (this: This, ...args: any[]) {
+            // Legacy case; fast path that sends event before method executes.
+            // Does not set "failed" if the result is a Promise and throws an exception.
+            sendTelemetryEvent(eventName, undefined, properties);
+            // eslint-disable-next-line no-invalid-this
+            return originalMethod.apply(this, args);
+        };
+
+        return descriptor;
+    };
 }
 
 /**
  * Map all shared properties to their data types.
  */
 export interface ISharedPropertyMapping {
-    /**
-     * Whether user ran a cell or not.
-     * Its possible we have auto start enabled, in which case things could fall over
-     * (jupyter not start, kernel not start), and these are all not user initiated events.
-     * Hence sending telemetry indicating failure in starting a kernel could be misleading.
-     * This tells us that user started the action.
-     */
-    userExecutedCell: 'true';
     /**
      * For every DS telemetry we would like to know the type of Notebook Editor used when doing something.
      */

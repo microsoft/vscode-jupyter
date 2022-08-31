@@ -77,7 +77,7 @@ suite('Telemetry validation', function () {
             _properties?: TelemetryEventProperties,
             _measurements?: TelemetryEventMeasurements
         ): void {
-            eventsSent.add('ERROR');
+            //
         },
         sendDangerousTelemetryException: function (
             _error: Error,
@@ -85,7 +85,7 @@ suite('Telemetry validation', function () {
             _measurements?: TelemetryEventMeasurements,
             _sanitize?: boolean
         ): void {
-            eventsSent.add('ERROR');
+            //
         },
         dispose: async function (): Promise<any> {
             // Do nothing for dispose

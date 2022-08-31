@@ -21,13 +21,14 @@ import {
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
-import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { isPythonKernelConnection } from '../../helpers';
 import { IRawKernelConnectionSession, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
+import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -70,7 +71,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         return this.rawNotebookSupportedService.isSupported;
     }
 
-    @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
+    @capturePerfTelemetry(Telemetry.RawKernelCreatingNotebook)
     public async createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
@@ -91,9 +92,14 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                 kernelConnection.kind === 'startUsingLocalKernelSpec'
             ) {
                 if (!kernelConnection.interpreter) {
-                    sendTelemetryEvent(Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter, undefined, {
-                        pythonExtensionInstalled: this.extensionChecker.isPythonExtensionInstalled
-                    });
+                    sendKernelTelemetryEvent(
+                        resource,
+                        Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter,
+                        undefined,
+                        {
+                            pythonExtensionInstalled: this.extensionChecker.isPythonExtensionInstalled
+                        }
+                    );
                 }
             }
             traceInfo(`Computing working directory for resource '${getDisplayPath(resource)}'`);

@@ -234,7 +234,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
         // Log telemetry about number of rows
         try {
-            sendTelemetryEvent(Telemetry.ShowDataViewer, 0, {
+            sendTelemetryEvent(Telemetry.ShowDataViewer, undefined, {
                 rows: output.rowCount ? output.rowCount : 0,
                 columns: output.columns ? output.columns.length : 0
             });
@@ -317,13 +317,15 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
     private sendElapsedTimeTelemetry() {
         if (this.rowsTimer && this.pendingRowsCount === 0) {
-            sendTelemetryEvent(Telemetry.ShowDataViewer, this.rowsTimer.elapsedTime);
+            sendTelemetryEvent(Telemetry.ShowDataViewerRowsLoaded, undefined, {
+                rowsTimer: this.rowsTimer.elapsedTime
+            });
         }
     }
 
     private maybeSendSliceDataDimensionalityTelemetry(numberOfDimensions: number) {
         if (!this.sentDataViewerSliceDimensionalityTelemetry) {
-            sendTelemetryEvent(Telemetry.DataViewerDataDimensionality, undefined, { numberOfDimensions });
+            sendTelemetryEvent(Telemetry.DataViewerDataDimensionality, { numberOfDimensions });
             this.sentDataViewerSliceDimensionalityTelemetry = true;
         }
     }

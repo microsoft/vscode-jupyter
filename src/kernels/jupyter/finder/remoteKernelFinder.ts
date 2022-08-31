@@ -27,7 +27,7 @@ import {
     Resource
 } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { captureTelemetry, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import {
     IJupyterSessionManagerFactory,
     IJupyterSessionManager,
@@ -281,7 +281,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     }
 
     // Talk to the remote server to determine sessions
-    @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
+    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
     public async listKernelsFromConnection(
         connInfo: INotebookProviderConnection
     ): Promise<RemoteKernelConnectionMetadata[]> {
