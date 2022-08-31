@@ -2667,7 +2667,7 @@ Common measurement used across a number of events.","number","",false
 "EXTENSION.LOAD","Telemetry event sent with perf measures related to activation and loading of extension.","EventName.EXTENSION_LOAD","donjayamanne","N/A","","","endActivateTime","Time when activation completed.","number","",false
 "HASHED_PACKAGE_NAME","Telemetry event sent with hash of an imported python package.
 Used to detect the popularity of a package, that would help determine which packages
-need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.","EventName.HASHED_PACKAGE_NAME","unknown","N/A","","","hashedNamev2","Hash of the package name","string","",false
+need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.","EventName.HASHED_PACKAGE_NAME","donjayamanne","N/A","","","hashedNamev2","Hash of the package name","string","",false
 "HASHED_PACKAGE_PERF","Time taken to hash python packages found in the code.","EventName.HASHED_PACKAGE_PERF","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "JUPYTER_EXPERIMENTS_OPT_IN_OUT","Telemetry event sent with details when a user has requested to opt it or out of an experiment group","EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT","unknown","N/A","","","expNameOptedInto","Carries the name of the experiment user has been opted into manually","string","",true

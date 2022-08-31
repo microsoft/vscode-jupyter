@@ -8186,7 +8186,7 @@
 //EventName.HASHED_PACKAGE_NAME
 /* __GDPR__
    "HASHED_PACKAGE_NAME" : {
-     "hashedNamev2": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Hash of the package name","owner":"unknown"},
+     "hashedNamev2": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Hash of the package name","owner":"donjayamanne"},
      "${include}": [
        "${F1}",
        "${F2}",

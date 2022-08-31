@@ -594,7 +594,7 @@ export class IEventNamePropertyMapping {
          */
         hashedNamev2: string;
     }> = {
-        owner: 'unknown',
+        owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
         properties: {

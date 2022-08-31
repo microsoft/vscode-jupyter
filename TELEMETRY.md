@@ -5092,7 +5092,7 @@ In such cases we do not notify user of any failures or the like.
 
 
 * HASHED_PACKAGE_NAME  (EventName.HASHED_PACKAGE_NAME)  
-      Owner: [@unknown](https://github.com/unknown)  
+      Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
     Telemetry event sent with hash of an imported python package.  
     Used to detect the popularity of a package, that would help determine which packages  
