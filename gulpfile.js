@@ -411,7 +411,7 @@ function hasNativeDependencies() {
 
 async function generateTelemetryMD() {
     const generator = require('./out/telemetryGenerator.node');
-    return generator.default();
+    await generator.default();
 }
 gulp.task('generateTelemetryMd', async () => {
     return generateTelemetryMD();

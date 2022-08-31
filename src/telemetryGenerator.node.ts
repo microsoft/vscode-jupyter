@@ -636,7 +636,7 @@ function generateDocumentationForCommonTypes(fileNames: string[], options: ts.Co
     }
 }
 
-function generateDocumentation(fileNames: string[], options: ts.CompilerOptions): void {
+function generateDocumentation(fileNames: string[], options: ts.CompilerOptions): string | undefined {
     let host = new TypeScriptLanguageServiceHost(fileNames, options);
     let languageService = ts.createLanguageService(host, undefined, ts.LanguageServiceMode.Semantic);
     let program = languageService.getProgram()!;
@@ -801,6 +801,8 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
                 });
             });
         });
+        // return 'Has errors, check the logs';
+        return '';
     }
 }
 
@@ -942,18 +944,19 @@ async function generateTelemetryOutput() {
         });
     });
     // Print out the source tree
-    generateDocumentation(files, {
+    return generateDocumentation(files, {
         target: ts.ScriptTarget.ES5,
         module: ts.ModuleKind.CommonJS
     });
 }
 
-const promise = generateTelemetryOutput().then(
-    () => {
-        //
-    },
-    (ex) => console.error(`Failed to generate telemetry`, ex)
-);
-export default async function () {
-    await promise;
+const promise = generateTelemetryOutput().catch((ex) => {
+    console.error(`Failed to generate telemetry`, ex);
+    return 'Failed';
+});
+/**
+ * Returns an error message if there are any errors, else returns undefined.
+ */
+export default async function (): Promise<string | undefined> {
+    return await promise;
 }
