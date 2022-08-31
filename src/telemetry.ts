@@ -34,6 +34,7 @@ export type DurationMeasurement = {
 export type ResourceTypeTelemetryProperty = {
     /**
      * Used to determine whether this event is related to a Notebooks or Interactive window.
+     * Common to most of the events.
      */
     resourceType?: 'notebook' | 'interactive';
 };
@@ -163,27 +164,27 @@ function globallySharedProperties(): AllEventPropertiesData<SharedPropertyMappin
         installSource: {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
-            comment: ' Determine where an extension was installed from'
+            comment: ' Determine where an extension was installed from. Common to all events.'
         },
         isamlcompute: {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
-            comment: 'Whether this is an AML compute instance'
+            comment: 'Whether this is an AML compute instance. Common to all events.'
         },
         isInsiderExtension: {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
-            comment: 'Whether this is the Insider version of the Jupyter extension or not.'
+            comment: 'Whether this is the Insider version of the Jupyter extension or not. Common to all events.'
         },
         isPythonExtensionInstalled: {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
-            comment: 'Whether Python extension is installed or not.'
+            comment: 'Whether Python extension is installed or not. Common to all events.'
         },
         rawKernelSupported: {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
-            comment: 'Whether the raw kernel is supported or not.'
+            comment: 'Whether the raw kernel is supported or not. Common to all events.'
         }
     };
 }
@@ -386,15 +387,18 @@ export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty 
     Partial<{
         /**
          * Whether the user executed a cell.
+         * Common to most of the events.
          */
         userExecutedCell?: boolean;
         /**
          * Hash of the Kernel Connection id.
+         * Common to most of the events.
          */
         kernelId: string;
         /**
          * Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
          * If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
+         * Common to most of the events.
          */
         disableUI?: boolean;
         /**
@@ -405,81 +409,100 @@ export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty 
          * and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
          * we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
          * and have a better understanding of what is going on, e.g. why something failed.
+         * Common to most of the events.
          */
         resourceHash?: string;
         /**
          * Unique identifier for an instance of a notebook session.
          * If we restart or run this notebook tomorrow, this id will be different.
          * Id could be something as simple as a hash of the current Epoch time.
+         * Common to most of the events.
          */
         kernelSessionId: string;
         /**
          * Whether this resource is using the active Python interpreter or not.
+         * Common to most of the events.
          */
         isUsingActiveInterpreter?: boolean;
         /**
          * Found plenty of issues when starting kernels with conda, hence useful to capture this info.
+         * Common to most of the events.
          */
         pythonEnvironmentType?: EnvironmentType;
         /**
          * A key, so that rest of the information is tied to this. (hash)
+         * Common to most of the events.
          */
         pythonEnvironmentPath?: string;
         /**
          * Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
+         * Common to most of the events.
          */
         pythonEnvironmentVersion?: string;
         /**
          * Total number of python environments.
+         * Common to most of the events.
          */
         pythonEnvironmentCount?: number;
         /**
          * Comma delimited list of hashed packages & their versions.
+         * Common to most of the events.
          */
         pythonEnvironmentPackages?: string;
         /**
          * Whether kernel was started using kernel spec, interpreter, etc.
+         * Common to most of the events.
          */
         kernelConnectionType?: KernelConnectionMetadata['kind'];
         /**
          * Language of the kernel connection.
+         * Common to most of the events.
          */
         kernelLanguage: string;
         /**
          * This number gets reset after we attempt a restart or change kernel.
+         * Common to most of the events.
          */
         interruptCount?: number;
         /**
          * This number gets reset after change the kernel.
+         * Common to most of the events.
          */
         restartCount?: number;
         /**
          * Number of times starting the kernel failed.
+         * Common to most of the events.
          */
         startFailureCount?: number;
         /**
          * Number of times the kernel was changed.
+         * Common to most of the events.
          */
         switchKernelCount?: number;
         /**
          * Total number of kernel specs in the kernel spec list.
+         * Common to most of the events.
          */
         kernelSpecCount: number;
         /**
          * Total number of interpreters in the kernel spec list.
+         * Common to most of the events.
          */
         kernelInterpreterCount: number;
         /**
          * Total number of live kernels in the kernel spec list.
+         * Common to most of the events.
          */
         kernelLiveCount: number;
         /**
          * Whether this was started by Jupyter extension or a 3rd party.
+         * Common to most of the events.
          */
         actionSource: KernelActionSource;
         /**
          * Whether we managed to capture the environment variables or not.
          * In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
+         * Common to most of the events.
          */
         capturedEnvVars?: boolean;
     }>;
