@@ -756,15 +756,6 @@ Expand each section to see more information about that event.
         The error value of the failure  
 
 
-* DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK  (Telemetry.CreateNewNotebook)  
-      Owner: [@unknown](https://github.com/unknown)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
-
-
 * DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL  (Telemetry.OpenNotebookAll)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
     ```

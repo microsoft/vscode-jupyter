@@ -251,8 +251,6 @@ Common to most of the events.","boolean","",true
 OCaml is one such kernel.","boolean","",true
 "DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","Code we run post starting a kernel seems to have failed.","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","ename","The error name of the failure.","string","",false
 "DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","Code we run post starting a kernel seems to have failed.","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","The error value of the failure","string","",false
-"DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK","","Telemetry.CreateNewNotebook","unknown","N/A","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","result","The result of the interrupt,","","success ()
 timeout ()

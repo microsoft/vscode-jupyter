@@ -12,7 +12,6 @@ import {
     IJupyterUriProviderRegistration,
     JupyterServerUriHandle
 } from '../../kernels/jupyter/types';
-import { INotebookEditorProvider } from '../../notebooks/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './extension';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
@@ -51,10 +50,6 @@ export interface IExtensionApi {
      */
     registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
     registerPythonApi(pythonApi: PythonApi): void;
-    /**
-     * Creates a blank notebook and defaults the empty cell to the language provided.
-     */
-    createBlankNotebook(options: { defaultCellLanguage: string }): Promise<void>;
     /**
      * Gets the service that provides access to kernels.
      * Returns `undefined` if the calling extension is not allowed to access this API. This could
@@ -106,10 +101,6 @@ export function buildApi(
         registerRemoteServerProvider(picker: IJupyterUriProvider): void {
             const container = serviceContainer.get<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration);
             container.registerProvider(picker);
-        },
-        createBlankNotebook: async (options: { defaultCellLanguage: string }): Promise<void> => {
-            const service = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-            await service.createNew(options);
         },
         getKernelService: async () => {
             const kernelServiceFactory =

@@ -135,7 +135,6 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // Disable this, as we don't want Python extension or any other extensions that depend on this to fall over.
         // Return a dummy object, to ensure other extension do not fall over.
         return {
-            createBlankNotebook: () => Promise.resolve(),
             ready: Promise.resolve(),
             registerPythonApi: noop,
             registerRemoteServerProvider: noop,

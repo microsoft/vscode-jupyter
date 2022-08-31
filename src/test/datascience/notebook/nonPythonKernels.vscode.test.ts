@@ -27,11 +27,11 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
     waitForTextOutput,
-    createTemporaryNotebookFromFile
+    createTemporaryNotebookFromFile,
+    createNewNotebook
 } from './helper.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { NotebookCellLanguageService } from '../../../notebooks/languages/cellLanguageService';
-import { INotebookEditorProvider } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () => {
@@ -56,7 +56,6 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     let testJavaNb: Uri;
     let testCSharpNb: Uri;
     let testEmptyPythonNb: Uri;
-    let editorProvider: INotebookEditorProvider;
     let languageService: NotebookCellLanguageService;
     // eslint-disable-next-line local-rules/dont-use-process
     const testJavaKernels = (process.env.VSC_JUPYTER_CI_RUN_JAVA_NB_TEST || '').toLowerCase() === 'true';
@@ -70,7 +69,6 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         sinon.restore();
         verifyPromptWasNotDisplayed();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);
     });
     function verifyPromptWasNotDisplayed() {
@@ -139,7 +137,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
             `Default cell language is not Julia, it is ${languageService.getPreferredLanguage().toLowerCase()}`
         );
         // Create a blank notebook & confirm we have a julia code cell & julia kernel.
-        await editorProvider.createNew();
+        await createNewNotebook();
 
         await waitForCondition(
             async () =>
