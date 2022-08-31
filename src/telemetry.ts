@@ -992,12 +992,6 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         tags: ['KernelStartup']
     };
-    [Telemetry.CreateNewNotebook]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'unknown',
-        feature: 'N/A',
-        source: 'N/A',
-        measures: commonClassificationForDurationProperties()
-    };
     [Telemetry.DataScienceSettings]: TelemetryEventInfo<{}> = {
         owner: 'unknown',
         feature: 'N/A'

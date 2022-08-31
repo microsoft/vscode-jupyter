@@ -41,10 +41,17 @@ import {
     EventEmitter,
     ConfigurationTarget,
     NotebookEditor,
-    debug
+    debug,
+    NotebookData
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
-import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import {
+    defaultNotebookFormat,
+    JupyterNotebookView,
+    JVSC_EXTENSION_ID,
+    MARKDOWN_LANGUAGE,
+    PYTHON_LANGUAGE
+} from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import {
@@ -567,7 +574,7 @@ export async function prewarmNotebooks() {
     if (prewarmNotebooksDone.done) {
         return;
     }
-    const { editorProvider, vscodeNotebook, serviceContainer } = await getServices();
+    const { vscodeNotebook, serviceContainer } = await getServices();
     await closeActiveWindows();
 
     const disposables: IDisposable[] = [];
@@ -577,7 +584,7 @@ export async function prewarmNotebooks() {
         if (memento.get(LastSavedNotebookCellLanguage) !== PYTHON_LANGUAGE) {
             await memento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE);
         }
-        await editorProvider.createNew();
+        await createNewNotebook();
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0)!;
@@ -589,6 +596,25 @@ export async function prewarmNotebooks() {
         disposables.forEach((d) => d.dispose());
         prewarmNotebooksDone.done = true;
     }
+}
+
+export async function createNewNotebook() {
+    // contents will be ignored
+    const language = PYTHON_LANGUAGE;
+    const cell = new NotebookCellData(NotebookCellKind.Code, '', language);
+    const data = new NotebookData([cell]);
+    data.metadata = {
+        custom: {
+            cells: [],
+            metadata: {
+                orig_nbformat: defaultNotebookFormat.major
+            },
+            nbformat: defaultNotebookFormat.major,
+            nbformat_minor: defaultNotebookFormat.minor
+        }
+    };
+    const doc = await workspace.openNotebookDocument(JupyterNotebookView, data);
+    await window.showNotebookDocument(doc);
 }
 
 function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
