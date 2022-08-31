@@ -180,7 +180,7 @@ jobs:
           failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'
 
       - name: Validate TELEMETRY files
-        run: npm run validateTelemetryFiles
+        run: npm run validateTelemetry
 
   ts_tests:
     name: Type Script Tests

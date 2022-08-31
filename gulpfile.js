@@ -417,7 +417,7 @@ gulp.task('generateTelemetryMd', async () => {
     return generateTelemetryMD();
 });
 
-gulp.task('validateTelemetryFiles', async () => {
+gulp.task('validateTelemetry', async () => {
     const telemetryMD = fs.readFileSync(path.join(__dirname, 'TELEMETRY.md'), 'utf-8');
     const telemetryCSV = fs.readFileSync(path.join(__dirname, 'TELEMETRY.csv'), 'utf-8');
     const gdprTS = fs.readFileSync(path.join(__dirname, 'src', 'gdpr.ts'), 'utf-8');
