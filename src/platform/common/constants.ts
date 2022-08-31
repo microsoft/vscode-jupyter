@@ -442,7 +442,6 @@ export enum Telemetry {
     DataScienceSettings = 'DS_INTERNAL.SETTINGS',
     VariableExplorerVariableCount = 'DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT',
     AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW',
-    GetPasswordAttempt = 'DATASCIENCE.GET_PASSWORD_ATTEMPT',
     GetPasswordFailure = 'DS_INTERNAL.GET_PASSWORD_FAILURE',
     GetPasswordSuccess = 'DS_INTERNAL.GET_PASSWORD_SUCCESS',
     OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
@@ -452,7 +451,6 @@ export enum Telemetry {
      * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
      */
     SelectJupyterInterpreter = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER',
-    SelectJupyterInterpreterMessageDisplayed = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER_MESSAGE_DISPLAYED',
     /**
      * User used command to select an intrepreter for the jupyter server.
      */
@@ -530,10 +528,8 @@ export enum Telemetry {
     RawKernelSessionConnect = 'DS_INTERNAL.RAWKERNEL_SESSION_CONNECT',
     RawKernelStartRawSession = 'DS_INTERNAL.RAWKERNEL_START_RAW_SESSION',
     RawKernelInfoResponse = 'DS_INTERNAL.RAWKERNEL_INFO_RESPONSE',
-    RawKernelSessionStartSuccess = 'DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS',
     RawKernelSessionStart = 'DS_INTERNAL.RAWKERNEL_SESSION_START',
     RawKernelSessionStartUserCancel = 'DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL',
-    RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
     RawKernelSessionStartNoIpykernel = 'DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
     RawKernelSessionShutdown = 'DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN',
