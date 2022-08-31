@@ -583,7 +583,6 @@ jobs:
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop != 'web'
 
       - name: Get server launcher Linux/macOS
-        if: ${{ github.event.inputs.os != 'windows' }}
         run: |
           wget -O- https://aka.ms/install-vscode-server/setup.sh | sh
 
