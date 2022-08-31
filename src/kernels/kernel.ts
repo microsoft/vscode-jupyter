@@ -515,11 +515,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         });
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             // Run user specified startup commands
-            await this.executeSilently(session, this.getUserStartupCommands(), {
-                traceErrors: true,
-                traceErrorsMessage: 'Error executing user defined startup code',
-                telemetryName: Telemetry.UserStartupCodeFailure
-            });
+            await this.executeSilently(session, this.getUserStartupCommands(), { traceErrors: false });
         }
 
         // Then request our kernel info (indicates kernel is ready to go)

@@ -691,7 +691,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE  (Telemetry.KernelStartupCodeFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Code we run post starting a kernel seems to have failed.  
+    ```
+
     - Properties:  
         - `ename`: `string`  
         - `evalue`: `string`  
@@ -1915,17 +1918,6 @@ Expand each section to see more information about that event.
 * DATASCIENCE.USER_INSTALLED_PANDAS  (Telemetry.UserInstalledPandas)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
-
-
-* DATASCIENCE.USER_STARTUP_CODE_FAILURE  (Telemetry.UserStartupCodeFailure)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Telemetry sent to indicate there's a failure in  
-    ```
-
-    - Properties:  
-        - `ename`: `string`  
-        - `evalue`: `string`  
 
 
 * DATAVIEWER.USING_INTERPRETER  (Telemetry.DataViewerUsingInterpreter)  

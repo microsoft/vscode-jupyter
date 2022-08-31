@@ -222,8 +222,8 @@ In the case of conda environments, `false` would be an error condition, as we mu
 'remote' ",false
 "DATASCIENCE.KERNEL_SPEC_LANGUAGE","","Telemetry.KernelSpecLanguage","donjayamanne","N/A","KernelStartup","","usesShell","Whether shell is used to start the kernel. E.g. `""/bin/sh""` is used in the argv of the kernelSpec.
 OCaml is one such kernel.","boolean","",true
-"DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","ename","","string","",false
-"DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","","string","",false
+"DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","Code we run post starting a kernel seems to have failed.","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","ename","","string","",false
+"DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","Code we run post starting a kernel seems to have failed.","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","","string","",false
 "DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK","","Telemetry.CreateNewNotebook","unknown","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
@@ -870,8 +870,6 @@ prompt ",false
 "DATASCIENCE.SHOW_DATA_EXPLORER_ROWS_LOADED","Data viewer loads rows in chunks, this event is sent when the rows have all been loaded","Telemetry.ShowDataViewerRowsLoaded","IanMatthewHuff","DataFrameViewer","","","rowsTimer","Timer to indicate how long it took to load all the rows","","null or <empty> ",false
 "DATASCIENCE.START_SHOW_DATA_EXPLORER","User requested to open the data frame viewer.","Telemetry.StartShowDataViewer","IanMatthewHuff","DataFrameViewer","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.USER_STARTUP_CODE_FAILURE","Telemetry sent to indicate there's a failure in","Telemetry.UserStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","ename","","string","",false
-"DATASCIENCE.USER_STARTUP_CODE_FAILURE","Telemetry sent to indicate there's a failure in","Telemetry.UserStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","","string","",false
 "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true

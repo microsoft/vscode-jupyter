@@ -3250,29 +3250,18 @@ export class IEventNamePropertyMapping {
             }
         }
     };
-    [Telemetry.KernelStartupCodeFailure]: TelemetryEventInfo<{
-        ename: string;
-        evalue: string;
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        source: 'N/A',
-        properties: {
-            ename: {
-                classification: 'CallstackOrException',
-                purpose: 'PerformanceAndHealth'
-            },
-            evalue: {
-                classification: 'CallstackOrException',
-                purpose: 'PerformanceAndHealth'
-            }
-        }
-    };
+
     /**
-     * Telemetry sent to indicate there's a failure in
+     * Code we run post starting a kernel seems to have failed.
      */
-    [Telemetry.UserStartupCodeFailure]: TelemetryEventInfo<{
+    [Telemetry.KernelStartupCodeFailure]: TelemetryEventInfo<{
+        /*
+         * The error name of the failure.
+         */
         ename: string;
+        /*
+         * The error value of the failure
+         */
         evalue: string;
     }> = {
         owner: 'donjayamanne',
