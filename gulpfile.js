@@ -417,13 +417,25 @@ gulp.task('generateTelemetryMd', async () => {
     return generateTelemetryMD();
 });
 
-gulp.task('validateTelemetryMD', async () => {
+gulp.task('validateTelemetryFiles', async () => {
     const telemetryMD = fs.readFileSync(path.join(__dirname, 'TELEMETRY.md'), 'utf-8');
+    const telemetryCSV = fs.readFileSync(path.join(__dirname, 'TELEMETRY.csv'), 'utf-8');
+    const gdprTS = fs.readFileSync(path.join(__dirname, 'src', 'gdpr.ts'), 'utf-8');
     await generateTelemetryMD();
     const telemetryMD2 = fs.readFileSync(path.join(__dirname, 'TELEMETRY.md'), 'utf-8');
     if (telemetryMD2.trim() !== telemetryMD.trim()) {
-        console.error('Telemetry MD is not valid, please re-run `npm run generateTelemetry`');
-        throw new Error('Telemetry MD is not valid, please re-run `npm run generateTelemetry`');
+        console.error('Telemetry.md is not valid, please re-run `npm run generateTelemetry`');
+        throw new Error('Telemetry.md is not valid, please re-run `npm run generateTelemetry`');
+    }
+    const telemetryCSV2 = fs.readFileSync(path.join(__dirname, 'TELEMETRY.csv'), 'utf-8');
+    if (telemetryCSV2.trim() !== telemetryCSV.trim()) {
+        console.error('Telemetry.csv is not valid, please re-run `npm run generateTelemetry`');
+        throw new Error('Telemetry.csv is not valid, please re-run `npm run generateTelemetry`');
+    }
+    const gdprTS2 = fs.readFileSync(path.join(__dirname, 'src', 'gdpr.ts'), 'utf-8');
+    if (gdprTS2.trim() !== gdprTS.trim()) {
+        console.error('src/gdpr.ts is not valid, please re-run `npm run generateTelemetry`');
+        throw new Error('src/gdpr.ts is not valid, please re-run `npm run generateTelemetry`');
     }
 });
 
