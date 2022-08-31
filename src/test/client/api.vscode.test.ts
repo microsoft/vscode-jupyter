@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { traceInfo } from '../../platform/logging';
+import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -109,6 +109,11 @@ suite.only('3rd Party Kernel Service API', function () {
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
 
         const kernelSpecs = await kernelService!.getKernelSpecifications();
+        traceInfoIfCI(
+            `Found kernel specs ${kernelSpecs.length}: ${kernelSpecs
+                .map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri}`)
+                .join('\n')}`
+        );
         const pythonKernel = IS_REMOTE_NATIVE_TEST()
             ? kernelSpecs.find(
                   (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === 'python'
