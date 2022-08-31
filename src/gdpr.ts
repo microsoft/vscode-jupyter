@@ -216,7 +216,8 @@
 //Telemetry.InteractiveWindowDebugSetupCodeFailure
 /* __GDPR__
    "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE" : {
-   }
+     "ename": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"","owner":"roblourens"},
+     "evalue": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"","owner":"roblourens"}   }
  */
 //Telemetry.Interrupt
 /* __GDPR__
@@ -549,7 +550,7 @@
 //Telemetry.CommandExecuted
 /* __GDPR__
    "DS_INTERNAL.COMMAND_EXECUTED" : {
-     "command": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Name of the command executed.","owner":"unknown"}   }
+     "command": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Name of the command executed.","owner":"amunger"}   }
  */
 //Telemetry.ConnectFailedJupyter
 /* __GDPR__

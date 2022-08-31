@@ -877,14 +877,23 @@ export class IEventNamePropertyMapping {
         feature: ['DataFrameViewer', 'VariableViewer']
     };
     /**
-     * Telemetry event sent when user adds a cell below the current cell for IW.
+     * User adds a cell below the current cell for IW.
      */
     [Telemetry.AddCellBelow]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * How long on average we spent parsing code lens. Sent on shutdown.
+     **/
     [Telemetry.CodeLensAverageAcquisitionTime]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Sent when we have failed to connect to the local Jupyter server we started.
      */
@@ -1018,17 +1027,19 @@ export class IEventNamePropertyMapping {
     /**
      * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
      */
-    [Telemetry.DisableInteractiveShiftEnter]: TelemetryEventInfo<DurationMeasurement> = {
+    [Telemetry.DisableInteractiveShiftEnter]: TelemetryEventInfo<never | undefined> = {
         owner: 'amunger',
-        feature: ['InteractiveWindow']
-    } as any;
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
+     * Enable using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
      */
-    [Telemetry.EnableInteractiveShiftEnter]: TelemetryEventInfo<DurationMeasurement> = {
+    [Telemetry.EnableInteractiveShiftEnter]: TelemetryEventInfo<never | undefined> = {
         owner: 'amunger',
-        feature: ['InteractiveWindow']
-    } as any;
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
      * Telemetry sent to capture first time execution of a cell.
      * If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.
@@ -1362,101 +1373,212 @@ export class IEventNamePropertyMapping {
         properties: commonClassificationForResourceSpecificTelemetryProperties()
     };
     /**
-     * Run all Cell Commands in Interactive Python
+     * Command to Run all cells from the active python file in the Interactive Window
      */
-    [Telemetry.RunAllCells]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunAllCells]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Run a Selection or Line in Interactive Python
+     * Command to Run a Selection or Line in the Interactive Window
      */
-    [Telemetry.RunSelectionOrLine]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunSelectionOrLine]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Run the current Cell in Interactive Python
+     * Command to Run the current Cell in the Interactive Window
      */
-    [Telemetry.RunCurrentCell]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunCurrentCell]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Run all the above cells in Interactive Python
+     * Command to Run all the above cells in the Interactive Window
      */
-    [Telemetry.RunAllCellsAbove]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunAllCellsAbove]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Run current cell and all below in Interactive Python
+     * Command to Run current cell and all below in the Interactive Window
      */
-    [Telemetry.RunCellAndAllBelow]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunCellAndAllBelow]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Run current cell and advance cursor in Interactive Python
+     * Command to Run current cell in the Interactive Window and advance cursor to the next cell
      */
-    [Telemetry.RunCurrentCellAndAdvance]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunCurrentCellAndAdvance]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Run file in Interactive Python
+     * Command to Run the active file in the Interactive Window
      */
-    [Telemetry.RunFileInteractive]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
-    [Telemetry.RunToLine]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
-    [Telemetry.RunFromLine]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunFileInteractive]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Cell Edit Commands in Interactive Python
+     * Command to Run the active file contents up to the cursor location in the Interactive Window
+     */
+    [Telemetry.RunToLine]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A'
+    };
+    /**
+     * Command to Run the active file contents from the cursor location in the Interactive Window
+     */
+    [Telemetry.RunFromLine]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A'
+    };
+    /**
+     * Cell Edit Command in Interactive Window
      */
     [Telemetry.InsertCellBelowPosition]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.InsertCellBelow]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.InsertCellAbove]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.DeleteCells]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Selection Command in Interactive Window
+     */
     [Telemetry.SelectCell]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Selection Command in Interactive Window
+     */
     [Telemetry.SelectCellContents]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Selection Command in Interactive Window
+     */
     [Telemetry.ExtendSelectionByCellAbove]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Selection Command in Interactive Window
+     */
     [Telemetry.ExtendSelectionByCellBelow]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.MoveCellsUp]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.MoveCellsDown]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.ChangeCellToMarkdown]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.ChangeCellToCode]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Navigation Command in Interactive Window
+     */
     [Telemetry.GotoNextCellInFile]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Navigation Command in Interactive Window
+     */
     [Telemetry.GotoPrevCellInFile]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Run the cell and everything below it in the Interactive Window.
+     */
     [Telemetry.RunCurrentCellAndAddBelow]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Sent when users chose not to allow connecting to Jupyter over HTTPS when certificate isn't trusted by a trusted CA.
      */
@@ -1746,9 +1868,14 @@ export class IEventNamePropertyMapping {
             }
         }
     };
+    /**
+     * Information banner displayed to give the user the option to configure shift+enter for the Interactive Window.
+     */
     [Telemetry.ShiftEnterBannerShown]: TelemetryEventInfo<never | undefined> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A'
+    };
     /**
      * User requested to open the data frame viewer.
      */
@@ -1820,7 +1947,14 @@ export class IEventNamePropertyMapping {
         feature: ['DataFrameViewer'],
         source: 'User Action'
     };
-    [Telemetry.CreateNewInteractive]: TelemetryEventInfo<never | undefined> = { owner: 'amunger' } as any;
+    /**
+     * Command to create a new Interactive Window.
+     */
+    [Telemetry.CreateNewInteractive]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A'
+    };
     /**
      * Time taken to start the Jupyter server.
      */
@@ -2087,8 +2221,10 @@ export class IEventNamePropertyMapping {
      * Telemetry event sent when a user runs the interactive window with a new file
      */
     [Telemetry.NewFileForInteractiveWindow]: TelemetryEventInfo<never | undefined> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A'
+    };
     /**
      * Telemetry event sent when the ZMQ native binaries do not work.
      */
@@ -2902,7 +3038,7 @@ export class IEventNamePropertyMapping {
         source: 'N/A'
     };
     /**
-     * Telemetry sent when a command is executed.
+     * A command that the extension contributes is executed.
      */
     [Telemetry.CommandExecuted]: TelemetryEventInfo<{
         /**
@@ -2910,7 +3046,7 @@ export class IEventNamePropertyMapping {
          */
         command: string;
     }> = {
-        owner: 'unknown',
+        owner: 'amunger',
         feature: 'N/A',
         source: 'N/A',
         properties: {
@@ -3179,10 +3315,27 @@ export class IEventNamePropertyMapping {
             }
         }
     };
+    /**
+     * Error information from the debugger output channel while running initialization code.
+     */
     [Telemetry.InteractiveWindowDebugSetupCodeFailure]: TelemetryEventInfo<{
         ename: string;
         evalue: string;
-    }> = { owner: 'amunger' } as any;
+    }> = {
+        owner: 'roblourens',
+        feature: ['InteractiveWindow', 'Debugger'],
+        source: 'N/A',
+        properties: {
+            ename: {
+                classification: 'CallstackOrException',
+                purpose: 'PerformanceAndHealth'
+            },
+            evalue: {
+                classification: 'CallstackOrException',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
     /**
      * Sent when Kernel crashes.
      */
