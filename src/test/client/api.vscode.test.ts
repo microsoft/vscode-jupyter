@@ -19,9 +19,10 @@ import * as sinon from 'sinon';
 import { captureScreenShot, createEventHandler, IExtensionTestApi } from '../common.node';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
-import { workspace } from 'vscode';
+import { Uri, workspace } from 'vscode';
 import { executeSilently } from '../../kernels/helpers';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 
 // eslint-disable-next-line no-only-tests/no-only-tests
 suite.only('3rd Party Kernel Service API', function () {
@@ -106,19 +107,26 @@ suite.only('3rd Party Kernel Service API', function () {
 
     test('Start Kernel', async function () {
         const kernelService = await api.getKernelService();
+        const interpreterService = await api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
+        const activeInterpreter = await interpreterService.getActiveInterpreter();
 
         const kernelSpecs = await kernelService!.getKernelSpecifications();
         traceInfoIfCI(
             `Found kernel specs ${kernelSpecs.length}: ${kernelSpecs
-                .map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri}`)
+                .map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri.toString()}`)
                 .join('\n')}`
         );
         const pythonKernel = IS_REMOTE_NATIVE_TEST()
             ? kernelSpecs.find(
                   (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === 'python'
               )
-            : kernelSpecs.find((item) => item.kind === 'startUsingPythonInterpreter');
+            : kernelSpecs.find(
+                  (item) =>
+                      item.kind === 'startUsingPythonInterpreter' &&
+                      activeInterpreter &&
+                      Uri.from(item.interpreter.uri).toString() === Uri.from(activeInterpreter.uri).toString()
+              );
         assert.isOk(pythonKernel, 'Python Kernel Spec not found');
 
         // Don't use same file (due to dirty handling, we might save in dirty.)
