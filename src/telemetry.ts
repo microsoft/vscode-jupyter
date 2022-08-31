@@ -849,33 +849,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Telemetry event sent with details when a user has requested to opt it or out of an experiment group
-     */
-    [EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT]: TelemetryEventInfo<{
-        /**
-         * Carries the name of the experiment user has been opted into manually
-         */
-        expNameOptedInto?: string;
-        /**
-         * Carries the name of the experiment user has been opted out of manually
-         */
-        expNameOptedOutOf?: string;
-    }> = {
-        owner: 'unknown',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            expNameOptedInto: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            expNameOptedOutOf: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * Telemetry event sent when user opens the data viewer via the variable view.
      */
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: TelemetryEventInfo<never | undefined> = {

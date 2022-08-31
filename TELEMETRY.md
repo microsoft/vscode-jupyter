@@ -5074,19 +5074,6 @@ In such cases we do not notify user of any failures or the like.
         Common measurement used across a number of events.  
 
 
-* JUPYTER_EXPERIMENTS_OPT_IN_OUT  (EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT)  
-      Owner: [@unknown](https://github.com/unknown)  
-    ```
-    Telemetry event sent with details when a user has requested to opt it or out of an experiment group  
-    ```
-
-    - Properties:  
-        - `expNameOptedInto`?: `string`  
-        Carries the name of the experiment user has been opted into manually  
-        - `expNameOptedOutOf`?: `string`  
-        Carries the name of the experiment user has been opted out of manually  
-
-
 * JUPYTER_IS_INSTALLED  (Telemetry.JupyterInstalled)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
