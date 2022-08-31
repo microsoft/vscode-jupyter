@@ -151,9 +151,6 @@ ipynb ",false
 "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
-"DATASCIENCE.FETCH_CONTROLLERS","Telemetry sent when we have loaded some controllers.","Telemetry.FetchControllers","donjayamanne","","","","cached","Whether this is from a cached result or not","boolean","",false
-"DATASCIENCE.FETCH_CONTROLLERS","Telemetry sent when we have loaded some controllers.","Telemetry.FetchControllers","donjayamanne","","","","kind","Whether we've loaded local or remote controllers.","","'local' 
-'remote' ",false
 "DATASCIENCE.GET_PASSWORD_ATTEMPT","","Telemetry.GetPasswordAttempt","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.GOTO_NEXT_CELL_IN_FILE","","Telemetry.GotoNextCellInFile","amunger","","","","duration","Duration of a measure in milliseconds.
@@ -170,11 +167,11 @@ as the context already, in which case the import command doesn't ask for selecti
 "DATASCIENCE.INTERRUPT","User interrupts a cell
 Identical to `Telemetry.InterruptJupyterTime`","Telemetry.Interrupt","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","extensionId","","string","",false
-"DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","allowed","","","'yes' 
+"DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","Telemetry sent when an extension attempts to use our 3rd party API.","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","extensionId","Extension Id that's attempting to use the API.","string","",false
+"DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","Telemetry sent when an extension attempts to use our 3rd party API.","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","allowed","Whether or not the extension was able to use the API.","","'yes' 
 'no' ",false
-"DATASCIENCE.JUPYTER_KERNEL_API_USAGE","","Telemetry.JupyterKernelApiUsage","donjayamanne","N/A","","","extensionId","","string","",false
-"DATASCIENCE.JUPYTER_KERNEL_API_USAGE","","Telemetry.JupyterKernelApiUsage","donjayamanne","N/A","","","pemUsed","","keyof IExportedKernelService","",false
+"DATASCIENCE.JUPYTER_KERNEL_API_USAGE","Telemetry sent when an extension uses our 3rd party API.","Telemetry.JupyterKernelApiUsage","donjayamanne","N/A","","","extensionId","Extension Id that's attempting to use the API.","string","",false
+"DATASCIENCE.JUPYTER_KERNEL_API_USAGE","Telemetry sent when an extension uses our 3rd party API.","Telemetry.JupyterKernelApiUsage","donjayamanne","N/A","","","pemUsed","Name of the API member used.","keyof IExportedKernelService","",false
 "DATASCIENCE.KERNEL_CRASH","","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DATASCIENCE.KERNEL_CRASH","","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -873,8 +870,8 @@ prompt ",false
 "DATASCIENCE.SHOW_DATA_EXPLORER_ROWS_LOADED","Data viewer loads rows in chunks, this event is sent when the rows have all been loaded","Telemetry.ShowDataViewerRowsLoaded","IanMatthewHuff","DataFrameViewer","","","rowsTimer","Timer to indicate how long it took to load all the rows","","null or <empty> ",false
 "DATASCIENCE.START_SHOW_DATA_EXPLORER","User requested to open the data frame viewer.","Telemetry.StartShowDataViewer","IanMatthewHuff","DataFrameViewer","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.USER_STARTUP_CODE_FAILURE","","Telemetry.UserStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","ename","","string","",false
-"DATASCIENCE.USER_STARTUP_CODE_FAILURE","","Telemetry.UserStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","","string","",false
+"DATASCIENCE.USER_STARTUP_CODE_FAILURE","Telemetry sent to indicate there's a failure in","Telemetry.UserStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","ename","","string","",false
+"DATASCIENCE.USER_STARTUP_CODE_FAILURE","Telemetry sent to indicate there's a failure in","Telemetry.UserStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","","string","",false
 "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
@@ -896,54 +893,6 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","pythonExtensionInstalled","Indicates whether the python extension is installed.
-If we send telemetry fro this & this is `true`, then we have a bug.
-If its `false`, then we can ignore this telemetry.","boolean","",false
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
-'interactive' ",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","kernelId","Hash of the Kernel Connection id.","string","",false
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
-If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.
-Used to check whether a particular notebook fails across time or not.
-This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
-and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
-we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
-and have a better understanding of what is going on, e.g. why something failed.","string","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","kernelSessionId","Unique identifier for an instance of a notebook session.
-If we restart or run this notebook tomorrow, this id will be different.
-Id could be something as simple as a hash of the current Epoch time.","string","",false
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
-Conda 
-VirtualEnv 
-PipEnv 
-Pyenv 
-Venv 
-WindowsStore 
-Poetry 
-VirtualEnvWrapper 
-Global 
-System ",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","pythonEnvironmentCount","Total number of python environments.","number","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","kernelLanguage","Language of the kernel connection.","string","",false
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","restartCount","This number gets reset after change the kernel.","number","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","startFailureCount","Number of times starting the kernel failed.","number","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
-3rdPartyExtension ",false
-"DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER","","Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter","donjayamanne","N/A","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
-In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD","Telemetry sent to capture first time execution of a cell.
 If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.","Telemetry.ExecuteCellPerceivedCold","donjayamanne","InteractiveWindow, Notebook","Cell Execution","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
@@ -1084,9 +1033,9 @@ E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/i
 "DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO","Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.
 E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.","Telemetry.IPyWidgetExtensionJsInfo","donjayamanne","Notebook, Notebook","Widgets","Failed to parse extension.js. ","widgetFolderNameHash","Hash of the widget folder name.","string","",false
 "DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO","Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.
-E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.","Telemetry.IPyWidgetExtensionJsInfo","donjayamanne","Notebook, Notebook","Widgets","Failed to parse extension.js. ","failed","","true","",false
+E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.","Telemetry.IPyWidgetExtensionJsInfo","donjayamanne","Notebook, Notebook","Widgets","Failed to parse extension.js. ","failed","Failed to parse extension.js.","true","",false
 "DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO","Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.
-E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.","Telemetry.IPyWidgetExtensionJsInfo","donjayamanne","Notebook, Notebook","Widgets","Failed to parse extension.js. ","failure","","","'couldNotLocateRequireConfigStart' 
+E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.","Telemetry.IPyWidgetExtensionJsInfo","donjayamanne","Notebook, Notebook","Widgets","Failed to parse extension.js. ","failure","Reason for the failure.","","'couldNotLocateRequireConfigStart' 
 'couldNotLocateRequireConfigEnd' 
 'noRequireConfigEntries' ",false
 "DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO","Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.
@@ -1220,33 +1169,35 @@ In the case of conda environments, `false` would be an error condition, as we mu
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.JUPYTERSTARTUPCOST","","Telemetry.StartJupyter","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","condaEnvsSharingSameInterpreter","Total number of conda environments that share the same interpreter
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","condaEnvsSharingSameInterpreter","Total number of conda environments that share the same interpreter
 This happens when we create conda envs without the `python` argument.
 Such conda envs don't work today in the extension.
 Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","localKernelSpecCount","Total number of local kernel specs in the list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","remoteKernelSpecCount","Total number of remote kernel specs in the list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelId","Hash of the Kernel Connection id.","string","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelId","Hash of the Kernel Connection id.","string","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
 If we run the same notebook tomorrow, the hash will be the same.
 Used to check whether a particular notebook fails across time or not.
 This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
 and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
 we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
 and have a better understanding of what is going on, e.g. why something failed.","string","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSessionId","Unique identifier for an instance of a notebook session.
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
 Conda 
 VirtualEnv 
 PipEnv 
@@ -1257,22 +1208,22 @@ Poetry
 VirtualEnvWrapper 
 Global 
 System ",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","pythonEnvironmentCount","Total number of python environments.","number","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLanguage","Language of the kernel connection.","string","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","restartCount","This number gets reset after change the kernel.","number","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","startFailureCount","Number of times starting the kernel failed.","number","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","pythonEnvironmentCount","Total number of python environments.","number","",true
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelLanguage","Language of the kernel connection.","string","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","restartCount","This number gets reset after change the kernel.","number","",true
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","startFailureCount","Number of times starting the kernel failed.","number","",true
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","switchKernelCount","Number of times the kernel was changed.","number","",true
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
@@ -1657,27 +1608,36 @@ System ",true
 3rdPartyExtension ",false
 "DS_INTERNAL.RAWKERNEL_SESSION_CONNECT","","Telemetry.RawKernelSessionConnect","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","stacktrace","This is the callstack at the time that the `dispose` method
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","stacktrace","This is the callstack at the time that the `dispose` method
 is called, intended for us to be able to identify who called
 `dispose` on the RawSession.","","null or <empty> ",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.","string","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
 If we run the same notebook tomorrow, the hash will be the same.
 Used to check whether a particular notebook fails across time or not.
 This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
 and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
 we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
 and have a better understanding of what is going on, e.g. why something failed.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
 Conda 
 VirtualEnv 
 PipEnv 
@@ -1688,22 +1648,37 @@ Poetry
 VirtualEnvWrapper 
 Global 
 System ",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.","string","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
+"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
 RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","exitReason","The kernel process's exit reason, based on the error
@@ -1778,55 +1753,49 @@ RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donja
 "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
 RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","reason","","","0 
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","reason","Captures the result of the error message, whether user dismissed this or picked a new kernel or the like.","","0 
 1 
 2 
 3 
 4 ",false
-"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","failed","Whether there was a failure.","true","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","stackTrace","Node stacktrace without PII.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","isRequestToShutdownRestartSession","This indicates whether the session being shutdown
-is a restart session.","","true 
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","isRequestToShutdownRestartSession","This indicates whether the session being shutdown is a restart session.","","true 
 false 
 null or <empty> ",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","stacktrace","This is the callstack at the time that the `shutdownSession`
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","stacktrace","This is the callstack at the time that the `shutdownSession`
 method is called, intended for us to be ale to identify who
 tried to shutdown the session.","","null or <empty> ",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.","string","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
 If we run the same notebook tomorrow, the hash will be the same.
 Used to check whether a particular notebook fails across time or not.
 This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
 and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
 we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
 and have a better understanding of what is going on, e.g. why something failed.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
 Conda 
 VirtualEnv 
 PipEnv 
@@ -1837,37 +1806,37 @@ Poetry
 VirtualEnvWrapper 
 Global 
 System ",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.","string","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession`
-method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
+"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","When started successfully. ","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
@@ -2040,24 +2009,24 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.","string","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
 If we run the same notebook tomorrow, the hash will be the same.
 Used to check whether a particular notebook fails across time or not.
 This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
 and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
 we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
 and have a better understanding of what is going on, e.g. why something failed.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
 Conda 
 VirtualEnv 
 PipEnv 
@@ -2068,22 +2037,22 @@ Poetry
 VirtualEnvWrapper 
 Global 
 System ",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.","string","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
+"DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION","Telemetry event sent to indicate there was a failure in starting the raw kernel.","Telemetry.RawKernelSessionStartException","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS","","Telemetry.RawKernelSessionStartSuccess","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -2130,24 +2099,32 @@ System ",true
 3rdPartyExtension ",false
 "DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS","","Telemetry.RawKernelSessionStartSuccess","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.","string","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
 If we run the same notebook tomorrow, the hash will be the same.
 Used to check whether a particular notebook fails across time or not.
 This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
 and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
 we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
 and have a better understanding of what is going on, e.g. why something failed.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.","boolean","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.","","Unknown 
 Conda 
 VirtualEnv 
 PipEnv 
@@ -2158,22 +2135,37 @@ Poetry
 VirtualEnvWrapper 
 Global 
 System ",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.","KernelConnectionMetadata['kind']","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.","string","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.","number","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
+"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_START_RAW_SESSION","","Telemetry.RawKernelStartRawSession","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
@@ -2315,10 +2307,10 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME","How long did it take for a single variable request to be resolved.","Telemetry.VariableExplorerFetchTime","IanMatthewHuff","VariableViewer","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT","Count how many variables were in a variable request.","Telemetry.VariableExplorerVariableCount","IanMatthewHuff","VariableViewer","","","variableCount","Count of variables requested","number","",false
-"DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED","","Telemetry.VSCNotebookCellTranslationFailed","donjayamanne","Notebook, InteractiveWindow","","","isErrorOutput","","boolean","",false
+"DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED","We've failed to translate a Jupyter cell output for serialization into a Notebook cell.","Telemetry.VSCNotebookCellTranslationFailed","donjayamanne","Notebook, InteractiveWindow","","","outputType","Type of the output received from the Jupyter kernel.
+This is required to identify output types that we're not mapping correctly.","string","",false
 "DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER","","Telemetry.WaitForIdleJupyter","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.WEB_FETCH_ERROR","Event sent when trying to talk to a remote server and the browser gives us a generic fetch error","Telemetry.FetchError","unknown","","","","currentTask","What we were doing when the fetch error occurred","'connecting'","",false
 "DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","type","","string","",false
 "DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
@@ -2334,15 +2326,15 @@ need to be prioritized when resolving issues with intellisense or supporting sim
 "HASHED_PACKAGE_PERF","","EventName.HASHED_PACKAGE_PERF","donjayamanne","N/A","","","duration","","number","",false
 "JUPYTER_EXPERIMENTS_OPT_IN_OUT","Telemetry event sent with details when a user has requested to opt it or out of an experiment group","EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT","unknown","N/A","","","expNameOptedInto","Carries the name of the experiment user has been opted into manually","string","",true
 "JUPYTER_EXPERIMENTS_OPT_IN_OUT","Telemetry event sent with details when a user has requested to opt it or out of an experiment group","EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT","unknown","N/A","","","expNameOptedOutOf","Carries the name of the experiment user has been opted out of manually","string","",true
-"JUPYTER_IS_INSTALLED","","Telemetry.JupyterInstalled","donjayamanne","N/A","","/* Detection of jupyter failed ","failed","","true","",false
-"JUPYTER_IS_INSTALLED","","Telemetry.JupyterInstalled","donjayamanne","N/A","","/* Detection of jupyter failed ","reason","","'notInstalled'","",false
-"JUPYTER_IS_INSTALLED","","Telemetry.JupyterInstalled","donjayamanne","N/A","","/* Detection of jupyter failed ","frontEnd","","","'notebook' 
+"JUPYTER_IS_INSTALLED","Telemetry sent with result of detecting Jupyter in the current path.","Telemetry.JupyterInstalled","donjayamanne","N/A","","/* Detection of jupyter failed ","failed","Failed to detect Jupyter.","true","",false
+"JUPYTER_IS_INSTALLED","Telemetry sent with result of detecting Jupyter in the current path.","Telemetry.JupyterInstalled","donjayamanne","N/A","","/* Detection of jupyter failed ","reason","Reason for failure.","'notInstalled'","",false
+"JUPYTER_IS_INSTALLED","Telemetry sent with result of detecting Jupyter in the current path.","Telemetry.JupyterInstalled","donjayamanne","N/A","","/* Detection of jupyter failed ","frontEnd","Whether this is jupyter lab or notebook.","","'notebook' 
 'lab' ",false
-"JUPYTER_IS_INSTALLED","","Telemetry.JupyterInstalled","donjayamanne","N/A","","Jupyter was successfully detected ","detection","Jupyter is in current path of process owned by VS Code.
+"JUPYTER_IS_INSTALLED","Telemetry sent with result of detecting Jupyter in the current path.","Telemetry.JupyterInstalled","donjayamanne","N/A","","Jupyter was successfully detected ","detection","Jupyter is in current path of process owned by VS Code.
 I.e. jupyter can be found in the path as defined by the env variable process.env['PATH'].","'process'","",false
-"JUPYTER_IS_INSTALLED","","Telemetry.JupyterInstalled","donjayamanne","N/A","","Jupyter was successfully detected ","frontEnd","","","'notebook' 
+"JUPYTER_IS_INSTALLED","Telemetry sent with result of detecting Jupyter in the current path.","Telemetry.JupyterInstalled","donjayamanne","N/A","","Jupyter was successfully detected ","frontEnd","Whether this is jupyter lab or notebook.","","'notebook' 
 'lab' ",false
-"JUPYTER_IS_INSTALLED","","Telemetry.JupyterInstalled","donjayamanne","N/A","","Jupyter was successfully detected ","frontEndVersion","Version of the form 6.11, 4.8","number","",false
+"JUPYTER_IS_INSTALLED","Telemetry sent with result of detecting Jupyter in the current path.","Telemetry.JupyterInstalled","donjayamanne","N/A","","Jupyter was successfully detected ","frontEndVersion","Version of the form 6.11, 4.8","number","",false
 "PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","","EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","donjayamanne","N/A","","","hasEnvVars","Carries `true` if environment variables are present, `false` otherwise","boolean","",true
 "PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","","EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","donjayamanne","N/A","","","failed","Carries `true` if fetching environment variables failed, `false` otherwise","boolean","",true
 "PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","","EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","donjayamanne","N/A","","","activatedInTerminal","Whether the environment was activated within a terminal or not.","boolean","",true

@@ -412,7 +412,6 @@ export enum Telemetry {
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
     FailedToCreateNotebookController = 'DATASCIENCE.FAILED_TO_CREATE_CONTROLLER',
-    FetchControllers = 'DATASCIENCE.FETCH_CONTROLLERS',
 
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     ConnectLocalJupyter = 'DS_INTERNAL.CONNECTLOCALJUPYTER',
@@ -540,7 +539,6 @@ export enum Telemetry {
     RawKernelSessionShutdown = 'DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN',
     RawKernelSessionKernelProcessExited = 'DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED',
     RawKernelSessionDisposed = 'DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED',
-    AttemptedToLaunchRawKernelWithoutInterpreter = 'DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER',
     RunByLineVariableHover = 'DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER',
     InteractiveFileTooltipsPerf = 'DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF',
     NativeVariableViewLoaded = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED',
@@ -584,7 +582,6 @@ export enum Telemetry {
     KernelCrash = 'DATASCIENCE.KERNEL_CRASH',
     RunTest = 'DS_INTERNAL.RUNTEST',
     PreferredKernelExactMatch = 'DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH',
-    FetchError = 'DS_INTERNAL.WEB_FETCH_ERROR',
     JupyterInstalled = 'JUPYTER_IS_INSTALLED',
     NoActiveKernelSession = 'DATASCIENCE.NO_ACTIVE_KERNEL_SESSION',
     DataViewerUsingInterpreter = 'DATAVIEWER.USING_INTERPRETER',

@@ -3,10 +3,8 @@
 
 import { injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { Telemetry } from '../platform/common/constants';
 import { Resource } from '../platform/common/types';
 import { StopWatch } from '../platform/common/utils/stopWatch';
-import { sendTelemetryEvent } from '../telemetry';
 import { IContributedKernelFinder } from './internalTypes';
 import { IKernelFinder, KernelConnectionMetadata } from './types';
 
@@ -57,10 +55,6 @@ export class KernelFinder implements IKernelFinder {
         const key = `${kind}:${useCache}`;
         if (this.startTimeForFetching && !this.fetchingTelemetrySent.has(key)) {
             this.fetchingTelemetrySent.add(key);
-            sendTelemetryEvent(Telemetry.FetchControllers, this.startTimeForFetching.elapsedTime, {
-                cached: useCache === 'useCache',
-                kind
-            });
         }
 
         // Just return the list

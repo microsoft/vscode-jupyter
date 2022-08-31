@@ -2714,6 +2714,9 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForResourceSpecificTelemetryProperties
         }
     };
+    /**
+     * Telemetry event sent to indicate there was a failure in starting the raw kernel.
+     */
     [Telemetry.RawKernelSessionStartException]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
@@ -2723,6 +2726,10 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForResourceSpecificTelemetryProperties
         }
     };
+    /**
+     * Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
+     * E.g. possible the user chose another kernel or the like.
+     */
     [Telemetry.RawKernelSessionStartUserCancel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
@@ -2732,18 +2739,23 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForResourceSpecificTelemetryProperties
         }
     };
+    /**
+     * Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+     * This is useful to see what the user does with this error message.
+     */
     [Telemetry.RawKernelSessionStartNoIpykernel]: TelemetryEventInfo<
         {
+            /**
+             * Captures the result of the error message, whether user dismissed this or picked a new kernel or the like.
+             */
             reason: KernelInterpreterDependencyResponse;
-        } & TelemetryErrorProperties &
-            ResourceTypeTelemetryProperty
+        } & ResourceTypeTelemetryProperty
     > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         source: 'N/A',
         properties: {
-            ...commonClassificationForResourceType,
-            ...commonClassificationForErrorProperties
+            ...commonClassificationForResourceType
         },
         measures: {
             reason: {
@@ -2775,7 +2787,7 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         properties: {
             exitReason: {
-                classification: 'SystemMetaData',
+                classification: 'CallstackOrException',
                 purpose: 'PerformanceAndHealth'
             },
             ...commonClassificationForResourceType,
@@ -2783,7 +2795,7 @@ export class IEventNamePropertyMapping {
         },
         measures: {
             exitCode: {
-                classification: 'SystemMetaData',
+                classification: 'CallstackOrException',
                 purpose: 'PerformanceAndHealth',
                 isMeasurement: true
             }
@@ -2791,14 +2803,13 @@ export class IEventNamePropertyMapping {
     };
 
     /**
-     * This event is sent when a RawJupyterSession's `shutdownSession`
-     * method is called.
+     * This event is sent when a RawJupyterSession's `shutdownSession` method is called.
+     * Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.
      */
     [Telemetry.RawKernelSessionShutdown]: TelemetryEventInfo<
         {
             /**
-             * This indicates whether the session being shutdown
-             * is a restart session.
+             * This indicates whether the session being shutdown is a restart session.
              */
             isRequestToShutdownRestartSession: boolean | undefined;
             /**
@@ -2827,6 +2838,7 @@ export class IEventNamePropertyMapping {
     };
     /**
      * This event is sent when a RawSession's `dispose` method is called.
+     * Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.
      */
     [Telemetry.RawKernelSessionDisposed]: TelemetryEventInfo<
         {
@@ -2854,7 +2866,9 @@ export class IEventNamePropertyMapping {
     // Run by line events
     [Telemetry.RunByLineVariableHover]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
 
-    // Misc
+    /**
+     * Telemetry sent with the total number of different types of kernels in the kernel picker.
+     */
     [Telemetry.KernelCount]: TelemetryEventInfo<
         {
             /**
@@ -2876,11 +2890,19 @@ export class IEventNamePropertyMapping {
              * Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.
              */
             condaEnvsSharingSameInterpreter: number;
+            /**
+             * Total number of local kernel specs in the list.
+             */
+            localKernelSpecCount: number;
+            /**
+             * Total number of remote kernel specs in the list.
+             */
+            remoteKernelSpecCount: number;
         } & DurationMeasurement &
             ResourceSpecificTelemetryProperties
     > = {
         owner: 'donjayamanne',
-        feature: 'N/A',
+        feature: ['KernelPicker'],
         source: 'N/A',
         properties: {
             ...commonClassificationForResourceType,
@@ -2907,19 +2929,36 @@ export class IEventNamePropertyMapping {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight',
                 isMeasurement: true
+            },
+            localKernelSpecCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            remoteKernelSpecCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
             }
         }
     };
 
+    /**
+     * We've failed to translate a Jupyter cell output for serialization into a Notebook cell.
+     */
     [Telemetry.VSCNotebookCellTranslationFailed]: TelemetryEventInfo<{
-        isErrorOutput: boolean; // Whether we're trying to translate an error output when we shouldn't be.
+        /**
+         * Type of the output received from the Jupyter kernel.
+         * This is required to identify output types that we're not mapping correctly.
+         */
+        outputType: string;
     }> = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         source: 'N/A',
         properties: {
-            isErrorOutput: {
-                classification: 'SystemMetaData',
+            outputType: {
+                classification: 'PublicNonPersonalData',
                 purpose: 'PerformanceAndHealth'
             }
         }
@@ -2947,30 +2986,6 @@ export class IEventNamePropertyMapping {
         }
     };
 
-    // Whether we've attempted to start a raw Python kernel without any interpreter information.
-    // If we don't detect such telemetry in a few months, then we can remove this along with the temporary code associated with this telemetry.
-    [Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter]: TelemetryEventInfo<
-        {
-            /**
-             * Indicates whether the python extension is installed.
-             * If we send telemetry fro this & this is `true`, then we have a bug.
-             * If its `false`, then we can ignore this telemetry.
-             */
-            pythonExtensionInstalled: boolean;
-        } & ResourceSpecificTelemetryProperties
-    > = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            pythonExtensionInstalled: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            ...commonClassificationForResourceType,
-            ...commonClassificationForResourceSpecificTelemetryProperties
-        }
-    };
     /**
      * How long it took to return our hover tooltips for a .py file.
      */
@@ -3181,8 +3196,17 @@ export class IEventNamePropertyMapping {
     [DebuggingTelemetry.endedSession]: TelemetryEventInfo<{
         reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
     }> = { owner: 'roblourens' } as any;
+    /**
+     * Telemetry sent when an extension uses our 3rd party API.
+     */
     [Telemetry.JupyterKernelApiUsage]: TelemetryEventInfo<{
+        /**
+         * Extension Id that's attempting to use the API.
+         */
         extensionId: string;
+        /**
+         * Name of the API member used.
+         */
         pemUsed: keyof IExportedKernelService;
     }> = {
         owner: 'donjayamanne',
@@ -3199,8 +3223,17 @@ export class IEventNamePropertyMapping {
             }
         }
     };
+    /**
+     * Telemetry sent when an extension attempts to use our 3rd party API.
+     */
     [Telemetry.JupyterKernelApiAccess]: TelemetryEventInfo<{
+        /**
+         * Extension Id that's attempting to use the API.
+         */
         extensionId: string;
+        /**
+         * Whether or not the extension was able to use the API.
+         */
         allowed: 'yes' | 'no';
     }> = {
         owner: 'donjayamanne',
@@ -3212,7 +3245,7 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             allowed: {
-                classification: 'PublicNonPersonalData',
+                classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
         }
@@ -3235,6 +3268,9 @@ export class IEventNamePropertyMapping {
             }
         }
     };
+    /**
+     * Telemetry sent to indicate there's a failure in
+     */
     [Telemetry.UserStartupCodeFailure]: TelemetryEventInfo<{
         ename: string;
         evalue: string;
@@ -3309,19 +3345,6 @@ export class IEventNamePropertyMapping {
         source: 'User Action',
         feature: ['KernelPicker']
     };
-    /**
-     * Telemetry sent when we have loaded some controllers.
-     */
-    [Telemetry.FetchControllers]: TelemetryEventInfo<{
-        /**
-         * Whether this is from a cached result or not
-         */
-        cached: boolean;
-        /**
-         * Whether we've loaded local or remote controllers.
-         */
-        kind: 'local' | 'remote';
-    }> = { owner: 'donjayamanne' } as any;
     [Telemetry.RunTest]: TelemetryEventInfo<{
         testName: string;
         testResult: string;
@@ -3346,20 +3369,21 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Event sent when trying to talk to a remote server and the browser gives us a generic fetch error
+     * Telemetry sent with result of detecting Jupyter in the current path.
      */
-    [Telemetry.FetchError]: TelemetryEventInfo<{
-        /**
-         * What we were doing when the fetch error occurred
-         */
-        currentTask: 'connecting';
-    }> = {
-        owner: 'unknown'
-    } as any;
     [Telemetry.JupyterInstalled]: TelemetryEventInfo<
         | /* Detection of jupyter failed */ {
+              /**
+               * Failed to detect Jupyter.
+               */
               failed: true;
+              /**
+               * Reason for failure.
+               */
               reason: 'notInstalled';
+              /**
+               * Whether this is jupyter lab or notebook.
+               */
               frontEnd: 'notebook' | 'lab';
           }
         | /** Jupyter was successfully detected */ {
@@ -3368,6 +3392,9 @@ export class IEventNamePropertyMapping {
                * I.e. jupyter can be found in the path as defined by the env variable process.env['PATH'].
                */
               detection: 'process';
+              /**
+               * Whether this is jupyter lab or notebook.
+               */
               frontEnd: 'notebook' | 'lab';
               /**
                * Version of the form 6.11, 4.8
@@ -3391,15 +3418,15 @@ export class IEventNamePropertyMapping {
                 purpose: 'PerformanceAndHealth'
             },
             failed: {
-                classification: 'SystemMetaData',
+                classification: 'CallstackOrException',
                 purpose: 'PerformanceAndHealth'
             },
             frontEnd: {
-                classification: 'SystemMetaData',
+                classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },
             reason: {
-                classification: 'SystemMetaData',
+                classification: 'CallstackOrException',
                 purpose: 'PerformanceAndHealth'
             }
         }
@@ -3428,7 +3455,13 @@ export class IEventNamePropertyMapping {
                * Hash of the widget folder name.
                */
               widgetFolderNameHash: string;
+              /**
+               * Failed to parse extension.js.
+               */
               failed: true;
+              /**
+               * Reason for the failure.
+               */
               failure: 'couldNotLocateRequireConfigStart' | 'couldNotLocateRequireConfigEnd' | 'noRequireConfigEntries';
               /**
                * Pattern (code style) used to register require.config enties.
@@ -3449,11 +3482,11 @@ export class IEventNamePropertyMapping {
         },
         properties: {
             failed: {
-                classification: 'SystemMetaData',
+                classification: 'CallstackOrException',
                 purpose: 'PerformanceAndHealth'
             },
             failure: {
-                classification: 'SystemMetaData',
+                classification: 'CallstackOrException',
                 purpose: 'PerformanceAndHealth'
             },
             patternUsedToRegisterRequireConfig: {
@@ -3461,7 +3494,7 @@ export class IEventNamePropertyMapping {
                 purpose: 'PerformanceAndHealth'
             },
             widgetFolderNameHash: {
-                classification: 'PublicNonPersonalData',
+                classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
         }
