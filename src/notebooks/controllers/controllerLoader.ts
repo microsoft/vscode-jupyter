@@ -119,6 +119,10 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     private async loadControllersImpl(cancelToken: vscode.CancellationToken) {
         let connections = await this.kernelFinder.listKernels(undefined, cancelToken);
 
+        if (cancelToken.isCancellationRequested) {
+            return;
+        }
+
         traceVerbose(`Found ${connections.length} cached controllers`);
         this.createNotebookControllers(connections);
 
