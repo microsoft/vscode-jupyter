@@ -104,7 +104,6 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
         this.disposables.forEach((d) => d.dispose());
     }
     @capturePerfTelemetry(Telemetry.Interrupt)
-    @capturePerfTelemetry(Telemetry.InterruptJupyterTime)
     private async interruptExecution(
         session: IKernelConnectionSession,
         pendingExecutions: Promise<unknown>
@@ -184,7 +183,6 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
     }
 
     @capturePerfTelemetry(Telemetry.RestartKernel)
-    @capturePerfTelemetry(Telemetry.RestartJupyterTime)
     private async restartExecution(session: IKernelConnectionSession): Promise<void> {
         // Just use the internal session. Pending cells should have been canceled by the caller
         await session.restart();

@@ -83,7 +83,6 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
             newSession = await this.startRawSession({ ...options, purpose: 'start' });
             Cancellation.throwIfCanceled(options.token);
             // Only connect our session if we didn't cancel or timeout
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
             sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStart, {
                 duration: stopWatch.elapsedTime
             });
@@ -115,14 +114,6 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                     this.resource,
                     Telemetry.RawKernelSessionStart,
                     { duration: stopWatch.elapsedTime },
-                    undefined,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    error as any
-                );
-                sendKernelTelemetryEvent(
-                    this.resource,
-                    Telemetry.RawKernelSessionStartException,
-                    undefined,
                     undefined,
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     error as any

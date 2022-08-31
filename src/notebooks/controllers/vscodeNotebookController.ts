@@ -270,7 +270,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             return;
         }
         initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
-        sendKernelTelemetryEvent(notebook.uri, Telemetry.ExecuteCell);
         // Notebook is trusted. Continue to execute cells
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }

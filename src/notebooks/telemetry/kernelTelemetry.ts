@@ -17,6 +17,8 @@ export function sendKernelListTelemetry(
 ) {
     const counters = {
         kernelSpecCount: 0,
+        localKernelSpecCount: 0,
+        remoteKernelSpecCount: 0,
         kernelInterpreterCount: 0,
         kernelLiveCount: 0,
         condaEnvsSharingSameInterpreter: 0
@@ -28,7 +30,11 @@ export function sendKernelListTelemetry(
                 counters.kernelLiveCount += 1;
                 break;
             case 'startUsingRemoteKernelSpec':
+                counters.localKernelSpecCount += 1;
+                counters.kernelSpecCount += 1;
+                break;
             case 'startUsingLocalKernelSpec':
+                counters.remoteKernelSpecCount += 1;
                 counters.kernelSpecCount += 1;
                 break;
             case 'startUsingPythonInterpreter': {

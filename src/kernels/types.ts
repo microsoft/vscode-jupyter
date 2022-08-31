@@ -565,11 +565,23 @@ export type KernelSocketInformation = {
  * (these values are used in telemetry)
  */
 export enum KernelInterpreterDependencyResponse {
-    ok = 0, // Used in telemetry.
-    cancel = 1, // Used in telemetry.
-    failed = 2, // Used in telemetry.
-    selectDifferentKernel = 3, // Used in telemetry.
-    uiHidden = 4 // Used in telemetry.
+    /**
+     * Could mean dependencies are already installed
+     * or user clicked ok to install and it got installed.
+     */
+    ok = 0,
+    cancel = 1,
+    failed = 2,
+    /**
+     * User chose to select a different kernel.
+     */
+    selectDifferentKernel = 3,
+    /**
+     * Missing dependencies not installed and UI not displayed to the user
+     * as the kernel startup is part of a background process.
+     * In such cases we do not notify user of any failures or the like.
+     */
+    uiHidden = 4
 }
 
 export const IKernelDependencyService = Symbol('IKernelDependencyService');

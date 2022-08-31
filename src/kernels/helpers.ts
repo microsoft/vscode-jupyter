@@ -570,7 +570,6 @@ export type SilentExecutionErrorOptions = {
     telemetryName?:
         | Telemetry.InteractiveWindowDebugSetupCodeFailure
         | Telemetry.KernelStartupCodeFailure
-        | Telemetry.UserStartupCodeFailure
         | Telemetry.PythonVariableFetchingCodeFailure;
 };
 

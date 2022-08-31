@@ -278,8 +278,7 @@ Expand each section to see more information about that event.
 * DATASCIENCE.EXECUTE_CELL  (Telemetry.ExecuteCell)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
-    Executes a cell, applies to IW and Notebook.  
-    Check the `resourceType` to determine whether its a Jupyter Notebook or IW.  
+    Sent when a user executes a cell.  
     ```
 
     - Properties:  
@@ -444,7 +443,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.FAILED_TO_CREATE_CONTROLLER  (Telemetry.FailedToCreateNotebookController)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).  
+    ```
+
     - Properties:  
         - `kind`: `<see below>`  
         What kind of kernel spec did we fail to create.  
@@ -468,34 +470,6 @@ Expand each section to see more information about that event.
         Hash of the folder that contains the file in the last frame (from Python stack trace).  
         - `pythonErrorPackage`?: `string`  
         Hash of the module that contains the file in the last frame (from Python stack trace).  
-
-
-* DATASCIENCE.FETCH_CONTROLLERS  (Telemetry.FetchControllers)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR cached, kind. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-    ```
-    Telemetry sent when we have loaded some controllers.  
-    ```
-
-    - Properties:  
-        - `cached`: `boolean`  
-        Whether this is from a cached result or not  
-        - `kind`: `<see below>`  
-        Whether we've loaded local or remote controllers.  
-        Possible values include:  
-            - `'local'`  
-            - `'remote'`  
-
-
-* DATASCIENCE.GET_PASSWORD_ATTEMPT  (Telemetry.GetPasswordAttempt)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.GOTO_NEXT_CELL_IN_FILE  (Telemetry.GotoNextCellInFile)  
@@ -552,7 +526,6 @@ Expand each section to see more information about that event.
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
     User interrupts a cell  
-    Identical to `Telemetry.InterruptJupyterTime`  
     ```
 
     - Measures:  
@@ -563,10 +536,15 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.JUPYTER_KERNEL_API_ACCESS  (Telemetry.JupyterKernelApiAccess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry sent when an extension attempts to use our 3rd party API.  
+    ```
+
     - Properties:  
         - `extensionId`: `string`  
+        Extension Id that's attempting to use the API.  
         - `allowed`: `<see below>`  
+        Whether or not the extension was able to use the API.  
         Possible values include:  
             - `'yes'`  
             - `'no'`  
@@ -574,10 +552,15 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.JUPYTER_KERNEL_API_USAGE  (Telemetry.JupyterKernelApiUsage)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry sent when an extension uses our 3rd party API.  
+    ```
+
     - Properties:  
         - `extensionId`: `string`  
+        Extension Id that's attempting to use the API.  
         - `pemUsed`: `keyof IExportedKernelService`  
+        Name of the API member used.  
 
 
 * DATASCIENCE.JUPYTER_KERNEL_FILTER_USED  (Telemetry.JupyterKernelFilterUsed)  
@@ -598,12 +581,18 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN  (Telemetry.JupyterNotInstalledErrorShown)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when we display a message informing the user about Jupyter not being installed (or not detected).  
+    ```
+
 
 
 * DATASCIENCE.KERNEL_CRASH  (Telemetry.KernelCrash)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when Kernel crashes.  
+    ```
+
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -684,7 +673,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.KERNEL_SPEC_LANGUAGE  (Telemetry.KernelSpecLanguage)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent to detect the different languages of kernel specs used.  
+    ```
+
     - Properties:  
         - `language`: `string`  
         Language of the kernelSpec.  
@@ -700,10 +692,15 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE  (Telemetry.KernelStartupCodeFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Code we run post starting a kernel seems to have failed.  
+    ```
+
     - Properties:  
         - `ename`: `string`  
+        The error name of the failure.  
         - `evalue`: `string`  
+        The error value of the failure  
 
 
 * DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK  (Telemetry.CreateNewNotebook)  
@@ -737,7 +734,7 @@ Expand each section to see more information about that event.
 * DATASCIENCE.NOTEBOOK_INTERRUPT  (Telemetry.NotebookInterrupt)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
-    Total time taken to interrupt a kernel  
+    Telemetry sent when user interrupts the kernel.  
     Check the `resourceType` to determine whether its a Jupyter Notebook or IW.  
     ```
 
@@ -923,21 +920,10 @@ Expand each section to see more information about that event.
             Total number of live kernels in the kernel spec list.  
 
 
-* DATASCIENCE.NOTEBOOK_LANGUAGE  (Telemetry.NotebookLanguage)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Telemetry event sent to indicate the language used in a notebook  
-    ```
-
-    - Properties:  
-        - `language`: `string`  
-        Language found in the notebook if a known language. Otherwise 'unknown'  
-
-
 * DATASCIENCE.NOTEBOOK_RESTART  (Telemetry.NotebookRestart)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
-    Restarts the Kernel.  
+    Telemetry sent when user Restarts the Kernel.  
     Check the `resourceType` to determine whether its a Jupyter Notebook or IW.  
     ```
 
@@ -1121,9 +1107,7 @@ Expand each section to see more information about that event.
 * DATASCIENCE.NOTEBOOK_START  (Telemetry.NotebookStart)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
-    Starts a kernel, applies to IW and Notebook.  
-    Check the `resourceType` to determine whether its a Jupyter Notebook or IW.  
-    If `failed` is false, then its a success, else startup failed.  
+    Send when a kernel starts.  
     ```
 
     - Properties:  
@@ -1228,15 +1212,23 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE  (Telemetry.PythonVariableFetchingCodeFailure)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    The Python code that we ran to fetch variables had a failure.  
+    ```
+
     - Properties:  
         - `ename`: `string`  
+        The error name of the failure.  
         - `evalue`: `string`  
+        The error value of the failure  
 
 
 * DATASCIENCE.RECOMMENT_EXTENSION  (Telemetry.RecommendExtension)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry sent when we recommend installing an extension.  
+    ```
+
     - Properties:  
         - `extensionId`: `string`  
         Extension we recommended the user to install.  
@@ -1265,7 +1257,7 @@ Expand each section to see more information about that event.
 * DATASCIENCE.RESTART_KERNEL_COMMAND  (Telemetry.RestartKernelCommand)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
-    Telemetry event sent when IW or Notebook is restarted.  
+    Telemetry event sent when IW or Notebook is restarted  
     ```
 
     - Properties:  
@@ -1810,12 +1802,19 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.SELFCERTSMESSAGECLOSE  (Telemetry.SelfCertsMessageClose)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when users chose not to allow connecting to Jupyter over HTTPS when certificate isn't trusted by a trusted CA.  
+    ```
+
 
 
 * DATASCIENCE.SELFCERTSMESSAGEENABLED  (Telemetry.SelfCertsMessageEnabled)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when users chose to use self-signed certificates when connecting to Jupyter over https.  
+    Basically this means users has chosen to connect to Jupyter over HTTPS when certificate isn't trusted by a trusted CA.  
+    ```
+
 
 
 * DATASCIENCE.SET_JUPYTER_URI_LOCAL  (Telemetry.SetJupyterURIToLocal)  
@@ -1862,6 +1861,7 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `azure`: `boolean`  
+        Was the URI set to an Azure uri.  
 
 
 * DATASCIENCE.SHOW_DATA_EXPLORER  (Telemetry.ShowDataViewer)  
@@ -1908,30 +1908,35 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER  (Telemetry.UserDidNotInstallJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when user click `cancel` button when prompted to install Jupyter.  
+    ```
+
 
 
 * DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS  (Telemetry.UserDidNotInstallPandas)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Prompted to install Pandas and chose not to install  
+    Note: This could be just ignoring the UI so not a user action.  
+    ```
+
 
 
 * DATASCIENCE.USER_INSTALLED_JUPYTER  (Telemetry.UserInstalledJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when user installs Jupyter.  
+    ```
+
 
 
 * DATASCIENCE.USER_INSTALLED_PANDAS  (Telemetry.UserInstalledPandas)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Installed the python Pandas package.  
+    ```
 
-
-* DATASCIENCE.USER_STARTUP_CODE_FAILURE  (Telemetry.UserStartupCodeFailure)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Properties:  
-        - `ename`: `string`  
-        - `evalue`: `string`  
 
 
 * DATAVIEWER.USING_INTERPRETER  (Telemetry.DataViewerUsingInterpreter)  
@@ -1952,7 +1957,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF  (Telemetry.ActiveInterpreterListingPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Total time taken by Python extension to return the active Python environment.  
+    ```
+
     - Properties:  
         - `firstTime`?: `boolean`  
         Whether this is the first time in the session.  
@@ -1961,6 +1969,20 @@ Expand each section to see more information about that event.
     - Measures:  
         - `duration`: `number`  
         Total time taken to list interpreters.  
+
+
+* DS_INTERNAL.CELL_OUTPUT_MIME_TYPE  (Telemetry.CellOutputMimeType)  
+      Owner: [@donjayamanne](https://github.com/donjayamanne)  
+    ```
+    Mime type of a cell output.  
+    Used to detect the popularity of a mime type, that would help determine which mime types are most common.  
+    E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,  
+    or prioritize rendering of widgets when opening an existing notebook or the like.  
+    ```
+
+    - Properties:  
+        - `mimeType`: `string`  
+        Mimetype of the output.  
 
 
 * DS_INTERNAL.CODE_LENS_ACQ_TIME  (Telemetry.CodeLensAverageAcquisitionTime)  
@@ -1987,7 +2009,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTFAILEDJUPYTER  (Telemetry.ConnectFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when we have failed to connect to the local Jupyter server we started.  
+    ```
+
     - Properties:  
         - `failed`: `true`  
         Whether there was a failure.  
@@ -2007,7 +2032,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTLOCALJUPYTER  (Telemetry.ConnectLocalJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when we have successfully connected to a local jupyter server.  
+    ```
+
 
 
 * DS_INTERNAL.CONNECTREMOTEEXPIREDCERTFAILEDJUPYTER  (Telemetry.ConnectRemoteExpiredCertFailedJupyter)  
@@ -2020,7 +2048,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER  (Telemetry.ConnectRemoteFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when we fail to connect to a remote jupyter server.  
+    ```
+
     - Properties:  
         - `failed`: `true`  
         Whether there was a failure.  
@@ -2040,7 +2071,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CONNECTREMOTEJUPYTER  (Telemetry.ConnectRemoteJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when we have successfully connected to a remote jupyter server.  
+    ```
+
 
 
 * DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST  (Telemetry.ConnectRemoteJupyterViaLocalHost)  
@@ -2057,91 +2091,6 @@ Expand each section to see more information about that event.
     Jupyter server's certificate is not from a trusted authority.  
     ```
 
-
-
-* DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER  (Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Properties:  
-        - `pythonExtensionInstalled`: `boolean`  
-        Indicates whether the python extension is installed.  
-        If we send telemetry fro this & this is `true`, then we have a bug.  
-        If its `false`, then we can ignore this telemetry.  
-        - `resourceType`?: `<see below>`  
-        Used to determine whether this event is related to a Notebooks or Interactive window.  
-        Possible values include:  
-            - `'notebook'`  
-            - `'interactive'`  
-        - `userExecutedCell`?: `boolean`  
-        Whether the user executed a cell.  
-        - `kernelId`: `string`  
-        Hash of the Kernel Connection id.  
-        - `disableUI`?: `boolean`  
-        Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-        If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-        - `resourceHash`?: `string`  
-        Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-        If we run the same notebook tomorrow, the hash will be the same.  
-        Used to check whether a particular notebook fails across time or not.  
-        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-        and have a better understanding of what is going on, e.g. why something failed.  
-        - `kernelSessionId`: `string`  
-        Unique identifier for an instance of a notebook session.  
-        If we restart or run this notebook tomorrow, this id will be different.  
-        Id could be something as simple as a hash of the current Epoch time.  
-        - `isUsingActiveInterpreter`?: `boolean`  
-        Whether this resource is using the active Python interpreter or not.  
-        - `pythonEnvironmentType`?: `<see below>`  
-        Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-        Possible values include:  
-            - `Unknown`  
-            - `Conda`  
-            - `VirtualEnv`  
-            - `PipEnv`  
-            - `Pyenv`  
-            - `Venv`  
-            - `WindowsStore`  
-            - `Poetry`  
-            - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
-        - `pythonEnvironmentPath`?: `string`  
-        A key, so that rest of the information is tied to this. (hash)  
-        - `pythonEnvironmentVersion`?: `string`  
-        Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-        - `pythonEnvironmentPackages`?: `string`  
-        Comma delimited list of hashed packages & their versions.  
-        - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-        Whether kernel was started using kernel spec, interpreter, etc.  
-        - `kernelLanguage`: `string`  
-        Language of the kernel connection.  
-        - `actionSource`: `<see below>`  
-        Whether this was started by Jupyter extension or a 3rd party.  
-        Possible values include:  
-            - `jupyterExtension`  
-            - `3rdPartyExtension`  
-        - `capturedEnvVars`?: `boolean`  
-        Whether we managed to capture the environment variables or not.  
-        In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-    - Measures:  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
 
 
 * DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD  (Telemetry.ExecuteCellPerceivedCold)  
@@ -2185,7 +2134,25 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC  (Telemetry.FailedToUpdateKernelSpec)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when we fail to update the kernel spec json file.  
+    ```
+
+    - Properties:  
+        - `failed`: `true`  
+        Whether there was a failure.  
+        - `stackTrace`: `string`  
+        Node stacktrace without PII.  
+        - `failureCategory`?: `string`  
+        A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
+        - `failureSubCategory`?: `string`  
+        Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
+        - `pythonErrorFile`?: `string`  
+        Hash of the file name that contains the file in the last frame (from Python stack trace).  
+        - `pythonErrorFolder`?: `string`  
+        Hash of the folder that contains the file in the last frame (from Python stack trace).  
+        - `pythonErrorPackage`?: `string`  
+        Hash of the module that contains the file in the last frame (from Python stack trace).  
 
 
 * DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES  (Telemetry.GetActivatedEnvironmentVariables)  
@@ -2198,22 +2165,6 @@ Expand each section to see more information about that event.
     - Properties:  
         - `envType`?: `<see below>`  
         Type of the Python environment.  
-        Possible values include:  
-            - `Unknown`  
-            - `Conda`  
-            - `VirtualEnv`  
-            - `PipEnv`  
-            - `Pyenv`  
-            - `Venv`  
-            - `WindowsStore`  
-            - `Poetry`  
-            - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
-        - `pythonEnvType`?: `<see below>`  
-        Duplicate of `envType`, the property `envType` doesn't seem to be coming through.  
-        If we can get `envType`, then we'll deprecate this new property.  
-        Else we just deprecate & remote the old property.  
         Possible values include:  
             - `Unknown`  
             - `Conda`  
@@ -2253,52 +2204,18 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.GET_PASSWORD_FAILURE  (Telemetry.GetPasswordFailure)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent to indicate we've failed to connect to a Remote Jupyter Server successfully after requesting a password.  
+    ```
+
 
 
 * DS_INTERNAL.GET_PASSWORD_SUCCESS  (Telemetry.GetPasswordSuccess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-
-
-* DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE  (Telemetry.HashedCellOutputMimeType)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
-    Hash of the mime type of a cell output.  
-    Used to detect the popularity of a mime type, that would help determine which mime types are most common.  
-    E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,  
-    or prioritize rendering of widgets when opening an existing notebook or the like.  
+    Sent to indicate we've connected to a Remote Jupyter Server successfully after requesting a password.  
     ```
 
-    - Properties:  
-        - `hashedName`: `string`  
-        Hash of the cell output mimetype  
-        - `hasText`: `boolean`  
-        Whether the mime type has the word 'text' in it.  
-        - `hasLatex`: `boolean`  
-        Whether the mime type has the word 'latex' in it.  
-        - `hasHtml`: `boolean`  
-        Whether the mime type has the word 'html' in it.  
-        - `hasSvg`: `boolean`  
-        Whether the mime type has the word 'svg' in it.  
-        - `hasXml`: `boolean`  
-        Whether the mime type has the word 'xml' in it.  
-        - `hasJson`: `boolean`  
-        Whether the mime type has the word 'json' in it.  
-        - `hasImage`: `boolean`  
-        Whether the mime type has the word 'image' in it.  
-        - `hasGeo`: `boolean`  
-        Whether the mime type has the word 'geo' in it.  
-        - `hasPlotly`: `boolean`  
-        Whether the mime type has the word 'plotly' in it.  
-        - `hasVega`: `boolean`  
-        Whether the mime type has the word 'vega' in it.  
-        - `hasWidget`: `boolean`  
-        Whether the mime type has the word 'widget' in it.  
-        - `hasJupyter`: `boolean`  
-        Whether the mime type has the word 'jupyter' in it.  
-        - `hasVnd`: `boolean`  
-        Whether the mime type has the word 'vnd' in it.  
 
 
 * DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF  (Telemetry.InteractiveFileTooltipsPerf)  
@@ -2332,27 +2249,6 @@ Expand each section to see more information about that event.
         Total time taken to list interpreters.  
 
 
-* DS_INTERNAL.INTERRUPT_JUPYTER_TIME  (Telemetry.InterruptJupyterTime)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    User interrupts a cell  
-    Identical to `Telemetry.Interrupt`  
-    ```
-
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
-
-
-* DS_INTERNAL.INVALID_KERNEL_USED  (Telemetry.KernelInvalid)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Telemetry event sent when a kernel picked crashes on startup  
-    ```
-
-
-
 * DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS  (Telemetry.DiscoverIPyWidgetNamesPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
@@ -2364,23 +2260,6 @@ Expand each section to see more information about that event.
         - `type`: `<see below>`  
         Whether we're looking for widgets on local Jupyter environment (local connections) or remote.  
         Possible values include:  
-            - `'local'`  
-            - `'remote'`  
-
-
-* DS_INTERNAL.IPYWIDGET_DISCOVERED  (Telemetry.HashedIPyWidgetNameDiscovered)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Telemetry event sent with name of a Widget found.  
-    ```
-
-    - Properties:  
-        - `hashedName`: `string`  
-        Hash of the widget  
-        - `source`?: `<see below>`  
-        Where did we find the hashed name (CDN or user environment or remote jupyter).  
-        Possible values include:  
-            - `'cdn'`  
             - `'local'`  
             - `'remote'`  
 
@@ -2414,12 +2293,15 @@ Expand each section to see more information about that event.
             - `widgetFolderNameHash`: `string`  
             Hash of the widget folder name.  
             - `failed`: `true`  
+            Failed to parse extension.js.  
             - `failure`: `<see below>`  
+            Reason for the failure.  
             Possible values include:  
                 - `'couldNotLocateRequireConfigStart'`  
                 - `'couldNotLocateRequireConfigEnd'`  
                 - `'noRequireConfigEntries'`  
             - `patternUsedToRegisterRequireConfig`: `<see below>`  
+            Pattern (code style) used to register require.config entries.  
             Pattern (code style) used to register require.config enties.  
             Possible values include:  
                 - `null or <empty>`  
@@ -2433,9 +2315,13 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `isOnline`: `boolean`  
+        Whether we've detected a connection to the internet or not (to access the CDN).  
         - `moduleHash`: `string`  
+        Hash of the widget module.  
         - `moduleVersion`: `string`  
+        Version of the module.  
         - `timedout`: `boolean`  
+        Whether we timedout getting the source of the script (fetching script source in extension code).  
 
 
 * DS_INTERNAL.IPYWIDGET_LOAD_SUCCESS  (Telemetry.IPyWidgetLoadSuccess)  
@@ -2446,7 +2332,9 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `moduleHash`: `string`  
+        Hash of the module name.  
         - `moduleVersion`: `string`  
+        Version of the module.  
 
 
 * DS_INTERNAL.IPYWIDGET_OVERHEAD  (Telemetry.IPyWidgetOverhead)  
@@ -2457,9 +2345,13 @@ Expand each section to see more information about that event.
 
     - Measures:  
         - `totalOverheadInMs`: `number`  
+        Total time in ms  
         - `numberOfMessagesWaitedOn`: `number`  
+        Number of messages  
         - `averageWaitTime`: `number`  
+        Average wait timne.  
         - `numberOfRegisteredHooks`: `number`  
+        Number of registered hook.  
 
 
 * DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN  (Telemetry.IPyWidgetPromptToUseCDN)  
@@ -2479,6 +2371,7 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `selection`: `<see below>`  
+        The section made by the user.  
         Possible values include:  
             - `'ok'`  
             - `'cancel'`  
@@ -2514,6 +2407,7 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `msg_type`: `string`  
+        Type of the protocol message sent by Jupyter kernel.  
 
 
 * DS_INTERNAL.IPYWIDGET_USED_BY_USER  (Telemetry.HashedIPyWidgetNameUsed)  
@@ -2543,12 +2437,17 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `moduleHash`: `string`  
+        Hash of the widget module.  
         - `moduleVersion`: `string`  
+        Version of the module.  
 
 
 * DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK  (Telemetry.JupyterCreatingNotebook)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent to measure the time taken to start a Jupyter Notebook.  
+    ```
+
     - `When things fail`:  
         - Properties:  
             - `resourceType`?: `<see below>`  
@@ -2733,11 +2632,6 @@ Expand each section to see more information about that event.
 
 
 
-* DS_INTERNAL.JUPYTER_IDLE_TIMEOUT  (Telemetry.SessionIdleTimeout)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-
-
 * DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE  (Telemetry.JupyterInstalledButNotKernelSpecModule)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
@@ -2748,7 +2642,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL  (Telemetry.RegisterInterpreterAsKernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent to measure the time taken to register an interpreter as a Jupyter kernel.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -2757,7 +2654,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.JUPYTERSTARTUPCOST  (Telemetry.StartJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Time taken to start the Jupyter server.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -2766,7 +2666,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.KERNEL_COUNT  (Telemetry.KernelCount)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry sent with the total number of different types of kernels in the kernel picker.  
+    ```
+
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -2838,6 +2741,10 @@ Expand each section to see more information about that event.
         This happens when we create conda envs without the `python` argument.  
         Such conda envs don't work today in the extension.  
         Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.  
+        - `localKernelSpecCount`: `number`  
+        Total number of local kernel specs in the list.  
+        - `remoteKernelSpecCount`: `number`  
+        Total number of remote kernel specs in the list.  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
@@ -2853,10 +2760,13 @@ Expand each section to see more information about that event.
         Number of times the kernel was changed.  
         - `kernelSpecCount`: `number`  
         Total number of kernel specs in the kernel spec list.  
+        Total number of kernel specs in the kernel list.  
         - `kernelInterpreterCount`: `number`  
         Total number of interpreters in the kernel spec list.  
+        Total number of interpreters in the kernel list.  
         - `kernelLiveCount`: `number`  
         Total number of live kernels in the kernel spec list.  
+        Total number of live kernels in the kernel list.  
 
 
 * DS_INTERNAL.KERNEL_LAUNCHER_PERF  (Telemetry.KernelLauncherPerf)  
@@ -2965,12 +2875,11 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.KERNEL_LISTING_PERF  (Telemetry.KernelListingPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Time taken to list the kernels.  
+    ```
+
     - Properties:  
-        - `firstTime`?: `boolean`  
-        Whether this is the first time in the session.  
-        (fetching kernels first time in the session is slower, later its cached).  
-        This is a generic property supported for all telemetry (sent by decorators).  
         - `kind`: `<see below>`  
         Whether this telemetry is for listing of all kernels or just python or just non-python.  
         (fetching kernels first time in the session is slower, later its cached).  
@@ -2984,31 +2893,12 @@ Expand each section to see more information about that event.
         Total time taken to list kernels.  
 
 
-* DS_INTERNAL.KERNEL_PROVIDER_PERF  (Telemetry.KernelProviderPerf)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Total time taken to list kernels for VS Code.  
-    ```
-
-
-
 * DS_INTERNAL.KERNEL_SPEC_NOT_FOUND  (Telemetry.KernelSpecNotFound)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
     Telemetry event sent to indicate 'jupyter kernelspec' is not possible.  
     ```
 
-
-
-* DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT  (Telemetry.NumberOfLocalKernelSpecs)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Total number of Local kernel specifications.  
-    ```
-
-    - Measures:  
-        - `count`: `number`  
-        Number of kernel specs found on disc.  
 
 
 * DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED  (Telemetry.NativeVariableViewLoaded)  
@@ -3039,6 +2929,9 @@ Expand each section to see more information about that event.
 
     - Measures:  
         - `count`: `number`  
+        Total number of notebooks opened in a session.  
+        Not unique.  
+        If usre opens & closes a notebook, that counts as 2.  
 
 
 * DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT  (Telemetry.NotebookRunCount)  
@@ -3049,6 +2942,8 @@ Expand each section to see more information about that event.
 
     - Measures:  
         - `count`: `number`  
+        Number of cells executed.  
+        If a cell is executed 10 times, thats counted as 10.  
 
 
 * DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE  (Telemetry.NewFileForInteractiveWindow)  
@@ -3200,9 +3095,13 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER  (Telemetry.PythonExtensionInstalledViaKernelPicker)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Python extension was attempted to be installed via the kernel picker command.  
+    ```
+
     - Properties:  
         - `action`: `<see below>`  
+        Did the Extension install succeed or fail?  
         Possible values include:  
             - `'success'`  
             - `'failed'`  
@@ -3210,9 +3109,13 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED  (Telemetry.PythonExtensionNotInstalled)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    The kernel picker command to install python extension was shown.  
+    ```
+
     - Properties:  
         - `action`: `<see below>`  
+        The message was displayed, or indicate that the user dismissed or downloaded the message.  
         Possible values include:  
             - `'displayed'`  
             - `'dismissed'`  
@@ -3243,9 +3146,14 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_MODULE_INSTALL  (Telemetry.PythonModuleInstall)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry sent when user is presented with a dialog to install a python package.  
+    Also sent with the user's response to the dialog.  
+    ```
+
     - Properties:  
         - `moduleName`: `string`  
+        Name of the python module to be installed.  
         - `isModulePresent`?: `<see below>`  
         Whether the module was already (once before) installed into the python environment or  
         whether this already exists (detected via `pip list`)  
@@ -3253,6 +3161,7 @@ Expand each section to see more information about that event.
             - `'true'`  
             - `null or <empty>`  
         - `action`: `<see below>`  
+        Action taken by the user or the extension.  
         Possible values include:  
             - `'cancelled'`  
             - `'displayed'`  
@@ -3273,6 +3182,7 @@ Expand each section to see more information about that event.
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
         - `pythonEnvType`?: `<see below>`  
+        Type of the python environment.  
         Possible values include:  
             - `Unknown`  
             - `Conda`  
@@ -3298,9 +3208,13 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.PYTHON_NOT_INSTALLED  (Telemetry.PythonNotInstalled)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    The kernel picker command to install python was shown.  
+    ```
+
     - Properties:  
         - `action`: `<see below>`  
+        The message was displayed, or indicate that the user dismissed or downloaded the message.  
         Possible values include:  
             - `'displayed'`  
             - `'dismissed'`  
@@ -3321,7 +3235,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK  (Telemetry.RawKernelCreatingNotebook)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry send when we create a notebook for a raw kernel or jupyter  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -3424,7 +3341,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH  (Telemetry.RawKernelProcessLaunch)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent to measure time taken to spawn the raw kernel process.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -3433,7 +3353,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_CONNECT  (Telemetry.RawKernelSessionConnect)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent to measure the total time taken to start and connect to a raw kernel session.  
+    ```
+
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -3519,6 +3442,7 @@ Expand each section to see more information about that event.
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
     This event is sent when a RawSession's `dispose` method is called.  
+    Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.  
     ```
 
     - Properties:  
@@ -3699,30 +3623,31 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL  (Telemetry.RawKernelSessionStartNoIpykernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Properties not documented in GDPR reason. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.  
+    This is useful to see what the user does with this error message.  
+    ```
+
     - Properties:  
         - `reason`: `<see below>`  
+        Captures the result of the error message, whether user dismissed this or picked a new kernel or the like.  
         Possible values include:  
             - `0`  
+        Enum Member: KernelInterpreterDependencyResponse.ok  
+        Could mean dependencies are already installed
+or user clicked ok to install and it got installed.  
             - `1`  
+        Enum Member: KernelInterpreterDependencyResponse.cancel  
             - `2`  
+        Enum Member: KernelInterpreterDependencyResponse.failed  
             - `3`  
+        Enum Member: KernelInterpreterDependencyResponse.selectDifferentKernel  
+        User chose to select a different kernel.  
             - `4`  
-        - `failed`: `true`  
-        Whether there was a failure.  
-        - `stackTrace`: `string`  
-        Node stacktrace without PII.  
-        - `failureCategory`?: `string`  
-        A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
-        - `failureSubCategory`?: `string`  
-        Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-        - `pythonErrorFile`?: `string`  
-        Hash of the file name that contains the file in the last frame (from Python stack trace).  
-        - `pythonErrorFolder`?: `string`  
-        Hash of the folder that contains the file in the last frame (from Python stack trace).  
-        - `pythonErrorPackage`?: `string`  
-        Hash of the module that contains the file in the last frame (from Python stack trace).  
+        Enum Member: KernelInterpreterDependencyResponse.uiHidden  
+        Missing dependencies not installed and UI not displayed to the user
+as the kernel startup is part of a background process.
+In such cases we do not notify user of any failures or the like.  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
         Possible values include:  
@@ -3733,14 +3658,13 @@ Expand each section to see more information about that event.
 * DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN  (Telemetry.RawKernelSessionShutdown)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
-    This event is sent when a RawJupyterSession's `shutdownSession`  
-    method is called.  
+    This event is sent when a RawJupyterSession's `shutdownSession` method is called.  
+    Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.  
     ```
 
     - Properties:  
         - `isRequestToShutdownRestartSession`: `<see below>`  
-        This indicates whether the session being shutdown  
-        is a restart session.  
+        This indicates whether the session being shutdown is a restart session.  
         Possible values include:  
             - `true`  
             - `false`  
@@ -3830,7 +3754,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_SESSION_START  (Telemetry.RawKernelSessionStart)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry sent when we start (or fail to start) a raw kernel  
+    ```
+
     - `When started successfully.`:  
         - Properties:  
             - `resourceType`?: `<see below>`  
@@ -3911,113 +3838,7 @@ Expand each section to see more information about that event.
             Total number of interpreters in the kernel spec list.  
             - `kernelLiveCount`: `number`  
             Total number of live kernels in the kernel spec list.  
-    - `Sent when we fail to restart a kernel and have a failureCategory.`:  
-        - Properties:  
-            - `failed`: `true`  
-            - `failureCategory`: `<see below>`  
-            Possible values include:  
-                - `cancelled`  
-                - `timeout`  
-                - `daemon`  
-                - `zmq`  
-                - `debugger`  
-                - `kerneldied`  
-                - `kernelpromisetimeout`  
-                - `jupytersession`  
-                - `jupyterconnection`  
-                - `jupyterinstall`  
-                - `jupyterselfcert`  
-                - `jupyterexpiredcert`  
-                - `jupyterselfexpiredcert`  
-                - `invalidkernel`  
-                - `noipykernel`  
-                - `fetcherror`  
-                - `notinstalled`  
-                - `kernelspecnotfound`  
-                - `unsupportedKernelSpec`  
-                - `sessionDisposed`  
-                - `nodeonly`  
-                - `remotejupyterserverconnection`  
-                - `localjupyterserverconnection`  
-                - `remotejupyterserveruriprovider`  
-                - `invalidremotejupyterserverurihandle`  
-                - `unknown`  
-            - `resourceType`?: `<see below>`  
-            Used to determine whether this event is related to a Notebooks or Interactive window.  
-            Possible values include:  
-                - `'notebook'`  
-                - `'interactive'`  
-            - `userExecutedCell`?: `boolean`  
-            Whether the user executed a cell.  
-            - `kernelId`: `string`  
-            Hash of the Kernel Connection id.  
-            - `disableUI`?: `boolean`  
-            Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-            If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-            - `resourceHash`?: `string`  
-            Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-            If we run the same notebook tomorrow, the hash will be the same.  
-            Used to check whether a particular notebook fails across time or not.  
-            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-            and have a better understanding of what is going on, e.g. why something failed.  
-            - `kernelSessionId`: `string`  
-            Unique identifier for an instance of a notebook session.  
-            If we restart or run this notebook tomorrow, this id will be different.  
-            Id could be something as simple as a hash of the current Epoch time.  
-            - `isUsingActiveInterpreter`?: `boolean`  
-            Whether this resource is using the active Python interpreter or not.  
-            - `pythonEnvironmentType`?: `<see below>`  
-            Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-            Possible values include:  
-                - `Unknown`  
-                - `Conda`  
-                - `VirtualEnv`  
-                - `PipEnv`  
-                - `Pyenv`  
-                - `Venv`  
-                - `WindowsStore`  
-                - `Poetry`  
-                - `VirtualEnvWrapper`  
-                - `Global`  
-                - `System`  
-            - `pythonEnvironmentPath`?: `string`  
-            A key, so that rest of the information is tied to this. (hash)  
-            - `pythonEnvironmentVersion`?: `string`  
-            Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-            - `pythonEnvironmentPackages`?: `string`  
-            Comma delimited list of hashed packages & their versions.  
-            - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-            Whether kernel was started using kernel spec, interpreter, etc.  
-            - `kernelLanguage`: `string`  
-            Language of the kernel connection.  
-            - `actionSource`: `<see below>`  
-            Whether this was started by Jupyter extension or a 3rd party.  
-            Possible values include:  
-                - `jupyterExtension`  
-                - `3rdPartyExtension`  
-            - `capturedEnvVars`?: `boolean`  
-            Whether we managed to capture the environment variables or not.  
-            In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-        - Measures:  
-            - `pythonEnvironmentCount`?: `number`  
-            Total number of python environments.  
-            - `interruptCount`?: `number`  
-            This number gets reset after we attempt a restart or change kernel.  
-            - `restartCount`?: `number`  
-            This number gets reset after change the kernel.  
-            - `startFailureCount`?: `number`  
-            Number of times starting the kernel failed.  
-            - `switchKernelCount`?: `number`  
-            Number of times the kernel was changed.  
-            - `kernelSpecCount`: `number`  
-            Total number of kernel specs in the kernel spec list.  
-            - `kernelInterpreterCount`: `number`  
-            Total number of interpreters in the kernel spec list.  
-            - `kernelLiveCount`: `number`  
-            Total number of live kernels in the kernel spec list.  
-    - `If there are unhandled exceptions.`:  
+    - `Sent when we fail to restart a kernel.`:  
         - Properties:  
             - `resourceType`?: `<see below>`  
             Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -4110,171 +3931,13 @@ Expand each section to see more information about that event.
             Total number of live kernels in the kernel spec list.  
 
 
-* DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION  (Telemetry.RawKernelSessionStartException)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Properties:  
-        - `resourceType`?: `<see below>`  
-        Used to determine whether this event is related to a Notebooks or Interactive window.  
-        Possible values include:  
-            - `'notebook'`  
-            - `'interactive'`  
-        - `userExecutedCell`?: `boolean`  
-        Whether the user executed a cell.  
-        - `kernelId`: `string`  
-        Hash of the Kernel Connection id.  
-        - `disableUI`?: `boolean`  
-        Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-        If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-        - `resourceHash`?: `string`  
-        Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-        If we run the same notebook tomorrow, the hash will be the same.  
-        Used to check whether a particular notebook fails across time or not.  
-        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-        and have a better understanding of what is going on, e.g. why something failed.  
-        - `kernelSessionId`: `string`  
-        Unique identifier for an instance of a notebook session.  
-        If we restart or run this notebook tomorrow, this id will be different.  
-        Id could be something as simple as a hash of the current Epoch time.  
-        - `isUsingActiveInterpreter`?: `boolean`  
-        Whether this resource is using the active Python interpreter or not.  
-        - `pythonEnvironmentType`?: `<see below>`  
-        Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-        Possible values include:  
-            - `Unknown`  
-            - `Conda`  
-            - `VirtualEnv`  
-            - `PipEnv`  
-            - `Pyenv`  
-            - `Venv`  
-            - `WindowsStore`  
-            - `Poetry`  
-            - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
-        - `pythonEnvironmentPath`?: `string`  
-        A key, so that rest of the information is tied to this. (hash)  
-        - `pythonEnvironmentVersion`?: `string`  
-        Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-        - `pythonEnvironmentPackages`?: `string`  
-        Comma delimited list of hashed packages & their versions.  
-        - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-        Whether kernel was started using kernel spec, interpreter, etc.  
-        - `kernelLanguage`: `string`  
-        Language of the kernel connection.  
-        - `actionSource`: `<see below>`  
-        Whether this was started by Jupyter extension or a 3rd party.  
-        Possible values include:  
-            - `jupyterExtension`  
-            - `3rdPartyExtension`  
-        - `capturedEnvVars`?: `boolean`  
-        Whether we managed to capture the environment variables or not.  
-        In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-    - Measures:  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-
-
-* DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS  (Telemetry.RawKernelSessionStartSuccess)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Properties:  
-        - `resourceType`?: `<see below>`  
-        Used to determine whether this event is related to a Notebooks or Interactive window.  
-        Possible values include:  
-            - `'notebook'`  
-            - `'interactive'`  
-        - `userExecutedCell`?: `boolean`  
-        Whether the user executed a cell.  
-        - `kernelId`: `string`  
-        Hash of the Kernel Connection id.  
-        - `disableUI`?: `boolean`  
-        Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-        If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-        - `resourceHash`?: `string`  
-        Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-        If we run the same notebook tomorrow, the hash will be the same.  
-        Used to check whether a particular notebook fails across time or not.  
-        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-        and have a better understanding of what is going on, e.g. why something failed.  
-        - `kernelSessionId`: `string`  
-        Unique identifier for an instance of a notebook session.  
-        If we restart or run this notebook tomorrow, this id will be different.  
-        Id could be something as simple as a hash of the current Epoch time.  
-        - `isUsingActiveInterpreter`?: `boolean`  
-        Whether this resource is using the active Python interpreter or not.  
-        - `pythonEnvironmentType`?: `<see below>`  
-        Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-        Possible values include:  
-            - `Unknown`  
-            - `Conda`  
-            - `VirtualEnv`  
-            - `PipEnv`  
-            - `Pyenv`  
-            - `Venv`  
-            - `WindowsStore`  
-            - `Poetry`  
-            - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
-        - `pythonEnvironmentPath`?: `string`  
-        A key, so that rest of the information is tied to this. (hash)  
-        - `pythonEnvironmentVersion`?: `string`  
-        Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-        - `pythonEnvironmentPackages`?: `string`  
-        Comma delimited list of hashed packages & their versions.  
-        - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-        Whether kernel was started using kernel spec, interpreter, etc.  
-        - `kernelLanguage`: `string`  
-        Language of the kernel connection.  
-        - `actionSource`: `<see below>`  
-        Whether this was started by Jupyter extension or a 3rd party.  
-        Possible values include:  
-            - `jupyterExtension`  
-            - `3rdPartyExtension`  
-        - `capturedEnvVars`?: `boolean`  
-        Whether we managed to capture the environment variables or not.  
-        In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-    - Measures:  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-
-
 * DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL  (Telemetry.RawKernelSessionStartUserCancel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.  
+    E.g. possible the user chose another kernel or the like.  
+    ```
+
     - Properties:  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
@@ -4355,7 +4018,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.RAWKERNEL_START_RAW_SESSION  (Telemetry.RawKernelStartRawSession)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent to measure the time taken to start a raw kernel session.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -4364,38 +4030,17 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL  (Telemetry.RegisterAndUseInterpreterAsKernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-
-
-* DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT  (Telemetry.NumberOfRemoteKernelSpecs)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
-    Total number of Remote kernel specifications.  
+    Similar to `Telemetry.RegisterInterpreterAsKernel`.  
+    But sent when we have successfully registered the interpreter as a kernel.  
     ```
 
-    - Measures:  
-        - `count`: `number`  
-        Number of remote kernel specs.  
-
-
-* DS_INTERNAL.RESTART_JUPYTER_TIME  (Telemetry.RestartJupyterTime)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Total time taken to restart a kernel.  
-    Identical to `Telemetry.RestartKernel`  
-    ```
-
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.RESTART_KERNEL  (Telemetry.RestartKernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
     Total time taken to restart a kernel.  
-    Identical to `Telemetry.RestartJupyterTime`  
     ```
 
     - Measures:  
@@ -4420,21 +4065,29 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.SELECT_JUPYTER_INTERPRETER  (Telemetry.SelectJupyterInterpreter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when we notify the user to select an interpreter to start jupyter server  
+    Also sent after the user makes a selection to start the jupyter server.  
+    ```
+
     - Properties:  
         - `result`?: `<see below>`  
-        The result of the selection.  
+        If the value or `result` is empty this means we displayed the message to the user and user hasn't made a choice yet.  
+            The result of the selection.  
         notSelected - No interpreter was selected.  
         selected - An interpreter was selected (and configured to have jupyter and notebook).  
         installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter.  
+        selectAnotherInterpreter - Selected another interpreter.  
         Possible values include:  
             - `'notSelected'`  
             - `'selected'`  
             - `'installationCancelled'`  
+            - `'selectAnotherInterpreter'`  
 
 
-* DS_INTERNAL.SELECT_JUPYTER_INTERPRETER_MESSAGE_DISPLAYED  (Telemetry.SelectJupyterInterpreterMessageDisplayed)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
+* DS_INTERNAL.SETTINGS  (Telemetry.DataScienceSettings)  
+      Owner: [@unknown](https://github.com/unknown)  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
        <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
@@ -4568,7 +4221,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.START_JUPYTER_PROCESS  (Telemetry.StartJupyterProcess)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Time taken to start the Jupyter server.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -4693,32 +4349,26 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED  (Telemetry.VSCNotebookCellTranslationFailed)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    We've failed to translate a Jupyter cell output for serialization into a Notebook cell.  
+    ```
+
     - Properties:  
-        - `isErrorOutput`: `boolean`  
+        - `outputType`: `string`  
+        Type of the output received from the Jupyter kernel.  
+        This is required to identify output types that we're not mapping correctly.  
 
 
 * DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER  (Telemetry.WaitForIdleJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent to measure the time taken to wait for a Jupyter kernel to be idle.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
-
-
-* DS_INTERNAL.WEB_FETCH_ERROR  (Telemetry.FetchError)  
-      Owner: [@unknown](https://github.com/unknown)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR currentTask. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-    ```
-    Event sent when trying to talk to a remote server and the browser gives us a generic fetch error  
-    ```
-
-    - Properties:  
-        - `currentTask`: `'connecting'`  
-        What we were doing when the fetch error occurred  
 
 
 * DS_INTERNAL.WEBVIEW_STARTUP  (Telemetry.WebviewStartup)  
@@ -4729,6 +4379,7 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `type`: `string`  
+        The type of webview started up.  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -4768,9 +4419,6 @@ Expand each section to see more information about that event.
     Telemetry event sent when an environment file is detected in the workspace.  
     ```
 
-    - Properties:  
-        - `hasCustomEnvPath`: `boolean`  
-        If there's a custom path specified in the python.envFile workspace settings.  
 
 
 * EXTENSION.LOAD  (EventName.EXTENSION_LOAD)  
@@ -4807,9 +4455,14 @@ Expand each section to see more information about that event.
 
 * HASHED_PACKAGE_PERF  (EventName.HASHED_PACKAGE_PERF)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Time taken to hash python packages found in the code.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
+        Duration of a measure in milliseconds.  
+        Common measurement used across a number of events.  
 
 
 * JUPYTER_EXPERIMENTS_OPT_IN_OUT  (EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT)  
@@ -4827,12 +4480,18 @@ Expand each section to see more information about that event.
 
 * JUPYTER_IS_INSTALLED  (Telemetry.JupyterInstalled)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Telemetry sent with result of detecting Jupyter in the current path.  
+    ```
+
     - `/* Detection of jupyter failed`:  
         - Properties:  
             - `failed`: `true`  
+            Failed to detect Jupyter.  
             - `reason`: `'notInstalled'`  
+            Reason for failure.  
             - `frontEnd`: `<see below>`  
+            Whether this is jupyter lab or notebook.  
             Possible values include:  
                 - `'notebook'`  
                 - `'lab'`  
@@ -4842,6 +4501,7 @@ Expand each section to see more information about that event.
             Jupyter is in current path of process owned by VS Code.  
             I.e. jupyter can be found in the path as defined by the env variable process.env['PATH'].  
             - `frontEnd`: `<see below>`  
+            Whether this is jupyter lab or notebook.  
             Possible values include:  
                 - `'notebook'`  
                 - `'lab'`  
@@ -4876,7 +4536,10 @@ Expand each section to see more information about that event.
 
 * PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES  (EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when we fail or manage to successfully activate a Python environment.  
+    ```
+
     - Properties:  
         - `hasEnvVars`?: `boolean`  
         Carries `true` if environment variables are present, `false` otherwise  
@@ -4887,59 +4550,5 @@ Expand each section to see more information about that event.
         - `activatedByWrapper`?: `boolean`  
         Whether the environment was activated by the wrapper class.  
         If `true`, this telemetry is sent by the class that wraps the two activation providers   .  
-
-
-* TERMINAL_ENV_VAR_EXTRACTION  (Telemetry.TerminalEnvVariableExtraction)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR reason. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-    ```
-    Telemetry sent only when we fail to extract the env variables for a shell.  
-    ```
-
-    - Properties:  
-        - `failed`: `true`  
-        - `reason`: `<see below>`  
-        Possible values include:  
-            - `unknownOs`  
-            - `getWorkspace`  
-            - `terminalCreation`  
-            - `fileCreation`  
-            - `commandExecution`  
-            - `waitForCommand`  
-            - `parseOutput`  
-
-
-* TERMINAL_SHELL_IDENTIFICATION  (Telemetry.TerminalShellIdentification)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR reason, terminalProvided, shellIdentificationSource, hasCustomShell, hasShellInEnv. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Properties:  
-        - `failed`: `boolean`  
-        - `reason`: `<see below>`  
-        Possible values include:  
-            - `'unknownShell'`  
-            - `null or <empty>`  
-        - `terminalProvided`: `boolean`  
-        - `shellIdentificationSource`: `<see below>`  
-        Possible values include:  
-            - `'terminalName'`  
-            - `'settings'`  
-            - `'environment'`  
-            - `'default'`  
-            - `'vscode'`  
-        - `hasCustomShell`: `<see below>`  
-        Possible values include:  
-            - `null or <empty>`  
-            - `true`  
-            - `false`  
-        - `hasShellInEnv`: `<see below>`  
-        Possible values include:  
-            - `null or <empty>`  
-            - `true`  
-            - `false`  
 
 

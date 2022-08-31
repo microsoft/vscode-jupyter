@@ -179,16 +179,8 @@ jobs:
           skip-label: 'skip telemetry'
           failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'
 
-    # See issue https://github.com/microsoft/vscode-jupyter/issues/10343. We need a better way to validate. Perhaps nightly.
-    # - name: Validate TELEMETRY.md file
-    #    run: npm run validateTelemetryMD
-
-    #   - name: 'Check for news entry'
-    #     uses: brettcannon/check-for-changed-files@v1.1.0
-    #     with:
-    #       file-pattern: 'news/*/*.md'
-    #       skip-label: 'skip news'
-    #       failure-message: 'News entry file missing; see news/README.md for instructions (the ${skip-label} label can be used to pass this check)'
+      - name: Validate TELEMETRY files
+        run: npm run validateTelemetry
 
   ts_tests:
     name: Type Script Tests
@@ -543,7 +535,7 @@ jobs:
 
       - name: Install Dot.net
         if: matrix.os != 'windows-latest'
-        uses: actions/setup-dotnet@v1.8.0
+        uses: actions/setup-dotnet@v2.1.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
 

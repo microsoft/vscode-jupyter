@@ -7,7 +7,6 @@ import '../../../platform/common/extensions';
 import * as vscode from 'vscode';
 import uuid from 'uuid/v4';
 import { injectable, inject } from 'inversify';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceInfo, traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -22,13 +21,11 @@ import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
-import { isPythonKernelConnection } from '../../helpers';
 import { IRawKernelConnectionSession, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
-import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -51,7 +48,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
         @inject(IRawNotebookSupportedService)
         private readonly rawNotebookSupportedService: IRawNotebookSupportedService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         this.asyncRegistry.push(this);
@@ -86,22 +82,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         traceVerbose(`Getting preferred kernel for resource '${getDisplayPath(resource)}'`);
         try {
             const kernelConnectionProvided = !!kernelConnection;
-            if (
-                kernelConnection &&
-                isPythonKernelConnection(kernelConnection) &&
-                kernelConnection.kind === 'startUsingLocalKernelSpec'
-            ) {
-                if (!kernelConnection.interpreter) {
-                    sendKernelTelemetryEvent(
-                        resource,
-                        Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter,
-                        undefined,
-                        {
-                            pythonExtensionInstalled: this.extensionChecker.isPythonExtensionInstalled
-                        }
-                    );
-                }
-            }
             traceInfo(`Computing working directory for resource '${getDisplayPath(resource)}'`);
             const workingDirectory = await this.workspaceService.computeWorkingDirectory(resource);
             Cancellation.throwIfCanceled(cancelToken);
