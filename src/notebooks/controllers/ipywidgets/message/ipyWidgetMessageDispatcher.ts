@@ -103,9 +103,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     public receiveMessage(message: IPyWidgetMessage): void {
         switch (message.message) {
-            case IPyWidgetMessages.IPyWidgets_logMessage:
-                traceVerbose(`Widget Message: ${message.payload}`);
+            case IPyWidgetMessages.IPyWidgets_logMessage: {
+                const payload: IInteractiveWindowMapping[IPyWidgetMessages.IPyWidgets_logMessage] = message.payload;
+                if (payload.category === 'error') {
+                    traceError(`Widget Error: ${payload.message}`);
+                } else {
+                    traceVerbose(`Widget Message: ${payload.message}`);
+                }
                 break;
+            }
             case IPyWidgetMessages.IPyWidgets_Ready:
                 this.sendKernelOptions();
                 this.initialize();

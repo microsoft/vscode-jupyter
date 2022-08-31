@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { logMessage } from '../../react-common/logger';
+import { logErrorMessage } from '../../react-common/logger';
 
 const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/requirejs@2.3.6/bin/r.min.js';
@@ -51,7 +51,7 @@ async function isWebSiteReachable(url: string, signal: AbortSignal) {
         }
         return false;
     } catch (ex) {
-        logMessage(`Failed to access CDN ${url} after ${retries} attempts, ${(ex || '').toString()}`);
+        logErrorMessage(`Failed to access CDN ${url} after ${retries} attempts, ${(ex || '').toString()}`);
         return false;
     }
 }

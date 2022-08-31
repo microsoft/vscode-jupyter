@@ -51,8 +51,11 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
 
         // Handshake.
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_Ready);
-        setLogger((message: string) =>
-            this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_logMessage, message)
+        setLogger((category: 'error' | 'verbose', message: string) =>
+            this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_logMessage, {
+                category,
+                message
+            })
         );
     }
     public dispose(): void {
