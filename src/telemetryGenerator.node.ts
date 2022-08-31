@@ -852,8 +852,6 @@ const gdprHeader = `// Copyright (c) Microsoft Corporation.
 `;
 
 function generateTelemetryGdpr(output: TelemetryEntry[]) {
-    // Until we have property GDPR data in telemetry.ts.
-    return;
     const file = './src/gdpr.ts';
     fs.writeFileSync(file, '');
     fs.appendFileSync(file, gdprHeader);
