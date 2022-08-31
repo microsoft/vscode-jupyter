@@ -207,6 +207,7 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
                     gdprEntry = JSON.parse(
                         JSON.stringify(gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'][name])
                     ) as IPropertyDataNonMeasurement;
+                    (gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'] as any)[name] = gdprEntry as any;
                 }
                 if (
                     'measures' in gdprEntryOfCurrentlyComputingTelemetryEventName[1] &&
@@ -217,6 +218,7 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
                     gdprEntry = JSON.parse(
                         JSON.stringify(gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'][name])
                     ) as IPropertyDataNonMeasurement;
+                    (gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'] as any)[name] = gdprEntry as any;
                 }
                 if (gdprEntry) {
                     const comment = (descriptions || []).join(' ').split(/\r?\n/).join();
@@ -881,7 +883,7 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
     output.forEach((item) => {
         // Do not include `__GDPR__` in the string with JSON comments, else telemetry tool treats this as a valid GDPR annotation.
         const gdpr = '__GDPR__';
-        const header = [`/* ${gdpr}`, `   "${item.name}" : {`];
+        const header = [`//${item.constantName}`, `/* ${gdpr}`, `   "${item.name}" : {`];
         const footer = ['   }', ' */', '', ''];
         const properties: Record<string, IPropertyDataNonMeasurement> =
             'properties' in item.gdpr ? item.gdpr['properties'] : {};

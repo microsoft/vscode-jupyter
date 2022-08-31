@@ -1138,9 +1138,12 @@ System ()",true
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","restartCount","This number gets reset after change the kernel.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","startFailureCount","Number of times starting the kernel failed.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
+Total number of kernel specs in the kernel list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
+Total number of interpreters in the kernel list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
+Total number of live kernels in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension ()
 3rdPartyExtension ()",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","capturedEnvVars","Whether we managed to capture the environment variables or not.

@@ -38,6 +38,7 @@ src/test/datascience/temp/**
 .vs/
 test-results*.xml
 testresults.json
+telemetry.json
 xunit-test-results.xml
 build/ci/performance/performance-results.json
 !build/
