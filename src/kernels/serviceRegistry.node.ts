@@ -122,9 +122,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     const isInsiderVersion = packageJson?.engines?.vscode?.toLowerCase()?.endsWith('insider');
     setSharedProperty('isInsiderExtension', isVSCInsiders && isInsiderVersion ? 'true' : 'false');
 
-    // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
-    // This is temporary, and once we ship native editor this needs to be removed.
-    setSharedProperty('ds_notebookeditor', 'native');
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(
         'isPythonExtensionInstalled',

@@ -22,6 +22,7 @@ import { IExportedKernelService } from './standalone/api/extension';
 import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
 import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { ExcludeType, PickType } from './platform/common/utils/misc';
+import { SharedPropertyMapping } from './platform/telemetry/index';
 
 export * from './platform/telemetry/index';
 export type DurationMeasurement = {
@@ -157,6 +158,34 @@ type GdprEventDefinition<P> = P extends never
     : IEventData & { properties: EventPropertiesData<ExcludeType<P, number>> } & {
           measures: EventPropertiesData<PickType<P, number>>;
       };
+
+const globallySharedProperties: AllEventPropertiesData<SharedPropertyMapping> = {
+    installSource: {
+        classification: 'SystemMetaData',
+        purpose: 'FeatureInsight',
+        comment: ' Determine where an extension was installed from'
+    },
+    isamlcompute: {
+        classification: 'SystemMetaData',
+        purpose: 'FeatureInsight',
+        comment: 'Whether this is an AML compute instance'
+    },
+    isInsiderExtension: {
+        classification: 'SystemMetaData',
+        purpose: 'FeatureInsight',
+        comment: 'Whether this is the Insider version of the Jupyter extension or not.'
+    },
+    isPythonExtensionInstalled: {
+        classification: 'SystemMetaData',
+        purpose: 'FeatureInsight',
+        comment: 'Whether Python extension is installed or not.'
+    },
+    rawKernelSupported: {
+        classification: 'SystemMetaData',
+        purpose: 'FeatureInsight',
+        comment: 'Whether the raw kernel is supported or not.'
+    }
+};
 
 const commonClassificationForDurationProperties: AllEventPropertiesData<DurationMeasurement> = {
     duration: {
@@ -335,7 +364,8 @@ export const CommonProperties = {
     ...commonClassificationForDurationProperties,
     ...commonClassificationForErrorProperties,
     ...commonClassificationForResourceSpecificTelemetryProperties,
-    ...commonClassificationForResourceType
+    ...commonClassificationForResourceType,
+    ...globallySharedProperties
 };
 export const CommonPropertyAndMeasureTypeNames = [
     'ResourceSpecificTelemetryProperties',

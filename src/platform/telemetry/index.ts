@@ -48,11 +48,11 @@ export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolea
     return settings.globalValue === false ? true : false;
 }
 
-const sharedProperties: Partial<ISharedPropertyMapping> = {};
+const sharedProperties: Partial<SharedPropertyMapping> = {};
 /**
  * Set shared properties for all telemetry events.
  */
-export function setSharedProperty<P extends ISharedPropertyMapping, E extends keyof P>(name: E, value?: P[E]): void {
+export function setSharedProperty<P extends SharedPropertyMapping, E extends keyof P>(name: E, value?: P[E]): void {
     const propertyName = name as string;
     // Ignore such shared telemetry during unit tests.
     if (isUnitTestExecution() && propertyName.startsWith('ds_')) {
@@ -370,11 +370,7 @@ export function captureUsageTelemetry<This, P extends IEventNamePropertyMapping,
 /**
  * Map all shared properties to their data types.
  */
-export interface ISharedPropertyMapping {
-    /**
-     * For every DS telemetry we would like to know the type of Notebook Editor used when doing something.
-     */
-    ['ds_notebookeditor']: undefined | 'old' | 'custom' | 'native';
+export class SharedPropertyMapping {
     /**
      * Whether this is the Insider version of the Jupyter extension or not.
      */
