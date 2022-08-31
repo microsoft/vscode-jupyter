@@ -23,7 +23,8 @@ import { workspace } from 'vscode';
 import { executeSilently } from '../../kernels/helpers';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
 
-suite('3rd Party Kernel Service API', function () {
+// eslint-disable-next-line no-only-tests/no-only-tests
+suite.only('3rd Party Kernel Service API', function () {
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
     const disposables: IDisposable[] = [];

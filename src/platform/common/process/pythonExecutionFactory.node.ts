@@ -9,7 +9,7 @@ import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/inf
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
-import { ignoreLogging, traceDecoratorVerbose, traceError, traceInfo } from '../../logging';
+import { traceDecoratorVerbose, traceError, traceInfo } from '../../logging';
 import { getDisplayPath } from '../platform/fs-paths';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../types';
 import { ProcessService } from './proc.node';
@@ -160,7 +160,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
     @traceDecoratorVerbose('Create activated Env', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async createActivatedEnvironment(
-        @ignoreLogging() options: ExecutionFactoryCreateWithEnvironmentOptions
+        options: ExecutionFactoryCreateWithEnvironmentOptions
     ): Promise<IPythonExecutionService> {
         // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.
         if (!this.workspace.isTrusted) {

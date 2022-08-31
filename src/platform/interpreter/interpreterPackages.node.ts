@@ -12,9 +12,10 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 import { getComparisonKey } from '../vscode-path/resources';
 import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../telemetry/helpers';
 import { IWorkspaceService } from '../common/application/types';
-import { traceError, traceWarning } from '../logging';
+import { traceDecoratorVerbose, traceError, traceWarning } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths.node';
 import { IInterpreterPackages } from './types';
+import { TraceOptions } from '../logging/types';
 
 const interestedPackages = new Set(
     [
@@ -161,7 +162,7 @@ export class InterpreterPackages implements IInterpreterPackages {
             return;
         }
 
-        const promise = this.getPackageInformation(interpreter);
+        const promise = this.getPackageInformation({ interpreter });
         promise.finally(() => {
             // If this promise was resolved, then remove it from the pending list.
             // But cache for at least 5m (this is used only to diagnose failures in kernels).
@@ -175,7 +176,12 @@ export class InterpreterPackages implements IInterpreterPackages {
         });
         this.pendingInterpreterInformation.set(key, promise);
     }
-    private async getPackageInformation(interpreter: PythonEnvironment) {
+
+    @traceDecoratorVerbose(
+        'interpreterPackages getPackageInformation',
+        TraceOptions.BeforeCall | TraceOptions.Arguments
+    )
+    private async getPackageInformation({ interpreter }: { interpreter: PythonEnvironment }) {
         const service = await this.executionFactory.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,
             interpreter
