@@ -182,13 +182,6 @@ jobs:
       - name: Validate TELEMETRY files
         run: npm run validateTelemetryFiles
 
-      - name: 'Check for news entry'
-        uses: brettcannon/check-for-changed-files@v1.1.0
-        with:
-          file-pattern: 'news/*/*.md'
-          skip-label: 'skip news'
-          failure-message: 'News entry file missing; see news/README.md for instructions (the ${skip-label} label can be used to pass this check)'
-
   ts_tests:
     name: Type Script Tests
     runs-on: ${{ matrix.os }}
