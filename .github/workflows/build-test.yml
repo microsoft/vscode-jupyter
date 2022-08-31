@@ -582,6 +582,19 @@ jobs:
         id: test_notebook_vscode_ubuntu
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop != 'web'
 
+      - name: Get server launcher Linux/macOS
+        if: ${{ github.event.inputs.os != 'windows' }}
+        run: |
+          wget -O- https://aka.ms/install-vscode-server/setup.sh | sh
+
+      - name: Start server distro with vscode.dev
+        if: always()
+        timeout-minutes: 180
+        shell: pwsh
+        run: |
+          # start server distro
+          code-server serve --log trace --accept-server-license-terms --random-name
+
       - name: Build web bundle for testing
         run: npm run compile-web-test
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web'
