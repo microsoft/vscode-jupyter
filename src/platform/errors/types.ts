@@ -87,30 +87,37 @@ export type ErrorCategory =
 export type TelemetryErrorProperties = {
     /**
      * Whether there was a failure.
+     * Common to most of the events.
      */
     failed: true;
     /**
      * Node stacktrace without PII.
+     * Common to most of the events.
      */
     stackTrace: string;
     /**
      * A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
+     * Common to most of the events.
      */
     failureCategory?: string;
     /**
      * Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+     * Common to most of the events.
      */
     failureSubCategory?: string;
     /**
      * Hash of the file name that contains the file in the last frame (from Python stack trace).
+     * Common to most of the events.
      */
     pythonErrorFile?: string;
     /**
      * Hash of the folder that contains the file in the last frame (from Python stack trace).
+     * Common to most of the events.
      */
     pythonErrorFolder?: string;
     /**
      * Hash of the module that contains the file in the last frame (from Python stack trace).
+     * Common to most of the events.
      */
     pythonErrorPackage?: string;
 };

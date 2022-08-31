@@ -871,8 +871,13 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
     const file = './src/gdpr.ts';
     fs.writeFileSync(file, '');
     fs.appendFileSync(file, gdprHeader);
-
-    Object.keys(CommonProperties).forEach((key) => {
+    const gdpr = '__GDPR__FRAGMENT__';
+    fs.appendFileSync(file, `/* ${gdpr}\n`);
+    fs.appendFileSync(file, `   "F1" : {\n`);
+    const commonFields = ['     "${include}": ['];
+    const fieldList: string[] = [];
+    const fieldListForFile: string[] = [];
+    Object.keys(CommonProperties).forEach((key, index) => {
         const entry = (CommonProperties as any)[key] as IPropertyDataMeasurement | IPropertyDataNonMeasurement;
         const isMeasurement = entry.isMeasurement === true;
         const jsDocComment = commonPropertyComments.get(key) || '';
@@ -885,13 +890,20 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
         }
 
         // Do not include `__GDPR__` in the string with JSON comments, else telemetry tool treats this as a valid GDPR annotation.
-        const gdpr = '__GDPR__COMMON__';
-        fs.appendFileSync(
-            file,
-            `// ${gdpr} "${key}" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": ${isMeasurement}, "comment": "${comment}" }\n`
-        );
+        fieldList.push(`       "\${F${index + 1}}"`);
+        const json = {
+            classification: 'SystemMetaData',
+            purpose: 'FeatureInsight',
+            isMeasurement: isMeasurement,
+            comment: comment
+        };
+        fieldListForFile.push(`      "F1P${index + 1}": ${JSON.stringify(json)}`);
     });
-
+    commonFields.push(`${fieldList.join(',\n')}`);
+    commonFields.push('     ]');
+    fs.appendFileSync(file, `${fieldListForFile.join(',\n')}\n`);
+    fs.appendFileSync(file, `   }\n`);
+    fs.appendFileSync(file, ` */\n`);
     fs.appendFileSync(file, '\n');
 
     output.forEach((item) => {
@@ -917,7 +929,7 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
             if (prop.expiration) {
                 json.expiration = prop.expiration;
             }
-            entries.push(`     "${key}": ${JSON.stringify(json)}`);
+            entries.push(`     "${key}": ${JSON.stringify(json)},`);
         });
         Object.keys(measures).forEach((key) => {
             if (key in CommonProperties) {
@@ -934,10 +946,14 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
             if (prop.expiration) {
                 json.expiration = prop.expiration;
             }
-            entries.push(`     "${key}": ${JSON.stringify(json)}`);
+            entries.push(`     "${key}": ${JSON.stringify(json)},`);
         });
-
-        fs.appendFileSync(file, `${header.join('\n')}\n${entries.join(',\n')}${footer.join('\n')}`.trim());
+        fs.appendFileSync(
+            file,
+            `${header.join('\n')}\n${entries.join('\n')}${entries.length ? '\n' : ''}${commonFields.join(
+                '\n'
+            )}\n${footer.join('\n')}`.trim()
+        );
         fs.appendFileSync(file, `\n`);
     });
 }
