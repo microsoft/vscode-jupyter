@@ -139,8 +139,7 @@ as the context already, in which case the import command doesn't ask for selecti
 'file' ",false
 "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","","Telemetry.InteractiveWindowDebugSetupCodeFailure","amunger","","","","ename","","string","",false
 "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","","Telemetry.InteractiveWindowDebugSetupCodeFailure","amunger","","","","evalue","","string","",false
-"DATASCIENCE.INTERRUPT","User interrupts a cell
-Identical to `Telemetry.InterruptJupyterTime`","Telemetry.Interrupt","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.INTERRUPT","User interrupts a cell","Telemetry.Interrupt","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","Telemetry sent when an extension attempts to use our 3rd party API.","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","extensionId","Extension Id that's attempting to use the API.","string","",false
 "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","Telemetry sent when an extension attempts to use our 3rd party API.","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","allowed","Whether or not the extension was able to use the API.","","'yes' 
@@ -788,6 +787,10 @@ Common measurement used across a number of events.","number","",false
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
 "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","Total time taken by Python extension to return the active Python environment.","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.","number","",false
+"DS_INTERNAL.CELL_OUTPUT_MIME_TYPE","Mime type of a cell output.
+Used to detect the popularity of a mime type, that would help determine which mime types are most common.
+E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
+or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.CellOutputMimeType","donjayamanne","N/A","","","mimeType","Mimetype of the output.","string","",false
 "DS_INTERNAL.CODE_LENS_ACQ_TIME","","Telemetry.CodeLensAverageAcquisitionTime","amunger","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.COMMAND_EXECUTED","Telemetry sent when a command is executed.","Telemetry.CommandExecuted","unknown","N/A","","","command","Name of the command executed.","string","",false
@@ -856,62 +859,6 @@ Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentV
 'failedToGetCustomEnvVariables' ",true
 "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
 Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentVariables","donjayamanne","N/A","","","duration","Time taken.","number","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hashedName","Hash of the cell output mimetype","string","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasText","Whether the mime type has the word 'text' in it.","boolean","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasLatex","Whether the mime type has the word 'latex' in it.","boolean","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasHtml","Whether the mime type has the word 'html' in it.","boolean","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasSvg","Whether the mime type has the word 'svg' in it.","boolean","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasXml","Whether the mime type has the word 'xml' in it.","boolean","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasJson","Whether the mime type has the word 'json' in it.","boolean","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasImage","Whether the mime type has the word 'image' in it.","boolean","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasGeo","Whether the mime type has the word 'geo' in it.","boolean","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasPlotly","Whether the mime type has the word 'plotly' in it.","boolean","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasVega","Whether the mime type has the word 'vega' in it.","boolean","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasWidget","Whether the mime type has the word 'widget' in it.","boolean","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasJupyter","Whether the mime type has the word 'jupyter' in it.","boolean","",false
-"DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
-Used to detect the popularity of a mime type, that would help determine which mime types are most common.
-E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
-or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasVnd","Whether the mime type has the word 'vnd' in it.","boolean","",false
 "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","InteractiveWindow","IntelliSense","","isResultNull","Result is null if user signalled cancellation or if we timed out","boolean","",false
 "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","InteractiveWindow","IntelliSense","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
@@ -919,9 +866,6 @@ Common measurement used across a number of events.","number","",false
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
 "DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.","number","",false
-"DS_INTERNAL.INTERRUPT_JUPYTER_TIME","User interrupts a cell
-Identical to `Telemetry.Interrupt`","Telemetry.InterruptJupyterTime","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS","Total time taken to discover all IPyWidgets.
 This is how long it takes to discover all widgets on disc (from python environment).","Telemetry.DiscoverIPyWidgetNamesPerf","donjayamanne","Notebook, InteractiveWindow","Widgets","","type","Whether we're looking for widgets on local Jupyter environment (local connections) or remote.","","'local' 
 'remote' ",false
@@ -940,7 +884,8 @@ E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/i
 'couldNotLocateRequireConfigEnd' 
 'noRequireConfigEntries' ",false
 "DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO","Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.
-E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.","Telemetry.IPyWidgetExtensionJsInfo","donjayamanne","Notebook, Notebook","Widgets","Failed to parse extension.js. ","patternUsedToRegisterRequireConfig","Pattern (code style) used to register require.config enties.","","null or <empty> ",false
+E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.","Telemetry.IPyWidgetExtensionJsInfo","donjayamanne","Notebook, Notebook","Widgets","Failed to parse extension.js. ","patternUsedToRegisterRequireConfig","Pattern (code style) used to register require.config entries.
+Pattern (code style) used to register require.config enties.","","null or <empty> ",false
 "DS_INTERNAL.IPYWIDGET_LOAD_FAILURE","Telemetry event sent when an ipywidget module fails to load. Module name is hashed.","Telemetry.IPyWidgetLoadFailure","donjayamanne","Notebook, InteractiveWindow","Widgets","","isOnline","Whether we've detected a connection to the internet or not (to access the CDN).","boolean","",false
 "DS_INTERNAL.IPYWIDGET_LOAD_FAILURE","Telemetry event sent when an ipywidget module fails to load. Module name is hashed.","Telemetry.IPyWidgetLoadFailure","donjayamanne","Notebook, InteractiveWindow","Widgets","","moduleHash","Hash of the widget module.","string","",false
 "DS_INTERNAL.IPYWIDGET_LOAD_FAILURE","Telemetry event sent when an ipywidget module fails to load. Module name is hashed.","Telemetry.IPyWidgetLoadFailure","donjayamanne","Notebook, InteractiveWindow","Widgets","","moduleVersion","Version of the module.","string","",false
@@ -1920,11 +1865,7 @@ E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSe
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_START_RAW_SESSION","Sent to measure the time taken to start a raw kernel session.","Telemetry.RawKernelStartRawSession","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.RESTART_JUPYTER_TIME","Total time taken to restart a kernel.
-Identical to `Telemetry.RestartKernel`","Telemetry.RestartJupyterTime","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.RESTART_KERNEL","Total time taken to restart a kernel.
-Identical to `Telemetry.RestartJupyterTime`","Telemetry.RestartKernel","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
+"DS_INTERNAL.RESTART_KERNEL","Total time taken to restart a kernel.","Telemetry.RestartKernel","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RUNTEST","","Telemetry.RunTest","amunger","","","","testName","","string","",false
 "DS_INTERNAL.RUNTEST","","Telemetry.RunTest","amunger","","","","testResult","","string","",false

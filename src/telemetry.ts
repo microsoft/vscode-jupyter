@@ -4,7 +4,6 @@
 'use strict';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { JSONObject } from '@lumino/coreutils';
 import { Telemetry } from './platform/common/constants';
 import { CheckboxState, EventName, SliceOperationSource } from './platform/telemetry/constants';
 import { DebuggingTelemetry } from './notebooks/debugger/constants';
@@ -693,127 +692,23 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
-     * Hash of the mime type of a cell output.
+     * Mime type of a cell output.
      * Used to detect the popularity of a mime type, that would help determine which mime types are most common.
      * E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
      * or prioritize rendering of widgets when opening an existing notebook or the like.
      */
-    [Telemetry.HashedCellOutputMimeType]: TelemetryEventInfo<{
+    [Telemetry.CellOutputMimeType]: TelemetryEventInfo<{
         /**
-         * Hash of the cell output mimetype
+         * Mimetype of the output.
          */
-        hashedName: string;
-        /**
-         * Whether the mime type has the word 'text' in it.
-         */
-        hasText: boolean;
-        /**
-         * Whether the mime type has the word 'latex' in it.
-         */
-        hasLatex: boolean;
-        /**
-         * Whether the mime type has the word 'html' in it.
-         */
-        hasHtml: boolean;
-        /**
-         * Whether the mime type has the word 'svg' in it.
-         */
-        hasSvg: boolean;
-        /**
-         * Whether the mime type has the word 'xml' in it.
-         */
-        hasXml: boolean;
-        /**
-         * Whether the mime type has the word 'json' in it.
-         */
-        hasJson: boolean;
-        /**
-         * Whether the mime type has the word 'image' in it.
-         */
-        hasImage: boolean;
-        /**
-         * Whether the mime type has the word 'geo' in it.
-         */
-        hasGeo: boolean;
-        /**
-         * Whether the mime type has the word 'plotly' in it.
-         */
-        hasPlotly: boolean;
-        /**
-         * Whether the mime type has the word 'vega' in it.
-         */
-        hasVega: boolean;
-        /**
-         * Whether the mime type has the word 'widget' in it.
-         */
-        hasWidget: boolean;
-        /**
-         * Whether the mime type has the word 'jupyter' in it.
-         */
-        hasJupyter: boolean;
-        /**
-         * Whether the mime type has the word 'vnd' in it.
-         */
-        hasVnd: boolean;
+        mimeType: string;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
         properties: {
-            hasGeo: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hashedName: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hasHtml: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hasImage: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hasJson: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hasLatex: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hasJupyter: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hasPlotly: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hasSvg: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hasText: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hasVega: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hasVnd: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hasWidget: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            hasXml: {
-                classification: 'SystemMetaData',
+            mimeType: {
+                classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             }
         }
@@ -1071,10 +966,10 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         measures: commonClassificationForDurationProperties()
     };
-    [Telemetry.DataScienceSettings]: JSONObject = {
+    [Telemetry.DataScienceSettings]: TelemetryEventInfo<{}> = {
         owner: 'unknown',
         feature: 'N/A'
-    };
+    } as any;
     /**
      * Telemetry event sent when user hits the `continue` button while debugging IW
      */
@@ -1142,7 +1037,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['InteractiveWindow', 'Notebook'],
         tags: ['Cell Execution'],
-        source: 'User Action',
+        source: 'N/A',
         properties: commonClassificationForResourceSpecificTelemetryProperties(),
         measures: commonClassificationForDurationProperties()
     };
@@ -1155,7 +1050,7 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: ['InteractiveWindow', 'Notebook'],
         tags: ['Cell Execution'],
-        source: 'User Action',
+        source: 'N/A',
         properties: commonClassificationForResourceSpecificTelemetryProperties(),
         measures: commonClassificationForDurationProperties()
     };
@@ -1346,22 +1241,11 @@ export class IEventNamePropertyMapping {
     };
     /**
      * User interrupts a cell
-     * Identical to `Telemetry.InterruptJupyterTime`
      */
     [Telemetry.Interrupt]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
         feature: ['InteractiveWindow', 'Notebook'],
         source: 'User Action',
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * User interrupts a cell
-     * Identical to `Telemetry.Interrupt`
-     */
-    [Telemetry.InterruptJupyterTime]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: ['InteractiveWindow', 'Notebook'],
-        source: 'N/A',
         measures: commonClassificationForDurationProperties()
     };
     /**
@@ -1461,17 +1345,6 @@ export class IEventNamePropertyMapping {
     };
     /**
      * Total time taken to restart a kernel.
-     * Identical to `Telemetry.RestartKernel`
-     */
-    [Telemetry.RestartJupyterTime]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: ['InteractiveWindow', 'Notebook'],
-        source: 'User Action',
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * Total time taken to restart a kernel.
-     * Identical to `Telemetry.RestartJupyterTime`
      */
     [Telemetry.RestartKernel]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'donjayamanne',
@@ -1637,15 +1510,6 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         feature: ['KernelPicker'],
         properties: commonClassificationForResourceSpecificTelemetryProperties()
-    };
-    /**
-     * Time take for Jupyter session to be idle.
-     */
-    [Telemetry.SessionIdleTimeout]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
     };
     /**
      * Sent when we display a message informing the user about Jupyter not being installed (or not detected).
@@ -2094,9 +1958,6 @@ export class IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent when starting a session for a local connection failed.
-     *
-     * @type {(undefined | never)}
-     * @memberof IEventNamePropertyMapping
      */
     [Telemetry.StartSessionFailedJupyter]: TelemetryEventInfo<undefined | never> = {
         owner: 'donjayamanne',
@@ -2143,9 +2004,6 @@ export class IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent to indicate 'jupyter kernelspec' is not possible.
-     *
-     * @type {(undefined | never)}
-     * @memberof IEventNamePropertyMapping
      */
     [Telemetry.KernelSpecNotFound]: TelemetryEventInfo<undefined | never> = {
         owner: 'donjayamanne',
@@ -2231,15 +2089,6 @@ export class IEventNamePropertyMapping {
     [Telemetry.NewFileForInteractiveWindow]: TelemetryEventInfo<never | undefined> = {
         owner: 'amunger'
     } as any;
-    /**
-     * Telemetry event sent when a kernel picked crashes on startup
-     */
-    [Telemetry.KernelInvalid]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
-    };
     /**
      * Telemetry event sent when the ZMQ native binaries do not work.
      */
@@ -3481,7 +3330,7 @@ export class IEventNamePropertyMapping {
                */
               failure: 'couldNotLocateRequireConfigStart' | 'couldNotLocateRequireConfigEnd' | 'noRequireConfigEntries';
               /**
-               * Pattern (code style) used to register require.config enties.
+               * Pattern (code style) used to register require.config entries.
                */
               patternUsedToRegisterRequireConfig: string | undefined;
           }

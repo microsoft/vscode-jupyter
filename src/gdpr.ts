@@ -536,6 +536,11 @@
    "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF" : {
      "firstTime": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether this is the first time in the session. (fetching kernels first time in the session is slower, later its cached). This is a generic property supported for all telemetry (sent by decorators).","owner":"donjayamanne"}   }
  */
+//Telemetry.CellOutputMimeType
+/* __GDPR__
+   "DS_INTERNAL.CELL_OUTPUT_MIME_TYPE" : {
+     "mimeType": {"classification":"PublicNonPersonalData","purpose":"PublicNonPersonalData","comment":"Mimetype of the output.","owner":"donjayamanne"}   }
+ */
 //Telemetry.CodeLensAverageAcquisitionTime
 /* __GDPR__
    "DS_INTERNAL.CODE_LENS_ACQ_TIME" : {
@@ -613,24 +618,6 @@
    "DS_INTERNAL.GET_PASSWORD_SUCCESS" : {
    }
  */
-//Telemetry.HashedCellOutputMimeType
-/* __GDPR__
-   "DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE" : {
-     "hasGeo": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'geo' in it.","owner":"donjayamanne"},
-     "hashedName": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Hash of the cell output mimetype","owner":"donjayamanne"},
-     "hasHtml": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'html' in it.","owner":"donjayamanne"},
-     "hasImage": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'image' in it.","owner":"donjayamanne"},
-     "hasJson": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'json' in it.","owner":"donjayamanne"},
-     "hasLatex": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'latex' in it.","owner":"donjayamanne"},
-     "hasJupyter": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'jupyter' in it.","owner":"donjayamanne"},
-     "hasPlotly": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'plotly' in it.","owner":"donjayamanne"},
-     "hasSvg": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'svg' in it.","owner":"donjayamanne"},
-     "hasText": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'text' in it.","owner":"donjayamanne"},
-     "hasVega": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'vega' in it.","owner":"donjayamanne"},
-     "hasVnd": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'vnd' in it.","owner":"donjayamanne"},
-     "hasWidget": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'widget' in it.","owner":"donjayamanne"},
-     "hasXml": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the mime type has the word 'xml' in it.","owner":"donjayamanne"}   }
- */
 //Telemetry.InteractiveFileTooltipsPerf
 /* __GDPR__
    "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF" : {
@@ -640,16 +627,6 @@
 /* __GDPR__
    "DS_INTERNAL.INTERPRETER_LISTING_PERF" : {
      "firstTime": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether this is the first time in the session. (fetching kernels first time in the session is slower, later its cached). This is a generic property supported for all telemetry (sent by decorators).","owner":"donjayamanne"}   }
- */
-//Telemetry.InterruptJupyterTime
-/* __GDPR__
-   "DS_INTERNAL.INTERRUPT_JUPYTER_TIME" : {
-   }
- */
-//Telemetry.KernelInvalid
-/* __GDPR__
-   "DS_INTERNAL.INVALID_KERNEL_USED" : {
-   }
  */
 //Telemetry.DiscoverIPyWidgetNamesPerf
 /* __GDPR__
@@ -665,7 +642,7 @@
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO" : {
      "failure": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"Reason for the failure.","owner":"donjayamanne"},
-     "patternUsedToRegisterRequireConfig": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Pattern (code style) used to register require.config enties.","owner":"donjayamanne"},
+     "patternUsedToRegisterRequireConfig": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Pattern (code style) used to register require.config enties. Pattern (code style) used to register require.config entries.","owner":"donjayamanne"},
      "widgetFolderNameHash": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Hash of the widget folder name.","owner":"donjayamanne"},
      "requireEntryPointCount": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Total number of entries in the require config.","owner":"donjayamanne","isMeasurement":true}   }
  */
@@ -737,11 +714,6 @@
 //Telemetry.JupyterCommandLineNonDefault
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE" : {
-   }
- */
-//Telemetry.SessionIdleTimeout
-/* __GDPR__
-   "DS_INTERNAL.JUPYTER_IDLE_TIMEOUT" : {
    }
  */
 //Telemetry.JupyterInstalledButNotKernelSpecModule
@@ -924,11 +896,6 @@
    "DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL" : {
    }
  */
-//Telemetry.RestartJupyterTime
-/* __GDPR__
-   "DS_INTERNAL.RESTART_JUPYTER_TIME" : {
-   }
- */
 //Telemetry.RestartKernel
 /* __GDPR__
    "DS_INTERNAL.RESTART_KERNEL" : {
@@ -943,6 +910,11 @@
 /* __GDPR__
    "DS_INTERNAL.SELECT_JUPYTER_INTERPRETER" : {
      "result": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"If the value or `result` is empty this means we displayed the message to the user and user hasn't made a choice yet.  The result of the selection. notSelected - No interpreter was selected. selected - An interpreter was selected (and configured to have jupyter and notebook). installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter. selectAnotherInterpreter - Selected another interpreter.","owner":"donjayamanne"}   }
+ */
+//Telemetry.DataScienceSettings
+/* __GDPR__
+   "DS_INTERNAL.SETTINGS" : {
+   }
  */
 //Telemetry.ShiftEnterBannerShown
 /* __GDPR__

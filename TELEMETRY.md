@@ -526,7 +526,6 @@ Expand each section to see more information about that event.
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
     User interrupts a cell  
-    Identical to `Telemetry.InterruptJupyterTime`  
     ```
 
     - Measures:  
@@ -1972,6 +1971,20 @@ Expand each section to see more information about that event.
         Total time taken to list interpreters.  
 
 
+* DS_INTERNAL.CELL_OUTPUT_MIME_TYPE  (Telemetry.CellOutputMimeType)  
+      Owner: [@donjayamanne](https://github.com/donjayamanne)  
+    ```
+    Mime type of a cell output.  
+    Used to detect the popularity of a mime type, that would help determine which mime types are most common.  
+    E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,  
+    or prioritize rendering of widgets when opening an existing notebook or the like.  
+    ```
+
+    - Properties:  
+        - `mimeType`: `string`  
+        Mimetype of the output.  
+
+
 * DS_INTERNAL.CODE_LENS_ACQ_TIME  (Telemetry.CodeLensAverageAcquisitionTime)  
       Owner: [@amunger](https://github.com/amunger)  
        <span style="color:red">Feature not defined.</span>  
@@ -2205,46 +2218,6 @@ Expand each section to see more information about that event.
 
 
 
-* DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE  (Telemetry.HashedCellOutputMimeType)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Hash of the mime type of a cell output.  
-    Used to detect the popularity of a mime type, that would help determine which mime types are most common.  
-    E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,  
-    or prioritize rendering of widgets when opening an existing notebook or the like.  
-    ```
-
-    - Properties:  
-        - `hashedName`: `string`  
-        Hash of the cell output mimetype  
-        - `hasText`: `boolean`  
-        Whether the mime type has the word 'text' in it.  
-        - `hasLatex`: `boolean`  
-        Whether the mime type has the word 'latex' in it.  
-        - `hasHtml`: `boolean`  
-        Whether the mime type has the word 'html' in it.  
-        - `hasSvg`: `boolean`  
-        Whether the mime type has the word 'svg' in it.  
-        - `hasXml`: `boolean`  
-        Whether the mime type has the word 'xml' in it.  
-        - `hasJson`: `boolean`  
-        Whether the mime type has the word 'json' in it.  
-        - `hasImage`: `boolean`  
-        Whether the mime type has the word 'image' in it.  
-        - `hasGeo`: `boolean`  
-        Whether the mime type has the word 'geo' in it.  
-        - `hasPlotly`: `boolean`  
-        Whether the mime type has the word 'plotly' in it.  
-        - `hasVega`: `boolean`  
-        Whether the mime type has the word 'vega' in it.  
-        - `hasWidget`: `boolean`  
-        Whether the mime type has the word 'widget' in it.  
-        - `hasJupyter`: `boolean`  
-        Whether the mime type has the word 'jupyter' in it.  
-        - `hasVnd`: `boolean`  
-        Whether the mime type has the word 'vnd' in it.  
-
-
 * DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF  (Telemetry.InteractiveFileTooltipsPerf)  
       Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
     ```
@@ -2274,27 +2247,6 @@ Expand each section to see more information about that event.
     - Measures:  
         - `duration`: `number`  
         Total time taken to list interpreters.  
-
-
-* DS_INTERNAL.INTERRUPT_JUPYTER_TIME  (Telemetry.InterruptJupyterTime)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    User interrupts a cell  
-    Identical to `Telemetry.Interrupt`  
-    ```
-
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
-
-
-* DS_INTERNAL.INVALID_KERNEL_USED  (Telemetry.KernelInvalid)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Telemetry event sent when a kernel picked crashes on startup  
-    ```
-
 
 
 * DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS  (Telemetry.DiscoverIPyWidgetNamesPerf)  
@@ -2349,6 +2301,7 @@ Expand each section to see more information about that event.
                 - `'couldNotLocateRequireConfigEnd'`  
                 - `'noRequireConfigEntries'`  
             - `patternUsedToRegisterRequireConfig`: `<see below>`  
+            Pattern (code style) used to register require.config entries.  
             Pattern (code style) used to register require.config enties.  
             Possible values include:  
                 - `null or <empty>`  
@@ -2675,14 +2628,6 @@ Expand each section to see more information about that event.
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
     Telemetry event sent to when user customizes the jupyter command line  
-    ```
-
-
-
-* DS_INTERNAL.JUPYTER_IDLE_TIMEOUT  (Telemetry.SessionIdleTimeout)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Time take for Jupyter session to be idle.  
     ```
 
 
@@ -4092,24 +4037,10 @@ In such cases we do not notify user of any failures or the like.
 
 
 
-* DS_INTERNAL.RESTART_JUPYTER_TIME  (Telemetry.RestartJupyterTime)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Total time taken to restart a kernel.  
-    Identical to `Telemetry.RestartKernel`  
-    ```
-
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
-
-
 * DS_INTERNAL.RESTART_KERNEL  (Telemetry.RestartKernel)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
     Total time taken to restart a kernel.  
-    Identical to `Telemetry.RestartJupyterTime`  
     ```
 
     - Measures:  
@@ -4152,6 +4083,12 @@ In such cases we do not notify user of any failures or the like.
             - `'selected'`  
             - `'installationCancelled'`  
             - `'selectAnotherInterpreter'`  
+
+
+* DS_INTERNAL.SETTINGS  (Telemetry.DataScienceSettings)  
+      Owner: [@unknown](https://github.com/unknown)  
+       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
+       <span style="color:red">Add jsDoc comments to describe this event.</span>  
 
 
 * DS_INTERNAL.SHIFTENTER_BANNER_SHOWN  (Telemetry.ShiftEnterBannerShown)  

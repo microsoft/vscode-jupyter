@@ -572,6 +572,9 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
     }
     writeOutput(`\n`);
 
+    if (entry.gdpr.owner === 'unknown') {
+        eventErrorMessages.push('No owner specified for this event');
+    }
     if (eventErrorMessages.length) {
         const ownerIssues: Record<string, EventProblem> = (errorsByOwners[entry.gdpr.owner] =
             errorsByOwners[entry.gdpr.owner] || []);
