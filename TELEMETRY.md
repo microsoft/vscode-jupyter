@@ -4608,16 +4608,21 @@ In such cases we do not notify user of any failures or the like.
 
 * DS_INTERNAL.RUNTEST  (Telemetry.RunTest)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR testName, testResult, perfWarmup, commitHash, timedCheckpoints. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    A automated test has been run  
+    ```
+
     - Properties:  
         - `testName`: `string`  
+        The name of the test.  
         - `testResult`: `string`  
+        Whether the test passed or failed.  
         - `perfWarmup`?: `'true'`  
+        If the test was an initial run to warmup the product.  
         - `commitHash`?: `string`  
+        The git commit that the test was run against.  
         - `timedCheckpoints`?: `string`  
+        Timings for segments of the test.  
 
 
 * DS_INTERNAL.SELECT_JUPYTER_INTERPRETER  (Telemetry.SelectJupyterInterpreter)  

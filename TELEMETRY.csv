@@ -2449,11 +2449,11 @@ Common to most of the events.","boolean","",true
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RESTART_KERNEL","Total time taken to restart a kernel.","Telemetry.RestartKernel","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.RUNTEST","","Telemetry.RunTest","amunger","","","","testName","","string","",false
-"DS_INTERNAL.RUNTEST","","Telemetry.RunTest","amunger","","","","testResult","","string","",false
-"DS_INTERNAL.RUNTEST","","Telemetry.RunTest","amunger","","","","perfWarmup","","'true'","",true
-"DS_INTERNAL.RUNTEST","","Telemetry.RunTest","amunger","","","","commitHash","","string","",true
-"DS_INTERNAL.RUNTEST","","Telemetry.RunTest","amunger","","","","timedCheckpoints","","string","",true
+"DS_INTERNAL.RUNTEST","A automated test has been run","Telemetry.RunTest","amunger","N/A","","","testName","The name of the test.","string","",false
+"DS_INTERNAL.RUNTEST","A automated test has been run","Telemetry.RunTest","amunger","N/A","","","testResult","Whether the test passed or failed.","string","",false
+"DS_INTERNAL.RUNTEST","A automated test has been run","Telemetry.RunTest","amunger","N/A","","","perfWarmup","If the test was an initial run to warmup the product.","'true'","",true
+"DS_INTERNAL.RUNTEST","A automated test has been run","Telemetry.RunTest","amunger","N/A","","","commitHash","The git commit that the test was run against.","string","",true
+"DS_INTERNAL.RUNTEST","A automated test has been run","Telemetry.RunTest","amunger","N/A","","","timedCheckpoints","Timings for segments of the test.","string","",true
 "DS_INTERNAL.SELECT_JUPYTER_INTERPRETER","Sent when we notify the user to select an interpreter to start jupyter server
 Also sent after the user makes a selection to start the jupyter server.","Telemetry.SelectJupyterInterpreter","donjayamanne","N/A","KernelStartup","","result","If the value or `result` is empty this means we displayed the message to the user and user hasn't made a choice yet.
 

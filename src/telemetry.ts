@@ -3387,13 +3387,57 @@ export class IEventNamePropertyMapping {
         source: 'User Action',
         feature: ['KernelPicker']
     };
+    /**
+     * A automated test has been run
+     */
     [Telemetry.RunTest]: TelemetryEventInfo<{
+        /**
+         * The name of the test.
+         */
         testName: string;
+        /**
+         * Whether the test passed or failed.
+         */
         testResult: string;
+        /**
+         * If the test was an initial run to warmup the product.
+         */
         perfWarmup?: 'true';
+        /**
+         * The git commit that the test was run against.
+         */
         commitHash?: string;
+        /**
+         * Timings for segments of the test.
+         */
         timedCheckpoints?: string;
-    }> = { owner: 'amunger' } as any;
+    }> = {
+        owner: 'amunger',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            testName: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            testResult: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            perfWarmup: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            commitHash: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            timedCheckpoints: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
     /**
      * Send we we complete our preferred kernel match. Matched reason might be 'no match'.
      */
