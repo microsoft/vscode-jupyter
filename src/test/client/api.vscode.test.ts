@@ -114,7 +114,7 @@ suite.only('3rd Party Kernel Service API', function () {
         const kernelSpecs = await kernelService!.getKernelSpecifications();
         traceInfoIfCI(
             `Found kernel specs ${kernelSpecs.length}: ${kernelSpecs
-                .map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri.toString()}`)
+                .map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri.path}`)
                 .join('\n')}`
         );
         const pythonKernel = IS_REMOTE_NATIVE_TEST()

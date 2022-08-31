@@ -136,6 +136,10 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
                 return;
             }
 
+            if (updateCacheCancellationToken.token.isCancellationRequested) {
+                return;
+            }
+
             // update resource cache
             const resourceCacheKey = this.getResourceCacheKey(resource);
             this.resourceCache.set(resourceCacheKey, kernels);
@@ -147,6 +151,10 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
                     return new Promise<void>(async (resolve) => {
                         try {
                             let kernels = await this.listKernels(folder.uri, updateCacheCancellationToken.token);
+                            if (updateCacheCancellationToken.token.isCancellationRequested) {
+                                return;
+                            }
+
                             await this.writeToCache(kernels);
                             const resourceCacheKey = this.getResourceCacheKey(folder.uri);
                             this.resourceCache.set(resourceCacheKey, kernels);
@@ -157,6 +165,10 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
                     });
                 })
             );
+        }
+
+        if (updateCacheCancellationToken.token.isCancellationRequested) {
+            return;
         }
 
         this._onDidChangeKernels.fire();
