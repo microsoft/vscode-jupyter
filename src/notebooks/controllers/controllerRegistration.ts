@@ -172,8 +172,7 @@ export class ControllerRegistration implements IControllerRegistration {
                 undefined,
                 { kind: metadata.kind },
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ex as any,
-                true
+                ex as any
             );
             traceError(`Failed to create notebook controller for ${metadata.id}`, ex);
         }

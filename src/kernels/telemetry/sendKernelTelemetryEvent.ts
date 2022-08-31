@@ -43,7 +43,7 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     const props = getContextualPropsForTelemetry(resource);
     Object.assign(props, properties || {});
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sendTelemetryEvent(eventName as any, measures as any, props as any, ex, true);
+    sendTelemetryEvent(eventName as any, measures as any, props as any, ex);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resetData(resource, eventName as any, props);

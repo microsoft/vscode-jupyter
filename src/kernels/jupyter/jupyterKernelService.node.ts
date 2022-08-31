@@ -207,7 +207,7 @@ export class JupyterKernelService implements IJupyterKernelService {
             await this.fs.writeFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
         } catch (ex) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
+            sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any);
             throw ex;
         }
         if (cancelToken.isCancellationRequested) {
@@ -297,7 +297,7 @@ export class JupyterKernelService implements IJupyterKernelService {
                     return;
                 }
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
+                sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any);
                 throw ex;
             }
 

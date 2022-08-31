@@ -45,8 +45,7 @@ Common measurement used across a number of events.","number","",false
 "DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER","Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)","Telemetry.EnableInteractiveShiftEnter","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.ENTER_JUPYTER_URI","A URI has been selected and is being checked for validity.","Telemetry.EnterJupyterURI","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DATASCIENCE.EXECUTE_CELL","Executes a cell, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -148,8 +147,7 @@ ipynb ",false
 "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","failed","Whether there was a failure.","true","",false
 "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","stackTrace","Node stacktrace without PII.","string","",false
 "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
@@ -157,8 +155,7 @@ Name of the method in the extension that threw the exception. Further sub classi
 "DATASCIENCE.FETCH_CONTROLLERS","Telemetry sent when we have loaded some controllers.","Telemetry.FetchControllers","donjayamanne","","","","kind","Whether we've loaded local or remote controllers.","","'local' 
 'remote' ",false
 "DATASCIENCE.GET_PASSWORD_ATTEMPT","","Telemetry.GetPasswordAttempt","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DATASCIENCE.GOTO_NEXT_CELL_IN_FILE","","Telemetry.GotoNextCellInFile","amunger","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.GOTO_PREV_CELL_IN_FILE","","Telemetry.GotoPrevCellInFile","amunger","","","","duration","Duration of a measure in milliseconds.
@@ -172,8 +169,7 @@ as the context already, in which case the import command doesn't ask for selecti
 "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","","Telemetry.InteractiveWindowDebugSetupCodeFailure","amunger","","","","evalue","","string","",false
 "DATASCIENCE.INTERRUPT","User interrupts a cell
 Identical to `Telemetry.InterruptJupyterTime`","Telemetry.Interrupt","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","extensionId","","string","",false
 "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","allowed","","","'yes' 
 'no' ",false
@@ -232,16 +228,14 @@ OCaml is one such kernel.","boolean","",true
 "DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","ename","","string","",false
 "DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","","string","",false
 "DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK","","Telemetry.CreateNewNotebook","unknown","N/A","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","result","The result of the interrupt,","","success 
 timeout 
 restart ",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -312,8 +306,7 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -389,8 +382,7 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Total time taken to interrupt a kernel
@@ -404,8 +396,7 @@ Also in the case of raw kernels, we keep a separate process running, and when re
 In such cases this value will be `undefined`. In the case of raw kernels this will be true only when starting a new kernel process from scratch.","true","",false
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -549,8 +540,7 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Restarts the Kernel.
@@ -659,8 +649,7 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 If `failed` is false, then its a success, else startup failed.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
 "DATASCIENCE.NOTEBOOK_START","Starts a kernel, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
-If `failed` is false, then its a success, else startup failed.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+If `failed` is false, then its a success, else startup failed.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DATASCIENCE.NOTEBOOK_START","Starts a kernel, applies to IW and Notebook.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
 If `failed` is false, then its a success, else startup failed.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
@@ -773,8 +762,7 @@ Common measurement used across a number of events.","number","",false
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.SELECT_JUPYTER_URI","User has triggered selection of a Jupyter URI for a remote connection.
 Note: Might not come from a direct user action.","Telemetry.SelectJupyterURI","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -866,8 +854,7 @@ System ",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DATASCIENCE.SET_JUPYTER_URI_LOCAL","Jupyter URI was set to local.","Telemetry.SetJupyterURIToLocal","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED","This telemetry tracks the display of the Picker for Jupyter Remote servers.","Telemetry.SetJupyterURIUIDisplayed","IanMatthewHuff","KernelPicker","","","commandSource","This telemetry tracks the source of this UI.
 nonUser - Invoked internally by our code.
 toolbar - Invoked by user from Native or Interactive window toolbar.
@@ -885,31 +872,27 @@ prompt ",false
 "DATASCIENCE.SHOW_DATA_EXPLORER","Request was made to show the data viewer with specific data frame info.","Telemetry.ShowDataViewer","IanMatthewHuff","DataFrameViewer","","","columns","Count of columns in the target data frame.","","null or <empty> ",false
 "DATASCIENCE.SHOW_DATA_EXPLORER_ROWS_LOADED","Data viewer loads rows in chunks, this event is sent when the rows have all been loaded","Telemetry.ShowDataViewerRowsLoaded","IanMatthewHuff","DataFrameViewer","","","rowsTimer","Timer to indicate how long it took to load all the rows","","null or <empty> ",false
 "DATASCIENCE.START_SHOW_DATA_EXPLORER","User requested to open the data frame viewer.","Telemetry.StartShowDataViewer","IanMatthewHuff","DataFrameViewer","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DATASCIENCE.USER_STARTUP_CODE_FAILURE","","Telemetry.UserStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","ename","","string","",false
 "DATASCIENCE.USER_STARTUP_CODE_FAILURE","","Telemetry.UserStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","","string","",false
 "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
-"DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+"DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.","number","",false
 "DS_INTERNAL.CODE_LENS_ACQ_TIME","","Telemetry.CodeLensAverageAcquisitionTime","amunger","","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.COMMAND_EXECUTED","Telemetry sent when a command is executed.","Telemetry.CommandExecuted","unknown","N/A","","","command","Name of the command executed.","string","",false
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","failed","Whether there was a failure.","true","",false
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","stackTrace","Node stacktrace without PII.","string","",false
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","failed","Whether there was a failure.","true","",false
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","stackTrace","Node stacktrace without PII.","string","",false
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
@@ -963,16 +946,14 @@ System ",true
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD","Telemetry sent to capture first time execution of a cell.
 If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.","Telemetry.ExecuteCellPerceivedCold","donjayamanne","InteractiveWindow, Notebook","Cell Execution","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD","Telemetry sent to capture first time execution of a cell.
 If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.","Telemetry.ExecuteCellPerceivedCold","donjayamanne","InteractiveWindow, Notebook","Cell Execution","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM","Telemetry sent to capture subsequent execution of a cell.
 If `notebook = true`, this its telemetry for native editor/notebooks.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.ExecuteCellPerceivedWarm","donjayamanne","InteractiveWindow, Notebook","Cell Execution","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM","Telemetry sent to capture subsequent execution of a cell.
 If `notebook = true`, this its telemetry for native editor/notebooks.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.ExecuteCellPerceivedWarm","donjayamanne","InteractiveWindow, Notebook","Cell Execution","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
@@ -1020,8 +1001,7 @@ Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentV
 'failedToGetActivatedEnvVariablesFromPython' 
 'failedToGetCustomEnvVariables' ",true
 "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
-Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentVariables","donjayamanne","N/A","","","duration","Time taken.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentVariables","donjayamanne","N/A","","","duration","Time taken.","number","",false
 "DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE","Hash of the mime type of a cell output.
 Used to detect the popularity of a mime type, that would help determine which mime types are most common.
 E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
@@ -1080,17 +1060,14 @@ E.g. if we see widget mimetype, then we know how many use ipywidgets and the lik
 or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.HashedCellOutputMimeType","donjayamanne","N/A","","","hasVnd","Whether the mime type has the word 'vnd' in it.","boolean","",false
 "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","InteractiveWindow","IntelliSense","","isResultNull","Result is null if user signalled cancellation or if we timed out","boolean","",false
 "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","InteractiveWindow","IntelliSense","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
-"DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+"DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.","number","",false
 "DS_INTERNAL.INTERRUPT_JUPYTER_TIME","User interrupts a cell
 Identical to `Telemetry.Interrupt`","Telemetry.InterruptJupyterTime","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS","Total time taken to discover all IPyWidgets.
 This is how long it takes to discover all widgets on disc (from python environment).","Telemetry.DiscoverIPyWidgetNamesPerf","donjayamanne","Notebook, InteractiveWindow","Widgets","","type","Whether we're looking for widgets on local Jupyter environment (local connections) or remote.","","'local' 
 'remote' ",false
@@ -1129,8 +1106,7 @@ E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/i
 'dismissed' 
 'doNotShowAgain' ",false
 "DS_INTERNAL.IPYWIDGET_TIME_TO_COPY_NBEXTENSIONS_DIR","Total time take to copy the nb extensions folder.","Telemetry.IPyWidgetNbExtensionCopyTime","donjayamanne","Notebook, Notebook","Widgets","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE","Telemetry event sent when the widget tries to send a kernel message but nothing was listening","Telemetry.IPyWidgetUnhandledMessage","donjayamanne","Notebook, InteractiveWindow","Widgets","","msg_type","","string","",false
 "DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","hashedName","Hash of the widget","string","",false
 "DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","source","Where did we find the hashed name (CDN or user environment or remote jupyter).","","'cdn' 
@@ -1140,8 +1116,7 @@ Total time taken to list interpreters. Total time taken to list kernels. Time ta
 "DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE","Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.","Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure","donjayamanne","Notebook, InteractiveWindow","Widgets","","moduleHash","","string","",false
 "DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE","Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.","Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure","donjayamanne","Notebook, InteractiveWindow","Widgets","","moduleVersion","","string","",false
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -1190,14 +1165,12 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","failed","Whether there was a failure.","true","",false
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","stackTrace","Node stacktrace without PII.","string","",false
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When successfully created ","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When successfully created ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When successfully created ","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -1244,24 +1217,18 @@ System ",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When successfully created ","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL","","Telemetry.RegisterInterpreterAsKernel","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.JUPYTERSTARTUPCOST","","Telemetry.StartJupyter","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel list.
-Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel list.
-Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel list.
-Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list.","number","",false
+Common measurement used across a number of events.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","condaEnvsSharingSameInterpreter","Total number of conda environments that share the same interpreter
 This happens when we create conda envs without the `python` argument.
 Such conda envs don't work today in the extension.
 Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -1300,19 +1267,15 @@ System ",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","restartCount","This number gets reset after change the kernel.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","startFailureCount","Number of times starting the kernel failed.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","switchKernelCount","Number of times the kernel was changed.","number","",true
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.","number","",false
+"DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","kernelLiveCount","Total number of live kernels in the kernel spec list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.","","jupyterExtension 
 3rdPartyExtension ",false
 "DS_INTERNAL.KERNEL_COUNT","","Telemetry.KernelCount","donjayamanne","N/A","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -1361,8 +1324,7 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","failed","Whether there was a failure.","true","",false
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","stackTrace","Node stacktrace without PII.","string","",false
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
@@ -1374,12 +1336,10 @@ This is a generic property supported for all telemetry (sent by decorators).","b
 'local' 
 'localKernelSpec' 
 'localPython' ",false
-"DS_INTERNAL.KERNEL_LISTING_PERF","","Telemetry.KernelListingPerf","donjayamanne","N/A","","","duration","Total time taken to list kernels.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+"DS_INTERNAL.KERNEL_LISTING_PERF","","Telemetry.KernelListingPerf","donjayamanne","N/A","","","duration","Total time taken to list kernels.","number","",false
 "DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT","Total number of Local kernel specifications.","Telemetry.NumberOfLocalKernelSpecs","donjayamanne","N/A","","","count","Number of kernel specs found on disc.","number","",false
 "DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED","The Variable View webview was loaded.","Telemetry.NativeVariableViewLoaded","IanMatthewHuff","VariableViewer","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT","Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.","Telemetry.NotebookOpenCount","donjayamanne","InteractiveWindow, Notebook","","","count","","number","",false
 "DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT","Total number of cells executed. Telemetry Sent when VS Code is closed.","Telemetry.NotebookRunCount","donjayamanne","InteractiveWindow, Notebook","","","count","","number","",false
 "DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED","When users connect to a remote kernel, we store the kernel id so we can re-connect to that
@@ -1387,8 +1347,7 @@ when user opens the same notebook. We only store the last 100.
 Count is the number of kernels saved in the list.","Telemetry.NumberOfSavedRemoteKernelIds","IanMatthewHuff","KernelPicker","","","count","Count is the number of kernels saved in the list.","number","",false
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -1514,17 +1473,14 @@ System ",true
 "DS_INTERNAL.PYTHON_MODULE_INSTALL","","Telemetry.PythonModuleInstall","donjayamanne","N/A","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.PYTHON_MODULE_INSTALL","","Telemetry.PythonModuleInstall","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.PYTHON_NOT_INSTALLED","","Telemetry.PythonNotInstalled","IanMatthewHuff","KernelPicker","","","action","","","'displayed' 
 'dismissed' 
 'download' ",false
 "DS_INTERNAL.RANK_KERNELS_PERF","Time taken to load kernels if needed and rank them all.","Telemetry.RankKernelsPerf","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK","","Telemetry.RawKernelCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
@@ -1537,8 +1493,7 @@ or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Not
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
 or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
@@ -1654,11 +1609,9 @@ If we timeout and later we find successful comms for this session, then timeout 
 or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH","","Telemetry.RawKernelProcessLaunch","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_CONNECT","","Telemetry.RawKernelSessionConnect","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_CONNECT","","Telemetry.RawKernelSessionConnect","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.RAWKERNEL_SESSION_CONNECT","","Telemetry.RawKernelSessionConnect","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -1833,8 +1786,7 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","failed","Whether there was a failure.","true","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","stackTrace","Node stacktrace without PII.","string","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
@@ -1918,8 +1870,7 @@ method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook
 method is called.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","When started successfully. ","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","When started successfully. ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","When started successfully. ","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -1965,8 +1916,8 @@ System ",true
 3rdPartyExtension ",false
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","When started successfully. ","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","Sent when we fail to restart a kernel and have a failureCategory. ","failed","Whether there was a failure.","true","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","Sent when we fail to restart a kernel and have a failureCategory. ","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","","cancelled 
+"DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","Sent when we fail to restart a kernel and have a failureCategory. ","failed","","true","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","Sent when we fail to restart a kernel and have a failureCategory. ","failureCategory","","","cancelled 
 timeout 
 daemon 
 zmq 
@@ -2085,8 +2036,7 @@ In the case of conda environments, `false` would be an error condition, as we mu
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","failed","Whether there was a failure.","true","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","stackTrace","Node stacktrace without PII.","string","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
@@ -2226,17 +2176,14 @@ System ",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_START_RAW_SESSION","","Telemetry.RawKernelStartRawSession","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT","Total number of Remote kernel specifications.","Telemetry.NumberOfRemoteKernelSpecs","donjayamanne","N/A","","","count","Number of remote kernel specs.","number","",false
 "DS_INTERNAL.RESTART_JUPYTER_TIME","Total time taken to restart a kernel.
 Identical to `Telemetry.RestartKernel`","Telemetry.RestartJupyterTime","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RESTART_KERNEL","Total time taken to restart a kernel.
 Identical to `Telemetry.RestartJupyterTime`","Telemetry.RestartKernel","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RUNTEST","","Telemetry.RunTest","amunger","","","","testName","","string","",false
 "DS_INTERNAL.RUNTEST","","Telemetry.RunTest","amunger","","","","testResult","","string","",false
 "DS_INTERNAL.RUNTEST","","Telemetry.RunTest","amunger","","","","perfWarmup","","'true'","",true
@@ -2249,8 +2196,7 @@ installationCancelled - Installation of jupyter and/or notebook was cancelled fo
 'selected' 
 'installationCancelled' ",true
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","userExecutedCell","Whether the user executed a cell.","boolean","",true
@@ -2297,8 +2243,7 @@ System ",true
 "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.START_JUPYTER_PROCESS","","Telemetry.StartJupyterProcess","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.","","'notebook' 
 'interactive' ",true
@@ -2368,30 +2313,16 @@ WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence 
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.","boolean","",true
 "DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME","How long did it take for a single variable request to be resolved.","Telemetry.VariableExplorerFetchTime","IanMatthewHuff","VariableViewer","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT","Count how many variables were in a variable request.","Telemetry.VariableExplorerVariableCount","IanMatthewHuff","VariableViewer","","","variableCount","Count of variables requested","number","",false
 "DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED","","Telemetry.VSCNotebookCellTranslationFailed","donjayamanne","Notebook, InteractiveWindow","","","isErrorOutput","","boolean","",false
 "DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER","","Telemetry.WaitForIdleJupyter","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.WEB_FETCH_ERROR","Event sent when trying to talk to a remote server and the browser gives us a generic fetch error","Telemetry.FetchError","unknown","","","","currentTask","What we were doing when the fetch error occurred","'connecting'","",false
 "DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","type","","string","",false
 "DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.
-Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+Common measurement used across a number of events.","number","",false
 "ENVFILE_WORKSPACE","Telemetry event sent when an environment file is detected in the workspace.","EventName.ENVFILE_WORKSPACE","donjayamanne","N/A","","","hasCustomEnvPath","If there's a custom path specified in the python.envFile workspace settings.","boolean","",false
-"ERROR","","ERROR","donjayamanne","N/A","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","'methodException'","",false
-"ERROR","","ERROR","donjayamanne","N/A","","","failureSubCategory","Name of the method in the extension that threw the exception.
-Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",false
-"ERROR","","ERROR","donjayamanne","N/A","","","failed","Whether there was a failure.","true","",false
-"ERROR","","ERROR","donjayamanne","N/A","","","stackTrace","Node stacktrace without PII.","string","",false
-"ERROR","","ERROR","donjayamanne","N/A","","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.","string","",true
-"ERROR","","ERROR","donjayamanne","N/A","","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Name of the method in the extension that threw the exception. Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.","string","",true
-"ERROR","","ERROR","donjayamanne","N/A","","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).","string","",true
-"ERROR","","ERROR","donjayamanne","N/A","","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).","string","",true
-"ERROR","","ERROR","donjayamanne","N/A","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).","string","",true
 "EXTENSION.LOAD","Telemetry event sent with perf measures related to activation and loading of extension.","EventName.EXTENSION_LOAD","donjayamanne","N/A","","","workspaceFolderCount","Number of workspace folders opened","number","",false
 "EXTENSION.LOAD","Telemetry event sent with perf measures related to activation and loading of extension.","EventName.EXTENSION_LOAD","donjayamanne","N/A","","","totalActivateTime","Time taken to activate the extension.","number","",false
 "EXTENSION.LOAD","Telemetry event sent with perf measures related to activation and loading of extension.","EventName.EXTENSION_LOAD","donjayamanne","N/A","","","codeLoadingTime","Time taken to load the code.","number","",false
@@ -2400,7 +2331,7 @@ Name of the method in the extension that threw the exception. Further sub classi
 "HASHED_PACKAGE_NAME","Telemetry event sent with hash of an imported python package.
 Used to detect the popularity of a package, that would help determine which packages
 need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.","EventName.HASHED_PACKAGE_NAME","unknown","N/A","","","hashedNamev2","Hash of the package name","string","",false
-"HASHED_PACKAGE_PERF","","EventName.HASHED_PACKAGE_PERF","donjayamanne","N/A","","","duration","Total time taken to list interpreters. Total time taken to list kernels. Time taken. Duration of a measure in milliseconds. Common measurement used across a number of events.","number","",false
+"HASHED_PACKAGE_PERF","","EventName.HASHED_PACKAGE_PERF","donjayamanne","N/A","","","duration","","number","",false
 "JUPYTER_EXPERIMENTS_OPT_IN_OUT","Telemetry event sent with details when a user has requested to opt it or out of an experiment group","EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT","unknown","N/A","","","expNameOptedInto","Carries the name of the experiment user has been opted into manually","string","",true
 "JUPYTER_EXPERIMENTS_OPT_IN_OUT","Telemetry event sent with details when a user has requested to opt it or out of an experiment group","EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT","unknown","N/A","","","expNameOptedOutOf","Carries the name of the experiment user has been opted out of manually","string","",true
 "JUPYTER_IS_INSTALLED","","Telemetry.JupyterInstalled","donjayamanne","N/A","","/* Detection of jupyter failed ","failed","","true","",false

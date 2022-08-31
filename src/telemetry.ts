@@ -449,24 +449,6 @@ export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty 
     }>;
 
 export class IEventNamePropertyMapping {
-    'ERROR': TelemetryEventInfo<
-        Partial<
-            {
-                failureCategory: 'methodException';
-                /**
-                 * Name of the method in the extension that threw the exception.
-                 */
-                failureSubCategory: string;
-            } & TelemetryErrorProperties
-        >
-    > = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            ...commonClassificationForErrorProperties
-        }
-    };
     /**
      * Telemetry event sent with perf measures related to activation and loading of extension.
      */

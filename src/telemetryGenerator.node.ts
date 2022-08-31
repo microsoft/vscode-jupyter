@@ -191,17 +191,21 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
                     'properties' in gdprEntryOfCurrentlyComputingTelemetryEventName[1] &&
                     name in gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties']
                 ) {
-                    gdprEntry = gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'][
-                        name
-                    ] as IPropertyDataNonMeasurement;
+                    // Some times we share the properties of two events,
+                    // When updating the values, we don't want to be overwriting the values of the other event.
+                    gdprEntry = JSON.parse(
+                        JSON.stringify(gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'][name])
+                    ) as IPropertyDataNonMeasurement;
                 }
                 if (
                     'measures' in gdprEntryOfCurrentlyComputingTelemetryEventName[1] &&
                     name in gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures']
                 ) {
-                    gdprEntry = gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'][
-                        name
-                    ] as IPropertyDataNonMeasurement;
+                    // Some times we share the properties of two events,
+                    // When updating the values, we don't want to be overwriting the values of the other event.
+                    gdprEntry = JSON.parse(
+                        JSON.stringify(gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'][name])
+                    ) as IPropertyDataNonMeasurement;
                 }
                 if (gdprEntry) {
                     const comment = (descriptions || []).join(' ').split(/\r?\n/).join();
@@ -514,13 +518,20 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
 
 const commonPropertyComments = new Map<string, string>();
 
+/** True if this is visible outside this file, false otherwise */
+function isNodeExported(node: ts.Node): boolean {
+    return (
+        (ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Export) !== 0 ||
+        (!!node.parent && node.parent.kind === ts.SyntaxKind.SourceFile)
+    );
+}
+
 /** Generate documentation for all classes in a set of .ts files */
-function generateDocumentation(fileNames: string[], options: ts.CompilerOptions): void {
+function generateDocumentationForCommonTypes(fileNames: string[], options: ts.CompilerOptions): void {
     let host = new TypeScriptLanguageServiceHost(fileNames, options);
     let languageService = ts.createLanguageService(host, undefined, ts.LanguageServiceMode.Semantic);
     let program = languageService.getProgram()!;
     const typeChecker = program!.getTypeChecker();
-    const entries = new Map<string, TelemetryEntry>();
 
     // Visit every sourceFile in the program
     if (program) {
@@ -551,6 +562,40 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
             });
             return;
         }
+    }
+}
+
+function generateDocumentation(fileNames: string[], options: ts.CompilerOptions): void {
+    let host = new TypeScriptLanguageServiceHost(fileNames, options);
+    let languageService = ts.createLanguageService(host, undefined, ts.LanguageServiceMode.Semantic);
+    let program = languageService.getProgram()!;
+    const typeChecker = program!.getTypeChecker();
+    const entries = new Map<string, TelemetryEntry>();
+
+    // First generate documentation for common properties and measures.
+    generateDocumentationForCommonTypes(fileNames, options);
+
+    // Visit every sourceFile in the program
+    if (program) {
+        for (const sourceFile of program.getSourceFiles()) {
+            if (!sourceFile.isDeclarationFile) {
+                // Walk the tree to search for classes
+                ts.forEachChild(sourceFile, visit.bind(undefined, sourceFile));
+            }
+        }
+    }
+    /** visit nodes finding exported classes */
+    function visit(sourceFile: ts.SourceFile, node: ts.Node) {
+        // Only consider exported nodes
+        if (!isNodeExported(node)) {
+            return;
+        }
+        if (ts.isModuleDeclaration(node)) {
+            // This is a namespace, visit its children
+            ts.forEachChild(node, visit.bind(undefined, sourceFile));
+            return;
+        }
+
         if (!ts.isClassDeclaration(node) || node.name?.text !== 'IEventNamePropertyMapping') {
             return;
         }
@@ -628,7 +673,12 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
                             currentGdprComment.length === 0 || currentGdprComment.endsWith('.') ? ' ' : '. '
                         }${description}`.trim();
                         const type = typeNode.typeArguments[0];
-
+                        if (name === 'DATASCIENCE.GET_PASSWORD_ATTEMPT') {
+                            debugger;
+                        }
+                        if (name === 'DS_INTERNAL.INTERPRETER_LISTING_PERF') {
+                            debugger;
+                        }
                         const groups: TelemetryPropertyGroup[] = [];
                         if (ts.isTypeLiteralNode(type)) {
                             const properties = computePropertiesForLiteralType(type, typeChecker);
@@ -665,14 +715,6 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
         } catch (ex) {
             console.error(`Failure in generating telemetry documentation for ${node.getText()}`, ex);
         }
-    }
-
-    /** True if this is visible outside this file, false otherwise */
-    function isNodeExported(node: ts.Node): boolean {
-        return (
-            (ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Export) !== 0 ||
-            (!!node.parent && node.parent.kind === ts.SyntaxKind.SourceFile)
-        );
     }
 
     const values = Array.from(entries.values()).sort((a, b) =>
@@ -812,7 +854,7 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
     });
 }
 
-export default async function generateTelemetryOutput() {
+async function generateTelemetryOutput() {
     const files = await new Promise<string[]>((resolve, reject) => {
         glob('./src/**/*.ts', (ex, res) => {
             if (ex) {
@@ -829,9 +871,12 @@ export default async function generateTelemetryOutput() {
     });
 }
 
-generateTelemetryOutput().then(
+const promise = generateTelemetryOutput().then(
     () => {
         //
     },
     (ex) => console.error(`Failed to generate telemetry`, ex)
 );
+export default async function () {
+    await promise;
+}
