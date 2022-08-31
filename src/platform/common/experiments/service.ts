@@ -6,8 +6,6 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment } from '../application/types';
 import { JVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceVerbose } from '../../logging';
@@ -105,18 +103,10 @@ export class ExperimentService implements IExperimentService {
         // so we need to perform these checks and send the corresponding telemetry manually.
         switch (this.getOptInOptOutStatus(experiment)) {
             case 'optOut': {
-                sendTelemetryEvent(EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT, undefined, {
-                    expNameOptedOutOf: experiment
-                });
-
                 return false;
             }
             case 'optIn': {
                 await this.experimentationService.isCachedFlightEnabled(experiment);
-                sendTelemetryEvent(EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT, undefined, {
-                    expNameOptedInto: experiment
-                });
-
                 return true;
             }
 
