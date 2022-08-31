@@ -3500,6 +3500,7 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `matchedReason`: `<see below>`  
+        How/why the preferred kernel was matched the way it was.  
         Possible values include:  
             - `null or <empty>`  
 

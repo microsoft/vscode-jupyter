@@ -6354,7 +6354,7 @@
 //Telemetry.PreferredKernelExactMatch
 /* __GDPR__
    "DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH" : {
-     "matchedReason": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"","owner":"IanMatthewHuff"},
+     "matchedReason": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"How/why the preferred kernel was matched the way it was.","owner":"IanMatthewHuff"},
      "${include}": [
        "${F1}",
        "${F2}",

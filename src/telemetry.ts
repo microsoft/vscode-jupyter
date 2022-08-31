@@ -3245,6 +3245,9 @@ export class IEventNamePropertyMapping {
      * Send we we complete our preferred kernel match. Matched reason might be 'no match'.
      */
     [Telemetry.PreferredKernelExactMatch]: TelemetryEventInfo<{
+        /**
+         * How/why the preferred kernel was matched the way it was.
+         */
         matchedReason: PreferredKernelExactMatchReason | undefined;
     }> = {
         owner: 'IanMatthewHuff',

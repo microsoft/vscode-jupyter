@@ -1633,7 +1633,7 @@ Common to most of the events.","boolean","",true
 "DS_INTERNAL.PREFERRED_KERNEL","Telemetry sent when we have attempted to find the preferred kernel.","Telemetry.PreferredKernel","IanMatthewHuff","InteractiveWindow, Notebook, KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH","Send we we complete our preferred kernel match. Matched reason might be 'no match'.","Telemetry.PreferredKernelExactMatch","IanMatthewHuff","KernelPicker","","","matchedReason","","","null or <empty> ",false
+"DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH","Send we we complete our preferred kernel match. Matched reason might be 'no match'.","Telemetry.PreferredKernelExactMatch","IanMatthewHuff","KernelPicker","","","matchedReason","How/why the preferred kernel was matched the way it was.","","null or <empty> ",false
 "DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER","Python extension was attempted to be installed via the kernel picker command.","Telemetry.PythonExtensionInstalledViaKernelPicker","IanMatthewHuff","KernelPicker","","","action","Did the Extension install succeed or fail?","","'success' 
 'failed' ",false
 "DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED","The kernel picker command to install python extension was shown.","Telemetry.PythonExtensionNotInstalled","IanMatthewHuff","KernelPicker","","","action","The message was displayed, or indicate that the user dismissed or downloaded the message.","","'displayed' 
