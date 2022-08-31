@@ -897,11 +897,7 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
             isMeasurement: isMeasurement,
             comment: comment
         };
-        fieldListForFile.push(
-            `      "F1P${
-                index + 1
-            }": ${JSON.stringify(json)}`
-        );
+        fieldListForFile.push(`      "F1P${index + 1}": ${JSON.stringify(json)}`);
     });
     commonFields.push(`${fieldList.join(',\n')}`);
     commonFields.push('     ]');
@@ -954,7 +950,9 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
         });
         fs.appendFileSync(
             file,
-            `${header.join('\n')}\n${entries.join('\n')}${entries.length ? '\n' : ''}${commonFields.join('\n')}\n${footer.join('\n')}`.trim()
+            `${header.join('\n')}\n${entries.join('\n')}${entries.length ? '\n' : ''}${commonFields.join(
+                '\n'
+            )}\n${footer.join('\n')}`.trim()
         );
         fs.appendFileSync(file, `\n`);
     });
