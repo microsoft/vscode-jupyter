@@ -4,10 +4,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.ADD_CELL_BELOW  (Telemetry.AddCellBelow)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Telemetry event sent when user adds a cell below the current cell for IW.  
+    User adds a cell below the current cell for IW.  
     ```
 
     - Measures:  
@@ -34,9 +32,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.CREATE_NEW_INTERACTIVE  (Telemetry.CreateNewInteractive)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Command to create a new Interactive Window.  
+    ```
+
 
 
 * DATASCIENCE.DATA_VIEWER_DATA_DIMENSIONALITY  (Telemetry.DataViewerDataDimensionality)  
@@ -239,28 +238,18 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER  (Telemetry.DisableInteractiveShiftEnter)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER  (Telemetry.EnableInteractiveShiftEnter)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)  
+    Enable using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.ENTER_JUPYTER_URI  (Telemetry.EnterJupyterURI)  
@@ -504,9 +493,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.GOTO_NEXT_CELL_IN_FILE  (Telemetry.GotoNextCellInFile)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Navigation Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -515,9 +505,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.GOTO_PREV_CELL_IN_FILE  (Telemetry.GotoPrevCellInFile)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Navigation Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -542,11 +533,11 @@ Expand each section to see more information about that event.
 
 
 * DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE  (Telemetry.InteractiveWindowDebugSetupCodeFailure)  
-      Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR ename, evalue. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+      Owner: [@roblourens](https://github.com/roblourens)  
+    ```
+    Error information from the debugger output channel while running initialization code.  
+    ```
+
     - Properties:  
         - `ename`: `string`  
         - `evalue`: `string`  
@@ -1552,30 +1543,18 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_ALL_CELLS  (Telemetry.RunAllCells)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Run all Cell Commands in Interactive Python  
+    Command to Run all cells from the active python file in the Interactive Window  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.RUN_ALL_CELLS_ABOVE  (Telemetry.RunAllCellsAbove)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Run all the above cells in Interactive Python  
+    Command to Run all the above cells in the Interactive Window  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER  (Telemetry.RunByLineVariableHover)  
@@ -1587,23 +1566,18 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_CELL_AND_ALL_BELOW  (Telemetry.RunCellAndAllBelow)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Run current cell and all below in Interactive Python  
+    Command to Run current cell and all below in the Interactive Window  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.RUN_CHANGE_CELL_TO_CODE  (Telemetry.ChangeCellToCode)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Edit Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1612,9 +1586,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_CHANGE_CELL_TO_MARKDOWN  (Telemetry.ChangeCellToMarkdown)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Edit Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1623,23 +1598,18 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_CURRENT_CELL  (Telemetry.RunCurrentCell)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Run the current Cell in Interactive Python  
+    Command to Run the current Cell in the Interactive Window  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.RUN_CURRENT_CELL_AND_ADD_BELOW  (Telemetry.RunCurrentCellAndAddBelow)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Run the cell and everything below it in the Interactive Window.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1648,23 +1618,18 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE  (Telemetry.RunCurrentCellAndAdvance)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Run current cell and advance cursor in Interactive Python  
+    Command to Run current cell in the Interactive Window and advance cursor to the next cell  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.RUN_DELETE_CELLS  (Telemetry.DeleteCells)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Edit Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1673,9 +1638,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_ABOVE  (Telemetry.ExtendSelectionByCellAbove)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Selection Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1684,9 +1650,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_BELOW  (Telemetry.ExtendSelectionByCellBelow)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Selection Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1695,34 +1662,26 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_FILE_INTERACTIVE  (Telemetry.RunFileInteractive)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Run file in Interactive Python  
+    Command to Run the active file in the Interactive Window  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.RUN_FROM_LINE  (Telemetry.RunFromLine)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
+    ```
+    Command to Run the active file contents from the cursor location in the Interactive Window  
+    ```
+
 
 
 * DATASCIENCE.RUN_INSERT_CELL_ABOVE  (Telemetry.InsertCellAbove)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Edit Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1731,9 +1690,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_INSERT_CELL_BELOW  (Telemetry.InsertCellBelow)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Edit Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1742,10 +1702,8 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_INSERT_CELL_BELOW_POSITION  (Telemetry.InsertCellBelowPosition)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Cell Edit Commands in Interactive Python  
+    Cell Edit Command in Interactive Window  
     ```
 
     - Measures:  
@@ -1756,9 +1714,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_MOVE_CELLS_DOWN  (Telemetry.MoveCellsDown)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Edit Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1767,9 +1726,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_MOVE_CELLS_UP  (Telemetry.MoveCellsUp)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Edit Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1778,9 +1738,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_SELECT_CELL  (Telemetry.SelectCell)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Selection Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1789,9 +1750,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_SELECT_CELL_CONTENTS  (Telemetry.SelectCellContents)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Cell Selection Command in Interactive Window  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -1800,27 +1762,18 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_SELECTION_OR_LINE  (Telemetry.RunSelectionOrLine)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
-    Run a Selection or Line in Interactive Python  
+    Command to Run a Selection or Line in the Interactive Window  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.RUN_TO_LINE  (Telemetry.RunToLine)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
+    ```
+    Command to Run the active file contents up to the cursor location in the Interactive Window  
+    ```
+
 
 
 * DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command  (Telemetry.SelectJupyterInterpreterCommand)  
@@ -2245,9 +2198,10 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.CODE_LENS_ACQ_TIME  (Telemetry.CodeLensAverageAcquisitionTime)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    How long on average we spent parsing code lens. Sent on shutdown.  
+    ```
+
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -2255,9 +2209,9 @@ Expand each section to see more information about that event.
 
 
 * DS_INTERNAL.COMMAND_EXECUTED  (Telemetry.CommandExecuted)  
-      Owner: [@unknown](https://github.com/unknown)  
+      Owner: [@amunger](https://github.com/amunger)  
     ```
-    Telemetry sent when a command is executed.  
+    A command that the extension contributes is executed.  
     ```
 
     - Properties:  
@@ -3335,8 +3289,6 @@ Expand each section to see more information about that event.
 
 * DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE  (Telemetry.NewFileForInteractiveWindow)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when a user runs the interactive window with a new file  
     ```
@@ -4698,9 +4650,10 @@ In such cases we do not notify user of any failures or the like.
 
 * DS_INTERNAL.SHIFTENTER_BANNER_SHOWN  (Telemetry.ShiftEnterBannerShown)  
       Owner: [@amunger](https://github.com/amunger)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Information banner displayed to give the user the option to configure shift+enter for the Interactive Window.  
+    ```
+
 
 
 * DS_INTERNAL.SHOW_DATA_NO_PANDAS  (Telemetry.PandasNotInstalled)  

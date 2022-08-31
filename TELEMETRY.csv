@@ -1,5 +1,5 @@
 "eventName","eventDescription","eventConstant","owner","feature","tags","groupDescription","propertyName","propertyDescription","propertyType","propertyPossibleValues","propertyIsNullable"
-"DATASCIENCE.ADD_CELL_BELOW","Telemetry event sent when user adds a cell below the current cell for IW.","Telemetry.AddCellBelow","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.ADD_CELL_BELOW","User adds a cell below the current cell for IW.","Telemetry.AddCellBelow","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK","User exports the IW or Notebook to a specific format.","Telemetry.ClickedExportNotebookAsQuickPick","IanMatthewHuff","Import-Export, InteractiveWindow","","","format","What format to export to was selected in the quick pick.","","pdf ()
 html ()
@@ -40,10 +40,6 @@ Common measurement used across a number of events.","number","",false
 'withKeybinding' ",false
 "DATASCIENCE.DEBUGGING.IPYKERNEL6_STATUS","","DebuggingTelemetry.ipykernel6Status","roblourens","","","","status","","","'installed' 
 'notInstalled' ",false
-"DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER","Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)","Telemetry.DisableInteractiveShiftEnter","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER","Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)","Telemetry.EnableInteractiveShiftEnter","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
 "DATASCIENCE.ENTER_JUPYTER_URI","A URI has been selected and is being checked for validity.","Telemetry.EnterJupyterURI","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
@@ -158,17 +154,17 @@ Common to most of the events.","string","",true
 Common to most of the events.","string","",true
 "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).
 Common to most of the events.","string","",true
-"DATASCIENCE.GOTO_NEXT_CELL_IN_FILE","","Telemetry.GotoNextCellInFile","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.GOTO_NEXT_CELL_IN_FILE","Cell Navigation Command in Interactive Window","Telemetry.GotoNextCellInFile","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.GOTO_PREV_CELL_IN_FILE","","Telemetry.GotoPrevCellInFile","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.GOTO_PREV_CELL_IN_FILE","Cell Navigation Command in Interactive Window","Telemetry.GotoPrevCellInFile","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.IMPORT_NOTEBOOK","Called when user imports a Jupyter Notebook into a Python file.
 Command is `Jupyter: Import Jupyter Notebook`
 Basically user is exporting some jupyter notebook into a Python file.","Telemetry.ImportNotebook","IanMatthewHuff","Import-Export","","","scope","The command can be called as a command, in which a file then needs to be selected, or with a file
 as the context already, in which case the import command doesn't ask for selection.","","'command' 
 'file' ",false
-"DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","","Telemetry.InteractiveWindowDebugSetupCodeFailure","amunger","","","","ename","","string","",false
-"DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","","Telemetry.InteractiveWindowDebugSetupCodeFailure","amunger","","","","evalue","","string","",false
+"DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","Error information from the debugger output channel while running initialization code.","Telemetry.InteractiveWindowDebugSetupCodeFailure","roblourens","InteractiveWindow, Debugger","","","ename","","string","",false
+"DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","Error information from the debugger output channel while running initialization code.","Telemetry.InteractiveWindowDebugSetupCodeFailure","roblourens","InteractiveWindow, Debugger","","","evalue","","string","",false
 "DATASCIENCE.INTERRUPT","User interrupts a cell","Telemetry.Interrupt","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","Telemetry sent when an extension attempts to use our 3rd party API.","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","extensionId","Extension Id that's attempting to use the API.","string","",false
@@ -838,49 +834,31 @@ Common to most of the events.","","jupyterExtension ()
 "DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
 Common to most of the events.","boolean","",true
-"DATASCIENCE.RUN_ALL_CELLS","Run all Cell Commands in Interactive Python","Telemetry.RunAllCells","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_CHANGE_CELL_TO_CODE","Cell Edit Command in Interactive Window","Telemetry.ChangeCellToCode","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_ALL_CELLS_ABOVE","Run all the above cells in Interactive Python","Telemetry.RunAllCellsAbove","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_CHANGE_CELL_TO_MARKDOWN","Cell Edit Command in Interactive Window","Telemetry.ChangeCellToMarkdown","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_CELL_AND_ALL_BELOW","Run current cell and all below in Interactive Python","Telemetry.RunCellAndAllBelow","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_CURRENT_CELL_AND_ADD_BELOW","Run the cell and everything below it in the Interactive Window.","Telemetry.RunCurrentCellAndAddBelow","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_CHANGE_CELL_TO_CODE","","Telemetry.ChangeCellToCode","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_DELETE_CELLS","Cell Edit Command in Interactive Window","Telemetry.DeleteCells","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_CHANGE_CELL_TO_MARKDOWN","","Telemetry.ChangeCellToMarkdown","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_ABOVE","Cell Selection Command in Interactive Window","Telemetry.ExtendSelectionByCellAbove","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_CURRENT_CELL","Run the current Cell in Interactive Python","Telemetry.RunCurrentCell","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_BELOW","Cell Selection Command in Interactive Window","Telemetry.ExtendSelectionByCellBelow","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_CURRENT_CELL_AND_ADD_BELOW","","Telemetry.RunCurrentCellAndAddBelow","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_INSERT_CELL_ABOVE","Cell Edit Command in Interactive Window","Telemetry.InsertCellAbove","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE","Run current cell and advance cursor in Interactive Python","Telemetry.RunCurrentCellAndAdvance","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_INSERT_CELL_BELOW","Cell Edit Command in Interactive Window","Telemetry.InsertCellBelow","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_DELETE_CELLS","","Telemetry.DeleteCells","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_INSERT_CELL_BELOW_POSITION","Cell Edit Command in Interactive Window","Telemetry.InsertCellBelowPosition","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_ABOVE","","Telemetry.ExtendSelectionByCellAbove","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_MOVE_CELLS_DOWN","Cell Edit Command in Interactive Window","Telemetry.MoveCellsDown","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_BELOW","","Telemetry.ExtendSelectionByCellBelow","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_MOVE_CELLS_UP","Cell Edit Command in Interactive Window","Telemetry.MoveCellsUp","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_FILE_INTERACTIVE","Run file in Interactive Python","Telemetry.RunFileInteractive","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_SELECT_CELL","Cell Selection Command in Interactive Window","Telemetry.SelectCell","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_FROM_LINE","","Telemetry.RunFromLine","amunger","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_INSERT_CELL_ABOVE","","Telemetry.InsertCellAbove","amunger","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_INSERT_CELL_BELOW","","Telemetry.InsertCellBelow","amunger","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_INSERT_CELL_BELOW_POSITION","Cell Edit Commands in Interactive Python","Telemetry.InsertCellBelowPosition","amunger","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_MOVE_CELLS_DOWN","","Telemetry.MoveCellsDown","amunger","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_MOVE_CELLS_UP","","Telemetry.MoveCellsUp","amunger","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_SELECT_CELL","","Telemetry.SelectCell","amunger","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_SELECT_CELL_CONTENTS","","Telemetry.SelectCellContents","amunger","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_SELECTION_OR_LINE","Run a Selection or Line in Interactive Python","Telemetry.RunSelectionOrLine","amunger","","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.RUN_TO_LINE","","Telemetry.RunToLine","amunger","","","","duration","Duration of a measure in milliseconds.
+"DATASCIENCE.RUN_SELECT_CELL_CONTENTS","Cell Selection Command in Interactive Window","Telemetry.SelectCellContents","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.SELECT_JUPYTER_URI","User has triggered selection of a Jupyter URI for a remote connection.
 Note: Might not come from a direct user action.","Telemetry.SelectJupyterURI","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
@@ -1049,9 +1027,9 @@ This is a generic property supported for all telemetry (sent by decorators).","b
 Used to detect the popularity of a mime type, that would help determine which mime types are most common.
 E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
 or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.CellOutputMimeType","donjayamanne","N/A","","","mimeType","Mimetype of the output.","string","",false
-"DS_INTERNAL.CODE_LENS_ACQ_TIME","","Telemetry.CodeLensAverageAcquisitionTime","amunger","","","","duration","Duration of a measure in milliseconds.
+"DS_INTERNAL.CODE_LENS_ACQ_TIME","How long on average we spent parsing code lens. Sent on shutdown.","Telemetry.CodeLensAverageAcquisitionTime","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.COMMAND_EXECUTED","Telemetry sent when a command is executed.","Telemetry.CommandExecuted","unknown","N/A","","","command","Name of the command executed.","string","",false
+"DS_INTERNAL.COMMAND_EXECUTED","A command that the extension contributes is executed.","Telemetry.CommandExecuted","amunger","N/A","","","command","Name of the command executed.","string","",false
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","Sent when we have failed to connect to the local Jupyter server we started.","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","failed","Whether there was a failure.
 Common to most of the events.","true","",false
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","Sent when we have failed to connect to the local Jupyter server we started.","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","stackTrace","Node stacktrace without PII.

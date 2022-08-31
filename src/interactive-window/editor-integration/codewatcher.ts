@@ -22,7 +22,7 @@ import { IDocumentManager } from '../../platform/common/application/types';
 import { ICellRange, IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
 import { chainable } from '../../platform/common/utils/decorators';
 import { isUri, noop } from '../../platform/common/utils/misc';
-import { capturePerfTelemetry } from '../../telemetry';
+import { capturePerfTelemetry, captureUsageTelemetry } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
 import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError';
 import { Telemetry, Commands, Identifiers } from '../../platform/common/constants';
@@ -129,7 +129,7 @@ export class CodeWatcher implements ICodeWatcher {
         this.closeDocumentDisposable?.dispose(); // NOSONAR
         this.updateRequiredDisposable?.dispose(); // NOSONAR
     }
-    @capturePerfTelemetry(Telemetry.RunAllCells)
+    @captureUsageTelemetry(Telemetry.RunAllCells)
     public async runAllCells() {
         const iw = await this.getActiveInteractiveWindow();
         const runCellCommands = this.codeLenses.filter(
@@ -174,7 +174,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    @capturePerfTelemetry(Telemetry.RunFileInteractive)
+    @captureUsageTelemetry(Telemetry.RunFileInteractive)
     public async runFileInteractive() {
         return this.runFileInteractiveInternal(false);
     }
@@ -185,7 +185,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     // Run all cells up to the cell containing this start line and character
-    @capturePerfTelemetry(Telemetry.RunAllCellsAbove)
+    @captureUsageTelemetry(Telemetry.RunAllCellsAbove)
     public async runAllCellsAbove(stopLine: number, stopCharacter: number) {
         const iw = await this.getActiveInteractiveWindow();
         const runCellCommands = this.codeLenses.filter((c) => c.command && c.command.command === Commands.RunCell);
@@ -223,7 +223,7 @@ export class CodeWatcher implements ICodeWatcher {
         await finished;
     }
 
-    @capturePerfTelemetry(Telemetry.RunCellAndAllBelow)
+    @captureUsageTelemetry(Telemetry.RunCellAndAllBelow)
     public async runCellAndAllBelow(startLine: number, startCharacter: number) {
         const iw = await this.getActiveInteractiveWindow();
         const runCellCommands = this.codeLenses.filter((c) => c.command && c.command.command === Commands.RunCell);
@@ -248,7 +248,7 @@ export class CodeWatcher implements ICodeWatcher {
         await finished;
     }
 
-    @capturePerfTelemetry(Telemetry.RunSelectionOrLine)
+    @captureUsageTelemetry(Telemetry.RunSelectionOrLine)
     public async runSelectionOrLine(activeEditor: TextEditor | undefined, text?: string | Uri) {
         if (this.document && activeEditor && urlPath.isEqual(activeEditor.document.uri, this.document.uri)) {
             const iw = await this.getActiveInteractiveWindow();
@@ -270,7 +270,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    @capturePerfTelemetry(Telemetry.RunToLine)
+    @captureUsageTelemetry(Telemetry.RunToLine)
     public async runToLine(targetLine: number) {
         if (this.document && targetLine > 0) {
             const iw = await this.getActiveInteractiveWindow();
@@ -285,7 +285,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    @capturePerfTelemetry(Telemetry.RunFromLine)
+    @captureUsageTelemetry(Telemetry.RunFromLine)
     public async runFromLine(targetLine: number) {
         if (this.document && targetLine < this.document.lineCount) {
             const iw = await this.getActiveInteractiveWindow();
@@ -323,7 +323,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(range, false, true);
     }
 
-    @capturePerfTelemetry(Telemetry.RunCurrentCell)
+    @captureUsageTelemetry(Telemetry.RunCurrentCell)
     public async runCurrentCell(): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return;
@@ -333,7 +333,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(this.documentManager.activeTextEditor.selection, false);
     }
 
-    @capturePerfTelemetry(Telemetry.RunCurrentCellAndAdvance)
+    @captureUsageTelemetry(Telemetry.RunCurrentCellAndAdvance)
     public async runCurrentCellAndAdvance() {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return;
