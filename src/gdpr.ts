@@ -1521,6 +1521,8 @@
 //Telemetry.InteractiveWindowDebugSetupCodeFailure
 /* __GDPR__
    "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE" : {
+     "ename": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"","owner":"roblourens"},
+     "evalue": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"","owner":"roblourens"},
      "${include}": [
        "${F1}",
        "${F2}",
@@ -4338,7 +4340,7 @@
 //Telemetry.CommandExecuted
 /* __GDPR__
    "DS_INTERNAL.COMMAND_EXECUTED" : {
-     "command": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Name of the command executed.","owner":"unknown"},
+     "command": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Name of the command executed.","owner":"amunger"},
      "${include}": [
        "${F1}",
        "${F2}",
@@ -7231,6 +7233,11 @@
 //Telemetry.RunTest
 /* __GDPR__
    "DS_INTERNAL.RUNTEST" : {
+     "testName": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"The name of the test.","owner":"amunger"},
+     "testResult": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether the test passed or failed.","owner":"amunger"},
+     "perfWarmup": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"If the test was an initial run to warmup the product.","owner":"amunger"},
+     "commitHash": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"The git commit that the test was run against.","owner":"amunger"},
+     "timedCheckpoints": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Timings for segments of the test.","owner":"amunger"},
      "${include}": [
        "${F1}",
        "${F2}",
