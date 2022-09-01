@@ -1112,6 +1112,7 @@ Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentV
 'unhandledError' 
 'emptyFromCondaRun' 
 'emptyFromPython' 
+'condaActivationFailed' 
 'failedToGetActivatedEnvVariablesFromPython' 
 'failedToGetCustomEnvVariables' ",true
 "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
@@ -2655,8 +2656,3 @@ I.e. jupyter can be found in the path as defined by the env variable process.env
 "JUPYTER_IS_INSTALLED","Telemetry sent with result of detecting Jupyter in the current path.","Telemetry.JupyterInstalled","donjayamanne","N/A","","Jupyter was successfully detected ","frontEnd","Whether this is jupyter lab or notebook.","","'notebook' 
 'lab' ",false
 "JUPYTER_IS_INSTALLED","Telemetry sent with result of detecting Jupyter in the current path.","Telemetry.JupyterInstalled","donjayamanne","N/A","","Jupyter was successfully detected ","frontEndVersion","Version of the form 6.11, 4.8","number","",false
-"PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","Sent when we fail or manage to successfully activate a Python environment.","EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","donjayamanne","N/A","","","hasEnvVars","Carries `true` if environment variables are present, `false` otherwise","boolean","",true
-"PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","Sent when we fail or manage to successfully activate a Python environment.","EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","donjayamanne","N/A","","","failed","Carries `true` if fetching environment variables failed, `false` otherwise","boolean","",true
-"PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","Sent when we fail or manage to successfully activate a Python environment.","EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","donjayamanne","N/A","","","activatedInTerminal","Whether the environment was activated within a terminal or not.","boolean","",true
-"PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","Sent when we fail or manage to successfully activate a Python environment.","EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES","donjayamanne","N/A","","","activatedByWrapper","Whether the environment was activated by the wrapper class.
-If `true`, this telemetry is sent by the class that wraps the two activation providers   .","boolean","",true

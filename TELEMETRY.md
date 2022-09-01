@@ -2421,6 +2421,7 @@ Expand each section to see more information about that event.
             - `'unhandledError'`  
             - `'emptyFromCondaRun'`  
             - `'emptyFromPython'`  
+            - `'condaActivationFailed'`  
             - `'failedToGetActivatedEnvVariablesFromPython'`  
             - `'failedToGetCustomEnvVariables'`  
     - Measures:  
@@ -5119,23 +5120,5 @@ In such cases we do not notify user of any failures or the like.
     Telemetry event sent when user opens the data viewer via the variable view and we successfully open the view.  
     ```
 
-
-
-* PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES  (EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Sent when we fail or manage to successfully activate a Python environment.  
-    ```
-
-    - Properties:  
-        - `hasEnvVars`?: `boolean`  
-        Carries `true` if environment variables are present, `false` otherwise  
-        - `failed`?: `boolean`  
-        Carries `true` if fetching environment variables failed, `false` otherwise  
-        - `activatedInTerminal`?: `boolean`  
-        Whether the environment was activated within a terminal or not.  
-        - `activatedByWrapper`?: `boolean`  
-        Whether the environment was activated by the wrapper class.  
-        If `true`, this telemetry is sent by the class that wraps the two activation providers   .  
 
 
