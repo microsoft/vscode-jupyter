@@ -3210,14 +3210,14 @@ export class IEventNamePropertyMapping {
      * An event describing whether the environment has ipykernel 6 installed.
      */
     [DebuggingTelemetry.ipykernel6Status]: TelemetryEventInfo<{
+        /**
+         * Whether ipykernel 6 is installed.
+         */
         status: 'installed' | 'notInstalled';
     }> = {
         owner: 'roblourens',
         feature: ['Debugger'],
         properties: {
-            /**
-             * Whether ipykernel 6 is installed.
-             */
             status: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
@@ -3269,15 +3269,15 @@ export class IEventNamePropertyMapping {
      * Sent when a notebook debugging session ends.
      */
     [DebuggingTelemetry.endedSession]: TelemetryEventInfo<{
+        /**
+         * The reason the session ended.
+         */
         reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
     }> = {
         owner: 'roblourens',
         feature: ['Debugger'],
         source: 'N/A',
         properties: {
-            /**
-             * The reason the session ended.
-             */
             reason: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
@@ -3397,7 +3397,13 @@ export class IEventNamePropertyMapping {
      * Error information from the debugger output channel while running initialization code.
      */
     [Telemetry.InteractiveWindowDebugSetupCodeFailure]: TelemetryEventInfo<{
+        /**
+         * The error name of the failure.
+         */
         ename: string;
+        /**
+         * The error value of the failure.
+         */
         evalue: string;
     }> = {
         owner: 'roblourens',

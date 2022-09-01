@@ -696,6 +696,7 @@
 //DebuggingTelemetry.endedSession
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.ENDED_SESSION" : {
+     "reason": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"The reason the session ended.","owner":"roblourens"},
      "${include}": [
        "${F1}",
        "${F2}",
@@ -739,6 +740,7 @@
 //DebuggingTelemetry.ipykernel6Status
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.IPYKERNEL6_STATUS" : {
+     "status": {"classification":"SystemMetaData","purpose":"SystemMetaData","comment":"Whether ipykernel 6 is installed.","owner":"roblourens"},
      "${include}": [
        "${F1}",
        "${F2}",
@@ -1521,8 +1523,8 @@
 //Telemetry.InteractiveWindowDebugSetupCodeFailure
 /* __GDPR__
    "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE" : {
-     "ename": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"","owner":"roblourens"},
-     "evalue": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"","owner":"roblourens"},
+     "ename": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"The error name of the failure.","owner":"roblourens"},
+     "evalue": {"classification":"CallstackOrException","purpose":"CallstackOrException","comment":"The error value of the failure.","owner":"roblourens"},
      "${include}": [
        "${F1}",
        "${F2}",
