@@ -5,7 +5,7 @@
 import '../extensions';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { inject, injectable, named, optional } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 
 import { IWorkspaceService } from '../application/types';
 import { IPlatformService } from '../platform/types';
@@ -24,12 +24,11 @@ import { Memento, Uri } from 'vscode';
 import { getDisplayPath } from '../platform/fs-paths';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { CondaService } from './condaService.node';
 import { condaVersionSupportsLiveStreaming, createCondaEnv } from './pythonEnvironment.node';
 import { printEnvVariablesToFile } from './internal/scripts/index.node';
 import { ProcessService } from './proc.node';
-import { swallowExceptions, testOnlyMethod } from '../utils/decorators';
+import { swallowExceptions } from '../utils/decorators';
 import { DataScience } from '../utils/localize';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { Telemetry } from '../constants';
@@ -71,7 +70,6 @@ const condaRetryMessages = [
 ];
 
 const ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX = 'ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX_{0}';
-const ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX = 'ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX_V3_{0}';
 
 export type EnvironmentVariablesCacheInformation = {
     activatedEnvVariables: EnvironmentVariables | undefined;
@@ -80,8 +78,6 @@ export type EnvironmentVariablesCacheInformation = {
     activationCommands: string[];
     interpreterVersion: string;
 };
-
-const MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS = 500;
 
 /**
  * Assumption reader is aware of why we need `getActivatedEnvironmentVariables`.
@@ -100,7 +96,7 @@ const MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS = 500;
  *
  * Once env variables have been generated, we cache them.
  *
- * We've found that doing this in jupyter yields much better results.// Copyright (c) Microsoft Corporation.
+ * We've found that doing this in jupyter yields much better results.
  * Stats: In Jupyter activation takes 800ms & the same in Python would take 2.6s, or with a complex Conda (5s vs 9s).
  * Note: We cache the activate commands, as this is not something that changes day to day. Its almost a constant.
  * Either way, we always fetch the latest from Python extension & update the cache.
@@ -110,7 +106,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     private readonly disposables: IDisposable[] = [];
     private readonly activatedEnvVariablesCache = new Map<string, Promise<NodeJS.ProcessEnv | undefined>>();
     private readonly envActivationCommands = new Map<string, Promise<string[] | undefined>>();
-    private static minTimeAfterWhichWeShouldCacheEnvVariables: number = MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS;
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
@@ -121,13 +116,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(CondaService) private readonly condaService: CondaService,
-        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
-        @inject('number')
-        @optional()
-        minTimeAfterWhichWeShouldCacheEnvVariables = MIN_TIME_AFTER_WHICH_WE_SHOULD_CACHE_ENV_VARS
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode
     ) {
-        EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables =
-            minTimeAfterWhichWeShouldCacheEnvVariables;
         this.envVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
         this.interpreterService.onDidChangeInterpreter(this.clearCache, this, this.disposables);
     }
@@ -222,6 +212,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             | 'emptyVariables'
             | 'failedToGetActivatedEnvVariablesFromPython'
             | 'failedToGetCustomEnvVariables' = 'emptyVariables';
+        let failureEx: Error | undefined;
         let [env, customEnvVars] = await Promise.all([
             this.apiProvider.getApi().then((api) =>
                 api
@@ -245,6 +236,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     ex
                 );
                 reasonForFailure = 'failedToGetCustomEnvVariables';
+                failureEx = ex;
                 return undefined;
             })
         ]);
@@ -258,7 +250,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 source: 'python',
                 failed: Object.keys(env || {}).length === 0,
                 reason: reasonForFailure
-            }
+            },
+            failureEx
         );
         // We must get activated env variables for Conda env, if not running stuff against conda will not work.
         // Hence we must log these as errors (so we can see them in jupyter logs).
@@ -266,18 +259,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             traceError(`Failed to get activated conda env variables for ${getDisplayPath(interpreter?.uri)}`);
         }
 
-        // Store in cache if we have env vars (lets not cache if it takes <=500ms (see const) to activate an environment).
-        const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
-        const key = ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
-            `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
-        );
-        if (env && stopWatch.elapsedTime > EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables) {
-            const customEnvVariablesHash = getTelemetrySafeHashedString(JSON.stringify(customEnvVars));
-            this.storeActivatedEnvVariablesInCache(resource, interpreter, env, customEnvVariablesHash).catch(noop);
-        } else if (this.memento.get(key)) {
-            // Remove it from cache (if it exists).
-            this.memento.update(key, undefined).then(noop, noop);
-        }
         if (env && customEnvVars) {
             env = {
                 ...env,
@@ -345,7 +326,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                             source: 'jupyter',
                             failed: true,
                             reason: 'unhandledError'
-                        }
+                        },
+                        ex
                     );
                     traceError('Failed to get activated environment variables ourselves', ex);
                 } finally {
@@ -376,13 +358,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         const stopWatch = new StopWatch();
         try {
             let isPossiblyCondaEnv = false;
-            const processServicePromise = this.processServiceFactory.create(resource);
-
-            const [activationCommands, customEnvVars] = await Promise.all([
+            const [processService, activationCommands, customEnvVars] = await Promise.all([
+                this.processServiceFactory.create(resource),
                 this.getActivationCommands(resource, interpreterDetails || interpreter),
                 this.envVarsService.getEnvironmentVariables(resource, 'RunPythonCode')
             ]);
-            const processService = await processServicePromise;
             const hasCustomEnvVars = Object.keys(customEnvVars).length;
             if (!activationCommands || activationCommands.length === 0) {
                 sendTelemetryEvent(
@@ -429,6 +409,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             let result: ExecutionResult<string> | undefined;
             let tryCount = 1;
             let returnedEnv: NodeJS.ProcessEnv | undefined;
+            let reason: 'emptyFromPython' | 'condaActivationFailed' = 'emptyFromPython';
+            let lastError: Error | undefined;
             while (!result) {
                 try {
                     result = await processService.shellExec(command, {
@@ -457,6 +439,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                             throw new Error(`StdErr from ShellExec, ${result.stderr} for ${command}`);
                         }
                     }
+                    lastError = undefined;
                 } catch (exc) {
                     // Special case. Conda for some versions will state a file is in use. If
                     // that's the case, wait and try again. This happens especially on AzDo
@@ -469,6 +452,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     } else {
                         throw exc;
                     }
+                    reason = 'condaActivationFailed';
+                    lastError = exc;
                 }
             }
 
@@ -484,13 +469,14 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 {
                     envType,
                     source: 'jupyter',
-                    failed: Object.keys(env || {}).length === 0,
-                    reason: Object.keys(env || {}).length === 0 ? 'emptyFromPython' : undefined
-                }
+                    failed: Object.keys(returnedEnv || {}).length === 0,
+                    reason: Object.keys(returnedEnv || {}).length === 0 ? reason : undefined
+                },
+                Object.keys(returnedEnv || {}).length === 0 ? lastError : undefined
             );
 
             return returnedEnv;
-        } catch (e) {
+        } catch (ex) {
             sendTelemetryEvent(
                 Telemetry.GetActivatedEnvironmentVariables,
                 { duration: stopWatch.elapsedTime },
@@ -499,70 +485,18 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     source: 'jupyter',
                     failed: true,
                     reason: 'unhandledError'
-                }
+                },
+                ex
             );
-            traceError('Failed to get activated environment variables ourselves', e);
+            traceError('Failed to get activated environment variables ourselves', ex);
             return;
         }
-    }
-    @testOnlyMethod()
-    public getInterpreterEnvCacheKeyForTesting(
-        resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
-    ): string {
-        const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
-        return ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
-            `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
-        );
     }
 
     private get processEnv(): EnvironmentVariables {
         return process.env as unknown as EnvironmentVariables;
     }
 
-    private async storeActivatedEnvVariablesInCache(
-        resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
-        activatedEnvVariables: NodeJS.ProcessEnv,
-        customEnvVariablesHash: string
-    ) {
-        let activationCommands = await this.getActivationCommands(resource, interpreter);
-        if (interpreter.envType !== EnvironmentType.Conda && (!activationCommands || activationCommands.length === 0)) {
-            return;
-        }
-        activationCommands = activationCommands || [];
-        // For conda environments, we don't care about the activation commands (as we activate either using conda activation commands or conda run)
-        if (interpreter.envType == EnvironmentType.Conda) {
-            activationCommands = [];
-        }
-        const cachedData: EnvironmentVariablesCacheInformation = {
-            activationCommands,
-            originalProcEnvVariablesHash: getTelemetrySafeHashedString(
-                JSON.stringify(this.sanitizedCurrentProcessEnvVars)
-            ),
-            activatedEnvVariables: activatedEnvVariables,
-            interpreterVersion: `${interpreter.sysVersion || ''}#${interpreter.version?.raw || ''}`,
-            customEnvVariablesHash
-        };
-        const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
-        const key = ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
-            `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
-        );
-        await this.memento.update(key, cachedData);
-    }
-    private get sanitizedCurrentProcessEnvVars() {
-        // When debugging VS Code Env vars messes with the hash used for storage.
-        // Even in real world we can ignore these, these should not impact the Env Variables of Conda.
-        // So for the purpose of checking if env variables have changed, we'll ignore these,
-        // However when returning the cached env variables we'll restore these to the latest values (so things work well when debugging VSC).
-        const vars = JSON.parse(JSON.stringify(this.processEnv));
-        Object.keys(vars).forEach((key) => {
-            if (key.startsWith('VSCODE_')) {
-                delete vars[key];
-            }
-        });
-        return vars;
-    }
     @traceDecoratorVerbose('getCondaEnvVariables', TraceOptions.BeforeCall)
     public async getCondaEnvVariables(
         resource: Resource,

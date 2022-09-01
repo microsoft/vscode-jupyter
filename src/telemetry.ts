@@ -765,6 +765,7 @@ export class IEventNamePropertyMapping {
             | 'unhandledError'
             | 'emptyFromCondaRun'
             | 'emptyFromPython'
+            | 'condaActivationFailed'
             | 'failedToGetActivatedEnvVariablesFromPython'
             | 'failedToGetCustomEnvVariables';
         /**
@@ -803,50 +804,6 @@ export class IEventNamePropertyMapping {
         feature: 'N/A',
         source: 'N/A',
         measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * Sent when we fail or manage to successfully activate a Python environment.
-     */
-    [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: TelemetryEventInfo<{
-        /**
-         * Carries `true` if environment variables are present, `false` otherwise
-         */
-        hasEnvVars?: boolean;
-        /**
-         * Carries `true` if fetching environment variables failed, `false` otherwise
-         */
-        failed?: boolean;
-        /**
-         * Whether the environment was activated within a terminal or not.
-         */
-        activatedInTerminal?: boolean;
-        /**
-         * Whether the environment was activated by the wrapper class.
-         * If `true`, this telemetry is sent by the class that wraps the two activation providers   .
-         */
-        activatedByWrapper?: boolean;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            activatedByWrapper: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            activatedInTerminal: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            failed: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            hasEnvVars: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            }
-        }
     };
     /**
      * Telemetry event sent when user opens the data viewer via the variable view.
