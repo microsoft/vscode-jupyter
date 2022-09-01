@@ -9,7 +9,7 @@ import { NotebookDocument, Uri, Event } from 'vscode';
 import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
-import { computeHash } from '../platform/common/crypto';
+import * as hashjs from 'hash.js';
 
 export interface IExtensionTestApi extends IExtensionApi {
     serviceContainer: IServiceContainer;
@@ -209,11 +209,11 @@ export async function initialize() {
 }
 
 const screenShotCount = new Map<string, number>();
-export async function generateScreenShotFileName(contextOrFileName: string | Mocha.Context) {
+export function generateScreenShotFileName(contextOrFileName: string | Mocha.Context) {
     const fullTestNameHash =
         typeof contextOrFileName === 'string'
             ? ''
-            : (await computeHash(contextOrFileName.currentTest?.fullTitle() || '', 'SHA256')).substring(0, 10); // Ensure file names are short enough for windows.
+            : computeHash(contextOrFileName.currentTest?.fullTitle() || '', 'SHA256').substring(0, 10); // Ensure file names are short enough for windows.
     const testTitle = typeof contextOrFileName === 'string' ? '' : contextOrFileName.currentTest?.title || '';
     const counter = (screenShotCount.get(fullTestNameHash) || 0) + 1;
     screenShotCount.set(fullTestNameHash, counter);
@@ -221,4 +221,14 @@ export async function generateScreenShotFileName(contextOrFileName: string | Moc
         typeof contextOrFileName === 'string' ? contextOrFileName : `${testTitle}_${fullTestNameHash}`;
     const name = `${fileNamePrefix}_${counter}`.replace(/[\W]+/g, '_');
     return `${name}-screenshot.png`;
+}
+
+function computeHash(data: string, algorithm: 'SHA512' | 'SHA256' | 'SHA1') {
+    if (algorithm === 'SHA1') {
+        return hashjs.sha1().update(data).digest('hex');
+    } else if (algorithm === 'SHA256') {
+        return hashjs.sha256().update(data).digest('hex');
+    } else {
+        return hashjs.sha512().update(data).digest('hex');
+    }
 }
