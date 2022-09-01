@@ -33,15 +33,7 @@ import { DataScience } from '../utils/localize';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { Telemetry } from '../constants';
 import { IFileSystemNode } from '../platform/types.node';
-import {
-    logValue,
-    traceDecoratorError,
-    traceDecoratorVerbose,
-    traceError,
-    traceInfo,
-    traceVerbose,
-    traceWarning
-} from '../../logging';
+import { logValue, traceDecoratorVerbose, traceError, traceInfo, traceVerbose, traceWarning } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { serializePythonEnvironment } from '../../api/pythonApi';
 import { noop } from '../utils/misc';
@@ -184,7 +176,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // If we got this using our way, and we have env variables use it.
         if (envVariablesOurSelves.resolved) {
             if (envVariablesOurSelves.value) {
-                traceVerbose(`Got env vars ourselves faster ${getDisplayPath(interpreter?.uri)}`);
+                traceInfo(
+                    `Got env vars ourselves faster ${getDisplayPath(interpreter?.uri)} with env var count ${
+                        Object.keys(envVariablesOurSelves.value).length
+                    }`
+                );
                 return envVariablesOurSelves.value;
             } else {
                 traceVerbose(`Got env vars ourselves faster, but empty ${getDisplayPath(interpreter?.uri)}`);
@@ -256,17 +252,19 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // We must get activated env variables for Conda env, if not running stuff against conda will not work.
         // Hence we must log these as errors (so we can see them in jupyter logs).
         if (!env && envType === EnvironmentType.Conda) {
-            traceError(`Failed to get activated conda env variables for ${getDisplayPath(interpreter?.uri)}`);
+            traceError(
+                `Failed to get activated conda env variables from Python for ${getDisplayPath(interpreter?.uri)}`
+            );
         }
 
         if (env) {
-            traceVerbose(
+            traceInfo(
                 `Got env vars with python ${getDisplayPath(interpreter?.uri)}, with env var count ${
                     Object.keys(env || {}).length
                 } and custom env var count ${Object.keys(customEnvVars || {}).length} in ${stopWatch.elapsedTime}ms`
             );
         } else {
-            traceVerbose(
+            traceInfo(
                 `Got empty env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`
             );
         }
@@ -299,7 +297,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         const shellInfo = defaultShells[this.platform.osType];
         const envType = interpreter?.envType;
         if (!shellInfo) {
-            traceWarning(
+            traceVerbose(
                 `Cannot get activated env variables for ${getDisplayPath(
                     interpreter?.uri
                 )}, shell cannot be determined.`
@@ -341,7 +339,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                         },
                         ex
                     );
-                    traceError('Failed to get activated environment variables ourselves', ex);
+                    traceVerbose('Failed to get activated environment variables ourselves', ex);
                 } finally {
                     traceVerbose(`getCondaEnvVariables and send telemetry took: ${stopWatch.elapsedTime}ms`);
                 }
@@ -438,13 +436,14 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                         // If variables are available, then ignore errors (but log them).
                         returnedEnv = this.parseEnvironmentOutput(result.stdout, parse);
                     } catch (ex) {
+                        traceVerbose(`Failed to parse Environment variables`, ex);
                         if (!result.stderr) {
                             throw ex;
                         }
                     }
                     if (result.stderr) {
                         if (returnedEnv && !condaRetryMessages.find((m) => result!.stderr!.includes(m))) {
-                            traceWarning(
+                            traceVerbose(
                                 `Got env variables but with errors, stdErr:${result.stderr}, stdOut: ${result.stdout}`
                             );
                         } else {
@@ -457,7 +456,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     // that's the case, wait and try again. This happens especially on AzDo
                     const excString = exc.toString();
                     if (condaRetryMessages.find((m) => excString.includes(m)) && tryCount < 10) {
-                        traceInfo(`Conda is busy, attempting to retry ...`);
+                        traceVerbose(`Conda is busy, attempting to retry ...`);
                         result = undefined;
                         tryCount += 1;
                         await sleep(500);
@@ -500,7 +499,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 },
                 ex
             );
-            traceError('Failed to get activated environment variables ourselves', ex);
+            traceVerbose('Failed to get activated environment variables ourselves', ex);
             return;
         }
     }
@@ -558,7 +557,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             await proc.exec(execInfo.command, execInfo.args, { env, timeout: CONDA_ENVIRONMENT_TIMEOUT });
             const jsonContents = await this.fs.readFile(Uri.file(tmpFile.filePath));
             const envVars = await parse(jsonContents);
-            traceInfo(
+            traceVerbose(
                 `Got activated conda env vars ourselves for ${getDisplayPath(interpreter.uri)} in ${
                     stopWatch.elapsedTime
                 }`
@@ -589,7 +588,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
         const shellInfo = defaultShells[this.platform.osType];
         if (!shellInfo) {
-            traceWarning(`No activation commands for ${interpreter.uri}, as the OS is unknown.`);
+            traceVerbose(`No activation commands for ${interpreter.uri}, as the OS is unknown.`);
             return;
         }
         const promise = (async () => {
@@ -605,11 +604,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 if (!activationCommands || activationCommands.length === 0) {
                     return;
                 }
-                traceInfo(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
+                traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
                 this.memento.update(key, activationCommands).then(noop, noop);
                 return activationCommands;
             } catch (ex) {
-                traceError(`Failed to get env activation commands for ${getDisplayPath(interpreter.uri)}`, ex);
+                traceVerbose(`Failed to get env activation commands for ${getDisplayPath(interpreter.uri)}`, ex);
                 return;
             }
         })();
@@ -621,7 +620,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // Replace 'source ' with '. ' as that works in shell exec
         return commands.map((cmd) => cmd.replace(/^source\s+/, '. '));
     }
-    @traceDecoratorError('Failed to parse Environment variables')
     @traceDecoratorVerbose('parseEnvironmentOutput', TraceOptions.None)
     protected parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
         output = output.substring(output.indexOf(ENVIRONMENT_PREFIX) + ENVIRONMENT_PREFIX.length);
