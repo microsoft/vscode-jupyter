@@ -974,36 +974,46 @@ export class IEventNamePropertyMapping {
      */
     [Telemetry.DebugContinue]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'roblourens',
-        feature: ['Debugger']
-    } as any;
+        feature: ['Debugger'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Telemetry event sent when user debugs the cell in the IW
      */
     [Telemetry.DebugCurrentCell]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'roblourens',
-        feature: ['Debugger']
-    } as any;
+        feature: ['Debugger'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Telemetry event sent when user hits the `step over` button while debugging IW
      */
     [Telemetry.DebugStepOver]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'roblourens',
-        feature: ['Debugger']
-    } as any;
+        feature: ['Debugger'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Telemetry event sent when user hits the `stop` button while debugging IW
      */
     [Telemetry.DebugStop]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'roblourens',
-        feature: ['Debugger']
-    } as any;
+        feature: ['Debugger'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Telemetry event sent when user debugs the file in the IW
      */
     [Telemetry.DebugFileInteractive]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'roblourens',
-        feature: ['Debugger']
-    } as any;
+        feature: ['Debugger'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Sent when we fail to update the kernel spec json file.
      */
@@ -2863,8 +2873,14 @@ export class IEventNamePropertyMapping {
         }
     };
 
-    // Run by line events
-    [Telemetry.RunByLineVariableHover]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
+    /**
+     * Fired when a user hovers a variable while debugging the IW.
+     */
+    [Telemetry.RunByLineVariableHover]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'User Action'
+    };
 
     /**
      * Telemetry sent with the total number of different types of kernels in the kernel picker.
@@ -3174,28 +3190,100 @@ export class IEventNamePropertyMapping {
             }
         }
     };
-    [DebuggingTelemetry.clickedOnSetup]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
-    [DebuggingTelemetry.closedModal]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
+    /**
+     * Sent when the user accepts the prompt to install ipykernel 6 automatically.
+     */
+    [DebuggingTelemetry.clickedOnSetup]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'User Action'
+    };
+    /**
+     * Sent when the user dismisses the prompt to install ipykernel 6 automatically.
+     */
+    [DebuggingTelemetry.closedModal]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'User Action'
+    };
+    /**
+     * An event describing whether the environment has ipykernel 6 installed.
+     */
     [DebuggingTelemetry.ipykernel6Status]: TelemetryEventInfo<{
         status: 'installed' | 'notInstalled';
-    }> = { owner: 'roblourens' } as any;
-    [DebuggingTelemetry.clickedRunByLine]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
-    [DebuggingTelemetry.successfullyStartedRunByLine]: TelemetryEventInfo<never | undefined> = {
-        owner: 'roblourens'
-    } as any;
+    }> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        properties: {
+            /**
+             * Whether ipykernel 6 is installed.
+             */
+            status: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        },
+        source: 'N/A'
+    };
+    /**
+     * Sent when the user attempts to start run by line.
+     */
+    [DebuggingTelemetry.clickedRunByLine]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'User Action'
+    };
+    /**
+     * Sent when the run by line session starts successfully.
+     */
+    [DebuggingTelemetry.successfullyStartedRunByLine]: TelemetryEventInfo<undefined> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'N/A'
+    };
     /**
      * Telemetry sent when we have managed to successfully start the Interactive Window debugger using the Jupyter protocol.
      */
     [DebuggingTelemetry.successfullyStartedIWJupyterDebugger]: TelemetryEventInfo<never | undefined> = {
-        owner: 'roblourens'
-    } as any;
-    [DebuggingTelemetry.clickedRunAndDebugCell]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'N/A'
+    };
+    /**
+     * Sent when the user attempts to start debugging a notebook cell.
+     */
+    [DebuggingTelemetry.clickedRunAndDebugCell]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'User Action'
+    };
+    /**
+     * Sent when the user successfully starts debugging a notebook cell.
+     */
     [DebuggingTelemetry.successfullyStartedRunAndDebugCell]: TelemetryEventInfo<never | undefined> = {
-        owner: 'roblourens'
-    } as any;
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'N/A'
+    };
+    /**
+     * Sent when a notebook debugging session ends.
+     */
     [DebuggingTelemetry.endedSession]: TelemetryEventInfo<{
         reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
-    }> = { owner: 'roblourens' } as any;
+    }> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'N/A',
+        properties: {
+            /**
+             * The reason the session ended.
+             */
+            reason: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
      * Telemetry sent when an extension uses our 3rd party API.
      */
