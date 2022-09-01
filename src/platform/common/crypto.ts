@@ -19,7 +19,7 @@ export class CryptoUtils implements ICryptoUtils {
     }
 }
 
-export function computeHash(data: string, algorithm: 'SHA512' | 'SHA256' | 'SHA1') {
+export async function computeHash(data: string, algorithm: 'SHA512' | 'SHA256' | 'SHA1') {
     if (algorithm === 'SHA1') {
         return hashjs.sha1().update(data).digest('hex');
     } else if (algorithm === 'SHA256') {

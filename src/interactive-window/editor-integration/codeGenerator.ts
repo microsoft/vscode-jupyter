@@ -58,7 +58,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         this.executionCount = 0;
     }
 
-    public generateCode(
+    public async generateCode(
         metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id' | 'interactiveWindowCellMarker'>,
         cellIndex: number,
         debug: boolean,
@@ -122,7 +122,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         this.cellIndexesCounted[e.cell.index] = true;
     }
 
-    private generateCodeImpl(
+    private async generateCodeImpl(
         metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id' | 'interactiveWindowCellMarker'>,
         expectedCount: number,
         debug: boolean,
@@ -166,7 +166,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
 
         const hashedCode = stripped.join('');
         const realCode = doc.getText(new Range(new Position(cellLine, 0), endLine.rangeIncludingLineBreak.end));
-        const hashValue = computeHash(hashedCode, 'SHA1').substring(0, 12);
+        const hashValue = (await computeHash(hashedCode, 'SHA1')).substring(0, 12);
         const runtimeFile = this.getRuntimeFile(hashValue, expectedCount);
         // If we're debugging reduce one line for the `breakpoint()` statement added by us.
         const lineOffsetRelativeToIndexOfFirstLineInCell = debug ? -1 : 0;

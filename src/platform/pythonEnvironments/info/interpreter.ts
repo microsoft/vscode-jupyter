@@ -57,12 +57,3 @@ export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = U
     }
     return Uri.file(fsPath);
 }
-
-/**
- * Generates a unique id for an intepreter
- * @param interpreter
- * @returns
- */
-export function getInterpreterId(interpreter: PythonEnvironment) {
-    return getInterpreterHash(interpreter);
-}

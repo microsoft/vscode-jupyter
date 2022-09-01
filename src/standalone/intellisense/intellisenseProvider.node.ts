@@ -18,7 +18,6 @@ import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/applic
 import { IDisposableRegistry, IConfigurationService, IsPreRelease } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { getInterpreterId } from '../../platform/pythonEnvironments/info/interpreter';
 import { INotebookCompletionProvider, INotebookEditorProvider } from '../../notebooks/types';
 import { LanguageServer } from './languageServer.node';
 import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
@@ -36,7 +35,6 @@ const EmptyWorkspaceKey = '';
 export class IntellisenseProvider implements INotebookCompletionProvider, IExtensionSyncActivationService {
     private servers = new Map<string, Promise<LanguageServer | undefined>>();
     private activeInterpreterCache = new Map<string, PythonEnvironment | undefined>();
-    private interpreterIdCache: Map<string, string> = new Map<string, string>();
     private knownControllers: WeakMap<NotebookDocument, IVSCodeNotebookController> = new WeakMap<
         NotebookDocument,
         IVSCodeNotebookController
@@ -79,7 +77,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         const interpreter = controller
             ? controller.connection.interpreter
             : await this.interpreterService.getActiveInterpreter(notebook.uri);
-        const interpreterId = interpreter ? this.getInterpreterIdFromCache(interpreter) : undefined;
+        const interpreterId = interpreter ? getComparisonKey(interpreter.uri) : undefined;
         const server = interpreterId ? await this.servers.get(interpreterId) : undefined;
         return server?.client;
     }
@@ -141,7 +139,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
             const oldInterpreter = oldController
                 ? oldController.connection.interpreter
                 : this.getActiveInterpreterSync(e.notebook.uri);
-            const oldInterpreterId = oldInterpreter ? this.getInterpreterIdFromCache(oldInterpreter) : undefined;
+            const oldInterpreterId = oldInterpreter ? getComparisonKey(oldInterpreter.uri) : undefined;
             const oldLanguageServer = oldInterpreterId ? await this.servers.get(oldInterpreterId) : undefined;
 
             // If we had one, tell the old language server to stop watching this notebook
@@ -193,24 +191,13 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         this.knownControllers.delete(n);
     }
 
-    private getInterpreterIdFromCache(interpreter: PythonEnvironment) {
-        const key = getComparisonKey(interpreter.uri);
-        let id = this.interpreterIdCache.get(key);
-        if (!id) {
-            // Making an assumption that the id for an interpreter never changes.
-            id = getInterpreterId(interpreter);
-            this.interpreterIdCache.set(key, id);
-        }
-        return id;
-    }
-
     private shouldAllowIntellisense(uri: Uri, interpreterId: string, _interpreterPath: Uri) {
         // We should allow intellisense for a URI when the interpreter matches
         // the controller for the uri
         const notebook = this.notebookEditorProvider.findAssociatedNotebookDocument(uri);
         const controller = notebook ? this.notebookControllerSelection.getSelected(notebook) : undefined;
         const notebookInterpreter = controller ? controller.connection.interpreter : this.getActiveInterpreterSync(uri);
-        let notebookId = notebookInterpreter ? this.getInterpreterIdFromCache(notebookInterpreter) : undefined;
+        let notebookId = notebookInterpreter ? getComparisonKey(notebookInterpreter.uri) : undefined;
 
         // Special case. For remote use the active interpreter as the controller's interpreter isn't
         // usable by pylance.
@@ -220,7 +207,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
                 controller?.connection.kind === 'connectToLiveRemoteKernel')
         ) {
             const activeInterpreter = this.getActiveInterpreterSync(uri);
-            notebookId = activeInterpreter ? this.getInterpreterIdFromCache(activeInterpreter) : undefined;
+            notebookId = activeInterpreter ? getComparisonKey(activeInterpreter.uri) : undefined;
         }
 
         // Cell also have to support python
@@ -256,7 +243,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
                 : 'jupyter';
 
         // See if we already have one for this interpreter or not
-        const id = interpreter ? getInterpreterId(interpreter) : undefined;
+        const id = interpreter ? getComparisonKey(interpreter.uri) : undefined;
         if (id && !this.servers.has(id) && interpreter) {
             // We don't already have one. Create a new one for this interpreter.
             // The logic for whether or not

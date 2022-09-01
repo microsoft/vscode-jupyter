@@ -199,7 +199,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     NotebookControllerAffinity.Preferred
                 );
 
-                trackKernelResourceInformation(document.uri, {
+                await trackKernelResourceInformation(document.uri, {
                     kernelConnection: preferredConnection,
                     isPreferredKernel: true
                 });
@@ -267,7 +267,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             const onlyConnection = rankedConnections.length === 1;
 
             // Is the top ranked connection the preferred interpreter?
-            const topMatchIsPreferredInterpreter = findKernelSpecMatchingInterpreter(preferredInterpreter, [
+            const topMatchIsPreferredInterpreter = await findKernelSpecMatchingInterpreter(preferredInterpreter, [
                 potentialMatch
             ]);
 
@@ -313,7 +313,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         const telemetrySafeLanguage =
             resourceType === 'interactive'
                 ? PYTHON_LANGUAGE
-                : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
+                : await getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
 
         sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
             result: preferredConnection ? 'found' : 'notfound',

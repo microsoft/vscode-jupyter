@@ -137,11 +137,11 @@ export class CommonMessageCoordinator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
-            this.sendLoadSucceededTelemetry(payload);
+            this.sendLoadSucceededTelemetry(payload).ignoreErrors();
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
-            this.handleWidgetLoadFailure(payload);
+            this.handleWidgetLoadFailure(payload).ignoreErrors();
         } else if (message === InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported) {
-            this.sendUnsupportedWidgetVersionFailureTelemetry(payload);
+            this.sendUnsupportedWidgetVersionFailureTelemetry(payload).ignoreErrors();
         } else if (message === InteractiveWindowMessages.IPyWidgetRenderFailure) {
             this.sendRenderFailureTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage) {
@@ -162,10 +162,10 @@ export class CommonMessageCoordinator {
         this.getIPyWidgetMessageDispatcher().initialize();
     }
 
-    private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
+    private async sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
         try {
             sendTelemetryEvent(Telemetry.IPyWidgetLoadSuccess, 0, {
-                moduleHash: getTelemetrySafeHashedString(payload.moduleName),
+                moduleHash: await getTelemetrySafeHashedString(payload.moduleName),
                 moduleVersion: payload.moduleVersion
             });
         } catch {
@@ -173,7 +173,7 @@ export class CommonMessageCoordinator {
         }
     }
 
-    private handleWidgetLoadFailure(payload: ILoadIPyWidgetClassFailureAction) {
+    private async handleWidgetLoadFailure(payload: ILoadIPyWidgetClassFailureAction) {
         try {
             let errorMessage: string = payload.error.toString();
             const cdnsEnabled = this.configService.getSettings(undefined).widgetScriptSources.length > 0;
@@ -211,7 +211,7 @@ export class CommonMessageCoordinator {
 
             sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
                 isOnline: payload.isOnline,
-                moduleHash: getTelemetrySafeHashedString(payload.moduleName),
+                moduleHash: await getTelemetrySafeHashedString(payload.moduleName),
                 moduleVersion: payload.moduleVersion,
                 timedout: payload.timedout
             });
@@ -226,10 +226,12 @@ export class CommonMessageCoordinator {
             await this.webview.postMessage({ type: IPyWidgetMessages.IPyWidgets_AttemptToDownloadFailedWidgetsAgain });
         }
     }
-    private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgetWidgetVersionNotSupportedAction) {
+    private async sendUnsupportedWidgetVersionFailureTelemetry(
+        payload: NotifyIPyWidgetWidgetVersionNotSupportedAction
+    ) {
         try {
             sendTelemetryEvent(Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure, 0, {
-                moduleHash: getTelemetrySafeHashedString(payload.moduleName),
+                moduleHash: await getTelemetrySafeHashedString(payload.moduleName),
                 moduleVersion: payload.moduleVersion
             });
         } catch {

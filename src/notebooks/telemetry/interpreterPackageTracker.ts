@@ -45,7 +45,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         if (!event.controller.connection.interpreter) {
             return;
         }
-        trackKernelResourceInformation(event.notebook.uri, { kernelConnection: event.controller.connection });
+        await trackKernelResourceInformation(event.notebook.uri, { kernelConnection: event.controller.connection });
         await this.packages.trackPackages(event.controller.connection.interpreter);
     }
     private async trackUponActivation() {

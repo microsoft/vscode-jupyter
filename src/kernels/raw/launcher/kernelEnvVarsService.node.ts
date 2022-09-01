@@ -75,7 +75,7 @@ export class KernelEnvironmentVariablesService {
                       })
                 : undefined
         ]);
-        trackKernelResourceInformation(resource, {
+        await trackKernelResourceInformation(resource, {
             capturedEnvVars: Object.keys(interpreterEnv || {}).length > 0
         });
 

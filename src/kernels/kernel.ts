@@ -157,12 +157,12 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             kernelConnection: this.kernelConnectionMetadata,
             actionSource: this.creator,
             disableUI: this.startupUI.disableUI
-        });
+        }).ignoreErrors();
         this.startupUI.onDidChangeDisableUI(() => {
             if (!this.startupUI.disableUI) {
                 trackKernelResourceInformation(this.resourceUri, {
                     disableUI: false
-                });
+                }).ignoreErrors();
             }
         }, this.disposables);
     }
@@ -180,7 +180,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     }
     public async interrupt(): Promise<void> {
         await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
-        trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
+        await trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
         traceInfo(`Interrupt requested ${getDisplayPath(this.resourceUri || this.uri)}`);
         this.startCancellation.cancel();
         const interruptResultPromise = this.kernelExecution.interrupt(this._jupyterSessionPromise);
@@ -301,7 +301,10 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         });
         if (!this.startupUI.disableUI) {
             // This means the user is actually running something against the kernel (deliberately).
-            initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.resourceUri, this.kernelConnectionMetadata);
+            await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+                this.resourceUri,
+                this.kernelConnectionMetadata
+            );
         } else {
             this.startupUI.onDidChangeDisableUI(
                 () => {
@@ -312,7 +315,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
                     initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
                         this.resourceUri,
                         this.kernelConnectionMetadata
-                    );
+                    ).ignoreErrors();
                 },
                 this,
                 this.disposables
@@ -324,7 +327,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
                 this.startCancellation = new CancellationTokenSource();
             }
             const stopWatch = new StopWatch();
-            trackKernelResourceInformation(this.resourceUri, {
+            await trackKernelResourceInformation(this.resourceUri, {
                 kernelConnection: this.kernelConnectionMetadata,
                 actionSource: this.creator
             });
@@ -766,7 +769,10 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
     }
     public async executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState> {
         traceCellMessage(cell, `kernel.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
-        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.resourceUri, this.kernelConnectionMetadata);
+        await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+            this.resourceUri,
+            this.kernelConnectionMetadata
+        );
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
         this.sendKernelStartedTelemetry();
         const stopWatch = new StopWatch();

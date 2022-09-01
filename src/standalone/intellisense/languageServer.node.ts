@@ -26,10 +26,10 @@ import { createNotebookMiddleware, createPylanceMiddleware, NotebookMiddleware }
 import uuid from 'uuid/v4';
 import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
-import { getInterpreterId } from '../../platform/pythonEnvironments/info/interpreter';
 import { noop } from '../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
+import { getComparisonKey } from '../../platform/vscode-path/resources';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ensure(target: any, key: string) {
@@ -114,7 +114,7 @@ export class LanguageServer implements Disposable {
     ) {
         // Client should be already started. We can expose it right away.
         this._client = client;
-        this._interpreterId = getInterpreterId(interpreter);
+        this._interpreterId = getComparisonKey(interpreter.uri);
         workspace.onDidChangeNotebookDocument(this.onDidChangeNotebookDocument, this, disposables);
     }
 
@@ -170,7 +170,7 @@ export class LanguageServer implements Disposable {
         if (serverOptions) {
             let languageClient: LanguageClient | undefined;
             const outputChannel = window.createOutputChannel(`${interpreter.displayName || 'notebook'}-languageserver`);
-            const interpreterId = getInterpreterId(interpreter);
+            const interpreterId = getComparisonKey(interpreter.uri);
             const middleware =
                 middlewareType == 'jupyter'
                     ? createNotebookMiddleware(

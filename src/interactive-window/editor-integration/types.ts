@@ -117,7 +117,7 @@ export interface IInteractiveWindowCodeGenerator extends IDisposable {
         cellIndex: number,
         debug: boolean,
         usingJupyterDebugProtocol?: boolean
-    ): IGeneratedCode | undefined;
+    ): Promise<IGeneratedCode | undefined>;
 }
 
 export const ICodeGeneratorFactory = Symbol('ICodeGeneratorFactory');
