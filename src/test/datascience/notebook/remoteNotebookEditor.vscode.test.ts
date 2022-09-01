@@ -222,6 +222,7 @@ suite.only('DataScience - VSCode Notebook - (Remote Execution)', function () {
 
         // Now that we don't have any remote kernels, connect to a remote jupyter server.
         await startJupyterServer();
+        await controllerLoader.loadControllers(true);
 
         // Verify we have a remote kernel spec.
         await waitForCondition(
@@ -275,6 +276,7 @@ suite.only('DataScience - VSCode Notebook - (Remote Execution)', function () {
             { result: DataScience.jupyterSelfCertEnable(), clickImmediately: true }
         );
         await startJupyterServer(undefined, true);
+        await controllerLoader.loadControllers(true);
         const { editor } = await openNotebook(ipynbFile);
         await waitForCondition(() => prompt.displayed, defaultNotebookTestTimeout, 'Prompt not displayed');
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE, true);
