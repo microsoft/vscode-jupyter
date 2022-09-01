@@ -209,11 +209,11 @@ export async function initialize() {
 }
 
 const screenShotCount = new Map<string, number>();
-export function generateScreenShotFileName(contextOrFileName: string | Mocha.Context) {
+export async function generateScreenShotFileName(contextOrFileName: string | Mocha.Context) {
     const fullTestNameHash =
         typeof contextOrFileName === 'string'
             ? ''
-            : computeHash(contextOrFileName.currentTest?.fullTitle() || '', 'SHA256').substring(0, 10); // Ensure file names are short enough for windows.
+            : (await computeHash(contextOrFileName.currentTest?.fullTitle() || '', 'SHA256')).substring(0, 10); // Ensure file names are short enough for windows.
     const testTitle = typeof contextOrFileName === 'string' ? '' : contextOrFileName.currentTest?.title || '';
     const counter = (screenShotCount.get(fullTestNameHash) || 0) + 1;
     screenShotCount.set(fullTestNameHash, counter);

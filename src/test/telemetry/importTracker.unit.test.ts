@@ -30,16 +30,16 @@ suite('Import Tracker', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let openedEventEmitter: EventEmitter<TextDocument>;
     let savedEventEmitter: EventEmitter<TextDocument>;
-    const pandasHash: string = getTelemetrySafeHashedString('pandas');
-    const elephasHash: string = getTelemetrySafeHashedString('elephas');
-    const kerasHash: string = getTelemetrySafeHashedString('keras');
-    const pysparkHash: string = getTelemetrySafeHashedString('pyspark');
-    const sparkdlHash: string = getTelemetrySafeHashedString('sparkdl');
-    const numpyHash: string = getTelemetrySafeHashedString('numpy');
-    const scipyHash: string = getTelemetrySafeHashedString('scipy');
-    const sklearnHash: string = getTelemetrySafeHashedString('sklearn');
-    const randomHash: string = getTelemetrySafeHashedString('random');
-    const disposables: IDisposable[] = [];
+    let pandasHash: string;
+    let elephasHash: string;
+    let kerasHash: string;
+    let pysparkHash: string;
+    let sparkdlHash: string;
+    let numpyHash: string;
+    let scipyHash: string;
+    let sklearnHash: string;
+    let randomHash: string;
+    let disposables: IDisposable[] = [];
     class Reporter {
         public static eventNames: string[] = [];
         public static properties: Record<string, string>[] = [];
@@ -61,7 +61,17 @@ suite('Import Tracker', () => {
             Reporter.measures.push(measures!);
         }
     }
-
+    suiteSetup(async () => {
+        pandasHash = await getTelemetrySafeHashedString('pandas');
+        elephasHash = await getTelemetrySafeHashedString('elephas');
+        kerasHash = await getTelemetrySafeHashedString('keras');
+        pysparkHash = await getTelemetrySafeHashedString('pyspark');
+        sparkdlHash = await getTelemetrySafeHashedString('sparkdl');
+        numpyHash = await getTelemetrySafeHashedString('numpy');
+        scipyHash = await getTelemetrySafeHashedString('scipy');
+        sklearnHash = await getTelemetrySafeHashedString('sklearn');
+        randomHash = await getTelemetrySafeHashedString('random');
+    });
     setup(() => {
         setTestExecution(false);
         setUnitTestExecution(false);

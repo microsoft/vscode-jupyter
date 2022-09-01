@@ -124,7 +124,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                         vscode.Uri.file('test.ipynb'), // Give a dummy ipynb value, we need this as its used in telemetry to determine the resource.
                         this.registration.registered.map((v) => v.connection),
                         stopWatch
-                    );
+                    ).ignoreErrors();
 
                     traceInfoIfCI(`Providing notebook controllers with length ${this.registration.registered.length}.`);
                 });

@@ -319,7 +319,7 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
     if (!isCI) {
         return;
     }
-    const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, generateScreenShotFileName(contextOrFileName));
+    const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, await generateScreenShotFileName(contextOrFileName));
     try {
         const screenshot = require('screenshot-desktop');
         await screenshot({ filename });

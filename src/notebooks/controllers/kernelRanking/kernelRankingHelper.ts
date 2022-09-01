@@ -44,7 +44,7 @@ export class KernelRankingHelper implements IKernelRankingHelper {
                     ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(resource)
                     : undefined;
 
-            let rankedKernels = rankKernels(
+            let rankedKernels = await rankKernels(
                 kernels,
                 resource,
                 notebookMetadata,

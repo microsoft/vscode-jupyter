@@ -58,7 +58,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         this.executionCount = 0;
     }
 
-    public generateCode(
+    public async generateCode(
         metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id' | 'interactiveWindowCellMarker'>,
         cellIndex: number,
         debug: boolean,
@@ -122,7 +122,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         this.cellIndexesCounted[e.cell.index] = true;
     }
 
-    private generateCodeImpl(
+    private async generateCodeImpl(
         metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id' | 'interactiveWindowCellMarker'>,
         expectedCount: number,
         debug: boolean,

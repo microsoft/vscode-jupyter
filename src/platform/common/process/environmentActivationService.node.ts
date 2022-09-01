@@ -269,10 +269,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // Store in cache if we have env vars (lets not cache if it takes <=500ms (see const) to activate an environment).
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         const key = ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
-            `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
+            `${workspaceKey}_${interpreter && (await getInterpreterHash(interpreter))}`
         );
         if (env && stopWatch.elapsedTime > EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables) {
-            const customEnvVariablesHash = getTelemetrySafeHashedString(JSON.stringify(customEnvVars));
+            const customEnvVariablesHash = await getTelemetrySafeHashedString(JSON.stringify(customEnvVars));
             this.storeActivatedEnvVariablesInCache(resource, interpreter, env, customEnvVariablesHash).catch(noop);
         } else if (this.memento.get(key)) {
             // Remove it from cache (if it exists).
@@ -296,7 +296,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
-        const key = `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`;
+        const key = `${workspaceKey}_${interpreter && (await getInterpreterHash(interpreter))}`;
 
         if (this.activatedEnvVariablesCache.has(key)) {
             traceVerbose(`Got activation Env Vars from cached promise with key ${key}`);
@@ -506,13 +506,13 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
     }
     @testOnlyMethod()
-    public getInterpreterEnvCacheKeyForTesting(
+    public async getInterpreterEnvCacheKeyForTesting(
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
-    ): string {
+    ): Promise<string> {
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         return ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
-            `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
+            `${workspaceKey}_${interpreter && (await getInterpreterHash(interpreter))}`
         );
     }
 
@@ -537,7 +537,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
         const cachedData: EnvironmentVariablesCacheInformation = {
             activationCommands,
-            originalProcEnvVariablesHash: getTelemetrySafeHashedString(
+            originalProcEnvVariablesHash: await getTelemetrySafeHashedString(
                 JSON.stringify(this.sanitizedCurrentProcessEnvVars)
             ),
             activatedEnvVariables: activatedEnvVariables,
@@ -546,7 +546,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         };
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         const key = ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
-            `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
+            `${workspaceKey}_${interpreter && (await getInterpreterHash(interpreter))}`
         );
         await this.memento.update(key, cachedData);
     }

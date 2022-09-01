@@ -259,7 +259,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const sysInfoCell = this.insertSysInfoMessage(metadata, SysInfoReason.Start);
         try {
             // Try creating a kernel
-            initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, metadata);
+            await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, metadata);
 
             const onStartKernel = (action: KernelAction, k: IKernel) => {
                 if (action !== 'start' && action !== 'restart') {
@@ -823,7 +823,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             !isLocalConnection(kernel.kernelConnectionMetadata) ||
             this.configuration.getSettings(undefined).forceIPyKernelDebugger;
 
-        const generatedCode = this.codeGeneratorFactory
+        const generatedCode = await this.codeGeneratorFactory
             .getOrCreate(this.notebookDocument)
             .generateCode(metadata, cell.index, isDebug, forceIPyKernelDebugger);
 
@@ -858,7 +858,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
         if (kernel) {
-            updateNotebookMetadata(metadata, kernel.kernelConnectionMetadata);
+            await updateNotebookMetadata(metadata, kernel.kernelConnectionMetadata);
         }
 
         let defaultFileName;

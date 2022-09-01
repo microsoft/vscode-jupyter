@@ -77,6 +77,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
         let preferredRemote: PreferredRemoteKernelIdProvider;
         let pythonExecService: IPythonExecutionService;
         let kernelRankHelper: IKernelRankingHelper;
+
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -95,7 +96,6 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
              */
             globalKernelSpecs?: KernelSpec.ISpecModel[];
         };
-
         async function initialize(
             testData: TestData,
             activeInterpreter?: PythonEnvironment,
@@ -481,17 +481,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
                 FOO: 'BAR'
             }
         };
-        const kernelspecRegisteredByOlderVersionOfExtension: KernelSpec.ISpecModel = {
-            argv: [python38VenvEnv.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
-            display_name: 'Kernelspec registered by older version of extension',
-            language: 'python',
-            // Most recent versions of extensions used a custom prefix in kernelnames.
-            name: `${getInterpreterKernelSpecName(python38VenvEnv)}kernelSpecRegisteredByOlderVersionOfExtension`,
-            resources: {},
-            env: {
-                HELLO: 'World'
-            }
-        };
+        let kernelspecRegisteredByOlderVersionOfExtension: KernelSpec.ISpecModel;
         const kernelspecRegisteredByVeryOldVersionOfExtension: KernelSpec.ISpecModel = {
             argv: [python38VenvEnv.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             display_name: 'Kernelspec registered by very old version of extension',
@@ -512,6 +502,21 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
                 }
             }
         };
+        suiteSetup(async () => {
+            kernelspecRegisteredByOlderVersionOfExtension = {
+                argv: [python38VenvEnv.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
+                display_name: 'Kernelspec registered by older version of extension',
+                language: 'python',
+                // Most recent versions of extensions used a custom prefix in kernelnames.
+                name: `${await getInterpreterKernelSpecName(
+                    python38VenvEnv
+                )}kernelSpecRegisteredByOlderVersionOfExtension`,
+                resources: {},
+                env: {
+                    HELLO: 'World'
+                }
+            };
+        });
 
         async function generateExpectedKernels(
             expectedGlobalKernelSpecs: KernelSpec.ISpecModel[],
@@ -570,7 +575,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
             );
             await Promise.all(
                 expectedInterpreters.map(async (interpreter) => {
-                    const spec = createInterpreterKernelSpec(interpreter, tempDirForKernelSpecs);
+                    const spec = await createInterpreterKernelSpec(interpreter, tempDirForKernelSpecs);
                     expectedKernelSpecs.push(<KernelConnectionMetadata>{
                         id: getKernelId(spec!, interpreter),
                         kernelSpec: spec,
@@ -1539,7 +1544,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
                                         name: 'someUnknownNameThatWillNeverMatch'
                                     },
                                     interpreter: {
-                                        hash: getInterpreterHash(condaEnv1)
+                                        hash: await getInterpreterHash(condaEnv1)
                                     },
                                     language_info: { name: PYTHON_LANGUAGE },
                                     orig_nbformat: 4

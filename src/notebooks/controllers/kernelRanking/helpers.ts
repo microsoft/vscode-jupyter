@@ -26,7 +26,7 @@ import * as path from '../../../platform/vscode-path/path';
  * Given an interpreter, find the kernel connection that matches this interpreter.
  * & is used to start a kernel using the provided interpreter.
  */
-export function findKernelSpecMatchingInterpreter(
+export async function findKernelSpecMatchingInterpreter(
     interpreter: PythonEnvironment | undefined,
     kernels: KernelConnectionMetadata[]
 ) {
@@ -34,14 +34,19 @@ export function findKernelSpecMatchingInterpreter(
         return;
     }
 
-    const result = kernels.filter((kernel) => {
-        return (
-            kernel.kind === 'startUsingPythonInterpreter' &&
-            getKernelRegistrationInfo(kernel.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
-            getInterpreterHash(kernel.interpreter) === getInterpreterHash(interpreter) &&
-            kernel.interpreter.envName === interpreter.envName
-        );
-    });
+    const result: typeof kernels = [];
+    await Promise.all(
+        kernels.map(async (kernel) => {
+            if (
+                kernel.kind === 'startUsingPythonInterpreter' &&
+                getKernelRegistrationInfo(kernel.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
+                (await getInterpreterHash(kernel.interpreter)) === (await getInterpreterHash(interpreter)) &&
+                kernel.interpreter.envName === interpreter.envName
+            ) {
+                result.push(kernel);
+            }
+        })
+    );
 
     // if we have more than one match then something is wrong.
     if (result.length > 1) {
@@ -70,13 +75,13 @@ function getInterpreterHashInMetadata(notebookMetadata: nbformat.INotebookMetada
     return metadataInterpreter?.hash;
 }
 
-export function rankKernels(
+export async function rankKernels(
     kernels: KernelConnectionMetadata[],
     resource: Resource,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     preferredInterpreter: PythonEnvironment | undefined,
     preferredRemoteKernelId: string | undefined
-): KernelConnectionMetadata[] | undefined {
+): Promise<KernelConnectionMetadata[] | undefined> {
     traceInfo(
         `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
             notebookMetadata || {}
@@ -89,9 +94,9 @@ export function rankKernels(
 
     // First calculate what the kernel spec would be for our active interpreter
     let preferredInterpreterKernelSpec =
-        preferredInterpreter && findKernelSpecMatchingInterpreter(preferredInterpreter, kernels);
+        preferredInterpreter && (await findKernelSpecMatchingInterpreter(preferredInterpreter, kernels));
     if (preferredInterpreter && !preferredInterpreterKernelSpec) {
-        const spec = createInterpreterKernelSpec(preferredInterpreter);
+        const spec = await createInterpreterKernelSpec(preferredInterpreter);
         preferredInterpreterKernelSpec = <PythonKernelConnectionMetadata>{
             kind: 'startUsingPythonInterpreter',
             kernelSpec: spec,
@@ -142,8 +147,10 @@ export function rankKernels(
                   )?.toLowerCase();
     }
 
-    kernels.sort((a, b) =>
-        compareKernels(
+    const comparisonResults = new Map<KernelConnectionMetadata, Map<KernelConnectionMetadata, number>>();
+    const promises: Promise<number>[] = [];
+    kernels.sort((a, b) => {
+        const promise = compareKernels(
             resource,
             possibleNbMetadataLanguage,
             actualNbMetadataLanguage,
@@ -152,16 +159,31 @@ export function rankKernels(
             a,
             b,
             preferredRemoteKernelId
-        )
-    );
+        );
+        promises.push(
+            promise.then((result) => {
+                const aValue = comparisonResults.get(a) || new Map<KernelConnectionMetadata, number>();
+                comparisonResults.set(a, aValue);
+                aValue.set(b, result);
+                return result;
+            })
+        );
+        // Ignore sorting the first time.
+        return 0;
+    });
+
+    await Promise.all(promises);
+
+    // Now sort with the results.
+    kernels.sort((a, b) => comparisonResults.get(a)?.get(b) || 0);
     return kernels;
 }
 
-export function isExactMatch(
+export async function isExactMatch(
     kernelConnection: KernelConnectionMetadata,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     preferredRemoteKernelId: string | undefined
-): boolean {
+): Promise<boolean> {
     // Live kernel ID match is always an exact match
     if (
         kernelConnection.kind === 'connectToLiveRemoteKernel' &&
@@ -178,7 +200,7 @@ export function isExactMatch(
 
     if (
         getInterpreterHashInMetadata(notebookMetadata) &&
-        interpreterMatchesThatInNotebookMetadata(kernelConnection, notebookMetadata)
+        (await interpreterMatchesThatInNotebookMetadata(kernelConnection, notebookMetadata))
     ) {
         // Case: Metadata has interpreter, in this case it should have an interpreter
         // and a kernel spec that should fully match, note that in this case matching
@@ -232,7 +254,7 @@ function isKernelSpecExactMatch(
     return false;
 }
 
-export function compareKernels(
+export async function compareKernels(
     _resource: Resource,
     possibleNbMetadataLanguage: string | undefined,
     actualNbMetadataLanguage: string | undefined,
@@ -458,8 +480,8 @@ export function compareKernels(
         return 0;
     }
 
-    const comparisonOfDisplayNames = compareAgainstKernelDisplayNameInNotebookMetadata(a, b, notebookMetadata);
-    const comparisonOfInterpreter = compareAgainstInterpreterInNotebookMetadata(a, b, notebookMetadata);
+    const comparisonOfDisplayNames = await compareAgainstKernelDisplayNameInNotebookMetadata(a, b, notebookMetadata);
+    const comparisonOfInterpreter = await compareAgainstInterpreterInNotebookMetadata(a, b, notebookMetadata);
 
     // By now we know that the kernelspec name in notebook metadata doesn't match the names of the kernelspecs.
     // Nor does it match any of the environment names in the kernels.
@@ -534,7 +556,7 @@ function givePreferenceToStartingWithoutCustomKernelSpec(a: KernelConnectionMeta
     return 0;
 }
 
-function compareKernelSpecOrEnvNames(
+async function compareKernelSpecOrEnvNames(
     a: KernelConnectionMetadata,
     b: KernelConnectionMetadata,
     nameOfA: string,
@@ -543,7 +565,7 @@ function compareKernelSpecOrEnvNames(
     activeInterpreterConnection: KernelConnectionMetadata | undefined
 ) {
     const comparisonOfDisplayNames = compareAgainstKernelDisplayNameInNotebookMetadata(a, b, notebookMetadata);
-    const comparisonOfInterpreter = compareAgainstInterpreterInNotebookMetadata(a, b, notebookMetadata);
+    const comparisonOfInterpreter = await compareAgainstInterpreterInNotebookMetadata(a, b, notebookMetadata);
 
     if (!notebookMetadata?.kernelspec?.name) {
         //
@@ -695,7 +717,7 @@ function compareKernelSpecOrEnvNames(
  * If the user has kernelspec in metadata & the interpreter hash is stored in metadata, then its a great match.
  * This is the preferred approach https://github.com/microsoft/vscode-jupyter/issues/5612
  */
-function compareAgainstInterpreterInNotebookMetadata(
+async function compareAgainstInterpreterInNotebookMetadata(
     a: KernelConnectionMetadata,
     b: KernelConnectionMetadata,
     notebookMetadata?: nbformat.INotebookMetadata
@@ -710,8 +732,14 @@ function compareAgainstInterpreterInNotebookMetadata(
 
     const kernelRegInfoA = getKernelRegistrationInfo(a.kernelSpec);
     const kernelRegInfoB = getKernelRegistrationInfo(b.kernelSpec);
-    const interpreterMatchesThatInNotebookMetadataA = !!interpreterMatchesThatInNotebookMetadata(a, notebookMetadata);
-    const interpreterMatchesThatInNotebookMetadataB = !!interpreterMatchesThatInNotebookMetadata(b, notebookMetadata);
+    const interpreterMatchesThatInNotebookMetadataA = !!(await interpreterMatchesThatInNotebookMetadata(
+        a,
+        notebookMetadata
+    ));
+    const interpreterMatchesThatInNotebookMetadataB = !!(await interpreterMatchesThatInNotebookMetadata(
+        b,
+        notebookMetadata
+    ));
 
     if (!interpreterMatchesThatInNotebookMetadataA && !interpreterMatchesThatInNotebookMetadataB) {
         // Both don't match.
@@ -864,13 +892,13 @@ function compareAgainstKernelDisplayNameInNotebookMetadata(
 /**
  * Checks whether the kernel connection matches the interpreter defined in the notebook metadata.
  */
-function interpreterMatchesThatInNotebookMetadata(
+async function interpreterMatchesThatInNotebookMetadata(
     kernelConnection: KernelConnectionMetadata,
     notebookMetadata?: nbformat.INotebookMetadata
 ) {
     const interpreterHashInMetadata = getInterpreterHashInMetadata(notebookMetadata);
     const interpreterHashForKernel = kernelConnection.interpreter
-        ? getInterpreterHash(kernelConnection.interpreter)
+        ? await getInterpreterHash(kernelConnection.interpreter)
         : undefined;
     return (
         interpreterHashInMetadata &&

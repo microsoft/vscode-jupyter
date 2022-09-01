@@ -301,12 +301,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 })
         );
 
-        // Combine the two into our list
-        const results = [
-            ...Array.from(distinctKernelMetadata.values()),
-            ...filteredInterpreters.map((i) => {
+        const filteredItems = await Promise.all(
+            filteredInterpreters.map(async (i) => {
                 // Update spec to have a default spec file
-                const spec = createInterpreterKernelSpec(i, tempDirForKernelSpecs);
+                const spec = await createInterpreterKernelSpec(i, tempDirForKernelSpecs);
                 const result: PythonKernelConnectionMetadata = {
                     kind: 'startUsingPythonInterpreter',
                     kernelSpec: spec,
@@ -315,7 +313,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 };
                 return result;
             })
-        ];
+        );
+        // Combine the two into our list
+        const results = [...Array.from(distinctKernelMetadata.values()), ...filteredItems];
 
         return results.sort((a, b) => {
             if (a.kernelSpec.display_name.toUpperCase() === b.kernelSpec.display_name.toUpperCase()) {

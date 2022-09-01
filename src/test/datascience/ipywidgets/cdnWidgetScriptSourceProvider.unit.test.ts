@@ -64,8 +64,8 @@ suite('DataScience - ipywidget - CDN', () => {
         return readable;
     }
 
-    function generateScriptName(moduleName: string, moduleVersion: string) {
-        const hash = sanitize(computeHash(`${moduleName}${moduleVersion}`, 'SHA256'));
+    async function generateScriptName(moduleName: string, moduleVersion: string) {
+        const hash = sanitize(await computeHash(`${moduleName}${moduleVersion}`, 'SHA256'));
         return Uri.file(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts', hash, 'index.js')).toString();
     }
     test('Prompt to use CDN', async () => {
@@ -280,9 +280,9 @@ suite('DataScience - ipywidget - CDN', () => {
                     const moduleVersion = '1';
                     let baseUrl = '';
                     let scriptUri = '';
-                    setup(() => {
+                    setup(async () => {
                         baseUrl = cdn === 'unpkg.com' ? unpgkUrl : jsdelivrUrl;
-                        scriptUri = generateScriptName(moduleName, moduleVersion);
+                        scriptUri = await generateScriptName(moduleName, moduleVersion);
                     });
                     teardown(() => {
                         scriptSourceProvider.dispose();

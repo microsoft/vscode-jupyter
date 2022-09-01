@@ -90,7 +90,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
 
         sendTelemetryEvent(Telemetry.HashedIPyWidgetNameUsed, undefined, {
-            hashedName: getTelemetrySafeHashedString(found.moduleName),
+            hashedName: await getTelemetrySafeHashedString(found.moduleName),
             source: found.source,
             cdnSearched: this.configuredScriptSources.length > 0
         });
