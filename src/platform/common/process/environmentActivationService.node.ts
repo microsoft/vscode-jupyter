@@ -259,6 +259,18 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             traceError(`Failed to get activated conda env variables for ${getDisplayPath(interpreter?.uri)}`);
         }
 
+        if (env) {
+            traceVerbose(
+                `Got env vars with python ${getDisplayPath(interpreter?.uri)}, with env var count ${
+                    Object.keys(env || {}).length
+                } and custom env var count ${Object.keys(customEnvVars || {}).length} in ${stopWatch.elapsedTime}ms`
+            );
+        } else {
+            traceVerbose(
+                `Got empty env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`
+            );
+        }
+
         if (env && customEnvVars) {
             env = {
                 ...env,
