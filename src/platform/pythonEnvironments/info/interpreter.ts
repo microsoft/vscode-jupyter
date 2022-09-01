@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { sha256 } from 'hash.js';
 import { Uri } from 'vscode';
 import * as uriPath from '../../vscode-path/resources';
 import { PythonEnvironment } from '.';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { getFilePath } from '../../common/platform/fs-paths';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 
 export function getInterpreterHash(interpreter: PythonEnvironment | {uri: Uri}){
     const interpreterPath = getNormalizedInterpreterPath(interpreter.uri);
-    return sha256().update(interpreterPath.path).digest('hex');
+    return getTelemetrySafeHashedString(interpreterPath.path);
 }
 
 export function areInterpretersSame(i1: PythonEnvironment | undefined, i2: PythonEnvironment | undefined) {

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as hashjs from 'hash.js';
 import { KnownKernelLanguageAliases, VSCodeKnownNotebookLanguages } from '../common/constants';
+import { computeHash } from '../common/crypto';
 import { traceError } from '../logging';
 
 export function getTelemetrySafeLanguage(language: string = 'unknown') {
@@ -36,5 +36,5 @@ export function getTelemetrySafeVersion(version: string): string | undefined {
  * Safe way to send data in telemetry (obfuscate PII).
  */
 export function getTelemetrySafeHashedString(data: string) {
-    return hashjs.sha256().update(data).digest('hex');
+    return computeHash(data, 'SHA256');
 }
