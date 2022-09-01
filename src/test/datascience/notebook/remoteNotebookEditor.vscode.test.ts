@@ -35,7 +35,7 @@ import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { runCellAndVerifyUpdateOfPreferredRemoteKernelId } from './remoteNotebookEditor.vscode.common.test';
 import { IControllerLoader, IControllerRegistration, IControllerSelection } from '../../../notebooks/controllers/types';
 
-suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
+suite.only('DataScience - VSCode Notebook - (Remote Execution)', function () {
     let controllerLoader: IControllerLoader;
     let controllerRegistration: IControllerRegistration;
     let jupyterServerSelector: JupyterServerSelector;
@@ -93,6 +93,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
             disposables
         );
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        await controllerLoader.loadControllers(true);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
