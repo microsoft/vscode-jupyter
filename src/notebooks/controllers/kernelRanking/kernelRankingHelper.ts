@@ -40,11 +40,11 @@ export class KernelRankingHelper implements IKernelRankingHelper {
                 kernels = kernels.filter((kernel) => !isLocalConnection(kernel) && kernel.serverId === serverId);
             }
             const preferredRemoteKernelId =
-                resource &&
-                this.preferredRemoteFinder &&
-                this.preferredRemoteFinder.getPreferredRemoteKernelId(resource);
+                resource && this.preferredRemoteFinder
+                    ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(resource)
+                    : undefined;
 
-            let rankedKernels = rankKernels(
+            let rankedKernels = await rankKernels(
                 kernels,
                 resource,
                 notebookMetadata,
@@ -59,13 +59,15 @@ export class KernelRankingHelper implements IKernelRankingHelper {
         }
     }
 
-    public isExactMatch(
+    public async isExactMatch(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         notebookMetadata: INotebookMetadata | undefined
-    ): boolean {
+    ): Promise<boolean> {
         const preferredRemoteKernelId =
-            resource && this.preferredRemoteFinder && this.preferredRemoteFinder.getPreferredRemoteKernelId(resource);
+            resource && this.preferredRemoteFinder
+                ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(resource)
+                : undefined;
 
         return isExactMatch(kernelConnection, notebookMetadata, preferredRemoteKernelId);
     }

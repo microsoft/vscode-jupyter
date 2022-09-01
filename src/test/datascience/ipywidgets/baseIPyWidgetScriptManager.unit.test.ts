@@ -82,7 +82,7 @@ suite('DataScience - ipywidget - CDN', () => {
             );
             const file = path.join(nbExtensionsFolder, item.file, 'extension.js');
             const contents = fs.readFileSync(file).toString();
-            const config = extractRequireConfigFromWidgetEntry(Uri.file(nbExtensionsFolder), item.file, contents);
+            const config = await extractRequireConfigFromWidgetEntry(Uri.file(nbExtensionsFolder), item.file, contents);
             // Convert values to strings for easy comparison.
             Object.keys(config!).forEach((key) => (config![key] = config![key].toString() as any));
 

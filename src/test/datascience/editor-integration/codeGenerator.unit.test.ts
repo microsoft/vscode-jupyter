@@ -45,7 +45,7 @@ suite('Code Generator Unit Tests', () => {
         documentManager.changeDocument(file, [{ range, newText }]);
     }
 
-    function sendCode(code: string, line: number, file?: string) {
+    async function sendCode(code: string, line: number, file?: string) {
         const fileName = file ? file : 'foo.py';
         const metadata: InteractiveCellMetadata = {
             interactiveWindowCellMarker: '# %%',

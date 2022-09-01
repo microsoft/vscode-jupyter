@@ -10,7 +10,7 @@ import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTele
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
 import { ResourceSet } from '../../platform/vscode-path/map';
 
-export function sendKernelListTelemetry(
+export async function sendKernelListTelemetry(
     resource: Resource,
     kernels: KernelConnectionMetadata[],
     stopWatch?: StopWatch
@@ -56,7 +56,7 @@ export function sendKernelListTelemetry(
                 break;
         }
     });
-    trackKernelResourceInformation(resource, counters);
+    await trackKernelResourceInformation(resource, counters);
     if (stopWatch) {
         sendKernelTelemetryEvent(resource, Telemetry.KernelCount, { duration: stopWatch.elapsedTime, ...counters });
     }

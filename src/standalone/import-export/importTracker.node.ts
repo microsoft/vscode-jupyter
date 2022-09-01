@@ -200,7 +200,7 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         this.lookForImports(lines);
     }
 
-    private sendTelemetry(packageName: string) {
+    private async sendTelemetry(packageName: string) {
         // No need to send duplicate telemetry or waste CPU cycles on an unneeded hash.
         if (this.sentMatches.has(packageName)) {
             return;
@@ -208,7 +208,7 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         this.sentMatches.add(packageName);
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
-        const hash = getTelemetrySafeHashedString(packageName);
+        const hash = await getTelemetrySafeHashedString(packageName);
         sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedNamev2: hash });
     }
 
@@ -219,7 +219,7 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
                 if (match !== null && match.groups !== undefined) {
                     if (match.groups.fromImport !== undefined) {
                         // `from pkg ...`
-                        this.sendTelemetry(match.groups.fromImport);
+                        this.sendTelemetry(match.groups.fromImport).ignoreErrors();
                     } else if (match.groups.importImport !== undefined) {
                         // `import pkg1, pkg2, ...`
                         const packageNames = match.groups.importImport

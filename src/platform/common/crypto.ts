@@ -14,12 +14,12 @@ import * as hashjs from 'hash.js';
  */
 @injectable()
 export class CryptoUtils implements ICryptoUtils {
-    public createHash(data: string, algorithm: 'SHA512' | 'SHA256' = 'SHA256'): string {
+    public async createHash(data: string, algorithm: 'SHA512' | 'SHA256' = 'SHA256'): Promise<string> {
         return computeHash(data, algorithm);
     }
 }
 
-export function computeHash(data: string, algorithm: 'SHA512' | 'SHA256' | 'SHA1') {
+export async function computeHash(data: string, algorithm: 'SHA512' | 'SHA256' | 'SHA1') {
     if (algorithm === 'SHA1') {
         return hashjs.sha1().update(data).digest('hex');
     } else if (algorithm === 'SHA256') {

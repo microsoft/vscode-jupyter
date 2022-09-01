@@ -98,7 +98,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
             // If a kernel connection was not provided, then we set it up here.
             if (!kernelConnectionProvided) {
-                trackKernelResourceInformation(resource, { kernelConnection });
+                await trackKernelResourceInformation(resource, { kernelConnection });
             }
             await rawSession.connect({ token: cancelToken, ui });
             if (cancelToken.isCancellationRequested) {

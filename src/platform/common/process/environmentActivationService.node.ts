@@ -287,7 +287,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
-        const key = `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`;
+        const key = `${workspaceKey}_${interpreter && (await getInterpreterHash(interpreter))}`;
 
         if (this.activatedEnvVariablesCache.has(key)) {
             traceVerbose(`Got activation Env Vars from cached promise with key ${key}`);

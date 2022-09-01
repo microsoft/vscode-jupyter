@@ -221,9 +221,12 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
         // Add shared properties to telemetry props (we may overwrite existing ones).
         Object.assign(customProperties, sharedProperties);
         Object.assign(customProperties, properties || {});
-        populateTelemetryWithErrorInfo(customProperties, ex);
-        customProperties = sanitizeProperties(eventNameSent, customProperties);
-        reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
+        populateTelemetryWithErrorInfo(customProperties, ex)
+            .then(() => {
+                customProperties = sanitizeProperties(eventNameSent, customProperties);
+                reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
+            })
+            .ignoreErrors();
     } else {
         if (properties) {
             customProperties = sanitizeProperties(eventNameSent, properties);

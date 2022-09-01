@@ -26,6 +26,7 @@ import {
     setTestExecution,
     setUnitTestExecution
 } from '../../platform/common/constants';
+import { sleep } from '../core';
 
 suite('Telemetry', () => {
     let workspaceService: IWorkspaceService;
@@ -162,7 +163,7 @@ suite('Telemetry', () => {
         expect(Reporter.measures).to.deep.equal([measures]);
         expect(Reporter.properties).to.deep.equal([expectedProperties]);
     });
-    test('Send Error Telemetry', () => {
+    test('Send Error Telemetry', async () => {
         rewiremock.enable();
         const error = new Error('Boo');
         rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
@@ -173,7 +174,7 @@ suite('Telemetry', () => {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
-
+        await sleep(1);
         const expectedErrorProperties = {
             failed: 'true',
             failureCategory: 'unknown',
@@ -188,7 +189,7 @@ suite('Telemetry', () => {
         delete Reporter.properties[0].stackTrace;
         expect(Reporter.properties).to.deep.equal([expectedErrorProperties]);
     });
-    test('Send Error Telemetry with stack trace', () => {
+    test('Send Error Telemetry with stack trace', async () => {
         rewiremock.enable();
         const error = new Error('Boo');
         const root = EXTENSION_ROOT_DIR.replace(/\\/g, '/');
@@ -220,7 +221,7 @@ suite('Telemetry', () => {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
-
+        await sleep(1);
         const expectedErrorProperties = {
             failed: 'true',
             failureCategory: 'unknown',

@@ -52,10 +52,10 @@ suite('DataScience - Kernels Finder', () => {
         );
         const isMatch =
             kernelSpec &&
-            rankHelper.isExactMatch(resourceToUse, kernelSpec, {
+            (await rankHelper.isExactMatch(resourceToUse, kernelSpec, {
                 language_info: { name: 'foobar' },
                 orig_nbformat: 4
-            });
+            }));
         assert.isNotTrue(isMatch);
     });
     test('Python kernel returned if no matching kernel found', async () => {

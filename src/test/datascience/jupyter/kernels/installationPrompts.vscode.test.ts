@@ -155,7 +155,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             fs
                 .readFileSync(nbFile.fsPath)
                 .toString('utf8')
-                .replace('<hash>', getInterpreterHash({ uri: venvNoKernelPath }))
+                .replace('<hash>', await getInterpreterHash({ uri: venvNoKernelPath }))
         );
         await Promise.all([
             installIPyKernel(venvKernelPath.fsPath),

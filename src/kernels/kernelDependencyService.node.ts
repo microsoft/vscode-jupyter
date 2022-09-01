@@ -156,7 +156,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             // The reason is even if ipykernel isn't available, the kernel will still be started (i.e. the process is started),
             // However Jupyter doesn't notify a failure to start.
             this.rawSupport.isSupported &&
-            isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, kernelConnection.interpreter)
+            (await isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, kernelConnection.interpreter))
         ) {
             traceInfo(
                 `IPyKernel found previously in this environment ${getDisplayPath(kernelConnection.interpreter.uri)}`
@@ -216,7 +216,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         );
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');
         const resourceType = resource ? getResourceType(resource) : undefined;
-        const resourceHash = resource ? getTelemetrySafeHashedString(resource.toString()) : undefined;
+        const resourceHash = resource ? await getTelemetrySafeHashedString(resource.toString()) : undefined;
         sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
             action: 'displayed',
             moduleName: productNameForTelemetry,

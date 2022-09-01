@@ -5,11 +5,11 @@ import { KnownKernelLanguageAliases, VSCodeKnownNotebookLanguages } from '../com
 import { computeHash } from '../common/crypto';
 import { traceError } from '../logging';
 
-export function getTelemetrySafeLanguage(language: string = 'unknown') {
+export async function getTelemetrySafeLanguage(language: string = 'unknown') {
     language = (language || 'unknown').toLowerCase();
     language = KnownKernelLanguageAliases.get(language) || language;
     if (!VSCodeKnownNotebookLanguages.includes(language) && language != 'unknown') {
-        language = getTelemetrySafeHashedString(language);
+        language = await getTelemetrySafeHashedString(language);
     }
     return language;
 }
