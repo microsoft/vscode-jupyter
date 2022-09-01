@@ -33,12 +33,12 @@ Common measurement used across a number of events.","number","",false
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.DEBUG_STOP","Telemetry event sent when user hits the `stop` button while debugging IW","Telemetry.DebugStop","roblourens","Debugger","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DATASCIENCE.DEBUGGING.ENDED_SESSION","","DebuggingTelemetry.endedSession","roblourens","","","","reason","","","'normally' 
+"DATASCIENCE.DEBUGGING.ENDED_SESSION","Sent when a notebook debugging session ends.","DebuggingTelemetry.endedSession","roblourens","Debugger","","","reason","The reason the session ended.","","'normally' 
 'onKernelDisposed' 
 'onAnInterrupt' 
 'onARestart' 
 'withKeybinding' ",false
-"DATASCIENCE.DEBUGGING.IPYKERNEL6_STATUS","","DebuggingTelemetry.ipykernel6Status","roblourens","","","","status","","","'installed' 
+"DATASCIENCE.DEBUGGING.IPYKERNEL6_STATUS","An event describing whether the environment has ipykernel 6 installed.","DebuggingTelemetry.ipykernel6Status","roblourens","Debugger","","","status","Whether ipykernel 6 is installed.","","'installed' 
 'notInstalled' ",false
 "DATASCIENCE.ENTER_JUPYTER_URI","A URI has been selected and is being checked for validity.","Telemetry.EnterJupyterURI","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
@@ -163,8 +163,8 @@ Command is `Jupyter: Import Jupyter Notebook`
 Basically user is exporting some jupyter notebook into a Python file.","Telemetry.ImportNotebook","IanMatthewHuff","Import-Export","","","scope","The command can be called as a command, in which a file then needs to be selected, or with a file
 as the context already, in which case the import command doesn't ask for selection.","","'command' 
 'file' ",false
-"DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","Error information from the debugger output channel while running initialization code.","Telemetry.InteractiveWindowDebugSetupCodeFailure","roblourens","InteractiveWindow, Debugger","","","ename","","string","",false
-"DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","Error information from the debugger output channel while running initialization code.","Telemetry.InteractiveWindowDebugSetupCodeFailure","roblourens","InteractiveWindow, Debugger","","","evalue","","string","",false
+"DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","Error information from the debugger output channel while running initialization code.","Telemetry.InteractiveWindowDebugSetupCodeFailure","roblourens","InteractiveWindow, Debugger","","","ename","The error name of the failure.","string","",false
+"DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","Error information from the debugger output channel while running initialization code.","Telemetry.InteractiveWindowDebugSetupCodeFailure","roblourens","InteractiveWindow, Debugger","","","evalue","The error value of the failure.","string","",false
 "DATASCIENCE.INTERRUPT","User interrupts a cell","Telemetry.Interrupt","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","Telemetry sent when an extension attempts to use our 3rd party API.","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","extensionId","Extension Id that's attempting to use the API.","string","",false

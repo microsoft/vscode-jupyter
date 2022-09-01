@@ -92,7 +92,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUG_CONTINUE  (Telemetry.DebugContinue)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when user hits the `continue` button while debugging IW  
     ```
@@ -105,7 +104,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUG_CURRENT_CELL  (Telemetry.DebugCurrentCell)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when user debugs the cell in the IW  
     ```
@@ -118,7 +116,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUG_FILE_INTERACTIVE  (Telemetry.DebugFileInteractive)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when user debugs the file in the IW  
     ```
@@ -131,7 +128,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUG_STEP_OVER  (Telemetry.DebugStepOver)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when user hits the `step over` button while debugging IW  
     ```
@@ -144,7 +140,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUG_STOP  (Telemetry.DebugStop)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry event sent when user hits the `stop` button while debugging IW  
     ```
@@ -157,40 +152,45 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUGGING.CLICKED_ON_SETUP  (DebuggingTelemetry.clickedOnSetup)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when the user accepts the prompt to install ipykernel 6 automatically.  
+    ```
+
 
 
 * DATASCIENCE.DEBUGGING.CLICKED_RUN_AND_DEBUG_CELL  (DebuggingTelemetry.clickedRunAndDebugCell)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when the user attempts to start debugging a notebook cell.  
+    ```
+
 
 
 * DATASCIENCE.DEBUGGING.CLICKED_RUNBYLINE  (DebuggingTelemetry.clickedRunByLine)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when the user attempts to start run by line.  
+    ```
+
 
 
 * DATASCIENCE.DEBUGGING.CLOSED_MODAL  (DebuggingTelemetry.closedModal)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when the user dismisses the prompt to install ipykernel 6 automatically.  
+    ```
+
 
 
 * DATASCIENCE.DEBUGGING.ENDED_SESSION  (DebuggingTelemetry.endedSession)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR reason. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when a notebook debugging session ends.  
+    ```
+
     - Properties:  
         - `reason`: `<see below>`  
+        The reason the session ended.  
         Possible values include:  
             - `'normally'`  
             - `'onKernelDisposed'`  
@@ -201,12 +201,13 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUGGING.IPYKERNEL6_STATUS  (DebuggingTelemetry.ipykernel6Status)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Properties not documented in GDPR status. Add jsDoc comments for the properties in telemetry.ts file.</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    An event describing whether the environment has ipykernel 6 installed.  
+    ```
+
     - Properties:  
         - `status`: `<see below>`  
+        Whether ipykernel 6 is installed.  
         Possible values include:  
             - `'installed'`  
             - `'notInstalled'`  
@@ -214,8 +215,6 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_IW_JUPYTER  (DebuggingTelemetry.successfullyStartedIWJupyterDebugger)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
     ```
     Telemetry sent when we have managed to successfully start the Interactive Window debugger using the Jupyter protocol.  
     ```
@@ -224,16 +223,18 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_RUN_AND_DEBUG_CELL  (DebuggingTelemetry.successfullyStartedRunAndDebugCell)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when the user successfully starts debugging a notebook cell.  
+    ```
+
 
 
 * DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_RUNBYLINE  (DebuggingTelemetry.successfullyStartedRunByLine)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Sent when the run by line session starts successfully.  
+    ```
+
 
 
 * DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER  (Telemetry.DisableInteractiveShiftEnter)  
@@ -540,7 +541,9 @@ Expand each section to see more information about that event.
 
     - Properties:  
         - `ename`: `string`  
+        The error name of the failure.  
         - `evalue`: `string`  
+        The error value of the failure.  
 
 
 * DATASCIENCE.INTERRUPT  (Telemetry.Interrupt)  
@@ -1550,9 +1553,10 @@ Expand each section to see more information about that event.
 
 * DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER  (Telemetry.RunByLineVariableHover)  
       Owner: [@roblourens](https://github.com/roblourens)  
-       <span style="color:red">Feature not defined.</span>  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
+    ```
+    Fired when a user hovers a variable while debugging the IW.  
+    ```
+
 
 
 * DATASCIENCE.RUN_CELL_AND_ALL_BELOW  (Telemetry.RunCellAndAllBelow)  
