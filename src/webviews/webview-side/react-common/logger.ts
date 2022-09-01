@@ -3,13 +3,18 @@
 
 'use strict';
 
-let messageLogger: undefined | ((message: string) => void);
+let messageLogger: undefined | ((category: 'error' | 'verbose', message: string) => void);
 export function logMessage(message: string) {
     if (messageLogger) {
-        messageLogger(message);
+        messageLogger('verbose', message);
+    }
+}
+export function logErrorMessage(message: string) {
+    if (messageLogger) {
+        messageLogger('error', message);
     }
 }
 
-export function setLogger(logger: (message: string) => void) {
+export function setLogger(logger: (category: 'error' | 'verbose', message: string) => void) {
     messageLogger = logger;
 }

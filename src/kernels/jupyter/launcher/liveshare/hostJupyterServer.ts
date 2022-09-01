@@ -125,7 +125,6 @@ export class HostJupyterServer implements INotebookServer {
             this.throwIfDisposedOrCancelled(cancelToken);
 
             if (session) {
-                traceInfo(`Finished connecting kernel ${kernelConnection.kind}:${kernelConnection.id}`);
                 sessionPromise.resolve(session);
             } else {
                 sessionPromise.reject(this.getDisposedError());
