@@ -222,7 +222,7 @@ suite('VSCode Notebook - Run By Line', function () {
         assert.equal(stack2.stackFrames[0].line, 4, 'Stopped at the wrong line');
     });
 
-    test('Does not stop in other cell', async function () {
+    test.skip('Does not stop in other cell', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
         const cell0 = await insertCodeCell('def foo():\n    print(1)');
         const cell1 = await insertCodeCell('foo()');
