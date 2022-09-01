@@ -29,7 +29,7 @@ export class PreferredRemoteKernelIdProvider {
         @inject(ICryptoUtils) private crypto: ICryptoUtils
     ) {}
 
-    public getPreferredRemoteKernelId(uri: Uri): string | undefined {
+    public async getPreferredRemoteKernelId(uri: Uri): Promise<string | undefined> {
         // Stored as a list so we don't take up too much space
         const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
         if (list) {
@@ -54,7 +54,7 @@ export class PreferredRemoteKernelIdProvider {
         const list: KernelIdListEntry[] = cloneDeep(
             this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, [])
         );
-        const fileHash = this.crypto.createHash(uri.toString());
+        const fileHash = await this.crypto.createHash(uri.toString());
         const index = list.findIndex((l) => l.fileHash === fileHash);
         // Always remove old spot (we'll push on the back for new ones)
         if (index >= 0) {

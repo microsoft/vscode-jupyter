@@ -272,7 +272,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             ]);
 
             // Are we an exact match based on metadata hash / name / ect...?
-            const isExactMatch = this.kernelRankHelper.isExactMatch(uri, potentialMatch, notebookMetadata);
+            const isExactMatch = await this.kernelRankHelper.isExactMatch(uri, potentialMatch, notebookMetadata);
 
             // non-exact matches are ok for non-python kernels, else we revert to active interpreter for non-python kernels.
             const languageInNotebookMetadata = getLanguageInNotebookMetadata(notebookMetadata);

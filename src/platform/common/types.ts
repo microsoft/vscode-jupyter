@@ -288,7 +288,7 @@ export interface ICryptoUtils {
      * @param data The string to hash
      * @param [algorithm]
      */
-    createHash(data: string, algorithm?: 'SHA512' | 'SHA256'): string;
+    createHash(data: string, algorithm?: 'SHA512' | 'SHA256'): Promise<string>;
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');

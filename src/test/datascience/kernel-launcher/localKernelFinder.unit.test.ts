@@ -1744,9 +1744,9 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
             };
 
             // Set up the preferred remote id
-            when(preferredRemote.getPreferredRemoteKernelId(anything())).thenReturn(activeID);
+            when(preferredRemote.getPreferredRemoteKernelId(anything())).thenResolve(activeID);
 
-            const isExactMatch = kernelRankHelper.isExactMatch(nbUri, liveSpec, {
+            const isExactMatch = await kernelRankHelper.isExactMatch(nbUri, liveSpec, {
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
             });
@@ -1757,7 +1757,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 { kind: 'startUsingLocalKernelSpec', id: 'hi', kernelSpec: {} as any },
                 {
@@ -1772,7 +1772,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1799,7 +1799,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1828,7 +1828,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1855,7 +1855,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1884,7 +1884,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1909,7 +1909,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',

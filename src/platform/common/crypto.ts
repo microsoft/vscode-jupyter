@@ -14,7 +14,7 @@ import * as hashjs from 'hash.js';
  */
 @injectable()
 export class CryptoUtils implements ICryptoUtils {
-    public createHash(data: string, algorithm: 'SHA512' | 'SHA256' = 'SHA256'): string {
+    public async createHash(data: string, algorithm: 'SHA512' | 'SHA256' = 'SHA256'): Promise<string> {
         return computeHash(data, algorithm);
     }
 }
