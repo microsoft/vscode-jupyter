@@ -146,21 +146,24 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
 
             this._onDidChangeKernels.fire();
         } else if (workspace.workspaceFolders) {
-            const promises = workspace.workspaceFolders.map((folder) => new Promise<void>(async (resolve) => {
-                try {
-                    let kernels = await this.listKernels(folder.uri, updateCacheCancellationToken.token);
-                    if (updateCacheCancellationToken.token.isCancellationRequested) {
-                        return;
-                    }
+            const promises = workspace.workspaceFolders.map(
+                (folder) =>
+                    new Promise<void>(async (resolve) => {
+                        try {
+                            let kernels = await this.listKernels(folder.uri, updateCacheCancellationToken.token);
+                            if (updateCacheCancellationToken.token.isCancellationRequested) {
+                                return;
+                            }
 
-                    await this.writeToCache(kernels);
-                    const resourceCacheKey = this.getResourceCacheKey(folder.uri);
-                    this.resourceCache.set(resourceCacheKey, kernels);
-                } catch (ex) {
-                    traceError(`Exception loading kernels: ${ex}`);
-                }
-                resolve();
-            }));
+                            await this.writeToCache(kernels);
+                            const resourceCacheKey = this.getResourceCacheKey(folder.uri);
+                            this.resourceCache.set(resourceCacheKey, kernels);
+                        } catch (ex) {
+                            traceError(`Exception loading kernels: ${ex}`);
+                        }
+                        resolve();
+                    })
+            );
 
             await Promise.all(promises);
         }
