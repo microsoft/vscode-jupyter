@@ -3,7 +3,6 @@
 
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
-import { sha256 } from 'hash.js';
 import nock from 'nock';
 import * as path from '../../../platform/vscode-path/path';
 import { Readable } from 'stream';
@@ -24,6 +23,7 @@ import { HttpClient } from '../../../platform/common/net/httpClient';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
+import { computeHash } from '../../../platform/common/crypto';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
 const sanitize = require('sanitize-filename');
@@ -65,7 +65,7 @@ suite('DataScience - ipywidget - CDN', () => {
     }
 
     function generateScriptName(moduleName: string, moduleVersion: string) {
-        const hash = sanitize(sha256().update(`${moduleName}${moduleVersion}`).digest('hex'));
+        const hash = sanitize(computeHash(`${moduleName}${moduleVersion}`, 'SHA256'));
         return Uri.file(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts', hash, 'index.js')).toString();
     }
     test('Prompt to use CDN', async () => {

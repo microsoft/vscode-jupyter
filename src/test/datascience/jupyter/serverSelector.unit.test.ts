@@ -54,7 +54,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const picker = mock(JupyterUriProviderRegistration);
         const crypto = mock(CryptoUtils);
         settings = mock(JupyterSettings);
-        when(crypto.createHash(anyString(), 'string')).thenCall((a1, _a2) => a1);
+        when(crypto.createHash(anyString(), anyString())).thenCall((a1, _a2) => a1);
         quickPick = new MockQuickPick(quickPickSelection);
         const input = new MockInputBox(inputSelection);
         when(applicationShell.createQuickPick()).thenReturn(quickPick!);

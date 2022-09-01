@@ -9,7 +9,7 @@ import { NotebookDocument, Uri, Event } from 'vscode';
 import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
-import * as hashjs from 'hash.js';
+import { computeHash } from '../platform/common/crypto';
 
 export interface IExtensionTestApi extends IExtensionApi {
     serviceContainer: IServiceContainer;
@@ -213,11 +213,7 @@ export function generateScreenShotFileName(contextOrFileName: string | Mocha.Con
     const fullTestNameHash =
         typeof contextOrFileName === 'string'
             ? ''
-            : hashjs
-                  .sha256()
-                  .update(contextOrFileName.currentTest?.fullTitle() || '')
-                  .digest('hex')
-                  .substring(0, 10); // Ensure file names are short enough for windows.
+            : computeHash(contextOrFileName.currentTest?.fullTitle() || '', 'SHA256').substring(0, 10); // Ensure file names are short enough for windows.
     const testTitle = typeof contextOrFileName === 'string' ? '' : contextOrFileName.currentTest?.title || '';
     const counter = (screenShotCount.get(fullTestNameHash) || 0) + 1;
     screenShotCount.set(fullTestNameHash, counter);

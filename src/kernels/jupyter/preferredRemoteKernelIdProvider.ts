@@ -34,7 +34,7 @@ export class PreferredRemoteKernelIdProvider {
         const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
         if (list) {
             // Not using a map as we're only going to store the last 40 items.
-            const fileHash = this.crypto.createHash(uri.toString(), 'string');
+            const fileHash = this.crypto.createHash(uri.toString());
             const entry = list.find((l) => l.fileHash === fileHash);
             traceInfo(`Preferred Remote kernel for ${getDisplayPath(uri)} is ${entry?.kernelId}`);
             return entry?.kernelId;
@@ -54,7 +54,7 @@ export class PreferredRemoteKernelIdProvider {
         const list: KernelIdListEntry[] = cloneDeep(
             this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, [])
         );
-        const fileHash = this.crypto.createHash(uri.toString(), 'string');
+        const fileHash = this.crypto.createHash(uri.toString());
         const index = list.findIndex((l) => l.fileHash === fileHash);
         // Always remove old spot (we'll push on the back for new ones)
         if (index >= 0) {
