@@ -22,7 +22,7 @@ export async function createActiveInterpreterController(
     if (pythonInterpreter) {
         // Ensure that the controller corresponding to the active interpreter
         // has been successfully created
-        const spec = createInterpreterKernelSpec(pythonInterpreter);
+        const spec = await createInterpreterKernelSpec(pythonInterpreter);
         const metadata: PythonKernelConnectionMetadata = {
             kind: 'startUsingPythonInterpreter',
             kernelSpec: spec,

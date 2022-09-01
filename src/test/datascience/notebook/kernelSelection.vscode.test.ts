@@ -169,7 +169,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             fs
                 .readFileSync(nbFile1.fsPath)
                 .toString('utf8')
-                .replace('<hash>', getInterpreterHash({ uri: venvNoKernelPythonPath }))
+                .replace('<hash>', await getInterpreterHash({ uri: venvNoKernelPythonPath }))
         );
         await closeActiveWindows();
         sinon.restore();

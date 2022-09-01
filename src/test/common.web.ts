@@ -19,7 +19,7 @@ async function captureScreenShot(contextOrFileName: string | Mocha.Context) {
     if (!isCI) {
         return;
     }
-    const filename = generateScreenShotFileName(contextOrFileName);
+    const filename = await generateScreenShotFileName(contextOrFileName);
     try {
         await ClientAPI.captureScreenShot(filename);
         console.info(`Screenshot captured into ${filename}`);

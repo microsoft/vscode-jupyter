@@ -14,7 +14,7 @@ import { IIPyWidgetScriptManager } from '../types';
 import { StopWatch } from '../../../../platform/common/utils/stopWatch';
 import { isCI } from '../../../../platform/common/constants';
 
-export function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderName: string, contents: string) {
+export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderName: string, contents: string) {
     // Look for `require.config(` or `window["require"].config` or `window['requirejs'].config`
     const patternsToLookFor = [
         'require.config({',
@@ -28,7 +28,7 @@ export function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderNa
         '["requirejs"]["config"]({',
         "['requirejs']['config']({"
     ];
-    const widgetFolderNameHash = getTelemetrySafeHashedString(widgetFolderName);
+    const widgetFolderNameHash = await getTelemetrySafeHashedString(widgetFolderName);
     let indexOfRequireConfig = 0;
     let patternUsedToRegisterRequireConfig: string | undefined;
     while (indexOfRequireConfig <= 0 && patternsToLookFor.length) {

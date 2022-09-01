@@ -224,7 +224,7 @@ export async function runCellAndVerifyUpdateOfPreferredRemoteKernelId(
     // If we nb it as soon as output appears, its possible the kernel id hasn't been saved yet & we mess that up.
     // Optionally we could wait for 100ms.
     await waitForCondition(
-        async () => !!remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri),
+        async () => !!(await remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri)),
         5_000,
         'Remote Kernel id not saved'
     );

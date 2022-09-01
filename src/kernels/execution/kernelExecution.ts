@@ -258,7 +258,7 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
     public override async interrupt(sessionPromise?: Promise<IKernelConnectionSession>): Promise<InterruptResult> {
-        trackKernelResourceInformation(this.kernel.resourceUri, { interruptKernel: true });
+        await trackKernelResourceInformation(this.kernel.resourceUri, { interruptKernel: true });
         const executionQueue = this.documentExecutions.get(this.kernel.notebook);
         if (!executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             return InterruptResult.Success;
@@ -286,7 +286,7 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
     public override async restart(sessionPromise?: Promise<IKernelConnectionSession>): Promise<void> {
-        trackKernelResourceInformation(this.kernel.resourceUri, { restartKernel: true });
+        await trackKernelResourceInformation(this.kernel.resourceUri, { restartKernel: true });
         const executionQueue = this.documentExecutions.get(this.kernel.notebook);
         // Possible we don't have a notebook.
         const session = sessionPromise ? await sessionPromise.catch(() => undefined) : undefined;

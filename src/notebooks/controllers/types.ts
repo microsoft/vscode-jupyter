@@ -119,7 +119,7 @@ export interface IKernelRankingHelper {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         notebookMetadata: INotebookMetadata | undefined
-    ): boolean;
+    ): Promise<boolean>;
 }
 
 export const IControllerDefaultService = Symbol('IControllerDefaultService');

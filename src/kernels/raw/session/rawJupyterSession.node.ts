@@ -74,7 +74,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
     public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Save the resource that we connect with
         let newSession: RawSession;
-        trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
+        await trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
         const stopWatch = new StopWatch();
         try {
             // Try to start up our raw session, allow for cancellation or timeout

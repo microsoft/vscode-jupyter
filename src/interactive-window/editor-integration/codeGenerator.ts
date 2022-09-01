@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 'use strict';
-import * as hashjs from 'hash.js';
 import {
     Disposable,
     NotebookCellExecutionStateChangeEvent,
@@ -21,6 +20,7 @@ import { IConfigurationService, IDisposableRegistry } from '../../platform/commo
 import { uncommentMagicCommands } from './cellFactory';
 import { CellMatcher } from './cellMatcher';
 import { IGeneratedCode, IInteractiveWindowCodeGenerator, IGeneratedCodeStore, InteractiveCellMetadata } from './types';
+import { computeHash } from '../../platform/common/crypto';
 
 // This class provides generated code for debugging jupyter cells. Call getGeneratedCode just before starting debugging to compute all of the
 // generated codes for cells & update the source maps in the python debugger.
@@ -58,7 +58,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         this.executionCount = 0;
     }
 
-    public generateCode(
+    public async generateCode(
         metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id' | 'interactiveWindowCellMarker'>,
         cellIndex: number,
         debug: boolean,
@@ -122,7 +122,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         this.cellIndexesCounted[e.cell.index] = true;
     }
 
-    private generateCodeImpl(
+    private async generateCodeImpl(
         metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id' | 'interactiveWindowCellMarker'>,
         expectedCount: number,
         debug: boolean,
@@ -166,7 +166,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
 
         const hashedCode = stripped.join('');
         const realCode = doc.getText(new Range(new Position(cellLine, 0), endLine.rangeIncludingLineBreak.end));
-        const hashValue = hashjs.sha1().update(hashedCode).digest('hex').substring(0, 12);
+        const hashValue = (await computeHash(hashedCode, 'SHA1')).substring(0, 12);
         const runtimeFile = this.getRuntimeFile(hashValue, expectedCount);
         // If we're debugging reduce one line for the `breakpoint()` statement added by us.
         const lineOffsetRelativeToIndexOfFirstLineInCell = debug ? -1 : 0;

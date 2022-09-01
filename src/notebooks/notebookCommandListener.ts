@@ -213,7 +213,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
 
         if (kernel) {
             sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.RestartKernelCommand);
-            trackKernelResourceInformation(kernel.resourceUri, { restartKernel: true });
+            await trackKernelResourceInformation(kernel.resourceUri, { restartKernel: true });
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage();
