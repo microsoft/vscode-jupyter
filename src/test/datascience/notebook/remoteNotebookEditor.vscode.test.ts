@@ -222,7 +222,6 @@ suite.only('DataScience - VSCode Notebook - (Remote Execution)', function () {
 
         // Now that we don't have any remote kernels, connect to a remote jupyter server.
         await startJupyterServer();
-        await controllerLoader.loadControllers(true);
 
         // Verify we have a remote kernel spec.
         await waitForCondition(
