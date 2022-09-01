@@ -281,7 +281,7 @@ suite('VSCode Notebook - Run By Line', function () {
                 return getCellOutputs(cell).includes('sleepy');
             },
             defaultNotebookTestTimeout,
-            'Print during time loop is not working',
+            `Print during time loop is not working. Outputs: ${getCellOutputs(cell)}}`,
             1000
         );
         await commandManager.executeCommand(Commands.RunByLineStop);
