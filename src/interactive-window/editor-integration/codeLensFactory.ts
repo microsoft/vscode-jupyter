@@ -234,7 +234,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         }
 
         let commandsToBeDisabled: string[] = [];
-        // If workspace is not trusted, then exclude execution related commands.
+        // If workspace is not trusted, then exclude execution related commands. yeah
         if (!this.workspace.isTrusted) {
             commandsToBeDisabled = [
                 ...CodeLensCommands.DebuggerCommands,
