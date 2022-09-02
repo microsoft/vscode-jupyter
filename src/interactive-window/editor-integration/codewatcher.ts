@@ -115,7 +115,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.codeLenses;
     }
 
-    @capturePerfTelemetry(Telemetry.DebugCurrentCell)
+    @captureUsageTelemetry(Telemetry.DebugCurrentCell)
     public async debugCurrentCell() {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return;
@@ -179,7 +179,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runFileInteractiveInternal(false);
     }
 
-    @capturePerfTelemetry(Telemetry.DebugFileInteractive)
+    @captureUsageTelemetry(Telemetry.DebugFileInteractive)
     public async debugFileInteractive() {
         return this.runFileInteractiveInternal(true);
     }
@@ -313,7 +313,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(range, advance);
     }
 
-    @capturePerfTelemetry(Telemetry.DebugCurrentCell)
+    @captureUsageTelemetry(Telemetry.DebugCurrentCell)
     public async debugCell(range: Range): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return;

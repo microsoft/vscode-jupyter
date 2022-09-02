@@ -418,7 +418,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @capturePerfTelemetry(Telemetry.DebugStepOver)
+    @captureUsageTelemetry(Telemetry.DebugStepOver)
     private async debugStepOver(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession) {
@@ -426,7 +426,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @capturePerfTelemetry(Telemetry.DebugStop)
+    @captureUsageTelemetry(Telemetry.DebugStop)
     private async debugStop(uri: Uri): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession && this.interactiveWindowProvider) {
@@ -444,7 +444,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @capturePerfTelemetry(Telemetry.DebugContinue)
+    @captureUsageTelemetry(Telemetry.DebugContinue)
     private async debugContinue(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession) {

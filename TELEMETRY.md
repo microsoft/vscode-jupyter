@@ -96,10 +96,6 @@ Expand each section to see more information about that event.
     Telemetry event sent when user hits the `continue` button while debugging IW  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.DEBUG_CURRENT_CELL  (Telemetry.DebugCurrentCell)  
@@ -108,10 +104,6 @@ Expand each section to see more information about that event.
     Telemetry event sent when user debugs the cell in the IW  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.DEBUG_FILE_INTERACTIVE  (Telemetry.DebugFileInteractive)  
@@ -120,10 +112,6 @@ Expand each section to see more information about that event.
     Telemetry event sent when user debugs the file in the IW  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.DEBUG_STEP_OVER  (Telemetry.DebugStepOver)  
@@ -132,10 +120,6 @@ Expand each section to see more information about that event.
     Telemetry event sent when user hits the `step over` button while debugging IW  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.DEBUG_STOP  (Telemetry.DebugStop)  
@@ -144,10 +128,6 @@ Expand each section to see more information about that event.
     Telemetry event sent when user hits the `stop` button while debugging IW  
     ```
 
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DATASCIENCE.DEBUGGING.CLICKED_ON_SETUP  (DebuggingTelemetry.clickedOnSetup)  
