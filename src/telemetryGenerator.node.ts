@@ -646,7 +646,7 @@ function generateDocumentationForCommonTypes(fileNames: string[]): void {
     }
 }
 
-function generateDocumentation(fileNames: string[]): string | undefined {
+function generateDocumentation(fileNames: string[]): void {
     const configFile = ts.convertCompilerOptionsFromJson(
         JSON.parse(fs.readFileSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tsconfig.json'), 'utf8')),
         ''
@@ -815,8 +815,7 @@ function generateDocumentation(fileNames: string[]): string | undefined {
                 });
             });
         });
-        // return 'Has errors, check the logs';
-        return '';
+        throw new Error('Has errors, check the logs');
     }
 }
 
@@ -977,13 +976,10 @@ async function generateTelemetryOutput() {
     return generateDocumentation(files);
 }
 
-const promise = generateTelemetryOutput().catch((ex) => {
-    console.error(`Failed to generate telemetry`, ex);
-    return 'Failed';
-});
+const promise = generateTelemetryOutput();
 /**
  * Returns an error message if there are any errors, else returns undefined.
  */
-export default async function (): Promise<string | undefined> {
-    return await promise;
+export default async function (): Promise<void> {
+    return promise;
 }
