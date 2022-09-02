@@ -4643,12 +4643,6 @@ In such cases we do not notify user of any failures or the like.
             - `'selectAnotherInterpreter'`  
 
 
-* DS_INTERNAL.SETTINGS  (Telemetry.DataScienceSettings)  
-      Owner: [@unknown](https://github.com/unknown)  
-       <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  
-       <span style="color:red">Add jsDoc comments to describe this event.</span>  
-
-
 * DS_INTERNAL.SHIFTENTER_BANNER_SHOWN  (Telemetry.ShiftEnterBannerShown)  
       Owner: [@amunger](https://github.com/amunger)  
     ```
