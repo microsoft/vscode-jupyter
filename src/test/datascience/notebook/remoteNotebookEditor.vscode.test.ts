@@ -287,7 +287,16 @@ suite.only('DataScience - VSCode Notebook - (Remote Execution)', function () {
             { result: DataScience.jupyterSelfCertEnable(), clickImmediately: true }
         );
         await startJupyterServer(undefined, true);
-        await controllerLoader.loadControllers(true);
+
+        await waitForCondition(
+            async () => {
+                const controllers = controllerRegistration.registered;
+                return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
+            },
+            defaultNotebookTestTimeout,
+            'Should have at least one remote controller'
+        );
+
         const { editor } = await openNotebook(ipynbFile);
         await waitForCondition(() => prompt.displayed, defaultNotebookTestTimeout, 'Prompt not displayed');
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE, true);
