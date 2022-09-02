@@ -16,6 +16,7 @@ import { IExtensionTestApi, setAutoSaveDelayInWorkspaceRoot, waitForCondition } 
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants.node';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
+import { captureScreenShot } from '../common';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
 suite('Smoke Tests', () => {
@@ -35,6 +36,9 @@ suite('Smoke Tests', () => {
     suiteTeardown(closeActiveWindows);
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this);
+        }
         await closeActiveWindows();
         traceInfo(`End Test Compelete ${this.currentTest?.title}`);
     });
