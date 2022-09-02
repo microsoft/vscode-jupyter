@@ -158,7 +158,10 @@ exports.dumpTestSummary = async () => {
                     case 'fail': {
                         const stackFrames = (output.err.stack || '').split(/\r?\n/);
                         const line1 = stackFrames.shift() || '';
-                        const fullTestNameHash = (await computeHash(output.fullTitle() || '', 'SHA-256')).substring(0, 10);
+                        const fullTestNameHash = (await computeHash(output.fullTitle() || '', 'SHA-256')).substring(
+                            0,
+                            10
+                        );
                         const fileNamePrefix = `${output.title}_${fullTestNameHash}`.replace(/[\W]+/g, '_');
                         const assertionError = {
                             ename: '',
