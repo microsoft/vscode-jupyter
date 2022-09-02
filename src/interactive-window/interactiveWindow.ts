@@ -10,7 +10,6 @@ import {
     NotebookCellData,
     NotebookCellKind,
     NotebookDocument,
-    NotebookEditorRevealType,
     NotebookRange,
     Uri,
     Range,
@@ -721,13 +720,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private revealCell(notebookCell: NotebookCell) {
         const notebookRange = new NotebookRange(notebookCell.index, notebookCell.index + 1);
         this.pendingNotebookScrolls.push(notebookRange);
-        // This will always try to reveal the whole cell--input + output combined
-        setTimeout(() => {
-            this.notebookEditor.revealRange(notebookRange, NotebookEditorRevealType.Default);
-
-            // No longer pending
-            this.pendingNotebookScrolls.shift();
-        }, 200); // Rendering output is async so the output is not guaranteed to immediately exist
     }
 
     public async hasCell(id: string): Promise<boolean> {
