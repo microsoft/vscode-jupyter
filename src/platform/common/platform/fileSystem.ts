@@ -11,7 +11,7 @@ import * as uriPath from '../../vscode-path/resources';
 import uuid from 'uuid/v4';
 import { isFileNotFoundError } from './errors';
 import { traceError } from '../../logging';
-import { computeHash } from '../crypto';
+import { computeHash } from '../hash';
 
 export const ENCODING = 'utf8';
 
@@ -125,6 +125,6 @@ export class FileSystem implements IFileSystem {
         // The reason for lstat rather than stat is not clear...
         const stat = await this.stat(filename);
         const data = `${stat.ctime}-${stat.mtime}`;
-        return computeHash(data, 'SHA512');
+        return computeHash(data, 'SHA-512');
     }
 }

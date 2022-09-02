@@ -95,7 +95,7 @@ gulp.task('validateTranslationFiles', (done) => {
 });
 
 gulp.task('printTestResults', async (done) => {
-    dumpTestSummary();
+    await dumpTestSummary();
     done();
 });
 

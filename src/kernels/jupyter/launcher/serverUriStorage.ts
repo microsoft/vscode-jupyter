@@ -273,10 +273,10 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     private async getUriAccountKey(): Promise<string> {
         if (this.workspaceService.rootFolder) {
             // Folder situation
-            return this.crypto.createHash(getFilePath(this.workspaceService.rootFolder), 'SHA512');
+            return this.crypto.createHash(getFilePath(this.workspaceService.rootFolder), 'SHA-512');
         } else if (this.workspaceService.workspaceFile) {
             // Workspace situation
-            return this.crypto.createHash(getFilePath(this.workspaceService.workspaceFile), 'SHA512');
+            return this.crypto.createHash(getFilePath(this.workspaceService.workspaceFile), 'SHA-512');
         }
         return this.appEnv.machineId; // Global key when no folder or workspace file
     }

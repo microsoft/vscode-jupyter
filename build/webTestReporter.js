@@ -10,9 +10,9 @@ const dedent = require('dedent');
 const { EventEmitter } = require('events');
 const colors = require('colors');
 const core = require('@actions/core');
-const hashjs = require('hash.js');
 const glob = require('glob');
 const { ExtensionRootDir } = require('./constants');
+const { computeHash } = require('../src/platform/msrCrypto/hash');
 
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
 const webTestSummaryJsonFile = path.join(__dirname, '..', 'testresults.json');
@@ -92,7 +92,7 @@ exports.startReportServer = async function () {
     });
 };
 
-exports.dumpTestSummary = () => {
+exports.dumpTestSummary = async () => {
     try {
         const summary = JSON.parse(fs.readFileSync(webTestSummaryJsonFile).toString());
         const runner = new EventEmitter();
@@ -106,120 +106,118 @@ exports.dumpTestSummary = () => {
         let passedCount = 0;
         mocha.reporters.Base.useColors = true;
         colors.enable();
-        summary.forEach((output) => {
-            output = JSON.parse(JSON.stringify(output));
-            // mocha expects test objects to have a method `slow, fullTitle, titlePath`.
-            ['slow', 'fullTitle', 'titlePath', 'isPending', 'currentRetry'].forEach((fnName) => {
-                const value = output[fnName];
-                output[fnName] = () => value;
-            });
-            // Tests have a parent with a title, used by xunit.
-            const currentParent = output.parent || { fullTitle: '' };
-            output.parent = {
-                fullTitle: () => ('fullTitle' in currentParent ? currentParent.fullTitle : '') || ''
-            };
-            if ('stats' in output) {
-                reportWriter.stats = { ...output.stats };
-                Object.assign(runner.stats, output.stats);
-            }
-            if (output.event === 'fail') {
-                reportWriter.failures.push(output);
-            }
-            runner.emit(output.event, output, output.err);
-
-            switch (output.event) {
-                case 'pass': {
-                    passedCount++;
-                    break;
+        await Promise.all(
+            summary.map(async (output) => {
+                output = JSON.parse(JSON.stringify(output));
+                // mocha expects test objects to have a method `slow, fullTitle, titlePath`.
+                ['slow', 'fullTitle', 'titlePath', 'isPending', 'currentRetry'].forEach((fnName) => {
+                    const value = output[fnName];
+                    output[fnName] = () => value;
+                });
+                // Tests have a parent with a title, used by xunit.
+                const currentParent = output.parent || { fullTitle: '' };
+                output.parent = {
+                    fullTitle: () => ('fullTitle' in currentParent ? currentParent.fullTitle : '') || ''
+                };
+                if ('stats' in output) {
+                    reportWriter.stats = { ...output.stats };
+                    Object.assign(runner.stats, output.stats);
                 }
-                case 'suite': {
-                    indent += 1;
-                    const indentString = '#'.repeat(indent);
-                    cells.push({
-                        cell_type: 'markdown',
-                        metadata: {
-                            collapsed: true
-                        },
-                        source: dedent`
+                if (output.event === 'fail') {
+                    reportWriter.failures.push(output);
+                }
+                runner.emit(output.event, output, output.err);
+
+                switch (output.event) {
+                    case 'pass': {
+                        passedCount++;
+                        break;
+                    }
+                    case 'suite': {
+                        indent += 1;
+                        const indentString = '#'.repeat(indent);
+                        cells.push({
+                            cell_type: 'markdown',
+                            metadata: {
+                                collapsed: true
+                            },
+                            source: dedent`
                                 ${indentString} ${output.title}
                                 `
-                    });
-                    break;
-                }
-                case 'suite end': {
-                    indent -= 1;
-                    break;
-                }
-                case 'pending': {
-                    skippedTests.push(output);
-                    break;
-                }
-                case 'fail': {
-                    const stackFrames = (output.err.stack || '').split(/\r?\n/);
-                    const line1 = stackFrames.shift() || '';
-                    const fullTestNameHash = hashjs
-                        .sha256()
-                        .update(output.fullTitle() || '')
-                        .digest('hex')
-                        .substring(0, 10);
-                    const fileNamePrefix = `${output.title}_${fullTestNameHash}`.replace(/[\W]+/g, '_');
-                    const assertionError = {
-                        ename: '',
-                        evalue: '',
-                        output_type: 'error',
-                        traceback: [`${colors.red(line1)}\n`, stackFrames.join('\n')]
-                    };
-                    const consoleOutputs = (output.consoleOutput || [])
-                        .map((item) => {
-                            const time = item.time ? new Date(item.time) : '';
-                            const timeStr = time ? `${time.toLocaleTimeString()}.${time.getMilliseconds()}` : '';
-                            const colorizedTime = timeStr ? `${colors.blue(timeStr)}: ` : '';
-                            switch (item.category) {
-                                case 'warn':
-                                    return `${colorizedTime}${colors.yellow(item.output)}`;
-                                case 'error':
-                                    return `${colorizedTime}${colors.red(item.output)}`;
-                                default:
-                                    return `${colorizedTime}${item.output}`;
-                                    break;
-                            }
-                        })
-                        .map((item) => `${item}\n`);
-                    const consoleOutput = {
-                        name: 'stdout',
-                        output_type: 'stream',
-                        text: consoleOutputs
-                    };
-                    // Look for a screenshot file with the above prefix & attach that to the cell outputs.
-                    console.error(`Looking for screenshot file ${fileNamePrefix}*-screenshot.png`);
-                    const screenshots = glob
-                        .sync(`${fileNamePrefix}*-screenshot.png`, { cwd: ExtensionRootDir })
-                        .map((file) => {
-                            console.error(`Found screenshot file ${file}`);
-                            const contents = Buffer.from(fs.readFileSync(path.join(ExtensionRootDir, file))).toString(
-                                'base64'
-                            );
-                            return {
-                                data: {
-                                    'image/png': contents
-                                },
-                                metadata: {},
-                                output_type: 'display_data'
-                            };
                         });
-                    cells.push({
-                        cell_type: 'code',
-                        metadata: {
-                            collapsed: true
-                        },
-                        source: `#${output.title}`,
-                        execution_count: ++executionCount,
-                        outputs: [assertionError, consoleOutput, ...screenshots]
-                    });
-                    break;
+                        break;
+                    }
+                    case 'suite end': {
+                        indent -= 1;
+                        break;
+                    }
+                    case 'pending': {
+                        skippedTests.push(output);
+                        break;
+                    }
+                    case 'fail': {
+                        const stackFrames = (output.err.stack || '').split(/\r?\n/);
+                        const line1 = stackFrames.shift() || '';
+                        const fullTestNameHash = (await computeHash(output.fullTitle() || '', 'SHA-256')).substring(0, 10);
+                        const fileNamePrefix = `${output.title}_${fullTestNameHash}`.replace(/[\W]+/g, '_');
+                        const assertionError = {
+                            ename: '',
+                            evalue: '',
+                            output_type: 'error',
+                            traceback: [`${colors.red(line1)}\n`, stackFrames.join('\n')]
+                        };
+                        const consoleOutputs = (output.consoleOutput || [])
+                            .map((item) => {
+                                const time = item.time ? new Date(item.time) : '';
+                                const timeStr = time ? `${time.toLocaleTimeString()}.${time.getMilliseconds()}` : '';
+                                const colorizedTime = timeStr ? `${colors.blue(timeStr)}: ` : '';
+                                switch (item.category) {
+                                    case 'warn':
+                                        return `${colorizedTime}${colors.yellow(item.output)}`;
+                                    case 'error':
+                                        return `${colorizedTime}${colors.red(item.output)}`;
+                                    default:
+                                        return `${colorizedTime}${item.output}`;
+                                        break;
+                                }
+                            })
+                            .map((item) => `${item}\n`);
+                        const consoleOutput = {
+                            name: 'stdout',
+                            output_type: 'stream',
+                            text: consoleOutputs
+                        };
+                        // Look for a screenshot file with the above prefix & attach that to the cell outputs.
+                        console.error(`Looking for screenshot file ${fileNamePrefix}*-screenshot.png`);
+                        const screenshots = glob
+                            .sync(`${fileNamePrefix}*-screenshot.png`, { cwd: ExtensionRootDir })
+                            .map((file) => {
+                                console.error(`Found screenshot file ${file}`);
+                                const contents = Buffer.from(
+                                    fs.readFileSync(path.join(ExtensionRootDir, file))
+                                ).toString('base64');
+                                return {
+                                    data: {
+                                        'image/png': contents
+                                    },
+                                    metadata: {},
+                                    output_type: 'display_data'
+                                };
+                            });
+                        cells.push({
+                            cell_type: 'code',
+                            metadata: {
+                                collapsed: true
+                            },
+                            source: `#${output.title}`,
+                            execution_count: ++executionCount,
+                            outputs: [assertionError, consoleOutput, ...screenshots]
+                        });
+                        break;
+                    }
                 }
-            }
-        });
+            })
+        );
 
         if (reportWriter.failures.length) {
             core.setFailed(`${reportWriter.failures.length} tests failed.`);

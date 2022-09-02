@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { KnownKernelLanguageAliases, VSCodeKnownNotebookLanguages } from '../common/constants';
-import { computeHash } from '../common/crypto';
+import { computeHash } from '../common/hash';
 import { traceError } from '../logging';
 
 export async function getTelemetrySafeLanguage(language: string = 'unknown') {
@@ -35,6 +35,6 @@ export function getTelemetrySafeVersion(version: string): string | undefined {
 /**
  * Safe way to send data in telemetry (obfuscate PII).
  */
-export function getTelemetrySafeHashedString(data: string) {
-    return computeHash(data, 'SHA256');
+export async function getTelemetrySafeHashedString(data: string) {
+    return computeHash(data, 'SHA-256');
 }

@@ -198,6 +198,7 @@ function buildConfiguration(bundle) {
             fallback: {
                 fs: false,
                 path: require.resolve('path-browserify'),
+                crypto: require.resolve(path.join(constants.ExtensionRootDir, 'src/platform/msrCrypto/msrCrypto.js')),
                 os: false
             }
         },

@@ -131,6 +131,7 @@ const config = {
             stream: require.resolve('stream-browserify'),
             os: require.resolve('os-browserify'),
             path: require.resolve('path-browserify'),
+            crypto: require.resolve(path.join(constants.ExtensionRootDir, 'src/platform/msrCrypto/msrCrypto.js')),
             fs: false
         }
     },

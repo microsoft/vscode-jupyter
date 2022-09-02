@@ -15,18 +15,7 @@ import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../platform/common/constants';
-import { traceError } from '../../platform/logging';
-const msrCrypto = require('../../platform/msrCrypto/msrCrypto');
-
-// Use window crypto if it's available, otherwise use the msrCrypto module
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const globalMsCrypto = (global?.window as any)?.msCrypto?.subtle?.digest
-    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (global?.window as any)?.msCrypto
-    : undefined;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const windowCrypto = (global?.window as any)?.crypto?.subtle?.digest ? (global?.window as any)?.crypto : undefined;
-const crypto = (globalMsCrypto || windowCrypto || msrCrypto) as Crypto;
+import { computeHash } from '../../platform/common/hash';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -144,17 +133,7 @@ export function createRemoteConnectionInfo(
 }
 
 export async function computeServerId(uri: string) {
-    try {
-        const inputBuffer = new TextEncoder().encode(uri);
-        const hashBuffer = await crypto.subtle.digest({ name: 'SHA-256' }, inputBuffer);
-
-        // Turn into hash string (got this logic from https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest)
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-    } catch (e) {
-        traceError(`Failed to compute server id for ${uri}`, e);
-        throw e;
-    }
+    return computeHash(uri, 'SHA-256');
 }
 
 export function generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {

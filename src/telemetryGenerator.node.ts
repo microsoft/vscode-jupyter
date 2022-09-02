@@ -776,6 +776,11 @@ function generateDocumentation(fileNames: string[]): string | undefined {
                             const properties = comptePropertyGroupsForIntersectionTypes(type, typeChecker);
                             const comment = getCommentForUnions(type);
                             groups.push({ description: comment, properties });
+                        } else if (
+                            type.kind === ts.SyntaxKind.UndefinedKeyword ||
+                            type.kind === ts.SyntaxKind.NeverKeyword
+                        ) {
+                            // Ignore
                         } else {
                             console.error(`Unknown type ${type.kind} in generating the Telemetry Documentation`);
                         }
