@@ -5,6 +5,8 @@ import { injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { Resource } from '../platform/common/types';
 import { StopWatch } from '../platform/common/utils/stopWatch';
+import { ignoreLogging, traceDecoratorVerbose } from '../platform/logging';
+import { TraceOptions } from '../platform/logging/types';
 import { IContributedKernelFinder } from './internalTypes';
 import { IKernelFinder, KernelConnectionMetadata } from './types';
 
@@ -21,9 +23,10 @@ export class KernelFinder implements IKernelFinder {
         this._finders.push(finder);
     }
 
+    @traceDecoratorVerbose('List all kernels', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async listKernels(
         resource: Resource,
-        cancelToken: CancellationToken | undefined,
+        @ignoreLogging() cancelToken: CancellationToken | undefined,
         useCache: 'ignoreCache' | 'useCache' = 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]> {
         this.startTimeForFetching = this.startTimeForFetching ?? new StopWatch();
