@@ -11,7 +11,7 @@ import {
     IBaseKernel
 } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { traceVerbose, traceInfoIfCI } from '../../platform/logging';
 import { IDisposable, IDisposableRegistry, IExtensions } from '../../platform/common/types';
 import { PromiseChain } from '../../platform/common/utils/async';
 import { IKernelSocket as ExtensionKernelSocket } from '../../kernels/types';
@@ -85,7 +85,7 @@ class JupyterKernelService implements IExportedKernelService {
             extensionId: this.callingExtensionId,
             pemUsed: 'onDidChangeKernelSpecifications'
         });
-        traceInfo(`API called from ${this.callingExtensionId}`);
+        traceVerbose(`API called from ${this.callingExtensionId}`);
         return this._onDidChangeKernelSpecifications.event;
     }
     public get onDidChangeKernels(): Event<void> {
@@ -182,7 +182,7 @@ class JupyterKernelService implements IExportedKernelService {
                 // Note: In VS Code, a controller starts a kernel, however the controller only keeps track of the kernel spec.
                 // Hence when we return this connection, we're actually returning the controller's kernel spec & the uri.
                 if (kernel && kernel.session?.kernelId) {
-                    kernelsAlreadyListed.add(kernel.session?.kernelId);
+                    kernelsAlreadyListed.add(kernel.session.kernelId);
                 }
                 kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
@@ -200,7 +200,7 @@ class JupyterKernelService implements IExportedKernelService {
                 // Note: In VS Code, a controller starts a kernel, however the controller only keeps track of the kernel spec.
                 // Hence when we return this connection, we're actually returning the controller's kernel spec & the uri.
                 if (kernel && kernel.session?.kernelId) {
-                    kernelsAlreadyListed.add(kernel.session?.kernelId);
+                    kernelsAlreadyListed.add(kernel.session.kernelId);
                 }
                 kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),

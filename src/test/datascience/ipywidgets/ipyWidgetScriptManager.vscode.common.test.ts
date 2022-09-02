@@ -100,7 +100,7 @@ suite('IPyWidget Script Manager', function () {
                     context.extensionUri,
                     'tmp',
                     'scripts',
-                    getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
+                    await getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
                     'jupyter'
                 );
                 assert.strictEqual(baseUrl!.toString(), expectedDir.toString());
@@ -120,7 +120,7 @@ suite('IPyWidget Script Manager', function () {
             context.extensionUri,
             'tmp',
             'scripts',
-            getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
+            await getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
             'jupyter'
         );
         const nbExtensionsFolder = Uri.joinPath(expectedDir, 'nbextensions');

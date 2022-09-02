@@ -125,7 +125,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         if (!activeInterpreter || !interpreter1 || !interpreter2 || !interpreter3) {
             throw new Error('Unable to get information for interpreter 1');
         }
-        activeInterpreterPath = activeInterpreter?.uri;
+        activeInterpreterPath = activeInterpreter.uri;
         venvNoKernelPythonPath = interpreter1.uri;
         venvKernelPythonPath = interpreter2.uri;
         venvNoRegPythonPath = interpreter3.uri;
@@ -169,7 +169,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             fs
                 .readFileSync(nbFile1.fsPath)
                 .toString('utf8')
-                .replace('<hash>', getInterpreterHash({ uri: venvNoKernelPythonPath }))
+                .replace('<hash>', await getInterpreterHash({ uri: venvNoKernelPythonPath }))
         );
         await closeActiveWindows();
         sinon.restore();

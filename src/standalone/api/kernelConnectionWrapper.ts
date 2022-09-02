@@ -71,7 +71,7 @@ export class KernelConnectionWrapper extends BaseKernelConnectionWrapper {
         if (!this.kernel.session?.kernel) {
             throw new Error('Restart failed');
         }
-        this.startHandleKernelMessages(this.kernel.session?.kernel);
+        this.startHandleKernelMessages(this.kernel.session.kernel);
     }
     async restart(): Promise<void> {
         if (this.possibleKernelConnection) {
@@ -84,7 +84,7 @@ export class KernelConnectionWrapper extends BaseKernelConnectionWrapper {
         if (!this.kernel.session?.kernel) {
             throw new Error('Restart failed');
         }
-        this.startHandleKernelMessages(this.kernel.session?.kernel);
+        this.startHandleKernelMessages(this.kernel.session.kernel);
     }
     protected override startHandleKernelMessages(kernelConnection: Kernel.IKernelConnection) {
         this._kernelConnection = kernelConnection;

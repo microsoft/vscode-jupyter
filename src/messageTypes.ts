@@ -135,7 +135,7 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse]: WidgetScriptSource;
     public [IPyWidgetMessages.IPyWidgets_Ready]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_IsOnline]: { isOnline: boolean };
-    public [IPyWidgetMessages.IPyWidgets_logMessage]: string;
+    public [IPyWidgetMessages.IPyWidgets_logMessage]: { category: 'error' | 'verbose'; message: string };
     public [IPyWidgetMessages.IPyWidgets_onRestartKernel]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_onKernelChanged]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;

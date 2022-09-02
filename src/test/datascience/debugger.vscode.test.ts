@@ -222,7 +222,7 @@ suite('VSCode Notebook - Run By Line', function () {
         assert.equal(stack2.stackFrames[0].line, 4, 'Stopped at the wrong line');
     });
 
-    test('Does not stop in other cell', async function () {
+    test.skip('Does not stop in other cell', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
         const cell0 = await insertCodeCell('def foo():\n    print(1)');
         const cell1 = await insertCodeCell('foo()');
@@ -245,8 +245,8 @@ suite('VSCode Notebook - Run By Line', function () {
         );
     });
 
-    test('Run a second time after interrupt', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/8753
+    test.skip('Run a second time after interrupt', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/11245
         await insertCodeCell(
             'import time\nfor i in range(0,50):\n  time.sleep(.1)\n  print("sleepy")\nprint("final " + "output")',
             {
@@ -281,7 +281,7 @@ suite('VSCode Notebook - Run By Line', function () {
                 return getCellOutputs(cell).includes('sleepy');
             },
             defaultNotebookTestTimeout,
-            'Print during time loop is not working',
+            `Print during time loop is not working. Outputs: ${getCellOutputs(cell)}}`,
             1000
         );
         await commandManager.executeCommand(Commands.RunByLineStop);

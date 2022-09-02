@@ -52,7 +52,10 @@ export type ContextualTelemetryProps = {
     capturedEnvVars?: boolean;
 };
 
-export function trackKernelResourceInformation(resource: Resource, information: Partial<ContextualTelemetryProps>) {
+export async function trackKernelResourceInformation(
+    resource: Resource,
+    information: Partial<ContextualTelemetryProps>
+) {
     if (!resource) {
         return;
     }
@@ -60,14 +63,14 @@ export function trackKernelResourceInformation(resource: Resource, information: 
     const [currentData, context] = trackedInfo.get(key) || [
         {
             resourceType: getResourceType(resource),
-            resourceHash: resource ? getTelemetrySafeHashedString(resource.toString()) : undefined,
-            kernelSessionId: getTelemetrySafeHashedString(Date.now().toString())
+            resourceHash: resource ? await getTelemetrySafeHashedString(resource.toString()) : undefined,
+            kernelSessionId: await getTelemetrySafeHashedString(Date.now().toString())
         },
         { previouslySelectedKernelConnectionId: '' }
     ];
 
     if (information.restartKernel) {
-        currentData.kernelSessionId = getTelemetrySafeHashedString(Date.now().toString());
+        currentData.kernelSessionId = await getTelemetrySafeHashedString(Date.now().toString());
         currentData.interruptCount = 0;
         currentData.restartCount = (currentData.restartCount || 0) + 1;
     }
@@ -105,7 +108,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
             context.previouslySelectedKernelConnectionId &&
             context.previouslySelectedKernelConnectionId !== newKernelConnectionId
         ) {
-            currentData.kernelSessionId = getTelemetrySafeHashedString(Date.now().toString());
+            currentData.kernelSessionId = await getTelemetrySafeHashedString(Date.now().toString());
             currentData.switchKernelCount = (currentData.switchKernelCount || 0) + 1;
         }
         let language: string | undefined;
@@ -123,8 +126,11 @@ export function trackKernelResourceInformation(resource: Resource, information: 
             default:
                 break;
         }
-        currentData.kernelLanguage = getTelemetrySafeLanguage(language);
-        currentData.kernelId = getTelemetrySafeHashedString(kernelConnection.id);
+        [currentData.kernelLanguage, currentData.kernelId] = await Promise.all([
+            getTelemetrySafeLanguage(language),
+            getTelemetrySafeHashedString(kernelConnection.id)
+        ]);
+
         // Keep track of the kernel that was last selected.
         context.previouslySelectedKernelConnectionId = kernelConnection.id;
 
@@ -135,7 +141,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
                 interpreter
             );
             currentData.pythonEnvironmentType = interpreter.envType;
-            currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(
+            currentData.pythonEnvironmentPath = await getTelemetrySafeHashedString(
                 getFilePath(getNormalizedInterpreterPath(interpreter.uri))
             );
             pythonEnvironmentsByHash.set(currentData.pythonEnvironmentPath, interpreter);
@@ -160,11 +166,11 @@ export function trackKernelResourceInformation(resource: Resource, information: 
 /**
  * Initializes the Interactive/Notebook telemetry as a result of user action.
  */
-export function initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+export async function initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
     resourceUri: Resource,
     kernelConnection: KernelConnectionMetadata
 ) {
-    trackKernelResourceInformation(resourceUri, { kernelConnection, userExecutedCell: true });
+    await trackKernelResourceInformation(resourceUri, { kernelConnection, userExecutedCell: true });
 }
 
 export function clearInterruptCounter(resource: Resource) {

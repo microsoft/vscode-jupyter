@@ -78,6 +78,7 @@ import { noop } from '../../../platform/common/utils/misc';
         let preferredRemote: PreferredRemoteKernelIdProvider;
         let pythonExecService: IPythonExecutionService;
         let kernelRankHelper: IKernelRankingHelper;
+
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -96,7 +97,6 @@ import { noop } from '../../../platform/common/utils/misc';
              */
             globalKernelSpecs?: KernelSpec.ISpecModel[];
         };
-
         async function initialize(
             testData: TestData,
             activeInterpreter?: PythonEnvironment,
@@ -492,17 +492,7 @@ import { noop } from '../../../platform/common/utils/misc';
                 FOO: 'BAR'
             }
         };
-        const kernelspecRegisteredByOlderVersionOfExtension: KernelSpec.ISpecModel = {
-            argv: [python38VenvEnv.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
-            display_name: 'Kernelspec registered by older version of extension',
-            language: 'python',
-            // Most recent versions of extensions used a custom prefix in kernelnames.
-            name: `${getInterpreterKernelSpecName(python38VenvEnv)}kernelSpecRegisteredByOlderVersionOfExtension`,
-            resources: {},
-            env: {
-                HELLO: 'World'
-            }
-        };
+        let kernelspecRegisteredByOlderVersionOfExtension: KernelSpec.ISpecModel;
         const kernelspecRegisteredByVeryOldVersionOfExtension: KernelSpec.ISpecModel = {
             argv: [python38VenvEnv.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             display_name: 'Kernelspec registered by very old version of extension',
@@ -523,6 +513,21 @@ import { noop } from '../../../platform/common/utils/misc';
                 }
             }
         };
+        suiteSetup(async () => {
+            kernelspecRegisteredByOlderVersionOfExtension = {
+                argv: [python38VenvEnv.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
+                display_name: 'Kernelspec registered by older version of extension',
+                language: 'python',
+                // Most recent versions of extensions used a custom prefix in kernelnames.
+                name: `${await getInterpreterKernelSpecName(
+                    python38VenvEnv
+                )}kernelSpecRegisteredByOlderVersionOfExtension`,
+                resources: {},
+                env: {
+                    HELLO: 'World'
+                }
+            };
+        });
 
         async function generateExpectedKernels(
             expectedGlobalKernelSpecs: KernelSpec.ISpecModel[],
@@ -581,7 +586,7 @@ import { noop } from '../../../platform/common/utils/misc';
             );
             await Promise.all(
                 expectedInterpreters.map(async (interpreter) => {
-                    const spec = createInterpreterKernelSpec(interpreter, tempDirForKernelSpecs);
+                    const spec = await createInterpreterKernelSpec(interpreter, tempDirForKernelSpecs);
                     expectedKernelSpecs.push(<KernelConnectionMetadata>{
                         id: getKernelId(spec!, interpreter),
                         kernelSpec: spec,
@@ -1550,7 +1555,7 @@ import { noop } from '../../../platform/common/utils/misc';
                                         name: 'someUnknownNameThatWillNeverMatch'
                                     },
                                     interpreter: {
-                                        hash: getInterpreterHash(condaEnv1)
+                                        hash: await getInterpreterHash(condaEnv1)
                                     },
                                     language_info: { name: PYTHON_LANGUAGE },
                                     orig_nbformat: 4
@@ -1755,9 +1760,9 @@ import { noop } from '../../../platform/common/utils/misc';
             };
 
             // Set up the preferred remote id
-            when(preferredRemote.getPreferredRemoteKernelId(anything())).thenReturn(activeID);
+            when(preferredRemote.getPreferredRemoteKernelId(anything())).thenResolve(activeID);
 
-            const isExactMatch = kernelRankHelper.isExactMatch(nbUri, liveSpec, {
+            const isExactMatch = await kernelRankHelper.isExactMatch(nbUri, liveSpec, {
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
             });
@@ -1768,7 +1773,7 @@ import { noop } from '../../../platform/common/utils/misc';
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 { kind: 'startUsingLocalKernelSpec', id: 'hi', kernelSpec: {} as any },
                 {
@@ -1783,7 +1788,7 @@ import { noop } from '../../../platform/common/utils/misc';
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1810,7 +1815,7 @@ import { noop } from '../../../platform/common/utils/misc';
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1839,7 +1844,7 @@ import { noop } from '../../../platform/common/utils/misc';
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1866,7 +1871,7 @@ import { noop } from '../../../platform/common/utils/misc';
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1895,7 +1900,7 @@ import { noop } from '../../../platform/common/utils/misc';
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',
@@ -1920,7 +1925,7 @@ import { noop } from '../../../platform/common/utils/misc';
             await initialize(testData);
             const nbUri = Uri.file('test.ipynb');
 
-            const isExactMatch = kernelRankHelper.isExactMatch(
+            const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
                 {
                     kind: 'startUsingLocalKernelSpec',

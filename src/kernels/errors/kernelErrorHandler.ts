@@ -373,7 +373,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             );
             this.sendKernelTelemetry(err, errorContext, resource, failureInfo?.reason);
             if (failureInfo) {
-                this.showMessageWithMoreInfo(failureInfo?.message, failureInfo?.moreInfoLink).catch(noop);
+                this.showMessageWithMoreInfo(failureInfo.message, failureInfo?.moreInfoLink).catch(noop);
             } else {
                 // These are generic errors, we have no idea what went wrong,
                 // hence add a descriptive prefix (message), that provides more context to the user.

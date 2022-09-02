@@ -246,7 +246,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
             await this.addToUriList(uri, Date.now(), uri);
 
             // Save in the storage (unique account per workspace)
-            const key = this.getUriAccountKey();
+            const key = await this.getUriAccountKey();
             await this.encryptedStorage.store(Settings.JupyterServerRemoteLaunchService, key, uri);
         }
     }
@@ -255,7 +255,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
             return Settings.JupyterServerLocalLaunch;
         } else {
             // Should be stored in encrypted storage based on the workspace
-            const key = this.getUriAccountKey();
+            const key = await this.getUriAccountKey();
             const storedUri = await this.encryptedStorage.retrieve(Settings.JupyterServerRemoteLaunchService, key);
 
             // Update server id if not already set
@@ -270,13 +270,13 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     /**
      * Returns a unique identifier for the current workspace
      */
-    private getUriAccountKey(): string {
+    private async getUriAccountKey(): Promise<string> {
         if (this.workspaceService.rootFolder) {
             // Folder situation
-            return this.crypto.createHash(getFilePath(this.workspaceService.rootFolder), 'string', 'SHA512');
+            return this.crypto.createHash(getFilePath(this.workspaceService.rootFolder), 'SHA512');
         } else if (this.workspaceService.workspaceFile) {
             // Workspace situation
-            return this.crypto.createHash(getFilePath(this.workspaceService.workspaceFile), 'string', 'SHA512');
+            return this.crypto.createHash(getFilePath(this.workspaceService.workspaceFile), 'SHA512');
         }
         return this.appEnv.machineId; // Global key when no folder or workspace file
     }

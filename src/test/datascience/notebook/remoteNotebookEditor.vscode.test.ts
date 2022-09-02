@@ -326,7 +326,7 @@ suite.only('DataScience - VSCode Notebook - (Remote Execution)', function () {
 
         // Verify we have a preferred remote kernel stored.
         assert.isNotEmpty(
-            remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri),
+            await remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri),
             'Preferred remote kernel id cannot be empty'
         );
 
@@ -352,12 +352,14 @@ suite.only('DataScience - VSCode Notebook - (Remote Execution)', function () {
         );
 
         // Wait for the preferred remote kernel id to be cleared for this notebook.
+        let preferredKernelId = await remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri);
         await waitForCondition(
-            async () => !remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri),
+            async () => {
+                preferredKernelId = await remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri);
+                return !preferredKernelId;
+            },
             5_000,
-            `Remote Kernel is not empty, instead the value is ${remoteKernelIdProvider.getPreferredRemoteKernelId(
-                nbEditor.notebook.uri
-            )}`
+            () => `Remote Kernel is not empty, instead the value is ${preferredKernelId}`
         );
     });
 });

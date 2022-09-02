@@ -251,7 +251,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 );
                 // If for some reason the session manager refuses to communicate, fall
                 // back to a default. This may not exist, but it's likely.
-                return [createInterpreterKernelSpec()];
+                return [await createInterpreterKernelSpec()];
             }
         } catch (e) {
             traceError(`SessionManager:getKernelSpecs failure: `, e);

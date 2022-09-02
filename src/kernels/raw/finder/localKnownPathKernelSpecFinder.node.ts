@@ -97,7 +97,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                         cancelToken
                     );
                     if (kernelSpec) {
-                        sendKernelSpecTelemetry(kernelSpec, 'local');
+                        sendKernelSpecTelemetry(kernelSpec, 'local').ignoreErrors();
                         results.push(kernelSpec);
                     }
                 } catch (ex) {
@@ -113,7 +113,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
         const originalSpecFiles = new Set<string>();
         results.forEach((r) => {
             if (r.metadata?.originalSpecFile) {
-                originalSpecFiles.add(r.metadata?.originalSpecFile);
+                originalSpecFiles.add(r.metadata.originalSpecFile);
             }
         });
         results = results.filter((r) => !r.specFile || !originalSpecFiles.has(r.specFile));

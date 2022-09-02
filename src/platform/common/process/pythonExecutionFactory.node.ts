@@ -6,8 +6,6 @@ import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IServiceContainer } from '../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
 import { traceDecoratorVerbose, traceError, traceInfo } from '../../logging';
 import { getDisplayPath } from '../platform/fs-paths';
@@ -172,7 +170,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             options.allowEnvironmentFetchExceptions
         );
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
-        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
         if (!hasEnvVars) {
             return this.create({
                 resource: options.resource,

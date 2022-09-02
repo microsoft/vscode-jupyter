@@ -269,7 +269,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (!this.workspace.isTrusted) {
             return;
         }
-        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
+        await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         // Notebook is trusted. Continue to execute cells
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
@@ -473,7 +473,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
-        traceInfo(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
+        traceVerbose(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
         // Start execution now (from the user's point of view)
         let exec = this.createCellExecutionIfNecessary(cell, this.controller);
 
@@ -639,7 +639,7 @@ async function updateNotebookDocumentMetadata(
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
     let metadata = getNotebookMetadata(document) || { orig_nbformat: 3 };
-    const { changed } = updateNotebookMetadata(metadata, kernelConnection, kernelInfo);
+    const { changed } = await updateNotebookMetadata(metadata, kernelConnection, kernelInfo);
     if (changed) {
         const edit = new WorkspaceEdit();
         // Create a clone.

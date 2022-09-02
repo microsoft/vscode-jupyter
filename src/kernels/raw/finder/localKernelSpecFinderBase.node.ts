@@ -275,7 +275,7 @@ export async function loadKernelSpec(
     // from an interpreter location (like a conda environment). Modify the name to make sure it fits
     // the kernel instead
     // kernelJson.originalName = kernelJson.name;
-    kernelJson.name = interpreter ? getInterpreterKernelSpecName(interpreter) : kernelJson.name;
+    kernelJson.name = interpreter ? await getInterpreterKernelSpecName(interpreter) : kernelJson.name;
 
     // Update the display name too if we have an interpreter.
     const isDefaultPythonName = kernelJson.display_name.toLowerCase().match(isDefaultPythonKernelSpecSpecName);

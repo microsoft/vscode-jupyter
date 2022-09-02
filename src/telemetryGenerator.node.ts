@@ -1,6 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// This line should always be right on top.
+/* eslint-disable @typescript-eslint/no-explicit-any */
+if ((Reflect as any).metadata === undefined) {
+    require('reflect-metadata');
+}
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as ts from 'typescript';
 import * as fs from 'fs-extra';
@@ -8,6 +13,8 @@ import glob from 'glob';
 import { initialize } from './test/vscode-mock';
 import { Parser } from 'json2csv';
 import colors from 'colors';
+// eslint-disable-next-line local-rules/node-imports
+import * as path from 'path';
 
 initialize();
 
@@ -20,6 +27,7 @@ import {
     TelemetryEventInfo,
     CommonPropertyAndMeasureTypeNames
 } from './telemetry';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from './test/constants.node';
 const GDPRData = new IEventNamePropertyMapping();
 let gdprEntryOfCurrentlyComputingTelemetryEventName: [name: string, gdpr: TelemetryEventInfo<unknown>] | undefined;
 const errorsByOwners: Record<string, Record<string, EventProblem>> = {};
@@ -598,10 +606,12 @@ function isNodeExported(node: ts.Node): boolean {
 }
 
 /** Generate documentation for all classes in a set of .ts files */
-function generateDocumentationForCommonTypes(fileNames: string[], options: ts.CompilerOptions): void {
-    let host = new TypeScriptLanguageServiceHost(fileNames, options);
-    let languageService = ts.createLanguageService(host, undefined, ts.LanguageServiceMode.Semantic);
-    let program = languageService.getProgram()!;
+function generateDocumentationForCommonTypes(fileNames: string[]): void {
+    const configFile = ts.convertCompilerOptionsFromJson(
+        JSON.parse(fs.readFileSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tsconfig.json'), 'utf8')),
+        ''
+    );
+    const program = ts.createProgram(fileNames, configFile.options);
     const typeChecker = program!.getTypeChecker();
 
     // Visit every sourceFile in the program
@@ -636,15 +646,19 @@ function generateDocumentationForCommonTypes(fileNames: string[], options: ts.Co
     }
 }
 
-function generateDocumentation(fileNames: string[], options: ts.CompilerOptions): string | undefined {
-    let host = new TypeScriptLanguageServiceHost(fileNames, options);
-    let languageService = ts.createLanguageService(host, undefined, ts.LanguageServiceMode.Semantic);
-    let program = languageService.getProgram()!;
+function generateDocumentation(fileNames: string[]): string | undefined {
+    const configFile = ts.convertCompilerOptionsFromJson(
+        JSON.parse(fs.readFileSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tsconfig.json'), 'utf8')),
+        ''
+    );
+    const host = new TypeScriptLanguageServiceHost(fileNames, configFile.options);
+    const languageService = ts.createLanguageService(host, undefined, ts.LanguageServiceMode.Semantic);
+    const program = languageService.getProgram()!;
     const typeChecker = program!.getTypeChecker();
     const entries = new Map<string, TelemetryEntry>();
 
     // First generate documentation for common properties and measures.
-    generateDocumentationForCommonTypes(fileNames, options);
+    generateDocumentationForCommonTypes(fileNames);
 
     // Visit every sourceFile in the program
     if (program) {
@@ -736,7 +750,7 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
                         const description =
                             typeof jsDocNode?.comment === 'string'
                                 ? jsDocNode.comment
-                                : (jsDocNode?.comment || [])?.map((item) => item.getText()).join('\n');
+                                : (jsDocNode?.comment || []).map((item) => item.getText()).join('\n');
                         const currentGdprComment = (
                             gdprEntryOfCurrentlyComputingTelemetryEventName[1].comment || ''
                         ).trim();
@@ -862,8 +876,13 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
     const file = './src/gdpr.ts';
     fs.writeFileSync(file, '');
     fs.appendFileSync(file, gdprHeader);
-
-    Object.keys(CommonProperties).forEach((key) => {
+    const gdpr = '__GDPR__FRAGMENT__';
+    fs.appendFileSync(file, `/* ${gdpr}\n`);
+    fs.appendFileSync(file, `   "F1" : {\n`);
+    const commonFields = ['     "${include}": ['];
+    const fieldList: string[] = [];
+    const fieldListForFile: string[] = [];
+    Object.keys(CommonProperties).forEach((key, index) => {
         const entry = (CommonProperties as any)[key] as IPropertyDataMeasurement | IPropertyDataNonMeasurement;
         const isMeasurement = entry.isMeasurement === true;
         const jsDocComment = commonPropertyComments.get(key) || '';
@@ -876,13 +895,20 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
         }
 
         // Do not include `__GDPR__` in the string with JSON comments, else telemetry tool treats this as a valid GDPR annotation.
-        const gdpr = '__GDPR__COMMON__';
-        fs.appendFileSync(
-            file,
-            `// ${gdpr} "${key}" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": ${isMeasurement}, "comment": "${comment}" }\n`
-        );
+        fieldList.push(`       "\${F${index + 1}}"`);
+        const json = {
+            classification: 'SystemMetaData',
+            purpose: 'FeatureInsight',
+            isMeasurement: isMeasurement,
+            comment: comment
+        };
+        fieldListForFile.push(`      "F1P${index + 1}": ${JSON.stringify(json)}`);
     });
-
+    commonFields.push(`${fieldList.join(',\n')}`);
+    commonFields.push('     ]');
+    fs.appendFileSync(file, `${fieldListForFile.join(',\n')}\n`);
+    fs.appendFileSync(file, `   }\n`);
+    fs.appendFileSync(file, ` */\n`);
     fs.appendFileSync(file, '\n');
 
     output.forEach((item) => {
@@ -908,7 +934,7 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
             if (prop.expiration) {
                 json.expiration = prop.expiration;
             }
-            entries.push(`     "${key}": ${JSON.stringify(json)}`);
+            entries.push(`     "${key}": ${JSON.stringify(json)},`);
         });
         Object.keys(measures).forEach((key) => {
             if (key in CommonProperties) {
@@ -925,17 +951,21 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
             if (prop.expiration) {
                 json.expiration = prop.expiration;
             }
-            entries.push(`     "${key}": ${JSON.stringify(json)}`);
+            entries.push(`     "${key}": ${JSON.stringify(json)},`);
         });
-
-        fs.appendFileSync(file, `${header.join('\n')}\n${entries.join(',\n')}${footer.join('\n')}`.trim());
+        fs.appendFileSync(
+            file,
+            `${header.join('\n')}\n${entries.join('\n')}${entries.length ? '\n' : ''}${commonFields.join(
+                '\n'
+            )}\n${footer.join('\n')}`.trim()
+        );
         fs.appendFileSync(file, `\n`);
     });
 }
 
 async function generateTelemetryOutput() {
     const files = await new Promise<string[]>((resolve, reject) => {
-        glob('./src/**/*.ts', (ex, res) => {
+        glob(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/**/*.ts'), (ex, res) => {
             if (ex) {
                 reject(ex);
             } else {
@@ -944,10 +974,7 @@ async function generateTelemetryOutput() {
         });
     });
     // Print out the source tree
-    return generateDocumentation(files, {
-        target: ts.ScriptTarget.ES5,
-        module: ts.ModuleKind.CommonJS
-    });
+    return generateDocumentation(files);
 }
 
 const promise = generateTelemetryOutput().catch((ex) => {

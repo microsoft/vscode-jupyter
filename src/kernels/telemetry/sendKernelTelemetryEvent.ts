@@ -5,21 +5,9 @@ import { Resource } from '../../platform/common/types';
 import { Telemetry } from '../../platform/common/constants';
 import { sendTelemetryEvent, waitBeforeSending, IEventNamePropertyMapping, TelemetryEventInfo } from '../../telemetry';
 import { getContextualPropsForTelemetry } from '../../platform/telemetry/telemetry';
-import { clearInterruptCounter, trackKernelResourceInformation } from './helper';
+import { clearInterruptCounter } from './helper';
 import { InterruptResult } from '../types';
 import { ExcludeType, PickType, UnionToIntersection } from '../../platform/common/utils/misc';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function incrementStartFailureCount(resource: Resource, eventName: any, properties: any) {
-    if (eventName === Telemetry.NotebookStart) {
-        let kv: Pick<IEventNamePropertyMapping, Telemetry.NotebookStart>;
-        const data: undefined | typeof kv[Telemetry.NotebookStart] = properties;
-        // Check start failed.
-        if (data && 'failed' in data && data['failed'] === true) {
-            trackKernelResourceInformation(resource, { startFailed: true });
-        }
-    }
-}
 
 /**
  * @param {(P[E] & { waitBeforeSending: Promise<void> })} [properties]
@@ -40,16 +28,16 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
         : undefined | { [waitBeforeSending]?: Promise<void> } | (undefined | { [waitBeforeSending]?: Promise<void> }),
     ex?: Error | undefined
 ) {
-    const props = getContextualPropsForTelemetry(resource);
-    Object.assign(props, properties || {});
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sendTelemetryEvent(eventName as any, measures as any, props as any, ex);
+    getContextualPropsForTelemetry(resource)
+        .then((props) => {
+            Object.assign(props, properties || {});
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            sendTelemetryEvent(eventName as any, measures as any, props as any, ex);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resetData(resource, eventName as any, props);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    incrementStartFailureCount(resource, eventName as any, props);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            resetData(resource, eventName as any, props);
+        })
+        .ignoreErrors();
 }
 
 /**

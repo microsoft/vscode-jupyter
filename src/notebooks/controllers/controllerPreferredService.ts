@@ -197,7 +197,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     NotebookControllerAffinity.Preferred
                 );
 
-                trackKernelResourceInformation(document.uri, {
+                await trackKernelResourceInformation(document.uri, {
                     kernelConnection: preferredConnection,
                     isPreferredKernel: true
                 });
@@ -263,12 +263,12 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             const onlyConnection = rankedConnections.length === 1;
 
             // Is the top ranked connection the preferred interpreter?
-            const topMatchIsPreferredInterpreter = findKernelSpecMatchingInterpreter(preferredInterpreter, [
+            const topMatchIsPreferredInterpreter = await findKernelSpecMatchingInterpreter(preferredInterpreter, [
                 potentialMatch
             ]);
 
             // Are we an exact match based on metadata hash / name / ect...?
-            const isExactMatch = this.kernelRankHelper.isExactMatch(uri, potentialMatch, notebookMetadata);
+            const isExactMatch = await this.kernelRankHelper.isExactMatch(uri, potentialMatch, notebookMetadata);
 
             // non-exact matches are ok for non-python kernels, else we revert to active interpreter for non-python kernels.
             const languageInNotebookMetadata = getLanguageInNotebookMetadata(notebookMetadata);
@@ -309,7 +309,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         const telemetrySafeLanguage =
             resourceType === 'interactive'
                 ? PYTHON_LANGUAGE
-                : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
+                : await getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
 
         sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
             result: preferredConnection ? 'found' : 'notfound',

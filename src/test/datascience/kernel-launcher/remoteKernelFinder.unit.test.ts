@@ -135,7 +135,7 @@ suite(`Remote Kernel Finder`, () => {
         });
         const crypto = mock(CryptoUtils);
         when(crypto.createHash(anything(), anything())).thenCall((d, _c) => {
-            return d.toLowerCase();
+            return Promise.resolve(d.toLowerCase());
         });
         preferredRemoteKernelIdProvider = new PreferredRemoteKernelIdProvider(instance(memento), instance(crypto));
         jupyterSessionManager = mock(JupyterSessionManager);

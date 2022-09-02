@@ -43,12 +43,15 @@ suite('DataScience - Kernel Dependency Service', () => {
         envType: EnvironmentType.Conda,
         uri: Uri.file('abc')
     });
-    const metadata: PythonKernelConnectionMetadata = {
-        interpreter,
-        kind: 'startUsingPythonInterpreter',
-        kernelSpec: createInterpreterKernelSpec(interpreter, Uri.file('')),
-        id: '1'
-    };
+    let metadata: PythonKernelConnectionMetadata;
+    suiteSetup(async () => {
+        metadata = {
+            interpreter,
+            kind: 'startUsingPythonInterpreter',
+            kernelSpec: await createInterpreterKernelSpec(interpreter, Uri.file('')),
+            id: '1'
+        };
+    });
     setup(() => {
         appShell = mock<IApplicationShell>();
         installer = mock<IInstaller>();

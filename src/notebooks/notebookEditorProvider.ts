@@ -4,15 +4,12 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Uri, NotebookData, NotebookCellData, NotebookCellKind, NotebookEditor, window } from 'vscode';
+import { Uri, NotebookEditor, window } from 'vscode';
 import { IVSCodeNotebook } from '../platform/common/application/types';
-import { JupyterNotebookView, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
 import { Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { getComparisonKey } from '../platform/vscode-path/resources';
-import { capturePerfTelemetry, Telemetry } from '../telemetry';
-import { defaultNotebookFormat } from '../platform/common/constants';
 import { IEmbedNotebookEditorProvider, INotebookEditorProvider } from './types';
 import { getOSType, OSType } from '../platform/common/utils/platform';
 
@@ -27,25 +24,6 @@ import { getOSType, OSType } from '../platform/common/utils/platform';
 export class NotebookEditorProvider implements INotebookEditorProvider {
     private providers: Set<IEmbedNotebookEditorProvider> = new Set();
     constructor(@inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook) {}
-    @capturePerfTelemetry(Telemetry.CreateNewNotebook)
-    public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<void> {
-        // contents will be ignored
-        const language = options?.defaultCellLanguage ?? PYTHON_LANGUAGE;
-        const cell = new NotebookCellData(NotebookCellKind.Code, '', language);
-        const data = new NotebookData([cell]);
-        data.metadata = {
-            custom: {
-                cells: [],
-                metadata: {
-                    orig_nbformat: defaultNotebookFormat.major
-                },
-                nbformat: defaultNotebookFormat.major,
-                nbformat_minor: defaultNotebookFormat.minor
-            }
-        };
-        const doc = await this.vscodeNotebook.openNotebookDocument(JupyterNotebookView, data);
-        await this.vscodeNotebook.showNotebookDocument(doc);
-    }
 
     registerEmbedNotebookProvider(provider: IEmbedNotebookEditorProvider): void {
         this.providers.add(provider);

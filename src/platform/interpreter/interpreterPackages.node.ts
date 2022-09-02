@@ -83,7 +83,7 @@ export class InterpreterPackages implements IInterpreterPackages {
             return Promise.resolve(undefined);
         }
         const packages = await this.getPackageVersions(interpreter);
-        const telemetrySafeString = getTelemetrySafeHashedString(packageName.toLocaleLowerCase());
+        const telemetrySafeString = await getTelemetrySafeHashedString(packageName.toLocaleLowerCase());
         if (!packages.has(telemetrySafeString)) {
             return;
         }
@@ -191,25 +191,29 @@ export class InterpreterPackages implements IInterpreterPackages {
         const output = await service.execModule('pip', ['list'], { throwOnStdErr: false, mergeStdOutErr: true });
         const packageAndVersions = new Map<string, string>();
         // Add defaults.
-        interestedPackages.forEach((item) => {
-            packageAndVersions.set(getTelemetrySafeHashedString(item), notInstalled);
-        });
-        output.stdout
-            .split('\n')
-            .map((line) => line.trim().toLowerCase())
-            .filter((line) => line.length > 0)
-            .forEach((line) => {
-                const parts = line.split(' ').filter((item) => item.trim().length);
-                if (parts.length < 2) {
-                    return;
-                }
-                const [packageName, rawVersion] = parts;
-                if (!interestedPackages.has(packageName.toLowerCase().trim())) {
-                    return;
-                }
-                const version = getTelemetrySafeVersion(rawVersion);
-                packageAndVersions.set(getTelemetrySafeHashedString(packageName), version || '');
-            });
+        await Promise.all(
+            Array.from(interestedPackages).map(async (item) => {
+                packageAndVersions.set(await getTelemetrySafeHashedString(item), notInstalled);
+            })
+        );
+        await Promise.all(
+            output.stdout
+                .split('\n')
+                .map((line) => line.trim().toLowerCase())
+                .filter((line) => line.length > 0)
+                .map(async (line) => {
+                    const parts = line.split(' ').filter((item) => item.trim().length);
+                    if (parts.length < 2) {
+                        return;
+                    }
+                    const [packageName, rawVersion] = parts;
+                    if (!interestedPackages.has(packageName.toLowerCase().trim())) {
+                        return;
+                    }
+                    const version = getTelemetrySafeVersion(rawVersion);
+                    packageAndVersions.set(await getTelemetrySafeHashedString(packageName), version || '');
+                })
+        );
         const key = getComparisonKey(interpreter.uri);
         let deferred = this.interpreterInformation.get(key);
         if (!deferred) {

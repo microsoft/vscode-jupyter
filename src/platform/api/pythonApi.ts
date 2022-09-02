@@ -3,7 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { EventEmitter, Event, Uri, workspace, ExtensionMode } from 'vscode';
+import { EventEmitter, Event, Uri, ExtensionMode } from 'vscode';
 import {
     IPythonApiProvider,
     IPythonExtensionChecker,
@@ -133,12 +133,6 @@ export class PythonApiProvider implements IPythonApiProvider {
         }
 
         this.api.resolve(unifiedApi);
-
-        // Log experiment status here. Python extension is definitely loaded at this point.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const pythonConfig = workspace.getConfiguration('python', null as any as Uri);
-        const experimentsSection = pythonConfig.get('experiments');
-        traceInfo(`Experiment status for python is ${JSON.stringify(experimentsSection)}`);
     }
 
     private async init() {

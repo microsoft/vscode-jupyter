@@ -48,7 +48,7 @@ export async function sendTelemetryForPythonKernelExecutable(
             match: match ? 'true' : 'false',
             kernelConnectionType: kernelConnection.kind
         });
-        trackKernelResourceInformation(resource, { interpreterMatchesKernel: match });
+        await trackKernelResourceInformation(resource, { interpreterMatchesKernel: match });
         if (match) {
             return;
         }
@@ -75,7 +75,7 @@ export async function sendTelemetryForPythonKernelExecutable(
                         match: match ? 'true' : 'false',
                         kernelConnectionType: kernelConnection.kind
                     });
-                    trackKernelResourceInformation(resource, { interpreterMatchesKernel: match });
+                    await trackKernelResourceInformation(resource, { interpreterMatchesKernel: match });
                     if (!match) {
                         traceError(
                             `Interpreter started by kernel does not match expectation, expected ${getDisplayPath(

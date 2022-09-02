@@ -94,9 +94,9 @@ export function deleteTrackedInformation(resource: Uri) {
  * Always return a clone of the properties.
  * We will be using a reference of this object elsewhere & adding properties to the object.
  */
-export function getContextualPropsForTelemetry(
+export async function getContextualPropsForTelemetry(
     resource: Resource
-): ResourceSpecificTelemetryProperties & { waitBeforeSendingTelemetry?: Promise<void> } {
+): Promise<ResourceSpecificTelemetryProperties & { waitBeforeSendingTelemetry?: Promise<void> }> {
     if (!resource) {
         return {};
     }
@@ -105,7 +105,7 @@ export function getContextualPropsForTelemetry(
     if (!data && resourceType) {
         return {
             resourceType,
-            resourceHash: resource ? getTelemetrySafeHashedString(resource.toString()) : undefined
+            resourceHash: resource ? await getTelemetrySafeHashedString(resource.toString()) : undefined
         };
     }
     if (!data) {

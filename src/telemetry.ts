@@ -34,6 +34,7 @@ export type DurationMeasurement = {
 export type ResourceTypeTelemetryProperty = {
     /**
      * Used to determine whether this event is related to a Notebooks or Interactive window.
+     * Common to most of the events.
      */
     resourceType?: 'notebook' | 'interactive';
 };
@@ -163,27 +164,27 @@ function globallySharedProperties(): AllEventPropertiesData<SharedPropertyMappin
         installSource: {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
-            comment: ' Determine where an extension was installed from'
+            comment: ' Determine where an extension was installed from. Common to all events.'
         },
         isamlcompute: {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
-            comment: 'Whether this is an AML compute instance'
+            comment: 'Whether this is an AML compute instance. Common to all events.'
         },
         isInsiderExtension: {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
-            comment: 'Whether this is the Insider version of the Jupyter extension or not.'
+            comment: 'Whether this is the Insider version of the Jupyter extension or not. Common to all events.'
         },
         isPythonExtensionInstalled: {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
-            comment: 'Whether Python extension is installed or not.'
+            comment: 'Whether Python extension is installed or not. Common to all events.'
         },
         rawKernelSupported: {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
-            comment: 'Whether the raw kernel is supported or not.'
+            comment: 'Whether the raw kernel is supported or not. Common to all events.'
         }
     };
 }
@@ -386,15 +387,18 @@ export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty 
     Partial<{
         /**
          * Whether the user executed a cell.
+         * Common to most of the events.
          */
         userExecutedCell?: boolean;
         /**
          * Hash of the Kernel Connection id.
+         * Common to most of the events.
          */
         kernelId: string;
         /**
          * Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
          * If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
+         * Common to most of the events.
          */
         disableUI?: boolean;
         /**
@@ -405,81 +409,100 @@ export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty 
          * and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
          * we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
          * and have a better understanding of what is going on, e.g. why something failed.
+         * Common to most of the events.
          */
         resourceHash?: string;
         /**
          * Unique identifier for an instance of a notebook session.
          * If we restart or run this notebook tomorrow, this id will be different.
          * Id could be something as simple as a hash of the current Epoch time.
+         * Common to most of the events.
          */
         kernelSessionId: string;
         /**
          * Whether this resource is using the active Python interpreter or not.
+         * Common to most of the events.
          */
         isUsingActiveInterpreter?: boolean;
         /**
          * Found plenty of issues when starting kernels with conda, hence useful to capture this info.
+         * Common to most of the events.
          */
         pythonEnvironmentType?: EnvironmentType;
         /**
          * A key, so that rest of the information is tied to this. (hash)
+         * Common to most of the events.
          */
         pythonEnvironmentPath?: string;
         /**
          * Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
+         * Common to most of the events.
          */
         pythonEnvironmentVersion?: string;
         /**
          * Total number of python environments.
+         * Common to most of the events.
          */
         pythonEnvironmentCount?: number;
         /**
          * Comma delimited list of hashed packages & their versions.
+         * Common to most of the events.
          */
         pythonEnvironmentPackages?: string;
         /**
          * Whether kernel was started using kernel spec, interpreter, etc.
+         * Common to most of the events.
          */
         kernelConnectionType?: KernelConnectionMetadata['kind'];
         /**
          * Language of the kernel connection.
+         * Common to most of the events.
          */
         kernelLanguage: string;
         /**
          * This number gets reset after we attempt a restart or change kernel.
+         * Common to most of the events.
          */
         interruptCount?: number;
         /**
          * This number gets reset after change the kernel.
+         * Common to most of the events.
          */
         restartCount?: number;
         /**
          * Number of times starting the kernel failed.
+         * Common to most of the events.
          */
         startFailureCount?: number;
         /**
          * Number of times the kernel was changed.
+         * Common to most of the events.
          */
         switchKernelCount?: number;
         /**
          * Total number of kernel specs in the kernel spec list.
+         * Common to most of the events.
          */
         kernelSpecCount: number;
         /**
          * Total number of interpreters in the kernel spec list.
+         * Common to most of the events.
          */
         kernelInterpreterCount: number;
         /**
          * Total number of live kernels in the kernel spec list.
+         * Common to most of the events.
          */
         kernelLiveCount: number;
         /**
          * Whether this was started by Jupyter extension or a 3rd party.
+         * Common to most of the events.
          */
         actionSource: KernelActionSource;
         /**
          * Whether we managed to capture the environment variables or not.
          * In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
+         * Common to most of the events.
          */
         capturedEnvVars?: boolean;
     }>;
@@ -571,7 +594,7 @@ export class IEventNamePropertyMapping {
          */
         hashedNamev2: string;
     }> = {
-        owner: 'unknown',
+        owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
         properties: {
@@ -742,6 +765,7 @@ export class IEventNamePropertyMapping {
             | 'unhandledError'
             | 'emptyFromCondaRun'
             | 'emptyFromPython'
+            | 'condaActivationFailed'
             | 'failedToGetActivatedEnvVariablesFromPython'
             | 'failedToGetCustomEnvVariables';
         /**
@@ -782,77 +806,6 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
-     * Sent when we fail or manage to successfully activate a Python environment.
-     */
-    [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: TelemetryEventInfo<{
-        /**
-         * Carries `true` if environment variables are present, `false` otherwise
-         */
-        hasEnvVars?: boolean;
-        /**
-         * Carries `true` if fetching environment variables failed, `false` otherwise
-         */
-        failed?: boolean;
-        /**
-         * Whether the environment was activated within a terminal or not.
-         */
-        activatedInTerminal?: boolean;
-        /**
-         * Whether the environment was activated by the wrapper class.
-         * If `true`, this telemetry is sent by the class that wraps the two activation providers   .
-         */
-        activatedByWrapper?: boolean;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            activatedByWrapper: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            activatedInTerminal: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            failed: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            hasEnvVars: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            }
-        }
-    };
-    /**
-     * Telemetry event sent with details when a user has requested to opt it or out of an experiment group
-     */
-    [EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT]: TelemetryEventInfo<{
-        /**
-         * Carries the name of the experiment user has been opted into manually
-         */
-        expNameOptedInto?: string;
-        /**
-         * Carries the name of the experiment user has been opted out of manually
-         */
-        expNameOptedOutOf?: string;
-    }> = {
-        owner: 'unknown',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            expNameOptedInto: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            expNameOptedOutOf: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * Telemetry event sent when user opens the data viewer via the variable view.
      */
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: TelemetryEventInfo<never | undefined> = {
@@ -877,14 +830,23 @@ export class IEventNamePropertyMapping {
         feature: ['DataFrameViewer', 'VariableViewer']
     };
     /**
-     * Telemetry event sent when user adds a cell below the current cell for IW.
+     * User adds a cell below the current cell for IW.
      */
     [Telemetry.AddCellBelow]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * How long on average we spent parsing code lens. Sent on shutdown.
+     **/
     [Telemetry.CodeLensAverageAcquisitionTime]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Sent when we have failed to connect to the local Jupyter server we started.
      */
@@ -960,12 +922,6 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         tags: ['KernelStartup']
     };
-    [Telemetry.CreateNewNotebook]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'unknown',
-        feature: 'N/A',
-        source: 'N/A',
-        measures: commonClassificationForDurationProperties()
-    };
     [Telemetry.DataScienceSettings]: TelemetryEventInfo<{}> = {
         owner: 'unknown',
         feature: 'N/A'
@@ -975,36 +931,46 @@ export class IEventNamePropertyMapping {
      */
     [Telemetry.DebugContinue]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'roblourens',
-        feature: ['Debugger']
-    } as any;
+        feature: ['Debugger'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Telemetry event sent when user debugs the cell in the IW
      */
     [Telemetry.DebugCurrentCell]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'roblourens',
-        feature: ['Debugger']
-    } as any;
+        feature: ['Debugger'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Telemetry event sent when user hits the `step over` button while debugging IW
      */
     [Telemetry.DebugStepOver]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'roblourens',
-        feature: ['Debugger']
-    } as any;
+        feature: ['Debugger'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Telemetry event sent when user hits the `stop` button while debugging IW
      */
     [Telemetry.DebugStop]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'roblourens',
-        feature: ['Debugger']
-    } as any;
+        feature: ['Debugger'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Telemetry event sent when user debugs the file in the IW
      */
     [Telemetry.DebugFileInteractive]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'roblourens',
-        feature: ['Debugger']
-    } as any;
+        feature: ['Debugger'],
+        source: 'User Action',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Sent when we fail to update the kernel spec json file.
      */
@@ -1018,17 +984,19 @@ export class IEventNamePropertyMapping {
     /**
      * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
      */
-    [Telemetry.DisableInteractiveShiftEnter]: TelemetryEventInfo<DurationMeasurement> = {
+    [Telemetry.DisableInteractiveShiftEnter]: TelemetryEventInfo<never | undefined> = {
         owner: 'amunger',
-        feature: ['InteractiveWindow']
-    } as any;
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
+     * Enable using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
      */
-    [Telemetry.EnableInteractiveShiftEnter]: TelemetryEventInfo<DurationMeasurement> = {
+    [Telemetry.EnableInteractiveShiftEnter]: TelemetryEventInfo<never | undefined> = {
         owner: 'amunger',
-        feature: ['InteractiveWindow']
-    } as any;
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
      * Telemetry sent to capture first time execution of a cell.
      * If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.
@@ -1362,101 +1330,212 @@ export class IEventNamePropertyMapping {
         properties: commonClassificationForResourceSpecificTelemetryProperties()
     };
     /**
-     * Run all Cell Commands in Interactive Python
+     * Command to Run all cells from the active python file in the Interactive Window
      */
-    [Telemetry.RunAllCells]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunAllCells]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Run a Selection or Line in Interactive Python
+     * Command to Run a Selection or Line in the Interactive Window
      */
-    [Telemetry.RunSelectionOrLine]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunSelectionOrLine]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Run the current Cell in Interactive Python
+     * Command to Run the current Cell in the Interactive Window
      */
-    [Telemetry.RunCurrentCell]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunCurrentCell]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Run all the above cells in Interactive Python
+     * Command to Run all the above cells in the Interactive Window
      */
-    [Telemetry.RunAllCellsAbove]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunAllCellsAbove]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Run current cell and all below in Interactive Python
+     * Command to Run current cell and all below in the Interactive Window
      */
-    [Telemetry.RunCellAndAllBelow]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunCellAndAllBelow]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Run current cell and advance cursor in Interactive Python
+     * Command to Run current cell in the Interactive Window and advance cursor to the next cell
      */
-    [Telemetry.RunCurrentCellAndAdvance]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunCurrentCellAndAdvance]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Run file in Interactive Python
+     * Command to Run the active file in the Interactive Window
      */
-    [Telemetry.RunFileInteractive]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
-    [Telemetry.RunToLine]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
-    [Telemetry.RunFromLine]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+    [Telemetry.RunFileInteractive]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'User Action'
+    };
     /**
-     * Cell Edit Commands in Interactive Python
+     * Command to Run the active file contents up to the cursor location in the Interactive Window
+     */
+    [Telemetry.RunToLine]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A'
+    };
+    /**
+     * Command to Run the active file contents from the cursor location in the Interactive Window
+     */
+    [Telemetry.RunFromLine]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A'
+    };
+    /**
+     * Cell Edit Command in Interactive Window
      */
     [Telemetry.InsertCellBelowPosition]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.InsertCellBelow]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.InsertCellAbove]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.DeleteCells]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Selection Command in Interactive Window
+     */
     [Telemetry.SelectCell]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Selection Command in Interactive Window
+     */
     [Telemetry.SelectCellContents]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Selection Command in Interactive Window
+     */
     [Telemetry.ExtendSelectionByCellAbove]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Selection Command in Interactive Window
+     */
     [Telemetry.ExtendSelectionByCellBelow]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.MoveCellsUp]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.MoveCellsDown]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.ChangeCellToMarkdown]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Edit Command in Interactive Window
+     */
     [Telemetry.ChangeCellToCode]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Navigation Command in Interactive Window
+     */
     [Telemetry.GotoNextCellInFile]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Cell Navigation Command in Interactive Window
+     */
     [Telemetry.GotoPrevCellInFile]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Run the cell and everything below it in the Interactive Window.
+     */
     [Telemetry.RunCurrentCellAndAddBelow]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Sent when users chose not to allow connecting to Jupyter over HTTPS when certificate isn't trusted by a trusted CA.
      */
@@ -1746,9 +1825,14 @@ export class IEventNamePropertyMapping {
             }
         }
     };
+    /**
+     * Information banner displayed to give the user the option to configure shift+enter for the Interactive Window.
+     */
     [Telemetry.ShiftEnterBannerShown]: TelemetryEventInfo<never | undefined> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A'
+    };
     /**
      * User requested to open the data frame viewer.
      */
@@ -1820,7 +1904,14 @@ export class IEventNamePropertyMapping {
         feature: ['DataFrameViewer'],
         source: 'User Action'
     };
-    [Telemetry.CreateNewInteractive]: TelemetryEventInfo<never | undefined> = { owner: 'amunger' } as any;
+    /**
+     * Command to create a new Interactive Window.
+     */
+    [Telemetry.CreateNewInteractive]: TelemetryEventInfo<never | undefined> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A'
+    };
     /**
      * Time taken to start the Jupyter server.
      */
@@ -2087,8 +2178,10 @@ export class IEventNamePropertyMapping {
      * Telemetry event sent when a user runs the interactive window with a new file
      */
     [Telemetry.NewFileForInteractiveWindow]: TelemetryEventInfo<never | undefined> = {
-        owner: 'amunger'
-    } as any;
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A'
+    };
     /**
      * Telemetry event sent when the ZMQ native binaries do not work.
      */
@@ -2737,8 +2830,14 @@ export class IEventNamePropertyMapping {
         }
     };
 
-    // Run by line events
-    [Telemetry.RunByLineVariableHover]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
+    /**
+     * Fired when a user hovers a variable while debugging the IW.
+     */
+    [Telemetry.RunByLineVariableHover]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'User Action'
+    };
 
     /**
      * Telemetry sent with the total number of different types of kernels in the kernel picker.
@@ -2902,7 +3001,7 @@ export class IEventNamePropertyMapping {
         source: 'N/A'
     };
     /**
-     * Telemetry sent when a command is executed.
+     * A command that the extension contributes is executed.
      */
     [Telemetry.CommandExecuted]: TelemetryEventInfo<{
         /**
@@ -2910,7 +3009,7 @@ export class IEventNamePropertyMapping {
          */
         command: string;
     }> = {
-        owner: 'unknown',
+        owner: 'amunger',
         feature: 'N/A',
         source: 'N/A',
         properties: {
@@ -3048,28 +3147,100 @@ export class IEventNamePropertyMapping {
             }
         }
     };
-    [DebuggingTelemetry.clickedOnSetup]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
-    [DebuggingTelemetry.closedModal]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
+    /**
+     * Sent when the user accepts the prompt to install ipykernel 6 automatically.
+     */
+    [DebuggingTelemetry.clickedOnSetup]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'User Action'
+    };
+    /**
+     * Sent when the user dismisses the prompt to install ipykernel 6 automatically.
+     */
+    [DebuggingTelemetry.closedModal]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'User Action'
+    };
+    /**
+     * An event describing whether the environment has ipykernel 6 installed.
+     */
     [DebuggingTelemetry.ipykernel6Status]: TelemetryEventInfo<{
+        /**
+         * Whether ipykernel 6 is installed.
+         */
         status: 'installed' | 'notInstalled';
-    }> = { owner: 'roblourens' } as any;
-    [DebuggingTelemetry.clickedRunByLine]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
-    [DebuggingTelemetry.successfullyStartedRunByLine]: TelemetryEventInfo<never | undefined> = {
-        owner: 'roblourens'
-    } as any;
+    }> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        properties: {
+            status: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        },
+        source: 'N/A'
+    };
+    /**
+     * Sent when the user attempts to start run by line.
+     */
+    [DebuggingTelemetry.clickedRunByLine]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'User Action'
+    };
+    /**
+     * Sent when the run by line session starts successfully.
+     */
+    [DebuggingTelemetry.successfullyStartedRunByLine]: TelemetryEventInfo<undefined> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'N/A'
+    };
     /**
      * Telemetry sent when we have managed to successfully start the Interactive Window debugger using the Jupyter protocol.
      */
     [DebuggingTelemetry.successfullyStartedIWJupyterDebugger]: TelemetryEventInfo<never | undefined> = {
-        owner: 'roblourens'
-    } as any;
-    [DebuggingTelemetry.clickedRunAndDebugCell]: TelemetryEventInfo<never | undefined> = { owner: 'roblourens' } as any;
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'N/A'
+    };
+    /**
+     * Sent when the user attempts to start debugging a notebook cell.
+     */
+    [DebuggingTelemetry.clickedRunAndDebugCell]: TelemetryEventInfo<never | undefined> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'User Action'
+    };
+    /**
+     * Sent when the user successfully starts debugging a notebook cell.
+     */
     [DebuggingTelemetry.successfullyStartedRunAndDebugCell]: TelemetryEventInfo<never | undefined> = {
-        owner: 'roblourens'
-    } as any;
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'N/A'
+    };
+    /**
+     * Sent when a notebook debugging session ends.
+     */
     [DebuggingTelemetry.endedSession]: TelemetryEventInfo<{
+        /**
+         * The reason the session ended.
+         */
         reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
-    }> = { owner: 'roblourens' } as any;
+    }> = {
+        owner: 'roblourens',
+        feature: ['Debugger'],
+        source: 'N/A',
+        properties: {
+            reason: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
      * Telemetry sent when an extension uses our 3rd party API.
      */
@@ -3179,10 +3350,33 @@ export class IEventNamePropertyMapping {
             }
         }
     };
+    /**
+     * Error information from the debugger output channel while running initialization code.
+     */
     [Telemetry.InteractiveWindowDebugSetupCodeFailure]: TelemetryEventInfo<{
+        /**
+         * The error name of the failure.
+         */
         ename: string;
+        /**
+         * The error value of the failure.
+         */
         evalue: string;
-    }> = { owner: 'amunger' } as any;
+    }> = {
+        owner: 'roblourens',
+        feature: ['InteractiveWindow', 'Debugger'],
+        source: 'N/A',
+        properties: {
+            ename: {
+                classification: 'CallstackOrException',
+                purpose: 'PerformanceAndHealth'
+            },
+            evalue: {
+                classification: 'CallstackOrException',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
     /**
      * Sent when Kernel crashes.
      */
@@ -3211,17 +3405,64 @@ export class IEventNamePropertyMapping {
         source: 'User Action',
         feature: ['KernelPicker']
     };
+    /**
+     * A automated test has been run
+     */
     [Telemetry.RunTest]: TelemetryEventInfo<{
+        /**
+         * The name of the test.
+         */
         testName: string;
+        /**
+         * Whether the test passed or failed.
+         */
         testResult: string;
+        /**
+         * If the test was an initial run to warmup the product.
+         */
         perfWarmup?: 'true';
+        /**
+         * The git commit that the test was run against.
+         */
         commitHash?: string;
+        /**
+         * Timings for segments of the test.
+         */
         timedCheckpoints?: string;
-    }> = { owner: 'amunger' } as any;
+    }> = {
+        owner: 'amunger',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            testName: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            testResult: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            perfWarmup: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            commitHash: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            timedCheckpoints: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
     /**
      * Send we we complete our preferred kernel match. Matched reason might be 'no match'.
      */
     [Telemetry.PreferredKernelExactMatch]: TelemetryEventInfo<{
+        /**
+         * How/why the preferred kernel was matched the way it was.
+         */
         matchedReason: PreferredKernelExactMatchReason | undefined;
     }> = {
         owner: 'IanMatthewHuff',

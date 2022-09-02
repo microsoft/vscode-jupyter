@@ -6,8 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { injectable } from 'inversify';
-import { traceError } from '../logging';
-import { ICryptoUtils, IHashFormat } from './types';
+import { ICryptoUtils } from './types';
 import * as hashjs from 'hash.js';
 
 /**
@@ -15,24 +14,17 @@ import * as hashjs from 'hash.js';
  */
 @injectable()
 export class CryptoUtils implements ICryptoUtils {
-    public createHash<E extends keyof IHashFormat>(
-        data: string,
-        hashFormat: E,
-        algorithm: 'SHA512' | 'SHA256' = 'SHA256'
-    ): IHashFormat[E] {
-        let hash: string;
-        if (algorithm === 'SHA256') {
-            hash = hashjs.sha256().update(data).digest('hex');
-        } else {
-            hash = hashjs.sha512().update(data).digest('hex');
-        }
-        if (hashFormat === 'number') {
-            const result = parseInt(hash, 16);
-            if (isNaN(result)) {
-                traceError(`Number hash for data '${data}' is NaN`);
-            }
-            return result as any;
-        }
-        return hash as any;
+    public async createHash(data: string, algorithm: 'SHA512' | 'SHA256' = 'SHA256'): Promise<string> {
+        return computeHash(data, algorithm);
+    }
+}
+
+export async function computeHash(data: string, algorithm: 'SHA512' | 'SHA256' | 'SHA1') {
+    if (algorithm === 'SHA1') {
+        return hashjs.sha1().update(data).digest('hex');
+    } else if (algorithm === 'SHA256') {
+        return hashjs.sha256().update(data).digest('hex');
+    } else {
+        return hashjs.sha512().update(data).digest('hex');
     }
 }

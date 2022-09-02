@@ -657,7 +657,7 @@ export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
 }
 
 // eslint-disable-next-line complexity
-export function updateNotebookMetadata(
+export async function updateNotebookMetadata(
     metadata?: nbformat.INotebookMetadata,
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
@@ -741,7 +741,7 @@ export function updateNotebookMetadata(
                 break;
             case 'registeredByNewVersionOfExtForCustomKernelSpec': {
                 const originalNameFromOriginalSpecFile = kernelSpec.metadata?.vscode?.originalSpecFile
-                    ? path.basename(path.dirname(kernelSpec.metadata?.vscode?.originalSpecFile))
+                    ? path.basename(path.dirname(kernelSpec.metadata.vscode.originalSpecFile))
                     : undefined;
 
                 name = originalNameFromOriginalSpecFile || kernelSpec.name;
@@ -757,7 +757,7 @@ export function updateNotebookMetadata(
         // since name might be python3 in both scenarios and they might have the same python version so the
         // check above with language info would not see them as changed.
         const interpreter = getInterpreterFromKernelConnectionMetadata(kernelConnection);
-        const interpreterHash = interpreter?.uri ? getInterpreterHash({ uri: interpreter?.uri }) : undefined;
+        const interpreterHash = interpreter?.uri ? await getInterpreterHash({ uri: interpreter?.uri }) : undefined;
         const metadataInterpreter: undefined | { hash?: string } =
             'interpreter' in metadata // In the past we'd store interpreter.hash directly under metadata, but now we store it under metadata.vscode.
                 ? (metadata.interpreter as undefined | { hash?: string })
@@ -782,7 +782,7 @@ export function updateNotebookMetadata(
                 // then in ours they cannot go back to jupyter as `python<hash>` is not necessarily a valid kernel in jupter.
                 metadata.vscode = {
                     interpreter: {
-                        hash: getInterpreterHash(kernelConnection.interpreter)
+                        hash: await getInterpreterHash(kernelConnection.interpreter)
                     }
                 };
                 if ('interpreter' in metadata) {
@@ -792,7 +792,7 @@ export function updateNotebookMetadata(
         }
     } else if (kernelSpecOrModel && !metadata.kernelspec) {
         const originalNameFromOriginalSpecFile = kernelSpecOrModel.metadata?.vscode?.originalSpecFile
-            ? path.basename(path.dirname(kernelSpecOrModel.metadata?.vscode?.originalSpecFile))
+            ? path.basename(path.dirname(kernelSpecOrModel.metadata.vscode.originalSpecFile))
             : undefined;
         // Add a new spec in this case
         metadata.kernelspec = {
@@ -810,7 +810,7 @@ export function updateNotebookMetadata(
         changed = true;
     } else if (kernelSpecOrModel && metadata.kernelspec) {
         const originalNameFromOriginalSpecFile = kernelSpecOrModel.metadata?.vscode?.originalSpecFile
-            ? path.basename(path.dirname(kernelSpecOrModel.metadata?.vscode?.originalSpecFile))
+            ? path.basename(path.dirname(kernelSpecOrModel.metadata.vscode.originalSpecFile))
             : undefined;
         // Spec exists, just update name and display_name
         const name = originalNameFromOriginalSpecFile || kernelSpecOrModel.name || kernelSpecOrModel.display_name || '';

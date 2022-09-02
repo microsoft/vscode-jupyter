@@ -7,7 +7,7 @@ import { WidgetManager } from '../common/manager';
 import { ScriptManager } from '../common/scriptManager';
 import { OutputItem } from 'vscode-notebook-renderer';
 import { SharedMessages, IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../messageTypes';
-import { logMessage } from '../../react-common/logger';
+import { logErrorMessage, logMessage } from '../../react-common/logger';
 
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
@@ -213,7 +213,7 @@ async function createWidgetView(
     } catch (ex) {
         // eslint-disable-next-line no-console
         console.error(`Failed to render widget ${widgetData.model_id}`, ex);
-        logMessage(`Error: Failed to render widget ${widgetData.model_id}, ${ex.toString()}`);
+        logErrorMessage(`Error: Failed to render widget ${widgetData.model_id}, ${ex.toString()}`);
     }
 }
 
@@ -227,7 +227,7 @@ function initialize(context?: KernelMessagingApi) {
     } catch (ex) {
         // eslint-disable-next-line no-console
         console.error('Exception initializing WidgetManager', ex);
-        logMessage(`Error: Exception initializing WidgetManager, ${ex.toString()}`);
+        logErrorMessage(`Error: Exception initializing WidgetManager, ${ex.toString()}`);
     }
 }
 

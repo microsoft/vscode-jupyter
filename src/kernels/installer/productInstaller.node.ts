@@ -39,7 +39,7 @@ import { translateProductToModule } from './utils';
 import { IInterpreterPackages } from '../../platform/interpreter/types';
 
 export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter: PythonEnvironment) {
-    const key = `${getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
+    const key = `${await getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
     if (memento.get(key, false)) {
         return true;
     }

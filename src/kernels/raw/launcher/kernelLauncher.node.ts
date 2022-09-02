@@ -168,9 +168,10 @@ export class KernelLauncher implements IKernelLauncher {
                 .map((s) => s.trim())
                 .filter((s) => s.length > 0);
             if (outputs.length === 2) {
-                traceInfo(`ipykernel version ${outputs[0]} for ${displayInterpreterPath}`);
                 traceInfo(
-                    `ipykernel location ${getDisplayPathFromLocalFile(outputs[1])} for ${displayInterpreterPath}`
+                    `ipykernel version & path ${outputs[0]}, ${getDisplayPathFromLocalFile(
+                        outputs[1]
+                    )} for ${displayInterpreterPath}`
                 );
             } else {
                 traceInfo(`ipykernel version & path ${output.stdout.trim()} for ${displayInterpreterPath}`);
@@ -287,10 +288,7 @@ export class KernelLauncher implements IKernelLauncher {
         const startPort = await KernelLauncher.startPortPromise;
 
         // Then get the next set starting at that point
-        const ports = await KernelLauncher.findNextFreePort(startPort);
-        traceInfo(`Kernel launching with ports ${ports.toString()}. Start port is ${startPort}`);
-
-        return ports;
+        return KernelLauncher.findNextFreePort(startPort);
     }
 
     private async getKernelConnection(

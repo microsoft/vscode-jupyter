@@ -100,7 +100,7 @@ jobs:
         uses: ./.github/actions/build-vsix
         id: build-vsix
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: 'ms-toolsai-jupyter-insiders.vsix'
           path: 'ms-toolsai-jupyter-insiders.vsix'
@@ -264,7 +264,7 @@ jobs:
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
@@ -635,7 +635,7 @@ jobs:
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
@@ -643,7 +643,7 @@ jobs:
           retention-days: 1
 
       - name: Upload screenshots
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
@@ -651,7 +651,7 @@ jobs:
           retention-days: 1
 
       - name: Upload VS code logs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: VSCodeLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
@@ -663,7 +663,7 @@ jobs:
         run: npm run printTestResults
 
       - name: Upload test result files
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: TestResult-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
@@ -671,7 +671,7 @@ jobs:
           retention-days: 60
 
       - name: Upload test failure notebook file
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: TestResultNotebook-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
@@ -679,7 +679,7 @@ jobs:
           retention-days: 4
 
       - name: Upload Memory snapshot
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: SD-memtest.json
           path: './SD-memtest.json'
@@ -755,7 +755,7 @@ jobs:
           run: npm run testSmokeLogged
 
       - name: Upload smoke-test log
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: smoke-test-${{matrix.os}}.log
@@ -766,7 +766,7 @@ jobs:
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
@@ -840,7 +840,7 @@ jobs:
           run: npm run testPerformance
 
       - name: Upload screenshots
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: Screenshots-perf-${{matrix.os}}

@@ -74,12 +74,11 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         ui: IDisplayOptions,
         cancelToken: vscode.CancellationToken
     ): Promise<IRawKernelConnectionSession> {
-        traceInfo(`Creating raw notebook for resource '${getDisplayPath(resource)}'`);
+        traceVerbose(`Creating raw notebook for resource '${getDisplayPath(resource)}'`);
         const sessionPromise = createDeferred<IRawKernelConnectionSession>();
         this.trackDisposable(sessionPromise.promise);
         let rawSession: RawJupyterSession | undefined;
 
-        traceVerbose(`Getting preferred kernel for resource '${getDisplayPath(resource)}'`);
         try {
             const kernelConnectionProvided = !!kernelConnection;
             traceInfo(`Computing working directory for resource '${getDisplayPath(resource)}'`);
@@ -99,18 +98,13 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
             // If a kernel connection was not provided, then we set it up here.
             if (!kernelConnectionProvided) {
-                trackKernelResourceInformation(resource, { kernelConnection });
+                await trackKernelResourceInformation(resource, { kernelConnection });
             }
-            traceVerbose(
-                `Connecting to raw session for ${getDisplayPath(resource)} with connection ${kernelConnection.id}`
-            );
             await rawSession.connect({ token: cancelToken, ui });
             if (cancelToken.isCancellationRequested) {
                 throw new vscode.CancellationError();
             }
             if (rawSession.isConnected) {
-                traceInfo(`Finished connecting ${this.id}`);
-
                 sessionPromise.resolve(rawSession);
             } else {
                 sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError()));

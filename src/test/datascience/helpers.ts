@@ -155,7 +155,7 @@ export async function submitFromPythonFile(
         await interpreterService.refreshInterpreters();
         const interpreter = await interpreterService.getActiveInterpreter();
         assert.ok(isEqual(interpreter?.uri, activeInterpreterPath), `Active interpreter not set`);
-        const spec = createInterpreterKernelSpec(interpreter);
+        const spec = await createInterpreterKernelSpec(interpreter);
         connection = <PythonKernelConnectionMetadata>{
             kind: 'startUsingPythonInterpreter',
             kernelSpec: spec,
