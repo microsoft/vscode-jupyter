@@ -826,8 +826,25 @@ function generateTelemetryMd(output: TelemetryEntry[]) {
     output.forEach(writeTelemetryEntry);
 }
 function generateTelemetryCSV(output: TelemetryEntry[]) {
-    const properties: {}[] = [];
+    const entries: {}[] = [];
     output.forEach((o) => {
+        if (o.propertyGroups.length === 0) {
+            // an event without any properties.
+            entries.push({
+                eventName: o.name,
+                eventDescription: o.description,
+                eventConstant: o.constantName,
+                owner: o.gdpr.owner,
+                feature: Array.isArray(o.gdpr.feature) ? o.gdpr.feature.join(', ') : o.gdpr.feature || '',
+                tags: Array.isArray(o.gdpr.tags) ? o.gdpr.tags.join(', ') : o.gdpr.tags || '',
+                groupDescription: '',
+                propertyName: '',
+                propertyDescription: '',
+                propertyType: '',
+                propertyPossibleValues: '',
+                propertyIsNullable: ''
+            });
+        }
         o.propertyGroups.forEach((og) => {
             const groupDescription =
                 typeof og.description === 'string' ? og.description : (og.description || []).join('\n');
@@ -840,7 +857,7 @@ function generateTelemetryCSV(output: TelemetryEntry[]) {
                               .join('\n')
                         : '';
 
-                properties.push({
+                entries.push({
                     eventName: o.name,
                     eventDescription: o.description,
                     eventConstant: o.constantName,
@@ -858,9 +875,9 @@ function generateTelemetryCSV(output: TelemetryEntry[]) {
         });
     });
 
-    const fields = Object.keys(properties[0]);
+    const fields = Object.keys(entries[0]);
     const parser = new Parser({ fields });
-    const csv = parser.parse(properties);
+    const csv = parser.parse(entries);
     fs.writeFileSync('./TELEMETRY.csv', csv);
 }
 
