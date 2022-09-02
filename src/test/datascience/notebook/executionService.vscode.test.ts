@@ -74,7 +74,7 @@ import { InteractiveWindowMessages } from '../../../messageTypes';
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
+suite.only('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -84,6 +84,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     const envFile = Uri.joinPath(Uri.file(EXTENSION_ROOT_DIR_FOR_TESTS), 'src', 'test', 'datascience', '.env');
     this.timeout(120_000);
     suiteSetup(async function () {
+        console.error('Suite Setup Start');
         traceInfo('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
         try {
@@ -109,9 +110,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             await captureScreenShot('execution-suite');
             throw e;
         }
+        console.error('Suite Setup End');
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
+        console.error('Test Setup Start');
         try {
             traceInfo(`Start Test ${this.currentTest?.title}`);
             sinon.restore();
@@ -125,16 +128,23 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             await captureScreenShot(this);
             throw e;
         }
+        console.error('Test Setup End');
     });
     teardown(async function () {
+        console.error('Teardown start');
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+        console.error('Teardown End');
     });
-    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    suiteTeardown(async () => {
+        console.error('Suite Teardown Start');
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+        console.error('Suite Teardown End');
+    });
     test('Execute cell using VSCode Kernel', async () => {
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;

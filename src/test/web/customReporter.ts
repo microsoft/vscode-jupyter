@@ -44,6 +44,7 @@ type Message =
           title: string;
           titlePath: string[];
           fullTitle: string;
+          time: number;
       }
     | {
           event: typeof constants.EVENT_SUITE_END;
@@ -51,6 +52,7 @@ type Message =
           slow: number;
           titlePath: string[];
           fullTitle: string;
+          time: number;
       }
     | {
           event: typeof constants.EVENT_TEST_FAIL;
@@ -64,6 +66,7 @@ type Message =
           duration?: number;
           state: 'failed' | 'passed' | undefined;
           consoleOutput: { category?: 'warn' | 'error'; output: string; time: number }[];
+          time: number;
       }
     | {
           event: typeof constants.EVENT_TEST_PENDING;
@@ -75,6 +78,7 @@ type Message =
           duration?: number;
           state: 'failed' | 'passed' | undefined;
           parent?: ParentTest;
+          time: number;
       }
     | {
           event: typeof constants.EVENT_TEST_PASS;
@@ -86,6 +90,7 @@ type Message =
           duration?: number;
           state: 'failed' | 'passed' | undefined;
           parent?: ParentTest;
+          time: number;
       };
 let currentPromise = Promise.resolve();
 const messages: Message[] = [];
@@ -208,7 +213,7 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
         .once(constants.EVENT_RUN_BEGIN, () => {
             consoleHijacker.release();
             console.error(`Started tests`);
-            writeReportProgress({ event: constants.EVENT_RUN_BEGIN });
+            writeReportProgress({ event: constants.EVENT_RUN_BEGIN, time : Date.now() });
         })
         .once(constants.EVENT_RUN_END, () => {
             consoleHijacker.release();
@@ -221,7 +226,8 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
                 event: constants.EVENT_SUITE_BEGIN,
                 title: suite.title,
                 titlePath: suite.titlePath(),
-                fullTitle: suite.fullTitle()
+                fullTitle: suite.fullTitle(),
+                time: Date.now()
             });
         })
         .on(constants.EVENT_SUITE_END, (suite: mochaTypes.Suite) => {
@@ -231,7 +237,8 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
                 title: suite.title,
                 titlePath: suite.titlePath(),
                 slow: suite.slow(),
-                fullTitle: suite.fullTitle()
+                fullTitle: suite.fullTitle(),
+                time: Date.now()
             });
         })
         .on(constants.EVENT_TEST_FAIL, (test: mochaTypes.Test, err: any) => {
@@ -247,7 +254,8 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
                 duration: test.duration,
                 state: test.state,
                 isPending: test.isPending(),
-                parent: { fullTitle: test.parent?.fullTitle() }
+                parent: { fullTitle: test.parent?.fullTitle() },
+                time: Date.now()
             });
         })
         .on(constants.EVENT_TEST_BEGIN, (test: mochaTypes.Test) => {
@@ -261,7 +269,8 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
                 isPending: test.isPending(),
                 duration: test.duration,
                 state: test.state,
-                parent: { fullTitle: test.parent?.fullTitle() }
+                parent: { fullTitle: test.parent?.fullTitle() },
+                time: Date.now()
             });
         })
         .on(constants.EVENT_TEST_PENDING, (test: mochaTypes.Test) => {
@@ -275,7 +284,8 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
                 isPending: test.isPending(),
                 duration: test.duration,
                 state: test.state,
-                parent: { fullTitle: test.parent?.fullTitle() }
+                parent: { fullTitle: test.parent?.fullTitle() },
+                time: Date.now()
             });
         })
         .on(constants.EVENT_TEST_PASS, (test: mochaTypes.Test) => {
@@ -286,7 +296,8 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
                 duration: test.duration,
                 state: test.state,
                 isPending: test.isPending(),
-                parent: { fullTitle: test.parent?.fullTitle() }
+                parent: { fullTitle: test.parent?.fullTitle() },
+                time: Date.now()
             });
         });
 }
