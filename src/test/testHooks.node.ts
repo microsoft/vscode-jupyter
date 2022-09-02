@@ -27,6 +27,7 @@ export const rootHooks: Mocha.RootHookObject = {
         telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true);
     },
     afterEach(this: Context) {
+        traceInfoIfCI('Root afterEach');
         if (
             !IS_CI_SERVER ||
             !process.env.GITHUB_REF_NAME ||
