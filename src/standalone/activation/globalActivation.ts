@@ -18,8 +18,7 @@ import {
 } from '../../platform/common/types';
 import { debounceAsync, swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EditorContexts, Telemetry } from '../../platform/common/constants';
+import { EditorContexts } from '../../platform/common/constants';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
@@ -149,7 +148,7 @@ export class GlobalActivation implements IExtensionSingleActivationService {
                     resultSettings[k] = currentValue;
                 }
             }
-            sendTelemetryEvent(Telemetry.DataScienceSettings, undefined, resultSettings);
+            // sendTelemetryEvent(Telemetry.DataScienceSettings, undefined, resultSettings);
         }
     }
 }

@@ -922,10 +922,10 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         tags: ['KernelStartup']
     };
-    [Telemetry.DataScienceSettings]: TelemetryEventInfo<{}> = {
-        owner: 'unknown',
-        feature: 'N/A'
-    } as any;
+    // [Telemetry.DataScienceSettings]: TelemetryEventInfo<{}> = {
+    //     owner: 'unknown',
+    //     feature: 'N/A'
+    // } as any;
     /**
      * Telemetry event sent when user hits the `continue` button while debugging IW
      */
