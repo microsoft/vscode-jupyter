@@ -1,0 +1,32 @@
+name: Aggregate Test Results
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # daily at 2 am
+
+jobs:
+  getTestResults:
+    name: Get Test Results
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: setup python
+        uses: actions/setup-python@v4
+        run: python -m pip install requests
+
+      - name: Aggregate yesterdays test results
+        uses: jannekem/run-python-script-action@v1
+        with:
+          script: |
+            ./pythonFiles/aggregateTestResults.py ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload test result files
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: AggTestResults.json
+          path: testresults.json
+          retention-days: 60
