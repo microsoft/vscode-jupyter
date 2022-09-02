@@ -215,11 +215,13 @@ export abstract class LocalKernelSpecFinderBase {
         }
         const promise = (async () => {
             const searchPath = isUri(searchItem) ? searchItem : searchItem.kernelSearchPath;
+            traceVerbose(`Searching for kernels in ${getDisplayPath(searchPath)}`);
             if (await this.fs.exists(searchPath)) {
                 if (cancelToken?.isCancellationRequested) {
                     return [];
                 }
                 const files = await this.fs.searchLocal(`**/kernel.json`, searchPath.fsPath, true);
+                traceVerbose(`Found ${files.length} kernels in ${getDisplayPath(searchPath)}`);
                 return files
                     .map((item) => uriPath.joinPath(searchPath, item))
                     .map((item) => {

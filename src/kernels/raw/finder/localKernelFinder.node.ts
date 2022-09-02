@@ -14,7 +14,8 @@ import {
     traceDecoratorError,
     traceError,
     traceVerbose,
-    traceWarning
+    traceWarning,
+    traceDecoratorVerbose
 } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IMemento, Resource } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
@@ -29,6 +30,7 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { KernelFinder } from '../../kernelFinder';
 import { LocalKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { TraceOptions } from '../../../platform/logging/types';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -54,9 +56,10 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         noop();
     }
 
+    @traceDecoratorVerbose('List local kernels', TraceOptions.BeforeCall | TraceOptions.Arguments)
     async listContributedKernels(
         resource: Resource,
-        cancelToken: CancellationToken | undefined,
+        @ignoreLogging() cancelToken: CancellationToken | undefined,
         useCache: 'ignoreCache' | 'useCache'
     ): Promise<KernelConnectionMetadata[]> {
         const kernels: KernelConnectionMetadata[] = await this.listKernelsImpl(resource, cancelToken, useCache).catch(
@@ -68,7 +71,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
                 return [];
             }
         );
-        traceVerbose(`KernelFinder discovered ${kernels.length} local`);
+        traceVerbose(`KernelFinder discovered ${kernels.length} local with ${useCache}`);
 
         return kernels;
     }
@@ -89,6 +92,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         if (useCache === 'ignoreCache') {
             try {
                 kernels = await kernelsWithoutCachePromise;
+                traceVerbose(`Found ${kernels.length} kernels without cache`);
             } catch (ex) {
                 traceWarning(`Could not fetch kernels from the ${this.kind}`);
                 kernels = [];
@@ -176,6 +180,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         } else {
             await promise;
         }
+        traceVerbose(`Found ${validValues.length} kernels in cache`);
         return validValues;
     }
 
@@ -184,6 +189,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
      */
     @traceDecoratorError('List kernels failed')
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
+    @traceDecoratorVerbose('Listing local kernels', TraceOptions.BeforeCall)
     public async listKernels(
         resource: Resource,
         @ignoreLogging() cancelToken?: CancellationToken

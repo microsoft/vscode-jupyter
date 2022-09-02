@@ -28,7 +28,14 @@ import {
     IRemoteKernelFinder
 } from '../types';
 import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
-import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
+import {
+    traceError,
+    traceWarning,
+    traceInfoIfCI,
+    traceVerbose,
+    ignoreLogging,
+    traceDecoratorVerbose
+} from '../../../platform/logging';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { computeServerId } from '../jupyterUtils';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -42,6 +49,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 import { KernelFinder } from '../../kernelFinder';
 import { RemoteKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { TraceOptions } from '../../../platform/logging/types';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -76,9 +84,10 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         noop();
     }
 
+    @traceDecoratorVerbose('List local kernels', TraceOptions.BeforeCall | TraceOptions.Arguments)
     async listContributedKernels(
         resource: Resource,
-        cancelToken: CancellationToken | undefined,
+        @ignoreLogging() cancelToken: CancellationToken | undefined,
         useCache: 'ignoreCache' | 'useCache'
     ): Promise<KernelConnectionMetadata[]> {
         const kernels: KernelConnectionMetadata[] = await this.listKernelsImpl(resource, cancelToken, useCache).catch(
@@ -91,7 +100,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
             }
         );
 
-        traceVerbose(`KernelFinder discovered ${kernels.length} remote`);
+        traceVerbose(`KernelFinder discovered ${kernels.length} remote with ${useCache}`);
         return kernels;
     }
 

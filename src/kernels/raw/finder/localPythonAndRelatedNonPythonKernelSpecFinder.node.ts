@@ -80,7 +80,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             ? await this.interpreterService.getInterpreters(resource)
             : [];
 
-        traceInfoIfCI(`Listing kernels for ${interpreters.length} interpreters`);
+        traceVerbose(`Listing kernels for interpreters ${interpreters.map((i) => getDisplayPath(i.uri)).join(', ')}`);
         // If we don't have Python extension installed or don't discover any Python interpreters
         // then list all of the global python kernel specs.
         if (interpreters.length === 0 || !this.extensionChecker.isPythonExtensionInstalled) {
@@ -183,6 +183,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     ) {
                         return true;
                     }
+                    traceVerbose(`Ignoring global kernel spec ${item.id} as it uses ipykernel_launcher`);
                     return false;
                 })
                 .map(async (item) => {
@@ -316,7 +317,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         );
         // Combine the two into our list
         const results = [...Array.from(distinctKernelMetadata.values()), ...filteredItems];
-
+        results.forEach((item) => traceVerbose(`Found kernel spec ${item.kernelSpec.display_name} with id ${item.id}`));
         return results.sort((a, b) => {
             if (a.kernelSpec.display_name.toUpperCase() === b.kernelSpec.display_name.toUpperCase()) {
                 return 0;
@@ -408,7 +409,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         interpreters: PythonEnvironment[],
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
-        traceInfoIfCI(
+        traceVerbose(
             `Finding kernel specs for ${interpreters.length} interpreters: ${interpreters
                 .map((i) => `${i.displayName} => ${i.uri}`)
                 .join('\n')}`
@@ -419,7 +420,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             this.jupyterPaths.getKernelSpecRootPaths(cancelToken),
             this.jupyterPaths.getKernelSpecRootPath()
         ]);
-        // Exclude the glbal paths from the list.
+        // Exclude the global paths from the list.
         // What could happens is, we could have a global python interpreter and that returns a global path.
         // But we could have a kernel spec in global path that points to a completely different interpreter.
         // We already have a way of identifying the interpreter associated with a global kernelspec.
@@ -473,7 +474,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             }
         });
 
-        traceInfoIfCI(`Finding kernel specs unique results: ${unique.map((u) => u.interpreterPath!).join('\n')}`);
+        traceVerbose(`Finding kernel specs unique results: ${unique.map((u) => u.interpreterPath!).join('\n')}`);
 
         return unique;
     }
