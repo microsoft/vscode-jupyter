@@ -929,47 +929,42 @@ export class IEventNamePropertyMapping {
     /**
      * Telemetry event sent when user hits the `continue` button while debugging IW
      */
-    [Telemetry.DebugContinue]: TelemetryEventInfo<DurationMeasurement> = {
+    [Telemetry.DebugContinue]: TelemetryEventInfo<never | undefined> = {
         owner: 'roblourens',
         feature: ['Debugger'],
-        source: 'User Action',
-        measures: commonClassificationForDurationProperties()
+        source: 'User Action'
     };
     /**
      * Telemetry event sent when user debugs the cell in the IW
      */
-    [Telemetry.DebugCurrentCell]: TelemetryEventInfo<DurationMeasurement> = {
+    [Telemetry.DebugCurrentCell]: TelemetryEventInfo<never | undefined> = {
         owner: 'roblourens',
         feature: ['Debugger'],
-        source: 'User Action',
-        measures: commonClassificationForDurationProperties()
+        source: 'User Action'
     };
     /**
      * Telemetry event sent when user hits the `step over` button while debugging IW
      */
-    [Telemetry.DebugStepOver]: TelemetryEventInfo<DurationMeasurement> = {
+    [Telemetry.DebugStepOver]: TelemetryEventInfo<never | undefined> = {
         owner: 'roblourens',
         feature: ['Debugger'],
-        source: 'User Action',
-        measures: commonClassificationForDurationProperties()
+        source: 'User Action'
     };
     /**
      * Telemetry event sent when user hits the `stop` button while debugging IW
      */
-    [Telemetry.DebugStop]: TelemetryEventInfo<DurationMeasurement> = {
+    [Telemetry.DebugStop]: TelemetryEventInfo<never | undefined> = {
         owner: 'roblourens',
         feature: ['Debugger'],
-        source: 'User Action',
-        measures: commonClassificationForDurationProperties()
+        source: 'User Action'
     };
     /**
      * Telemetry event sent when user debugs the file in the IW
      */
-    [Telemetry.DebugFileInteractive]: TelemetryEventInfo<DurationMeasurement> = {
+    [Telemetry.DebugFileInteractive]: TelemetryEventInfo<never | undefined> = {
         owner: 'roblourens',
         feature: ['Debugger'],
-        source: 'User Action',
-        measures: commonClassificationForDurationProperties()
+        source: 'User Action'
     };
     /**
      * Sent when we fail to update the kernel spec json file.
