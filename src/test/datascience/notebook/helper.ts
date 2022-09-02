@@ -557,6 +557,10 @@ export async function waitForKernelToGetAutoSelected(
         );
 
         const activeInterpreter = await interpreterService.getActiveInterpreter(notebookEditor.notebook.uri);
+        traceInfoIfCI(`Attempt to find a kernel that matches the active interpreter ${activeInterpreter?.uri.path}`);
+        traceInfoIfCI(
+            `Matches: ${matches.map((m) => m.connection.kind + ', ' + m.connection.interpreter?.uri.path).join('\n ')}`
+        );
 
         match =
             matches.find(
