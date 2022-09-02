@@ -6,7 +6,7 @@ import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, multiInject, optional } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
-import { PYTHON_FILE_ANY_SCHEME, PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { PYTHON_FILE_ANY_SCHEME, PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import '../../platform/common/extensions';
 import {
@@ -23,6 +23,7 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
+import { sendTelemetryEvent } from '../../telemetry';
 
 /**
  * Singleton class that activate a bunch of random things that didn't fit anywhere else.
@@ -148,7 +149,10 @@ export class GlobalActivation implements IExtensionSingleActivationService {
                     resultSettings[k] = currentValue;
                 }
             }
-            // sendTelemetryEvent(Telemetry.DataScienceSettings, undefined, resultSettings);
+
+            sendTelemetryEvent(Telemetry.DataScienceSettings, undefined, {
+                settingsJson: JSON.stringify(resultSettings)
+            });
         }
     }
 }
