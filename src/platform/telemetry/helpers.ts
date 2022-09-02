@@ -35,6 +35,6 @@ export function getTelemetrySafeVersion(version: string): string | undefined {
 /**
  * Safe way to send data in telemetry (obfuscate PII).
  */
-export function getTelemetrySafeHashedString(data: string) {
-    return computeHash(data, 'SHA256');
+export async function getTelemetrySafeHashedString(data: string) {
+    return computeHash(data, 'SHA-256');
 }

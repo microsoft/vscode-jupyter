@@ -179,7 +179,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 traceInfo(
                     `Got env vars ourselves faster ${getDisplayPath(interpreter?.uri)} with env var count ${
                         Object.keys(envVariablesOurSelves.value).length
-                    }`
+                    } in ${stopWatch.elapsedTime}ms`
                 );
                 return envVariablesOurSelves.value;
             } else {

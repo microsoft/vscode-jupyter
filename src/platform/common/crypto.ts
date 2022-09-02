@@ -3,28 +3,52 @@
 
 'use strict';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { injectable } from 'inversify';
-import { ICryptoUtils } from './types';
-import * as hashjs from 'hash.js';
+import type { ICryptoUtils } from './types';
+import { computeHash as computeHashLib } from '../../platform/msrCrypto/hash';
 
 /**
  * Provides hashing functions. These hashing functions should only be used for non sensitive data. For sensitive data, use msrCrypto instead.
  */
 @injectable()
 export class CryptoUtils implements ICryptoUtils {
-    public async createHash(data: string, algorithm: 'SHA512' | 'SHA256' = 'SHA256'): Promise<string> {
+    public async createHash(data: string, algorithm: 'SHA-512' | 'SHA-256' = 'SHA-256'): Promise<string> {
         return computeHash(data, algorithm);
     }
 }
 
-export async function computeHash(data: string, algorithm: 'SHA512' | 'SHA256' | 'SHA1') {
-    if (algorithm === 'SHA1') {
-        return hashjs.sha1().update(data).digest('hex');
-    } else if (algorithm === 'SHA256') {
-        return hashjs.sha256().update(data).digest('hex');
-    } else {
-        return hashjs.sha512().update(data).digest('hex');
+const computedHashes: Record<string, string> = {};
+let stopStoringHashes = false;
+
+/**
+ * Computes a hash for a give string and returns hash as a hex value.
+ *
+ * @param {string} data
+ * @param {('SHA512' | 'SHA256' | 'SHA1')} algorithm
+ * @return {*}
+ */
+export async function computeHash(data: string, algorithm: 'SHA-512' | 'SHA-256' | 'SHA-1') {
+    // Save some CPU as this is called in a number of places.
+    // This will not get too large, will only grow by number of files per workspace, even if user has
+    // 1000s of files, this will not grow that large to cause any memory issues.
+    // Files get hashed a lot in a number of places within the extension (.interactive is the IW window Uri).
+    // Even things that include file paths like kernel id, which isn't a file path, but contains python executable path.
+    const isCandidateForCashing = data.includes('/') || data.includes('\\') || data.endsWith('.interactive');
+    if (isCandidateForCashing && computedHashes[data]) {
+        return computedHashes[data];
     }
+
+    const hash = await computeHashLib(data, algorithm);
+
+    if (isCandidateForCashing && !stopStoringHashes) {
+        // Just a simple fail safe, why 10_000, simple why not 10_000
+        // All we want to ensure is that we don't store too many hashes.
+        // The only way we can get there is if user never closes VS Code and our code
+        // ends up hashing Uris of cells, then again user would have to have 1000s of cells in notebooks to hit this case.
+        if (Object.keys(computedHashes).length > 10_000) {
+            stopStoringHashes = true;
+        }
+        computedHashes[data] = hash;
+    }
+    return hash;
 }

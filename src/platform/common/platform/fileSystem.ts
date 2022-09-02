@@ -125,6 +125,6 @@ export class FileSystem implements IFileSystem {
         // The reason for lstat rather than stat is not clear...
         const stat = await this.stat(filename);
         const data = `${stat.ctime}-${stat.mtime}`;
-        return computeHash(data, 'SHA512');
+        return computeHash(data, 'SHA-512');
     }
 }

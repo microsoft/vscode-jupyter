@@ -21,7 +21,7 @@ import { IDisposable } from '../../platform/common/types';
 import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { ImportTracker } from '../../standalone/import-export/importTracker.node';
-import { sleep } from '../core';
+import { waitForCondition } from '../common';
 import { createDocument } from '../datascience/editor-integration/helpers';
 
 suite('Import Tracker', async () => {
@@ -46,9 +46,25 @@ suite('Import Tracker', async () => {
         public static properties: Record<string, string>[] = [];
         public static measures: {}[] = [];
 
-        public static expectHashes(...hashes: string[]) {
+        public static async expectHashes(...hashes: string[]) {
+            await waitForCondition(
+                async () => {
+                    expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_PERF);
+                    return true;
+                },
+                1_000,
+                'Hashed package perf event not sent'
+            );
             expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_PERF);
             if (hashes.length > 0) {
+                await waitForCondition(
+                    async () => {
+                        expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_NAME);
+                        return true;
+                    },
+                    1_000,
+                    'Hashed package name event not sent'
+                );
                 expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_NAME);
             }
             const properties = Reporter.properties.filter((item) => Object.keys(item).length);
@@ -112,22 +128,22 @@ suite('Import Tracker', async () => {
 
     test('Open document', async () => {
         emitDocEvent('import pandas\r\n', openedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes(pandasHash);
+
+        await Reporter.expectHashes(pandasHash);
     });
 
     test('Already opened documents', async () => {
         const doc = createDocument('import pandas\r\n', 'foo.py', 1, TypeMoq.Times.atMost(100), true);
         documentManager.setup((d) => d.textDocuments).returns(() => [doc.object]);
         await importTracker.activate();
-        await sleep(1);
-        Reporter.expectHashes(pandasHash);
+
+        await Reporter.expectHashes(pandasHash);
     });
 
     test('Save document', async () => {
         emitDocEvent('import pandas\r\n', savedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes(pandasHash);
+
+        await Reporter.expectHashes(pandasHash);
     });
 
     test('from <pkg>._ import _, _', async () => {
@@ -154,8 +170,8 @@ suite('Import Tracker', async () => {
         model.set_weights(weights)`;
 
         emitDocEvent(elephas, savedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes(elephasHash, kerasHash);
+
+        await Reporter.expectHashes(elephasHash, kerasHash);
     });
 
     test('from <pkg>._ import _', async () => {
@@ -177,8 +193,8 @@ suite('Import Tracker', async () => {
         print("Training set accuracy = " + str(evaluator.evaluate(predictionAndLabels)))`;
 
         emitDocEvent(pyspark, savedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes(pysparkHash, sparkdlHash);
+
+        await Reporter.expectHashes(pysparkHash, sparkdlHash);
     });
 
     test('import <pkg> as _', async () => {
@@ -194,8 +210,8 @@ def simplify_ages(df):
     df.Age = categories
     return df`;
         emitDocEvent(code, savedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes(pandasHash, numpyHash, randomHash);
+
+        await Reporter.expectHashes(pandasHash, numpyHash, randomHash);
     });
 
     test('from <pkg> import _', async () => {
@@ -209,15 +225,15 @@ x = np.array([r * np.cos(theta) for r in radius])
 y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes(scipyHash);
+
+        await Reporter.expectHashes(scipyHash);
     });
 
     test('from <pkg> import _ as _', async () => {
         const code = `from pandas import DataFrame as df`;
         emitDocEvent(code, savedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes(pandasHash);
+
+        await Reporter.expectHashes(pandasHash);
     });
 
     test('import <pkg1>, <pkg2>', async () => {
@@ -231,8 +247,8 @@ x = np.array([r * np.cos(theta) for r in radius])
 y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes(sklearnHash, pandasHash);
+
+        await Reporter.expectHashes(sklearnHash, pandasHash);
     });
 
     test('Import from within a function', async () => {
@@ -246,8 +262,8 @@ x = np.array([r * np.cos(theta) for r in radius])
 y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes(sklearnHash);
+
+        await Reporter.expectHashes(sklearnHash);
     });
 
     test('Do not send the same package twice', async () => {
@@ -255,15 +271,15 @@ z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
 import pandas
 import pandas`;
         emitDocEvent(code, savedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes(pandasHash);
+
+        await Reporter.expectHashes(pandasHash);
     });
 
     test('Ignore relative imports', async () => {
         const code = 'from .pandas import not_real';
         emitDocEvent(code, savedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes();
+
+        await Reporter.expectHashes();
     });
 
     test('Ignore docstring for `from` imports', async () => {
@@ -271,8 +287,8 @@ import pandas`;
 from numpy import the random function
 """`;
         emitDocEvent(code, savedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes();
+
+        await Reporter.expectHashes();
     });
 
     test('Ignore docstring for `import` imports', async () => {
@@ -280,7 +296,7 @@ from numpy import the random function
 import numpy for all the things
 """`;
         emitDocEvent(code, savedEventEmitter);
-        await sleep(1);
-        Reporter.expectHashes();
+
+        await Reporter.expectHashes();
     });
 });
