@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { KnownKernelLanguageAliases, VSCodeKnownNotebookLanguages } from '../common/constants';
-import { computeHash } from '../common/hash';
+import { computeHash } from '../common/crypto';
 import { traceError } from '../logging';
 
 export async function getTelemetrySafeLanguage(language: string = 'unknown') {

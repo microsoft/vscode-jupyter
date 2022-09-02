@@ -11,7 +11,7 @@ import * as uriPath from '../../vscode-path/resources';
 import uuid from 'uuid/v4';
 import { isFileNotFoundError } from './errors';
 import { traceError } from '../../logging';
-import { computeHash } from '../hash';
+import { computeHash } from '../crypto';
 
 export const ENCODING = 'utf8';
 

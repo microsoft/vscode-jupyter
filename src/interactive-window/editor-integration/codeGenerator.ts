@@ -20,7 +20,7 @@ import { IConfigurationService, IDisposableRegistry } from '../../platform/commo
 import { uncommentMagicCommands } from './cellFactory';
 import { CellMatcher } from './cellMatcher';
 import { IGeneratedCode, IInteractiveWindowCodeGenerator, IGeneratedCodeStore, InteractiveCellMetadata } from './types';
-import { computeHash } from '../../platform/common/hash';
+import { computeHash } from '../../platform/common/crypto';
 
 // This class provides generated code for debugging jupyter cells. Call getGeneratedCode just before starting debugging to compute all of the
 // generated codes for cells & update the source maps in the python debugger.

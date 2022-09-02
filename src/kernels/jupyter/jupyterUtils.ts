@@ -15,7 +15,7 @@ import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../platform/common/constants';
-import { computeHash } from '../../platform/common/hash';
+import { computeHash } from '../../platform/common/crypto';
 
 export function expandWorkingDir(
     workingDir: string | undefined,

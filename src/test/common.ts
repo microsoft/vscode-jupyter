@@ -9,7 +9,7 @@ import { NotebookDocument, Uri, Event } from 'vscode';
 import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
-import { computeHash } from '../platform/common/hash';
+import { computeHash } from '../platform/msrCrypto/hash';
 
 export interface IExtensionTestApi extends IExtensionApi {
     serviceContainer: IServiceContainer;

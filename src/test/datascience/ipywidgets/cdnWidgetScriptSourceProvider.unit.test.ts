@@ -23,7 +23,7 @@ import { HttpClient } from '../../../platform/common/net/httpClient';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
-import { computeHash } from '../../../platform/common/hash';
+import { computeHash } from '../../../platform/common/crypto';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
 const sanitize = require('sanitize-filename');
