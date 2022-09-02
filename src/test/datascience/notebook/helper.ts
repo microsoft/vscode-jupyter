@@ -548,6 +548,7 @@ export async function waitForKernelToGetAutoSelected(
         }
     }
     if (!match) {
+        traceInfoIfCI(`Manually pick a preferred kernel from all kernel specs`);
         const matches = notebookControllers.filter(
             (d) =>
                 d.connection.kind != 'connectToLiveRemoteKernel' &&
