@@ -12,6 +12,7 @@ import { activateExtension, initializePython } from '../initialize.node';
 import { PerformanceTracker } from './performanceTracker';
 
 suite('Initial Notebook Cell Execution Perf Test', function () {
+    this.timeout(120_000);
     let tracker: PerformanceTracker;
     setup(function () {
         sinon.restore();
