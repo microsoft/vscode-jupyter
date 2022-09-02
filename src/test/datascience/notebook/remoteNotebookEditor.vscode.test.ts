@@ -36,7 +36,7 @@ import { runCellAndVerifyUpdateOfPreferredRemoteKernelId } from './remoteNoteboo
 import { IControllerLoader, IControllerRegistration, IControllerSelection } from '../../../notebooks/controllers/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
-suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
+suite.only('DataScience - VSCode Notebook - (Remote Execution)', function () {
     let controllerLoader: IControllerLoader;
     let controllerRegistration: IControllerRegistration;
     let jupyterServerSelector: JupyterServerSelector;
@@ -171,6 +171,15 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
             controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
             'Should have at least one remote kernelspec'
         );
+
+        await waitForCondition(
+            async () => {
+                return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
+            },
+            defaultNotebookTestTimeout,
+            () => `Should have at least one remote kernelspec`
+        );
+
         assert.notOk(
             controllers.some(
                 (item) =>
