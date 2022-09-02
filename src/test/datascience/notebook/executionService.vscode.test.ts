@@ -74,7 +74,7 @@ import { InteractiveWindowMessages } from '../../../messageTypes';
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite.only('DataScience - VSCode Notebook - (Execution) (slow)', function () {
+suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
