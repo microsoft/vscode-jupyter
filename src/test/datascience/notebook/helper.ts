@@ -96,6 +96,7 @@ import {
 import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpdater';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
 import { IServerConnectionType } from '../../../kernels/jupyter/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -114,6 +115,7 @@ export async function getServices() {
         controllerSelection: api.serviceContainer.get<IControllerSelection>(IControllerSelection),
         controllerPreferred: api.serviceContainer.get<IControllerPreferredService>(IControllerPreferredService),
         isWebExtension: api.serviceContainer.get<boolean>(IsWebExtension),
+        interpreterService: api.serviceContainer.get<IInterpreterService>(IInterpreterService),
         serviceContainer: api.serviceContainer
     };
 }
@@ -485,8 +487,14 @@ export async function waitForKernelToGetAutoSelected(
     skipAutoSelection: boolean = false
 ) {
     traceInfoIfCI('Wait for kernel to get auto selected');
-    const { controllerLoader, controllerRegistration, controllerSelection, controllerPreferred, isWebExtension } =
-        await getServices();
+    const {
+        controllerLoader,
+        controllerRegistration,
+        controllerSelection,
+        controllerPreferred,
+        interpreterService,
+        isWebExtension
+    } = await getServices();
     const useRemoteKernelSpec = preferRemoteKernelSpec || isWebExtension; // Web is only remote
 
     // Wait for the active editor to come up
@@ -540,12 +548,23 @@ export async function waitForKernelToGetAutoSelected(
         }
     }
     if (!match) {
-        match = notebookControllers.find(
+        const matches = notebookControllers.filter(
             (d) =>
                 d.connection.kind != 'connectToLiveRemoteKernel' &&
                 language === d.connection.kernelSpec?.language?.toLowerCase() &&
                 (!useRemoteKernelSpec || d.connection.kind.includes('Remote'))
         );
+
+        const activeInterpreter = await interpreterService.getActiveInterpreter(notebookEditor.notebook.uri);
+
+        match =
+            matches.find(
+                (d) =>
+                    d.connection.kind === 'startUsingPythonInterpreter' &&
+                    d.connection.interpreter &&
+                    activeInterpreter &&
+                    Uri.from(d.connection.interpreter.uri).toString() === Uri.from(activeInterpreter.uri).toString()
+            ) ?? matches[0];
     }
 
     if (!match) {
