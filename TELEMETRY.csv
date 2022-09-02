@@ -24,16 +24,11 @@ the slice control panel. `source` is one of `dropdown`,
 `textbox`, or `checkbox`.","","dropdown ()
 textbox ()
 checkbox ()",false
-"DATASCIENCE.DEBUG_CONTINUE","Telemetry event sent when user hits the `continue` button while debugging IW","Telemetry.DebugContinue","roblourens","Debugger","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.DEBUG_CURRENT_CELL","Telemetry event sent when user debugs the cell in the IW","Telemetry.DebugCurrentCell","roblourens","Debugger","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.DEBUG_FILE_INTERACTIVE","Telemetry event sent when user debugs the file in the IW","Telemetry.DebugFileInteractive","roblourens","Debugger","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.DEBUG_STEP_OVER","Telemetry event sent when user hits the `step over` button while debugging IW","Telemetry.DebugStepOver","roblourens","Debugger","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DATASCIENCE.DEBUG_STOP","Telemetry event sent when user hits the `stop` button while debugging IW","Telemetry.DebugStop","roblourens","Debugger","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
+"DATASCIENCE.DEBUG_CONTINUE","Telemetry event sent when user hits the `continue` button while debugging IW","Telemetry.DebugContinue","roblourens","Debugger","","","","","","",""
+"DATASCIENCE.DEBUG_CURRENT_CELL","Telemetry event sent when user debugs the cell in the IW","Telemetry.DebugCurrentCell","roblourens","Debugger","","","","","","",""
+"DATASCIENCE.DEBUG_FILE_INTERACTIVE","Telemetry event sent when user debugs the file in the IW","Telemetry.DebugFileInteractive","roblourens","Debugger","","","","","","",""
+"DATASCIENCE.DEBUG_STEP_OVER","Telemetry event sent when user hits the `step over` button while debugging IW","Telemetry.DebugStepOver","roblourens","Debugger","","","","","","",""
+"DATASCIENCE.DEBUG_STOP","Telemetry event sent when user hits the `stop` button while debugging IW","Telemetry.DebugStop","roblourens","Debugger","","","","","","",""
 "DATASCIENCE.DEBUGGING.CLICKED_ON_SETUP","Sent when the user accepts the prompt to install ipykernel 6 automatically.","DebuggingTelemetry.clickedOnSetup","roblourens","Debugger","","","","","","",""
 "DATASCIENCE.DEBUGGING.CLICKED_RUN_AND_DEBUG_CELL","Sent when the user attempts to start debugging a notebook cell.","DebuggingTelemetry.clickedRunAndDebugCell","roblourens","Debugger","","","","","","",""
 "DATASCIENCE.DEBUGGING.CLICKED_RUNBYLINE","Sent when the user attempts to start run by line.","DebuggingTelemetry.clickedRunByLine","roblourens","Debugger","","","","","","",""
