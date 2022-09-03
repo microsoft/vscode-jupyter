@@ -8,7 +8,6 @@ import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTest
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import * as tmp from 'tmp';
 import { PythonExtension, PylanceExtension, setTestExecution } from '../platform/common/constants';
-import * as jsonc from 'jsonc-parser';
 import { DownloadPlatform } from '@vscode/test-electron/out/download';
 
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
@@ -83,20 +82,6 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
     });
 }
 
-async function updatePackageJson() {
-    const packageJsonFile = path.join(extensionDevelopmentPath, 'package.json');
-    // Changing the logging level to be read from workspace settings file.
-    // This way we can enable verbose logging and get the logs for the tests.
-    const settingsJson = fs.readFileSync(packageJsonFile).toString();
-    const edits = jsonc.modify(
-        settingsJson,
-        ['contributes', 'configuration', 'properties', 'jupyter.logging.level', 'scope'],
-        'resource',
-        {}
-    );
-    const updatedSettingsJson = jsonc.applyEdits(settingsJson, edits);
-    fs.writeFileSync(packageJsonFile, updatedSettingsJson);
-}
 async function createSettings(): Promise<string> {
     // User data dir can be overridden with an environment variable.
     const userDataDirectory = process.env.VSC_JUPYTER_USER_DATA_DIR || (await createTempDir());
@@ -104,7 +89,7 @@ async function createSettings(): Promise<string> {
     const settingsFile = path.join(userDataDirectory, 'User', 'settings.json');
     const defaultSettings: Record<string, string | boolean | string[]> = {
         'python.insidersChannel': 'off',
-        'jupyter.logging.level': 'debug',
+        'jupyter.logging.level': 'verbose',
         'python.logging.level': 'debug',
         'files.autoSave': 'off',
         'python.experiments.enabled': true,
@@ -149,7 +134,6 @@ async function start() {
     const userDataDirectory = await createSettings();
     const extensionsDir = await getExtensionsDir();
     await installPythonExtension(vscodeExecutablePath, extensionsDir, platform);
-    await updatePackageJson();
     await runTests({
         vscodeExecutablePath,
         extensionDevelopmentPath: extensionDevelopmentPath,
