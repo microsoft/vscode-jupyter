@@ -16,7 +16,7 @@ import { JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfo, traceError } from '../../../platform/logging';
+import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
@@ -95,6 +95,11 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                         resultPath.interpreter,
                         globalKernelPath,
                         cancelToken
+                    );
+                    traceVerbose(
+                        `findKernelSpecs.getKernelSpec for ${
+                            resultPath.kernelSpecFile
+                        } from ${resultPath.interpreter?.uri?.toString()}`
                     );
                     if (kernelSpec) {
                         sendKernelSpecTelemetry(kernelSpec, 'local').ignoreErrors();

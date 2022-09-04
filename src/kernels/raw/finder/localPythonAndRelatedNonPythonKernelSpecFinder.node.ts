@@ -115,6 +115,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         interpreters: PythonEnvironment[],
         cancelToken?: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+        traceVerbose(
+            `listPythonAndRelatedNonPythonKernelSpecs.1 ${interpreters.length} cancelToken.isCancellationRequested=${cancelToken?.isCancellationRequested}`
+        );
         // First find the on disk kernel specs and interpreters
         const [kernelSpecs, activeInterpreter, globalKernelSpecs, tempDirForKernelSpecs] = await Promise.all([
             this.findKernelSpecsInInterpreters(interpreters, cancelToken),
@@ -122,6 +125,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             this.listGlobalPythonKernelSpecs(true, cancelToken),
             this.jupyterPaths.getKernelSpecTempRegistrationFolder()
         ]);
+        traceVerbose(
+            `listPythonAndRelatedNonPythonKernelSpecs.2 ${interpreters.length}, ${kernelSpecs
+                .map((k) => k.specFile?.toString())
+                .join(', ')} cancelToken.isCancellationRequested=${cancelToken?.isCancellationRequested}`
+        );
         const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
             getKernelRegistrationInfo(item.kernelSpec)
         );
@@ -425,11 +433,17 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // But we could have a kernel spec in global path that points to a completely different interpreter.
         // We already have a way of identifying the interpreter associated with a global kernelspec.
         // Hence exclude global paths from the list of interpreter specific paths (as global paths are NOT interpreter specific).
+        traceVerbose(`findKernelSpecsInInterpreterPaths before filtering for ${interpreterPaths.join(', ')}`);
         const paths = interpreterPaths.filter(
             (item) => !rootSpecPaths.find((i) => uriPath.isEqual(i, item.kernelSearchPath))
         );
-
+        traceVerbose(`findKernelSpecsInInterpreterPaths for ${paths.join(', ')} `);
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
+        traceVerbose(
+            `findKernelSpecsInInterpreterPaths for ${paths.join(', ')} cancelToken?.isCancellationRequested=${
+                cancelToken?.isCancellationRequested
+            }`
+        );
         let results: IJupyterKernelSpec[] = [];
         await Promise.all(
             searchResults.map(async (resultPath) => {
@@ -447,6 +461,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             })
         );
 
+        traceVerbose(
+            `findKernelSpecsInInterpreterPaths for ${paths.join(', ')} cancelToken?.isCancellationRequested=${
+                cancelToken?.isCancellationRequested
+            }`
+        );
         // Filter out duplicates. This can happen when
         // 1) Conda installs kernel
         // 2) Same kernel is registered in the global location
@@ -474,7 +493,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             }
         });
 
-        traceVerbose(`Finding kernel specs unique results: ${unique.map((u) => u.interpreterPath!).join('\n')}`);
+        traceVerbose(
+            `Finding kernel specs unique results: ${unique
+                .map((u) => u.interpreterPath!)
+                .join('\n')} cancelToken?.isCancellationRequested=${cancelToken?.isCancellationRequested}`
+        );
 
         return unique;
     }
