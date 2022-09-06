@@ -70,7 +70,8 @@ suite('Smoke Tests', () => {
     //     console.log('Step4');
     // }).timeout(timeoutForCellToRun);
 
-    test.skip('Run Cell in native editor', async () => {
+    test('Run Cell in native editor', async function () {
+        this.skip(); // See https://github.com/microsoft/vscode-jupyter/issues/11304
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',

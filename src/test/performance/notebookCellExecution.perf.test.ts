@@ -26,6 +26,7 @@ suite('Initial Notebook Cell Execution Perf Test', function () {
         }
     });
     test.skip('Initial Notebook Cell Execution Perf Test', async function () {
+        // See https://github.com/microsoft/vscode-jupyter/issues/11303
         const disposables: IDisposable[] = [];
         sinon.restore();
         await initializePython();
