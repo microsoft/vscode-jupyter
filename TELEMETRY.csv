@@ -2521,6 +2521,8 @@ selectAnotherInterpreter - Selected another interpreter.","","'notSelected'
 'selected' 
 'installationCancelled' 
 'selectAnotherInterpreter' ",true
+"DS_INTERNAL.SETTINGS","The list of settings a user has set. Sent on activation.","Telemetry.DataScienceSettings","amunger","N/A","","","settingsJson","A json representation of settings that the user has set.
+The values for string based settings are transalted to 'default' | 'non-default' unless white-listed.","string","",false
 "DS_INTERNAL.SHIFTENTER_BANNER_SHOWN","Information banner displayed to give the user the option to configure shift+enter for the Interactive Window.","Telemetry.ShiftEnterBannerShown","amunger","InteractiveWindow","","","","","","",""
 "DS_INTERNAL.SHOW_DATA_NO_PANDAS","User tried to open the data viewer and Pandas package was not installed.
 Note: Not a failure state, as we prompt for install after this.","Telemetry.PandasNotInstalled","IanMatthewHuff","DataFrameViewer","","","","","","",""

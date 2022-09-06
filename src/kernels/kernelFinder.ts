@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
-import { CancellationToken } from 'vscode';
-import { Resource } from '../platform/common/types';
+import { inject, injectable } from 'inversify';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
+import { IDisposableRegistry, Resource } from '../platform/common/types';
 import { StopWatch } from '../platform/common/utils/stopWatch';
+import { traceInfoIfCI } from '../platform/logging';
 import { IContributedKernelFinder } from './internalTypes';
 import { IKernelFinder, KernelConnectionMetadata } from './types';
 
@@ -14,50 +15,44 @@ import { IKernelFinder, KernelConnectionMetadata } from './types';
 @injectable()
 export class KernelFinder implements IKernelFinder {
     private startTimeForFetching?: StopWatch;
-    private fetchingTelemetrySent = new Set<string>();
     private _finders: IContributedKernelFinder[] = [];
+
+    private _onDidChangeKernels = new EventEmitter<void>();
+    onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
+
+    constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {}
 
     public registerKernelFinder(finder: IContributedKernelFinder) {
         this._finders.push(finder);
+        this.disposables.push(finder.onDidChangeKernels(() => this._onDidChangeKernels.fire()));
     }
 
     public async listKernels(
         resource: Resource,
-        cancelToken: CancellationToken | undefined,
-        useCache: 'ignoreCache' | 'useCache' = 'ignoreCache'
+        cancelToken: CancellationToken | undefined
     ): Promise<KernelConnectionMetadata[]> {
         this.startTimeForFetching = this.startTimeForFetching ?? new StopWatch();
 
-        const kernels: KernelConnectionMetadata[] = [];
+        // Wait all finders to warm up their cache first
+        await Promise.all(this._finders.map((finder) => finder.initialized));
 
-        const allKernels = await Promise.all(
-            this._finders.map((finder) => {
-                return finder.listContributedKernels(resource, cancelToken, useCache).then((kernels) => {
-                    this.finishListingKernels(kernels, useCache, finder.kind as 'local' | 'remote');
-                    return kernels;
-                });
-            })
-        );
-
-        allKernels.forEach((kernelList) => {
-            kernels.push(...kernelList);
-        });
-
-        return kernels;
-    }
-
-    private finishListingKernels(
-        list: KernelConnectionMetadata[],
-        useCache: 'ignoreCache' | 'useCache',
-        kind: 'local' | 'remote'
-    ) {
-        // Send the telemetry once for each type of search
-        const key = `${kind}:${useCache}`;
-        if (this.startTimeForFetching && !this.fetchingTelemetrySent.has(key)) {
-            this.fetchingTelemetrySent.add(key);
+        if (cancelToken?.isCancellationRequested) {
+            return [];
         }
 
-        // Just return the list
-        return list;
+        const kernels: KernelConnectionMetadata[] = [];
+
+        for (const finder of this._finders) {
+            const contributedKernels = finder.listContributedKernels(resource);
+            kernels.push(...contributedKernels);
+        }
+
+        traceInfoIfCI(
+            `list kernel specs ${kernels.length}: ${kernels
+                .map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri}`)
+                .join('\n')}`
+        );
+
+        return kernels;
     }
 }

@@ -610,11 +610,8 @@ export interface IKernelDependencyService {
 export const IKernelFinder = Symbol('IKernelFinder');
 
 export interface IKernelFinder {
-    listKernels(
-        resource: Resource,
-        cancelToken?: CancellationToken,
-        useCache?: 'useCache' | 'ignoreCache'
-    ): Promise<KernelConnectionMetadata[]>;
+    onDidChangeKernels: Event<void>;
+    listKernels(resource: Resource, cancelToken?: CancellationToken): Promise<KernelConnectionMetadata[]>;
 }
 
 export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';

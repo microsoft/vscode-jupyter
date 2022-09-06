@@ -11,7 +11,7 @@ import {
     IBaseKernel
 } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceVerbose } from '../../platform/logging';
+import { traceVerbose, traceInfoIfCI } from '../../platform/logging';
 import { IDisposable, IDisposableRegistry, IExtensions } from '../../platform/common/types';
 import { PromiseChain } from '../../platform/common/utils/async';
 import { IKernelSocket as ExtensionKernelSocket } from '../../kernels/types';
@@ -105,10 +105,54 @@ class JupyterKernelService implements IExportedKernelService {
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {
-        this.kernelProvider.onDidDisposeKernel(() => this._onDidChangeKernels.fire(), this, disposables);
-        this.kernelProvider.onDidStartKernel(() => this._onDidChangeKernels.fire(), this, disposables);
-        this.thirdPartyKernelProvider.onDidDisposeKernel(() => this._onDidChangeKernels.fire(), this, disposables);
-        this.thirdPartyKernelProvider.onDidStartKernel(() => this._onDidChangeKernels.fire(), this, disposables);
+        this.kernelProvider.onDidDisposeKernel(
+            (e) => {
+                traceInfoIfCI(
+                    `Kernel ${
+                        e.kernelConnectionMetadata.id
+                    }, ${e.kernelConnectionMetadata.interpreter?.uri.toString()} disposed`
+                );
+                this._onDidChangeKernels.fire();
+            },
+            this,
+            disposables
+        );
+        this.kernelProvider.onDidStartKernel(
+            (e) => {
+                traceInfoIfCI(
+                    `Kernel ${
+                        e.kernelConnectionMetadata.id
+                    }, ${e.kernelConnectionMetadata.interpreter?.uri.toString()} started`
+                );
+                this._onDidChangeKernels.fire();
+            },
+            this,
+            disposables
+        );
+        this.thirdPartyKernelProvider.onDidDisposeKernel(
+            (e) => {
+                traceInfoIfCI(
+                    `Third party Kernel ${
+                        e.kernelConnectionMetadata.id
+                    }, ${e.kernelConnectionMetadata.interpreter?.uri.toString()} disposed`
+                );
+                this._onDidChangeKernels.fire();
+            },
+            this,
+            disposables
+        );
+        this.thirdPartyKernelProvider.onDidStartKernel(
+            (e) => {
+                traceInfoIfCI(
+                    `Third party Kernel ${
+                        e.kernelConnectionMetadata.id
+                    }, ${e.kernelConnectionMetadata.interpreter?.uri.toString()} started`
+                );
+                this._onDidChangeKernels.fire();
+            },
+            this,
+            disposables
+        );
         this.controllerLoader.refreshed(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
     }
     async getKernelSpecifications(refresh?: boolean): Promise<KernelConnectionMetadata[]> {

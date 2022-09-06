@@ -34,6 +34,7 @@ import { IDisposable } from '../../../platform/common/types';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { runCellAndVerifyUpdateOfPreferredRemoteKernelId } from './remoteNotebookEditor.vscode.common.test';
 import { IControllerLoader, IControllerRegistration, IControllerSelection } from '../../../notebooks/controllers/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
 suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
     let controllerLoader: IControllerLoader;
@@ -43,6 +44,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
     let ipynbFile: Uri;
     let remoteKernelIdProvider: PreferredRemoteKernelIdProvider;
     let svcContainer: IServiceContainer;
+    let interpreterService: IInterpreterService;
 
     this.timeout(120_000);
     let api: IExtensionTestApi;
@@ -64,6 +66,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         remoteKernelIdProvider = serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider);
         svcContainer = serviceContainer;
+        interpreterService = await api.serviceContainer.get<IInterpreterService>(IInterpreterService);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
@@ -93,6 +96,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
             disposables
         );
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        await controllerLoader.loadControllers(true);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
@@ -167,6 +171,15 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
             controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
             'Should have at least one remote kernelspec'
         );
+
+        await waitForCondition(
+            async () => {
+                return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
+            },
+            defaultNotebookTestTimeout,
+            () => `Should have at least one remote kernelspec`
+        );
+
         assert.notOk(
             controllers.some(
                 (item) =>
@@ -212,7 +225,13 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
             'Should not have any remote controllers'
         );
 
-        await createEmptyPythonNotebook(disposables);
+        const activeInterpreter = await interpreterService.getActiveInterpreter();
+        traceInfoIfCI(`active interpreter ${activeInterpreter?.uri.path}`);
+        const notebook = await createEmptyPythonNotebook(disposables);
+        const controllerManager = svcContainer.get<IControllerSelection>(IControllerSelection);
+        const preferredController = controllerManager.getSelected(notebook);
+        traceInfoIfCI(`preferred controller ${preferredController?.connection.id}`);
+
         await insertCodeCell('a = "123412341234"', { index: 0 });
         await insertCodeCell('print(a)', { index: 1 });
         const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
@@ -231,6 +250,9 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
             defaultNotebookTestTimeout,
             'Should have at least one remote controller'
         );
+
+        const newPreferredController = controllerManager.getSelected(notebook);
+        traceInfoIfCI(`new preferred controller ${newPreferredController?.connection.id}`);
 
         // Run the second cell and verify we still have the same kernel state.
         await Promise.all([runCell(cell2), waitForTextOutput(cell2, '123412341234')]);
@@ -274,6 +296,16 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
             { result: DataScience.jupyterSelfCertEnable(), clickImmediately: true }
         );
         await startJupyterServer(undefined, true);
+
+        await waitForCondition(
+            async () => {
+                const controllers = controllerRegistration.registered;
+                return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
+            },
+            defaultNotebookTestTimeout,
+            'Should have at least one remote controller'
+        );
+
         const { editor } = await openNotebook(ipynbFile);
         await waitForCondition(() => prompt.displayed, defaultNotebookTestTimeout, 'Prompt not displayed');
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE, true);
