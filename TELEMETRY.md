@@ -4623,6 +4623,18 @@ In such cases we do not notify user of any failures or the like.
             - `'selectAnotherInterpreter'`  
 
 
+* DS_INTERNAL.SETTINGS  (Telemetry.DataScienceSettings)  
+      Owner: [@amunger](https://github.com/amunger)  
+    ```
+    The list of settings a user has set. Sent on activation.  
+    ```
+
+    - Properties:  
+        - `settingsJson`: `string`  
+        A json representation of settings that the user has set.  
+        The values for string based settings are transalted to 'default' | 'non-default' unless white-listed.  
+
+
 * DS_INTERNAL.SHIFTENTER_BANNER_SHOWN  (Telemetry.ShiftEnterBannerShown)  
       Owner: [@amunger](https://github.com/amunger)  
     ```
