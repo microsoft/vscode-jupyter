@@ -457,6 +457,7 @@ ${actualCode}
     });
 
     test('Error stack traces have correct line hrefs with mix of cell sources', async function () {
+        this.skip();
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('interactiveWindowMode', 'single');
 
@@ -489,6 +490,7 @@ ${actualCode}
     });
 
     test('Raising an exception from within a function has a stack trace', async function () {
+        this.skip();
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '# %%\ndef raiser():\n  raise Exception("error")\n# %%\nraiser()',
