@@ -25,6 +25,7 @@ import { ResourceMap, ResourceSet } from '../../../platform/vscode-path/map';
 import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
+import { TraceOptions } from '../../../platform/logging/types';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -152,6 +153,7 @@ export class JupyterPaths {
         return this.cachedDataDirs.get(key)!;
     }
 
+    @traceDecoratorVerbose('getDataDirsImpl', TraceOptions.BeforeCall | TraceOptions.Arguments)
     private async getDataDirsImpl({
         resource,
         interpreter

@@ -34,7 +34,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
 import { EventEmitter, Memento, Uri } from 'vscode';
-import { IDisposable, IExtensionContext } from '../../../platform/common/types';
+import { IDisposable, IExtensionContext, IExtensions } from '../../../platform/common/types';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import {
@@ -47,7 +47,6 @@ import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder
 import { loadKernelSpec } from '../../../kernels/raw/finder/localKernelSpecFinderBase.node';
 import { LocalKnownPathKernelSpecFinder } from '../../../kernels/raw/finder/localKnownPathKernelSpecFinder.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
-import { ILocalKernelFinder } from '../../../kernels/raw/types';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../../kernels/kernelFinder';
@@ -60,10 +59,12 @@ import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
+import { CondaService } from '../../../platform/common/process/condaService.node';
+import { noop } from '../../../platform/common/utils/misc';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
-        let localKernelFinder: ILocalKernelFinder;
+        let localKernelFinder: LocalKernelFinder;
         let remoteKernelFinder: IRemoteKernelFinder;
         let kernelFinder: KernelFinder;
         let interpreterService: IInterpreterService;
@@ -108,7 +109,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
             interpreterService = mock(InterpreterService);
             remoteKernelFinder = mock(RemoteKernelFinder);
 
-            when(remoteKernelFinder.listKernelsFromConnection(anything(), anything(), anything())).thenResolve([]);
+            when(remoteKernelFinder.listKernelsFromConnection(anything())).thenResolve([]);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
                 testData.interpreters = testData.interpreters || [];
@@ -246,7 +247,10 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
             disposables.push(onDidChangeEvent);
             when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
 
-            kernelFinder = new KernelFinder();
+            const extensions = mock<IExtensions>();
+            kernelFinder = new KernelFinder([]);
+
+            const condaService = mock<CondaService>();
 
             localKernelFinder = new LocalKernelFinder(
                 nonPythonKernelSpecFinder,
@@ -262,8 +266,15 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
                 instance(memento),
                 instance(fs),
                 instance(env),
-                kernelFinder
+                kernelFinder,
+                [],
+                instance(extensionChecker),
+                instance(interpreterService),
+                instance(condaService),
+                instance(extensions),
+                instance(workspaceService)
             );
+            localKernelFinder.activate().then(noop, noop);
 
             kernelRankHelper = new KernelRankingHelper(kernelFinder, instance(preferredRemote));
         }

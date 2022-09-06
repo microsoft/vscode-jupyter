@@ -109,9 +109,9 @@ suite('Preferred Controller', () => {
         when(document.notebookType).thenReturn(notebookType);
         when(document.metadata).thenReturn({ custom: { metadata } });
         when(serverConnectionType.isLocalLaunch).thenReturn(true);
-        when(
-            kernelRankHelper.rankKernels(anything(), anything(), anything(), anything(), anything(), anything())
-        ).thenResolve(kernels);
+        when(kernelRankHelper.rankKernels(anything(), anything(), anything(), anything(), anything())).thenResolve(
+            kernels
+        );
         when(kernelRankHelper.isExactMatch(anything(), anything(), anything())).thenResolve(false);
         const controllers = kernels.map((kernel) => {
             const controller = mock<IVSCodeNotebookController>();

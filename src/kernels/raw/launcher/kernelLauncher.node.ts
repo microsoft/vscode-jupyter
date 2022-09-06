@@ -14,7 +14,7 @@ import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
-import { traceInfo, traceWarning } from '../../../platform/logging';
+import { traceDecoratorVerbose, traceInfo, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../platform/common/process/types.node';
@@ -38,6 +38,7 @@ import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEve
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { TraceOptions } from '../../../platform/logging/types';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -106,6 +107,7 @@ export class KernelLauncher implements IKernelLauncher {
         }
     }
 
+    @traceDecoratorVerbose('Kernel Launcher. launch', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async launch(
         kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         timeout: number,
