@@ -70,7 +70,7 @@ suite('Smoke Tests', () => {
     //     console.log('Step4');
     // }).timeout(timeoutForCellToRun);
 
-    test('Run Cell in native editor', async () => {
+    test.skip('Run Cell in native editor', async () => {
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',

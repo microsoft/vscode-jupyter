@@ -25,7 +25,7 @@ suite('Initial Notebook Cell Execution Perf Test', function () {
             await captureScreenShot(this);
         }
     });
-    test('Initial Notebook Cell Execution Perf Test', async function () {
+    test.skip('Initial Notebook Cell Execution Perf Test', async function () {
         const disposables: IDisposable[] = [];
         sinon.restore();
         await initializePython();
