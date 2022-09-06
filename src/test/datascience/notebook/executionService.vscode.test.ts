@@ -149,7 +149,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             await Promise.all([runCell(cell), waitForTextOutput(cell, `${uri.fsPath}`)]);
         }
     });
-    test('Test exceptions have hrefs', async () => {
+    test.skip('Test exceptions have hrefs', async () => {
         const uri = vscodeNotebook.activeNotebookEditor?.notebook.uri;
         if (uri && uri.scheme === 'file') {
             let ipythonVersionCell = await insertCodeCell(IPYTHON_VERSION_CODE, { index: 0 });
