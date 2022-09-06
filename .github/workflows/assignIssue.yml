@@ -3,6 +3,14 @@ name: Assign DS issue to someone
 on:
   issues:
     types: [opened]
+  pull_request:
+    branches:
+      - main
+      - 'release'
+      - 'release/*'
+      - 'release-*'
+  check_run:
+    types: [rerequested, requested_action]
 
 permissions:
   issues: write
@@ -56,86 +64,13 @@ jobs:
           echo ${{steps.hour.outputs.hour}}
         shell: bash
       - name: Saturday (Don)
-        if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 6
         uses: actions/github-script@v6.2.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
+            github.rest.issues.addAssignees({
+              issue_number: 6054,
               owner: context.repo.owner,
               repo: context.repo.repo,
               assignees: ['DonJayamanne']
-            })
-      - name: Sunday (Don)
-        if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 0
-        uses: actions/github-script@v6.2.0
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              assignees: ['DonJayamanne']
-            })
-      - name: Monday (Aaron)
-        if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 1 && steps.hour.outputs.hour < 16
-        uses: actions/github-script@v6.2.0
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              assignees: ['amunger']
-            })
-      - name: Tuesday (Rob)
-        if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 1 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 2 && steps.hour.outputs.hour < 16)
-        uses: actions/github-script@v6.2.0
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              assignees: ['roblourens ']
-            })
-      - name: Wednesday (Ian)
-        if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 2 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 3 && steps.hour.outputs.hour < 16)
-        uses: actions/github-script@v6.2.0
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              assignees: ['IanMatthewHuff']
-            })
-      - name: Thursday (Peng)
-        if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 3 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 4 && steps.hour.outputs.hour < 16)
-        uses: actions/github-script@v6.2.0
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              assignees: ['rebornix']
-            })
-      - name: Friday (Aaron)
-        if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 4 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 5)
-        uses: actions/github-script@v6.2.0
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              assignees: ['amunger']
             })
