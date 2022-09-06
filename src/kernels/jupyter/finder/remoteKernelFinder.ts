@@ -130,9 +130,11 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         this.kernelProvider.onDidDisposeKernel(
             (k) => {
                 if (k && isRemoteConnection(k.kernelConnectionMetadata)) {
-                    setTimeout(() => {
+                    const timer = setTimeout(() => {
                         this.updateCache().then(noop, noop);
                     }, REMOTE_KERNEL_REFRESH_INTERVAL);
+
+                    return timer;
                 }
             },
             this,
@@ -152,7 +154,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         this.wasPythonInstalledWhenFetchingKernels = this.extensionChecker.isPythonExtensionInstalled;
     }
 
-    private async loadCache() {
+    public async loadCache() {
         if (this.serverConnectionType.isLocalLaunch) {
             await this.writeToCache([]);
             this._initializeResolve();
@@ -211,12 +213,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         this._onDidChangeKernels.fire();
     }
 
-    /**
-     * Used in test only
-     */
-    async _updateCacheForTest() {
-        await this.loadCache();
-    }
     /**
      *
      * Remote kernel finder is resource agnostic.

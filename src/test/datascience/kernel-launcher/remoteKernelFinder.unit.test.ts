@@ -348,7 +348,7 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManager.getRunningKernels()).thenResolve([]);
         when(jupyterSessionManager.getRunningSessions()).thenResolve([]);
         when(jupyterSessionManager.getKernelSpecs()).thenResolve([]);
-        await remoteKernelFinder._updateCacheForTest();
+        await remoteKernelFinder.loadCache();
 
         const kernels = await kernelFinder.listKernels(Uri.file('a.ipynb'), undefined);
         assert.lengthOf(kernels, 0);
@@ -409,7 +409,7 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManager.getRunningKernels()).thenResolve([]);
         when(jupyterSessionManager.getRunningSessions()).thenResolve([]);
         when(jupyterSessionManager.getKernelSpecs()).thenResolve([]);
-        await remoteKernelFinder._updateCacheForTest();
+        await remoteKernelFinder.loadCache();
 
         const kernels = await kernelFinder.listKernels(Uri.file('a.ipynb'), undefined);
         assert.lengthOf(kernels, 1);
