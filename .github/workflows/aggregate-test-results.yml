@@ -3,6 +3,7 @@ name: Aggregate Test Results
 on:
   schedule:
     - cron: '0 2 * * *' # daily at 2 am
+  workflow_dispatch:
 
 jobs:
   getTestResults:
