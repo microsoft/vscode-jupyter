@@ -149,7 +149,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             await Promise.all([runCell(cell), waitForTextOutput(cell, `${uri.fsPath}`)]);
         }
     });
-    test.skip('Test exceptions have hrefs', async () => {
+    test.only('Test exceptions have hrefs', async () => {
         const uri = vscodeNotebook.activeNotebookEditor?.notebook.uri;
         if (uri && uri.scheme === 'file') {
             let ipythonVersionCell = await insertCodeCell(IPYTHON_VERSION_CODE, { index: 0 });
@@ -173,7 +173,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             // Should be more than 3 hrefs if ipython 8
             if (ipythonVersion >= 8) {
                 const hrefs = /<a\s+href='(.*\?line=\d+)'/gm.exec(html);
-                assert.ok(hrefs, 'Hrefs not found in traceback');
+                assert.ok(hrefs, `Hrefs not found in traceback for html ${html}`);
                 const errorComm = api.serviceContainer
                     .getAll<ErrorRendererCommunicationHandler>(IExtensionSyncActivationService)
                     .find((s) => s.onDidReceiveMessage);

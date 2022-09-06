@@ -456,8 +456,7 @@ ${actualCode}
         await waitForTextOutput(notebookDocument!.cellAt(1), '1\n2');
     });
 
-    test('Error stack traces have correct line hrefs with mix of cell sources', async function () {
-        this.skip();
+    test.only('Error stack traces have correct line hrefs with mix of cell sources', async function () {
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('interactiveWindowMode', 'single');
 
@@ -486,7 +485,7 @@ ${actualCode}
 
         // Should be three hrefs for the two lines in the call stack
         const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
-        assert.equal(hrefs?.length, 4, '4 hrefs not found in traceback');
+        assert.equal(hrefs?.length, 4, `4 hrefs not found in traceback of html ${html}`);
     });
 
     test('Raising an exception from within a function has a stack trace', async function () {
