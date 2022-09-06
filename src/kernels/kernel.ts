@@ -216,7 +216,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             this._session = this._session
                 ? this._session
                 : this._jupyterSessionPromise
-                ? await this._jupyterSessionPromise
+                ? await this._jupyterSessionPromise.catch(() => undefined)
                 : undefined;
             this._jupyterSessionPromise = undefined;
             if (this._session) {
