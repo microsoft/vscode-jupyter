@@ -5,6 +5,7 @@ import zipfile
 import io
 
 authtoken = sys.argv[1]
+print("Using authtoken with prefix: " + authtoken[:4])
 
 
 def getRuns(createdDate):
@@ -24,7 +25,7 @@ def getArtifactData(id):
         f"https://api.github.com/repos/microsoft/vscode-jupyter/actions/artifacts/{id}/zip",
         headers={
             "Accept": "application/vnd.github+json",
-            f"Authorization": "Bearer {authtoken}",
+            "Authorization": f"Bearer {authtoken}",
         },
     )
 
