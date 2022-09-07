@@ -948,7 +948,7 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
             const prop = properties[key];
             const json: Record<string, string> = {
                 classification: prop.classification,
-                purpose: prop.classification,
+                purpose: prop.purpose,
                 comment: prop.comment || '',
                 owner: item.gdpr.owner
             };
@@ -964,7 +964,7 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
             const prop = measures[key];
             const json: Record<string, string | boolean> = {
                 classification: prop.classification,
-                purpose: prop.classification,
+                purpose: prop.purpose,
                 comment: prop.comment || '',
                 owner: item.gdpr.owner,
                 isMeasurement: true
