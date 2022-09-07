@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 'use strict';
-import * as vscode from 'vscode';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
-import { IApplicationEnvironment } from '../platform/common/application/types';
-import { Identifiers, JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { Identifiers } from '../platform/common/constants';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
 import { registerInstallerTypes } from './installer/serviceRegistry.node';
@@ -47,6 +45,8 @@ import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { PythonKernelInterruptDaemon } from './raw/finder/pythonKernelInterruptDaemon.node';
 import { LocalKernelFinder } from './raw/finder/localKernelFinder.node';
 import { DebugStartupCodeProvider } from './debuggerStartupCodeProvider';
+
+declare const IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: 'true' | 'false';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
@@ -115,12 +115,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
     registerInstallerTypes(serviceManager);
-
-    const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
-    const packageJson: { engines: { vscode: string } } | undefined =
-        vscode.extensions.getExtension(JVSC_EXTENSION_ID)?.packageJSON;
-    const isInsiderVersion = packageJson?.engines?.vscode?.toLowerCase()?.endsWith('insider');
-    setSharedProperty('isInsiderExtension', isVSCInsiders && isInsiderVersion ? 'true' : 'false');
+    setSharedProperty('isInsiderExtension', IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION || 'false');
 
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(

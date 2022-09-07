@@ -122,6 +122,12 @@ function buildConfiguration(bundle) {
     // Folder inside `webviews/webview-side` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
     const filesToCopy = [];
+    const plugins = [
+        new webpack.optimize.LimitChunkCountPlugin({
+            maxChunks: 100
+        }),
+        ...getPlugins(bundle)
+    ];
     if (bundle === 'ipywidgetsRenderer') {
         // Include files only for notebooks.
         filesToCopy.push(
@@ -149,6 +155,13 @@ function buildConfiguration(bundle) {
             from: path.join(constants.ExtensionRootDir, 'src/webviews/webview-side/ipywidgets/kernel/require.js'),
             to: path.join(constants.ExtensionRootDir, 'out', 'webviews/webview-side', 'ipywidgetsKernel')
         });
+        console.error('Lets try this');
+        plugins.push(
+            new webpack.ProvidePlugin({
+                $: '/Users/donjayamanne/Desktop/development/vsc/vscode-jupyter/node_modules/jquery/dist/jquery.min.js',
+                jQuery: '/Users/donjayamanne/Desktop/development/vsc/vscode-jupyter/node_modules/jquery/dist/jquery.min.js'
+            })
+        );
     } else if (bundle === 'widgetTester') {
         ///
     } else {
@@ -157,12 +170,6 @@ function buildConfiguration(bundle) {
             to: path.join(constants.ExtensionRootDir, 'out', 'webviews/webview-side', bundleFolder)
         });
     }
-    const plugins = [
-        new webpack.optimize.LimitChunkCountPlugin({
-            maxChunks: 100
-        }),
-        ...getPlugins(bundle)
-    ];
     if (filesToCopy.length > 0) {
         plugins.push(
             new CopyWebpackPlugin({
