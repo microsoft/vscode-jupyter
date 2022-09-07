@@ -23,7 +23,7 @@ export class NotebookTracebackFormatter implements ITracebackFormatter {
         return traceback.map((traceFrame) => this.modifyTracebackFrameIPython(cell, traceFrame));
     }
     private modifyTracebackFrameIPython(cell: NotebookCell, traceFrame: string): string {
-        if (/^[Input|File].*?\n.*/.test(traceFrame)) {
+        if (/^[Cell|Input|File].*?\n.*/.test(traceFrame)) {
             return this.modifyTracebackFrameIPython8(cell, traceFrame);
         } else {
             return traceFrame;
@@ -58,12 +58,13 @@ export class NotebookTracebackFormatter implements ITracebackFormatter {
             });
 
             // Then replace the input line with our uri for this cell
+            const cellAt = DataScience.cellAtFormat().format(
+                getFilePath(cell.document.uri),
+                (cell.index + 1).toString()
+            );
             return afterLineReplace.replace(
                 /.*?\n/,
-                `\u001b[1;32m${DataScience.cellAtFormat().format(
-                    getFilePath(cell.document.uri),
-                    (cell.index + 1).toString()
-                )}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
+                `\u001b[1;32m${cellAt}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
             );
         }
         return traceFrame;

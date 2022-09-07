@@ -32,7 +32,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
             return traceback;
         }
         const storage = this.storageFactory.get({ notebook: cell.notebook });
-        const useIPython8Format = traceback.some((traceFrame) => /^[Input|File].*?\n.*/.test(traceFrame));
+        const useIPython8Format = traceback.some((traceFrame) => /^[Input|Cell|File].*?\n.*/.test(traceFrame));
         if (!useIPython8Format && !storage) {
             // nothing to modify for IPython7 if we don't have any code to look up (standalone Interactive Window)
             return traceback;
@@ -69,10 +69,20 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
 
         traceInfoIfCI(`Trace frame to match: ${traceFrame}`);
 
+        let executionCount: number | undefined;
+        let location: string | undefined;
         const inputMatch = /^Input.*?\[.*32mIn\s+\[(\d+).*?0;36m(.*?)\n.*/.exec(traceFrame);
-        if (generatedCodes && inputMatch && inputMatch.length > 1) {
-            const executionCount = parseInt(inputMatch[1]);
+        const cellMatch = /^Cell.*?\[.*32mIn\s+\[(\d+)\], (.*).\[0m\n/.exec(traceFrame);
 
+        if (inputMatch && inputMatch.length > 1) {
+            executionCount = parseInt(inputMatch[1]);
+            location = inputMatch[2];
+        } else if (cellMatch && cellMatch.length > 1) {
+            executionCount = parseInt(cellMatch[1]);
+            location = cellMatch[2];
+        }
+
+        if (generatedCodes && executionCount) {
             // Find the cell that matches the execution count in group 1
             let matchUri: Uri | undefined;
             let match: IGeneratedCode | undefined;
@@ -97,7 +107,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
                 // Then replace the input line with our uri for this cell
                 return afterLineReplace.replace(
                     /.*?\n/,
-                    `\u001b[1;32m${getFilePath(matchUri)}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
+                    `\u001b[1;32m${getFilePath(matchUri)}\u001b[0m in \u001b[0;36m${location}\n`
                 );
             }
         }
