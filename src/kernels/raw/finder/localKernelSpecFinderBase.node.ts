@@ -24,6 +24,7 @@ import {
 } from '../../../kernels/types';
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
+import { createDeferredFromPromise } from '../../../platform/common/utils/async';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
@@ -213,8 +214,8 @@ export abstract class LocalKernelSpecFinderBase {
         if (previousPromise) {
             return previousPromise;
         }
+        const searchPath = isUri(searchItem) ? searchItem : searchItem.kernelSearchPath;
         const promise = (async () => {
-            const searchPath = isUri(searchItem) ? searchItem : searchItem.kernelSearchPath;
             if (await this.fs.exists(searchPath)) {
                 if (cancelToken?.isCancellationRequested) {
                     return [];
@@ -229,14 +230,24 @@ export abstract class LocalKernelSpecFinderBase {
                         };
                     });
             } else {
+                traceVerbose(`Not Searching for kernels as path not found, ${getDisplayPath(searchPath)}`);
                 return [];
             }
         })();
         this.findKernelSpecsInPathCache.set(cacheKey, promise);
-        promise.catch(() => {
+        if (cancelToken) {
+            const disposable = cancelToken.onCancellationRequested(() => {
+                if (this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
+                    this.findKernelSpecsInPathCache.delete(cacheKey);
+                }
+            });
+            promise.finally(() => disposable.dispose());
+        }
+        promise.catch((ex) => {
             if (this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
                 this.findKernelSpecsInPathCache.delete(cacheKey);
             }
+            traceVerbose(`Failed to search for kernels in ${getDisplayPath(searchPath)} with an error`, ex);
         });
         return promise;
     }
