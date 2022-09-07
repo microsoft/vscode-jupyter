@@ -24,7 +24,6 @@ import {
 } from '../../../kernels/types';
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
-import { createDeferredFromPromise } from '../../../platform/common/utils/async';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
