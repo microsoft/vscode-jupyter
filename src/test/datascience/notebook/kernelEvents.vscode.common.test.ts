@@ -29,7 +29,8 @@ import {
 import { createEventHandler } from '../../common';
 import { IKernelProvider } from '../../../kernels/types';
 
-suite('Kernel Event', function () {
+suite.skip('Kernel Event', function () {
+    // https://github.com/microsoft/vscode-jupyter/issues/11314
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let configSettings: ReadWrite<IWatchableJupyterSettings>;
