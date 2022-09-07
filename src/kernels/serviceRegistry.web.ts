@@ -4,7 +4,7 @@
 'use strict';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
-import { Identifiers } from '../platform/common/constants';
+import { Identifiers, isPreReleaseVersionOfExtension } from '../platform/common/constants';
 
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
@@ -30,14 +30,12 @@ class RawNotebookSupportedService implements IRawNotebookSupportedService {
     isSupported: boolean = false;
 }
 
-declare const IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: 'true' | 'false';
-
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(
         IRawNotebookSupportedService,
         RawNotebookSupportedService
     );
-    setSharedProperty('isInsiderExtension', IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION || 'false');
+    setSharedProperty('isInsiderExtension', isPreReleaseVersionOfExtension() ? 'true' : 'false');
 
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(
