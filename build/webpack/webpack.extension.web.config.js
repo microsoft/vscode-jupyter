@@ -94,7 +94,10 @@ const config = {
             Buffer: ['buffer', 'Buffer']
         }),
         new webpack.ProvidePlugin({
-            process: 'process/browser' // provide a shim for the global `process` variable
+            process: 'process/browser', // provide a shim for the global `process` variable
+            IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION
+                ? 'true'
+                : 'false'
         }),
         new webpack.DefinePlugin({
             // Definitions...

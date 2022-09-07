@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 'use strict';
-import * as vscode from 'vscode';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
-import { IApplicationEnvironment } from '../platform/common/application/types';
-import { Identifiers, JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { Identifiers, isPreReleaseVersionOfExtension } from '../platform/common/constants';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
 import { registerInstallerTypes } from './installer/serviceRegistry.node';
@@ -115,12 +113,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
     registerInstallerTypes(serviceManager);
-
-    const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
-    const packageJson: { engines: { vscode: string } } | undefined =
-        vscode.extensions.getExtension(JVSC_EXTENSION_ID)?.packageJSON;
-    const isInsiderVersion = packageJson?.engines?.vscode?.toLowerCase()?.endsWith('insider');
-    setSharedProperty('isInsiderExtension', isVSCInsiders && isInsiderVersion ? 'true' : 'false');
+    setSharedProperty('isInsiderExtension', isPreReleaseVersionOfExtension() ? 'true' : 'false');
 
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(
