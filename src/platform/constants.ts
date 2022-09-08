@@ -7,22 +7,19 @@ export const HiddenFileFormatString = '_HiddenFile_{0}.py';
 
 export const MillisecondsInADay = 24 * 60 * 60 * 1_000;
 
-/**
- * The value for the key `IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION` will be replaced by webpack.
- */
-const isPreRelease = {
-    IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: undefined
-};
-export function isPreReleaseVersionOfExtension(): boolean {
+declare var IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: 'true' | 'false';
+export function isPreReleaseVersion() {
     try {
-        if ('true' in isPreRelease) {
-            return true;
-        } else if ('false' in isPreRelease) {
-            return false;
+        if (IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'true') {
+            return 'true';
+        } else if (IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'false') {
+            return 'false';
+        } else {
+            // No idea, possible webpack is not replacing the value, meaning we're in dev mode.
+            return 'true';
         }
-        // Development env of extension is the same as pre-release.
-        return true;
     } catch {
-        return false;
+        // Dev version is treated as pre-release.
+        return 'true';
     }
 }

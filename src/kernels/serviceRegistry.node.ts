@@ -4,7 +4,7 @@
 'use strict';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
-import { Identifiers, isPreReleaseVersionOfExtension } from '../platform/common/constants';
+import { Identifiers, isPreReleaseVersion } from '../platform/common/constants';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
 import { registerInstallerTypes } from './installer/serviceRegistry.node';
@@ -113,7 +113,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
     registerInstallerTypes(serviceManager);
-    setSharedProperty('isInsiderExtension', isPreReleaseVersionOfExtension() ? 'true' : 'false');
+    setSharedProperty('isInsiderExtension', isPreReleaseVersion());
 
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(
