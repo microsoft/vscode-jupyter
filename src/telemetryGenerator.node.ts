@@ -901,9 +901,8 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
     fs.appendFileSync(file, `/* ${gdpr}\n`);
     fs.appendFileSync(file, `   "F1" : {\n`);
     const commonFields = ['     "${include}": ['];
-    const fieldList: string[] = [];
     const fieldListForFile: string[] = [];
-    Object.keys(CommonProperties).forEach((key, index) => {
+    Object.keys(CommonProperties).forEach((key) => {
         const entry = (CommonProperties as any)[key] as IPropertyDataMeasurement | IPropertyDataNonMeasurement;
         const isMeasurement = entry.isMeasurement === true;
         const jsDocComment = commonPropertyComments.get(key) || '';
@@ -916,16 +915,15 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
         }
 
         // Do not include `__GDPR__` in the string with JSON comments, else telemetry tool treats this as a valid GDPR annotation.
-        fieldList.push(`       "\${F${index + 1}}"`);
         const json = {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
             isMeasurement: isMeasurement,
             comment: comment
         };
-        fieldListForFile.push(`      "F1P${index + 1}": ${JSON.stringify(json)}`);
+        fieldListForFile.push(`      "${key}": ${JSON.stringify(json)}`);
     });
-    commonFields.push(`${fieldList.join(',\n')}`);
+    commonFields.push('       "${F1}"\n');
     commonFields.push('     ]');
     fs.appendFileSync(file, `${fieldListForFile.join(',\n')}\n`);
     fs.appendFileSync(file, `   }\n`);
