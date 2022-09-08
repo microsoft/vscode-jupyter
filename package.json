@@ -2118,8 +2118,8 @@
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
         "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
-        "prePublishBundleStable": "cross-env BUILD_WITH_VSCODE_NLS=true IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=false gulp prePublishBundle",
-        "prePublishBundlePreRelease": "cross-env BUILD_WITH_VSCODE_NLS=true IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=true gulp prePublishBundle",
+        "prePublishBundleStable": "cross-env BUILD_WITH_VSCODE_NLS=true IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=false gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
+        "prePublishBundlePreRelease": "cross-env BUILD_WITH_VSCODE_NLS=true IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=true gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
         "prePublishNonBundle": "gulp clean && gulp prePublishNonBundle",
         "createNycFolder": "gulp createNycFolder",
         "validateTranslationFiles": "gulp validateTranslationFiles",
