@@ -27,6 +27,6 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: AggTestResults.json
-          path: testresults.json
+          name: testResults.json
+          path: ./AggTestresults.json
           retention-days: 60
