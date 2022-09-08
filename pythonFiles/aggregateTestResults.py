@@ -56,43 +56,42 @@ def getResultsForRun(run):
             print(f"    retrieving {artifact['name']}")
             rawData = getArtifactData(artifact["id"])
             testRunResults = getResultsJson(rawData)
-            if "title" in testRunResults and "state" in testRunResults:
-                results.append(
-                    {
-                        "scenario": artifact["name"],
-                        "date": run["created_at"],
-                        "runUrl": run["html_url"],
-                        "data": testRunResults,
-                    }
-                )
+            results.append(
+                {
+                    "scenario": artifact["name"],
+                    "date": run["created_at"],
+                    "runUrl": run["html_url"],
+                    "data": testRunResults,
+                }
+            )
+            print(f"    {len(testRunResults)} results read")
 
     return results
 
 
-def flattenTestResults(runResults):
-    testResults = []
-    index = 0
-    for runResult in runResults:
-        for scenario in runResult:
-            suite = []
-            for testResult in scenario["data"]:
-                if (
-                    testResult["event"] == "suite"
-                    and len(str.strip(testResult["title"])) > 0
-                ):
-                    suite.append(testResult["title"])
-                elif (
-                    testResult["event"] == "suite end"
-                    and len(str.strip(testResult["title"]))
-                    and len(suite) > 0
-                ):
-                    suite.pop()
-                elif "title" in testResult and "state" in testResult:
-                    print(
-                        f"{scenario['scenario']} {testResult['title']} - {testResult['state']}"
-                    )
-                    testResults.append(
-                        {
+def flattenTestResultsToFile(runResults):
+    resultCount = 1
+    with open("AggTestResults.json", "w") as outfile:
+        outfile.write("[\n")
+        for runResult in runResults:
+            print(f"writing results {resultCount} of {len(runResults)}")
+            resultCount += 1
+            for scenario in runResult:
+                suite = []
+                for testResult in scenario["data"]:
+                    if (
+                        testResult["event"] == "suite"
+                        and len(str.strip(testResult["title"])) > 0
+                    ):
+                        suite.append(testResult["title"])
+                    elif (
+                        testResult["event"] == "suite end"
+                        and len(str.strip(testResult["title"]))
+                        and len(suite) > 0
+                    ):
+                        suite.pop()
+                    elif "title" in testResult and "state" in testResult:
+                        singleResult = {
                             "scenario": scenario["scenario"],
                             "suite": " - ".join(suite),
                             "testName": testResult["title"],
@@ -100,10 +99,9 @@ def flattenTestResults(runResults):
                             "runUrl": scenario["runUrl"],
                             "status": testResult["state"],
                         }
-                    )
-                index = index + 1
+                        outfile.write(json.dumps(singleResult) + ",\n")
 
-    return testResults
+        outfile.write("]\n")
 
 
 # %%
@@ -120,8 +118,4 @@ for run in runs:
         runResults.append(getResultsForRun(run))
 
 # %%
-allTests = flattenTestResults(runResults)
-
-# %%
-with open("AggTestResults.json", "w") as outfile:
-    json.dump(allTests, outfile)
+allTests = flattenTestResultsToFile(runResults)
