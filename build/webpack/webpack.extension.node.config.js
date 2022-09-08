@@ -140,6 +140,13 @@ const config = {
         new webpack.IgnorePlugin({
             resourceRegExp: /^\.\/locale$/,
             contextRegExp: /moment$/
+        }),
+        new webpack.DefinePlugin({
+            IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: JSON.stringify(
+                typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
+                    ? process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION
+                    : 'true'
+            )
         })
     ],
     resolve: {

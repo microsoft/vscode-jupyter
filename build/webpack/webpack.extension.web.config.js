@@ -101,7 +101,12 @@ const config = {
             BROWSER: JSON.stringify(true),
             process: {
                 platform: JSON.stringify('web')
-            }
+            },
+            IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: JSON.stringify(
+                typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
+                    ? process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION
+                    : 'true'
+            )
         }),
         new CleanTerminalPlugin(),
         new webpack.IgnorePlugin({
