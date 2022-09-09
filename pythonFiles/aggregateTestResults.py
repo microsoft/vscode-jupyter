@@ -8,7 +8,6 @@ import io
 authtoken = sys.argv[1]
 print("Using authtoken with prefix: " + authtoken[:4])
 
-
 def getRuns(createdDate):
     runsResponse = requests.get(
         "https://api.github.com/repos/microsoft/vscode-jupyter/actions/runs",
