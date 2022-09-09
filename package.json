@@ -1946,6 +1946,17 @@
                     "description": "%jupyter.configuration.jupyter.interactiveWindowMode.description%",
                     "default": "multiple"
                 },
+                "jupyter.interactiveWindowViewColumn": {
+                    "type": "string",
+                    "enum": [
+                        "beside",
+                        "active",
+                        "secondGroup"
+                    ],
+                    "scope": "resource",
+                    "description": "%jupyter.configuration.jupyter.interactiveWindowViewColumn.description%",
+                    "default": "secondGroup"
+                },
                 "jupyter.magicCommandsAsComments": {
                     "type": "boolean",
                     "default": false,

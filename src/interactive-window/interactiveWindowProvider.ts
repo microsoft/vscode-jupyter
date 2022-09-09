@@ -242,10 +242,11 @@ export class InteractiveWindowProvider
     ): Promise<[Uri, NotebookEditor]> {
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
         const hasOwningFile = resource !== undefined;
+        let viewColumn = this.getInteractiveViewColumn(resource);
         const { inputUri, notebookEditor } = (await commandManager.executeCommand(
             'interactive.open',
             // Keep focus on the owning file if there is one
-            { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
+            { viewColumn: viewColumn, preserveFocus: hasOwningFile },
             undefined,
             controllerId,
             resource && mode === 'perFile' ? getInteractiveWindowTitle(resource) : undefined
@@ -256,6 +257,21 @@ export class InteractiveWindowProvider
             throw new Error('Failed to request creation of interactive window from VS Code.');
         }
         return [inputUri, notebookEditor];
+    }
+
+    private getInteractiveViewColumn(resource: Resource): ViewColumn {
+        if (resource) {
+            return ViewColumn.Beside;
+        }
+
+        const setting = this.configService.getSettings(resource).interactiveWindowViewColumn;
+        if (setting === 'secondGroup') {
+            return ViewColumn.One;
+        } else if (setting === 'active') {
+            return ViewColumn.Active;
+        }
+
+        return ViewColumn.Beside;
     }
 
     private async getInteractiveMode(resource: Resource): Promise<InteractiveWindowMode> {

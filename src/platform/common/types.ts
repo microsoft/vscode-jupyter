@@ -102,6 +102,7 @@ export interface IJupyterSettings {
     readonly jupyterCommandLineArguments: string[];
     readonly widgetScriptSources: WidgetCDNs[];
     readonly interactiveWindowMode: InteractiveWindowMode;
+    readonly interactiveWindowViewColumn: InteractiveWindowViewColumn;
     readonly disableZMQSupport: boolean;
     readonly forceIPyKernelDebugger?: boolean;
     readonly disablePythonDaemon: boolean;
@@ -157,6 +158,8 @@ export interface IVariableQuery {
 }
 
 export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
+
+export type InteractiveWindowViewColumn = 'beside' | 'active' | 'secondGroup';
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 
