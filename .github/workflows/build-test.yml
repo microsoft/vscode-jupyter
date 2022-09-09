@@ -675,7 +675,7 @@ jobs:
         if: always()
         with:
           name: debugpy-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
-          path: debugpy.*.log
+          path: debugpyLogs/*
           retention-days: 60
 
       - name: Upload test failure notebook file
