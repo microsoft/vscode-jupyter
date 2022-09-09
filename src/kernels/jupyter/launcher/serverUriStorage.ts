@@ -11,7 +11,7 @@ import {
 import { Settings } from '../../../platform/common/constants';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { ICryptoUtils, IMemento, GLOBAL_MEMENTO, IsWebExtension } from '../../../platform/common/types';
-import { traceError } from '../../../platform/logging';
+import { traceError, traceInfoIfCI } from '../../../platform/logging';
 import { computeServerId } from '../jupyterUtils';
 import { IJupyterServerUriStorage, IServerConnectionType } from '../types';
 
@@ -201,6 +201,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     public async getRemoteUri(): Promise<string | undefined> {
         try {
             const uri = await this.getUri();
+            traceInfoIfCI(`getRemoteUri: ${uri}`);
             switch (uri) {
                 case Settings.JupyterServerLocalLaunch:
                     return;
