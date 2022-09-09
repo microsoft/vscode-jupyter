@@ -56,3 +56,4 @@ src/test/datascience/.venv*
 *.xlf
 *.nls.*.json
 *.i18n.json
+debugpyLogs

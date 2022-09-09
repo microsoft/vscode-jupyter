@@ -134,7 +134,8 @@ async function start() {
     const userDataDirectory = await createSettings();
     const extensionsDir = await getExtensionsDir();
     await installPythonExtension(vscodeExecutablePath, extensionsDir, platform);
-    const debugpyLogDir = path.resolve(__dirname, '..', '..');
+    const debugpyLogDir = path.resolve(__dirname, '..', '..', 'debugpyLogs');
+    fs.mkdirpSync(debugpyLogDir);
     console.log(`debugpy log dir: ${debugpyLogDir}`);
     await runTests({
         vscodeExecutablePath,

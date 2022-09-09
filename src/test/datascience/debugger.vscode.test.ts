@@ -2,42 +2,66 @@
 // Licensed under the MIT License.
 
 'use strict';
-import * as sinon from 'sinon';
+import { assert } from 'chai';
 import * as fs from 'fs';
+import glob from 'glob';
 import * as os from 'os';
-import * as path from '../../platform/vscode-path/path';
-import { noop, sleep } from '../core';
+import * as sinon from 'sinon';
+import { debug } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { IDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
 import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { Commands } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
+import { traceInfo } from '../../platform/logging';
+import * as path from '../../platform/vscode-path/path';
+import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
+import { noop, sleep } from '../core';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
+import { testN } from '../utils/tests';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
+    defaultNotebookTestTimeout,
+    getCellOutputs,
+    getDebugSessionAndAdapter,
     insertCodeCell,
     prewarmNotebooks,
-    getCellOutputs,
-    defaultNotebookTestTimeout,
-    waitForStoppedEvent,
     runCell,
-    getDebugSessionAndAdapter
+    waitForStoppedEvent
 } from './notebook/helper.node';
-import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
-import { traceInfo } from '../../platform/logging';
-import { assert } from 'chai';
-import { debug } from 'vscode';
 import { ITestWebviewHost } from './testInterfaces';
-import { DebugProtocol } from 'vscode-debugprotocol';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
-import { Commands } from '../../platform/common/constants';
-import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
-import { IDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
+import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
 
-function testN(name: string, n: number, fn: () => unknown): void {
-    for (let i = 0; i < n; i += 1) {
-        test(`${name} - ${i + 1}`, fn);
-    }
+function renameDebugpyLogs(testName: string): Promise<void> {
+    // eslint-disable-next-line local-rules/dont-use-process
+    const logDir = process.env.DEBUGPY_LOG_DIR;
+
+    return new Promise((resolve, reject) => {
+        glob(
+            'debugpy.*',
+            // eslint-disable-next-line local-rules/dont-use-process
+            { cwd: logDir },
+            (err, files) => {
+                if (err) {
+                    reject(err);
+                }
+
+                if (!logDir) {
+                    reject(new Error('No debugpy log dir'));
+                    return;
+                }
+
+                files.forEach((file) => {
+                    fs.renameSync(path.join(logDir, file), path.join(logDir, `${testName}-${file}`));
+                });
+                resolve();
+            }
+        );
+    });
 }
 
 // eslint-disable-next-line no-only-tests/no-only-tests
@@ -85,6 +109,9 @@ suite.only('VSCode Notebook - Run By Line', function () {
         }
         await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        if (this.currentTest) {
+            await renameDebugpyLogs(this.currentTest.title.replace(/ /g, '_'));
+        }
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
 
@@ -138,7 +165,7 @@ suite.only('VSCode Notebook - Run By Line', function () {
         }
     });
 
-    testN('Stops at end of cell', 20, async function () {
+    testN('Stops at end of cell', 5, async function () {
         // Run by line seems to end up on the second line of the function, not the first
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
@@ -229,7 +256,7 @@ suite.only('VSCode Notebook - Run By Line', function () {
         assert.equal(stack2.stackFrames[0].line, 4, 'Stopped at the wrong line');
     });
 
-    testN('Does not stop in other cell', 20, async function () {
+    testN('Does not stop in other cell', 5, async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
         const cell0 = await insertCodeCell('def foo():\n    print(1)');
         const cell1 = await insertCodeCell('foo()');
@@ -252,7 +279,7 @@ suite.only('VSCode Notebook - Run By Line', function () {
         );
     });
 
-    testN('Run a second time after interrupt', 20, async function () {
+    testN('Run a second time after interrupt', 5, async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/11245
         await insertCodeCell(
             'import time\nfor i in range(0,50):\n  time.sleep(.1)\n  print("sleepy")\nprint("final " + "output")',
