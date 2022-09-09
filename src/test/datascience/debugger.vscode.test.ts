@@ -34,7 +34,14 @@ import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { IDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
 
-suite('VSCode Notebook - Run By Line', function () {
+function testN(name: string, n: number, fn: () => unknown): void {
+    for (let i = 0; i < n; i += 1) {
+        test(`${name} - ${i + 1}`, fn);
+    }
+}
+
+// eslint-disable-next-line no-only-tests/no-only-tests
+suite.only('VSCode Notebook - Run By Line', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
@@ -131,7 +138,7 @@ suite('VSCode Notebook - Run By Line', function () {
         }
     });
 
-    test.skip('Stops at end of cell', async function () {
+    testN('Stops at end of cell', 20, async function () {
         // Run by line seems to end up on the second line of the function, not the first
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
@@ -222,7 +229,7 @@ suite('VSCode Notebook - Run By Line', function () {
         assert.equal(stack2.stackFrames[0].line, 4, 'Stopped at the wrong line');
     });
 
-    test.skip('Does not stop in other cell', async function () {
+    testN('Does not stop in other cell', 20, async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
         const cell0 = await insertCodeCell('def foo():\n    print(1)');
         const cell1 = await insertCodeCell('foo()');
@@ -245,7 +252,7 @@ suite('VSCode Notebook - Run By Line', function () {
         );
     });
 
-    test.skip('Run a second time after interrupt', async function () {
+    testN('Run a second time after interrupt', 20, async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/11245
         await insertCodeCell(
             'import time\nfor i in range(0,50):\n  time.sleep(.1)\n  print("sleepy")\nprint("final " + "output")',

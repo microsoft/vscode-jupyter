@@ -670,6 +670,14 @@ jobs:
           path: testresults.json
           retention-days: 60
 
+      - name: Upload debugpy logs
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: debugpy-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          path: debugpy.*.log
+          retention-days: 60
+
       - name: Upload test failure notebook file
         uses: actions/upload-artifact@v3
         if: always()
