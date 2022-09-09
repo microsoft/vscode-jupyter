@@ -25,8 +25,14 @@ jobs:
 
       - name: Upload test result files
         uses: actions/upload-artifact@v3
-        if: always()
         with:
-          name: testResults.json
-          path: ./AggTestresults.json
+          name: testResults
+          path: pythonFiles/AggTestResults-*.json
+          retention-days: 60
+
+      - name: Upload test result files
+        uses: actions/upload-artifact@v3
+        with:
+          name: testResults
+          path: AggTestResults-*.json
           retention-days: 60
