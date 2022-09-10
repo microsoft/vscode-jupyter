@@ -148,7 +148,7 @@ async function addCell(cells, output, failed) {
             collapsed: true
         },
         source: `#${output.title}`,
-        execution_count: ++executionCount,
+        execution_count: executionCount,
         outputs: [...assertionError, consoleOutput, ...screenshots]
     });
 }
@@ -192,6 +192,7 @@ exports.dumpTestSummary = async () => {
                 switch (output.event) {
                     case 'pass': {
                         passedCount++;
+                        executionCount++;
                         await addCell(cells, output, false);
                         break;
                     }
@@ -227,6 +228,7 @@ exports.dumpTestSummary = async () => {
                         break;
                     }
                     case 'fail': {
+                        executionCount++;
                         await addCell(failedCells, output, true);
                         await addCell(cells, output, true);
                         break;
