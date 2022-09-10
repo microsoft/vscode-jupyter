@@ -17,6 +17,7 @@ const { computeHash } = require('../src/platform/msrCrypto/hash');
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
 const webTestSummaryJsonFile = path.join(__dirname, '..', 'testresults.json');
 const webTestSummaryNb = path.join(__dirname, '..', 'testresults.ipynb');
+const failedWebTestSummaryNb = path.join(__dirname, '..', 'failedtestresults.ipynb');
 const progress = [];
 
 async function captureScreenShot(name, res) {
@@ -92,6 +93,65 @@ exports.startReportServer = async function () {
     });
 };
 
+async function addCell(cells, output, failed) {
+    const stackFrames = failed ? (output.err.stack || '').split(/\r?\n/) : [];
+    const line1 = stackFrames.shift() || '';
+    const fullTestNameHash = (await computeHash(output.fullTitle() || '', 'SHA-256')).substring(0, 10);
+    const fileNamePrefix = `${output.title}_${fullTestNameHash}`.replace(/[\W]+/g, '_');
+    const assertionError = failed
+        ? [
+              {
+                  ename: '',
+                  evalue: '',
+                  output_type: 'error',
+                  traceback: [`${colors.red(line1)}\n`, stackFrames.join('\n')]
+              }
+          ]
+        : [];
+    const consoleOutputs = (output.consoleOutput || [])
+        .map((item) => {
+            const time = item.time ? new Date(item.time) : '';
+            const timeStr = time ? `${time.toLocaleTimeString()}.${time.getMilliseconds()}` : '';
+            const colorizedTime = timeStr ? `${colors.blue(timeStr)}: ` : '';
+            switch (item.category) {
+                case 'warn':
+                    return `${colorizedTime}${colors.yellow(item.output)}`;
+                case 'error':
+                    return `${colorizedTime}${colors.red(item.output)}`;
+                default:
+                    return `${colorizedTime}${item.output}`;
+                    break;
+            }
+        })
+        .map((item) => `${item}\n`);
+    const consoleOutput = {
+        name: 'stdout',
+        output_type: 'stream',
+        text: consoleOutputs
+    };
+    // Look for a screenshot file with the above prefix & attach that to the cell outputs.
+    console.info(`Looking for screenshot file ${fileNamePrefix}*-screenshot.png`);
+    const screenshots = glob.sync(`${fileNamePrefix}*-screenshot.png`, { cwd: ExtensionRootDir }).map((file) => {
+        console.error(`Found screenshot file ${file}`);
+        const contents = Buffer.from(fs.readFileSync(path.join(ExtensionRootDir, file))).toString('base64');
+        return {
+            data: {
+                'image/png': contents
+            },
+            metadata: {},
+            output_type: 'display_data'
+        };
+    });
+    cells.push({
+        cell_type: 'code',
+        metadata: {
+            collapsed: true
+        },
+        source: `#${output.title}`,
+        execution_count: ++executionCount,
+        outputs: [...assertionError, consoleOutput, ...screenshots]
+    });
+}
 exports.dumpTestSummary = async () => {
     try {
         const summary = JSON.parse(fs.readFileSync(webTestSummaryJsonFile).toString());
@@ -99,6 +159,7 @@ exports.dumpTestSummary = async () => {
         runner.stats = {};
         const reportWriter = new mocha.reporters.Spec(runner, { color: true });
         reportWriter.failures = [];
+        const failedCells = [];
         const cells = [];
         let indent = 0;
         let executionCount = 0;
@@ -131,11 +192,21 @@ exports.dumpTestSummary = async () => {
                 switch (output.event) {
                     case 'pass': {
                         passedCount++;
+                        await addCell(cells, output, false);
                         break;
                     }
                     case 'suite': {
                         indent += 1;
                         const indentString = '#'.repeat(indent);
+                        failedCells.push({
+                            cell_type: 'markdown',
+                            metadata: {
+                                collapsed: true
+                            },
+                            source: dedent`
+                                ${indentString} ${output.title}
+                                `
+                        });
                         cells.push({
                             cell_type: 'markdown',
                             metadata: {
@@ -156,66 +227,8 @@ exports.dumpTestSummary = async () => {
                         break;
                     }
                     case 'fail': {
-                        const stackFrames = (output.err.stack || '').split(/\r?\n/);
-                        const line1 = stackFrames.shift() || '';
-                        const fullTestNameHash = (await computeHash(output.fullTitle() || '', 'SHA-256')).substring(
-                            0,
-                            10
-                        );
-                        const fileNamePrefix = `${output.title}_${fullTestNameHash}`.replace(/[\W]+/g, '_');
-                        const assertionError = {
-                            ename: '',
-                            evalue: '',
-                            output_type: 'error',
-                            traceback: [`${colors.red(line1)}\n`, stackFrames.join('\n')]
-                        };
-                        const consoleOutputs = (output.consoleOutput || [])
-                            .map((item) => {
-                                const time = item.time ? new Date(item.time) : '';
-                                const timeStr = time ? `${time.toLocaleTimeString()}.${time.getMilliseconds()}` : '';
-                                const colorizedTime = timeStr ? `${colors.blue(timeStr)}: ` : '';
-                                switch (item.category) {
-                                    case 'warn':
-                                        return `${colorizedTime}${colors.yellow(item.output)}`;
-                                    case 'error':
-                                        return `${colorizedTime}${colors.red(item.output)}`;
-                                    default:
-                                        return `${colorizedTime}${item.output}`;
-                                        break;
-                                }
-                            })
-                            .map((item) => `${item}\n`);
-                        const consoleOutput = {
-                            name: 'stdout',
-                            output_type: 'stream',
-                            text: consoleOutputs
-                        };
-                        // Look for a screenshot file with the above prefix & attach that to the cell outputs.
-                        console.error(`Looking for screenshot file ${fileNamePrefix}*-screenshot.png`);
-                        const screenshots = glob
-                            .sync(`${fileNamePrefix}*-screenshot.png`, { cwd: ExtensionRootDir })
-                            .map((file) => {
-                                console.error(`Found screenshot file ${file}`);
-                                const contents = Buffer.from(
-                                    fs.readFileSync(path.join(ExtensionRootDir, file))
-                                ).toString('base64');
-                                return {
-                                    data: {
-                                        'image/png': contents
-                                    },
-                                    metadata: {},
-                                    output_type: 'display_data'
-                                };
-                            });
-                        cells.push({
-                            cell_type: 'code',
-                            metadata: {
-                                collapsed: true
-                            },
-                            source: `#${output.title}`,
-                            execution_count: ++executionCount,
-                            outputs: [assertionError, consoleOutput, ...screenshots]
-                        });
+                        await addCell(failedCells, output, true);
+                        await addCell(cells, output, true);
                         break;
                     }
                 }
@@ -230,9 +243,10 @@ exports.dumpTestSummary = async () => {
         }
 
         // Write output into an ipynb file with the failures & corresponding console output & screenshot.
-        if (cells.length) {
-            fs.writeFileSync(webTestSummaryNb, JSON.stringify({ cells: cells }));
+        if (failedCells.length) {
+            fs.writeFileSync(failedWebTestSummaryNb, JSON.stringify({ cells: failedCells }));
         }
+        fs.writeFileSync(webTestSummaryNb, JSON.stringify({ cells: cells }));
     } catch (ex) {
         core.error('Failed to print test summary');
         core.setFailed(ex);
