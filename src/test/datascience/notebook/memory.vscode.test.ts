@@ -60,7 +60,7 @@ suite('DataScience - Memory Test', function () {
             native_context_diff: current.number_of_native_contexts - snapshot.number_of_native_contexts,
             detached_context_diff: current.number_of_detached_contexts - snapshot.number_of_detached_contexts
         };
-        const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, `SD-memtest.json`);
+        const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'logs', `SD-memtest.json`);
         await fs.writeFile(file, JSON.stringify(diff), { encoding: 'utf-8' }).ignoreErrors();
         return diff;
     }

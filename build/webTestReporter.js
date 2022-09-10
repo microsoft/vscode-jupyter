@@ -15,15 +15,15 @@ const { ExtensionRootDir } = require('./constants');
 const { computeHash } = require('../src/platform/msrCrypto/hash');
 
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
-const webTestSummaryJsonFile = path.join(__dirname, '..', 'testresults.json');
-const webTestSummaryNb = path.join(__dirname, '..', 'testresults.ipynb');
-const failedWebTestSummaryNb = path.join(__dirname, '..', 'failedtestresults.ipynb');
+const webTestSummaryJsonFile = path.join(__dirname, '..', 'logs', 'testresults.json');
+const webTestSummaryNb = path.join(__dirname, '..', 'logs', 'testresults.ipynb');
+const failedWebTestSummaryNb = path.join(__dirname, '..', 'logs', 'failedtestresults.ipynb');
 const progress = [];
 
 async function captureScreenShot(name, res) {
     try {
         const screenshot = require('screenshot-desktop');
-        const filename = path.join(ExtensionRootDir, name);
+        const filename = path.join(ExtensionRootDir, 'logs', name);
         await screenshot({ filename });
         console.info(`Screenshot captured into ${filename}`);
     } catch (ex) {

@@ -642,14 +642,6 @@ jobs:
           path: .nyc_output
           retention-days: 1
 
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
-          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
-          retention-days: 1
-
       - name: Upload VS code logs
         uses: actions/upload-artifact@v3
         if: failure()
@@ -662,36 +654,13 @@ jobs:
         if: always()
         run: npm run printTestResults
 
-      - name: Upload test result files
+      - name: Upload test result, screenshots files
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: TestResult-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
-          path: testresults.json
+          name: TestResults-Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          path: './logs/*'
           retention-days: 60
-
-      - name: Upload test failure notebook file
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: FailedTestResultNotebook-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
-          path: testresults.ipynb
-          retention-days: 4
-
-      - name: Upload test notebook file
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: TestResultNotebook-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
-          path: failedtestresults.ipynb
-          retention-days: 4
-
-      - name: Upload Memory snapshot
-        uses: actions/upload-artifact@v3
-        with:
-          name: SD-memtest.json
-          path: './SD-memtest.json'
-          retention-days: 20
 
       - name: Verify there are no unhandled errors
         run: npm run verifyUnhandledErrors
@@ -847,13 +816,13 @@ jobs:
         with:
           run: npm run testPerformance
 
-      - name: Upload screenshots
+      - name: Upload test result, screenshots files
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: Screenshots-perf-${{matrix.os}}
-          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
-          retention-days: 1
+          name: TestResults-Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          path: './logs/*'
+          retention-days: 10
 
   coverage:
     name: Coverage reports upload
