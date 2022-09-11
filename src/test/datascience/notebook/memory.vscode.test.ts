@@ -61,6 +61,7 @@ suite('DataScience - Memory Test', function () {
             detached_context_diff: current.number_of_detached_contexts - snapshot.number_of_detached_contexts
         };
         const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'logs', `SD-memtest.json`);
+        fs.ensureDirSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'logs'));
         await fs.writeFile(file, JSON.stringify(diff), { encoding: 'utf-8' }).ignoreErrors();
         return diff;
     }

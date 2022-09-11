@@ -23,6 +23,7 @@ const progress = [];
 async function captureScreenShot(name, res) {
     try {
         const screenshot = require('screenshot-desktop');
+        fs.ensureDirSync(path.join(ExtensionRootDir, 'logs', name));
         const filename = path.join(ExtensionRootDir, 'logs', name);
         await screenshot({ filename });
         console.info(`Screenshot captured into ${filename}`);
@@ -85,6 +86,7 @@ exports.startReportServer = async function () {
             resolve({
                 dispose: async () => {
                     console.error(`Disposing test server`);
+                    fs.ensureDirSync(path.dirname(webTestSummaryJsonFile));
                     fs.writeFileSync(webTestSummaryJsonFile, JSON.stringify(progress));
                     server.close();
                 }
