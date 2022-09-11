@@ -21,10 +21,10 @@ const failedWebTestSummaryNb = path.join(__dirname, '..', 'logs', 'failedtestres
 const progress = [];
 
 async function captureScreenShot(name, res) {
+    const screenshot = require('screenshot-desktop');
+    fs.ensureDirSync(path.join(ExtensionRootDir, 'logs', name));
+    const filename = path.join(ExtensionRootDir, 'logs', name);
     try {
-        const screenshot = require('screenshot-desktop');
-        fs.ensureDirSync(path.join(ExtensionRootDir, 'logs', name));
-        const filename = path.join(ExtensionRootDir, 'logs', name);
         await screenshot({ filename });
         console.info(`Screenshot captured into ${filename}`);
     } catch (ex) {
