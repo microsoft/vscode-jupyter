@@ -658,7 +658,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: TestResults-Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          name: TestLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
           path: './logs/*'
           retention-days: 60
 
