@@ -124,7 +124,7 @@ export class CellExecutionMessageHandler implements IDisposable {
      * If users clear outputs or if we have a new output other than stream, then clear this item.
      * Because if after the stream we have an image, then the stream is not the last output item, hence its cleared.
      */
-    private lastUsedStreamOutput?: { stream: 'stdout' | 'stderr'; text: string; output: NotebookCellOutput };
+    private lastUsedStreamOutput?: { stream: 'stdout' | 'stderr'; output: NotebookCellOutput };
     /**
      * When we have nested Output Widgets, we get comm messages one for each output widget.
      * The way it works is:
@@ -818,35 +818,13 @@ export class CellExecutionMessageHandler implements IDisposable {
         // Ensure we append to previous output, only if the streams as the same &
         // If the last output is the desired stream type.
         if (this.lastUsedStreamOutput?.stream === msg.content.name) {
-            // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
-            let existingOutputText = this.lastUsedStreamOutput.text;
-            let newContent = msg.content.text;
-            // Look for the ansi code `<char27>[A`. (this means move up)
-            // Not going to support `[2A` (not for now).
-            const moveUpCode = `${String.fromCharCode(27)}[A`;
-            if (msg.content.text.startsWith(moveUpCode)) {
-                // Split message by lines & strip out the last n lines (where n = number of lines to move cursor up).
-                const existingOutputLines = existingOutputText.splitLines({
-                    trim: false,
-                    removeEmptyEntries: false
-                });
-                if (existingOutputLines.length) {
-                    existingOutputLines.pop();
-                }
-                existingOutputText = existingOutputLines.join('\n');
-                newContent = newContent.substring(moveUpCode.length);
-            }
-            // Create a new output item with the concatenated string.
-            this.lastUsedStreamOutput.text = formatStreamText(
-                concatMultilineString(`${existingOutputText}${newContent}`)
-            );
             const output = cellOutputToVSCCellOutput({
                 output_type: 'stream',
                 name: msg.content.name,
-                text: this.lastUsedStreamOutput.text
+                text: msg.content.text
             });
-            traceCellMessage(this.cell, `Replace output items '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
-            task?.replaceOutputItems(output.items, this.lastUsedStreamOutput.output).then(noop, noop);
+            traceCellMessage(this.cell, `Append output items '${msg.content.text.substring(0, 100)}`);
+            task?.appendOutputItems(output.items, this.lastUsedStreamOutput.output).then(noop, noop);
         } else if (previousValueOfClearOutputOnNextUpdateToOutput) {
             // Replace the current outputs with a single new output.
             const text = formatStreamText(concatMultilineString(msg.content.text));
@@ -855,8 +833,8 @@ export class CellExecutionMessageHandler implements IDisposable {
                 name: msg.content.name,
                 text
             });
-            this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
-            traceCellMessage(this.cell, `Replace output '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
+            this.lastUsedStreamOutput = { output, stream: msg.content.name };
+            traceCellMessage(this.cell, `Replace output with '${text.substring(0, 100)}'`);
             task?.replaceOutput([output]).then(noop, noop);
         } else {
             // Create a new output
@@ -866,8 +844,8 @@ export class CellExecutionMessageHandler implements IDisposable {
                 name: msg.content.name,
                 text
             });
-            this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
-            traceCellMessage(this.cell, `Append output '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
+            this.lastUsedStreamOutput = { output, stream: msg.content.name };
+            traceCellMessage(this.cell, `Append new output '${text.substring(0, 100)}'`);
             task?.appendOutput([output]).then(noop, noop);
         }
         this.endTemporaryTask();
