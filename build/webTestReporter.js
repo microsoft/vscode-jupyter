@@ -95,7 +95,7 @@ exports.startReportServer = async function () {
     });
 };
 
-async function addCell(cells, output, failed) {
+async function addCell(cells, output, failed, executionCount) {
     const stackFrames = failed ? (output.err.stack || '').split(/\r?\n/) : [];
     const line1 = stackFrames.shift() || '';
     const fullTestNameHash = (await computeHash(output.fullTitle() || '', 'SHA-256')).substring(0, 10);
@@ -195,7 +195,7 @@ exports.dumpTestSummary = async () => {
                     case 'pass': {
                         passedCount++;
                         executionCount++;
-                        await addCell(cells, output, false);
+                        await addCell(cells, output, false, executionCount);
                         break;
                     }
                     case 'suite': {
@@ -231,8 +231,8 @@ exports.dumpTestSummary = async () => {
                     }
                     case 'fail': {
                         executionCount++;
-                        await addCell(failedCells, output, true);
-                        await addCell(cells, output, true);
+                        await addCell(failedCells, output, true, executionCount);
+                        await addCell(cells, output, true, executionCount);
                         break;
                     }
                 }
