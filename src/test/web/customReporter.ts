@@ -100,7 +100,7 @@ function writeReportProgress(message: Message) {
             traceInfoIfCI(`Writing test results to ${logFile}`);
             const requireFunc: typeof require =
                 typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
-            const fs: typeof import('fs-extra') = requireFunc('fs');
+            const fs: typeof import('fs-extra') = requireFunc('fs-extra');
             // eslint-disable-next-line local-rules/dont-use-fspath
             fs.ensureDirSync(Uri.joinPath(ext, 'logs').fsPath);
             // eslint-disable-next-line local-rules/dont-use-fspath
