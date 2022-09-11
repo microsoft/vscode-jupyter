@@ -37,7 +37,7 @@ def getArtifactData(id):
 
 def getResultsJson(zipData):
     artifact = zipfile.ZipFile(io.BytesIO(zipData))
-    content = artifact.read("testresults.json")
+    content = artifact.read("logs/testresults.json")
     return json.loads(content)
 
 

@@ -96,7 +96,7 @@ function writeReportProgress(message: Message) {
         messages.push(message);
         if (message.event === constants.EVENT_RUN_END) {
             const ext = extensions.getExtension(JVSC_EXTENSION_ID_FOR_TESTS)!.extensionUri;
-            const logFile = Uri.joinPath(ext, 'testresults.json');
+            const logFile = Uri.joinPath(ext, 'logs', 'testresults.json');
             traceInfoIfCI(`Writing test results to ${logFile}`);
             const requireFunc: typeof require =
                 typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
