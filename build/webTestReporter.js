@@ -132,9 +132,8 @@ async function addCell(cells, output, failed, executionCount) {
         text: consoleOutputs
     };
     // Look for a screenshot file with the above prefix & attach that to the cell outputs.
-    console.info(`Looking for screenshot file ${fileNamePrefix}*-screenshot.png`);
     const screenshots = glob.sync(`${fileNamePrefix}*-screenshot.png`, { cwd: ExtensionRootDir }).map((file) => {
-        console.error(`Found screenshot file ${file}`);
+        console.info(`Found screenshot file ${file}`);
         const contents = Buffer.from(fs.readFileSync(path.join(ExtensionRootDir, file))).toString('base64');
         return {
             data: {
@@ -249,8 +248,10 @@ exports.dumpTestSummary = async () => {
         // Write output into an ipynb file with the failures & corresponding console output & screenshot.
         if (failedCells.length) {
             fs.writeFileSync(failedWebTestSummaryNb, JSON.stringify({ cells: failedCells }));
+            console.info(`Created failed test summary notebook file ${failedWebTestSummaryNb}`);
         }
         fs.writeFileSync(webTestSummaryNb, JSON.stringify({ cells: cells }));
+        console.info(`Created test summary notebook file ${webTestSummaryNb}`);
     } catch (ex) {
         core.error('Failed to print test summary');
         core.setFailed(ex);
