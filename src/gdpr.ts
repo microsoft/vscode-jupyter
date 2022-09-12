@@ -1706,8 +1706,6 @@
 //Telemetry.PreferredKernel
 /* __GDPR__
    "DS_INTERNAL.PREFERRED_KERNEL" : {
-     "properties": {"comment":"","owner":"IanMatthewHuff"},
-     "measures": {"comment":"","owner":"IanMatthewHuff"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"IanMatthewHuff"},
      "hasActiveInterpreter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If we have an active interpreter or not.","owner":"IanMatthewHuff"},
      "language": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the target notebook or interactive window","owner":"IanMatthewHuff"},
