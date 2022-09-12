@@ -81,18 +81,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(
-                Commands.NotebookEditorInterruptKernel,
-                (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
-                    if (context && 'notebookEditor' in context) {
-                        this.interruptKernel(context?.notebookEditor?.notebookUri).ignoreErrors();
-                    } else {
-                        this.interruptKernel(context).ignoreErrors();
-                    }
-                }
-            )
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(
                 Commands.NotebookEditorRestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {

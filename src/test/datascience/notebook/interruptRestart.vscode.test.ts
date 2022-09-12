@@ -101,7 +101,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         traceInfo('Step 3');
 
         // Interrupt the kernel.
-        commandManager.executeCommand(Commands.NotebookEditorInterruptKernel, vscEditor.notebook.uri).then(noop, noop);
+        commandManager
+            .executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: vscEditor.notebook.uri } })
+            .then(noop, noop);
         traceInfo('Step 4');
 
         // Wait for interruption (cell will fail with errors).
@@ -154,7 +156,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
 
         // Don't have to wait for interrupt, as sometimes interrupt can timeout & we get a prompt to restart.
         // Stop execution of the cell (if possible) in kernel.
-        commandManager.executeCommand(Commands.NotebookEditorInterruptKernel, vscEditor.notebook.uri).then(noop, noop);
+        commandManager
+            .executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: vscEditor.notebook.uri } })
+            .then(noop, noop);
         // Stop the cell (cleaner way to tear down this test, else VS Code can hang due to the fact that we delete/close notebooks & rest of the code is trying to access it).
 
         traceInfo('Step 14');
@@ -237,7 +241,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         console.log('Step2');
 
         // Interrupt the kernel & wait for 2 to cancel & 3 to get de-queued.
-        commandManager.executeCommand(Commands.NotebookEditorInterruptKernel, vscEditor.notebook.uri).then(noop, noop);
+        commandManager
+            .executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: vscEditor.notebook.uri } })
+            .then(noop, noop);
         console.log('Step3');
 
         await Promise.all([
@@ -275,7 +281,10 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         assert.equal(cell2.executionSummary?.executionOrder, 3, 'Execution order of cell 2 should be 3');
 
         // Interrupt the kernel & wait for 2.
-        commandManager.executeCommand(Commands.NotebookEditorInterruptKernel, vscEditor.notebook.uri).then(noop, noop);
+        commandManager
+            .executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: vscEditor.notebook.uri } })
+            .then(noop, noop);
+
         console.log('Step7');
         await Promise.all([
             waitForExecutionCompletedWithErrors(cell2),
@@ -308,7 +317,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         console.log('Step9');
 
         // Interrupt the kernel & wait for 2 to cancel & 3 to get de-queued.
-        commandManager.executeCommand(Commands.NotebookEditorInterruptKernel, vscEditor.notebook.uri).then(noop, noop);
+        commandManager
+            .executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: vscEditor.notebook.uri } })
+            .then(noop, noop);
         console.log('Step10');
 
         await Promise.all([
