@@ -281,10 +281,14 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
             });
         })
         .on(constants.EVENT_TEST_PASS, (test: mochaTypes.Test) => {
-            consoleHijacker.release();
+            const consoleOutput = consoleHijacker.release();
             writeReportProgress({
                 event: constants.EVENT_TEST_PASS,
                 title: test.title,
+                titlePath: test.titlePath(),
+                slow: test.slow(),
+                fullTitle: test.fullTitle(),
+                consoleOutput,
                 duration: test.duration,
                 state: test.state,
                 isPending: test.isPending(),

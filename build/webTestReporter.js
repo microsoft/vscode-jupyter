@@ -122,7 +122,6 @@ async function addCell(cells, output, failed, executionCount) {
                     return `${colorizedTime}${colors.red(item.output)}`;
                 default:
                     return `${colorizedTime}${item.output}`;
-                    break;
             }
         })
         .map((item) => `${item}\n`);
