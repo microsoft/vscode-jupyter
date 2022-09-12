@@ -2216,7 +2216,6 @@ export class IEventNamePropertyMapping {
         feature: ['InteractiveWindow', 'Notebook', 'KernelPicker'],
         source: 'N/A',
         properties: {
-            ...commonClassificationForResourceSpecificTelemetryProperties(),
             ...commonClassificationForResourceType(),
             hasActiveInterpreter: {
                 classification: 'SystemMetaData',
