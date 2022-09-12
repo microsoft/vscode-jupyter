@@ -7,6 +7,7 @@ import io
 
 authtoken = sys.argv[1]
 print("Using authtoken with prefix: " + authtoken[:4])
+inputDate = sys.argv[2]
 
 
 def getRuns(createdDate):
@@ -106,11 +107,18 @@ def flattenTestResultsToFile(runResults, filename):
 
 
 # %%
-from datetime import date
+from datetime import date, datetime
 from datetime import timedelta
 
-yesterday = date.today() - timedelta(days=1)
-runs = getRuns(yesterday)
+if inputDate != '':
+    print(f"Using collection date {inputDate}")
+    collectionDateTime = datetime.strptime(inputDate, '%Y-%m-%d')
+    collectionDate = date.fromtimestamp(collectionDateTime.timestamp())
+else:
+    collectionDate = date.today() - timedelta(days=1)
+
+# %%
+runs = getRuns(collectionDate)
 
 # %%
 runResults = []
@@ -119,7 +127,7 @@ for run in runs:
         runResults.append(getResultsForRun(run))
 
 # %%
-resultFile = f'AggTestResults-{yesterday.strftime("%Y-%m-%d")}.json'
+resultFile = f'AggTestResults-{collectionDate.strftime("%Y-%m-%d")}.json'
 allTests = flattenTestResultsToFile(runResults, resultFile)
 
 # %%
@@ -127,3 +135,5 @@ import os
 
 file_size = os.path.getsize(resultFile)
 print(f"Wrote {file_size} bytes to {resultFile}")
+
+# %%
