@@ -392,17 +392,6 @@ function commonClassificationForResourceSpecificTelemetryProperties(): PropertyM
         }
     };
 }
-// function commonClassificationForResourceSpecificTelemetryMeasures(): AllEventPropertiesData<ResourceSpecificTelemetryProperties> {
-//     const allProperties = commonClassificationForResourceSpecificTelemetryProperties();
-//     const measures: any = {} as any;
-//     Object.keys(allProperties).forEach((key) => {
-//         const value = (allProperties as any)[key];
-//         if (value.isMeasurement) {
-//             measures[key] = value as any;
-//         }
-//     });
-//     return measures;
-// }
 
 export const CommonProperties = {
     ...commonClassificationForDurationProperties(),
