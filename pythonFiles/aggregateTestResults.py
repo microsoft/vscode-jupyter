@@ -1,3 +1,4 @@
+# %%
 import sys
 import requests
 import json
@@ -69,9 +70,9 @@ def getResultsForRun(run):
     return results
 
 
-def flattenTestResultsToFile(runResults):
+def flattenTestResultsToFile(runResults, filename):
     resultCount = 1
-    with open("AggTestResults.json", "w") as outfile:
+    with open(filename, "w") as outfile:
         outfile.write("[\n")
         for runResult in runResults:
             print(f"writing results {resultCount} of {len(runResults)}")
@@ -118,4 +119,11 @@ for run in runs:
         runResults.append(getResultsForRun(run))
 
 # %%
-allTests = flattenTestResultsToFile(runResults)
+resultFile = f'AggTestResults-{yesterday.strftime("%Y-%m-%d")}.json'
+allTests = flattenTestResultsToFile(runResults, resultFile)
+
+# %%
+import os
+
+file_size = os.path.getsize(resultFile)
+print(f"Wrote {file_size} bytes to {resultFile}")
