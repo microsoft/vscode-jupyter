@@ -142,6 +142,15 @@ async function addCell(cells, output, failed, executionCount) {
             output_type: 'display_data'
         };
     });
+    // Add a markdown cell so we can see this in the outline.
+    cells.push({
+        cell_type: 'markdown',
+        metadata: {
+            collapsed: true
+        },
+        source: `### ${output.title}`,
+        execution_count: executionCount
+    });
     cells.push({
         cell_type: 'code',
         metadata: {
