@@ -1043,11 +1043,8 @@ export class IEventNamePropertyMapping {
         feature: ['InteractiveWindow', 'Notebook'],
         tags: ['Cell Execution'],
         source: 'N/A',
-        properties: commonClassificationForResourceSpecificTelemetryProperties().properties,
-        measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
-        }
+        properties: commonClassificationForResourceType(),
+        measures: commonClassificationForDurationProperties()
     };
     /**
      * Telemetry sent to capture subsequent execution of a cell.
@@ -1059,11 +1056,8 @@ export class IEventNamePropertyMapping {
         feature: ['InteractiveWindow', 'Notebook'],
         tags: ['Cell Execution'],
         source: 'N/A',
-        properties: commonClassificationForResourceSpecificTelemetryProperties().properties,
-        measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
-        }
+        properties: commonClassificationForResourceType(),
+        measures: commonClassificationForDurationProperties()
     };
     /**
      * Time take for jupyter server to start and be ready to run first user cell.
