@@ -149,7 +149,7 @@ async function addCell(cells, output, failed, executionCount) {
             collapsed: true
         },
         // Add some color so its easy to find this in the outline.
-        source: `### ${failed ? '❌': '✅'} ${output.title}`,
+        source: `### ${failed ? '❌' : '✅'} ${output.title}`,
         execution_count: executionCount
     });
     cells.push({
