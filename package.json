@@ -2104,7 +2104,6 @@
     },
     "enabledApiProposals": [
         "notebookControllerKind",
-        "notebookWorkspaceEdit",
         "notebookDebugOptions",
         "notebookDeprecated",
         "notebookMessaging",
