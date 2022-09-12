@@ -110,9 +110,9 @@ def flattenTestResultsToFile(runResults, filename):
 from datetime import date, datetime
 from datetime import timedelta
 
-if inputDate != '':
+if inputDate != "":
     print(f"Using collection date {inputDate}")
-    collectionDateTime = datetime.strptime(inputDate, '%Y-%m-%d')
+    collectionDateTime = datetime.strptime(inputDate, "%Y-%m-%d")
     collectionDate = date.fromtimestamp(collectionDateTime.timestamp())
 else:
     collectionDate = date.today() - timedelta(days=1)
