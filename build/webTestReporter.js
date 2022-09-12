@@ -148,7 +148,8 @@ async function addCell(cells, output, failed, executionCount) {
         metadata: {
             collapsed: true
         },
-        source: `### ${output.title}`,
+        // Add some color so its easy to find this in the outline.
+        source: `### ${failed ? '❌': '✅'} ${output.title}`,
         execution_count: executionCount
     });
     cells.push({
@@ -176,36 +177,36 @@ exports.dumpTestSummary = async () => {
         let passedCount = 0;
         mocha.reporters.Base.useColors = true;
         colors.enable();
-        await Promise.all(
-            summary.map(async (output) => {
-                output = JSON.parse(JSON.stringify(output));
-                // mocha expects test objects to have a method `slow, fullTitle, titlePath`.
-                ['slow', 'fullTitle', 'titlePath', 'isPending', 'currentRetry'].forEach((fnName) => {
-                    const value = output[fnName];
-                    output[fnName] = () => value;
-                });
-                // Tests have a parent with a title, used by xunit.
-                const currentParent = output.parent || { fullTitle: '' };
-                output.parent = {
-                    fullTitle: () => ('fullTitle' in currentParent ? currentParent.fullTitle : '') || ''
-                };
-                if ('stats' in output) {
-                    reportWriter.stats = { ...output.stats };
-                    Object.assign(runner.stats, output.stats);
-                }
-                if (output.event === 'fail') {
-                    reportWriter.failures.push(output);
-                }
-                runner.emit(output.event, output, output.err);
+        for (let output of summary) {
+            output = JSON.parse(JSON.stringify(output));
+            // mocha expects test objects to have a method `slow, fullTitle, titlePath`.
+            ['slow', 'fullTitle', 'titlePath', 'isPending', 'currentRetry'].forEach((fnName) => {
+                const value = output[fnName];
+                output[fnName] = () => value;
+            });
+            // Tests have a parent with a title, used by xunit.
+            const currentParent = output.parent || { fullTitle: '' };
+            output.parent = {
+                fullTitle: () => ('fullTitle' in currentParent ? currentParent.fullTitle : '') || ''
+            };
+            if ('stats' in output) {
+                reportWriter.stats = { ...output.stats };
+                Object.assign(runner.stats, output.stats);
+            }
+            if (output.event === 'fail') {
+                reportWriter.failures.push(output);
+            }
+            runner.emit(output.event, output, output.err);
 
-                switch (output.event) {
-                    case 'pass': {
-                        passedCount++;
-                        executionCount++;
-                        await addCell(cells, output, false, executionCount);
-                        break;
-                    }
-                    case 'suite': {
+            switch (output.event) {
+                case 'pass': {
+                    passedCount++;
+                    executionCount++;
+                    await addCell(cells, output, false, executionCount);
+                    break;
+                }
+                case 'suite': {
+                    if (output.title) {
                         indent += 1;
                         const indentString = '#'.repeat(indent);
                         failedCells.push({
@@ -226,25 +227,25 @@ exports.dumpTestSummary = async () => {
                                 ${indentString} ${output.title}
                                 `
                         });
-                        break;
                     }
-                    case 'suite end': {
-                        indent -= 1;
-                        break;
-                    }
-                    case 'pending': {
-                        skippedTests.push(output);
-                        break;
-                    }
-                    case 'fail': {
-                        executionCount++;
-                        await addCell(failedCells, output, true, executionCount);
-                        await addCell(cells, output, true, executionCount);
-                        break;
-                    }
+                    break;
                 }
-            })
-        );
+                case 'suite end': {
+                    indent -= 1;
+                    break;
+                }
+                case 'pending': {
+                    skippedTests.push(output);
+                    break;
+                }
+                case 'fail': {
+                    executionCount++;
+                    await addCell(failedCells, output, true, executionCount);
+                    await addCell(cells, output, true, executionCount);
+                    break;
+                }
+            }
+        }
 
         if (reportWriter.failures.length) {
             core.setFailed(`${reportWriter.failures.length} tests failed.`);
