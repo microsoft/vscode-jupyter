@@ -224,8 +224,10 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
                     // Some times we share the properties of two events,
                     // When updating the values, we don't want to be overwriting the values of the other event.
                     gdprEntry = JSON.parse(
-                        JSON.stringify(gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'][name])
+                        JSON.stringify((gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'] as any)[name])
                     ) as IPropertyDataNonMeasurement;
+                    // All measures must be marked as isMeasurement=true
+                    (gdprEntry as any).isMeasurement = true;
                     (gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'] as any)[name] = gdprEntry as any;
                 }
                 if (gdprEntry) {
