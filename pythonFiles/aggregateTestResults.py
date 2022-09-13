@@ -8,6 +8,7 @@ import io
 authtoken = sys.argv[1]
 print("Using authtoken with prefix: " + authtoken[:4])
 
+# %%
 def getRuns(createdDate):
     runsResponse = requests.get(
         "https://api.github.com/repos/microsoft/vscode-jupyter/actions/runs",
@@ -37,8 +38,13 @@ def getArtifactData(id):
 
 def getResultsJson(zipData):
     artifact = zipfile.ZipFile(io.BytesIO(zipData))
-    content = artifact.read("logs/testresults.json")
-    return json.loads(content)
+    for name in artifact.namelist():
+        if name.endswith(".json"):
+            print(f"    parsing {name} from artifact with {artifact.namelist()}")
+            return json.loads(artifact.read(name))
+    else:
+        print("No results.json found in artifact")
+        return []
 
 
 def getResultsForRun(run):
@@ -71,6 +77,7 @@ def getResultsForRun(run):
 
 def flattenTestResultsToFile(runResults, filename):
     resultCount = 1
+    delimiter = ""
     with open(filename, "w") as outfile:
         outfile.write("[\n")
         for runResult in runResults:
@@ -91,6 +98,7 @@ def flattenTestResultsToFile(runResults, filename):
                     ):
                         suite.pop()
                     elif "title" in testResult and "state" in testResult:
+                        outfile.write(delimiter)
                         singleResult = {
                             "scenario": scenario["scenario"],
                             "suite": " - ".join(suite),
@@ -99,9 +107,10 @@ def flattenTestResultsToFile(runResults, filename):
                             "runUrl": scenario["runUrl"],
                             "status": testResult["state"],
                         }
-                        outfile.write(json.dumps(singleResult) + ",\n")
+                        outfile.write(json.dumps(singleResult))
+                        delimiter = ",\n"
 
-        outfile.write("]\n")
+        outfile.write("\n]\n")
 
 
 # %%
@@ -112,12 +121,11 @@ inputDate = ""
 if len(sys.argv) > 2:
     inputDate = sys.argv[2]
 
-if inputDate != "":
-    print(f"Using collection date {inputDate}")
+try:
     collectionDateTime = datetime.strptime(inputDate, "%Y-%m-%d")
     collectionDate = date.fromtimestamp(collectionDateTime.timestamp())
-else:
-    print("No collection date input, running for yesterday")
+except ValueError:
+    print(f"The string {inputDate} is not a date with format yyyy-mm-dd, running for yesterday")
     collectionDate = date.today() - timedelta(days=1)
 
 # %%
