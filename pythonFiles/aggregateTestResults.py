@@ -125,7 +125,9 @@ try:
     collectionDateTime = datetime.strptime(inputDate, "%Y-%m-%d")
     collectionDate = date.fromtimestamp(collectionDateTime.timestamp())
 except ValueError:
-    print(f"The string {inputDate} is not a date with format yyyy-mm-dd, running for yesterday")
+    print(
+        f"The string {inputDate} is not a date with format yyyy-mm-dd, running for yesterday"
+    )
     collectionDate = date.today() - timedelta(days=1)
 
 # %%
