@@ -76,6 +76,7 @@ i18n/**
 news/**
 node_modules/**
 obj/**
+logs/**
 out/**/*.stats.json
 out/**/*.analyzer.html
 out/coverconfig.json

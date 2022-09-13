@@ -8,6 +8,7 @@
 /* eslint-disable  */
 import { relative } from 'path';
 import * as vscode from 'vscode';
+import { NotebookEdit, SnippetTextEdit } from 'vscode';
 import { vscMockHtmlContent } from './htmlContent';
 import { vscMockStrings } from './strings';
 import { vscUri } from './uri';
@@ -803,7 +804,23 @@ export namespace vscMockExtHostedTypes {
             return this._textEdits.has(uri.toString());
         }
 
-        set(uri: vscUri.URI, edits: TextEdit[]): void {
+        set(uri: vscode.Uri, edits: NotebookEdit[]): void;
+        set(uri: vscode.Uri, edits: [NotebookEdit, vscode.WorkspaceEditEntryMetadata][]): void;
+        set(uri: vscode.Uri, edits: (TextEdit | SnippetTextEdit)[]): void;
+        set(uri: vscode.Uri, edits: [TextEdit | SnippetTextEdit, vscode.WorkspaceEditEntryMetadata][]): void;
+        set(
+            uri: vscUri.URI,
+            edits:
+                | null
+                | undefined
+                | (
+                      | TextEdit
+                      | SnippetTextEdit
+                      | NotebookEdit
+                      | [NotebookEdit, vscode.WorkspaceEditEntryMetadata]
+                      | [TextEdit | SnippetTextEdit, vscode.WorkspaceEditEntryMetadata]
+                  )[]
+        ): void {
             let data = this._textEdits.get(uri.toString());
             if (!data) {
                 data = { seq: this._seqPool++, uri, edits: [] };
@@ -813,7 +830,7 @@ export namespace vscMockExtHostedTypes {
                 // @ts-ignore
                 data.edits = undefined;
             } else {
-                data.edits = edits.slice(0);
+                //data.edits = edits.slice(0);
             }
         }
 
