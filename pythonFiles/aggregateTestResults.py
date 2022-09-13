@@ -13,8 +13,15 @@ def getRuns(createdDate):
     runsResponse = requests.get(
         "https://api.github.com/repos/microsoft/vscode-jupyter/actions/runs",
         params={"event": "push", "created": createdDate},
-        headers={"Accept": "application/vnd.github+json"},
+        headers={
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {authtoken}",
+        },
     )
+
+    if runsResponse.status_code != 200:
+        print(f"Error {runsResponse.status_code}")
+        raise ("Error getting runs")
 
     print(f"Found {len(runsResponse.json()['workflow_runs'])} runs")
 
