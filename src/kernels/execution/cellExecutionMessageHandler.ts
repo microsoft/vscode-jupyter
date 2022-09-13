@@ -46,7 +46,7 @@ import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import isObject = require('lodash/isObject');
 import { Identifiers, WIDGET_MIMETYPE } from '../../platform/common/constants';
 import { Lazy } from '../../platform/common/utils/lazy';
-
+import * as fs from 'fs-extra';
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
     replace: boolean;
@@ -181,6 +181,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>,
         cellExecution: NotebookCellExecution
     ) {
+        this.appendLogMessage('Started', '');
         this.executeRequestMessageId = request.msg.header.msg_id;
         this.ownedRequestMsgIds.add(request.msg.header.msg_id);
         workspace.onDidChangeNotebookDocument(
@@ -795,6 +796,17 @@ export class CellExecutionMessageHandler implements IDisposable {
     private handleStatusMessage(msg: KernelMessage.IStatusMsg) {
         traceCellMessage(this.cell, `Kernel switching to ${msg.content.execution_state}`);
     }
+    private appendLogMessage(prefix: string, msg: string) {
+        try {
+            fs.appendFileSync(
+                // eslint-disable-next-line local-rules/dont-use-fspath
+                this.cell.notebook.uri.fsPath + `${this.cell.index}.log`,
+                `${prefix}${JSON.stringify([msg])}\n`
+            );
+        } catch (ex) {
+            console.error(`Failed to log message`, ex);
+        }
+    }
     private handleStreamMessage(msg: KernelMessage.IStreamMsg) {
         if (
             getParentHeaderMsgId(msg) &&
@@ -805,7 +817,8 @@ export class CellExecutionMessageHandler implements IDisposable {
             // Stream messages will be handled by the Output Widget.
             return;
         }
-
+        // eslint-disable-next-line local-rules/dont-use-fspath
+        this.appendLogMessage(msg.content.name, msg.content.text);
         // eslint-disable-next-line complexity
         traceCellMessage(this.cell, `Update streamed output, new output '${msg.content.text.substring(0, 100)}'`);
         // Possible execution of cell has completed (the task would have been disposed).
@@ -846,7 +859,8 @@ export class CellExecutionMessageHandler implements IDisposable {
                 text: this.lastUsedStreamOutput.text
             });
             traceCellMessage(this.cell, `Replace output items '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
-            task?.replaceOutputItems(output.items, this.lastUsedStreamOutput.output).then(noop, noop);
+            console.log(output.items.length);
+            // task?.replaceOutputItems(output.items, this.lastUsedStreamOutput.output).then(noop, noop);
         } else if (previousValueOfClearOutputOnNextUpdateToOutput) {
             // Replace the current outputs with a single new output.
             const text = formatStreamText(concatMultilineString(msg.content.text));
@@ -857,7 +871,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             });
             this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
             traceCellMessage(this.cell, `Replace output '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
-            task?.replaceOutput([output]).then(noop, noop);
+            // task?.replaceOutput([output]).then(noop, noop);
         } else {
             // Create a new output
             const text = formatStreamText(concatMultilineString(msg.content.text));
@@ -868,7 +882,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             });
             this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
             traceCellMessage(this.cell, `Append output '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
-            task?.appendOutput([output]).then(noop, noop);
+            // task?.appendOutput([output]).then(noop, noop);
         }
         this.endTemporaryTask();
     }
