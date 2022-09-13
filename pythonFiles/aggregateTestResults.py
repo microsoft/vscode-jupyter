@@ -7,8 +7,6 @@ import io
 
 authtoken = sys.argv[1]
 print("Using authtoken with prefix: " + authtoken[:4])
-inputDate = sys.argv[2]
-
 
 def getRuns(createdDate):
     runsResponse = requests.get(
@@ -110,11 +108,16 @@ def flattenTestResultsToFile(runResults, filename):
 from datetime import date, datetime
 from datetime import timedelta
 
+inputDate = ""
+if len(sys.argv) > 2:
+    inputDate = sys.argv[2]
+
 if inputDate != "":
     print(f"Using collection date {inputDate}")
     collectionDateTime = datetime.strptime(inputDate, "%Y-%m-%d")
     collectionDate = date.fromtimestamp(collectionDateTime.timestamp())
 else:
+    print("No collection date input, running for yesterday")
     collectionDate = date.today() - timedelta(days=1)
 
 # %%
