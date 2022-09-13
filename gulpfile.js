@@ -228,7 +228,7 @@ gulp.task(
         // Dependencies first
         gulp.parallel('webpack-dependencies', 'webpack-renderers', 'webpack-viewers'),
         // Then the two extensions
-        gulp.parallel('webpack-extension-node', 'webpack-extension-web')
+        gulp.parallel('webpack-extension-node')
     )
 );
 
