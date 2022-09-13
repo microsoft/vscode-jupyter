@@ -155,6 +155,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     }
 
     public async loadCache() {
+        traceInfoIfCI('Remote Kernel Finder load cache', this.serverConnectionType.isLocalLaunch);
+
         if (this.serverConnectionType.isLocalLaunch) {
             await this.writeToCache([]);
             this._initializeResolve();

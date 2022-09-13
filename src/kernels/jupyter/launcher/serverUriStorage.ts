@@ -11,7 +11,7 @@ import {
 import { Settings } from '../../../platform/common/constants';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { ICryptoUtils, IMemento, GLOBAL_MEMENTO, IsWebExtension } from '../../../platform/common/types';
-import { traceError } from '../../../platform/logging';
+import { traceError, traceInfoIfCI } from '../../../platform/logging';
 import { computeServerId } from '../jupyterUtils';
 import { IJupyterServerUriStorage, IServerConnectionType } from '../types';
 
@@ -55,6 +55,13 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         @inject(IsWebExtension) readonly isWebExtension: boolean
     ) {
         // Remember if local only
+        traceInfoIfCI(`JupyterServerUriStorage: isWebExtension: ${isWebExtension}`);
+        traceInfoIfCI(
+            `Global memento: ${this.globalMemento.get<boolean>(
+                mementoKeyToIndicateIfConnectingToLocalKernelsOnly,
+                true
+            )}`
+        );
         this._localOnly = isWebExtension
             ? false
             : this.globalMemento.get<boolean>(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, true);
@@ -201,6 +208,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     public async getRemoteUri(): Promise<string | undefined> {
         try {
             const uri = await this.getUri();
+            traceInfoIfCI(`getRemoteUri: ${uri}`);
             switch (uri) {
                 case Settings.JupyterServerLocalLaunch:
                     return;
@@ -217,6 +225,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         }
     }
     public async setUriToLocal(): Promise<void> {
+        traceInfoIfCI(`setUriToLocal`);
         await this.setUri(Settings.JupyterServerLocalLaunch);
     }
     public async setUriToRemote(uri: string, displayName: string): Promise<void> {
@@ -228,6 +237,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     }
 
     public async setUriToNone(): Promise<void> {
+        traceInfoIfCI(`setUriToNone`);
         return this.setUri(undefined);
     }
 
@@ -235,6 +245,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         // Set the URI as our current state
         this.currentUriPromise = Promise.resolve(uri);
         this._currentServerId = uri ? await computeServerId(uri) : undefined;
+        traceInfoIfCI(`setUri: ${uri}`);
         this._localOnly = (uri === Settings.JupyterServerLocalLaunch || uri === undefined) && !this.isWebExtension;
         this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
 
