@@ -77,7 +77,6 @@
         "onWebviewPanel:jupyter"
     ],
     "main": "./out/extension.node.js",
-    "browser": "./out/extension.web.bundle.js",
     "capabilities": {
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {
