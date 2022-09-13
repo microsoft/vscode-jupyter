@@ -385,10 +385,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo(
             `Interrupt requested for ${getDisplayPath(vscodeNotebook.activeNotebookEditor?.notebook?.uri)} in test`
         );
-        await commands.executeCommand(
-            'jupyter.notebookeditor.interruptkernel',
-            vscodeNotebook.activeNotebookEditor?.notebook.uri
-        );
+        await commands.executeCommand('jupyter.interruptkernel', {
+            notebookEditor: vscodeNotebook.activeNotebookEditor
+                ? { notebookUri: vscodeNotebook.activeNotebookEditor.notebook.uri }
+                : undefined
+        });
         await waitForExecutionCompletedWithErrors(cell);
         // Verify that it hasn't got added (even after interrupting).
         assertNotHasTextOutputInVSCode(cell, 'Start', 0, false);

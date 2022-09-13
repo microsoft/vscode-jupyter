@@ -221,7 +221,6 @@ export namespace Commands {
     export const NotebookEditorUndoCells = 'jupyter.notebookeditor.undocells';
     export const NotebookEditorRedoCells = 'jupyter.notebookeditor.redocells';
     export const NotebookEditorRemoveAllCells = 'jupyter.notebookeditor.removeallcells';
-    export const NotebookEditorInterruptKernel = 'jupyter.notebookeditor.interruptkernel';
     export const NotebookEditorRestartKernel = 'jupyter.notebookeditor.restartkernel';
     export const NotebookEditorRunAllCells = 'jupyter.notebookeditor.runallcells';
     export const NotebookEditorRunSelectedCell = 'jupyter.notebookeditor.runselectedcell';
