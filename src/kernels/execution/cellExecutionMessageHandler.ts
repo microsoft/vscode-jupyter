@@ -827,7 +827,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             task?.appendOutputItems(output.items, this.lastUsedStreamOutput.output).then(noop, noop);
         } else if (previousValueOfClearOutputOnNextUpdateToOutput) {
             // Replace the current outputs with a single new output.
-            const text = formatStreamText(concatMultilineString(msg.content.text));
+            const text = concatMultilineString(msg.content.text);
             const output = cellOutputToVSCCellOutput({
                 output_type: 'stream',
                 name: msg.content.name,
