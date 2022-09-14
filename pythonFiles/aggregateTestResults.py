@@ -65,7 +65,9 @@ def getResultsForRun(run):
 
     results = []
     for artifact in artifacts:
-        if artifact["name"].startswith("TestResult-"):
+        if artifact["name"].startswith("TestResult-") or artifact["name"].startswith(
+            "TestResults-"
+        ):
             print(f"    retrieving {artifact['name']}")
             rawData = getArtifactData(artifact["id"])
             testRunResults = getResultsJson(rawData)
