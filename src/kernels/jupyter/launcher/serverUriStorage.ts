@@ -241,7 +241,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         return this.setUri(undefined, undefined);
     }
 
-    public async setUri(uri: string | undefined, disaplayName: string | undefined) {
+    public async setUri(uri: string | undefined, displayName: string | undefined) {
         // Set the URI as our current state
         this.currentUriPromise = Promise.resolve(uri);
         this._currentServerId = uri ? await computeServerId(uri) : undefined;
@@ -255,7 +255,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
 
         if (!this._localOnly && uri) {
             // disaplay name is wrong here
-            await this.addToUriList(uri, Date.now(), disaplayName ?? uri);
+            await this.addToUriList(uri, Date.now(), displayName ?? uri);
 
             // Save in the storage (unique account per workspace)
             const key = await this.getUriAccountKey();
