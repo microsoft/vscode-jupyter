@@ -233,7 +233,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
               };
 
         // For kernelPickerType internally collapse into just the kernelPickerType value
-        // Preferr the existing showOnlyOneTypeOfKernel value over the experimental picker
+        // Prefer the existing showOnlyOneTypeOfKernel value over the experimental picker
         const kernelPickerType = jupyterConfig.get<KernelPickerType>('experimental.kernelPickerType');
         const showOnlyOneTypeOfKernel = jupyterConfig.get<boolean>('showOnlyOneTypeOfKernel');
         if (showOnlyOneTypeOfKernel) {
