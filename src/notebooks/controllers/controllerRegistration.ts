@@ -23,7 +23,8 @@ import {
     ICommandManager,
     IWorkspaceService,
     IDocumentManager,
-    IApplicationShell
+    IApplicationShell,
+    IApplicationEnvironment
 } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { JupyterNotebookView, InteractiveWindowView, JVSC_EXTENSION_ID } from '../../platform/common/constants';
@@ -86,7 +87,8 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IApplicationEnvironment) private readonly app: IApplicationEnvironment
     ) {
         this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverConnectionType.onDidChange(this.onDidChangeFilter, this, this.disposables);
@@ -153,7 +155,10 @@ export class ControllerRegistration implements IControllerRegistration {
                             if (action !== 'start' || actionSource !== 'jupyterExtension') {
                                 return;
                             }
-                            await this.swapKernelSpecConnectionControllerWithLiveController(kernel);
+                            // Lets enable this functionality later, for now this is enabled only in insiders.
+                            if (this.app.channel === 'insiders') {
+                                await this.swapKernelSpecConnectionControllerWithLiveController(kernel);
+                            }
                         }
                     );
                     controller.onDidDispose(
