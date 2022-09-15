@@ -31,6 +31,6 @@ jobs:
       - name: Upload test result files
         uses: actions/upload-artifact@v3
         with:
-          name: testResults
+          name: testResults-${{ inputs.collection_date }}
           path: AggTestResults-*.json
           retention-days: 60
