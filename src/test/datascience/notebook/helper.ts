@@ -1112,11 +1112,12 @@ export async function hijackPrompt(
 }
 
 export async function changeShowOnlyOneTypeOfKernel(setting: boolean) {
+    const targetValue = setting ? 'OnlyOneTypeOfKernel' : 'Stable';
     const api = await initialize();
     const config = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
     const settings = config.getSettings();
-    if (settings.showOnlyOneTypeOfKernel !== setting) {
-        await config.updateSetting('showOnlyOneTypeOfKernel', setting, undefined, ConfigurationTarget.Global);
+    if (settings.kernelPickerType !== targetValue) {
+        await config.updateSetting('experimental.kernelPickerType', targetValue, undefined, ConfigurationTarget.Global);
     }
 }
 

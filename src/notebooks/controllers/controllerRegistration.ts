@@ -81,7 +81,7 @@ export class ControllerRegistration implements IControllerRegistration {
         this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
         this.workspace.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.disposables);
-        this.inKernelExperiment = this.configuration.getSettings().showOnlyOneTypeOfKernel;
+        this.inKernelExperiment = this.configuration.getSettings().kernelPickerType === 'OnlyOneTypeOfKernel';
     }
     add(
         metadata: KernelConnectionMetadata,
