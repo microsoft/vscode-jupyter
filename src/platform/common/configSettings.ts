@@ -20,6 +20,7 @@ import {
     IExperiments,
     ILoggingSettings,
     InteractiveWindowMode,
+    InteractiveWindowViewColumn,
     IVariableQuery,
     IVariableTooltipFields,
     IWatchableJupyterSettings,
@@ -91,6 +92,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public jupyterCommandLineArguments: string[] = [];
     public widgetScriptSources: WidgetCDNs[] = [];
     public interactiveWindowMode: InteractiveWindowMode = 'multiple';
+    public interactiveWindowViewColumn: InteractiveWindowViewColumn = 'secondGroup';
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     // Hidden settings not surfaced in package.json

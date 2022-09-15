@@ -5,42 +5,19 @@
 
 /* __GDPR__FRAGMENT__
    "F1" : {
-      "F1P1": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":true,"comment":"Duration of a measure in milliseconds. Common measurement used across a number of events."},
-      "F1P2": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether there was a failure. Common to most of the events."},
-      "F1P3": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error. Common to most of the events."},
-      "F1P4": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly. Common to most of the events."},
-      "F1P5": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Hash of the file name that contains the file in the last frame (from Python stack trace). Common to most of the events."},
-      "F1P6": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Hash of the folder that contains the file in the last frame (from Python stack trace). Common to most of the events."},
-      "F1P7": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Hash of the module that contains the file in the last frame (from Python stack trace). Common to most of the events."},
-      "F1P8": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Node stacktrace without PII. Common to most of the events."},
-      "F1P9": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events."},
-      "F1P10": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events."},
-      "F1P11": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":true,"comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events."},
-      "F1P12": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether the user executed a cell. Common to most of the events."},
-      "F1P13": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":true,"comment":"Number of times the kernel was changed. Common to most of the events."},
-      "F1P14": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":true,"comment":"Number of times starting the kernel failed. Common to most of the events."},
-      "F1P15": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":true,"comment":"This number gets reset after change the kernel. Common to most of the events."},
-      "F1P16": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events."},
-      "F1P17": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events."},
-      "F1P18": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events."},
-      "F1P19": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events."},
-      "F1P20": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Comma delimited list of hashed packages & their versions. Common to most of the events."},
-      "F1P21": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":true,"comment":"Total number of python environments. Common to most of the events."},
-      "F1P22": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":true,"comment":"Total number of kernel specs in the kernel spec list. Common to most of the events."},
-      "F1P23": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events."},
-      "F1P24": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":true,"comment":"Total number of live kernels in the kernel spec list. Common to most of the events."},
-      "F1P25": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Language of the kernel connection. Common to most of the events."},
-      "F1P26": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":true,"comment":"Total number of interpreters in the kernel spec list. Common to most of the events."},
-      "F1P27": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Hash of the Kernel Connection id. Common to most of the events."},
-      "F1P28": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events."},
-      "F1P29": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events."},
-      "F1P30": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events."},
-      "F1P31": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events."},
-      "F1P32": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Determine where an extension was installed from. Common to all events."},
-      "F1P33": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether this is an AML compute instance. Common to all events."},
-      "F1P34": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether this is the Insider version of the Jupyter extension or not. Common to all events."},
-      "F1P35": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether Python extension is installed or not. Common to all events."},
-      "F1P36": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether the raw kernel is supported or not. Common to all events."}
+      "duration": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":true,"comment":"Duration of a measure in milliseconds. Common measurement used across a number of events."},
+      "failed": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether there was a failure. Common to most of the events."},
+      "failureCategory": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error. Common to most of the events."},
+      "failureSubCategory": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly. Common to most of the events."},
+      "pythonErrorFile": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Hash of the file name that contains the file in the last frame (from Python stack trace). Common to most of the events."},
+      "pythonErrorFolder": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Hash of the folder that contains the file in the last frame (from Python stack trace). Common to most of the events."},
+      "pythonErrorPackage": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Hash of the module that contains the file in the last frame (from Python stack trace). Common to most of the events."},
+      "stackTrace": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Node stacktrace without PII. Common to most of the events."},
+      "installSource": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Determine where an extension was installed from. Common to all events."},
+      "isamlcompute": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether this is an AML compute instance. Common to all events."},
+      "isInsiderExtension": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether this is the Insider version of the Jupyter extension or not. Common to all events."},
+      "isPythonExtensionInstalled": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether Python extension is installed or not. Common to all events."},
+      "rawKernelSupported": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether the raw kernel is supported or not. Common to all events."}
    }
  */
 
@@ -48,42 +25,8 @@
 /* __GDPR__
    "DATASCIENCE.ADD_CELL_BELOW" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -92,42 +35,8 @@
    "DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK" : {
      "format": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"What format to export to was selected in the quick pick.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -135,42 +44,8 @@
 /* __GDPR__
    "DATASCIENCE.CREATE_NEW_INTERACTIVE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -179,42 +54,8 @@
    "DATASCIENCE.DATA_VIEWER_DATA_DIMENSIONALITY" : {
      "numberOfDimensions": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"This property represents the number of dimensions on the target variable being sliced. This should always be 2 at minimum.","owner":"IanMatthewHuff","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -223,42 +64,8 @@
    "DATASCIENCE.DATA_VIEWER_SLICE_ENABLEMENT_STATE_CHANGED" : {
      "newState": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"This property is either 'checked' when the result of toggling the checkbox is for slicing to be enabled, or 'unchecked' when the result of toggling the checkbox is for slicing to be disabled.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -267,42 +74,8 @@
    "DATASCIENCE.DATA_VIEWER_SLICE_OPERATION" : {
      "source": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"This property indicates whether the slice operation was triggered using the dropdown or the textbox in the slice control panel. `source` is one of `dropdown`, `textbox`, or `checkbox`.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -310,42 +83,8 @@
 /* __GDPR__
    "DATASCIENCE.DEBUG_CONTINUE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -353,42 +92,8 @@
 /* __GDPR__
    "DATASCIENCE.DEBUG_CURRENT_CELL" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -396,42 +101,8 @@
 /* __GDPR__
    "DATASCIENCE.DEBUG_FILE_INTERACTIVE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -439,42 +110,8 @@
 /* __GDPR__
    "DATASCIENCE.DEBUG_STEP_OVER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -482,42 +119,8 @@
 /* __GDPR__
    "DATASCIENCE.DEBUG_STOP" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -525,42 +128,8 @@
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.CLICKED_ON_SETUP" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -568,42 +137,8 @@
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.CLICKED_RUN_AND_DEBUG_CELL" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -611,42 +146,8 @@
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.CLICKED_RUNBYLINE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -654,42 +155,8 @@
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.CLOSED_MODAL" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -698,42 +165,8 @@
    "DATASCIENCE.DEBUGGING.ENDED_SESSION" : {
      "reason": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The reason the session ended.","owner":"roblourens"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -742,42 +175,8 @@
    "DATASCIENCE.DEBUGGING.IPYKERNEL6_STATUS" : {
      "status": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether ipykernel 6 is installed.","owner":"roblourens"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -785,42 +184,8 @@
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_IW_JUPYTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -828,42 +193,8 @@
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_RUN_AND_DEBUG_CELL" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -871,42 +202,8 @@
 /* __GDPR__
    "DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_RUNBYLINE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -914,42 +211,8 @@
 /* __GDPR__
    "DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -957,42 +220,8 @@
 /* __GDPR__
    "DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1000,85 +229,40 @@
 /* __GDPR__
    "DATASCIENCE.ENTER_JUPYTER_URI" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.ExecuteCell
 /* __GDPR__
    "DATASCIENCE.EXECUTE_CELL" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1090,42 +274,8 @@
      "successful": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Was the export operation successful.","owner":"IanMatthewHuff"},
      "opened": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Did the user end with opening the file in VS Code.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1134,42 +284,8 @@
    "DATASCIENCE.EXPORT_NOTEBOOK_AS_COMMAND" : {
      "format": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"What format was the export performed to.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1178,42 +294,8 @@
    "DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED" : {
      "format": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"What format was the export performed to.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1221,42 +303,8 @@
 /* __GDPR__
    "DATASCIENCE.EXPORT_PYTHON_FILE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1264,42 +312,8 @@
 /* __GDPR__
    "DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1307,42 +321,8 @@
 /* __GDPR__
    "DATASCIENCE.FAILED_SHOW_DATA_EXPLORER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1351,42 +331,8 @@
    "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER" : {
      "kind": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"What kind of kernel spec did we fail to create.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1394,42 +340,8 @@
 /* __GDPR__
    "DATASCIENCE.GOTO_NEXT_CELL_IN_FILE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1437,42 +349,8 @@
 /* __GDPR__
    "DATASCIENCE.GOTO_PREV_CELL_IN_FILE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1481,42 +359,8 @@
    "DATASCIENCE.IMPORT_NOTEBOOK" : {
      "scope": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The command can be called as a command, in which a file then needs to be selected, or with a file as the context already, in which case the import command doesn't ask for selection.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1526,42 +370,8 @@
      "ename": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"The error name of the failure.","owner":"roblourens"},
      "evalue": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"The error value of the failure.","owner":"roblourens"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1569,42 +379,8 @@
 /* __GDPR__
    "DATASCIENCE.INTERRUPT" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1614,42 +390,8 @@
      "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
      "allowed": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether or not the extension was able to use the API.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1659,42 +401,8 @@
      "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
      "pemUsed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the API member used.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1702,42 +410,8 @@
 /* __GDPR__
    "DATASCIENCE.JUPYTER_KERNEL_FILTER_USED" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1745,42 +419,8 @@
 /* __GDPR__
    "DATASCIENCE.JUPYTER_KERNEL_HIDDEN_VIA_FILTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1788,85 +428,40 @@
 /* __GDPR__
    "DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.KernelCrash
 /* __GDPR__
    "DATASCIENCE.KERNEL_CRASH" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1877,42 +472,8 @@
      "language": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the kernelSpec.","owner":"donjayamanne"},
      "usesShell": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether shell is used to start the kernel. E.g. `\"/bin/sh\"` is used in the argv of the kernelSpec. OCaml is one such kernel.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1922,42 +483,8 @@
      "ename": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"The error name of the failure.","owner":"donjayamanne"},
      "evalue": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"The error value of the failure","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -1965,42 +492,8 @@
 /* __GDPR__
    "DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2008,42 +501,8 @@
 /* __GDPR__
    "DATASCIENCE.NO_ACTIVE_KERNEL_SESSION" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2051,43 +510,32 @@
 /* __GDPR__
    "DATASCIENCE.NOTEBOOK_INTERRUPT" : {
      "result": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"The result of the interrupt,","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2095,86 +543,64 @@
 /* __GDPR__
    "DATASCIENCE.NOTEBOOK_RESTART" : {
      "startTimeOnly": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"If true, this is the total time taken to restart the kernel (excluding times to stop current cells and the like). Also in the case of raw kernels, we keep a separate process running, and when restarting we just switch to that process. In such cases this value will be `undefined`. In the case of raw kernels this will be true only when starting a new kernel process from scratch.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.NotebookStart
 /* __GDPR__
    "DATASCIENCE.NOTEBOOK_START" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2182,42 +608,8 @@
 /* __GDPR__
    "DATASCIENCE.OPEN_PLOT_VIEWER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2227,42 +619,8 @@
      "ename": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"The error name of the failure.","owner":"IanMatthewHuff"},
      "evalue": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"The error value of the failure","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2272,42 +630,8 @@
      "extensionId": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Extension we recommended the user to install.","owner":"IanMatthewHuff"},
      "action": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"`displayed` - If prompt was displayed `dismissed` - If prompt was displayed & dismissed by the user `ok` - If prompt was displayed & ok clicked by the user `cancel` - If prompt was displayed & cancel clicked by the user `doNotShowAgain` - If prompt was displayed & doNotShowAgain clicked by the user","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2315,85 +639,40 @@
 /* __GDPR__
    "DATASCIENCE.REFRESH_DATA_VIEWER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.RestartKernelCommand
 /* __GDPR__
    "DATASCIENCE.RESTART_KERNEL_COMMAND" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2401,42 +680,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_ALL_CELLS" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2444,42 +689,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_ALL_CELLS_ABOVE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2487,42 +698,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2530,42 +707,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_CELL_AND_ALL_BELOW" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2573,42 +716,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_CHANGE_CELL_TO_CODE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2616,42 +725,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_CHANGE_CELL_TO_MARKDOWN" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2659,42 +734,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_CURRENT_CELL" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2702,42 +743,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_CURRENT_CELL_AND_ADD_BELOW" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2745,42 +752,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2788,42 +761,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_DELETE_CELLS" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2831,42 +770,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_ABOVE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2874,42 +779,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_EXTEND_SELECTION_BY_CELL_BELOW" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2917,42 +788,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_FILE_INTERACTIVE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -2960,42 +797,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_FROM_LINE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3003,42 +806,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_INSERT_CELL_ABOVE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3046,42 +815,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_INSERT_CELL_BELOW" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3089,42 +824,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_INSERT_CELL_BELOW_POSITION" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3132,42 +833,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_MOVE_CELLS_DOWN" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3175,42 +842,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_MOVE_CELLS_UP" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3218,42 +851,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_SELECT_CELL" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3261,42 +860,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_SELECT_CELL_CONTENTS" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3304,42 +869,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_SELECTION_OR_LINE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3347,42 +878,8 @@
 /* __GDPR__
    "DATASCIENCE.RUN_TO_LINE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3390,42 +887,8 @@
 /* __GDPR__
    "DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3433,128 +896,72 @@
 /* __GDPR__
    "DATASCIENCE.SELECT_JUPYTER_URI" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.SelectLocalJupyterKernel
 /* __GDPR__
    "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"IanMatthewHuff"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"IanMatthewHuff"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"IanMatthewHuff"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"IanMatthewHuff"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"IanMatthewHuff"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"IanMatthewHuff"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"IanMatthewHuff"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"IanMatthewHuff"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"IanMatthewHuff"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"IanMatthewHuff"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"IanMatthewHuff"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"IanMatthewHuff"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"IanMatthewHuff"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"IanMatthewHuff"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"IanMatthewHuff"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.SelectRemoteJupyterKernel
 /* __GDPR__
    "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"IanMatthewHuff"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"IanMatthewHuff"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"IanMatthewHuff"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"IanMatthewHuff"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"IanMatthewHuff"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"IanMatthewHuff"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"IanMatthewHuff"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"IanMatthewHuff"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"IanMatthewHuff"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"IanMatthewHuff"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"IanMatthewHuff"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"IanMatthewHuff"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"IanMatthewHuff"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"IanMatthewHuff"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"IanMatthewHuff"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3562,42 +969,8 @@
 /* __GDPR__
    "DATASCIENCE.SELFCERTSMESSAGECLOSE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3605,42 +978,8 @@
 /* __GDPR__
    "DATASCIENCE.SELFCERTSMESSAGEENABLED" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3648,42 +987,8 @@
 /* __GDPR__
    "DATASCIENCE.SET_JUPYTER_URI_LOCAL" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3692,42 +997,8 @@
    "DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED" : {
      "commandSource": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"This telemetry tracks the source of this UI. nonUser - Invoked internally by our code. toolbar - Invoked by user from Native or Interactive window toolbar. commandPalette - Invoked from command palette by the user. nativeNotebookStatusBar - Invoked from Native notebook statusbar. nativeNotebookToolbar - Invoked from Native notebook toolbar.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3736,131 +1007,29 @@
    "DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED" : {
      "azure": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Was the URI set to an Azure uri.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.ShowDataViewer
 /* __GDPR__
    "DATASCIENCE.SHOW_DATA_EXPLORER" : {
-     "rows": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Count of rows in the target data frame.","owner":"IanMatthewHuff"},
-     "columns": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Count of columns in the target data frame.","owner":"IanMatthewHuff"},
+     "rows": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Count of rows in the target data frame.","owner":"IanMatthewHuff","isMeasurement":true},
+     "columns": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Count of columns in the target data frame.","owner":"IanMatthewHuff","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.ShowDataViewerRowsLoaded
 /* __GDPR__
    "DATASCIENCE.SHOW_DATA_EXPLORER_ROWS_LOADED" : {
-     "rowsTimer": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Timer to indicate how long it took to load all the rows","owner":"IanMatthewHuff"},
+     "rowsTimer": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Timer to indicate how long it took to load all the rows","owner":"IanMatthewHuff","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3868,42 +1037,8 @@
 /* __GDPR__
    "DATASCIENCE.START_SHOW_DATA_EXPLORER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3911,42 +1046,8 @@
 /* __GDPR__
    "DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3954,42 +1055,8 @@
 /* __GDPR__
    "DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -3997,42 +1064,8 @@
 /* __GDPR__
    "DATASCIENCE.USER_INSTALLED_JUPYTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4040,42 +1073,8 @@
 /* __GDPR__
    "DATASCIENCE.USER_INSTALLED_PANDAS" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4083,42 +1082,8 @@
 /* __GDPR__
    "DATAVIEWER.USING_INTERPRETER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4126,42 +1091,8 @@
 /* __GDPR__
    "DATAVIEWER.USING_KERNEL" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4170,42 +1101,8 @@
    "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF" : {
      "firstTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether this is the first time in the session. (fetching kernels first time in the session is slower, later its cached). This is a generic property supported for all telemetry (sent by decorators).","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4214,42 +1111,8 @@
    "DS_INTERNAL.CELL_OUTPUT_MIME_TYPE" : {
      "mimeType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Mimetype of the output.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4257,42 +1120,8 @@
 /* __GDPR__
    "DS_INTERNAL.CODE_LENS_ACQ_TIME" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4301,42 +1130,8 @@
    "DS_INTERNAL.COMMAND_EXECUTED" : {
      "command": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Name of the command executed.","owner":"amunger"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4344,42 +1139,8 @@
 /* __GDPR__
    "DS_INTERNAL.CONNECTFAILEDJUPYTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4387,42 +1148,8 @@
 /* __GDPR__
    "DS_INTERNAL.CONNECTLOCALJUPYTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4430,42 +1157,8 @@
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTEEXPIREDCERTFAILEDJUPYTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4473,42 +1166,8 @@
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4516,42 +1175,8 @@
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTEJUPYTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4559,42 +1184,8 @@
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4602,128 +1193,28 @@
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.ExecuteCellPerceivedCold
 /* __GDPR__
    "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD" : {
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.ExecuteCellPerceivedWarm
 /* __GDPR__
    "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM" : {
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4731,42 +1222,8 @@
 /* __GDPR__
    "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4777,42 +1234,8 @@
      "reason": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Reason for not being able to get the env variables.","owner":"donjayamanne"},
      "source": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Source where the env variables were fetched from. If `python`, then env variables were fetched from Python extension. If `jupyter`, then env variables were fetched from Jupyter extension.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4820,42 +1243,8 @@
 /* __GDPR__
    "DS_INTERNAL.GET_PASSWORD_FAILURE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4863,42 +1252,8 @@
 /* __GDPR__
    "DS_INTERNAL.GET_PASSWORD_SUCCESS" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4907,42 +1262,8 @@
    "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF" : {
      "isResultNull": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Result is null if user signalled cancellation or if we timed out","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4951,42 +1272,8 @@
    "DS_INTERNAL.INTERPRETER_LISTING_PERF" : {
      "firstTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether this is the first time in the session. (fetching kernels first time in the session is slower, later its cached). This is a generic property supported for all telemetry (sent by decorators).","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -4995,42 +1282,8 @@
    "DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS" : {
      "type": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether we're looking for widgets on local Jupyter environment (local connections) or remote.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5038,42 +1291,8 @@
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_DISCOVERY_ERRORED" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5085,42 +1304,8 @@
      "widgetFolderNameHash": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Hash of the widget folder name.","owner":"donjayamanne"},
      "requireEntryPointCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of entries in the require config.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5132,42 +1317,8 @@
      "moduleHash": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the widget module.","owner":"donjayamanne"},
      "moduleVersion": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Version of the module.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5177,42 +1328,8 @@
      "moduleHash": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the module name.","owner":"donjayamanne"},
      "moduleVersion": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Version of the module.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5224,42 +1341,8 @@
      "averageWaitTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Average wait timne.","owner":"donjayamanne","isMeasurement":true},
      "numberOfRegisteredHooks": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of registered hook.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5267,42 +1350,8 @@
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5311,42 +1360,8 @@
    "DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN_SELECTION" : {
      "selection": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"The section made by the user.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5354,42 +1369,8 @@
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_RENDER_FAILURE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5397,42 +1378,8 @@
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_TIME_TO_COPY_NBEXTENSIONS_DIR" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5441,42 +1388,8 @@
    "DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE" : {
      "msg_type": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Type of the protocol message sent by Jupyter kernel.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5487,42 +1400,8 @@
      "hashedName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the widget","owner":"donjayamanne"},
      "source": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Where did we find the hashed name (CDN or user environment or remote jupyter).","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5532,85 +1411,40 @@
      "moduleHash": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the widget module.","owner":"donjayamanne"},
      "moduleVersion": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Version of the module.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.JupyterCreatingNotebook
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5618,42 +1452,8 @@
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5661,42 +1461,8 @@
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5704,42 +1470,8 @@
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5747,131 +1479,75 @@
 /* __GDPR__
    "DS_INTERNAL.JUPYTERSTARTUPCOST" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.KernelCount
 /* __GDPR__
    "DS_INTERNAL.KERNEL_COUNT" : {
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "condaEnvsSharingSameInterpreter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of conda environments that share the same interpreter This happens when we create conda envs without the `python` argument. Such conda envs don't work today in the extension. Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.","owner":"donjayamanne","isMeasurement":true},
      "localKernelSpecCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of local kernel specs in the list.","owner":"donjayamanne","isMeasurement":true},
      "remoteKernelSpecCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of remote kernel specs in the list.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.KernelLauncherPerf
 /* __GDPR__
    "DS_INTERNAL.KERNEL_LAUNCHER_PERF" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5880,42 +1556,8 @@
    "DS_INTERNAL.KERNEL_LISTING_PERF" : {
      "kind": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether this telemetry is for listing of all kernels or just python or just non-python. (fetching kernels first time in the session is slower, later its cached).","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5923,42 +1565,8 @@
 /* __GDPR__
    "DS_INTERNAL.KERNEL_SPEC_NOT_FOUND" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -5966,42 +1574,8 @@
 /* __GDPR__
    "DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6009,42 +1583,8 @@
 /* __GDPR__
    "DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6053,42 +1593,8 @@
    "DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT" : {
      "count": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of notebooks opened in a session. Not unique. If usre opens & closes a notebook, that counts as 2.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6097,42 +1603,8 @@
    "DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT" : {
      "count": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of cells executed. If a cell is executed 10 times, thats counted as 10.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6140,42 +1612,8 @@
 /* __GDPR__
    "DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6184,175 +1622,63 @@
    "DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED" : {
      "count": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Count is the number of kernels saved in the list.","owner":"IanMatthewHuff","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.PerceivedJupyterStartupNotebook
 /* __GDPR__
    "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.PreferredKernel
 /* __GDPR__
    "DS_INTERNAL.PREFERRED_KERNEL" : {
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"IanMatthewHuff"},
      "hasActiveInterpreter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If we have an active interpreter or not.","owner":"IanMatthewHuff"},
      "language": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the target notebook or interactive window","owner":"IanMatthewHuff"},
      "result": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Note if we did or did not find a preferred kernel.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.PreferredKernelExactMatch
 /* __GDPR__
    "DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH" : {
-     "matchedReason": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How/why the preferred kernel was matched the way it was.","owner":"IanMatthewHuff"},
+     "matchedReason": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How/why the preferred kernel was matched the way it was.","owner":"IanMatthewHuff","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6361,42 +1687,8 @@
    "DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER" : {
      "action": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Did the Extension install succeed or fail?","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6405,86 +1697,19 @@
    "DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED" : {
      "action": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The message was displayed, or indicate that the user dismissed or downloaded the message.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.PythonKerneExecutableMatches
 /* __GDPR__
    "DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES" : {
+     "kernelConnectionType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Type of kernel connection, whether its local, remote or a python environment.","owner":"donjayamanne"},
      "match": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether we've managed to correctly identify the Python Environment.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6495,43 +1720,11 @@
      "isModulePresent": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether the module was already (once before) installed into the python environment or whether this already exists (detected via `pip list`)","owner":"donjayamanne"},
      "moduleName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the python module to be installed.","owner":"donjayamanne"},
      "pythonEnvType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Type of the python environment.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6540,42 +1733,8 @@
    "DS_INTERNAL.PYTHON_NOT_INSTALLED" : {
      "action": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The message was displayed, or indicate that the user dismissed or downloaded the message.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6583,42 +1742,8 @@
 /* __GDPR__
    "DS_INTERNAL.RANK_KERNELS_PERF" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6626,87 +1751,42 @@
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.RawKernelInfoResponse
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "timedout": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether we timedout while waiting for response for Kernel info request.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "attempts": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of attempts and sending a request and waiting for response.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6714,85 +1794,40 @@
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.RawKernelSessionConnect
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_CONNECT" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6800,43 +1835,32 @@
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED" : {
      "stacktrace": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"This is the callstack at the time that the `dispose` method is called, intended for us to be able to identify who called `dispose` on the RawSession.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6844,88 +1868,44 @@
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED" : {
      "exitReason": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"The kernel process's exit reason, based on the error object's reason","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "exitCode": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"The kernel process's exit code.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.RawKernelSessionStartNoIpykernel
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL" : {
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "reason": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Captures the result of the error message, whether user dismissed this or picked a new kernel or the like.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -6934,129 +1914,96 @@
    "DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN" : {
      "isRequestToShutdownRestartSession": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"This indicates whether the session being shutdown is a restart session.","owner":"donjayamanne"},
      "stacktrace": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"This is the callstack at the time that the `shutdownSession` method is called, intended for us to be ale to identify who tried to shutdown the session.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.RawKernelSessionStart
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_START" : {
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.RawKernelSessionStartUserCancel
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL" : {
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7064,42 +2011,8 @@
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_START_RAW_SESSION" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7107,42 +2020,8 @@
 /* __GDPR__
    "DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7150,42 +2029,8 @@
 /* __GDPR__
    "DS_INTERNAL.RESTART_KERNEL" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7198,42 +2043,8 @@
      "commitHash": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"The git commit that the test was run against.","owner":"amunger"},
      "timedCheckpoints": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Timings for segments of the test.","owner":"amunger"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7242,42 +2053,8 @@
    "DS_INTERNAL.SELECT_JUPYTER_INTERPRETER" : {
      "result": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the value or `result` is empty this means we displayed the message to the user and user hasn't made a choice yet.  The result of the selection. notSelected - No interpreter was selected. selected - An interpreter was selected (and configured to have jupyter and notebook). installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter. selectAnotherInterpreter - Selected another interpreter.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7286,42 +2063,8 @@
    "DS_INTERNAL.SETTINGS" : {
      "settingsJson": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"A json representation of settings that the user has set. The values for string based settings are transalted to 'default' | 'non-default' unless white-listed.","owner":"amunger"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7329,42 +2072,8 @@
 /* __GDPR__
    "DS_INTERNAL.SHIFTENTER_BANNER_SHOWN" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7372,42 +2081,8 @@
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_NO_PANDAS" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7415,42 +2090,8 @@
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7458,42 +2099,8 @@
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_PANDAS_OK" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7501,85 +2108,40 @@
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.StartExecuteNotebookCellPerceivedCold
 /* __GDPR__
    "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7587,42 +2149,8 @@
 /* __GDPR__
    "DS_INTERNAL.START_JUPYTER_PROCESS" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7630,85 +2158,40 @@
 /* __GDPR__
    "DS_INTERNAL.START_SESSION_FAILED_JUPYTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
 //Telemetry.SwitchKernel
 /* __GDPR__
    "DS_INTERNAL.SWITCH_KERNEL" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"IanMatthewHuff"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"IanMatthewHuff"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"IanMatthewHuff"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"IanMatthewHuff"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"IanMatthewHuff"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"IanMatthewHuff"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"IanMatthewHuff"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"IanMatthewHuff"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"IanMatthewHuff"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"IanMatthewHuff"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"IanMatthewHuff"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"IanMatthewHuff"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"IanMatthewHuff"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"IanMatthewHuff"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"IanMatthewHuff"},
+     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
+     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"IanMatthewHuff","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7716,42 +2199,8 @@
 /* __GDPR__
    "DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7760,42 +2209,8 @@
    "DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT" : {
      "variableCount": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Count of variables requested","owner":"IanMatthewHuff","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7804,42 +2219,8 @@
    "DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED" : {
      "outputType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Type of the output received from the Jupyter kernel. This is required to identify output types that we're not mapping correctly.","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7847,42 +2228,8 @@
 /* __GDPR__
    "DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7891,42 +2238,8 @@
    "DS_INTERNAL.WEBVIEW_STARTUP" : {
      "type": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The type of webview started up.","owner":"IanMatthewHuff"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7934,42 +2247,8 @@
 /* __GDPR__
    "DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -7977,42 +2256,8 @@
 /* __GDPR__
    "DS_INTERNAL.ZMQ_NATIVE_BINARIES_NOT_LOADING" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -8020,42 +2265,8 @@
 /* __GDPR__
    "ENVFILE_VARIABLE_SUBSTITUTION" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -8063,42 +2274,8 @@
 /* __GDPR__
    "ENVFILE_WORKSPACE" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -8111,42 +2288,8 @@
      "endActivateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Time when activation completed.","owner":"donjayamanne","isMeasurement":true},
      "startActivateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Time when activation started.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -8155,42 +2298,8 @@
    "HASHED_PACKAGE_NAME" : {
      "hashedNamev2": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Hash of the package name","owner":"donjayamanne"},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -8198,42 +2307,8 @@
 /* __GDPR__
    "HASHED_PACKAGE_PERF" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -8245,42 +2320,8 @@
      "reason": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"Reason for failure.","owner":"donjayamanne"},
      "frontEndVersion": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Version of the form 6.11, 4.8","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -8288,42 +2329,8 @@
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -8331,42 +2338,8 @@
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */
@@ -8374,42 +2347,8 @@
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX" : {
      "${include}": [
-       "${F1}",
-       "${F2}",
-       "${F3}",
-       "${F4}",
-       "${F5}",
-       "${F6}",
-       "${F7}",
-       "${F8}",
-       "${F9}",
-       "${F10}",
-       "${F11}",
-       "${F12}",
-       "${F13}",
-       "${F14}",
-       "${F15}",
-       "${F16}",
-       "${F17}",
-       "${F18}",
-       "${F19}",
-       "${F20}",
-       "${F21}",
-       "${F22}",
-       "${F23}",
-       "${F24}",
-       "${F25}",
-       "${F26}",
-       "${F27}",
-       "${F28}",
-       "${F29}",
-       "${F30}",
-       "${F31}",
-       "${F32}",
-       "${F33}",
-       "${F34}",
-       "${F35}",
-       "${F36}"
+       "${F1}"
+
      ]
    }
  */

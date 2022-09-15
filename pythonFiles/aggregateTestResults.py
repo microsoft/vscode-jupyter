@@ -1,3 +1,4 @@
+# %%
 import sys
 import requests
 import json
@@ -7,13 +8,20 @@ import io
 authtoken = sys.argv[1]
 print("Using authtoken with prefix: " + authtoken[:4])
 
-
+# %%
 def getRuns(createdDate):
     runsResponse = requests.get(
         "https://api.github.com/repos/microsoft/vscode-jupyter/actions/runs",
         params={"event": "push", "created": createdDate},
-        headers={"Accept": "application/vnd.github+json"},
+        headers={
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {authtoken}",
+        },
     )
+
+    if runsResponse.status_code != 200:
+        print(f"Error {runsResponse.status_code}")
+        raise ("Error getting runs")
 
     print(f"Found {len(runsResponse.json()['workflow_runs'])} runs")
 
@@ -37,8 +45,13 @@ def getArtifactData(id):
 
 def getResultsJson(zipData):
     artifact = zipfile.ZipFile(io.BytesIO(zipData))
-    content = artifact.read("testresults.json")
-    return json.loads(content)
+    for name in artifact.namelist():
+        if name.endswith(".json"):
+            print(f"    parsing {name} from artifact with {artifact.namelist()}")
+            return json.loads(artifact.read(name))
+    else:
+        print("No results.json found in artifact")
+        return []
 
 
 def getResultsForRun(run):
@@ -52,47 +65,50 @@ def getResultsForRun(run):
 
     results = []
     for artifact in artifacts:
-        if artifact["name"].startswith("TestResult-"):
+        if artifact["name"].startswith("TestResult-") or artifact["name"].startswith(
+            "TestResults-"
+        ):
             print(f"    retrieving {artifact['name']}")
             rawData = getArtifactData(artifact["id"])
             testRunResults = getResultsJson(rawData)
-            if "title" in testRunResults and "state" in testRunResults:
-                results.append(
-                    {
-                        "scenario": artifact["name"],
-                        "date": run["created_at"],
-                        "runUrl": run["html_url"],
-                        "data": testRunResults,
-                    }
-                )
+            results.append(
+                {
+                    "scenario": artifact["name"],
+                    "date": run["created_at"],
+                    "runUrl": run["html_url"],
+                    "data": testRunResults,
+                }
+            )
+            print(f"    {len(testRunResults)} results read")
 
     return results
 
 
-def flattenTestResults(runResults):
-    testResults = []
-    index = 0
-    for runResult in runResults:
-        for scenario in runResult:
-            suite = []
-            for testResult in scenario["data"]:
-                if (
-                    testResult["event"] == "suite"
-                    and len(str.strip(testResult["title"])) > 0
-                ):
-                    suite.append(testResult["title"])
-                elif (
-                    testResult["event"] == "suite end"
-                    and len(str.strip(testResult["title"]))
-                    and len(suite) > 0
-                ):
-                    suite.pop()
-                elif "title" in testResult and "state" in testResult:
-                    print(
-                        f"{scenario['scenario']} {testResult['title']} - {testResult['state']}"
-                    )
-                    testResults.append(
-                        {
+def flattenTestResultsToFile(runResults, filename):
+    resultCount = 1
+    delimiter = ""
+    with open(filename, "w") as outfile:
+        outfile.write("[\n")
+        for runResult in runResults:
+            print(f"writing results {resultCount} of {len(runResults)}")
+            resultCount += 1
+            for scenario in runResult:
+                suite = []
+                for testResult in scenario["data"]:
+                    if (
+                        testResult["event"] == "suite"
+                        and len(str.strip(testResult["title"])) > 0
+                    ):
+                        suite.append(testResult["title"])
+                    elif (
+                        testResult["event"] == "suite end"
+                        and len(str.strip(testResult["title"]))
+                        and len(suite) > 0
+                    ):
+                        suite.pop()
+                    elif "title" in testResult and "state" in testResult:
+                        outfile.write(delimiter)
+                        singleResult = {
                             "scenario": scenario["scenario"],
                             "suite": " - ".join(suite),
                             "testName": testResult["title"],
@@ -100,18 +116,31 @@ def flattenTestResults(runResults):
                             "runUrl": scenario["runUrl"],
                             "status": testResult["state"],
                         }
-                    )
-                index = index + 1
+                        outfile.write(json.dumps(singleResult))
+                        delimiter = ",\n"
 
-    return testResults
+        outfile.write("\n]\n")
 
 
 # %%
-from datetime import date
+from datetime import date, datetime
 from datetime import timedelta
 
-yesterday = date.today() - timedelta(days=1)
-runs = getRuns(yesterday)
+inputDate = ""
+if len(sys.argv) > 2:
+    inputDate = sys.argv[2]
+
+try:
+    collectionDateTime = datetime.strptime(inputDate, "%Y-%m-%d")
+    collectionDate = date.fromtimestamp(collectionDateTime.timestamp())
+except ValueError:
+    print(
+        f"The string {inputDate} is not a date with format yyyy-mm-dd, running for yesterday"
+    )
+    collectionDate = date.today() - timedelta(days=1)
+
+# %%
+runs = getRuns(collectionDate)
 
 # %%
 runResults = []
@@ -120,8 +149,13 @@ for run in runs:
         runResults.append(getResultsForRun(run))
 
 # %%
-allTests = flattenTestResults(runResults)
+resultFile = f'AggTestResults-{collectionDate.strftime("%Y-%m-%d")}.json'
+allTests = flattenTestResultsToFile(runResults, resultFile)
 
 # %%
-with open("AggTestResults.json", "w") as outfile:
-    json.dump(allTests, outfile)
+import os
+
+file_size = os.path.getsize(resultFile)
+print(f"Wrote {file_size} bytes to {resultFile}")
+
+# %%

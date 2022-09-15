@@ -267,7 +267,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
         with:
-          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
           path: .nyc_output
           retention-days: 1
 
@@ -638,23 +638,15 @@ jobs:
         uses: actions/upload-artifact@v3
         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
         with:
-          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
           path: .nyc_output
-          retention-days: 1
-
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
-          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
           retention-days: 1
 
       - name: Upload VS code logs
         uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: VSCodeLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          name: VSCodeLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
@@ -662,12 +654,12 @@ jobs:
         if: always()
         run: npm run printTestResults
 
-      - name: Upload test result files
+      - name: Upload test result, screenshots files
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: TestResult-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
-          path: testresults.json
+          name: TestLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          path: './logs/*'
           retention-days: 60
 
       - name: Upload debugpy logs
@@ -677,21 +669,6 @@ jobs:
           name: debugpy-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
           path: debugpyLogs/*
           retention-days: 60
-
-      - name: Upload test failure notebook file
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: TestResultNotebook-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
-          path: testresults.ipynb
-          retention-days: 4
-
-      - name: Upload Memory snapshot
-        uses: actions/upload-artifact@v3
-        with:
-          name: SD-memtest.json
-          path: './SD-memtest.json'
-          retention-days: 20
 
       - name: Verify there are no unhandled errors
         run: npm run verifyUnhandledErrors
@@ -777,7 +754,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
           path: .nyc_output
           retention-days: 1
 
@@ -847,13 +824,13 @@ jobs:
         with:
           run: npm run testPerformance
 
-      - name: Upload screenshots
+      - name: Upload test result, screenshots files
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: Screenshots-perf-${{matrix.os}}
-          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
-          retention-days: 1
+          name: TestResults-Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          path: './logs/*'
+          retention-days: 10
 
   coverage:
     name: Coverage reports upload
@@ -886,20 +863,20 @@ jobs:
           CI_JUPYTER_FAST_COMPILATION: 'true'
 
       # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
-      # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
+      # The name pattern is ${{env.COVERAGE_REPORTS}}-${{runner.os}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
       # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
       - name: Download Ubuntu test coverage artifacts
         uses: actions/download-artifact@v3
         with:
-          name: ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
-          path: ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
+          path: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
 
       - name: Extract Ubuntu coverage artifacts to ./nyc_output
         run: |
           pwd
           mkdir .nyc_output
-          mv ${{runner.os}}-${{ env.COVERAGE_REPORTS }}/* .nyc_output
-          rm -r ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+          mv ${{env.COVERAGE_REPORTS}}-${{runner.os}}/* .nyc_output
+          rm -r ${{env.COVERAGE_REPORTS}}-${{runner.os}}
 
       - name: Merge coverage reports
         run: |

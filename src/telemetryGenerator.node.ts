@@ -224,8 +224,10 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
                     // Some times we share the properties of two events,
                     // When updating the values, we don't want to be overwriting the values of the other event.
                     gdprEntry = JSON.parse(
-                        JSON.stringify(gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'][name])
+                        JSON.stringify((gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'] as any)[name])
                     ) as IPropertyDataNonMeasurement;
+                    // All measures must be marked as isMeasurement=true
+                    (gdprEntry as any).isMeasurement = true;
                     (gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'] as any)[name] = gdprEntry as any;
                 }
                 if (gdprEntry) {
@@ -520,61 +522,65 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
                 writePropertiesOrMeasures(measures, hasGroups ? 3 : 2);
             }
             function writePropertiesOrMeasures(items: TelemetryProperty[], startIndent: number) {
-                items.forEach((p) => {
-                    const description = Array.isArray(p.descriptions)
-                        ? p.descriptions
-                        : p.descriptions
-                        ? p.descriptions.length
-                            ? [p.descriptions]
-                            : []
-                        : [];
-                    const isEmpty = description.join('').trim().length === 0;
-                    if (isEmpty) {
-                        eventErrorMessages.push(`Add jsDoc comments to describe this property = ${p.name}.`);
-                    }
-                    if (description.length || typeof p.type === 'string') {
-                        const type = p.type ? `\`${p.type}\`` : '`<see below>`';
-                        const nullable = p.isNullable ? '?' : '';
-                        writeOutput(`${indent(startIndent)}- \`${p.name.trim()}\`${nullable}: ${type.trim()}  `);
-                        let wasPreviousLineEmpty = false;
-                        description.forEach((item) => {
-                            // Empty lines inside lists messes up formatting and causes blank lines to appear
-                            // in other places (i.e. increases the spacing between the list items).
-                            if (item.trim().length) {
-                                writeOutput(
-                                    `${indent(wasPreviousLineEmpty ? startIndent + 1 : startIndent)}${item.trim()}  `
-                                );
-                            }
-                            wasPreviousLineEmpty = item.trim().length === 0;
-                        });
-                        if (p.possibleValues?.length) {
-                            writeOutput(`${indent(startIndent)}Possible values include:  `);
-                            (p.possibleValues || []).forEach((description) => {
-                                writeOutput(`${indent(startIndent + 1)}- \`${description.value}\`  `);
-                                if (description.comment) {
-                                    let wasPreviousLineEmpty = false;
-                                    const comment = Array.isArray(description.comment)
-                                        ? description.comment
-                                        : description.comment.split(/\r?\n/);
-                                    comment.forEach((line) => {
-                                        // Empty lines inside lists messes up formatting and causes blank lines to appear
-                                        // in other places (i.e. increases the spacing between the list items).
-                                        if (line.trim().length) {
-                                            writeOutput(
-                                                `${indent(
-                                                    wasPreviousLineEmpty ? startIndent + 1 : startIndent
-                                                )}${line}  `
-                                            );
-                                        }
-                                        wasPreviousLineEmpty = line.trim().length === 0;
-                                    });
-                                }
-                            });
+                items
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .forEach((p) => {
+                        const description = Array.isArray(p.descriptions)
+                            ? p.descriptions
+                            : p.descriptions
+                            ? p.descriptions.length
+                                ? [p.descriptions]
+                                : []
+                            : [];
+                        const isEmpty = description.join('').trim().length === 0;
+                        if (isEmpty) {
+                            eventErrorMessages.push(`Add jsDoc comments to describe this property = ${p.name}.`);
                         }
-                    } else {
-                        writeOutput(`${indent(startIndent)}- ${p.name.trim()}  `);
-                    }
-                });
+                        if (description.length || typeof p.type === 'string') {
+                            const type = p.type ? `\`${p.type}\`` : '`<see below>`';
+                            const nullable = p.isNullable ? '?' : '';
+                            writeOutput(`${indent(startIndent)}- \`${p.name.trim()}\`${nullable}: ${type.trim()}  `);
+                            let wasPreviousLineEmpty = false;
+                            description.forEach((item) => {
+                                // Empty lines inside lists messes up formatting and causes blank lines to appear
+                                // in other places (i.e. increases the spacing between the list items).
+                                if (item.trim().length) {
+                                    writeOutput(
+                                        `${indent(
+                                            wasPreviousLineEmpty ? startIndent + 1 : startIndent
+                                        )}${item.trim()}  `
+                                    );
+                                }
+                                wasPreviousLineEmpty = item.trim().length === 0;
+                            });
+                            if (p.possibleValues?.length) {
+                                writeOutput(`${indent(startIndent)}Possible values include:  `);
+                                (p.possibleValues || []).forEach((description) => {
+                                    writeOutput(`${indent(startIndent + 1)}- \`${description.value}\`  `);
+                                    if (description.comment) {
+                                        let wasPreviousLineEmpty = false;
+                                        const comment = Array.isArray(description.comment)
+                                            ? description.comment
+                                            : description.comment.split(/\r?\n/);
+                                        comment.forEach((line) => {
+                                            // Empty lines inside lists messes up formatting and causes blank lines to appear
+                                            // in other places (i.e. increases the spacing between the list items).
+                                            if (line.trim().length) {
+                                                writeOutput(
+                                                    `${indent(
+                                                        wasPreviousLineEmpty ? startIndent + 1 : startIndent
+                                                    )}${line}  `
+                                                );
+                                            }
+                                            wasPreviousLineEmpty = line.trim().length === 0;
+                                        });
+                                    }
+                                });
+                            }
+                        } else {
+                            writeOutput(`${indent(startIndent)}- ${p.name.trim()}  `);
+                        }
+                    });
             }
         });
     }
@@ -853,30 +859,34 @@ function generateTelemetryCSV(output: TelemetryEntry[]) {
         o.propertyGroups.forEach((og) => {
             const groupDescription =
                 typeof og.description === 'string' ? og.description : (og.description || []).join('\n');
-            og.properties.forEach((p) => {
-                const description = Array.isArray(p.descriptions) ? p.descriptions.join('\n') : p.descriptions || '';
-                const possibleValues =
-                    Array.isArray(p.possibleValues) && p.possibleValues.length
-                        ? p.possibleValues
-                              .map((item) => `${item.value} ${item.comment ? `(${item.comment})` : ''}`)
-                              .join('\n')
-                        : '';
+            og.properties
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .forEach((p) => {
+                    const description = Array.isArray(p.descriptions)
+                        ? p.descriptions.join('\n')
+                        : p.descriptions || '';
+                    const possibleValues =
+                        Array.isArray(p.possibleValues) && p.possibleValues.length
+                            ? p.possibleValues
+                                  .map((item) => `${item.value} ${item.comment ? `(${item.comment})` : ''}`)
+                                  .join('\n')
+                            : '';
 
-                entries.push({
-                    eventName: o.name,
-                    eventDescription: o.description,
-                    eventConstant: o.constantName,
-                    owner: o.gdpr.owner,
-                    feature: Array.isArray(o.gdpr.feature) ? o.gdpr.feature.join(', ') : o.gdpr.feature || '',
-                    tags: Array.isArray(o.gdpr.tags) ? o.gdpr.tags.join(', ') : o.gdpr.tags || '',
-                    groupDescription,
-                    propertyName: p.name,
-                    propertyDescription: description,
-                    propertyType: p.type,
-                    propertyPossibleValues: possibleValues,
-                    propertyIsNullable: p.isNullable
+                    entries.push({
+                        eventName: o.name,
+                        eventDescription: o.description,
+                        eventConstant: o.constantName,
+                        owner: o.gdpr.owner,
+                        feature: Array.isArray(o.gdpr.feature) ? o.gdpr.feature.join(', ') : o.gdpr.feature || '',
+                        tags: Array.isArray(o.gdpr.tags) ? o.gdpr.tags.join(', ') : o.gdpr.tags || '',
+                        groupDescription,
+                        propertyName: p.name,
+                        propertyDescription: description,
+                        propertyType: p.type,
+                        propertyPossibleValues: possibleValues,
+                        propertyIsNullable: p.isNullable
+                    });
                 });
-            });
         });
     });
 
@@ -901,9 +911,8 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
     fs.appendFileSync(file, `/* ${gdpr}\n`);
     fs.appendFileSync(file, `   "F1" : {\n`);
     const commonFields = ['     "${include}": ['];
-    const fieldList: string[] = [];
     const fieldListForFile: string[] = [];
-    Object.keys(CommonProperties).forEach((key, index) => {
+    Object.keys(CommonProperties).forEach((key) => {
         const entry = (CommonProperties as any)[key] as IPropertyDataMeasurement | IPropertyDataNonMeasurement;
         const isMeasurement = entry.isMeasurement === true;
         const jsDocComment = commonPropertyComments.get(key) || '';
@@ -916,16 +925,15 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
         }
 
         // Do not include `__GDPR__` in the string with JSON comments, else telemetry tool treats this as a valid GDPR annotation.
-        fieldList.push(`       "\${F${index + 1}}"`);
         const json = {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
             isMeasurement: isMeasurement,
             comment: comment
         };
-        fieldListForFile.push(`      "F1P${index + 1}": ${JSON.stringify(json)}`);
+        fieldListForFile.push(`      "${key}": ${JSON.stringify(json)}`);
     });
-    commonFields.push(`${fieldList.join(',\n')}`);
+    commonFields.push('       "${F1}"\n');
     commonFields.push('     ]');
     fs.appendFileSync(file, `${fieldListForFile.join(',\n')}\n`);
     fs.appendFileSync(file, `   }\n`);

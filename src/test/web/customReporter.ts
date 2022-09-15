@@ -96,11 +96,13 @@ function writeReportProgress(message: Message) {
         messages.push(message);
         if (message.event === constants.EVENT_RUN_END) {
             const ext = extensions.getExtension(JVSC_EXTENSION_ID_FOR_TESTS)!.extensionUri;
-            const logFile = Uri.joinPath(ext, 'testresults.json');
+            const logFile = Uri.joinPath(ext, 'logs', 'testresults.json');
             traceInfoIfCI(`Writing test results to ${logFile}`);
             const requireFunc: typeof require =
                 typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
-            const fs: typeof import('fs') = requireFunc('fs');
+            const fs: typeof import('fs-extra') = requireFunc('fs-extra');
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            fs.ensureDirSync(Uri.joinPath(ext, 'logs').fsPath);
             // eslint-disable-next-line local-rules/dont-use-fspath
             fs.writeFileSync(logFile.fsPath, JSON.stringify(messages));
         }
@@ -279,10 +281,14 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
             });
         })
         .on(constants.EVENT_TEST_PASS, (test: mochaTypes.Test) => {
-            consoleHijacker.release();
+            const consoleOutput = consoleHijacker.release();
             writeReportProgress({
                 event: constants.EVENT_TEST_PASS,
                 title: test.title,
+                titlePath: test.titlePath(),
+                slow: test.slow(),
+                fullTitle: test.fullTitle(),
+                consoleOutput,
                 duration: test.duration,
                 state: test.state,
                 isPending: test.isPending(),

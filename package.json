@@ -654,17 +654,6 @@
                 "enablement": "isWorkspaceTrusted && jupyter.interactive.canRestartNotebookKernel"
             },
             {
-                "command": "jupyter.notebookeditor.interruptkernel",
-                "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
-                "category": "Notebook",
-                "icon": {
-                    "light": "resources/light/interrupt.svg",
-                    "dark": "resources/dark/interrupt.svg"
-                },
-                "enablement": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
-            },
-            {
                 "command": "jupyter.notebookeditor.restartkernel",
                 "title": "%jupyter.command.jupyter.restartkernel.title%",
                 "shortTitle": "%jupyter.command.jupyter.restartkernel.shorttitle%",
@@ -919,12 +908,6 @@
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canrestartNotebookkernel && config.notebook.globalToolbar != true"
                 },
                 {
-                    "command": "jupyter.notebookeditor.interruptkernel",
-                    "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                    "group": "overflow@1",
-                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel && config.notebook.globalToolbar != true"
-                },
-                {
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "group": "navigation@2",
@@ -953,11 +936,6 @@
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "group": "navigation/execute@1",
-                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.kernel.isjupyter"
-                },
-                {
-                    "command": "jupyter.notebookeditor.interruptkernel",
-                    "group": "navigation/execute@2",
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.kernel.isjupyter"
                 },
                 {
@@ -1363,12 +1341,6 @@
                     "title": "%jupyter.command.jupyter.notebookeditor.removeallcells.title%",
                     "category": "Notebook",
                     "when": "jupyter.havenativecells && jupyter.isnativeactive && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.interruptkernel",
-                    "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                    "category": "Notebook",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
@@ -1946,6 +1918,17 @@
                     "description": "%jupyter.configuration.jupyter.interactiveWindowMode.description%",
                     "default": "multiple"
                 },
+                "jupyter.interactiveWindowViewColumn": {
+                    "type": "string",
+                    "enum": [
+                        "beside",
+                        "active",
+                        "secondGroup"
+                    ],
+                    "scope": "resource",
+                    "description": "%jupyter.configuration.jupyter.interactiveWindowViewColumn.description%",
+                    "default": "secondGroup"
+                },
                 "jupyter.magicCommandsAsComments": {
                     "type": "boolean",
                     "default": false,
@@ -2104,7 +2087,6 @@
     },
     "enabledApiProposals": [
         "notebookControllerKind",
-        "notebookWorkspaceEdit",
         "notebookDebugOptions",
         "notebookDeprecated",
         "notebookMessaging",
@@ -2118,8 +2100,8 @@
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
         "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
-        "prePublishBundleStable": "cross-env BUILD_WITH_VSCODE_NLS=true IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=false gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
-        "prePublishBundlePreRelease": "cross-env BUILD_WITH_VSCODE_NLS=true IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=true gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
+        "prePublishBundleStable": "cross-env BUILD_WITH_VSCODE_NLS=true IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=false gulp prePublishBundle",
+        "prePublishBundlePreRelease": "cross-env BUILD_WITH_VSCODE_NLS=true IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=true gulp prePublishBundle",
         "prePublishNonBundle": "gulp clean && gulp prePublishNonBundle",
         "createNycFolder": "gulp createNycFolder",
         "validateTranslationFiles": "gulp validateTranslationFiles",

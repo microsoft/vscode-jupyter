@@ -342,6 +342,10 @@
         "message": "Behavior of the Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
         "comment": ["{Locked='perFile'}", "{Locked=\"'single'\"}", "{Locked=\"'multiple'\"}"]
     },
+    "jupyter.configuration.jupyter.interactiveWindowViewColumn.description":{
+        "message": "Where to open an Interactive Window that is not associated with a python file. 'beside' will open the interactive window to the right of the active editor. 'active' will open the interactive window in place of the active editor. 'secondGroup' will open the interactive window in the second editor group.",
+        "comment": ["{Locked='beside'}", "{Locked=\"'active'\"}", "{Locked=\"'secondGroup'\"}"]
+    },
     "jupyter.configuration.jupyter.magicCommandsAsComments.description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
     "jupyter.configuration.jupyter.pythonExportMethod.description": {
         "message": "The method to use when exporting a notebook to a Python file. 'direct' will copy over the code directly as is. 'commentMagics' will comment out lines starting with line magics (%), cell magics (%%), and shell commands(!). 'nbconvert' will install nbconvert and use that for the conversion which can translate iPython syntax into Python syntax.",
