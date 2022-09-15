@@ -18,6 +18,7 @@ import {
     IQuickPickParameters,
     InputFlowAction
 } from '../../platform/common/utils/multiStepInput';
+import { noop } from '../../platform/common/utils/misc';
 import { capturePerfTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../telemetry';
 import {
@@ -587,12 +588,16 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
                 if (!handled) {
                     return DataScience.jupyterSelfCertExpiredErrorMessageOnly();
                 }
-            } else if (!this.isWebExtension) {
-                return DataScience.remoteJupyterConnectionFailedWithoutServerWithError().format(
-                    err.message || err.toString()
-                );
             } else {
-                return DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb().format(
+                // Notify the user of web extension specific connection help
+                if (this.isWebExtension) {
+                    this.applicationShell
+                        .showErrorMessage(DataScience.remoteJupyterConnectionFailedWebExtension())
+                        .then(noop, noop);
+                }
+
+                // Return the general connection error to show in the validation box
+                return DataScience.remoteJupyterConnectionFailedWithoutServerWithError().format(
                     err.message || err.toString()
                 );
             }
