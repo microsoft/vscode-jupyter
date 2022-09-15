@@ -235,7 +235,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
         test('Remote server uri (do not reload VSCode if there is no change in settings)', async () => {
             const { selector, storage } = createDataScienceObject('http://localhost:1111', '', true);
-            await storage.setUri('http://localhost:1111');
+            await storage.setUri('http://localhost:1111', undefined);
 
             await selector.selectJupyterURI();
             const value = await storage.getUri();
@@ -445,7 +445,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
         test('Remote server uri (do not reload VSCode if there is no change in settings)', async () => {
             const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', true);
-            await storage.setUri('http://localhost:1111');
+            await storage.setUri('http://localhost:1111', undefined);
 
             await selector.selectJupyterURI('commandPalette');
             const value = await storage.getUri();
