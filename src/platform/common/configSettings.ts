@@ -24,6 +24,7 @@ import {
     IVariableQuery,
     IVariableTooltipFields,
     IWatchableJupyterSettings,
+    KernelPickerType,
     LoggingLevelSettingType,
     Resource,
     WidgetCDNs
@@ -110,6 +111,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public excludeUserSitePackages: boolean = false;
     public enableExtendedKernelCompletions: boolean = false;
     public showOnlyOneTypeOfKernel: boolean = false;
+    public kernelPickerType: KernelPickerType = 'Stable';
 
     public variableTooltipFields: IVariableTooltipFields = {
         python: {
@@ -231,6 +233,16 @@ export class JupyterSettings implements IWatchableJupyterSettings {
                   optOutFrom: []
               };
 
+        // For kernelPickerType internally collapse into just the kernelPickerType value
+        // Preferr the existing showOnlyOneTypeOfKernel value over the experimental picker
+        const kernelPickerType = jupyterConfig.get<KernelPickerType>('experimental.kernelPickerType');
+        const showOnlyOneTypeOfKernel = jupyterConfig.get<boolean>('showOnlyOneTypeOfKernel');
+        if (showOnlyOneTypeOfKernel) {
+            this.kernelPickerType = 'OnlyOneTypeOfKernel';
+        } else if (kernelPickerType) {
+            this.kernelPickerType = kernelPickerType;
+        }
+
         // The rest are all the same.
         const replacer = (k: string, config: WorkspaceConfiguration) => {
             // Replace variables with their actual value.
@@ -240,7 +252,9 @@ export class JupyterSettings implements IWatchableJupyterSettings {
                 (<any>this)[k] = val;
             }
         };
-        const keys = this.getSerializableKeys().filter((f) => f !== 'experiments' && f !== 'logging');
+        const keys = this.getSerializableKeys().filter(
+            (f) => f !== 'experiments' && f !== 'logging' && f !== 'kernelPickerType' && f !== 'showOnlyOneTypeOfKernel'
+        );
         keys.forEach((k) => replacer(k, jupyterConfig));
 
         // Special case poetryPath. It actually comes from the python settings

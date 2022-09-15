@@ -2008,6 +2008,17 @@
                     "tags": [
                         "experimental"
                     ]
+                },
+                "jupyter.experimental.kernelPickerType": {
+                    "type": "string",
+                    "enum": [
+                        "Stable",
+                        "OnlyOneTypeOfKernel",
+                        "Insiders"
+                    ],
+                    "scope": "resource",
+                    "description": "%jupyter.configuration.jupyter.experimental.kernelPickerType.markdownDescription%",
+                    "default": "Stable"
                 }
             }
         },

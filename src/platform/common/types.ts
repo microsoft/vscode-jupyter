@@ -161,6 +161,8 @@ export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
 
 export type InteractiveWindowViewColumn = 'beside' | 'active' | 'secondGroup';
 
+export type KernelPickerType = 'Stable' | 'OnlyOneTypeOfKernel' | 'Insiders';
+
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 
 export const IConfigurationService = Symbol('IConfigurationService');
