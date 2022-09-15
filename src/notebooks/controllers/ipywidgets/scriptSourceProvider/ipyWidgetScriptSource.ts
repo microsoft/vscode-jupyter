@@ -98,6 +98,7 @@ export class IPyWidgetScriptSource {
             }
         } else if (message === IPyWidgetMessages.IPyWidgets_Ready) {
             this.sendBaseUrl();
+            this.sendWidgetScriptSources().ignoreErrors();
         } else if (message === IPyWidgetMessages.IPyWidgets_IsOnline) {
             const isOnline = (payload as { isOnline: boolean }).isOnline;
             this.isWebViewOnline.resolve(isOnline);
