@@ -163,7 +163,8 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         );
     });
 
-    test('Local and Remote kernels are not listed', async function () {
+    test.skip('Local and Remote kernels are not listed', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/11324
         await changeShowOnlyOneTypeOfKernel(true);
         await controllerLoader.loadControllers();
         const controllers = controllerRegistration.registered;
