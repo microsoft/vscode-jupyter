@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { DebugProtocolMessage, NotebookCell } from 'vscode';
+import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IDebuggingDelegate, IKernelDebugAdapter } from '../../../notebooks/debugger/debuggingTypes';
-import { DebuggingTelemetry } from '../../../notebooks/debugger/constants';
 import { IKernel } from '../../../kernels/types';
+import { DebuggingTelemetry } from '../../../notebooks/debugger/constants';
+import { IDebuggingDelegate, IKernelDebugAdapter } from '../../../notebooks/debugger/debuggingTypes';
 import { cellDebugSetup } from '../../../notebooks/debugger/helper';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -27,7 +27,7 @@ export class DebugCellController implements IDebuggingDelegate {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
     }
 
-    public async willSendEvent(_msg: DebugProtocolMessage): Promise<boolean> {
+    public async willSendEvent(_msg: DebugProtocol.Event): Promise<boolean> {
         return false;
     }
     private debugCellDumped?: Promise<void>;

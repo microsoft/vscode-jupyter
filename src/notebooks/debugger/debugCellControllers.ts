@@ -1,15 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { DebugProtocolMessage, NotebookCell } from 'vscode';
+import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { ICommandManager } from '../../platform/common/application/types';
 import { IKernel } from '../../kernels/types';
+import { ICommandManager } from '../../platform/common/application/types';
+import { noop } from '../../platform/common/utils/misc';
+import { traceVerbose } from '../../platform/logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from './constants';
-import { cellDebugSetup } from './helper';
 import { IDebuggingDelegate, IKernelDebugAdapter } from './debuggingTypes';
-import { noop } from '../../platform/common/utils/misc';
+import { cellDebugSetup } from './helper';
+
+export function isJustMyCodeNotification(msg: string): boolean {
+    return msg.includes('Frame skipped from debugging during step-in');
+}
 
 /**
  * Controls starting execution on a cell when debugging a cell.
@@ -24,7 +29,18 @@ export class DebugCellController implements IDebuggingDelegate {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
     }
 
-    public async willSendEvent(_msg: DebugProtocolMessage): Promise<boolean> {
+    private trace(tag: string, msg: string) {
+        traceVerbose(`[Debug-Cell] ${tag}: ${msg}`);
+    }
+
+    public async willSendEvent(msg: DebugProtocol.Event): Promise<boolean> {
+        if (msg.event === 'output') {
+            if (isJustMyCodeNotification(msg.body.output)) {
+                this.trace('intercept', 'justMyCode notification');
+                return true;
+            }
+        }
+
         return false;
     }
 
