@@ -61,20 +61,24 @@ def getResultsForRun(run):
         url, headers={"Accept": "application/vnd.github+json"}
     )
 
+    if artifactsResponse.status_code != 200:
+        print(f"Error {artifactsResponse.status_code} getting artifacts")
+        return []
+
     artifacts = artifactsResponse.json()["artifacts"]
 
     results = []
     for artifact in artifacts:
         if (
             artifact["name"].startswith(
-                "TestResult-"
-            )  # previous artifact name (pre ~2022-09-12)
+                "TestResult-"  # previous artifact name (pre ~2022-09-12)
+            )
             or artifact["name"].startswith(
-                "TestResults-"
-            )  # performance tests artifact name
+                "TestResults-"  # previous performance tests artifact name
+            )
             or artifact["name"].startswith(
-                "TestLogs-"
-            )  # Integration tests artifact name, contains multiple files
+                "TestLogs-"  # consolidated artifact name, contains multiple files
+            )
         ):
             print(f"    retrieving {artifact['name']}")
             rawData = getArtifactData(artifact["id"])
