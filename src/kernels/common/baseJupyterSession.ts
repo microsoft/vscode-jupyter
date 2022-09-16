@@ -495,9 +495,9 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                             { done: Promise<void>; _status: number; dispose: Function }
                         >;
                         console.error('Before Dispose session.kernel.1a');
-                        console.error('session.kernel', session);
+                        console.error('session.kernel', typeof session);
                         console.error('session.kernel', Object.keys(session).join(','));
-                        console.error('session.kernel', session.kernel);
+                        console.error('session.kernel', typeof session.kernel);
                         console.error('session.kernel', Object.keys(session.kernel).join(','));
                         console.error('sendControlMessage', session.kernel.sendControlMessage);
                         console.error('sendShellMessage', session.kernel.sendShellMessage);
@@ -525,15 +525,38 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                         // futures.clear();
                         console.error('Before Dispose session.kernel.1b - after clear', futures.size);
                         if (foundId) {
-                            (session.kernel as any).prototype.sendShellMessage = (_: unknown, msg: any) => {
-                                console.error('Sending yet another message after disposing, sendShellMessage', msg);
-                            };
-                            (session.kernel as any).prototype.sendControlMessage = (msg: any) => {
-                                console.error('Sending yet another message after disposing, sendControlMessage', msg);
-                            };
-                            (session.kernel as any).prototype.requestDebug = (msg: any) => {
-                                console.error('Sending yet another message after disposing, requestDebug', msg);
-                            };
+                            try {
+                                (session.kernel as any).prototype.sendShellMessage = (_: unknown, msg: any) => {
+                                    console.error('Sending yet another message after disposing, sendShellMessage', msg);
+                                };
+                                (session.kernel as any).prototype.sendControlMessage = (msg: any) => {
+                                    console.error(
+                                        'Sending yet another message after disposing, sendControlMessage',
+                                        msg
+                                    );
+                                };
+                                (session.kernel as any).prototype.requestDebug = (msg: any) => {
+                                    console.error('Sending yet another message after disposing, requestDebug', msg);
+                                };
+                            } catch (ex) {
+                                console.error('Cannot set session.kernel.prototype', ex);
+                            }
+                            try {
+                                (session.kernel as any).__proto__.sendShellMessage = (_: unknown, msg: any) => {
+                                    console.error('Sending yet another message after disposing, sendShellMessage', msg);
+                                };
+                                (session.kernel as any).__proto__.sendControlMessage = (msg: any) => {
+                                    console.error(
+                                        'Sending yet another message after disposing, sendControlMessage',
+                                        msg
+                                    );
+                                };
+                                (session.kernel as any).__proto__.requestDebug = (msg: any) => {
+                                    console.error('Sending yet another message after disposing, requestDebug', msg);
+                                };
+                            } catch (ex) {
+                                console.error('Cannot set session.kernel.__proto__', ex);
+                            }
                         }
                         console.error('Before Dispose session.kernel.1c');
                     } catch (ex) {
