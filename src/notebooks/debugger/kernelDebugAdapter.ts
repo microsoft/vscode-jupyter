@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as path from '../../platform/vscode-path/path';
 import { IDumpCellResponse } from './debuggingTypes';
 import { traceError } from '../../platform/logging';
 import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
@@ -22,9 +21,9 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             const response = await this.session.customRequest('dumpCell', {
                 code: cell.document.getText().replace(/\r\n/g, '\n')
             });
-            const norm = path.normalize((response as IDumpCellResponse).sourcePath);
-            this.fileToCell.set(norm, cell.document.uri);
-            this.cellToFile.set(cell.document.uri.toString(), norm);
+            const pathOnKernelSide = (response as IDumpCellResponse).sourcePath;
+            this.fileToCell.set(pathOnKernelSide, cell.document.uri);
+            this.cellToFile.set(cell.document.uri.toString(), pathOnKernelSide);
         } catch (err) {
             traceError(err);
         }
