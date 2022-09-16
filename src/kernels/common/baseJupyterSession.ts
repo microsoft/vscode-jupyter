@@ -430,6 +430,15 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
             if (session.kernel && this._wrappedKernel) {
                 this._wrappedKernel.changeKernel(session.kernel);
             }
+            session.kernel?.anyMessage.connect((_, args) => {
+                if (args.direction === 'send' && args.msg.header.msg_type === 'debug_request') {
+                    console.error(
+                        'anyMessage message received',
+                        `msg_id = ${args.msg.header.msg_id}, value = ${JSON.stringify(args.msg.content)}`,
+                        `called from from ${new Error('').stack}`
+                    );
+                }
+            });
 
             // Listen for session status changes
             session.statusChanged.connect(this.statusHandler);
