@@ -249,6 +249,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
 
         // If there's stopped threads at this point, continue them all
         (response as IDebugInfoResponse).stoppedThreads.forEach((thread: number) => {
+            traceError('Sending requestDebug from debugInfo');
             this.jupyterSession.requestDebug({
                 seq: 0,
                 type: 'request',
@@ -286,6 +287,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         this.trace('to kernel', JSON.stringify(message));
         if (message.type === 'request') {
             const request = message as DebugProtocol.Request;
+            traceError('Sending requestDebug from sendRequestToJupyterSession', message);
             const control = this.jupyterSession.requestDebug(
                 {
                     seq: request.seq,
@@ -307,6 +309,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         } else if (message.type === 'response') {
             // responses of reverse requests
             const response = message as DebugProtocol.Response;
+            traceError('Sending requestDebug from sendRequestToJupyterSession', message);
             const control = this.jupyterSession.requestDebug(
                 {
                     seq: response.seq,

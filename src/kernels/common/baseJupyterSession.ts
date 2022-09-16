@@ -269,6 +269,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
         if (!this.session?.kernel) {
             throw new SessionDisposedError();
         }
+        traceError('SENDING requestDebug...', content);
         return this.session.kernel.requestDebug(content, disposeOnDone);
     }
 
@@ -531,8 +532,8 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                             };
                         }
                         console.error('Before Dispose session.kernel.1b');
-                    } catch {
-                        console.error('kaboom');
+                    } catch (ex) {
+                        console.error('kaboom', ex);
                     }
                     session.dispose();
                     console.error('After Dispose session.kernel.1');
