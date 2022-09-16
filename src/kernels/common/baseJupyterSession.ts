@@ -512,13 +512,14 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                             console.error('Sending yet another message after disposing, requestDebug', msg);
                         };
                         let foundId = false;
-                        Array.from(futures.values()).forEach((p) => {
-                            console.error(`Current status of flag ${p._status}`);
+                        Array.from(futures.keys()).forEach((key) => {
+                            const p = futures.get(key)!;
+                            console.error(`Current status of flag for msg_id ${key} is ${p._status}`);
                             if (p._status === 2) {
                                 foundId = true;
                             }
                             // p._status = p._status | 4;
-                            p.done.catch((ex) => console.error('Handled future error', ex));
+                            p.done.catch((ex) => console.error(`Handled future error for msg_id ${key}`, ex));
                             // p.dispose();
                         });
                         console.error('Before Dispose session.kernel.1b - before clear', futures.size);
