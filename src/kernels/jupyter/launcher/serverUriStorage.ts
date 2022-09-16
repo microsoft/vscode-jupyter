@@ -226,22 +226,22 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     }
     public async setUriToLocal(): Promise<void> {
         traceInfoIfCI(`setUriToLocal`);
-        await this.setUri(Settings.JupyterServerLocalLaunch);
+        await this.setUri(Settings.JupyterServerLocalLaunch, undefined);
     }
     public async setUriToRemote(uri: string, displayName: string): Promise<void> {
         // Make sure to add to the saved list before we set the uri. Otherwise
         // handlers for the URI changing will use the saved list to make sure the
         // server id matches
         await this.addToUriList(uri, Date.now(), displayName);
-        await this.setUri(uri);
+        await this.setUri(uri, displayName);
     }
 
     public async setUriToNone(): Promise<void> {
         traceInfoIfCI(`setUriToNone`);
-        return this.setUri(undefined);
+        return this.setUri(undefined, undefined);
     }
 
-    public async setUri(uri: string | undefined) {
+    public async setUri(uri: string | undefined, displayName: string | undefined) {
         // Set the URI as our current state
         this.currentUriPromise = Promise.resolve(uri);
         this._currentServerId = uri ? await computeServerId(uri) : undefined;
@@ -254,7 +254,8 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         await this.globalMemento.update(currentServerHashKey, this._currentServerId);
 
         if (!this._localOnly && uri) {
-            await this.addToUriList(uri, Date.now(), uri);
+            // disaplay name is wrong here
+            await this.addToUriList(uri, Date.now(), displayName ?? uri);
 
             // Save in the storage (unique account per workspace)
             const key = await this.getUriAccountKey();
