@@ -2017,7 +2017,12 @@
                         "Insiders"
                     ],
                     "scope": "resource",
-                    "description": "%jupyter.configuration.jupyter.experimental.kernelPickerType.markdownDescription%",
+                    "description": "%jupyter.configuration.jupyter.experimental.kernelPickerType.description%",
+                    "enumDescriptions": [
+                            "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.stable%",
+                            "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.onlyonetypeofkernel%",
+                            "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.insiders%"
+                    ],
                     "default": "Stable"
                 }
             }
