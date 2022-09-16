@@ -114,6 +114,7 @@ export class CellExecutionMessageHandler implements IDisposable {
     private temporaryExecution?: NotebookCellExecution;
     private previousResultsToRestore?: NotebookCellExecutionSummary;
     private cellHasErrorsInOutput?: boolean;
+    private disposed?: boolean;
 
     public get hasErrorOutput() {
         return this.cellHasErrorsInOutput === true;
@@ -235,7 +236,11 @@ export class CellExecutionMessageHandler implements IDisposable {
      * Or when execution has been cancelled.
      */
     public dispose() {
-        traceCellMessage(this.cell, 'Execution disposed');
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
+        traceCellMessage(this.cell, 'Execution Message Handler disposed');
         disposeAllDisposables(this.disposables);
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
