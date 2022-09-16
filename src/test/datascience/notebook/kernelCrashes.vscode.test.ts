@@ -55,7 +55,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
     let kernelProvider: IKernelProvider;
     let config: IConfigurationService;
     const kernelCrashFailureMessageInCell =
-        'The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure';
+        'The Kernel crashed while executing code in the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure';
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo('Suite Setup');
