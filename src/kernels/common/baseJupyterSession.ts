@@ -485,8 +485,8 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 }
                 if (!this.canShutdownSession(session, isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
                     traceVerbose(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
+                    console.error('Before Dispose session.kernel.1');
                     try {
-                        console.error('Before Dispose session.kernel.1');
                         // We could have pending messages, ensure we add handles for the messages,
                         // to avoid unhandled promise rejections.
                         const futures = (session.kernel as any)._futures as Map<string, { done: Promise<void> }>;
@@ -497,6 +497,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                         console.error('kaboom');
                     }
                     session.dispose();
+                    console.error('After Dispose session.kernel.1');
                     return;
                 }
                 try {
@@ -504,15 +505,27 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                     suppressShutdownErrors(session.kernel);
                     // Shutdown may fail if the process has been killed
                     if (!session.isDisposed) {
+                        console.error('Before shutdown session.kernel.1');
+                        try {
+                            // We could have pending messages, ensure we add handles for the messages,
+                            // to avoid unhandled promise rejections.
+                            const futures = (session.kernel as any)._futures as Map<string, { done: Promise<void> }>;
+                            console.error('Before shutdown session.kernel.1a');
+                            Array.from(futures.values()).forEach((p) => p.done.catch(noop));
+                            console.error('Before shutdown session.kernel.1b');
+                        } catch {
+                            console.error('kaboom');
+                        }
                         await waitForPromise(session.shutdown(), 1000);
+                        console.error('After shutdown session.kernel.1');
                     }
                 } catch {
                     noop();
                 }
                 // If session.shutdown didn't work, just dispose
                 if (session && !session.isDisposed) {
+                    console.error('Before Dispose session.kernel.2');
                     try {
-                        console.error('Before Dispose session.kernel.2');
                         // We could have pending messages, ensure we add handles for the messages,
                         // to avoid unhandled promise rejections.
                         const futures = (session.kernel as any)._futures as Map<string, { done: Promise<void> }>;
@@ -523,6 +536,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                         console.error('kaboom2');
                     }
                     session.dispose();
+                    console.error('After Dispose session.kernel.2');
                 }
             } catch (e) {
                 // Ignore, just trace.
