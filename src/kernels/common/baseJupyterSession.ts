@@ -494,13 +494,21 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                             { done: Promise<void>; _status: number }
                         >;
                         console.error('Before Dispose session.kernel.1a');
-                        console.error('sendControlMessage', (session.kernel as any).sendControlMessage);
-                        console.error('sendShellMessage', (session.kernel as any).sendShellMessage);
+                        console.error('session.kernel', session);
+                        console.error('session.kernel', Object.keys(session).join(','));
+                        console.error('session.kernel', session.kernel);
+                        console.error('session.kernel', Object.keys(session.kernel).join(','));
+                        console.error('sendControlMessage', session.kernel.sendControlMessage);
+                        console.error('sendShellMessage', session.kernel.sendShellMessage);
+                        console.error('requestDebug', session.kernel.requestDebug);
                         (session.kernel as any).sendShellMessage = (_: unknown, msg: any) => {
                             console.error('Sending yet another message after disposing, sendShellMessage', msg);
                         };
                         (session.kernel as any).sendControlMessage = (msg: any) => {
                             console.error('Sending yet another message after disposing, sendControlMessage', msg);
+                        };
+                        (session.kernel as any).requestDebug = (msg: any) => {
+                            console.error('Sending yet another message after disposing, requestDebug', msg);
                         };
                         Array.from(futures.values()).forEach((p) => {
                             console.error(`Current status of flag ${p._status}`);
