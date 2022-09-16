@@ -486,12 +486,15 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 if (!this.canShutdownSession(session, isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
                     traceVerbose(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
                     try {
+                        console.error('Before Dispose session.kernel.1');
                         // We could have pending messages, ensure we add handles for the messages,
                         // to avoid unhandled promise rejections.
                         const futures = (session.kernel as any)._futures as Map<string, { done: Promise<void> }>;
+                        console.error('Before Dispose session.kernel.1a');
                         Array.from(futures.values()).forEach((p) => p.done.catch(noop));
+                        console.error('Before Dispose session.kernel.1b');
                     } catch {
-                        //
+                        console.error('kaboom');
                     }
                     session.dispose();
                     return;
@@ -509,12 +512,15 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 // If session.shutdown didn't work, just dispose
                 if (session && !session.isDisposed) {
                     try {
+                        console.error('Before Dispose session.kernel.2');
                         // We could have pending messages, ensure we add handles for the messages,
                         // to avoid unhandled promise rejections.
                         const futures = (session.kernel as any)._futures as Map<string, { done: Promise<void> }>;
+                        console.error('Before Dispose session.kernel.2a');
                         Array.from(futures.values()).forEach((p) => p.done.catch(noop));
+                        console.error('Before Dispose session.kernel.2b');
                     } catch {
-                        //
+                        console.error('kaboom2');
                     }
                     session.dispose();
                 }
