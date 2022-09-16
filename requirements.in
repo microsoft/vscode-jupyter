@@ -5,4 +5,4 @@
 
 # DS Python daemon
 python-jsonrpc-server==0.4.0
-ujson==5.4.0
+ujson==5.5.0
