@@ -494,6 +494,10 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                             { done: Promise<void>; _status: number }
                         >;
                         console.error('Before Dispose session.kernel.1a');
+                        console.error('_sendKernelShellControl', (session.kernel as any)._sendKernelShellControl);
+                        (session.kernel as any)._sendKernelShellControl = (_: unknown, msg: any) => {
+                            console.error('Sending yet another message after disposing', msg);
+                        };
                         Array.from(futures.values()).forEach((p) => {
                             console.error(`Current status of flag ${p._status}`);
                             p._status = p._status | 4;
