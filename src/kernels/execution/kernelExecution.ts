@@ -36,6 +36,7 @@ import { noop } from '../../platform/common/utils/misc';
  */
 export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> implements IDisposable {
     protected readonly disposables: IDisposable[] = [];
+    private disposed?: boolean;
     private _interruptPromise?: Promise<InterruptResult>;
     private _restartPromise?: Promise<void>;
     protected get restarting() {
@@ -100,6 +101,10 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
         await this._restartPromise;
     }
     public dispose() {
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
         traceInfoIfCI(`Dispose KernelExecution`);
         this.disposables.forEach((d) => d.dispose());
     }
