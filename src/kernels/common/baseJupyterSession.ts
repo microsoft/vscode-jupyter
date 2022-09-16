@@ -508,6 +508,14 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 }
                 // If session.shutdown didn't work, just dispose
                 if (session && !session.isDisposed) {
+                    try {
+                        // We could have pending messages, ensure we add handles for the messages,
+                        // to avoid unhandled promise rejections.
+                        const futures = (session.kernel as any)._futures as Map<string, { done: Promise<void> }>;
+                        Array.from(futures.values()).forEach((p) => p.done.catch(noop));
+                    } catch {
+                        //
+                    }
                     session.dispose();
                 }
             } catch (e) {
