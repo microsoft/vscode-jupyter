@@ -116,7 +116,7 @@ export interface IJupyterSettings {
     readonly poetryPath: string;
     readonly excludeUserSitePackages: boolean;
     readonly enableExtendedKernelCompletions: boolean;
-    readonly showOnlyOneTypeOfKernel: boolean;
+    readonly kernelPickerType: KernelPickerType;
 }
 
 export interface IVariableTooltipFields {
@@ -160,6 +160,8 @@ export interface IVariableQuery {
 export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
 
 export type InteractiveWindowViewColumn = 'beside' | 'active' | 'secondGroup';
+
+export type KernelPickerType = 'Stable' | 'OnlyOneTypeOfKernel' | 'Insiders';
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 

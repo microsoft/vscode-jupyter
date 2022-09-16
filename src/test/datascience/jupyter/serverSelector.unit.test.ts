@@ -40,6 +40,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     let configService: IConfigurationService;
     let settings: IWatchableJupyterSettings;
     let experimental: boolean;
+    let onDidChangeSettings: sinon.SinonStub;
     const disposables: IDisposable[] = [];
     function createDataScienceObject(
         quickPickSelection: string,
@@ -78,7 +79,9 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         when(configService.updateSetting(anything(), anything(), anything(), anything())).thenResolve();
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(configService.getSettings()).thenReturn(instance(settings));
-        when(settings.showOnlyOneTypeOfKernel).thenReturn(experimental);
+        when(settings.kernelPickerType).thenReturn(experimental ? 'OnlyOneTypeOfKernel' : 'Stable');
+        onDidChangeSettings = sinon.stub();
+        when(settings.onDidChange).thenReturn(onDidChangeSettings);
         const storage = new JupyterServerUriStorage(
             instance(workspaceService),
             instance(crypto),

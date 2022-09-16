@@ -28,7 +28,12 @@ import {
     JupyterServerUriHandle
 } from './types';
 import { IDataScienceErrorHandler } from '../errors/types';
-import { IConfigurationService, IDisposableRegistry, IsWebExtension } from '../../platform/common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IsWebExtension,
+    KernelPickerType
+} from '../../platform/common/types';
 import {
     handleExpiredCertsError,
     handleSelfCertsError,
@@ -72,6 +77,7 @@ export type SelectJupyterUriCommandSource =
 @injectable()
 export class JupyterServerSelector {
     private impl: IJupyterServerSelector;
+    private implType?: KernelPickerType;
     constructor(
         @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
@@ -87,18 +93,12 @@ export class JupyterServerSelector {
         @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry
     ) {
-        this.createImpl(this.configService.getSettings().showOnlyOneTypeOfKernel);
-        workspaceService.onDidChangeConfiguration(
-            (e) => {
-                if (e.affectsConfiguration('jupyter.showOnlyOneTypeOfKernel')) {
-                    // Cant use config service here because it may not have updated yet.
-                    this.createImpl(
-                        workspaceService.getConfiguration('jupyter')?.get('showOnlyOneTypeOfKernel', false)
-                    );
-                }
-            },
-            undefined,
-            disposableRegistry
+        this.createImpl(this.configService.getSettings().kernelPickerType);
+        this.disposableRegistry.push(
+            this.configService.getSettings().onDidChange(() => {
+                // Create impl will ignore if the setting has not changed
+                this.createImpl(this.configService.getSettings().kernelPickerType);
+            })
         );
     }
 
@@ -117,8 +117,8 @@ export class JupyterServerSelector {
         return this.impl.setJupyterURIToRemote(userURI, ignoreValidation);
     }
 
-    private createImpl(useExperimental: boolean) {
-        if (useExperimental) {
+    private createImpl(kernelPickerType: KernelPickerType) {
+        if (kernelPickerType === 'OnlyOneTypeOfKernel' && this.implType !== 'OnlyOneTypeOfKernel') {
             this.impl = new JupyterServerSelector_Experimental(
                 this.multiStepFactory,
                 this.extraUriProviders,
@@ -129,7 +129,8 @@ export class JupyterServerSelector {
                 this.jupyterConnection,
                 this.isWebExtension
             );
-        } else {
+            this.implType = 'OnlyOneTypeOfKernel';
+        } else if (kernelPickerType === 'Stable' && this.implType !== 'Stable') {
             this.impl = new JupyterServerSelector_Original(
                 this.clipboard,
                 this.multiStepFactory,
@@ -141,6 +142,7 @@ export class JupyterServerSelector {
                 this.jupyterConnection,
                 this.isWebExtension
             );
+            this.implType = 'Stable';
         }
     }
 }

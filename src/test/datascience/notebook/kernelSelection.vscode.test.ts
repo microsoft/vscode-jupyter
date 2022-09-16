@@ -390,11 +390,12 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     }
 
     async function changeShowOnlyOneTypeOfKernel(setting: boolean) {
+        const targetValue = setting ? 'OnlyOneTypeOfKernel' : 'Stable';
         const settings = configurationService.getSettings();
-        if (settings.showOnlyOneTypeOfKernel !== setting) {
+        if (settings.kernelPickerType !== targetValue) {
             await configurationService.updateSetting(
-                'showOnlyOneTypeOfKernel',
-                setting,
+                'experimental.kernelPickerType',
+                targetValue,
                 undefined,
                 ConfigurationTarget.Global
             );
