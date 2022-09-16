@@ -492,7 +492,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                         // to avoid unhandled promise rejections.
                         const futures = (session.kernel as any)._futures as Map<
                             string,
-                            { done: Promise<void>; _status: number }
+                            { done: Promise<void>; _status: number; dispose: Function }
                         >;
                         console.error('Before Dispose session.kernel.1a');
                         console.error('session.kernel', session);
@@ -519,7 +519,11 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                             }
                             p._status = p._status | 4;
                             p.done.catch((ex) => console.error('Handled future error', ex));
+                            p.dispose();
                         });
+                        console.error('Before Dispose session.kernel.1b - before clear', futures.size);
+                        futures.clear();
+                        console.error('Before Dispose session.kernel.1b - after clear', futures.size);
                         if (foundId) {
                             (session.kernel as any).prototype.sendShellMessage = (_: unknown, msg: any) => {
                                 console.error('Sending yet another message after disposing, sendShellMessage', msg);
@@ -531,7 +535,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                                 console.error('Sending yet another message after disposing, requestDebug', msg);
                             };
                         }
-                        console.error('Before Dispose session.kernel.1b');
+                        console.error('Before Dispose session.kernel.1c');
                     } catch (ex) {
                         console.error('kaboom', ex);
                     }
