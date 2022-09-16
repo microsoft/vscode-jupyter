@@ -485,6 +485,14 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 }
                 if (!this.canShutdownSession(session, isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
                     traceVerbose(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
+                    try {
+                        // We could have pending messages, ensure we add handles for the messages,
+                        // to avoid unhandled promise rejections.
+                        const futures = (session.kernel as any)._futures as Map<string, { done: Promise<void> }>;
+                        Array.from(futures.values()).forEach((p) => p.done.catch(noop));
+                    } catch {
+                        //
+                    }
                     session.dispose();
                     return;
                 }
