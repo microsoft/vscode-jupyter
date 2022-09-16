@@ -731,12 +731,13 @@ jobs:
         with:
           run: npm run testSmokeLogged
 
-      - name: Upload smoke-test log
+      - name: Upload test result, screenshots files
         uses: actions/upload-artifact@v3
-        if: failure()
+        if: always()
         with:
-          name: smoke-test-${{matrix.os}}.log
-          path: './smoke-test.log'
+          name: TestLogs-Smoke-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          path: './logs/*'
+          retention-days: 60
 
       - name: Create coverage folder (if not created)
         run: npm run createNycFolder
@@ -820,9 +821,9 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: TestResults-Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          name: TestLogs-Perf-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
           path: './logs/*'
-          retention-days: 10
+          retention-days: 60
 
   coverage:
     name: Coverage reports upload
