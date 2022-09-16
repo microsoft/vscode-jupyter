@@ -240,7 +240,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             return;
         }
         this.disposed = true;
-        traceCellMessage(this.cell, 'Execution disposed');
+        traceCellMessage(this.cell, 'Execution Message Handler disposed');
         disposeAllDisposables(this.disposables);
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
