@@ -489,9 +489,16 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                     try {
                         // We could have pending messages, ensure we add handles for the messages,
                         // to avoid unhandled promise rejections.
-                        const futures = (session.kernel as any)._futures as Map<string, { done: Promise<void> }>;
+                        const futures = (session.kernel as any)._futures as Map<
+                            string,
+                            { done: Promise<void>; _status: number }
+                        >;
                         console.error('Before Dispose session.kernel.1a');
-                        Array.from(futures.values()).forEach((p) => p.done.catch(noop));
+                        Array.from(futures.values()).forEach((p) => {
+                            console.error(`Current status of flag ${p._status}`);
+                            p._status = p._status | 4;
+                            p.done.catch((ex) => console.error('Handled future error', ex));
+                        });
                         console.error('Before Dispose session.kernel.1b');
                     } catch {
                         console.error('kaboom');
@@ -511,7 +518,9 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                             // to avoid unhandled promise rejections.
                             const futures = (session.kernel as any)._futures as Map<string, { done: Promise<void> }>;
                             console.error('Before shutdown session.kernel.1a');
-                            Array.from(futures.values()).forEach((p) => p.done.catch(noop));
+                            Array.from(futures.values()).forEach((p) =>
+                                p.done.catch((ex) => console.error('Handled future error', ex))
+                            );
                             console.error('Before shutdown session.kernel.1b');
                         } catch {
                             console.error('kaboom');
@@ -530,7 +539,9 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                         // to avoid unhandled promise rejections.
                         const futures = (session.kernel as any)._futures as Map<string, { done: Promise<void> }>;
                         console.error('Before Dispose session.kernel.2a');
-                        Array.from(futures.values()).forEach((p) => p.done.catch(noop));
+                        Array.from(futures.values()).forEach((p) =>
+                            p.done.catch((ex) => console.error('Handled future error', ex))
+                        );
                         console.error('Before Dispose session.kernel.2b');
                     } catch {
                         console.error('kaboom2');
