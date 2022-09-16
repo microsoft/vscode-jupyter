@@ -517,12 +517,12 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                             if (p._status === 2) {
                                 foundId = true;
                             }
-                            p._status = p._status | 4;
+                            // p._status = p._status | 4;
                             p.done.catch((ex) => console.error('Handled future error', ex));
-                            p.dispose();
+                            // p.dispose();
                         });
                         console.error('Before Dispose session.kernel.1b - before clear', futures.size);
-                        futures.clear();
+                        // futures.clear();
                         console.error('Before Dispose session.kernel.1b - after clear', futures.size);
                         if (foundId) {
                             (session.kernel as any).prototype.sendShellMessage = (_: unknown, msg: any) => {
