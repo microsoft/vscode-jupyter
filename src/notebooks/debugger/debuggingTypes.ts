@@ -9,7 +9,6 @@ import {
     DebugAdapter,
     DebugAdapterTracker,
     DebugConfiguration,
-    DebugProtocolMessage,
     DebugSession,
     Event,
     NotebookCell,
@@ -86,7 +85,7 @@ export interface IDebuggingDelegate {
     /**
      * Called for every event sent from the debug adapter to the client. Returns true to signal that sending the message is vetoed.
      */
-    willSendEvent(msg: DebugProtocolMessage): Promise<boolean>;
+    willSendEvent(msg: DebugProtocol.Event): Promise<boolean>;
 
     /**
      * Called for every request sent from the client to the debug adapter.
