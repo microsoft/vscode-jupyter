@@ -2169,6 +2169,17 @@ Expand each section to see more information about that event.
     - Properties:  
         - `mimeType`: `string`  
         Mimetype of the output.  
+        - `resourceType`?: `<see below>`  
+        Used to determine whether this event is related to a Notebooks or Interactive window.  
+        Common to most of the events.  
+        Possible values include:  
+            - `'notebook'`  
+            - `'interactive'`  
+        - `when`: `<see below>`  
+        Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.  
+        Possible values include:  
+            - `'onExecution'`  
+            - `'onOpenCloseOrSave'`  
 
 
 * DS_INTERNAL.CODE_LENS_ACQ_TIME  (Telemetry.CodeLensAverageAcquisitionTime)  
@@ -5042,6 +5053,17 @@ In such cases we do not notify user of any failures or the like.
     - Properties:  
         - `hashedNamev2`: `string`  
         Hash of the package name  
+        - `resourceType`?: `<see below>`  
+        Used to determine whether this event is related to a Notebooks or Interactive window.  
+        Common to most of the events.  
+        Possible values include:  
+            - `'notebook'`  
+            - `'interactive'`  
+        - `when`: `<see below>`  
+        Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.  
+        Possible values include:  
+            - `'onExecution'`  
+            - `'onOpenCloseOrSave'`  
 
 
 * HASHED_PACKAGE_PERF  (EventName.HASHED_PACKAGE_PERF)  
