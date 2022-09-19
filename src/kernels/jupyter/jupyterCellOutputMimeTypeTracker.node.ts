@@ -47,32 +47,33 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
         if (!isJupyterNotebook(e.cell.notebook)) {
             return;
         }
-        this.checkCell(e.cell);
+        this.checkCell(e.cell, 'onExecution');
     }
     private onDidOpenCloseDocument(doc: NotebookDocument) {
         if (!isJupyterNotebook(doc)) {
             return;
         }
-        doc.getCells().forEach((cell) => this.checkCell(cell));
+        doc.getCells().forEach((cell) => this.checkCell(cell, 'onOpenCloseOrSave'));
     }
-    private checkCell(cell: NotebookCell) {
+    private checkCell(cell: NotebookCell, when: 'onExecution' | 'onOpenCloseOrSave') {
         if (cell.kind === NotebookCellKind.Markup) {
             return [];
         }
         if (cell.document.languageId === 'raw') {
             return [];
         }
-        return flatten(cell.outputs.map((output) => output.items.map((item) => item.mime))).forEach(
-            this.sendTelemetry.bind(this)
+        return flatten(cell.outputs.map((output) => output.items.map((item) => item.mime))).map((mime) =>
+            this.sendTelemetry(mime, when)
         );
     }
 
-    private sendTelemetry(mimeType: string) {
+    private sendTelemetry(mimeType: string, when: 'onExecution' | 'onOpenCloseOrSave') {
         // No need to send duplicate telemetry or waste CPU cycles on an unneeded hash.
-        if (this.sentMimeTypes.has(mimeType)) {
+        const key = `${mimeType}-${when}`;
+        if (this.sentMimeTypes.has(key)) {
             return;
         }
-        this.sentMimeTypes.add(mimeType);
-        sendTelemetryEvent(Telemetry.CellOutputMimeType, undefined, { mimeType });
+        this.sentMimeTypes.add(key);
+        sendTelemetryEvent(Telemetry.CellOutputMimeType, undefined, { mimeType, when });
     }
 }

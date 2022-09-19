@@ -619,12 +619,28 @@ export class IEventNamePropertyMapping {
          * Hash of the package name
          */
         hashedNamev2: string;
+        /**
+         * Whether the code is located in a Python file or a notebook cell.
+         */
+        source: 'pythonFile' | 'notebookCell';
+        /**
+         * Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.
+         */
+        when: 'onExecution' | 'onOpenCloseOrSave';
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
         properties: {
             hashedNamev2: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            source: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            when: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
@@ -751,6 +767,10 @@ export class IEventNamePropertyMapping {
          * Mimetype of the output.
          */
         mimeType: string;
+        /**
+         * Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.
+         */
+        when: 'onExecution' | 'onOpenCloseOrSave';
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -758,6 +778,10 @@ export class IEventNamePropertyMapping {
         properties: {
             mimeType: {
                 classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            when: {
+                classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
         }

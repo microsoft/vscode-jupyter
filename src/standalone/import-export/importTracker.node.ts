@@ -3,10 +3,16 @@
 
 'use strict';
 
-import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
-import { NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
+import {
+    NotebookCell,
+    NotebookCellExecutionState,
+    NotebookCellKind,
+    NotebookDocument,
+    TextDocument,
+    Uri
+} from 'vscode';
 import { capturePerfTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
@@ -17,7 +23,8 @@ import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import { getAssociatedJupyterNotebook, isJupyterNotebook, splitMultilineString } from '../../platform/common/utils';
+import { getAssociatedJupyterNotebook, isJupyterNotebook } from '../../platform/common/utils';
+import { ResourceMap } from '../../platform/vscode-path/map';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for
@@ -56,21 +63,44 @@ export interface IImportTracker {}
  */
 @injectable()
 export class ImportTracker implements IExtensionSingleActivationService, IDisposable {
-    private pendingChecks = new Map<string, NodeJS.Timer | number>();
+    private pendingChecks = new ResourceMap<NodeJS.Timer | number>();
     private disposables: IDisposable[] = [];
-    private sentMatches: Set<string> = new Set<string>();
+    private sentMatches = new Set<string>();
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         disposables.push(this);
-        this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t), this.disposables);
-        this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t), this.disposables);
-        this.vscNotebook.onDidOpenNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t), this.disposables);
-        this.vscNotebook.onDidCloseNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t), this.disposables);
-        this.vscNotebook.onDidSaveNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t), this.disposables);
-        this.vscNotebook.onDidChangeNotebookCellExecutionState((e) => this.checkNotebookCell(e), this, disposables);
+        this.documentManager.onDidOpenTextDocument(
+            (t) => this.onOpenedOrSavedDocument(t, 'onOpenCloseOrSave'),
+            this.disposables
+        );
+        this.documentManager.onDidSaveTextDocument(
+            (t) => this.onOpenedOrSavedDocument(t, 'onOpenCloseOrSave'),
+            this.disposables
+        );
+        this.vscNotebook.onDidOpenNotebookDocument(
+            (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
+            this.disposables
+        );
+        this.vscNotebook.onDidCloseNotebookDocument(
+            (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
+            this.disposables
+        );
+        this.vscNotebook.onDidSaveNotebookDocument(
+            (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
+            this.disposables
+        );
+        this.vscNotebook.onDidChangeNotebookCellExecutionState(
+            (e) => {
+                if (e.state == NotebookCellExecutionState.Pending) {
+                    this.checkNotebookCell(e.cell, 'onExecution').ignoreErrors();
+                }
+            },
+            this,
+            disposables
+        );
     }
 
     public dispose() {
@@ -80,70 +110,40 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
 
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
-        this.documentManager.textDocuments.forEach((d) => this.onOpenedOrSavedDocument(d));
-        this.vscNotebook.notebookDocuments.forEach((e) => this.checkNotebookDocument(e));
+        this.documentManager.textDocuments.forEach((d) => this.onOpenedOrSavedDocument(d, 'onOpenCloseOrSave'));
+        this.vscNotebook.notebookDocuments.forEach((e) => this.checkNotebookDocument(e, 'onOpenCloseOrSave'));
     }
 
-    private getDocumentLines(document: TextDocument): (string | undefined)[] {
-        const array = Array<string>(Math.min(document.lineCount, MAX_DOCUMENT_LINES)).fill('');
-        return array
-            .map((_a: string, i: number) => {
-                const line = document.lineAt(i);
-                if (line && !line.isEmptyOrWhitespace) {
-                    return line.text;
-                }
-                return undefined;
-            })
-            .filter((f: string | undefined) => f);
-    }
-
-    private getNotebookDocumentLines(e: NotebookDocument): (string | undefined)[] {
-        const result: (string | undefined)[] = [];
-        try {
-            e.getCells()
-                .filter((cell) => cell.kind === NotebookCellKind.Code)
-                .filter((cell) => cell.document.languageId === PYTHON_LANGUAGE)
-                .forEach((c) => {
-                    const cellArray = this.getCellLinesFromSource(c.document.getText());
-                    if (result.length < MAX_DOCUMENT_LINES) {
-                        result.push(...cellArray);
-                    }
-                });
-        } catch (ex) {
-            // Can fail on CI, if the notebook has been closed or the like
-            if (!isCI) {
-                throw ex;
+    private getDocumentLines(document: TextDocument): string[] {
+        const lines: string[] = [];
+        for (let lineIndex = 0; lineIndex < Math.min(MAX_DOCUMENT_LINES, document.lineCount); lineIndex++) {
+            const line = document.lineAt(lineIndex);
+            if (!line.isEmptyOrWhitespace) {
+                lines.push(line.text.trim());
             }
         }
-        return result;
+        return lines;
     }
 
-    private getCellLinesFromSource(source: nbformat.MultilineString): (string | undefined)[] {
-        // Split into multiple lines removing line feeds on the end.
-        return splitMultilineString(source).map((s) => s.replace(/\n/g, ''));
-    }
-
-    private onOpenedOrSavedDocument(document: TextDocument) {
+    private onOpenedOrSavedDocument(document: TextDocument, when: 'onOpenCloseOrSave') {
+        if (document.languageId !== PYTHON_LANGUAGE) {
+            return;
+        }
         // Make sure this is a Python file.
         if (path.extname(document.fileName) === '.py') {
-            this.scheduleDocument(document);
-        }
-        if (getAssociatedJupyterNotebook(document) && document.languageId === PYTHON_LANGUAGE) {
-            this.scheduleDocument(document);
+            this.scheduleCheck(document.uri, this.checkDocument.bind(this, document, 'pythonFile', when));
+        } else if (getAssociatedJupyterNotebook(document)) {
+            this.scheduleCheck(document.uri, this.checkDocument.bind(this, document, 'notebookCell', when));
         }
     }
-    private onOpenedOrClosedNotebookDocument(e: NotebookDocument) {
+    private onOpenedOrClosedNotebookDocument(e: NotebookDocument, when: 'onExecution' | 'onOpenCloseOrSave') {
         if (!isJupyterNotebook(e)) {
             return;
         }
-        this.scheduleCheck(e.uri.fsPath, this.checkNotebookDocument.bind(this, e));
+        this.scheduleCheck(e.uri, this.checkNotebookDocument.bind(this, e, when));
     }
 
-    private scheduleDocument(document: TextDocument) {
-        this.scheduleCheck(document.fileName, this.checkDocument.bind(this, document));
-    }
-
-    private scheduleCheck(file: string, check: () => void) {
+    private scheduleCheck(file: Uri, check: () => void) {
         // If already scheduled, cancel.
         const currentTimeout = this.pendingChecks.get(file);
         if (currentTimeout) {
@@ -162,77 +162,86 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         }
     }
 
-    @capturePerfTelemetry(EventName.HASHED_PACKAGE_PERF)
-    private checkNotebookDocument(e: NotebookDocument) {
-        this.pendingChecks.delete(e.uri.fsPath);
-        const lines = this.getNotebookDocumentLines(e);
-        this.lookForImports(lines);
-    }
-
-    @capturePerfTelemetry(EventName.HASHED_PACKAGE_PERF)
-    private checkNotebookCell(e: NotebookCellExecutionStateChangeEvent) {
-        if (!isJupyterNotebook(e.cell.notebook)) {
+    private async checkNotebookDocument(e: NotebookDocument, when: 'onExecution' | 'onOpenCloseOrSave') {
+        if (!isJupyterNotebook(e)) {
             return;
         }
-        this.pendingChecks.delete(e.cell.document.uri.toString());
-        const result: (string | undefined)[] = [];
+        await Promise.all(e.getCells().map(async (cell) => this.checkNotebookCell(cell, when)));
+    }
+
+    private async checkNotebookCell(cell: NotebookCell, when: 'onExecution' | 'onOpenCloseOrSave') {
+        if (
+            !isJupyterNotebook(cell.notebook) ||
+            cell.kind !== NotebookCellKind.Code ||
+            cell.document.languageId !== PYTHON_LANGUAGE
+        ) {
+            return;
+        }
         try {
-            if (e.cell.kind === NotebookCellKind.Code && e.cell.document.languageId === PYTHON_LANGUAGE) {
-                const cellArray = this.getCellLinesFromSource(e.cell.document.getText());
-                if (result.length < MAX_DOCUMENT_LINES) {
-                    result.push(...cellArray);
-                }
-            }
+            await this.sendTelemetryForImports(this.getDocumentLines(cell.document), 'notebookCell', when);
         } catch (ex) {
             // Can fail on CI, if the notebook has been closed or the like
             if (!isCI) {
                 throw ex;
             }
         }
+    }
 
-        this.lookForImports(result);
+    private async checkDocument(
+        document: TextDocument,
+        source: 'pythonFile' | 'notebookCell',
+        when: 'onExecution' | 'onOpenCloseOrSave'
+    ) {
+        await this.sendTelemetryForImports(this.getDocumentLines(document), source, when);
     }
 
     @capturePerfTelemetry(EventName.HASHED_PACKAGE_PERF)
-    private checkDocument(document: TextDocument) {
-        this.pendingChecks.delete(document.fileName);
-        const lines = this.getDocumentLines(document);
-        this.lookForImports(lines);
-    }
-
-    private async sendTelemetry(packageName: string) {
-        // No need to send duplicate telemetry or waste CPU cycles on an unneeded hash.
-        if (this.sentMatches.has(packageName)) {
-            return;
-        }
-        this.sentMatches.add(packageName);
-        // Hash the package name so that we will never accidentally see a
-        // user's private package name.
-        const hash = await getTelemetrySafeHashedString(packageName);
-        sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedNamev2: hash });
-    }
-
-    private lookForImports(lines: (string | undefined)[]) {
+    private lookForImports(lines: string[]) {
+        const packageNames: string[] = [];
         try {
             for (const s of lines) {
+                // No need of regex if we don't have imports
+                if (!s.includes('import') && !s.includes('from')) {
+                    continue;
+                }
                 const match = s ? ImportRegEx.exec(s) : null;
                 if (match !== null && match.groups !== undefined) {
                     if (match.groups.fromImport !== undefined) {
                         // `from pkg ...`
-                        this.sendTelemetry(match.groups.fromImport).ignoreErrors();
+                        packageNames.push(match.groups.fromImport);
                     } else if (match.groups.importImport !== undefined) {
                         // `import pkg1, pkg2, ...`
-                        const packageNames = match.groups.importImport
-                            .split(',')
-                            .map((rawPackageName) => rawPackageName.trim());
-                        // Can't pass in `this.sendTelemetry` directly as that rebinds `this`.
-                        packageNames.forEach((p) => this.sendTelemetry(p));
+                        packageNames.push(
+                            ...match.groups.importImport.split(',').map((rawPackageName) => rawPackageName.trim())
+                        );
                     }
                 }
             }
-        } catch {
+        } catch (ex) {
             // Don't care about failures since this is just telemetry.
             noop();
         }
+        return packageNames;
+    }
+
+    private async sendTelemetryForImports(
+        lines: string[],
+        source: 'pythonFile' | 'notebookCell',
+        when: 'onExecution' | 'onOpenCloseOrSave'
+    ) {
+        await Promise.all(
+            this.lookForImports(lines).map(async (packageName) => {
+                const key = `${packageName}_${source}_${when}`;
+                // No need to send duplicate telemetry or waste CPU cycles on an unneeded hash.
+                if (this.sentMatches.has(key)) {
+                    return;
+                }
+                this.sentMatches.add(key);
+                // Hash the package name so that we will never accidentally see a
+                // user's private package name.
+                const hash = await getTelemetrySafeHashedString(packageName);
+                sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedNamev2: hash, source, when });
+            })
+        );
     }
 }

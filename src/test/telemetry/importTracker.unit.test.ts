@@ -6,8 +6,15 @@
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import { instance, mock, when } from 'ts-mockito';
-import * as TypeMoq from 'typemoq';
-import { EventEmitter, NotebookDocument, TextDocument } from 'vscode';
+import {
+    EventEmitter,
+    NotebookCellExecutionState,
+    NotebookCellExecutionStateChangeEvent,
+    NotebookCellKind,
+    NotebookDocument,
+    TextDocument,
+    Uri
+} from 'vscode';
 
 import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import {
@@ -22,15 +29,16 @@ import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { ImportTracker } from '../../standalone/import-export/importTracker.node';
 import { waitForCondition } from '../common';
-import { createDocument } from '../datascience/editor-integration/helpers';
+import { createMockedDocument, createMockedNotebookDocument } from '../datascience/editor-integration/helpers';
 
 suite('Import Tracker', async () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();
     const oldValueOfVSC_JUPYTER_CI_TEST = isTestExecution();
     let importTracker: ImportTracker;
-    let documentManager: TypeMoq.IMock<IDocumentManager>;
+    let documentManager: IDocumentManager;
     let openedEventEmitter: EventEmitter<TextDocument>;
     let savedEventEmitter: EventEmitter<TextDocument>;
+    let onDidChangeNotebookCellExecutionState: EventEmitter<NotebookCellExecutionStateChangeEvent>;
     let pandasHash: string;
     let elephasHash: string;
     let kerasHash: string;
@@ -46,7 +54,11 @@ suite('Import Tracker', async () => {
         public static properties: Record<string, string>[] = [];
         public static measures: {}[] = [];
 
-        public static async expectHashes(...hashes: string[]) {
+        public static async expectHashes(
+            source: 'pythonFile' | 'notebookCell' = 'pythonFile',
+            when: 'onExecution' | 'onOpenCloseOrSave' = 'onOpenCloseOrSave',
+            ...hashes: string[]
+        ) {
             await waitForCondition(
                 async () => {
                     expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_PERF);
@@ -68,7 +80,7 @@ suite('Import Tracker', async () => {
                 expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_NAME);
             }
             const properties = Reporter.properties.filter((item) => Object.keys(item).length);
-            expect(properties).to.deep.equal(hashes.map((hash) => ({ hashedNamev2: hash })));
+            expect(properties).to.deep.equal(hashes.map((hash) => ({ hashedNamev2: hash, source, when })));
         }
 
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
@@ -95,9 +107,9 @@ suite('Import Tracker', async () => {
         openedEventEmitter = new EventEmitter<TextDocument>();
         savedEventEmitter = new EventEmitter<TextDocument>();
 
-        documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
-        documentManager.setup((a) => a.onDidOpenTextDocument).returns(() => openedEventEmitter.event);
-        documentManager.setup((a) => a.onDidSaveTextDocument).returns(() => savedEventEmitter.event);
+        documentManager = mock<IDocumentManager>();
+        when(documentManager.onDidOpenTextDocument).thenReturn(openedEventEmitter.event);
+        when(documentManager.onDidSaveTextDocument).thenReturn(savedEventEmitter.event);
 
         rewiremock.enable();
         rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
@@ -107,9 +119,11 @@ suite('Import Tracker', async () => {
         disposables.push(onDidOpenCloseNbEvent);
         when(vscNb.onDidOpenNotebookDocument).thenReturn(onDidOpenCloseNbEvent.event);
         when(vscNb.onDidCloseNotebookDocument).thenReturn(onDidOpenCloseNbEvent.event);
+        onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
+        when(vscNb.onDidChangeNotebookCellExecutionState).thenReturn(onDidChangeNotebookCellExecutionState.event);
         when(vscNb.notebookDocuments).thenReturn([]);
 
-        importTracker = new ImportTracker(documentManager.object, instance(vscNb), disposables);
+        importTracker = new ImportTracker(instance(documentManager), instance(vscNb), disposables);
     });
     teardown(() => {
         setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);
@@ -122,28 +136,27 @@ suite('Import Tracker', async () => {
     });
 
     function emitDocEvent(code: string, ev: EventEmitter<TextDocument>) {
-        const textDoc = createDocument(code, 'foo.py', 1, TypeMoq.Times.atMost(100), true);
-        ev.fire(textDoc.object);
+        const textDoc = createMockedDocument(code, Uri.file('foo.py'), 1, true);
+        ev.fire(textDoc);
     }
 
     test('Open document', async () => {
         emitDocEvent('import pandas\r\n', openedEventEmitter);
-
-        await Reporter.expectHashes(pandasHash);
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pandasHash);
     });
 
     test('Already opened documents', async () => {
-        const doc = createDocument('import pandas\r\n', 'foo.py', 1, TypeMoq.Times.atMost(100), true);
-        documentManager.setup((d) => d.textDocuments).returns(() => [doc.object]);
+        const doc = createMockedDocument('import pandas\r\n', Uri.file('foo.py'), 1, true);
+        when(documentManager.textDocuments).thenReturn([doc]);
         await importTracker.activate();
 
-        await Reporter.expectHashes(pandasHash);
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pandasHash);
     });
 
     test('Save document', async () => {
         emitDocEvent('import pandas\r\n', savedEventEmitter);
 
-        await Reporter.expectHashes(pandasHash);
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pandasHash);
     });
 
     test('from <pkg>._ import _, _', async () => {
@@ -171,7 +184,7 @@ suite('Import Tracker', async () => {
 
         emitDocEvent(elephas, savedEventEmitter);
 
-        await Reporter.expectHashes(elephasHash, kerasHash);
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', elephasHash, kerasHash);
     });
 
     test('from <pkg>._ import _', async () => {
@@ -194,7 +207,7 @@ suite('Import Tracker', async () => {
 
         emitDocEvent(pyspark, savedEventEmitter);
 
-        await Reporter.expectHashes(pysparkHash, sparkdlHash);
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pysparkHash, sparkdlHash);
     });
 
     test('import <pkg> as _', async () => {
@@ -211,7 +224,7 @@ def simplify_ages(df):
     return df`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes(pandasHash, numpyHash, randomHash);
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pandasHash, numpyHash, randomHash);
     });
 
     test('from <pkg> import _', async () => {
@@ -226,14 +239,14 @@ y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes(scipyHash);
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', scipyHash);
     });
 
     test('from <pkg> import _ as _', async () => {
         const code = `from pandas import DataFrame as df`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes(pandasHash);
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pandasHash);
     });
 
     test('import <pkg1>, <pkg2>', async () => {
@@ -248,7 +261,7 @@ y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes(sklearnHash, pandasHash);
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', sklearnHash, pandasHash);
     });
 
     test('Import from within a function', async () => {
@@ -263,7 +276,7 @@ y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes(sklearnHash);
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', sklearnHash);
     });
 
     test('Do not send the same package twice', async () => {
@@ -272,14 +285,14 @@ import pandas
 import pandas`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes(pandasHash);
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pandasHash);
     });
 
     test('Ignore relative imports', async () => {
         const code = 'from .pandas import not_real';
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes();
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave');
     });
 
     test('Ignore docstring for `from` imports', async () => {
@@ -288,7 +301,7 @@ from numpy import the random function
 """`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes();
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave');
     });
 
     test('Ignore docstring for `import` imports', async () => {
@@ -297,6 +310,23 @@ import numpy for all the things
 """`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes();
+        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave');
+    });
+    test('Track packages when a cell is executed', async () => {
+        const code = `import numpy`;
+        const nb = createMockedNotebookDocument([{ kind: NotebookCellKind.Code, languageId: 'python', value: code }]);
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Pending });
+
+        await Reporter.expectHashes('notebookCell', 'onExecution', numpyHash);
+
+        // Executing the cell multiple will have no effect, the telemetry is only sent once.
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Pending });
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Executing });
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Idle });
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Pending });
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Executing });
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Idle });
+
+        await Reporter.expectHashes('notebookCell', 'onExecution', numpyHash);
     });
 });
