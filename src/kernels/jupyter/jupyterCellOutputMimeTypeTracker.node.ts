@@ -74,6 +74,9 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
             return;
         }
         this.sentMimeTypes.add(key);
+        // The telemetry reporter assumes the presence of a `/` or `\` indicates these are file paths
+        // and obscures them. We don't want that, so we replace them with `_`.
+        mimeType = mimeType.replace(/\//g, '_').replace(/\\/g, '_');
         sendTelemetryEvent(Telemetry.CellOutputMimeType, undefined, { mimeType, when });
     }
 }
