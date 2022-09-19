@@ -614,20 +614,18 @@ export class IEventNamePropertyMapping {
      * Used to detect the popularity of a package, that would help determine which packages
      * need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.
      */
-    [EventName.HASHED_PACKAGE_NAME]: TelemetryEventInfo<{
-        /**
-         * Hash of the package name
-         */
-        hashedNamev2: string;
-        /**
-         * Whether the code is located in a Python file or a notebook cell.
-         */
-        source: 'pythonFile' | 'notebookCell';
-        /**
-         * Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.
-         */
-        when: 'onExecution' | 'onOpenCloseOrSave';
-    }> = {
+    [EventName.HASHED_PACKAGE_NAME]: TelemetryEventInfo<
+        {
+            /**
+             * Hash of the package name
+             */
+            hashedNamev2: string;
+            /**
+             * Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.
+             */
+            when: 'onExecution' | 'onOpenCloseOrSave';
+        } & ResourceTypeTelemetryProperty
+    > = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
@@ -636,14 +634,11 @@ export class IEventNamePropertyMapping {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             },
-            source: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
             when: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
-            }
+            },
+            ...commonClassificationForResourceType()
         }
     };
     /**
@@ -762,16 +757,18 @@ export class IEventNamePropertyMapping {
      * E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
      * or prioritize rendering of widgets when opening an existing notebook or the like.
      */
-    [Telemetry.CellOutputMimeType]: TelemetryEventInfo<{
-        /**
-         * Mimetype of the output.
-         */
-        mimeType: string;
-        /**
-         * Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.
-         */
-        when: 'onExecution' | 'onOpenCloseOrSave';
-    }> = {
+    [Telemetry.CellOutputMimeType]: TelemetryEventInfo<
+        {
+            /**
+             * Mimetype of the output.
+             */
+            mimeType: string;
+            /**
+             * Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.
+             */
+            when: 'onExecution' | 'onOpenCloseOrSave';
+        } & ResourceTypeTelemetryProperty
+    > = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
@@ -783,7 +780,8 @@ export class IEventNamePropertyMapping {
             when: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
-            }
+            },
+            ...commonClassificationForResourceType()
         }
     };
     /**

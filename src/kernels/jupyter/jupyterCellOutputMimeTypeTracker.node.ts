@@ -8,10 +8,11 @@ import { inject, injectable } from 'inversify';
 import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { JupyterNotebookView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { ResourceTypeTelemetryProperty, sendTelemetryEvent, Telemetry } from '../../telemetry';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
@@ -62,12 +63,17 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
         if (cell.document.languageId === 'raw') {
             return [];
         }
+        const resourceType = cell.notebook.notebookType === JupyterNotebookView ? 'notebook' : 'interactive';
         return flatten(cell.outputs.map((output) => output.items.map((item) => item.mime))).map((mime) =>
-            this.sendTelemetry(mime, when)
+            this.sendTelemetry(mime, when, resourceType)
         );
     }
 
-    private sendTelemetry(mimeType: string, when: 'onExecution' | 'onOpenCloseOrSave') {
+    private sendTelemetry(
+        mimeType: string,
+        when: 'onExecution' | 'onOpenCloseOrSave',
+        resourceType: ResourceTypeTelemetryProperty['resourceType']
+    ) {
         // No need to send duplicate telemetry or waste CPU cycles on an unneeded hash.
         const key = `${mimeType}-${when}`;
         if (this.sentMimeTypes.has(key)) {
@@ -77,6 +83,6 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
         // The telemetry reporter assumes the presence of a `/` or `\` indicates these are file paths
         // and obscures them. We don't want that, so we replace them with `_`.
         mimeType = mimeType.replace(/\//g, '_').replace(/\\/g, '_');
-        sendTelemetryEvent(Telemetry.CellOutputMimeType, undefined, { mimeType, when });
+        sendTelemetryEvent(Telemetry.CellOutputMimeType, undefined, { mimeType, when, resourceType });
     }
 }

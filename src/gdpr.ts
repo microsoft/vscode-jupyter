@@ -1110,6 +1110,8 @@
 /* __GDPR__
    "DS_INTERNAL.CELL_OUTPUT_MIME_TYPE" : {
      "mimeType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Mimetype of the output.","owner":"donjayamanne"},
+     "when": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -2297,6 +2299,8 @@
 /* __GDPR__
    "HASHED_PACKAGE_NAME" : {
      "hashedNamev2": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Hash of the package name","owner":"donjayamanne"},
+     "when": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 

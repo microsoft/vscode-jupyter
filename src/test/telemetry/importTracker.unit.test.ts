@@ -28,6 +28,7 @@ import { IDisposable } from '../../platform/common/types';
 import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { ImportTracker } from '../../standalone/import-export/importTracker.node';
+import { ResourceTypeTelemetryProperty } from '../../telemetry';
 import { waitForCondition } from '../common';
 import { createMockedDocument, createMockedNotebookDocument } from '../datascience/editor-integration/helpers';
 
@@ -55,8 +56,8 @@ suite('Import Tracker', async () => {
         public static measures: {}[] = [];
 
         public static async expectHashes(
-            source: 'pythonFile' | 'notebookCell' = 'pythonFile',
             when: 'onExecution' | 'onOpenCloseOrSave' = 'onOpenCloseOrSave',
+            resourceType: ResourceTypeTelemetryProperty['resourceType'] = undefined,
             ...hashes: string[]
         ) {
             await waitForCondition(
@@ -80,7 +81,11 @@ suite('Import Tracker', async () => {
                 expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_NAME);
             }
             const properties = Reporter.properties.filter((item) => Object.keys(item).length);
-            expect(properties).to.deep.equal(hashes.map((hash) => ({ hashedNamev2: hash, source, when })));
+            if (resourceType) {
+                expect(properties).to.deep.equal(hashes.map((hash) => ({ hashedNamev2: hash, when, resourceType })));
+            } else {
+                expect(properties).to.deep.equal(hashes.map((hash) => ({ hashedNamev2: hash, when })));
+            }
         }
 
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
@@ -142,7 +147,7 @@ suite('Import Tracker', async () => {
 
     test('Open document', async () => {
         emitDocEvent('import pandas\r\n', openedEventEmitter);
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pandasHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', undefined, pandasHash);
     });
 
     test('Already opened documents', async () => {
@@ -150,13 +155,13 @@ suite('Import Tracker', async () => {
         when(documentManager.textDocuments).thenReturn([doc]);
         await importTracker.activate();
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pandasHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', undefined, pandasHash);
     });
 
     test('Save document', async () => {
         emitDocEvent('import pandas\r\n', savedEventEmitter);
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pandasHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', undefined, pandasHash);
     });
 
     test('from <pkg>._ import _, _', async () => {
@@ -184,7 +189,7 @@ suite('Import Tracker', async () => {
 
         emitDocEvent(elephas, savedEventEmitter);
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', elephasHash, kerasHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', undefined, elephasHash, kerasHash);
     });
 
     test('from <pkg>._ import _', async () => {
@@ -207,7 +212,7 @@ suite('Import Tracker', async () => {
 
         emitDocEvent(pyspark, savedEventEmitter);
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pysparkHash, sparkdlHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', undefined, pysparkHash, sparkdlHash);
     });
 
     test('import <pkg> as _', async () => {
@@ -224,7 +229,7 @@ def simplify_ages(df):
     return df`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pandasHash, numpyHash, randomHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', undefined, pandasHash, numpyHash, randomHash);
     });
 
     test('from <pkg> import _', async () => {
@@ -239,14 +244,14 @@ y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', scipyHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', undefined, scipyHash);
     });
 
     test('from <pkg> import _ as _', async () => {
         const code = `from pandas import DataFrame as df`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pandasHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', undefined, pandasHash);
     });
 
     test('import <pkg1>, <pkg2>', async () => {
@@ -261,7 +266,7 @@ y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', sklearnHash, pandasHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', undefined, sklearnHash, pandasHash);
     });
 
     test('Import from within a function', async () => {
@@ -276,7 +281,7 @@ y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', sklearnHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', undefined, sklearnHash);
     });
 
     test('Do not send the same package twice', async () => {
@@ -285,14 +290,14 @@ import pandas
 import pandas`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave', pandasHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', undefined, pandasHash);
     });
 
     test('Ignore relative imports', async () => {
         const code = 'from .pandas import not_real';
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave');
+        await Reporter.expectHashes('onOpenCloseOrSave');
     });
 
     test('Ignore docstring for `from` imports', async () => {
@@ -301,7 +306,7 @@ from numpy import the random function
 """`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave');
+        await Reporter.expectHashes('onOpenCloseOrSave');
     });
 
     test('Ignore docstring for `import` imports', async () => {
@@ -310,14 +315,14 @@ import numpy for all the things
 """`;
         emitDocEvent(code, savedEventEmitter);
 
-        await Reporter.expectHashes('pythonFile', 'onOpenCloseOrSave');
+        await Reporter.expectHashes('onOpenCloseOrSave');
     });
     test('Track packages when a cell is executed', async () => {
         const code = `import numpy`;
         const nb = createMockedNotebookDocument([{ kind: NotebookCellKind.Code, languageId: 'python', value: code }]);
         onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Pending });
 
-        await Reporter.expectHashes('notebookCell', 'onExecution', numpyHash);
+        await Reporter.expectHashes('onExecution', 'notebook', numpyHash);
 
         // Executing the cell multiple will have no effect, the telemetry is only sent once.
         onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Pending });
@@ -327,6 +332,6 @@ import numpy for all the things
         onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Executing });
         onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Idle });
 
-        await Reporter.expectHashes('notebookCell', 'onExecution', numpyHash);
+        await Reporter.expectHashes('onExecution', 'notebook', numpyHash);
     });
 });

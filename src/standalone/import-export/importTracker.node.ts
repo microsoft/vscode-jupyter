@@ -13,10 +13,10 @@ import {
     TextDocument,
     Uri
 } from 'vscode';
-import { capturePerfTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { capturePerfTelemetry, ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { isCI, isTestExecution, PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import '../../platform/common/extensions';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -131,9 +131,13 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         }
         // Make sure this is a Python file.
         if (path.extname(document.fileName) === '.py') {
-            this.scheduleCheck(document.uri, this.checkDocument.bind(this, document, 'pythonFile', when));
-        } else if (getAssociatedJupyterNotebook(document)) {
-            this.scheduleCheck(document.uri, this.checkDocument.bind(this, document, 'notebookCell', when));
+            this.scheduleCheck(document.uri, this.checkDocument.bind(this, document, undefined, when));
+        } else {
+            const notebook = getAssociatedJupyterNotebook(document);
+            if (notebook) {
+                const resourceType = notebook.notebookType === JupyterNotebookView ? 'notebook' : 'interactive';
+                this.scheduleCheck(document.uri, this.checkDocument.bind(this, document, resourceType, when));
+            }
         }
     }
     private onOpenedOrClosedNotebookDocument(e: NotebookDocument, when: 'onExecution' | 'onOpenCloseOrSave') {
@@ -178,7 +182,8 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
             return;
         }
         try {
-            await this.sendTelemetryForImports(this.getDocumentLines(cell.document), 'notebookCell', when);
+            const resourceType = cell.notebook.notebookType === JupyterNotebookView ? 'notebook' : 'interactive';
+            await this.sendTelemetryForImports(this.getDocumentLines(cell.document), resourceType, when);
         } catch (ex) {
             // Can fail on CI, if the notebook has been closed or the like
             if (!isCI) {
@@ -189,10 +194,10 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
 
     private async checkDocument(
         document: TextDocument,
-        source: 'pythonFile' | 'notebookCell',
+        resourceType: ResourceTypeTelemetryProperty['resourceType'],
         when: 'onExecution' | 'onOpenCloseOrSave'
     ) {
-        await this.sendTelemetryForImports(this.getDocumentLines(document), source, when);
+        await this.sendTelemetryForImports(this.getDocumentLines(document), resourceType, when);
     }
 
     @capturePerfTelemetry(EventName.HASHED_PACKAGE_PERF)
@@ -226,12 +231,12 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
 
     private async sendTelemetryForImports(
         lines: string[],
-        source: 'pythonFile' | 'notebookCell',
+        resourceType: ResourceTypeTelemetryProperty['resourceType'],
         when: 'onExecution' | 'onOpenCloseOrSave'
     ) {
         await Promise.all(
             this.lookForImports(lines).map(async (packageName) => {
-                const key = `${packageName}_${source}_${when}`;
+                const key = `${packageName}_${resourceType || ''}_${when}`;
                 // No need to send duplicate telemetry or waste CPU cycles on an unneeded hash.
                 if (this.sentMatches.has(key)) {
                     return;
@@ -240,7 +245,11 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
                 // Hash the package name so that we will never accidentally see a
                 // user's private package name.
                 const hash = await getTelemetrySafeHashedString(packageName);
-                sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedNamev2: hash, source, when });
+                sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, {
+                    hashedNamev2: hash,
+                    resourceType,
+                    when
+                });
             })
         );
     }
