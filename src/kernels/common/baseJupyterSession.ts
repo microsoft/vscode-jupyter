@@ -407,6 +407,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 throw new JupyterWaitForIdleError(this.kernelConnectionMetadata);
             } catch (ex) {
                 traceInfoIfCI(`Error waiting for idle`, ex);
+                throw ex;
             } finally {
                 disposeAllDisposables(disposables);
             }
