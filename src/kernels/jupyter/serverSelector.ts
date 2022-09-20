@@ -848,9 +848,9 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         });
 
         // Offer the user a change to pick a display name for the server
-        // IANHU: Localize
+        // Prepopulate the value with the uri as the default suggestiong
         const newDisplayName = await this.applicationShell.showInputBox({
-            title: 'Change Server Display Name',
+            title: DataScience.jupyterRenameServer(),
             value: uri
         });
 
