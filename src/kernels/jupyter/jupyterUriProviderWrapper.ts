@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
+import { IDisposableRegistry } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
 import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from './types';
 
@@ -10,7 +11,32 @@ import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from '
  * extra data on the other extension's UI.
  */
 export class JupyterUriProviderWrapper implements IJupyterUriProvider {
-    constructor(private readonly provider: IJupyterUriProvider, private packageName: string) {}
+    onDidChangeHandles?: vscode.Event<void>;
+    getHandles?(): Promise<JupyterServerUriHandle[]>;
+
+    constructor(
+        private readonly provider: IJupyterUriProvider,
+        private packageName: string,
+        disposables: IDisposableRegistry
+    ) {
+        if (provider.onDidChangeHandles) {
+            const _onDidChangeHandles = new vscode.EventEmitter<void>();
+            this.onDidChangeHandles = _onDidChangeHandles.event.bind(this);
+
+            disposables.push(_onDidChangeHandles);
+            disposables.push(
+                provider.onDidChangeHandles(() => {
+                    _onDidChangeHandles.fire();
+                })
+            );
+        }
+
+        if (provider.getHandles) {
+            this.getHandles = async () => {
+                return provider.getHandles!();
+            };
+        }
+    }
     public get id() {
         return this.provider.id;
     }
