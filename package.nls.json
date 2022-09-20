@@ -580,7 +580,6 @@
     },
     "DataScience.executingCodeFailure": "Executing code failed : {0}",
     "DataScience.inputWatermark": "Type code here and press shift-enter to run",
-    "DataScience.deleteButtonTooltip": "Remove cell",
     "DataScience.gotoCodeButtonTooltip": "Go to code",
     "DataScience.copyBackToSourceButtonTooltip": "Paste code into file",
     "DataScience.copyToClipboardButtonTooltip": "Copy source to clipboard",
@@ -1081,7 +1080,6 @@
     "DataScience.defaultNotebookName": "default",
     "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targeting the language '{1}'",
     "DataScience.interactiveClearAllCells": "Clear All",
-    "DataScience.interactiveRemoveCell": "Remove Cell",
     "DataScience.interactiveGoToCode": "Go to code",
     "DataScience.kernelWasNotStarted": {
         "message": "Kernel was not started. A kernel session is needed to start debugging.",

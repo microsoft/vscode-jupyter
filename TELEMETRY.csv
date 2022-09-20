@@ -1064,6 +1064,17 @@ This is a generic property supported for all telemetry (sent by decorators).","b
 Used to detect the popularity of a mime type, that would help determine which mime types are most common.
 E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
 or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.CellOutputMimeType","donjayamanne","N/A","","","mimeType","Mimetype of the output.","string","",false
+"DS_INTERNAL.CELL_OUTPUT_MIME_TYPE","Mime type of a cell output.
+Used to detect the popularity of a mime type, that would help determine which mime types are most common.
+E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
+or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.CellOutputMimeType","donjayamanne","N/A","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
+Common to most of the events.","","'notebook' 
+'interactive' ",true
+"DS_INTERNAL.CELL_OUTPUT_MIME_TYPE","Mime type of a cell output.
+Used to detect the popularity of a mime type, that would help determine which mime types are most common.
+E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
+or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.CellOutputMimeType","donjayamanne","N/A","","","when","Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.","","'onExecution' 
+'onOpenCloseOrSave' ",false
 "DS_INTERNAL.CODE_LENS_ACQ_TIME","How long on average we spent parsing code lens. Sent on shutdown.","Telemetry.CodeLensAverageAcquisitionTime","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.COMMAND_EXECUTED","A command that the extension contributes is executed.","Telemetry.CommandExecuted","amunger","N/A","","","command","Name of the command executed.","string","",false
@@ -2719,6 +2730,15 @@ Gives us an idea of whether users have variable references in their .env files o
 "HASHED_PACKAGE_NAME","Telemetry event sent with hash of an imported python package.
 Used to detect the popularity of a package, that would help determine which packages
 need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.","EventName.HASHED_PACKAGE_NAME","donjayamanne","N/A","","","hashedNamev2","Hash of the package name","string","",false
+"HASHED_PACKAGE_NAME","Telemetry event sent with hash of an imported python package.
+Used to detect the popularity of a package, that would help determine which packages
+need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.","EventName.HASHED_PACKAGE_NAME","donjayamanne","N/A","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
+Common to most of the events.","","'notebook' 
+'interactive' ",true
+"HASHED_PACKAGE_NAME","Telemetry event sent with hash of an imported python package.
+Used to detect the popularity of a package, that would help determine which packages
+need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.","EventName.HASHED_PACKAGE_NAME","donjayamanne","N/A","","","when","Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.","","'onExecution' 
+'onOpenCloseOrSave' ",false
 "HASHED_PACKAGE_PERF","Time taken to hash python packages found in the code.","EventName.HASHED_PACKAGE_PERF","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "JUPYTER_IS_INSTALLED","Telemetry sent with result of detecting Jupyter in the current path.","Telemetry.JupyterInstalled","donjayamanne","N/A","","/* Detection of jupyter failed ","failed","Failed to detect Jupyter.","true","",false

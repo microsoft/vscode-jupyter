@@ -8,10 +8,11 @@ import { inject, injectable } from 'inversify';
 import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { JupyterNotebookView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { ResourceTypeTelemetryProperty, sendTelemetryEvent, Telemetry } from '../../telemetry';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
@@ -47,32 +48,41 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
         if (!isJupyterNotebook(e.cell.notebook)) {
             return;
         }
-        this.checkCell(e.cell);
+        this.checkCell(e.cell, 'onExecution');
     }
     private onDidOpenCloseDocument(doc: NotebookDocument) {
         if (!isJupyterNotebook(doc)) {
             return;
         }
-        doc.getCells().forEach((cell) => this.checkCell(cell));
+        doc.getCells().forEach((cell) => this.checkCell(cell, 'onOpenCloseOrSave'));
     }
-    private checkCell(cell: NotebookCell) {
+    private checkCell(cell: NotebookCell, when: 'onExecution' | 'onOpenCloseOrSave') {
         if (cell.kind === NotebookCellKind.Markup) {
             return [];
         }
         if (cell.document.languageId === 'raw') {
             return [];
         }
-        return flatten(cell.outputs.map((output) => output.items.map((item) => item.mime))).forEach(
-            this.sendTelemetry.bind(this)
+        const resourceType = cell.notebook.notebookType === JupyterNotebookView ? 'notebook' : 'interactive';
+        return flatten(cell.outputs.map((output) => output.items.map((item) => item.mime))).map((mime) =>
+            this.sendTelemetry(mime, when, resourceType)
         );
     }
 
-    private sendTelemetry(mimeType: string) {
+    private sendTelemetry(
+        mimeType: string,
+        when: 'onExecution' | 'onOpenCloseOrSave',
+        resourceType: ResourceTypeTelemetryProperty['resourceType']
+    ) {
         // No need to send duplicate telemetry or waste CPU cycles on an unneeded hash.
-        if (this.sentMimeTypes.has(mimeType)) {
+        const key = `${mimeType}-${when}`;
+        if (this.sentMimeTypes.has(key)) {
             return;
         }
-        this.sentMimeTypes.add(mimeType);
-        sendTelemetryEvent(Telemetry.CellOutputMimeType, undefined, { mimeType });
+        this.sentMimeTypes.add(key);
+        // The telemetry reporter assumes the presence of a `/` or `\` indicates these are file paths
+        // and obscures them. We don't want that, so we replace them with `_`.
+        mimeType = mimeType.replace(/\//g, '_').replace(/\\/g, '_');
+        sendTelemetryEvent(Telemetry.CellOutputMimeType, undefined, { mimeType, when, resourceType });
     }
 }

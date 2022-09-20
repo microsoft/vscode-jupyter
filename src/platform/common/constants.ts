@@ -272,7 +272,6 @@ export namespace Commands {
     export const OpenVariableView = 'jupyter.openVariableView';
     export const OpenOutlineView = 'jupyter.openOutlineView';
     export const InteractiveClearAll = 'jupyter.interactive.clearAllCells';
-    export const InteractiveRemoveCell = 'jupyter.interactive.removeCell';
     export const InteractiveGoToCode = 'jupyter.interactive.goToCode';
     export const InteractiveCopyCell = 'jupyter.interactive.copyCell';
     export const InteractiveExportAsNotebook = 'jupyter.interactive.exportasnotebook';

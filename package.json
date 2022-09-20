@@ -779,12 +779,6 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.interactive.removeCell",
-                "title": "%DataScience.interactiveRemoveCell%",
-                "icon": "$(close)",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.interactive.goToCode",
                 "title": "%DataScience.interactiveGoToCode%",
                 "icon": "$(go-to-file)",
@@ -1054,11 +1048,6 @@
                 {
                     "command": "jupyter.interactive.goToCode",
                     "group": "inline@1",
-                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
-                },
-                {
-                    "command": "jupyter.interactive.removeCell",
-                    "group": "inline@2",
                     "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 }
             ],
@@ -1496,10 +1485,6 @@
                 {
                     "command": "jupyter.interactive.goToCode",
                     "when": "false"
-                },
-                {
-                    "command": "jupyter.interactive.removeCell",
-                    "when": "activeEditor == 'workbench.editor.interactive' && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.interactive.clearAllCells",
