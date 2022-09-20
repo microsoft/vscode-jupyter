@@ -21,7 +21,8 @@ import {
     ICodeLensFactory,
     IDataScienceCodeLensProvider,
     IGeneratedCodeStorageFactory,
-    ICodeGeneratorFactory
+    ICodeGeneratorFactory,
+    IPythonCellFoldingProvider
 } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
@@ -30,6 +31,7 @@ import { InteractiveWindowDebugger } from './debugger/interactiveWindowDebugger.
 import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
 import { BANNER_NAME_INTERACTIVE_SHIFTENTER, InteractiveShiftEnterBanner } from './shiftEnterBanner';
 import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startupCodeProvider';
+import { PythonCellFoldingProvider } from './editor-integration/pythonCellFoldingProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
@@ -41,6 +43,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         IDataScienceCodeLensProvider,
         DataScienceCodeLensProvider
     );
+    serviceManager.addSingleton<IPythonCellFoldingProvider>(IPythonCellFoldingProvider, PythonCellFoldingProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

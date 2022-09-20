@@ -20,7 +20,10 @@ import { debounceAsync, swallowExceptions } from '../../platform/common/utils/de
 import { noop } from '../../platform/common/utils/misc';
 import { EditorContexts } from '../../platform/common/constants';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
+import {
+    IDataScienceCodeLensProvider,
+    IPythonCellFoldingProvider
+} from '../../interactive-window/editor-integration/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -41,6 +44,9 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         @inject(IDataScienceCodeLensProvider)
         @optional()
         private dataScienceCodeLensProvider: IDataScienceCodeLensProvider | undefined,
+        @optional()
+        @inject(IPythonCellFoldingProvider)
+        private pythonCellFoldingProvider: IPythonCellFoldingProvider | undefined,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
@@ -59,6 +65,11 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         if (this.dataScienceCodeLensProvider) {
             this.extensionContext.subscriptions.push(
                 vscode.languages.registerCodeLensProvider([PYTHON_FILE_ANY_SCHEME], this.dataScienceCodeLensProvider)
+            );
+        }
+        if (this.pythonCellFoldingProvider) {
+            this.extensionContext.subscriptions.push(
+                vscode.languages.registerFoldingRangeProvider([PYTHON_FILE_ANY_SCHEME], this.pythonCellFoldingProvider)
             );
         }
 
