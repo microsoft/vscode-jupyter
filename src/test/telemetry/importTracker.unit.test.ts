@@ -27,7 +27,7 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import { ImportTracker } from '../../standalone/import-export/importTracker.node';
+import { ImportTracker } from '../../standalone/import-export/importTracker';
 import { ResourceTypeTelemetryProperty } from '../../telemetry';
 import { waitForCondition } from '../common';
 import { createMockedDocument, createMockedNotebookDocument } from '../datascience/editor-integration/helpers';
