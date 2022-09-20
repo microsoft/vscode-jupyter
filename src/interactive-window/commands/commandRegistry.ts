@@ -48,7 +48,6 @@ import { IInteractiveWindowProvider } from '../types';
 import * as urlPath from '../../platform/vscode-path/resources';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { chainWithPendingUpdates } from '../../kernels/execution/notebookUpdater';
 import { ExportFormat, IExportDialog, IFileConverter } from '../../notebooks/export/types';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
@@ -199,7 +198,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         );
         this.registerCommand(Commands.ScrollToCell, (file: Uri, id: string) => this.scrollToCell(file, id));
         this.registerCommand(Commands.InteractiveClearAll, this.clearAllCellsInInteractiveWindow);
-        this.registerCommand(Commands.InteractiveRemoveCell, this.removeCellInInteractiveWindow);
         this.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow);
         this.commandManager.registerCommand(Commands.InteractiveCopyCell, this.copyCellInInteractiveWindow);
     }
@@ -852,24 +850,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         const nbEdit = NotebookEdit.deleteCells(new NotebookRange(0, document.cellCount));
         edit.set(document.uri, [nbEdit]);
         await workspace.applyEdit(edit);
-    }
-
-    private async removeCellInInteractiveWindow(context?: NotebookCell) {
-        const interactiveWindow = this.interactiveWindowProvider.getActiveOrAssociatedInteractiveWindow();
-        const ranges =
-            context === undefined
-                ? interactiveWindow?.notebookEditor?.selections
-                : [new NotebookRange(context.index, context.index + 1)];
-        const document = context === undefined ? interactiveWindow?.notebookEditor?.notebook : context.notebook;
-
-        if (ranges !== undefined && document !== undefined) {
-            await chainWithPendingUpdates(document, (edit) => {
-                ranges.forEach((range) => {
-                    const nbEdit = NotebookEdit.deleteCells(range);
-                    edit.set(document.uri, [nbEdit]);
-                });
-            });
-        }
     }
 
     private async goToCodeInInteractiveWindow(context?: NotebookCell) {
