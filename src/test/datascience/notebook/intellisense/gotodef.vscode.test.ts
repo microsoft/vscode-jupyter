@@ -102,7 +102,8 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definitio
         );
     });
 
-    test('Import pandas and goto it', async () => {
+    test.skip('Import pandas and goto it', async () => {
+        // Skipped https://github.com/microsoft/vscode-jupyter/issues/11408
         await insertCodeCell('import pandas as pd');
         const cell2 = await insertCodeCell('pd.read_csv');
 
