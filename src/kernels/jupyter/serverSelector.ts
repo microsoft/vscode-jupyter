@@ -944,6 +944,9 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
                 items.push({
                     label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
+                    // If our display name is not the same as the URI, render the uri as description
+                    description:
+                        !isNil(uriItem.displayName) && uriItem.displayName !== uriItem.uri ? uriItem.uri : undefined,
                     newChoice: false,
                     url: uriItem.uri,
                     buttons: isSelected

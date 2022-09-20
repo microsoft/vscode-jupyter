@@ -84,7 +84,6 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         const serverId = await computeServerId(uri);
 
         // Check if we have already found a display name for this server
-        // IANHU: Not the right place for this?
         const existingEntry = uriList.find((entry) => {
             return entry.serverId === serverId;
         });
