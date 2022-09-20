@@ -1222,9 +1222,20 @@ This is always sent when we display a prompt.","Telemetry.IPyWidgetPromptToUseCD
 "DS_INTERNAL.IPYWIDGET_TIME_TO_COPY_NBEXTENSIONS_DIR","Total time take to copy the nb extensions folder.","Telemetry.IPyWidgetNbExtensionCopyTime","donjayamanne","Notebook, Notebook","Widgets","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE","Telemetry event sent when the widget tries to send a kernel message but nothing was listening","Telemetry.IPyWidgetUnhandledMessage","donjayamanne","Notebook, InteractiveWindow","Widgets","","msg_type","Type of the protocol message sent by Jupyter kernel.","string","",false
-"DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","cdnSearched","Whether we searched CDN or not.","boolean","",false
-"DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","hashedName","Hash of the widget","string","",false
-"DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","source","Where did we find the hashed name (CDN or user environment or remote jupyter).","","'cdn' 
+"DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.
+Helps determine which widgets are used the most, and which are not.
+Useful in prioritizing which widgets to work on if things fail to work.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","cdnSearched","Whether we searched CDN or not.","boolean","",false
+"DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.
+Helps determine which widgets are used the most, and which are not.
+Useful in prioritizing which widgets to work on if things fail to work.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","hashedName","Hash of the widget module.
+If the widget is found on a CDN, then the unhashed name is sent in `moduleName`.","string","",false
+"DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.
+Helps determine which widgets are used the most, and which are not.
+Useful in prioritizing which widgets to work on if things fail to work.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","moduleName","Name of the widget module, sent only for cases where `source` is `cdn`.
+As that is the onl time we can safely send the name (if its on public CDN then its public information).","string","",true
+"DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.
+Helps determine which widgets are used the most, and which are not.
+Useful in prioritizing which widgets to work on if things fail to work.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","source","Where did we find the hashed name (CDN or user environment or remote jupyter).","","'cdn' 
 'local' 
 'remote' ",true
 "DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE","Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.","Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure","donjayamanne","Notebook, InteractiveWindow","Widgets","","moduleHash","Hash of the widget module.","string","",false
