@@ -2636,13 +2636,19 @@ Expand each section to see more information about that event.
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
     Telemetry event sent with name of a Widget that is used.  
+    Helps determine which widgets are used the most, and which are not.  
+    Useful in prioritizing which widgets to work on if things fail to work.  
     ```
 
     - Properties:  
         - `cdnSearched`: `boolean`  
         Whether we searched CDN or not.  
         - `hashedName`: `string`  
-        Hash of the widget  
+        Hash of the widget module.  
+        If the widget is found on a CDN, then the unhashed name is sent in `moduleName`.  
+        - `moduleName`?: `string`  
+        Name of the widget module, sent only for cases where `source` is `cdn`.  
+        As that is the onl time we can safely send the name (if its on public CDN then its public information).  
         - `source`?: `<see below>`  
         Where did we find the hashed name (CDN or user environment or remote jupyter).  
         Possible values include:  

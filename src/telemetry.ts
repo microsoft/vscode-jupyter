@@ -2288,7 +2288,7 @@ export class IEventNamePropertyMapping {
      */
     [Telemetry.HashedIPyWidgetNameUsed]: TelemetryEventInfo<{
         /**
-         * Hash of the widget.
+         * Hash of the widget module.
          * If the widget is found on a CDN, then the unhashed name is sent in `moduleName`.
          */
         hashedName: string;
