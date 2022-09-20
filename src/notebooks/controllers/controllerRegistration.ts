@@ -5,8 +5,7 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Event, EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
-import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
-import { IJupyterServerUriStorage, IServerConnectionType } from '../../kernels/jupyter/types';
+import { IJupyterServerUriEntry, IJupyterServerUriStorage, IServerConnectionType } from '../../kernels/jupyter/types';
 import { IKernelProvider, isLocalConnection, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
@@ -224,9 +223,9 @@ export class ControllerRegistration implements IControllerRegistration {
         this.onDidChangeFilter();
     }
 
-    private async onDidRemoveUris(uris: string[]) {
+    private async onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
         // Remove any connections that are no longer available.
-        const serverIds = await Promise.all(uris.map(computeServerId));
+        const serverIds = uriEntries.map((entry) => entry.serverId);
         serverIds.forEach((serverId) => {
             [...this.registeredMetadatas.keys()].forEach((k) => {
                 const m = this.registeredMetadatas.get(k);

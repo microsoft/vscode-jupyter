@@ -289,7 +289,7 @@ export interface IRawConnection {
 export interface IJupyterConnection extends Disposable {
     readonly type: 'jupyter';
     readonly localLaunch: boolean;
-    readonly displayName: string;
+    displayName: string;
     disconnected: Event<number>;
 
     // Jupyter specific members
