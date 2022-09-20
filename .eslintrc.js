@@ -142,7 +142,9 @@ module.exports = {
         'src/test/workspaceSymbols/main.unit.test.ts',
         'src/test/workspaceSymbols/generator.unit.test.ts',
         'src/test/datascience/extensionapi/exampleextension/ms-ai-tools-test/src/serverPicker.ts',
-        'vscode.d.ts'
+        'vscode.d.ts',
+        'vscode.proposed.*.d.ts',
+        '.eslintrc.js'
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
