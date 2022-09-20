@@ -234,11 +234,12 @@ export interface IJupyterUriProviderRegistration {
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
 
+// An entry into our list of saved servers
 export interface IJupyterServerUriEntry {
-    uri: string;
-    serverId: string;
-    time: number;
-    displayName?: string;
+    uri: string; // URI of the server to connect to
+    serverId: string; // Unique ID using a hash of the full uri
+    time: number; // The most recent time that we connected to this server
+    displayName?: string; // An optional display name to show for this server as opposed to just the URI
 }
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
