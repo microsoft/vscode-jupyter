@@ -16,7 +16,7 @@ import {
     Uri
 } from 'vscode';
 
-import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import {
     isTestExecution,
     isUnitTestExecution,
@@ -127,8 +127,16 @@ suite('Import Tracker', async () => {
         onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
         when(vscNb.onDidChangeNotebookCellExecutionState).thenReturn(onDidChangeNotebookCellExecutionState.event);
         when(vscNb.notebookDocuments).thenReturn([]);
-
-        importTracker = new ImportTracker(instance(documentManager), instance(vscNb), disposables);
+        const workspace = mock<IWorkspaceService>();
+        when(workspace.getConfiguration('telemetry')).thenReturn({
+            inspect: () => {
+                return {
+                    key: 'enableTelemetry',
+                    globalValue: true
+                };
+            }
+        } as any);
+        importTracker = new ImportTracker(instance(documentManager), instance(vscNb), disposables, instance(workspace));
     });
     teardown(() => {
         setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);

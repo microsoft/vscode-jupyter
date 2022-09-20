@@ -7,12 +7,13 @@ import { IDisposable } from '@fluentui/react';
 import { inject, injectable } from 'inversify';
 import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { ResourceTypeTelemetryProperty, sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { isTelemetryDisabled } from '../../telemetry';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
@@ -23,10 +24,14 @@ const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 export class CellOutputMimeTypeTracker implements IExtensionSyncActivationService, IDisposable {
     private sentMimeTypes: Set<string> = new Set<string>();
     private readonly disposables: IDisposable[] = [];
+    private get isTelemetryDisabled() {
+        return isTelemetryDisabled(this.workspace);
+    }
 
     constructor(
         @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         disposables.push(this);
     }
@@ -45,13 +50,13 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
         disposeAllDisposables(this.disposables);
     }
     public async onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): Promise<void> {
-        if (!isJupyterNotebook(e.cell.notebook)) {
+        if (!isJupyterNotebook(e.cell.notebook) || this.isTelemetryDisabled) {
             return;
         }
         this.checkCell(e.cell, 'onExecution');
     }
     private onDidOpenCloseDocument(doc: NotebookDocument) {
-        if (!isJupyterNotebook(doc)) {
+        if (!isJupyterNotebook(doc) || this.isTelemetryDisabled) {
             return;
         }
         doc.getCells().forEach((cell) => this.checkCell(cell, 'onOpenCloseOrSave'));
