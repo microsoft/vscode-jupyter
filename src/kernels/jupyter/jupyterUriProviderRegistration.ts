@@ -33,7 +33,7 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {
         disposables.push(this._onProvidersChanged);
@@ -96,7 +96,7 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
     private async createProvider(provider: IJupyterUriProvider): Promise<IJupyterUriProvider> {
         const info = await this.extensions.determineExtensionFromCallStack();
         this.updateRegistrationInfo(provider.id, info.extensionId).catch(noop);
-        return new JupyterUriProviderWrapper(provider, info.extensionId);
+        return new JupyterUriProviderWrapper(provider, info.extensionId, this.disposables);
     }
     @swallowExceptions()
     private async updateRegistrationInfo(providerId: string, extensionId: string): Promise<void> {
