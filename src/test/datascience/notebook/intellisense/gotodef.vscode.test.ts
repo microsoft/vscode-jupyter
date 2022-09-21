@@ -102,7 +102,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definitio
         );
     });
 
-    test.skip('Import pandas and goto it', async () => {
+    test.only('Import pandas and goto it', async () => {
         await insertCodeCell('import pandas as pd');
         const cell2 = await insertCodeCell('pd.read_csv');
 
