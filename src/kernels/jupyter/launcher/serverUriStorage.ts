@@ -10,7 +10,13 @@ import {
 } from '../../../platform/common/application/types';
 import { Settings } from '../../../platform/common/constants';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
-import { ICryptoUtils, IMemento, GLOBAL_MEMENTO, IsWebExtension } from '../../../platform/common/types';
+import {
+    ICryptoUtils,
+    IMemento,
+    GLOBAL_MEMENTO,
+    IsWebExtension,
+    IConfigurationService
+} from '../../../platform/common/types';
 import { traceError, traceInfoIfCI } from '../../../platform/logging';
 import { computeServerId } from '../jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage, IServerConnectionType } from '../types';
@@ -56,7 +62,8 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IsWebExtension) readonly isWebExtension: boolean
+        @inject(IsWebExtension) readonly isWebExtension: boolean,
+        @inject(IConfigurationService) readonly configService: IConfigurationService
     ) {
         // Remember if local only
         traceInfoIfCI(`JupyterServerUriStorage: isWebExtension: ${isWebExtension}`);
@@ -84,11 +91,13 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         const serverId = await computeServerId(uri);
 
         // Check if we have already found a display name for this server
-        const existingEntry = uriList.find((entry) => {
-            return entry.serverId === serverId;
-        });
-        if (existingEntry && existingEntry.displayName) {
-            displayName = existingEntry.displayName;
+        if (this.configService.getSettings().kernelPickerType === 'Insiders') {
+            const existingEntry = uriList.find((entry) => {
+                return entry.serverId === serverId;
+            });
+            if (existingEntry && existingEntry.displayName) {
+                displayName = existingEntry.displayName;
+            }
         }
 
         // Remove this uri if already found (going to add again with a new time)
