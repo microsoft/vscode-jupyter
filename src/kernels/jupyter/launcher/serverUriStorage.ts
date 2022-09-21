@@ -119,16 +119,27 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         // Start with saved list.
         const uriList = await this.getSavedUriList();
 
-        // Remove this uri if already found (going to add again with a new time)
+        const editedList = uriList.filter((f) => f.uri !== uri);
+        await this.updateMemento(editedList);
+        if (activeUri === uri) {
+            await this.setUriToLocal();
+        }
         const removedItem = uriList.find((f) => f.uri === uri);
         if (removedItem) {
-            const editedList = uriList.filter((f) => f.uri !== uri);
-            await this.updateMemento(editedList);
-            if (activeUri === uri) {
-                await this.setUriToLocal();
-            }
             this._onDidRemoveUris.fire([removedItem]);
         }
+
+        // Remove this uri if already found (going to add again with a new time)
+        // IANHU
+        // const removedItem = uriList.find((f) => f.uri === uri);
+        // if (removedItem) {
+        // const editedList = uriList.filter((f) => f.uri !== uri);
+        // await this.updateMemento(editedList);
+        // if (activeUri === uri) {
+        // await this.setUriToLocal();
+        // }
+        // this._onDidRemoveUris.fire([removedItem]);
+        // }
     }
     private async updateMemento(editedList: IJupyterServerUriEntry[]) {
         // Sort based on time. Newest time first
