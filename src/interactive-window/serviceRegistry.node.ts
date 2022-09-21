@@ -21,8 +21,7 @@ import {
     ICodeLensFactory,
     IDataScienceCodeLensProvider,
     IGeneratedCodeStorageFactory,
-    ICodeGeneratorFactory,
-    IPythonCellFoldingProvider
+    ICodeGeneratorFactory
 } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
@@ -43,7 +42,10 @@ export function registerTypes(serviceManager: IServiceManager) {
         IDataScienceCodeLensProvider,
         DataScienceCodeLensProvider
     );
-    serviceManager.addSingleton<IPythonCellFoldingProvider>(IPythonCellFoldingProvider, PythonCellFoldingProvider);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PythonCellFoldingProvider
+    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

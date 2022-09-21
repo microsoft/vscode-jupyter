@@ -8,15 +8,23 @@ import {
     CancellationToken,
     ProviderResult,
     FoldingRange,
-    FoldingRangeKind
+    FoldingRangeKind,
+    FoldingRangeProvider,
+    languages
 } from 'vscode';
-import { IDataScienceCodeLensProvider, IPythonCellFoldingProvider } from './types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { PYTHON_FILE_ANY_SCHEME } from '../../platform/common/constants';
+import { IDataScienceCodeLensProvider } from './types';
 
 @injectable()
-export class PythonCellFoldingProvider implements IPythonCellFoldingProvider {
+export class PythonCellFoldingProvider implements IExtensionSyncActivationService, FoldingRangeProvider {
     constructor(
         @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider
     ) {}
+
+    public activate() {
+        languages.registerFoldingRangeProvider([PYTHON_FILE_ANY_SCHEME], this);
+    }
 
     provideFoldingRanges(
         document: TextDocument,

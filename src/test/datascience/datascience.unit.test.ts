@@ -49,7 +49,6 @@ suite('DataScience Tests', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { subscriptions: [] } as any,
             instance(dataScienceCodeLensProvider),
-            undefined,
             instance(configService),
             instance(docManager),
             instance(workspaceService),

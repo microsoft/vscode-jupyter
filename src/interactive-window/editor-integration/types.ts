@@ -3,17 +3,7 @@
 
 'use strict';
 
-import {
-    Event,
-    CodeLens,
-    CodeLensProvider,
-    Uri,
-    TextEditor,
-    Range,
-    TextDocument,
-    NotebookDocument,
-    FoldingRangeProvider
-} from 'vscode';
+import { Event, CodeLens, CodeLensProvider, Uri, TextEditor, Range, TextDocument, NotebookDocument } from 'vscode';
 import { ICellRange, IDisposable } from '../../platform/common/types';
 
 // Wraps the vscode CodeLensProvider base class
@@ -21,9 +11,6 @@ export const IDataScienceCodeLensProvider = Symbol('IDataScienceCodeLensProvider
 export interface IDataScienceCodeLensProvider extends CodeLensProvider {
     getCodeWatcher(document: TextDocument): ICodeWatcher | undefined;
 }
-
-export const IPythonCellFoldingProvider = Symbol('IPythonCellFoldingProvider');
-export interface IPythonCellFoldingProvider extends FoldingRangeProvider {}
 
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
