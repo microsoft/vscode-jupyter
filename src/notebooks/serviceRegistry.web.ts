@@ -17,7 +17,7 @@ import { ITracebackFormatter } from '../kernels/types';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
 import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnectionHandler';
-import { JupyterServerSelectorCommand } from './serverSelector';
+import { JupyterServerSelectorCommand } from './serverSelectorCommand';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';

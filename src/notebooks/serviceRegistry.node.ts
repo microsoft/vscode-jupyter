@@ -28,7 +28,7 @@ import { Identifiers } from '../platform/common/constants';
 import { JupyterDebugService } from './debugger/jupyterDebugService.node';
 import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
 import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnectionHandler';
-import { JupyterServerSelectorCommand } from './serverSelector';
+import { JupyterServerSelectorCommand } from './serverSelectorCommand';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
 import { InstallPythonControllerCommands } from './controllers/commands/installPythonControllerCommands';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
