@@ -88,7 +88,8 @@ suite('DataScience - Jupyter Server URI Selector', () => {
             encryptedStorage,
             instance(applicationEnv),
             new MockMemento(),
-            false
+            false,
+            instance(configService)
         );
         const selector = new JupyterServerSelector(
             instance(clipboard),
