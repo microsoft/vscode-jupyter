@@ -227,8 +227,6 @@ export class ControllerRegistration implements IControllerRegistration {
     private async onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
         // Remove any connections that are no longer available.
         const serverIds = await Promise.all(uriEntries.map((entry) => entry.uri).map(computeServerId));
-        // IANHU
-        //const serverIds = uriEntries.map((entry) => entry.serverId);
         serverIds.forEach((serverId) => {
             [...this.registeredMetadatas.keys()].forEach((k) => {
                 const m = this.registeredMetadatas.get(k);
