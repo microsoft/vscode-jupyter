@@ -16,7 +16,7 @@ import {
     Uri
 } from 'vscode';
 
-import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import {
     isTestExecution,
     isUnitTestExecution,
@@ -27,7 +27,7 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import { ImportTracker } from '../../standalone/import-export/importTracker.node';
+import { ImportTracker } from '../../standalone/import-export/importTracker';
 import { ResourceTypeTelemetryProperty } from '../../telemetry';
 import { waitForCondition } from '../common';
 import { createMockedDocument, createMockedNotebookDocument } from '../datascience/editor-integration/helpers';
@@ -127,8 +127,16 @@ suite('Import Tracker', async () => {
         onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
         when(vscNb.onDidChangeNotebookCellExecutionState).thenReturn(onDidChangeNotebookCellExecutionState.event);
         when(vscNb.notebookDocuments).thenReturn([]);
-
-        importTracker = new ImportTracker(instance(documentManager), instance(vscNb), disposables);
+        const workspace = mock<IWorkspaceService>();
+        when(workspace.getConfiguration('telemetry')).thenReturn({
+            inspect: () => {
+                return {
+                    key: 'enableTelemetry',
+                    globalValue: true
+                };
+            }
+        } as any);
+        importTracker = new ImportTracker(instance(documentManager), instance(vscNb), disposables, instance(workspace));
     });
     teardown(() => {
         setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);

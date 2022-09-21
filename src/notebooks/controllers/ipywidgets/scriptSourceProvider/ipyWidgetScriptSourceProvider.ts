@@ -89,8 +89,14 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             }
         }
 
+        // The telemetry reporter assumes the presence of a `/` or `\` indicates these are file paths
+        // and obscures them. We don't want that, so we replace them with `_`.
+        const telemetrySafeModuleName =
+            found.source === 'cdn' ? found.moduleName.replace(/\//g, '_').replace(/\\/g, '_') : undefined;
+
         sendTelemetryEvent(Telemetry.HashedIPyWidgetNameUsed, undefined, {
             hashedName: await getTelemetrySafeHashedString(found.moduleName),
+            moduleName: telemetrySafeModuleName,
             source: found.source,
             cdnSearched: this.configuredScriptSources.length > 0
         });

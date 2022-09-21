@@ -23,6 +23,7 @@ import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistr
 import { IExtensionContext } from '../platform/common/types';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.web';
 import { PythonExtensionRestartNotification } from './notification/pythonExtensionRestartNotification';
+import { ImportTracker } from './import-export/importTracker';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
@@ -37,6 +38,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     );
 
     serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ImportTracker);
 
     // Activation Manager
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);

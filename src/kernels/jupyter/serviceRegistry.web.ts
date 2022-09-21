@@ -42,6 +42,7 @@ import {
     IJupyterRemoteCachedKernelValidator,
     IServerConnectionType
 } from './types';
+import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
@@ -87,4 +88,8 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterRemoteCachedKernelValidator
     );
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandlerWeb);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        CellOutputMimeTypeTracker
+    );
 }
