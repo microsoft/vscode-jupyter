@@ -853,10 +853,22 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
     }
 
     private async goToCodeInInteractiveWindow(context?: NotebookCell) {
-        if (context && context.metadata?.interactive) {
-            const uri = Uri.parse(context.metadata.interactive.uristring);
-            const line = context.metadata.interactive.lineIndex;
+        let uri: Uri | undefined;
+        let line: number | undefined;
 
+        if (context && context.metadata?.interactive) {
+            uri = Uri.parse(context.metadata.interactive.uristring);
+            line = context.metadata.interactive.lineIndex;
+        } else {
+            const editor = this.interactiveWindowProvider.activeWindow?.notebookEditor;
+            if (editor && editor.selection.start === editor.selection.end - 1) {
+                const cell = editor.notebook.cellAt(editor.selection.start);
+                uri = Uri.parse(cell?.metadata.interactive.uristring);
+                line = cell?.metadata.interactive.lineIndex;
+            }
+        }
+
+        if (uri && line) {
             const editor = await this.documentManager.showTextDocument(uri, { viewColumn: ViewColumn.One });
 
             // If we found the editor change its selection
