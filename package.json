@@ -978,11 +978,11 @@
             "notebook/kernelSource": [
                 {
                     "command": "jupyter.installPythonExtensionViaKernelPicker",
-                    "when": "jupyter.showInstallPythonExtensionCommand"
+                    "when": "jupyter.showInstallPythonExtensionCommand && jupyter.controllersLoaded"
                 },
                 {
                     "command": "jupyter.installPythonViaKernelPicker",
-                    "when": "jupyter.showInstallPythonCommand"
+                    "when": "jupyter.showInstallPythonCommand && jupyter.controllersLoaded"
                 },
                 {
                     "command": "jupyter.switchToLocalKernels",
