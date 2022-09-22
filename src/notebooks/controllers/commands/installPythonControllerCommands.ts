@@ -98,7 +98,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
     }
 
     private async onDidChangeActiveNotebookEditor(editor: NotebookEditor | undefined) {
-        if (!this.isWeb && editor) {
+        if (!this.isWeb && editor && editor.notebook.notebookType === JupyterNotebookView) {
             // Make sure we are only showing these for python notebooks or undefined notebooks
             const lang = getLanguageOfNotebookDocument(editor.notebook);
             if (!lang || lang === PYTHON_LANGUAGE) {
