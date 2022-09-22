@@ -19,6 +19,7 @@ import {
 } from '../helper.node';
 import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { Settings } from '../../../../platform/common/constants';
+import { sleep } from '../../../../platform/common/utils/async';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definition (slow)', function () {
@@ -124,6 +125,9 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definitio
         );
 
         const onDidSwitchActiveEditor = createEventHandler(vscode.window, 'onDidChangeActiveTextEditor');
+
+        // IANHU
+        await sleep(5_000);
 
         // Executing the command `editor.action.revealDefinition` to simulate going to definition
         await vscode.commands.executeCommand('editor.action.revealDefinition');
