@@ -17,7 +17,7 @@ import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ExtensionRecommendationService } from './recommendation/extensionRecommendation.node';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { AmlComputeContext } from './context/amlContext.node';
-import { IImportTracker, ImportTracker } from './import-export/importTracker.node';
+import { IImportTracker, ImportTracker } from './import-export/importTracker';
 import { GlobalActivation } from './activation/globalActivation';
 import { JupyterKernelServiceFactory } from './api/kernelApi';
 import { IExportedKernelServiceFactory } from './api/api';

@@ -3,7 +3,7 @@
 
 import { injectable, inject } from 'inversify';
 import { IFileSystem } from '../../../../platform/common/platform/types';
-import { IExtensionContext, IHttpClient } from '../../../../platform/common/types';
+import { IDisposableRegistry, IExtensionContext, IHttpClient } from '../../../../platform/common/types';
 import { IKernel } from '../../../../kernels/types';
 import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory } from '../types';
@@ -17,7 +17,8 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
     constructor(
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     getOrCreate(kernel: IKernel): IIPyWidgetScriptManager {
         if (!this.managers.has(kernel)) {
@@ -25,10 +26,9 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
                 kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
                 kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
             ) {
-                this.managers.set(
-                    kernel,
-                    new RemoteIPyWidgetScriptManager(kernel, this.httpClient, this.context, this.fs)
-                );
+                const scriptManager = new RemoteIPyWidgetScriptManager(kernel, this.httpClient, this.context, this.fs);
+                this.managers.set(kernel, scriptManager);
+                kernel.onDisposed(() => scriptManager.dispose(), this, this.disposables);
             } else {
                 throw new Error('Cannot enumerate Widget Scripts using local kernels on the Web');
             }

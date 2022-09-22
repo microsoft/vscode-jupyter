@@ -4,7 +4,6 @@
 'use strict';
 
 import { KernelMessage } from '@jupyterlab/services';
-import * as path from '../../platform/vscode-path/path';
 import {
     debug,
     DebugAdapter,
@@ -23,23 +22,30 @@ import {
     workspace
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernelConnectionSession, IKernel } from '../../kernels/types';
+import { executeSilently } from '../../kernels/helpers';
+import { IKernel, IKernelConnectionSession } from '../../kernels/types';
+import { IDebugService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
+import { IDisposable } from '../../platform/common/types';
+import { noop } from '../../platform/common/utils/misc';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
+import * as path from '../../platform/vscode-path/path';
+import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from './constants';
 import {
+    IDebuggingDelegate,
+    IDebugInfoResponse,
     IKernelDebugAdapter,
     IKernelDebugAdapterConfig,
-    IDebuggingDelegate,
-    KernelDebugMode,
-    IDebugInfoResponse
+    KernelDebugMode
 } from './debuggingTypes';
-import { sendTelemetryEvent } from '../../telemetry';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
-import { assertIsDebugConfig, isShortNamePath, shortNameMatchesLongName, getMessageSourceAndHookIt } from './helper';
-import { IDisposable } from '../../platform/common/types';
-import { executeSilently } from '../../kernels/helpers';
-import { noop } from '../../platform/common/utils/misc';
-import { IDebugService } from '../../platform/common/application/types';
+import {
+    assertIsDebugConfig,
+    getMessageSourceAndHookIt,
+    isDebugEventMsg,
+    isShortNamePath,
+    shortNameMatchesLongName
+} from './helper';
 
 /**
  * For info on the custom requests implemented by jupyter see:
@@ -151,12 +157,10 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     }
 
     async onIOPubMessage(_: unknown, msg: KernelMessage.IIOPubMessage) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const anyMsg = msg as any;
         traceInfoIfCI(`Debug IO Pub message: ${JSON.stringify(msg)}`);
-        if (anyMsg.header.msg_type === 'debug_event') {
+        if (isDebugEventMsg(msg)) {
             this.trace('event', JSON.stringify(msg));
-            if (!(await this.delegate?.willSendEvent(anyMsg))) {
+            if (!(await this.delegate?.willSendEvent(msg.content))) {
                 this.sendMessage.fire(msg.content);
             }
         }

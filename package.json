@@ -578,12 +578,6 @@
                 "enablement": "isWorkspaceTrusted"
             },
             {
-                "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
-            },
-            {
                 "command": "jupyter.selectjupytercommandline",
                 "title": "%jupyter.command.jupyter.selectjupytercommandline.title%",
                 "category": "Jupyter",
@@ -781,12 +775,6 @@
             {
                 "command": "jupyter.interactive.clearAllCells",
                 "title": "%DataScience.interactiveClearAllCells%",
-                "icon": "$(close)",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.interactive.removeCell",
-                "title": "%DataScience.interactiveRemoveCell%",
                 "icon": "$(close)",
                 "category": "Jupyter"
             },
@@ -1060,11 +1048,6 @@
                 {
                     "command": "jupyter.interactive.goToCode",
                     "group": "inline@1",
-                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
-                },
-                {
-                    "command": "jupyter.interactive.removeCell",
-                    "group": "inline@2",
                     "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 }
             ],
@@ -1502,10 +1485,6 @@
                 {
                     "command": "jupyter.interactive.goToCode",
                     "when": "false"
-                },
-                {
-                    "command": "jupyter.interactive.removeCell",
-                    "when": "activeEditor == 'workbench.editor.interactive' && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.interactive.clearAllCells",
@@ -2008,6 +1987,22 @@
                     "tags": [
                         "experimental"
                     ]
+                },
+                "jupyter.experimental.kernelPickerType": {
+                    "type": "string",
+                    "enum": [
+                        "Stable",
+                        "OnlyOneTypeOfKernel",
+                        "Insiders"
+                    ],
+                    "scope": "resource",
+                    "description": "%jupyter.configuration.jupyter.experimental.kernelPickerType.description%",
+                    "enumDescriptions": [
+                            "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.stable%",
+                            "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.onlyonetypeofkernel%",
+                            "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.insiders%"
+                    ],
+                    "default": "Stable"
                 }
             }
         },

@@ -206,7 +206,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                                     input.enabled = false;
                                     input.busy = true;
                                     // No validation allowed on a quick pick. Have to put up a dialog instead
-                                    await this.shell.showErrorMessage(validationMessage, { modal: true });
+                                    await this.shell.showErrorMessage(validationMessage);
                                     input.enabled = true;
                                     input.busy = false;
                                 }

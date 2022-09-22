@@ -94,7 +94,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     }
 
     private async updateContextKeys() {
-        if (this.configurationService.getSettings().showOnlyOneTypeOfKernel) {
+        if (this.configurationService.getSettings().kernelPickerType === 'OnlyOneTypeOfKernel') {
             const isLocal = this.serverConnectionType.isLocalLaunch;
             await (this.isWeb ? this.controllerLoader.loaded : Promise.resolve(true));
 

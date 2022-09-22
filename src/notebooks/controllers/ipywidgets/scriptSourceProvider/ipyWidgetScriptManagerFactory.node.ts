@@ -3,7 +3,7 @@
 
 import { injectable, inject } from 'inversify';
 import { IFileSystemNode } from '../../../../platform/common/platform/types.node';
-import { IExtensionContext, IHttpClient } from '../../../../platform/common/types';
+import { IDisposableRegistry, IExtensionContext, IHttpClient } from '../../../../platform/common/types';
 import { IKernel } from '../../../../kernels/types';
 import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory, INbExtensionsPathProvider } from '../types';
 import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
@@ -21,7 +21,8 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
-        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
+        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     getOrCreate(kernel: IKernel): IIPyWidgetScriptManager {
         if (!this.managers.has(kernel)) {
@@ -29,21 +30,19 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
                 kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
                 kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
             ) {
-                this.managers.set(
-                    kernel,
-                    new RemoteIPyWidgetScriptManager(kernel, this.httpClient, this.context, this.fs)
-                );
+                const scriptManager = new RemoteIPyWidgetScriptManager(kernel, this.httpClient, this.context, this.fs);
+                this.managers.set(kernel, scriptManager);
+                kernel.onDisposed(() => scriptManager.dispose(), this, this.disposables);
             } else {
-                this.managers.set(
+                const scriptManager = new LocalIPyWidgetScriptManager(
                     kernel,
-                    new LocalIPyWidgetScriptManager(
-                        kernel,
-                        this.fs,
-                        this.nbExtensionsPathProvider,
-                        this.context,
-                        this.jupyterPaths
-                    )
+                    this.fs,
+                    this.nbExtensionsPathProvider,
+                    this.context,
+                    this.jupyterPaths
                 );
+                this.managers.set(kernel, scriptManager);
+                kernel.onDisposed(() => scriptManager.dispose(), this, this.disposables);
             }
         }
         return this.managers.get(kernel)!;

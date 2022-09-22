@@ -2169,6 +2169,17 @@ Expand each section to see more information about that event.
     - Properties:  
         - `mimeType`: `string`  
         Mimetype of the output.  
+        - `resourceType`?: `<see below>`  
+        Used to determine whether this event is related to a Notebooks or Interactive window.  
+        Common to most of the events.  
+        Possible values include:  
+            - `'notebook'`  
+            - `'interactive'`  
+        - `when`: `<see below>`  
+        Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.  
+        Possible values include:  
+            - `'onExecution'`  
+            - `'onOpenCloseOrSave'`  
 
 
 * DS_INTERNAL.CODE_LENS_ACQ_TIME  (Telemetry.CodeLensAverageAcquisitionTime)  
@@ -2625,13 +2636,19 @@ Expand each section to see more information about that event.
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
     Telemetry event sent with name of a Widget that is used.  
+    Helps determine which widgets are used the most, and which are not.  
+    Useful in prioritizing which widgets to work on if things fail to work.  
     ```
 
     - Properties:  
         - `cdnSearched`: `boolean`  
         Whether we searched CDN or not.  
         - `hashedName`: `string`  
-        Hash of the widget  
+        Hash of the widget module.  
+        If the widget is found on a CDN, then the unhashed name is sent in `moduleName`.  
+        - `moduleName`?: `string`  
+        Name of the widget module, sent only for cases where `source` is `cdn`.  
+        As that is the onl time we can safely send the name (if its on public CDN then its public information).  
         - `source`?: `<see below>`  
         Where did we find the hashed name (CDN or user environment or remote jupyter).  
         Possible values include:  
@@ -5042,6 +5059,17 @@ In such cases we do not notify user of any failures or the like.
     - Properties:  
         - `hashedNamev2`: `string`  
         Hash of the package name  
+        - `resourceType`?: `<see below>`  
+        Used to determine whether this event is related to a Notebooks or Interactive window.  
+        Common to most of the events.  
+        Possible values include:  
+            - `'notebook'`  
+            - `'interactive'`  
+        - `when`: `<see below>`  
+        Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.  
+        Possible values include:  
+            - `'onExecution'`  
+            - `'onOpenCloseOrSave'`  
 
 
 * HASHED_PACKAGE_PERF  (EventName.HASHED_PACKAGE_PERF)  

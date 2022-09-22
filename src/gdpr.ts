@@ -1110,6 +1110,8 @@
 /* __GDPR__
    "DS_INTERNAL.CELL_OUTPUT_MIME_TYPE" : {
      "mimeType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Mimetype of the output.","owner":"donjayamanne"},
+     "when": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1397,8 +1399,9 @@
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_USED_BY_USER" : {
      "cdnSearched": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether we searched CDN or not.","owner":"donjayamanne"},
-     "hashedName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the widget","owner":"donjayamanne"},
+     "hashedName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the widget module. If the widget is found on a CDN, then the unhashed name is sent in `moduleName`.","owner":"donjayamanne"},
      "source": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Where did we find the hashed name (CDN or user environment or remote jupyter).","owner":"donjayamanne"},
+     "moduleName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the widget module, sent only for cases where `source` is `cdn`. As that is the onl time we can safely send the name (if its on public CDN then its public information).","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -2297,6 +2300,8 @@
 /* __GDPR__
    "HASHED_PACKAGE_NAME" : {
      "hashedNamev2": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Hash of the package name","owner":"donjayamanne"},
+     "when": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 

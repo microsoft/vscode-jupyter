@@ -4,6 +4,7 @@
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernelDebugAdapter, IKernelDebugAdapterConfig, KernelDebugMode } from './debuggingTypes';
 import { IKernel } from '../../kernels/types';
+import { IDebugEventMsg } from '@jupyterlab/services/lib/kernel/messages';
 
 export enum IpykernelCheckResult {
     Unknown,
@@ -156,4 +157,8 @@ export async function cellDebugSetup(kernel: IKernel, debugAdapter: IKernelDebug
     await kernel.executeHidden(code);
 
     await debugAdapter.dumpAllCells();
+}
+
+export function isDebugEventMsg(msg: unknown): msg is IDebugEventMsg {
+    return !!(msg as IDebugEventMsg).header && (msg as IDebugEventMsg).header.msg_type === 'debug_event';
 }

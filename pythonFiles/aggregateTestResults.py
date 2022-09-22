@@ -21,7 +21,7 @@ def getRuns(createdDate):
 
     if runsResponse.status_code != 200:
         print(f"Error {runsResponse.status_code}")
-        raise ("Error getting runs")
+        raise Exception("Error getting runs")
 
     print(f"Found {len(runsResponse.json()['workflow_runs'])} runs")
 
@@ -46,7 +46,7 @@ def getArtifactData(id):
 def getResultsJson(zipData):
     artifact = zipfile.ZipFile(io.BytesIO(zipData))
     for name in artifact.namelist():
-        if name.endswith(".json"):
+        if name.endswith("results.json"):
             print(f"    parsing {name} from artifact with {artifact.namelist()}")
             return json.loads(artifact.read(name))
     else:
@@ -61,12 +61,24 @@ def getResultsForRun(run):
         url, headers={"Accept": "application/vnd.github+json"}
     )
 
+    if artifactsResponse.status_code != 200:
+        print(f"Error {artifactsResponse.status_code} getting artifacts")
+        return []
+
     artifacts = artifactsResponse.json()["artifacts"]
 
     results = []
     for artifact in artifacts:
-        if artifact["name"].startswith("TestResult-") or artifact["name"].startswith(
-            "TestResults-"
+        if (
+            artifact["name"].startswith(
+                "TestResult-"  # previous artifact name (pre ~2022-09-12)
+            )
+            or artifact["name"].startswith(
+                "TestResults-"  # previous performance tests artifact name
+            )
+            or artifact["name"].startswith(
+                "TestLogs-"  # consolidated artifact name, contains multiple files
+            )
         ):
             print(f"    retrieving {artifact['name']}")
             rawData = getArtifactData(artifact["id"])

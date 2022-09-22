@@ -638,6 +638,7 @@ export namespace DataScience {
             'DataScience.jupyterSelectUserAndPasswordTitle',
             'Enter your user name and password to connect to Jupyter Hub'
         );
+    export const jupyterRenameServer = () => localize('DataScience.jupyterRenameServer', 'Change Server Display Name');
     export const jupyterSelectUserPrompt = () =>
         localize('DataScience.jupyterSelectUserPrompt', 'Enter your user name');
     export const jupyterSelectPasswordPrompt = () =>
@@ -677,7 +678,12 @@ export namespace DataScience {
     export const remoteJupyterConnectionFailedWithoutServerWithErrorWeb = () =>
         localize(
             'DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb',
-            'Connection failure. Verify the server is running and reachable from a browser. ({0}). See https://aka.ms/vscjremoteweb for more information.'
+            'Connection failure. Verify the server is running and reachable from a browser. ({0}). When connecting from vscode.dev Jupyter servers must be started with specific options to connect. See [here](https://aka.ms/vscjremoteweb) for more information.'
+        );
+    export const remoteJupyterConnectionFailedWebExtension = () =>
+        localize(
+            'DataScience.remoteJupyterConnectionFailedWebExtension',
+            'When connecting from vscode.dev Jupyter servers must be started with specific options to connect. See [here](https://aka.ms/vscjremoteweb) for more information.'
         );
     export const removeRemoteJupyterConnectionButtonText = () =>
         localize('DataScience.removeRemoteJupyterConnectionButtonText', 'Forget Connection');

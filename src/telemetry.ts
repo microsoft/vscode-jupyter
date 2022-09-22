@@ -614,12 +614,18 @@ export class IEventNamePropertyMapping {
      * Used to detect the popularity of a package, that would help determine which packages
      * need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.
      */
-    [EventName.HASHED_PACKAGE_NAME]: TelemetryEventInfo<{
-        /**
-         * Hash of the package name
-         */
-        hashedNamev2: string;
-    }> = {
+    [EventName.HASHED_PACKAGE_NAME]: TelemetryEventInfo<
+        {
+            /**
+             * Hash of the package name
+             */
+            hashedNamev2: string;
+            /**
+             * Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.
+             */
+            when: 'onExecution' | 'onOpenCloseOrSave';
+        } & ResourceTypeTelemetryProperty
+    > = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
@@ -627,7 +633,12 @@ export class IEventNamePropertyMapping {
             hashedNamev2: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
-            }
+            },
+            when: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            ...commonClassificationForResourceType()
         }
     };
     /**
@@ -746,12 +757,18 @@ export class IEventNamePropertyMapping {
      * E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
      * or prioritize rendering of widgets when opening an existing notebook or the like.
      */
-    [Telemetry.CellOutputMimeType]: TelemetryEventInfo<{
-        /**
-         * Mimetype of the output.
-         */
-        mimeType: string;
-    }> = {
+    [Telemetry.CellOutputMimeType]: TelemetryEventInfo<
+        {
+            /**
+             * Mimetype of the output.
+             */
+            mimeType: string;
+            /**
+             * Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.
+             */
+            when: 'onExecution' | 'onOpenCloseOrSave';
+        } & ResourceTypeTelemetryProperty
+    > = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
@@ -759,7 +776,12 @@ export class IEventNamePropertyMapping {
             mimeType: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
-            }
+            },
+            when: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            ...commonClassificationForResourceType()
         }
     };
     /**
@@ -2261,12 +2283,20 @@ export class IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent with name of a Widget that is used.
+     * Helps determine which widgets are used the most, and which are not.
+     * Useful in prioritizing which widgets to work on if things fail to work.
      */
     [Telemetry.HashedIPyWidgetNameUsed]: TelemetryEventInfo<{
         /**
-         * Hash of the widget
+         * Hash of the widget module.
+         * If the widget is found on a CDN, then the unhashed name is sent in `moduleName`.
          */
         hashedName: string;
+        /**
+         * Name of the widget module, sent only for cases where `source` is `cdn`.
+         * As that is the onl time we can safely send the name (if its on public CDN then its public information).
+         */
+        moduleName?: string;
         /**
          * Where did we find the hashed name (CDN or user environment or remote jupyter).
          */
@@ -2291,6 +2321,10 @@ export class IEventNamePropertyMapping {
             },
             source: {
                 classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            moduleName: {
+                classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             }
         }

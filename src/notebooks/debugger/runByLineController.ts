@@ -1,20 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as path from '../../platform/vscode-path/path';
-import { DebugProtocolMessage, NotebookCell } from 'vscode';
+import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { ICommandManager } from '../../platform/common/application/types';
 import { IKernel } from '../../kernels/types';
+import { ICommandManager } from '../../platform/common/application/types';
+import { Commands } from '../../platform/common/constants';
 import { IConfigurationService } from '../../platform/common/types';
+import { parseForComments } from '../../platform/common/utils';
+import { noop } from '../../platform/common/utils/misc';
+import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from './constants';
-import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
-import { noop } from '../../platform/common/utils/misc';
-import { Commands } from '../../platform/common/constants';
-import { cellDebugSetup } from './helper';
+import { isJustMyCodeNotification } from './debugCellControllers';
 import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from './debuggingTypes';
-import { parseForComments } from '../../platform/common/utils';
+import { cellDebugSetup } from './helper';
 
 /**
  * Listens to event when doing run by line and controls the behavior of the debugger (like auto stepping on moving out of a cell)
@@ -54,14 +55,18 @@ export class RunByLineController implements IDebuggingDelegate {
         return config.__mode;
     }
 
-    public async willSendEvent(msg: DebugProtocolMessage): Promise<boolean> {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const anyMsg = msg as any;
-
-        if (anyMsg.content.event === 'stopped') {
-            this.lastPausedThreadId = anyMsg.content.body.threadId;
+    public async willSendEvent(msg: DebugProtocol.Event): Promise<boolean> {
+        if (msg.event === 'stopped') {
+            this.lastPausedThreadId = msg.body.threadId;
             if (await this.handleStoppedEvent(this.lastPausedThreadId!)) {
-                this.trace('intercepted', JSON.stringify(anyMsg.content));
+                this.trace('intercepted', 'handled stop event');
+                return true;
+            }
+        }
+
+        if (msg.event === 'output') {
+            if (isJustMyCodeNotification(msg.body.output)) {
+                this.trace('intercept', 'justMyCode notification');
                 return true;
             }
         }
