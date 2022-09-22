@@ -20,6 +20,7 @@ import {
 import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { Settings } from '../../../../platform/common/constants';
 import { sleep } from '../../../../platform/common/utils/async';
+// import { sleep } from '../../../../platform/common/utils/async';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definition (slow)', function () {
@@ -133,13 +134,28 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definitio
         await vscode.commands.executeCommand('editor.action.revealDefinition');
 
         // Wait for the active cell to change
-        await waitForCondition(
-            async () => {
-                return onDidSwitchActiveEditor.fired;
-            },
-            defaultNotebookTestTimeout,
-            `Waiting for editor to switch`
-        );
+        try {
+            await waitForCondition(
+                async () => {
+                    return onDidSwitchActiveEditor.fired;
+                },
+                defaultNotebookTestTimeout,
+                `Waiting for editor to switch`
+            );
+        } catch {
+            await sleep(5_000);
+
+            // Executing the command `editor.action.revealDefinition` to simulate going to definition
+            await vscode.commands.executeCommand('editor.action.revealDefinition');
+
+            await waitForCondition(
+                async () => {
+                    return onDidSwitchActiveEditor.fired;
+                },
+                defaultNotebookTestTimeout,
+                `Waiting for editor to switch`
+            );
+        }
 
         // Verify we are in cell1
         assert.ok(
