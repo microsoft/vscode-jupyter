@@ -40,7 +40,11 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
         @inject(ICommandManager) private readonly commandManager: ICommandManager
-    ) {}
+    ) {
+        // This context key is set to true when controllers have completed their intitial load or are done loading after a refresh
+        // It's set to false on activation and when a refresh is requested.
+        this.controllersLoadedContext = new ContextKey('jupyter.controllersLoaded', this.commandManager);
+    }
 
     public activate(): void {
         // Make sure to reload whenever we do something that changes state
@@ -61,9 +65,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
 
         this.loadControllers(true).ignoreErrors();
 
-        // This context key is set to true when controllers have completed their intitial load or are done loading after a refresh
-        // It's set to false on activation and when a refresh is requested.
-        this.controllersLoadedContext = new ContextKey('jupyter.controllersLoaded', this.commandManager);
         this.controllersLoadedContext.set(false).then(noop, noop);
     }
     public loadControllers(refresh?: boolean | undefined): Promise<void> {
