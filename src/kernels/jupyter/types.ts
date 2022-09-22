@@ -234,13 +234,36 @@ export interface IJupyterUriProviderRegistration {
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
 
+/**
+ * Entry into our list of saved servers
+ */
+export interface IJupyterServerUriEntry {
+    /**
+     * Uri of the server to connect to
+     */
+    uri: string;
+    /**
+     * Unique ID using a hash of the full uri
+     */
+    serverId: string;
+    /**
+     * The most recent time that we connected to this server
+     */
+    time: number;
+    /**
+     * An optional display name to show for this server as opposed to just the Uri
+     */
+    displayName?: string;
+}
+
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
     readonly currentServerId: string | undefined;
     readonly onDidChangeUri: Event<void>;
-    readonly onDidRemoveUris: Event<string[]>;
+    readonly onDidRemoveUris: Event<IJupyterServerUriEntry[]>;
+    readonly onDidAddUri: Event<IJupyterServerUriEntry>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
-    getSavedUriList(): Promise<{ uri: string; serverId: string; time: number; displayName?: string }[]>;
+    getSavedUriList(): Promise<IJupyterServerUriEntry[]>;
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
     getRemoteUri(): Promise<string | undefined>;

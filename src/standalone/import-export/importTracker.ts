@@ -15,7 +15,7 @@ import {
 } from 'vscode';
 import { capturePerfTelemetry, ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import '../../platform/common/extensions';
 import { disposeAllDisposables } from '../../platform/common/helpers';
@@ -25,6 +25,7 @@ import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { getAssociatedJupyterNotebook, isJupyterNotebook } from '../../platform/common/utils';
 import { ResourceMap } from '../../platform/vscode-path/map';
+import { isTelemetryDisabled } from '../../telemetry';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for
@@ -66,10 +67,14 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
     private pendingChecks = new ResourceMap<NodeJS.Timer | number>();
     private disposables: IDisposable[] = [];
     private sentMatches = new Set<string>();
+    private get isTelemetryDisabled() {
+        return isTelemetryDisabled(this.workspace);
+    }
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         disposables.push(this);
         this.documentManager.onDidOpenTextDocument(
@@ -94,7 +99,7 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         );
         this.vscNotebook.onDidChangeNotebookCellExecutionState(
             (e) => {
-                if (e.state == NotebookCellExecutionState.Pending) {
+                if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
                     this.checkNotebookCell(e.cell, 'onExecution').ignoreErrors();
                 }
             },
@@ -126,7 +131,7 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
     }
 
     private onOpenedOrSavedDocument(document: TextDocument, when: 'onOpenCloseOrSave') {
-        if (document.languageId !== PYTHON_LANGUAGE) {
+        if (document.languageId !== PYTHON_LANGUAGE || this.isTelemetryDisabled) {
             return;
         }
         // Make sure this is a Python file.
@@ -141,7 +146,7 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         }
     }
     private onOpenedOrClosedNotebookDocument(e: NotebookDocument, when: 'onExecution' | 'onOpenCloseOrSave') {
-        if (!isJupyterNotebook(e)) {
+        if (!isJupyterNotebook(e) || this.isTelemetryDisabled) {
             return;
         }
         this.scheduleCheck(e.uri, this.checkNotebookDocument.bind(this, e, when));
@@ -167,7 +172,7 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
     }
 
     private async checkNotebookDocument(e: NotebookDocument, when: 'onExecution' | 'onOpenCloseOrSave') {
-        if (!isJupyterNotebook(e)) {
+        if (!isJupyterNotebook(e) || this.isTelemetryDisabled) {
             return;
         }
         await Promise.all(e.getCells().map(async (cell) => this.checkNotebookCell(cell, when)));

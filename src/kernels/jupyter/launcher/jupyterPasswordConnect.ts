@@ -15,6 +15,7 @@ import {
     IJupyterPasswordConnectInfo,
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
+    IJupyterServerUriEntry,
     IJupyterServerUriStorage
 } from '../types';
 
@@ -489,9 +490,9 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     }
 
     // When URIs are removed from the server list also remove them from
-    private onDidRemoveUris(uris: string[]) {
-        uris.forEach((uri) => {
-            const newUrl = addTrailingSlash(uri);
+    private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
+        uriEntries.forEach((uriEntry) => {
+            const newUrl = addTrailingSlash(uriEntry.uri);
             this.savedConnectInfo.delete(newUrl);
         });
     }

@@ -350,7 +350,9 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 disposables.push(progress);
             }
             try {
-                traceVerbose(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+                traceVerbose(
+                    `Waiting for ${timeout}ms idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`
+                );
 
                 // When our kernel connects and gets a status message it triggers the ready promise
                 const kernelStatus = createDeferred<string>();
@@ -403,6 +405,9 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 // If we throw an exception, make sure to shutdown the session as it's not usable anymore
                 this.shutdownSession(session, this.statusHandler, isRestartSession).ignoreErrors();
                 throw new JupyterWaitForIdleError(this.kernelConnectionMetadata);
+            } catch (ex) {
+                traceInfoIfCI(`Error waiting for idle`, ex);
+                throw ex;
             } finally {
                 disposeAllDisposables(disposables);
             }
@@ -513,7 +518,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
         this._isDisposed = true;
         if (this.session) {
             try {
-                traceVerbose('Shutdown session - current session');
+                traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
                 await this.shutdownSession(this.session, this.statusHandler, false, shutdownEvenIfRemote);
                 traceVerbose('Shutdown session - get restart session');
                 if (this.restartSessionPromise) {
