@@ -38,7 +38,7 @@ import { ITestVariableViewProvider } from './variableView/variableViewTestInterf
 
 const N = 20;
 
-function processDebugpyLogs(testName: string, state?: 'passed' | 'failed'): Promise<void> {
+function processDebugpyLogs(testName: string, _state?: 'passed' | 'failed'): Promise<void> {
     // eslint-disable-next-line local-rules/dont-use-process
     const logDir = process.env.DEBUGPY_LOG_DIR;
 
@@ -57,11 +57,11 @@ function processDebugpyLogs(testName: string, state?: 'passed' | 'failed'): Prom
                     return;
                 }
 
-                if (state === 'passed') {
-                    files.forEach((file) => fs.rmSync(path.join(logDir, file)));
-                    resolve();
-                    return;
-                }
+                // if (state === 'passed') {
+                //     files.forEach((file) => fs.rmSync(path.join(logDir, file)));
+                //     resolve();
+                //     return;
+                // }
 
                 files.forEach((file) =>
                     fs.renameSync(path.join(logDir, file), path.join(logDir, `${testName}-${file}`))
