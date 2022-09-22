@@ -5,9 +5,11 @@ import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernel } from '../../../kernels/types';
 import { DebuggingTelemetry } from '../../../notebooks/debugger/constants';
+import { isJustMyCodeNotification } from '../../../notebooks/debugger/debugCellControllers';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../../../notebooks/debugger/debuggingTypes';
 import { cellDebugSetup } from '../../../notebooks/debugger/helper';
 import { createDeferred } from '../../../platform/common/utils/async';
+import { traceVerbose } from '../../../platform/logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getInteractiveCellMetadata } from '../../helpers';
 
@@ -27,9 +29,21 @@ export class DebugCellController implements IDebuggingDelegate {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
     }
 
-    public async willSendEvent(_msg: DebugProtocol.Event): Promise<boolean> {
+    private trace(tag: string, msg: string) {
+        traceVerbose(`[Debug-IW] ${tag}: ${msg}`);
+    }
+
+    public async willSendEvent(msg: DebugProtocol.Event): Promise<boolean> {
+        if (msg.event === 'output') {
+            if (isJustMyCodeNotification(msg.body.output)) {
+                this.trace('intercept', 'justMyCode notification');
+                return true;
+            }
+        }
+
         return false;
     }
+
     private debugCellDumped?: Promise<void>;
     public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
         const metadata = getInteractiveCellMetadata(this.debugCell);
