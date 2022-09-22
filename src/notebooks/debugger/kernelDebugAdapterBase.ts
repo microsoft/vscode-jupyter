@@ -21,6 +21,7 @@ import {
     Uri,
     workspace
 } from 'vscode';
+import { IDumpCellResponse } from './debuggingTypes';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { executeSilently } from '../../kernels/helpers';
 import { IKernel, IKernelConnectionSession } from '../../kernels/types';
@@ -262,6 +263,20 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 }
             });
         });
+    }
+
+    static extractDumpFilePathOnKernelSide(dumpCellResponse: IDumpCellResponse) {
+        // Based on the response, check if the kernel runs on a Unix or Windows machine.
+        // If it runs on Windows, then path windows-style normalization might be necessary
+        // (see https://github.com/ipython/ipykernel/issues/995).
+        const dumpFilePathOnKernelSide = dumpCellResponse.sourcePath;
+        let norm = '';
+        if (dumpFilePathOnKernelSide.match(/^[A-Za-z]:/)) {
+            norm = path.win32.normalize(dumpFilePathOnKernelSide);
+        } else {
+            norm = dumpFilePathOnKernelSide;
+        }
+        return norm;
     }
 
     private lookupCellByLongName(sourcePath: string) {
