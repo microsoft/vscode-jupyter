@@ -148,6 +148,9 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definitio
             // Executing the command `editor.action.revealDefinition` to simulate going to definition
             await vscode.commands.executeCommand('editor.action.revealDefinition');
 
+            await sleep(2_000);
+            await vscode.commands.executeCommand('editor.action.revealDefinition');
+
             await waitForCondition(
                 async () => {
                     return onDidSwitchActiveEditor.fired;
