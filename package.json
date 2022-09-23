@@ -9,7 +9,9 @@
     },
     "extensionPack": [
         "ms-toolsai.jupyter-keymap",
-        "ms-toolsai.jupyter-renderers"
+        "ms-toolsai.jupyter-renderers",
+        "ms-toolsai.vscode-jupyter-slideshow",
+        "ms-toolsai.vscode-jupyter-cell-tags"
     ],
     "license": "MIT",
     "homepage": "https://github.com/Microsoft/vscode-jupyter",
