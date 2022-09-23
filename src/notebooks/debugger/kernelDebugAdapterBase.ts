@@ -160,7 +160,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         traceInfoIfCI(`Debug IO Pub message: ${JSON.stringify(msg)}`);
         if (isDebugEventMsg(msg)) {
             this.trace('event', JSON.stringify(msg));
-            if (!(await this.delegate?.willSendEvent(msg.content))) {
+            if (!this.delegate?.willSendEvent || !(await this.delegate.willSendEvent(msg.content))) {
                 this.sendMessage.fire(msg.content);
             }
         }
@@ -190,7 +190,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             }
 
             if (message.type === 'request') {
-                await this.delegate?.willSendRequest(message as DebugProtocol.Request);
+                await this.delegate?.willSendRequest?.(message as DebugProtocol.Request);
             }
 
             return this.sendRequestToJupyterSession(message);
