@@ -82,6 +82,7 @@ import { KernelMessage } from '@jupyterlab/services';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../kernels/telemetry/helper';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
+import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -157,7 +158,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly appShell: IApplicationShell,
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
-        private serviceContainer: IServiceContainer
+        private serviceContainer: IServiceContainer,
+        private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -182,7 +184,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             kernelConnection.kind === 'connectToLiveRemoteKernel'
                 ? getRemoteKernelSessionInformation(kernelConnection)
                 : '';
-        this.controller.kind = getKernelConnectionCategory(kernelConnection);
+        // this.controller.kind = getKernelConnectionCategory(kernelConnection, this.serverUriStorage);
+        getKernelConnectionCategory(kernelConnection, this.serverUriStorage)
+            .then((kind) => {
+                this.controller.kind = kind;
+            })
+            .catch(noop);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
@@ -663,20 +670,30 @@ async function updateNotebookDocumentMetadata(
     }
 }
 
-function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata) {
+async function getKernelConnectionCategory(
+    kernelConnection: KernelConnectionMetadata,
+    serverUriStorage: IJupyterServerUriStorage
+): Promise<string> {
     switch (kernelConnection.kind) {
         case 'connectToLiveRemoteKernel':
-            return DataScience.kernelCategoryForJupyterSession();
+            const remoteDisplayNameSession = await getRemoteServerDisplayName(kernelConnection, serverUriStorage);
+            //return DataScience.kernelCategoryForJupyterSession().format(remoteDisplayNameSession);
+            //return '({0}) Session'.format(remoteDisplayNameSession);
+            return 'Session - ({0})'.format(remoteDisplayNameSession);
         case 'startUsingRemoteKernelSpec':
-            return DataScience.kernelCategoryForRemoteJupyterKernel();
+            const remoteDisplayNameSpec = await getRemoteServerDisplayName(kernelConnection, serverUriStorage);
+            //return DataScience.kernelCategoryForRemoteJupyterKernel().format(remoteDisplayNameSpec);
+            return 'Kernel - ({0})'.format(remoteDisplayNameSpec);
         case 'startUsingLocalKernelSpec':
-            return DataScience.kernelCategoryForJupyterKernel();
+            // return DataScience.kernelCategoryForJupyterKernel();
+            return 'Kernel';
         case 'startUsingPythonInterpreter': {
             if (
                 getKernelRegistrationInfo(kernelConnection.kernelSpec) ===
                 'registeredByNewVersionOfExtForCustomKernelSpec'
             ) {
-                return DataScience.kernelCategoryForJupyterKernel();
+                //return DataScience.kernelCategoryForJupyterKernel();
+                return 'Kernel';
             }
             switch (kernelConnection.interpreter.envType) {
                 case EnvironmentType.Conda:
@@ -696,4 +713,23 @@ function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata)
             }
         }
     }
+}
+
+async function getRemoteServerDisplayName(
+    kernelConnection: KernelConnectionMetadata,
+    serverUriStorage: IJupyterServerUriStorage
+): Promise<string> {
+    if (
+        kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
+        kernelConnection.kind === 'connectToLiveRemoteKernel'
+    ) {
+        const savedUriList = await serverUriStorage.getSavedUriList();
+        const targetConnection = savedUriList.find((uriEntry) => uriEntry.serverId === kernelConnection.serverId);
+
+        if (targetConnection && targetConnection.displayName && targetConnection.uri !== targetConnection.displayName) {
+            return targetConnection.displayName;
+        }
+    }
+
+    return DataScience.kernelDefaultRemoteDisplayName();
 }

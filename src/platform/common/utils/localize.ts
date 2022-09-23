@@ -1239,14 +1239,16 @@ export namespace DataScience {
     export const importingIpynb = () => localize('DataScience.importingIpynb', 'Importing notebook file');
     export const exportingToFormat = () => localize('DataScience.exportingToFormat', 'Exporting to {0}');
     export const kernelCategoryForJupyterSession = () =>
-        localize('jupyter.kernel.category.jupyterSession', '(Remote) Jupyter Session');
+        localize('jupyter.kernel.category.jupyterSession', '({0}) Jupyter Session');
     export const kernelPrefixForRemote = () => localize('DataScience.kernelPrefixForRemote', '(Remote)');
+    export const kernelDefaultRemoteDisplayName = () =>
+        localize('DataScience.kernelDefaultRemoteDisplayName', 'Remote');
     export const kernelCategoryForJupyterKernel = () =>
         localize({ key: 'jupyter.kernel.category.jupyterKernel', comment: ['{Locked="Kernel"}'] }, 'Jupyter Kernel');
     export const kernelCategoryForRemoteJupyterKernel = () =>
         localize(
             { key: 'jupyter.kernel.category.jupyterRemoteKernel', comment: ['{Locked="kernel"}'] },
-            '(Remote) Jupyter Kernel'
+            '({0}) Jupyter Kernel'
         );
     export const kernelCategoryForConda = () => localize('jupyter.kernel.category.conda', 'Conda Env');
     export const kernelCategoryForPoetry = () =>

@@ -29,9 +29,7 @@ export const currentServerHashKey = 'currentServerHash';
  */
 @injectable()
 export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServerConnectionType {
-    private lastSavedList?: Promise<
-        { uri: string; serverId: string; time: number; displayName?: string | undefined }[]
-    >;
+    private lastSavedList?: Promise<IJupyterServerUriEntry[]>;
     private currentUriPromise: Promise<string | undefined> | undefined;
     private _currentServerId: string | undefined;
     private _localOnly: boolean = false;
