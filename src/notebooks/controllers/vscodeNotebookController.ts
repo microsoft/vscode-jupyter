@@ -64,7 +64,13 @@ import {
     areKernelConnectionsEqual,
     getKernelRegistrationInfo
 } from '../../kernels/helpers';
-import { IKernel, IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
+import {
+    IKernel,
+    IKernelProvider,
+    isLocalConnection,
+    KernelConnectionMetadata,
+    RemoteKernelConnectionMetadata
+} from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
@@ -677,23 +683,18 @@ async function getKernelConnectionCategory(
     switch (kernelConnection.kind) {
         case 'connectToLiveRemoteKernel':
             const remoteDisplayNameSession = await getRemoteServerDisplayName(kernelConnection, serverUriStorage);
-            //return DataScience.kernelCategoryForJupyterSession().format(remoteDisplayNameSession);
-            //return '({0}) Session'.format(remoteDisplayNameSession);
-            return 'Session - ({0})'.format(remoteDisplayNameSession);
+            return DataScience.kernelCategoryForJupyterSession().format(remoteDisplayNameSession);
         case 'startUsingRemoteKernelSpec':
             const remoteDisplayNameSpec = await getRemoteServerDisplayName(kernelConnection, serverUriStorage);
-            //return DataScience.kernelCategoryForRemoteJupyterKernel().format(remoteDisplayNameSpec);
-            return 'Kernel - ({0})'.format(remoteDisplayNameSpec);
+            return DataScience.kernelCategoryForRemoteJupyterKernel().format(remoteDisplayNameSpec);
         case 'startUsingLocalKernelSpec':
-            // return DataScience.kernelCategoryForJupyterKernel();
-            return 'Kernel';
+            return DataScience.kernelCategoryForJupyterKernel();
         case 'startUsingPythonInterpreter': {
             if (
                 getKernelRegistrationInfo(kernelConnection.kernelSpec) ===
                 'registeredByNewVersionOfExtForCustomKernelSpec'
             ) {
-                //return DataScience.kernelCategoryForJupyterKernel();
-                return 'Kernel';
+                return DataScience.kernelCategoryForJupyterKernel();
             }
             switch (kernelConnection.interpreter.envType) {
                 case EnvironmentType.Conda:
@@ -715,20 +716,17 @@ async function getKernelConnectionCategory(
     }
 }
 
+// For Remote connections, check if we have a saved display name for the server.
 async function getRemoteServerDisplayName(
-    kernelConnection: KernelConnectionMetadata,
+    kernelConnection: RemoteKernelConnectionMetadata,
     serverUriStorage: IJupyterServerUriStorage
 ): Promise<string> {
-    if (
-        kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
-        kernelConnection.kind === 'connectToLiveRemoteKernel'
-    ) {
-        const savedUriList = await serverUriStorage.getSavedUriList();
-        const targetConnection = savedUriList.find((uriEntry) => uriEntry.serverId === kernelConnection.serverId);
+    const savedUriList = await serverUriStorage.getSavedUriList();
+    const targetConnection = savedUriList.find((uriEntry) => uriEntry.serverId === kernelConnection.serverId);
 
-        if (targetConnection && targetConnection.displayName && targetConnection.uri !== targetConnection.displayName) {
-            return targetConnection.displayName;
-        }
+    // We only show this if we have a display name and the name is not the same as the URI (this prevents showing the long token for user entered URIs).
+    if (targetConnection && targetConnection.displayName && targetConnection.uri !== targetConnection.displayName) {
+        return targetConnection.displayName;
     }
 
     return DataScience.kernelDefaultRemoteDisplayName();
