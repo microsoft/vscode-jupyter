@@ -51,7 +51,7 @@ export class DebugCellController implements IDebuggingDelegate {
             this.commandManager
                 .executeCommand('notebook.cell.execute', {
                     ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
-                    document: this.debugCell.document.uri
+                    document: this.debugCell.notebook.uri
                 })
                 .then(noop, noop);
         }

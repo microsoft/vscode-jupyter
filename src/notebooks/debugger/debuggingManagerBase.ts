@@ -5,28 +5,27 @@
 
 import {
     debug,
-    NotebookDocument,
-    workspace,
     DebugSession,
     DebugSessionOptions,
-    DebugAdapterDescriptor,
     Event,
     EventEmitter,
-    NotebookCell
+    NotebookCell,
+    NotebookDocument,
+    workspace
 } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { IDisposable } from '../../platform/common/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { DebuggingTelemetry } from './constants';
-import { sendTelemetryEvent } from '../../telemetry';
-import { traceError, traceInfoIfCI } from '../../platform/logging';
+import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
-import { IKernelDebugAdapterConfig } from './debuggingTypes';
-import { Debugger } from './debugger';
-import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
-import { IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { noop } from '../../platform/common/utils/misc';
+import { traceError, traceInfoIfCI } from '../../platform/logging';
+import { sendTelemetryEvent } from '../../telemetry';
 import { IControllerLoader, IControllerSelection } from '../controllers/types';
+import { DebuggingTelemetry } from './constants';
+import { Debugger } from './debugger';
+import { IKernelDebugAdapterConfig } from './debuggingTypes';
+import { IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
+import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
 import { KernelConnector } from '../controllers/kernelConnector';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { DisplayOptions } from '../../kernels/displayOptions';
@@ -35,7 +34,7 @@ import { DisplayOptions } from '../../kernels/displayOptions';
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
 export abstract class DebuggingManagerBase implements IDisposable {
-    private notebookToDebugger = new Map<NotebookDocument, Debugger>();
+    protected notebookToDebugger = new Map<NotebookDocument, Debugger>();
     protected notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapterBase>();
     protected notebookInProgress = new Set<NotebookDocument>();
     protected readonly disposables: IDisposable[] = [];
@@ -60,7 +59,7 @@ export abstract class DebuggingManagerBase implements IDisposable {
             workspace.onDidCloseNotebookDocument(async (document) => {
                 const dbg = this.notebookToDebugger.get(document);
                 if (dbg) {
-                    await dbg.stop();
+                    await debug.stopDebugging(dbg.session);
                     this.onDidStopDebugging(document);
                 }
             })
@@ -82,12 +81,13 @@ export abstract class DebuggingManagerBase implements IDisposable {
         return this.notebookToDebugger.has(notebook);
     }
 
-    public getDebugSession(notebook: NotebookDocument): Promise<DebugSession> | undefined {
+    public getDebugSession(notebook: NotebookDocument): DebugSession | undefined {
         const dbg = this.notebookToDebugger.get(notebook);
         if (dbg) {
             return dbg.session;
         }
     }
+
     public getDebugAdapter(notebook: NotebookDocument): KernelDebugAdapterBase | undefined {
         return this.notebookToDebugAdapter.get(notebook);
     }
@@ -96,26 +96,14 @@ export abstract class DebuggingManagerBase implements IDisposable {
         //
     }
 
-    protected async startDebuggingConfig(
-        doc: NotebookDocument,
-        config: IKernelDebugAdapterConfig,
-        options?: DebugSessionOptions
-    ) {
+    protected async startDebuggingConfig(config: IKernelDebugAdapterConfig, options?: DebugSessionOptions) {
         traceInfoIfCI(`Attempting to start debugging with config ${JSON.stringify(config)}`);
-        let dbg = this.notebookToDebugger.get(doc);
-        if (!dbg) {
-            dbg = new Debugger(doc, config, options);
-            this.notebookToDebugger.set(doc, dbg);
 
-            try {
-                const session = await dbg.session;
-                traceInfoIfCI(`Debugger session is ready. Should be debugging ${session.id} now`);
-            } catch (err) {
-                traceError(`Can't start debugging (${err})`);
-                this.appShell.showErrorMessage(DataScience.cantStartDebugging()).then(noop, noop);
-            }
-        } else {
-            traceInfoIfCI(`Not starting debugging because already debugging in this notebook`);
+        try {
+            await debug.startDebugging(undefined, config, options);
+        } catch (err) {
+            traceError(`Can't start debugging (${err})`);
+            this.appShell.showErrorMessage(DataScience.cantStartDebugging()).then(noop, noop);
         }
     }
 
@@ -123,6 +111,7 @@ export abstract class DebuggingManagerBase implements IDisposable {
         this.notebookToDebugAdapter.set(notebook, adapter);
         this.disposables.push(adapter.onDidEndSession(this.endSession.bind(this)));
     }
+
     protected async endSession(session: DebugSession) {
         traceInfoIfCI(`Ending debug session ${session.id}`);
         this._doneDebugging.fire();
@@ -135,8 +124,6 @@ export abstract class DebuggingManagerBase implements IDisposable {
             }
         }
     }
-
-    protected abstract createDebugAdapterDescriptor(session: DebugSession): Promise<DebugAdapterDescriptor | undefined>;
 
     protected getDebuggerByUri(document: NotebookDocument): Debugger | undefined {
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {

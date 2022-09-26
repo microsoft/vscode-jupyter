@@ -76,7 +76,7 @@ export interface IDebuggingManager {
     readonly onDoneDebugging: Event<void>;
     isDebugging(notebook: NotebookDocument): boolean;
     getDebugMode(notebook: NotebookDocument): KernelDebugMode | undefined;
-    getDebugSession(notebook: NotebookDocument): Promise<DebugSession> | undefined;
+    getDebugSession(notebook: NotebookDocument): DebugSession | undefined;
     getDebugCell(notebook: NotebookDocument): NotebookCell | undefined;
     getDebugAdapter(notebook: NotebookDocument): IKernelDebugAdapter | undefined;
 }
@@ -122,6 +122,9 @@ export enum KernelDebugMode {
 export interface IKernelDebugAdapterConfig extends DebugConfiguration {
     __mode: KernelDebugMode;
     __cellIndex?: number;
+
+    // TODO
+    __notebookUri?: string;
     __interactiveWindowNotebookUri?: string;
 }
 

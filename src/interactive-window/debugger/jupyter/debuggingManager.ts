@@ -148,12 +148,10 @@ export class InteractiveWindowDebuggingManager
             __cellIndex: cell.index
         };
         const opts: DebugSessionOptions = { suppressSaveBeforeStart: true };
-        return this.startDebuggingConfig(doc, config, opts);
+        return this.startDebuggingConfig(config, opts);
     }
 
-    protected override async createDebugAdapterDescriptor(
-        session: DebugSession
-    ): Promise<DebugAdapterDescriptor | undefined> {
+    protected async createDebugAdapterDescriptor(session: DebugSession): Promise<DebugAdapterDescriptor | undefined> {
         const config = session.configuration;
         assertIsDebugConfig(config);
 
@@ -194,9 +192,7 @@ export class InteractiveWindowDebuggingManager
         const cell = activeDoc.cellAt(config.__cellIndex);
         const controller = new DebugCellController(adapter, cell, kernel!);
         adapter.setDebuggingDelegate(controller);
-        controller.ready
-            .then(() => debug.resolve(session))
-            .catch((ex) => console.error('Failed waiting for controller to be ready', ex));
+        controller.ready.catch((ex) => console.error('Failed waiting for controller to be ready', ex)); // ?? TODO
 
         this.trackDebugAdapter(activeDoc, adapter);
         return new DebugAdapterInlineImplementation(adapter);
@@ -205,7 +201,7 @@ export class InteractiveWindowDebuggingManager
     // TODO: This will likely be needed for mapping breakpoints and such
     public async updateSourceMaps(notebookEditor: NotebookEditor, hashes: IFileGeneratedCodes[]): Promise<void> {
         // Make sure that we have an active debugging session at this point
-        let debugSession = await this.getDebugSession(notebookEditor.notebook);
+        let debugSession = this.getDebugSession(notebookEditor.notebook);
         if (debugSession) {
             traceInfoIfCI(`Sending debug request for source map`);
             await Promise.all(
