@@ -225,13 +225,13 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     public dispose() {
+        const nbDocumentUris = this.notebookApi.notebookDocuments
+            .filter((item) => this.associatedDocuments.has(item))
+            .map((item) => item.uri.toString());
         traceVerbose(
-            `Disposing controller ${this.id} associated with connection ${
-                this.connection.id
-            } and documents ${this.notebookApi.notebookDocuments
-                .filter((item) => this.associatedDocuments.has(item))
-                .map((item) => item.uri.toString())
-                .join(', ')}`
+            `Disposing controller ${this.id} associated with connection ${this.connection.id} ${
+                nbDocumentUris.length ? 'and documents ' + nbDocumentUris.join(', ') : ''
+            }`
         );
         if (this.isDisposed) {
             // If we don't see this again, then we can remove this check and exit this function early.
