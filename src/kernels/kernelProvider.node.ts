@@ -27,6 +27,8 @@ import {
     KernelOptions,
     ThirdPartyKernelOptions
 } from './types';
+import { KernelConnectionMetadataProxy } from './kernelConnectionMetadataWrapper';
+import { NotebookControllerWrapper } from './notebookControllerWrapper';
 
 /**
  * Node version of a kernel provider. Needed in order to create the node version of a kernel.
@@ -65,12 +67,12 @@ export class KernelProvider extends BaseCoreKernelProvider {
             uri,
             resourceUri,
             notebook,
-            options.metadata,
+            KernelConnectionMetadataProxy.wrap(options.metadata),
             this.notebookProvider,
             waitForIdleTimeout,
             interruptTimeout,
             this.appShell,
-            options.controller,
+            NotebookControllerWrapper.wrap(options.controller),
             this.configService,
             this.outputTracker,
             this.statusProvider,

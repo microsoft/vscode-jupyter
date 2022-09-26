@@ -283,8 +283,8 @@ jobs:
       matrix:
         jupyter: [raw, local]
         python: [nonConda, conda]
-        pythonVersion: ['3.9', '3.10']
         webOrDesktop: ['']
+        pythonVersion: ['3.9', '3.10']
         # Whether we're using stable (<empty>) or pre-release versions of Python packages.
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.

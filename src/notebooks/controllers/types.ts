@@ -5,9 +5,9 @@
 
 import * as vscode from 'vscode';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
-import { KernelConnectionMetadata } from '../../kernels/types';
+import { IKernel, KernelAction, KernelActionSource, KernelConnectionMetadata } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
-import { IDisposable, Resource } from '../../platform/common/types';
+import { IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
@@ -33,6 +33,17 @@ export interface IVSCodeNotebookController extends IDisposable {
     isAssociatedWithDocument(notebook: vscode.NotebookDocument): boolean;
     updateConnection(connection: KernelConnectionMetadata): void;
     setPendingCellAddition(notebook: vscode.NotebookDocument, promise: Promise<void>): void;
+    /**
+     * Connects to the kernel.
+     * @param {(action: KernelAction, kernel: IKernel) => void} [onAction] Callback invoked once connected to the the kernel.
+     * @param {(action: KernelAction, actionSource: KernelActionSource, kernel: IKernel) => Promise<void>} [onActionCompleted] Callback invoked once all necessary post processing has been completed (e.g. creating a live kernel connection after starting a kernel from a kernel spec).
+     */
+    connectToKernel(
+        notebookResource: { resource?: vscode.Uri; notebook: vscode.NotebookDocument },
+        options: IDisplayOptions,
+        onAction?: (action: KernelAction, kernel: IKernel) => void,
+        onActionCompleted?: (action: KernelAction, actionSource: KernelActionSource, kernel: IKernel) => Promise<void>
+    ): Promise<IKernel>;
 }
 export const IControllerRegistration = Symbol('IControllerRegistration');
 

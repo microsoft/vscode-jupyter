@@ -7,30 +7,43 @@ import { ConfigurationChangeEvent, Event, EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage, IServerConnectionType } from '../../kernels/jupyter/types';
-import { IKernelProvider, isLocalConnection, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
+import {
+    IKernel,
+    IKernelProvider,
+    isLocalConnection,
+    isRemoteConnection,
+    KernelAction,
+    KernelActionSource,
+    KernelConnectionMetadata,
+    LiveRemoteKernelConnectionMetadata
+} from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
     ICommandManager,
     IWorkspaceService,
     IDocumentManager,
-    IApplicationShell
+    IApplicationShell,
+    IApplicationEnvironment
 } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
-import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
+import { JupyterNotebookView, InteractiveWindowView, JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import {
     IDisposableRegistry,
     IConfigurationService,
     IExtensionContext,
     IBrowserService
 } from '../../platform/common/types';
+import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { traceError } from '../../platform/logging';
+import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import { IControllerRegistration, InteractiveControllerIdSuffix, IVSCodeNotebookController } from './types';
 import { VSCodeNotebookController } from './vscodeNotebookController';
+import * as path from '../../platform/vscode-path/path';
+import { waitForCondition } from '../../platform/common/utils/async';
 
 /**
  * Keeps track of registered controllers and available KernelConnectionMetadatas.
@@ -74,7 +87,8 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IApplicationEnvironment) private readonly app: IApplicationEnvironment
     ) {
         this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverConnectionType.onDidChange(this.onDidChangeFilter, this, this.disposables);
@@ -136,7 +150,16 @@ export class ControllerRegistration implements IControllerRegistration {
                         this.appShell,
                         this.browser,
                         this.extensionChecker,
-                        this.serviceContainer
+                        this.serviceContainer,
+                        async (action: KernelAction, actionSource: KernelActionSource, kernel: IKernel) => {
+                            if (action !== 'start' || actionSource !== 'jupyterExtension') {
+                                return;
+                            }
+                            // Lets enable this functionality later, for now this is enabled only in insiders.
+                            if (this.app.channel === 'insiders') {
+                                await this.swapKernelSpecConnectionControllerWithLiveController(kernel);
+                            }
+                        }
                     );
                     controller.onDidDispose(
                         () => {
@@ -151,6 +174,7 @@ export class ControllerRegistration implements IControllerRegistration {
                     controller.onNotebookControllerSelectionChanged((e) => {
                         if (!e.selected && this.isFiltered(controller.connection)) {
                             // This item was selected but is no longer allowed in the kernel list. Remove it
+                            traceVerbose(`Removing controller ${controller.id} from kernel list`);
                             controller.dispose();
                         }
                     });
@@ -184,6 +208,75 @@ export class ControllerRegistration implements IControllerRegistration {
     ): IVSCodeNotebookController | undefined {
         const id = this.getControllerId(metadata, notebookType);
         return this.registeredControllers.get(id);
+    }
+    @swallowExceptions()
+    private async swapKernelSpecConnectionControllerWithLiveController(kernel: IKernel) {
+        if (kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec') {
+            if (!kernel.session?.kernel?.id) {
+                return;
+            }
+            // Check if we have a controller registered for this live kernel session.
+            // If not, then create one.
+            // Next, then swap the metadata & controller in the kernel.
+            const liveKernelConnection: LiveRemoteKernelConnectionMetadata = {
+                kind: 'connectToLiveRemoteKernel',
+                baseUrl: kernel.kernelConnectionMetadata.baseUrl,
+                id: kernel.session.kernel.id,
+                kernelModel: {
+                    ...kernel.kernelConnectionMetadata.kernelSpec,
+                    model: {
+                        id: kernel.session.kernel.id,
+                        name: kernel.session.kernel.name,
+                        path: path.basename(kernel.uri.path),
+                        type: 'notebook',
+                        kernel: kernel.session.kernel.model
+                    },
+                    notebook: {
+                        path: path.basename(kernel.uri.path)
+                    },
+                    name: kernel.session.kernel.name,
+                    numberOfConnections: 1,
+                    lastActivityTime: new Date(),
+                    id: kernel.session.kernel.id
+                },
+                serverId: kernel.kernelConnectionMetadata.serverId,
+                interpreter: kernel.kernelConnectionMetadata.interpreter
+            };
+            if (!this.registeredControllers.has(this.getControllerId(liveKernelConnection, 'jupyter-notebook'))) {
+                this.add(liveKernelConnection, [JupyterNotebookView, InteractiveWindowView]);
+            }
+            const liveController = Array.from(this.registeredControllers.values()).find(
+                (item) =>
+                    item.controller.notebookType === kernel.controller.notebookType &&
+                    item.connection.kind === 'connectToLiveRemoteKernel' &&
+                    item.connection.id === kernel.session?.kernel?.id
+            );
+            if (liveController) {
+                this.kernelProvider.updateKernel(kernel, liveController.connection, liveController.controller);
+
+                const notebookEditor = this.notebook.notebookEditors.find(
+                    (item) => item.notebook.uri.toString() === kernel.uri.toString()
+                );
+                await this.commandManager.executeCommand('notebook.selectKernel', {
+                    id: liveController.id,
+                    extension: JVSC_EXTENSION_ID,
+                    // Pass in the notebook editor as well, in case the notebook isn't active.
+                    notebookEditor
+                });
+                const nb = this.notebook.notebookDocuments.find(
+                    (item) => item.uri.toString() === kernel.uri.toString()
+                );
+                // Ensure our code see's this controller as having been selected.
+                if (nb) {
+                    await waitForCondition(async () => liveController.isAssociatedWithDocument(nb), 5_000, 100);
+                }
+            } else {
+                traceWarning(
+                    `Changing to live controller failed, could not find live kernel controller for ${kernel.session?.kernel?.id}`
+                );
+            }
+            return;
+        }
     }
 
     private isFiltered(metadata: KernelConnectionMetadata): boolean {
