@@ -24,6 +24,7 @@ on:
       - 'release-*'
   schedule:
     - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code pre-release builds which is 11pm PDT)
+  workflow_dispatch:
 
 env:
   NODE_VERSION: 16.14.2
