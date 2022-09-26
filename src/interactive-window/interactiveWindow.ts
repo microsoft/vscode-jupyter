@@ -19,7 +19,8 @@ import {
     Disposable,
     window,
     NotebookController,
-    NotebookEdit
+    NotebookEdit,
+    NotebookEditorRevealType
 } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
@@ -114,7 +115,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         controller?: NotebookController;
         metadata?: KernelConnectionMetadata;
     } = {};
-    private pendingNotebookScrolls: NotebookRange[] = [];
 
     private _notebookEditor!: NotebookEditor;
     public get notebookEditor(): NotebookEditor {
@@ -713,13 +713,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             .getCells()
             .find((cell) => getInteractiveCellMetadata(cell)?.id === id);
         if (matchingCell) {
-            this.revealCell(matchingCell);
+            const notebookRange = new NotebookRange(matchingCell.index, matchingCell.index + 1);
+            this.notebookEditor.revealRange(notebookRange, NotebookEditorRevealType.Default);
+            this.notebookEditor.selection = notebookRange;
         }
-    }
-
-    private revealCell(notebookCell: NotebookCell) {
-        const notebookRange = new NotebookRange(notebookCell.index, notebookCell.index + 1);
-        this.pendingNotebookScrolls.push(notebookRange);
     }
 
     public async hasCell(id: string): Promise<boolean> {
