@@ -36,7 +36,7 @@ import {
 } from '../../platform/common/types';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { traceError, traceWarning } from '../../platform/logging';
+import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
@@ -174,6 +174,7 @@ export class ControllerRegistration implements IControllerRegistration {
                     controller.onNotebookControllerSelectionChanged((e) => {
                         if (!e.selected && this.isFiltered(controller.connection)) {
                             // This item was selected but is no longer allowed in the kernel list. Remove it
+                            traceVerbose(`Removing controller ${controller.id} from kernel list`);
                             controller.dispose();
                         }
                     });

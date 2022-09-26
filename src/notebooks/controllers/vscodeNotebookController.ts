@@ -243,6 +243,14 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     public dispose() {
+        traceVerbose(
+            `Disposing controller ${this.id} associated with connection ${
+                this.connection.id
+            } and documents ${this.notebookApi.notebookDocuments
+                .filter((item) => this.associatedDocuments.has(item))
+                .map((item) => item.uri.toString())
+                .join(', ')}`
+        );
         if (!this.isDisposed) {
             this.isDisposed = true;
             this._onNotebookControllerSelected.dispose();
