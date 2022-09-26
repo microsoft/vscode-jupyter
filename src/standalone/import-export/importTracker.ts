@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as path from '../../platform/vscode-path/path';
 import {
     NotebookCell,
     NotebookCellExecutionState,
@@ -15,7 +14,7 @@ import {
 } from 'vscode';
 import { capturePerfTelemetry, ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
+import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import '../../platform/common/extensions';
 import { disposeAllDisposables } from '../../platform/common/helpers';
@@ -23,7 +22,7 @@ import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import { getAssociatedJupyterNotebook, isJupyterNotebook } from '../../platform/common/utils';
+import { isJupyterNotebook } from '../../platform/common/utils';
 import { ResourceMap } from '../../platform/vscode-path/map';
 import { isTelemetryDisabled } from '../../telemetry';
 
@@ -71,20 +70,11 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         return isTelemetryDisabled(this.workspace);
     }
     constructor(
-        @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         disposables.push(this);
-        this.documentManager.onDidOpenTextDocument(
-            (t) => this.onOpenedOrSavedDocument(t, 'onOpenCloseOrSave'),
-            this.disposables
-        );
-        this.documentManager.onDidSaveTextDocument(
-            (t) => this.onOpenedOrSavedDocument(t, 'onOpenCloseOrSave'),
-            this.disposables
-        );
         this.vscNotebook.onDidOpenNotebookDocument(
             (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
             this.disposables
@@ -114,8 +104,6 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
     }
 
     public async activate(): Promise<void> {
-        // Act like all of our open documents just opened; our timeout will make sure this is delayed.
-        this.documentManager.textDocuments.forEach((d) => this.onOpenedOrSavedDocument(d, 'onOpenCloseOrSave'));
         this.vscNotebook.notebookDocuments.forEach((e) => this.checkNotebookDocument(e, 'onOpenCloseOrSave'));
     }
 
@@ -130,21 +118,6 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         return lines;
     }
 
-    private onOpenedOrSavedDocument(document: TextDocument, when: 'onOpenCloseOrSave') {
-        if (document.languageId !== PYTHON_LANGUAGE || this.isTelemetryDisabled) {
-            return;
-        }
-        // Make sure this is a Python file.
-        if (path.extname(document.fileName) === '.py') {
-            this.scheduleCheck(document.uri, this.checkDocument.bind(this, document, undefined, when));
-        } else {
-            const notebook = getAssociatedJupyterNotebook(document);
-            if (notebook) {
-                const resourceType = notebook.notebookType === JupyterNotebookView ? 'notebook' : 'interactive';
-                this.scheduleCheck(document.uri, this.checkDocument.bind(this, document, resourceType, when));
-            }
-        }
-    }
     private onOpenedOrClosedNotebookDocument(e: NotebookDocument, when: 'onExecution' | 'onOpenCloseOrSave') {
         if (!isJupyterNotebook(e) || this.isTelemetryDisabled) {
             return;
@@ -195,14 +168,6 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
                 throw ex;
             }
         }
-    }
-
-    private async checkDocument(
-        document: TextDocument,
-        resourceType: ResourceTypeTelemetryProperty['resourceType'],
-        when: 'onExecution' | 'onOpenCloseOrSave'
-    ) {
-        await this.sendTelemetryForImports(this.getDocumentLines(document), resourceType, when);
     }
 
     @capturePerfTelemetry(EventName.HASHED_PACKAGE_PERF)
