@@ -190,7 +190,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             kernelConnection.kind === 'connectToLiveRemoteKernel'
                 ? getRemoteKernelSessionInformation(kernelConnection)
                 : '';
-        // this.controller.kind = getKernelConnectionCategory(kernelConnection, this.serverUriStorage);
         getKernelConnectionCategory(kernelConnection, this.serverUriStorage)
             .then((kind) => {
                 this.controller.kind = kind;
