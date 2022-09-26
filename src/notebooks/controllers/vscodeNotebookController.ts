@@ -225,7 +225,19 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     public dispose() {
-        if (!this.isDisposed) {
+        traceVerbose(
+            `Disposing controller ${this.id} associated with connection ${
+                this.connection.id
+            } and documents ${this.notebookApi.notebookDocuments
+                .filter((item) => this.associatedDocuments.has(item))
+                .map((item) => item.uri.toString())
+                .join(', ')}`
+        );
+        if (this.isDisposed) {
+            // If we don't see this again, then we can remove this check and exit this function early.
+            // Else the code needs to be fixed to ensure we don't dispose twice or don't depend on the events again.
+            traceVerbose(`Disposing controller ${this.id} again`);
+        } else {
             this.isDisposed = true;
             this._onNotebookControllerSelected.dispose();
             this._onNotebookControllerSelectionChanged.dispose();
