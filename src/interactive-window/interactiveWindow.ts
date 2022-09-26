@@ -804,7 +804,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             const nbEdit = NotebookEdit.insertCells(notebookDocument.cellCount, [notebookCellData]);
             edit.set(notebookDocument.uri, [nbEdit]);
         });
-        return notebookDocument.cellAt(notebookDocument.cellCount - 1);
+        const newCellIndex = notebookDocument.cellCount - 1;
+        this.notebookEditor.selection = new NotebookRange(newCellIndex, newCellIndex + 1);
+        return notebookDocument.cellAt(newCellIndex);
     }
     private async generateCodeAndAddMetadata(cell: NotebookCell, isDebug: boolean, kernel: IKernel) {
         const metadata = getInteractiveCellMetadata(cell);
