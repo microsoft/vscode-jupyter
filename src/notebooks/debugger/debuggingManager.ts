@@ -39,7 +39,7 @@ import { DebuggingTelemetry, pythonKernelDebugAdapter } from './constants';
 import { DebugCellController } from './debugCellControllers';
 import { Debugger } from './debugger';
 import { DebuggingManagerBase } from './debuggingManagerBase';
-import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from './debuggingTypes';
+import { IDebuggingManager, INotebookDebugConfig, KernelDebugMode } from './debuggingTypes';
 import { assertIsDebugConfig, IpykernelCheckResult } from './helper';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { RunByLineController } from './runByLineController';
@@ -202,30 +202,12 @@ export class DebuggingManager
             return;
         }
 
-        await this.checkIpykernel(editor);
-        if (mode === KernelDebugMode.RunByLine || mode === KernelDebugMode.Cell) {
-            await this.startDebuggingCell(editor.notebook, mode, cell!);
-        } else {
-            await this.startDebugging(editor.notebook);
-        }
-    }
-
-    protected async checkIpykernel(editor: NotebookEditor, allowSelectKernel: boolean = true): Promise<void> {
-        const ipykernelResult = await this.checkForIpykernel6(editor.notebook);
-        switch (ipykernelResult) {
-            case IpykernelCheckResult.NotInstalled:
-                // User would have been notified about this, nothing more to do.
-                return;
-            case IpykernelCheckResult.Outdated:
-            case IpykernelCheckResult.Unknown: {
-                this.promptInstallIpykernel6().then(noop, noop);
-                return;
-            }
-            case IpykernelCheckResult.ControllerNotSelected: {
-                if (allowSelectKernel) {
-                    await this.commandManager.executeCommand('notebook.selectKernel', { notebookEditor: editor });
-                    await this.checkIpykernel(editor, false);
-                }
+        const ipykernelResult = await this.checkIpykernelAndPrompt(editor);
+        if (ipykernelResult === IpykernelCheckResult.Ok) {
+            if (mode === KernelDebugMode.RunByLine || mode === KernelDebugMode.Cell) {
+                await this.startDebuggingCell(editor.notebook, mode, cell!);
+            } else {
+                await this.startDebugging(editor.notebook);
             }
         }
     }
@@ -235,7 +217,7 @@ export class DebuggingManager
         mode: KernelDebugMode.Cell | KernelDebugMode.RunByLine,
         cell: NotebookCell
     ) {
-        const config: IKernelDebugAdapterConfig = {
+        const config: INotebookDebugConfig = {
             type: pythonKernelDebugAdapter,
             name: path.basename(doc.uri.toString()),
             request: 'attach',
@@ -258,7 +240,7 @@ export class DebuggingManager
     }
 
     private async startDebugging(doc: NotebookDocument) {
-        const config: IKernelDebugAdapterConfig = {
+        const config: INotebookDebugConfig = {
             type: pythonKernelDebugAdapter,
             name: path.basename(doc.uri.toString()),
             request: 'attach',
@@ -274,7 +256,7 @@ export class DebuggingManager
         const config = session.configuration;
         assertIsDebugConfig(config);
 
-        const notebookUri = config.__interactiveWindowNotebookUri ?? config.__notebookUri;
+        const notebookUri = config.__notebookUri;
         const notebook = this.vscNotebook.notebookDocuments.find((doc) => doc.uri.toString() === notebookUri);
 
         if (!notebook) {
@@ -304,7 +286,7 @@ export class DebuggingManager
     }
 
     private async doCreateDebugAdapterDescriptor(
-        config: IKernelDebugAdapterConfig,
+        config: INotebookDebugConfig,
         session: DebugSession,
         notebook: NotebookDocument
     ): Promise<DebugAdapterDescriptor | undefined> {

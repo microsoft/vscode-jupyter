@@ -3,45 +3,46 @@
 
 import { inject, injectable } from 'inversify';
 import {
-    NotebookDocument,
+    debug,
+    DebugAdapterDescriptor,
     DebugAdapterInlineImplementation,
     DebugSession,
-    NotebookCell,
     DebugSessionOptions,
-    DebugAdapterDescriptor,
-    NotebookEditor,
-    debug
+    NotebookCell,
+    NotebookDocument,
+    NotebookEditor
 } from 'vscode';
+import { IKernelProvider } from '../../../kernels/types';
+import { IControllerLoader, IControllerSelection } from '../../../notebooks/controllers/types';
 import { pythonIWKernelDebugAdapter } from '../../../notebooks/debugger/constants';
+import { Debugger } from '../../../notebooks/debugger/debugger';
+import { DebuggingManagerBase } from '../../../notebooks/debugger/debuggingManagerBase';
 import {
     IDebuggingManager,
-    KernelDebugMode,
-    IKernelDebugAdapterConfig,
-    IDebugLocationTrackerFactory
+    IDebugLocationTrackerFactory,
+    IInteractiveWindowDebugConfig,
+    KernelDebugMode
 } from '../../../notebooks/debugger/debuggingTypes';
-import { IKernelProvider } from '../../../kernels/types';
-import { IpykernelCheckResult, assertIsDebugConfig } from '../../../notebooks/debugger/helper';
-import { KernelDebugAdapter } from './kernelDebugAdapter';
+import { assertIsInteractiveWindowDebugConfig, IpykernelCheckResult } from '../../../notebooks/debugger/helper';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import {
-    ICommandManager,
     IApplicationShell,
-    IVSCodeNotebook,
-    IDebugService
+    ICommandManager,
+    IDebugService,
+    IVSCodeNotebook
 } from '../../../platform/common/application/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { traceInfoIfCI, traceInfo, traceError } from '../../../platform/logging';
-import * as path from '../../../platform/vscode-path/path';
-import { DebugCellController } from './debugCellControllers';
-import { DebuggingManagerBase } from '../../../notebooks/debugger/debuggingManagerBase';
 import { IConfigurationService } from '../../../platform/common/types';
-import { IFileGeneratedCodes } from '../../editor-integration/types';
-import { buildSourceMap } from '../helper';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
-import { IInteractiveWindowDebuggingManager } from '../../types';
-import { IControllerLoader, IControllerSelection } from '../../../notebooks/controllers/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
+import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging';
+import * as path from '../../../platform/vscode-path/path';
+import { IFileGeneratedCodes } from '../../editor-integration/types';
+import { IInteractiveWindowDebuggingManager } from '../../types';
+import { buildSourceMap } from '../helper';
+import { DebugCellController } from './debugCellControllers';
+import { KernelDebugAdapter } from './kernelDebugAdapter';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -85,64 +86,28 @@ export class InteractiveWindowDebuggingManager
             })
         );
     }
+
     public getDebugMode(_notebook: NotebookDocument): KernelDebugMode | undefined {
         return KernelDebugMode.InteractiveWindow;
     }
+
     public async start(editor: NotebookEditor, cell: NotebookCell) {
         traceInfoIfCI(`Starting debugging IW`);
 
-        if (this.notebookInProgress.has(editor.notebook)) {
-            traceInfo(`Cannot start debugging. Already debugging this notebook`);
-            return;
-        }
-
-        if (this.isDebugging(editor.notebook)) {
-            traceInfo(`Cannot start debugging. Already debugging this notebook document. Toolbar should update`);
-            return;
-        }
-
-        const checkIpykernelAndStart = async (allowSelectKernel = true): Promise<void> => {
-            const ipykernelResult = await this.checkForIpykernel6(editor.notebook);
-            switch (ipykernelResult) {
-                case IpykernelCheckResult.NotInstalled:
-                    // User would have been notified about this, nothing more to do.
-                    return;
-                case IpykernelCheckResult.Outdated:
-                case IpykernelCheckResult.Unknown: {
-                    this.promptInstallIpykernel6().then(noop, noop);
-                    return;
-                }
-                case IpykernelCheckResult.Ok: {
-                    await this.startDebuggingCell(editor.notebook, cell);
-                    return;
-                }
-                case IpykernelCheckResult.ControllerNotSelected: {
-                    if (allowSelectKernel) {
-                        await this.commandManager.executeCommand('notebook.selectKernel', { notebookEditor: editor });
-                        await checkIpykernelAndStart(false);
-                    }
-                }
-            }
-        };
-
-        try {
-            this.notebookInProgress.add(editor.notebook);
-            await checkIpykernelAndStart();
-        } catch (e) {
-            traceInfo(`Error starting debugging: ${e}`);
-        } finally {
-            this.notebookInProgress.delete(editor.notebook);
+        const ipykernelResult = await this.checkIpykernelAndPrompt(editor);
+        if (ipykernelResult === IpykernelCheckResult.Ok) {
+            await this.startDebuggingCell(editor.notebook, cell);
         }
     }
 
     private async startDebuggingCell(doc: NotebookDocument, cell: NotebookCell) {
         const settings = this.configService.getSettings(doc.uri);
-        const config: IKernelDebugAdapterConfig = {
+        const config: IInteractiveWindowDebugConfig = {
             type: pythonIWKernelDebugAdapter,
             name: path.basename(doc.uri.toString()),
             request: 'attach',
             justMyCode: settings.debugJustMyCode,
-            __interactiveWindowNotebookUri: doc.uri.toString(),
+            __notebookUri: doc.uri.toString(),
             // add a property to the config to know if the session is runByLine
             __mode: KernelDebugMode.InteractiveWindow,
             __cellIndex: cell.index
@@ -152,33 +117,47 @@ export class InteractiveWindowDebuggingManager
     }
 
     protected async createDebugAdapterDescriptor(session: DebugSession): Promise<DebugAdapterDescriptor | undefined> {
-        const config = session.configuration;
-        assertIsDebugConfig(config);
+        const config = session.configuration as IInteractiveWindowDebugConfig;
+        assertIsInteractiveWindowDebugConfig(config);
 
-        const activeDoc = config.__interactiveWindowNotebookUri
-            ? this.vscNotebook.notebookDocuments.find(
-                  (doc) => doc.uri.toString() === config.__interactiveWindowNotebookUri
-              )
-            : this.vscNotebook.activeNotebookEditor?.notebook;
-        if (!activeDoc || typeof config.__cellIndex !== 'number') {
-            // This cannot happen.
+        const notebook = this.vscNotebook.notebookDocuments.find((doc) => doc.uri.toString() === config.__notebookUri);
+        if (!notebook || typeof config.__cellIndex !== 'number') {
             traceError('Invalid debug session for debugging of IW using Jupyter Protocol');
             return;
         }
 
-        // TODO we apparently always have a kernel here, clean up typings
-        const kernel = await this.ensureKernelIsRunning(activeDoc);
-        const debug = this.getDebuggerByUri(activeDoc);
-        if (!debug) {
+        if (this.notebookInProgress.has(notebook)) {
+            traceInfo(`Cannot start debugging. Already debugging this notebook`);
             return;
         }
+
+        if (this.isDebugging(notebook)) {
+            traceInfo(`Cannot start debugging. Already debugging this notebook document. Toolbar should update`);
+            return;
+        }
+
+        this.notebookToDebugger.set(notebook, new Debugger(notebook, config, session));
+        try {
+            this.notebookInProgress.add(notebook);
+            return await this.doCreateDebugAdapterDescriptor(config, session, notebook);
+        } finally {
+            this.notebookInProgress.delete(notebook);
+        }
+    }
+
+    private async doCreateDebugAdapterDescriptor(
+        config: IInteractiveWindowDebugConfig,
+        session: DebugSession,
+        notebook: NotebookDocument
+    ): Promise<DebugAdapterDescriptor | undefined> {
+        const kernel = await this.ensureKernelIsRunning(notebook);
         if (!kernel?.session) {
             this.appShell.showInformationMessage(DataScience.kernelWasNotStarted()).then(noop, noop);
             return;
         }
         const adapter = new KernelDebugAdapter(
             session,
-            debug.document,
+            notebook,
             kernel.session,
             kernel,
             this.platform,
@@ -188,13 +167,11 @@ export class InteractiveWindowDebuggingManager
 
         this.disposables.push(adapter.onDidEndSession(this.endSession.bind(this)));
 
-        // Wait till we're attached before resolving the session
-        const cell = activeDoc.cellAt(config.__cellIndex);
+        const cell = notebook.cellAt(config.__cellIndex);
         const controller = new DebugCellController(adapter, cell, kernel!);
         adapter.setDebuggingDelegate(controller);
-        controller.ready.catch((ex) => console.error('Failed waiting for controller to be ready', ex)); // ?? TODO
 
-        this.trackDebugAdapter(activeDoc, adapter);
+        this.trackDebugAdapter(notebook, adapter);
         return new DebugAdapterInlineImplementation(adapter);
     }
 

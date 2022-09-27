@@ -36,7 +36,7 @@ import {
     IDebuggingDelegate,
     IDebugInfoResponse,
     IKernelDebugAdapter,
-    IKernelDebugAdapterConfig,
+    INotebookDebugConfig,
     KernelDebugMode
 } from './debuggingTypes';
 import {
@@ -60,7 +60,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     protected readonly fileToCell = new Map<string, Uri>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private readonly endSession = new EventEmitter<DebugSession>();
-    private readonly configuration: IKernelDebugAdapterConfig;
+    private readonly configuration: INotebookDebugConfig;
     protected readonly disposables: IDisposable[] = [];
     private delegate: IDebuggingDelegate | undefined;
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
@@ -199,7 +199,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         }
     }
 
-    public getConfiguration(): IKernelDebugAdapterConfig {
+    public getConfiguration(): INotebookDebugConfig {
         return this.configuration;
     }
 

@@ -68,7 +68,7 @@ export interface IKernelDebugAdapter extends DebugAdapter {
     disconnect(): Promise<void>;
     onDidEndSession: Event<DebugSession>;
     dumpAllCells(): Promise<void>;
-    getConfiguration(): IKernelDebugAdapterConfig;
+    getConfiguration(): IBaseNotebookDebugConfig;
 }
 
 export const IDebuggingManager = Symbol('IDebuggingManager');
@@ -119,13 +119,34 @@ export enum KernelDebugMode {
     InteractiveWindow
 }
 
-export interface IKernelDebugAdapterConfig extends DebugConfiguration {
+interface IBaseNotebookDebugConfig extends DebugConfiguration {
     __mode: KernelDebugMode;
-    __cellIndex?: number;
+    __notebookUri: string;
+}
 
-    // TODO
-    __notebookUri?: string;
-    __interactiveWindowNotebookUri?: string;
+export type INotebookDebugConfig =
+    | IRunByLineDebugConfig
+    | ICellDebugConfig
+    | IEverythingDebugConfig
+    | IInteractiveWindowDebugConfig;
+
+export interface IRunByLineDebugConfig extends IBaseNotebookDebugConfig {
+    __mode: KernelDebugMode.RunByLine;
+    __cellIndex: number;
+}
+
+export interface ICellDebugConfig extends IBaseNotebookDebugConfig {
+    __mode: KernelDebugMode.Cell;
+    __cellIndex: number;
+}
+
+export interface IEverythingDebugConfig extends IBaseNotebookDebugConfig {
+    __mode: KernelDebugMode.Everything;
+}
+
+export interface IInteractiveWindowDebugConfig extends IBaseNotebookDebugConfig {
+    __mode: KernelDebugMode.InteractiveWindow;
+    __cellIndex: number;
 }
 
 export interface IDebugLocation {

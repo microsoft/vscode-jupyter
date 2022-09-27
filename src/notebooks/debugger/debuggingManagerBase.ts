@@ -11,6 +11,7 @@ import {
     EventEmitter,
     NotebookCell,
     NotebookDocument,
+    NotebookEditor,
     workspace
 } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
@@ -23,7 +24,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { IControllerLoader, IControllerSelection } from '../controllers/types';
 import { DebuggingTelemetry } from './constants';
 import { Debugger } from './debugger';
-import { IKernelDebugAdapterConfig } from './debuggingTypes';
+import { INotebookDebugConfig } from './debuggingTypes';
 import { IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
 import { KernelConnector } from '../controllers/kernelConnector';
@@ -96,7 +97,7 @@ export abstract class DebuggingManagerBase implements IDisposable {
         //
     }
 
-    protected async startDebuggingConfig(config: IKernelDebugAdapterConfig, options?: DebugSessionOptions) {
+    protected async startDebuggingConfig(config: INotebookDebugConfig, options?: DebugSessionOptions) {
         traceInfoIfCI(`Attempting to start debugging with config ${JSON.stringify(config)}`);
 
         try {
@@ -154,7 +155,32 @@ export abstract class DebuggingManagerBase implements IDisposable {
         return kernel;
     }
 
-    protected async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult> {
+    protected async checkIpykernelAndPrompt(
+        editor: NotebookEditor,
+        allowSelectKernel: boolean = true
+    ): Promise<IpykernelCheckResult> {
+        const ipykernelResult = await this.checkForIpykernel6(editor.notebook);
+        switch (ipykernelResult) {
+            case IpykernelCheckResult.NotInstalled:
+                // User would have been notified about this, nothing more to do.
+                break;
+            case IpykernelCheckResult.Outdated:
+            case IpykernelCheckResult.Unknown: {
+                this.promptInstallIpykernel6().then(noop, noop);
+                break;
+            }
+            case IpykernelCheckResult.ControllerNotSelected: {
+                if (allowSelectKernel) {
+                    await this.commandManager.executeCommand('notebook.selectKernel', { notebookEditor: editor });
+                    await this.checkIpykernelAndPrompt(editor, false);
+                }
+            }
+        }
+
+        return ipykernelResult;
+    }
+
+    private async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult> {
         try {
             let kernel = this.kernelProvider.get(doc);
             if (!kernel) {
@@ -180,7 +206,7 @@ export abstract class DebuggingManagerBase implements IDisposable {
         return IpykernelCheckResult.Unknown;
     }
 
-    protected async promptInstallIpykernel6() {
+    private async promptInstallIpykernel6() {
         const response = await this.appShell.showInformationMessage(
             DataScience.needIpykernel6(),
             { modal: true },

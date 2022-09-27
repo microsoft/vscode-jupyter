@@ -8,7 +8,6 @@ import { DebuggingTelemetry } from '../../../notebooks/debugger/constants';
 import { isJustMyCodeNotification } from '../../../notebooks/debugger/debugCellControllers';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../../../notebooks/debugger/debuggingTypes';
 import { cellDebugSetup } from '../../../notebooks/debugger/helper';
-import { createDeferred } from '../../../platform/common/utils/async';
 import { traceVerbose } from '../../../platform/logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getInteractiveCellMetadata } from '../../helpers';
@@ -18,8 +17,6 @@ import { getInteractiveCellMetadata } from '../../helpers';
  * Dumping a cell is how the IPython kernel determines the file path of a cell
  */
 export class DebugCellController implements IDebuggingDelegate {
-    private readonly _ready = createDeferred<void>();
-    public readonly ready = this._ready.promise;
     private cellDumpInvoked?: boolean;
     constructor(
         private readonly debugAdapter: IKernelDebugAdapter,
@@ -58,7 +55,6 @@ export class DebugCellController implements IDebuggingDelegate {
                 this.debugCellDumped = cellDebugSetup(this.kernel, this.debugAdapter);
             }
             await this.debugCellDumped;
-            this._ready.resolve();
         }
     }
 }
