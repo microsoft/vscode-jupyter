@@ -36,6 +36,7 @@ import { IIPyWidgetMessageDispatcher, IWidgetScriptSourceProviderFactory } from 
 import { ConsoleForegroundColors } from '../../../../platform/logging/types';
 import { IWebviewCommunication } from '../../../../platform/webviews/types';
 import { swallowExceptions } from '../../../../platform/common/utils/decorators';
+import { CDNWidgetScriptSourceProvider } from '../scriptSourceProvider/cdnWidgetScriptSourceProvider';
 
 /**
  * This class wraps all of the ipywidgets communication with a backing notebook
@@ -269,7 +270,8 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IConfigurationService>(IConfigurationService),
                 this.serviceContainer.get<IHttpClient>(IHttpClient),
                 this.serviceContainer.get<IWidgetScriptSourceProviderFactory>(IWidgetScriptSourceProviderFactory),
-                this.serviceContainer.get<boolean>(IsWebExtension)
+                this.serviceContainer.get<boolean>(IsWebExtension),
+                this.serviceContainer.get<CDNWidgetScriptSourceProvider>(CDNWidgetScriptSourceProvider)
             );
             this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.cacheOrSend, this));
         }

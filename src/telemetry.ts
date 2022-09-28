@@ -2316,10 +2316,14 @@ export class IEventNamePropertyMapping {
          */
         hashedName: string;
         /**
-         * Name of the widget module, sent only for cases where `source` is `cdn`.
+         * Name of the widget module, sent only for cases where `source` is `cdn` or when module is found on cdn.
          * As that is the onl time we can safely send the name (if its on public CDN then its public information).
          */
         moduleName?: string;
+        /**
+         * Version of the Module used, sent only for cases where `source` is `cdn` or when module is found on cdn.
+         */
+        moduleVersion?: string;
         /**
          * Where did we find the hashed name (CDN or user environment or remote jupyter).
          */
@@ -2347,6 +2351,10 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             moduleName: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            moduleVersion: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             }

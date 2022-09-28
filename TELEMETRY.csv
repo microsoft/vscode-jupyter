@@ -1236,8 +1236,11 @@ Useful in prioritizing which widgets to work on if things fail to work.","Teleme
 If the widget is found on a CDN, then the unhashed name is sent in `moduleName`.","string","",false
 "DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.
 Helps determine which widgets are used the most, and which are not.
-Useful in prioritizing which widgets to work on if things fail to work.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","moduleName","Name of the widget module, sent only for cases where `source` is `cdn`.
+Useful in prioritizing which widgets to work on if things fail to work.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","moduleName","Name of the widget module, sent only for cases where `source` is `cdn` or when module is found on cdn.
 As that is the onl time we can safely send the name (if its on public CDN then its public information).","string","",true
+"DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.
+Helps determine which widgets are used the most, and which are not.
+Useful in prioritizing which widgets to work on if things fail to work.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","moduleVersion","Version of the Module used, sent only for cases where `source` is `cdn` or when module is found on cdn.","string","",true
 "DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.
 Helps determine which widgets are used the most, and which are not.
 Useful in prioritizing which widgets to work on if things fail to work.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","source","Where did we find the hashed name (CDN or user environment or remote jupyter).","","'cdn' 
