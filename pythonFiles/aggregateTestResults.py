@@ -11,8 +11,8 @@ print("Using authtoken with prefix: " + authtoken[:4])
 # %%
 def getRuns(createdDate):
     runsResponse = requests.get(
-        "https://api.github.com/repos/microsoft/vscode-jupyter/actions/workflows/build-test.yml/runs?per_page=50&branch=main",
-        params={"created": createdDate},
+        "https://api.github.com/repos/microsoft/vscode-jupyter/actions/workflows/build-test.yml/runs",
+        params={"created": createdDate, "branch": "main"},
         headers={
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {authtoken}",
@@ -152,7 +152,7 @@ except ValueError:
     print(
         f"The string {inputDate} is not a date with format yyyy-mm-dd, running for yesterday"
     )
-    collectionDate = date.today()
+    collectionDate = date.today() - timedelta(days=1)
 
 # %%
 runs = getRuns(collectionDate)
