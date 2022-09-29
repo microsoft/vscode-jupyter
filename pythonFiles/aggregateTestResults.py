@@ -11,7 +11,7 @@ print("Using authtoken with prefix: " + authtoken[:4])
 # %%
 def getRuns(createdDate):
     runsResponse = requests.get(
-        "https://api.github.com/repos/microsoft/vscode-jupyter/actions/workflows/build-test.yml/runs?per_page=50",
+        "https://api.github.com/repos/microsoft/vscode-jupyter/actions/workflows/build-test.yml/runs?per_page=50&branch=main",
         params={"created": createdDate},
         headers={
             "Accept": "application/vnd.github+json",
@@ -24,14 +24,11 @@ def getRuns(createdDate):
         raise Exception("Error getting runs")
 
     runs = runsResponse.json()["workflow_runs"]
-    filtered = []
 
     for run in runs:
-        if run["head_branch"] == "main":
-            print(f"Found run {run['id']} for event '{run['event']}'")
-            filtered.append(run)
+        print(f"Found run {run['id']} for event '{run['event']}'")
 
-    return filtered
+    return runs
 
 
 def getArtifactData(id):
