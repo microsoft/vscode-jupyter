@@ -11,8 +11,8 @@ print("Using authtoken with prefix: " + authtoken[:4])
 # %%
 def getRuns(createdDate):
     runsResponse = requests.get(
-        "https://api.github.com/repos/microsoft/vscode-jupyter/actions/runs",
-        params={"event": "push", "created": createdDate},
+        "https://api.github.com/repos/microsoft/vscode-jupyter/actions/workflows/build-test.yml/runs",
+        params={"created": createdDate, "branch": "main"},
         headers={
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {authtoken}",
@@ -23,9 +23,12 @@ def getRuns(createdDate):
         print(f"Error {runsResponse.status_code}")
         raise Exception("Error getting runs")
 
-    print(f"Found {len(runsResponse.json()['workflow_runs'])} runs")
+    runs = runsResponse.json()["workflow_runs"]
 
-    return runsResponse.json()["workflow_runs"]
+    for run in runs:
+        print(f"Found run {run['id']} for event '{run['event']}'")
+
+    return runs
 
 
 def getArtifactData(id):
@@ -157,8 +160,7 @@ runs = getRuns(collectionDate)
 # %%
 runResults = []
 for run in runs:
-    if run["name"] == "Build and Test":
-        runResults.append(getResultsForRun(run))
+    runResults.append(getResultsForRun(run))
 
 # %%
 resultFile = f'AggTestResults-{collectionDate.strftime("%Y-%m-%d")}.json'
