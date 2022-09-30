@@ -16,6 +16,13 @@ import * as semver from 'semver';
 import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IControllerSelection } from '../../notebooks/controllers/types';
 
+interface PylanceApi {
+    notebook?: {
+        registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
+        registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void;
+    };
+}
+
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
  * enables us to provide the python.exe path for a notebook as required for Pylance's
@@ -34,7 +41,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {
-        if (!this._isPylanceExtensionInstalled()) {
+        if (!this.isPylanceExtensionInstalled()) {
             this.extensionChangeHandler = extensions.onDidChange(this.extensionsChangeHandler.bind(this));
         }
     }
@@ -42,6 +49,14 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     public async activate() {
         if (!this.isPylanceUsingLspNotebooks()) {
             return;
+        }
+
+        const pylanceApi = await this.getPylanceApi();
+        if (pylanceApi && pylanceApi.notebook) {
+            pylanceApi.notebook.registerJupyterPythonPathFunction((uri) => this._jupyterPythonPathFunction(uri));
+            pylanceApi.notebook.registerGetNotebookUriForTextDocumentUriFunction((uri) =>
+                this._getNotebookUriForTextDocumentUri(uri)
+            );
         }
 
         await this.apiProvider.getApi().then((api) => {
@@ -61,12 +76,26 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         await this.activate();
     }
 
-    private _isPylanceExtensionInstalled() {
+    private isPylanceExtensionInstalled() {
         return extensions.getExtension(PylanceExtension) !== undefined;
     }
 
+    private async getPylanceApi() {
+        const extension = extensions.getExtension(PylanceExtension);
+        if (!extension) {
+            return;
+        }
+
+        if (!extension.isActive) {
+            await extension.activate();
+        }
+
+        const api = extension.exports as PylanceApi;
+        return api.notebook ? api : undefined;
+    }
+
     private async extensionsChangeHandler(): Promise<void> {
-        if (this._isPylanceExtensionInstalled() && this.extensionChangeHandler) {
+        if (this.isPylanceExtensionInstalled() && this.extensionChangeHandler) {
             this.extensionChangeHandler.dispose();
             this.extensionChangeHandler = undefined;
 

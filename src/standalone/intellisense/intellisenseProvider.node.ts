@@ -6,7 +6,10 @@ import { inject, injectable } from 'inversify';
 import {
     CancellationToken,
     CompletionContext,
+    CompletionItem,
+    CompletionList,
     ConfigurationChangeEvent,
+    extensions,
     NotebookDocument,
     Position,
     TextDocument,
@@ -25,9 +28,23 @@ import { getComparisonKey } from '../../platform/vscode-path/resources';
 import { CompletionRequest } from 'vscode-languageclient';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
 import { isJupyterNotebook } from '../../platform/common/utils';
+import { PylanceExtension } from '../../platform/common/constants';
 
 const EmptyWorkspaceKey = '';
 
+interface PylanceApi {
+    client?: {
+        isEnabled(): boolean;
+    };
+    notebook?: {
+        getCompletionItems(
+            document: TextDocument,
+            position: Position,
+            context: CompletionContext,
+            token: CancellationToken
+        ): Promise<CompletionItem[] | CompletionList | undefined>;
+    };
+}
 /**
  * This class sets up the concatenated intellisense for every notebook as it changes its kernel.
  */
@@ -39,6 +56,9 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         NotebookDocument,
         IVSCodeNotebookController
     >();
+
+    // Lazily initialized pylance api
+    private doNotAccessDirectlyPylanceApi: PylanceApi | undefined;
 
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -72,7 +92,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.disposables);
     }
 
-    public async getLanguageClient(notebook: NotebookDocument) {
+    private async getLanguageClient(notebook: NotebookDocument) {
         const controller = this.notebookControllerSelection.getSelected(notebook);
         const interpreter = controller
             ? controller.connection.interpreter
@@ -89,6 +109,18 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         context: CompletionContext,
         cancelToken: CancellationToken
     ) {
+        const api = await this.getPylanceApi();
+        if (
+            api &&
+            api.client &&
+            api.notebook &&
+            api.client.isEnabled() &&
+            this.notebookPythonPathService.isPylanceUsingLspNotebooks()
+        ) {
+            const results = await api.notebook.getCompletionItems(document, position, context, cancelToken);
+            return this.getCompletionItems(results);
+        }
+
         const client = await this.getLanguageClient(notebook);
         if (client) {
             // Use provider so it gets translated by middleware
@@ -96,12 +128,16 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
             const provider = feature.getProvider(document);
             if (provider) {
                 const results = await provider.provideCompletionItems(document, position, cancelToken, context);
-                if (results && 'items' in results) {
-                    return results.items;
-                } else {
-                    return results;
-                }
+                return this.getCompletionItems(results);
             }
+        }
+    }
+
+    private getCompletionItems(results: CompletionItem[] | CompletionList | undefined | null) {
+        if (results && 'items' in results) {
+            return results.items;
+        } else {
+            return results;
         }
     }
 
@@ -275,5 +311,26 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
             // For all currently open notebooks, launch their language server
             this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).ignoreErrors());
         }
+    }
+
+    private async getPylanceApi() {
+        if (!this.doNotAccessDirectlyPylanceApi) {
+            const extension = extensions.getExtension(PylanceExtension);
+            if (extension) {
+                if (!extension.isActive) {
+                    await extension.activate();
+                }
+
+                const api = extension.exports as PylanceApi;
+                this.doNotAccessDirectlyPylanceApi = api.client && api.notebook ? api : undefined;
+            }
+        }
+
+        if (!this.doNotAccessDirectlyPylanceApi) {
+            this.doNotAccessDirectlyPylanceApi = {
+                // empty
+            };
+        }
+        return this.doNotAccessDirectlyPylanceApi;
     }
 }
