@@ -40,6 +40,7 @@ suite('IPyWidget Script Manager', function () {
     let fs: IFileSystem;
     let context: IExtensionContext;
     suiteSetup(async function () {
+        traceInfo('Suite Setup');
         api = await initialize();
         await closeNotebooks();
         await startJupyterServer();
@@ -74,6 +75,7 @@ suite('IPyWidget Script Manager', function () {
 
         kernel = kernelProvider.get(notebook)!;
         scriptManager = widgetScriptManagerFactory.getOrCreate(kernel);
+        traceInfo('Suite Setup (completed)');
     });
     setup(async function () {
         traceInfo(`Starting Test ${this.currentTest?.title}`);
