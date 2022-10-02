@@ -242,54 +242,61 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         await this.disposingPromise;
     }
     public async restart(): Promise<void> {
-        await Promise.all(this.eventHooks.map((h) => h('willRestart')));
-        traceInfo(`Restart requested ${this.uri}`);
-        this.startCancellation.cancel();
-        // Set our status
-        const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
-        const progress = KernelProgressReporter.createProgressReporter(
-            this.resourceUri,
-            DataScience.restartingKernelStatus().format(
-                `: ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)}`
-            )
-        );
-
-        const stopWatch = new StopWatch();
         try {
-            // If the session died, then start a new session.
-            await (this._jupyterSessionPromise
-                ? this.kernelExecution.restart(this._jupyterSessionPromise)
-                : this.start(new DisplayOptions(false)));
-            sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, { duration: stopWatch.elapsedTime });
-        } catch (ex) {
-            traceError(`Restart failed ${getDisplayPath(this.uri)}`, ex);
-            this._ignoreJupyterSessionDisposedErrors = true;
-            // If restart fails, kill the associated session.
-            const session = this._session;
-            this._session = undefined;
-            this._jupyterSessionPromise = undefined;
-            // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
-            // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
-            sendKernelTelemetryEvent(
+            await Promise.all(this.eventHooks.map((h) => h('willRestart')));
+            traceInfo(`Restart requested ${this.uri}`);
+            this.startCancellation.cancel();
+            // Set our status
+            const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
+            const progress = KernelProgressReporter.createProgressReporter(
                 this.resourceUri,
-                Telemetry.NotebookRestart,
-                { duration: stopWatch.elapsedTime },
-                undefined,
-                ex
+                DataScience.restartingKernelStatus().format(
+                    `: ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)}`
+                )
             );
-            await session?.dispose().catch(noop);
-            this._ignoreJupyterSessionDisposedErrors = false;
+
+            const stopWatch = new StopWatch();
+            try {
+                // If the session died, then start a new session.
+                await (this._jupyterSessionPromise
+                    ? this.kernelExecution.restart(this._jupyterSessionPromise)
+                    : this.start(new DisplayOptions(false)));
+                sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, {
+                    duration: stopWatch.elapsedTime
+                });
+            } catch (ex) {
+                traceError(`Restart failed ${getDisplayPath(this.uri)}`, ex);
+                this._ignoreJupyterSessionDisposedErrors = true;
+                // If restart fails, kill the associated session.
+                const session = this._session;
+                this._session = undefined;
+                this._jupyterSessionPromise = undefined;
+                // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
+                // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
+                sendKernelTelemetryEvent(
+                    this.resourceUri,
+                    Telemetry.NotebookRestart,
+                    { duration: stopWatch.elapsedTime },
+                    undefined,
+                    ex
+                );
+                await session?.dispose().catch(noop);
+                this._ignoreJupyterSessionDisposedErrors = false;
+                throw ex;
+            } finally {
+                status.dispose();
+                progress.dispose();
+            }
+
+            // Interactive window needs a restart sys info
+            await this.initializeAfterStart(this._session);
+
+            // Indicate a restart occurred if it succeeds
+            this._onRestarted.fire();
+        } catch (ex) {
+            traceError(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;
-        } finally {
-            status.dispose();
-            progress.dispose();
         }
-
-        // Interactive window needs a restart sys info
-        await this.initializeAfterStart(this._session);
-
-        // Indicate a restart occurred if it succeeds
-        this._onRestarted.fire();
     }
     protected async startJupyterSession(
         options: IDisplayOptions = new DisplayOptions(false)

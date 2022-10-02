@@ -587,6 +587,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     }
 
     private onKernelConnectionStatusHandler(_: unknown, kernelConnection: Kernel.ConnectionStatus) {
+        traceInfoIfCI(`Server Kernel Status = ${kernelConnection}`);
         if (kernelConnection === 'disconnected') {
             const status = this.getServerStatus();
             this.onStatusChangedEvent.fire(status);
