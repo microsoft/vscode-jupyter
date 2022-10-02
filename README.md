@@ -48,7 +48,7 @@ The Jupyter Extension supports other languages in addition to Python such as Jul
 
 -   **Step 1.** Install [VS Code](https://code.visualstudio.com/)
 
--   **Step 2** If not working with Python, make sure to have a Jupyter kernelspec that corresponds to the language you would like to use installed on your machine.
+-   **Step 2.** If not working with Python, make sure to have a Jupyter kernelspec that corresponds to the language you would like to use installed on your machine.
 
 -   **Step 3.** Install the [Jupyter Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter)
 
