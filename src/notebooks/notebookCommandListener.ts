@@ -24,7 +24,7 @@ import { DisplayOptions } from '../kernels/displayOptions';
 import { IKernel, IKernelProvider } from '../kernels/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
-import { traceInfoIfCI, traceInfo } from '../platform/logging';
+import { traceInfo, traceVerbose } from '../platform/logging';
 import { Telemetry } from '../telemetry';
 import { trackKernelResourceInformation } from '../kernels/telemetry/helper';
 import { INotebookEditorProvider } from './types';
@@ -172,14 +172,14 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         }).then(noop, noop);
     }
 
-    public async interruptKernel(notebookUri: Uri | undefined): Promise<void> {
+    private async interruptKernel(notebookUri: Uri | undefined): Promise<void> {
         const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
         if (document === undefined) {
             return;
         }
-        traceInfoIfCI(`Interrupt kernel command handler for ${getDisplayPath(document.uri)}`);
+        traceVerbose(`Command interrupted kernel for ${getDisplayPath(document.uri)}`);
 
         const kernel = this.kernelProvider.get(document);
         if (!kernel) {
@@ -200,6 +200,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         const kernel = this.kernelProvider.get(document);
 
         if (kernel) {
+            traceVerbose(`Interrupt kernel command handler for ${getDisplayPath(document.uri)}`);
             sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.RestartKernelCommand);
             await trackKernelResourceInformation(kernel.resourceUri, { restartKernel: true });
             if (await this.shouldAskForRestart(document.uri)) {

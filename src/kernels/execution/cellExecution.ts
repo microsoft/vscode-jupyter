@@ -20,7 +20,7 @@ import { CellExecutionCreator } from './cellExecutionCreator';
 import { analyzeKernelErrors, createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { BaseError } from '../../platform/errors/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable, Resource } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -33,6 +33,7 @@ import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandle
 import { IKernelConnectionSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { NotebookCellStateTracker, traceCellMessage } from './helpers';
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 /**
  * Factory for CellExecution objects.
@@ -101,6 +102,7 @@ export class CellExecution implements IDisposable {
                 // If the cell is deleted, then dispose the request object.
                 // No point keeping it alive, just chewing resources.
                 if (e === this.cell.document) {
+                    traceVerbose(`Disposing request as the cell was deleted ${getDisplayPath(this.cell.notebook.uri)}`);
                     try {
                         this.request?.dispose(); // NOSONAR
                     } catch (e) {

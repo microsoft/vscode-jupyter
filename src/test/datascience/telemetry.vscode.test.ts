@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as vscode from 'vscode';
 import TelemetryReporter, {
     RawTelemetryEventProperties,
     TelemetryEventMeasurements,
@@ -15,13 +14,7 @@ import { traceInfo } from '../../platform/logging';
 import { getTelemetryReporter, setTelemetryReporter } from '../../telemetry';
 import { captureScreenShot } from '../common.node';
 import { initialize } from '../initialize.node';
-import {
-    closeNotebooksAndCleanUpAfterTests,
-    createEmptyPythonNotebook,
-    insertCodeCell,
-    runCell,
-    waitForTextOutput
-} from './notebook/helper';
+import { closeNotebooksAndCleanUpAfterTests, createEmptyPythonNotebook } from './notebook/helper';
 import { IDisposable } from '../../platform/common/types';
 import { startJupyterServer } from './notebook/helper.node';
 import { runNewPythonFile, waitForLastCellToComplete } from './helpers.node';
@@ -139,21 +132,6 @@ suite('Telemetry validation', function () {
         }
         setTestExecution(true);
         await closeNotebooksAndCleanUpAfterTests(disposables);
-    });
-    test('Execute cell using VSCode Kernel', async () => {
-        await insertCodeCell('print("123412341234")', { index: 0 });
-        const cell = vscode.window.activeNotebookEditor?.notebook.cellAt(0)!;
-        await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
-
-        // Check for expected events
-        const assertEvent = (event: string) => {
-            assert.ok(eventsSent.has(event), `Events missing ${event}`);
-        };
-
-        // Right now this is the guaranteed list. Might want to expand this.
-        assertEvent(Telemetry.ExecuteCell);
-        assertEvent(Telemetry.OpenNotebookAll);
-        assertEvent(Telemetry.NotebookStart);
     });
     test('Run interactive window', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
