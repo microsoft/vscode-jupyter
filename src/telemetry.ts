@@ -1363,10 +1363,33 @@ export class IEventNamePropertyMapping {
      * Not tagging as a user action as this could be something like auto opening a file
      * from a previous session and not a direct user action.
      */
-    [Telemetry.OpenNotebookAll]: TelemetryEventInfo<never | undefined> = {
+    [Telemetry.OpenNotebookAll]: TelemetryEventInfo<{
+        /**
+         * Major Format of the Notebook.
+         * Useful in determining the most popular versions of nbformats used by users.
+         */
+        nbformat: number | undefined;
+        /**
+         * Minor Format of the Notebook.
+         * Useful in determining the most popular versions of nbformats used by users.
+         */
+        nbformat_minor: number | undefined;
+    }> = {
         owner: 'IanMatthewHuff',
         feature: 'N/A',
-        source: 'N/A'
+        source: 'N/A',
+        measures: {
+            nbformat: {
+                classification: 'PublicNonPersonalData',
+                isMeasurement: true,
+                purpose: 'FeatureInsight'
+            },
+            nbformat_minor: {
+                classification: 'PublicNonPersonalData',
+                isMeasurement: true,
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * A new instance of the plot viewer was opened.

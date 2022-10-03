@@ -11,7 +11,7 @@ import { IVSCodeNotebook } from '../platform/common/application/types';
 import { Telemetry, JupyterDaemonModule } from '../platform/common/constants';
 import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../platform/common/process/types.node';
 import { IDisposableRegistry } from '../platform/common/types';
-import { isJupyterNotebook } from '../platform/common/utils';
+import { getNotebookFormat, isJupyterNotebook } from '../platform/common/utils';
 import { debounceAsync, swallowExceptions } from '../platform/common/utils/decorators';
 import { sendTelemetryEvent } from '../telemetry';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService.node';
@@ -42,7 +42,9 @@ export class Activation implements IExtensionSingleActivationService {
         }
         this.notebookOpened = true;
         this.PreWarmDaemonPool().ignoreErrors();
-        sendTelemetryEvent(Telemetry.OpenNotebookAll);
+        getNotebookFormat(e)
+            .then((format) => sendTelemetryEvent(Telemetry.OpenNotebookAll, format))
+            .ignoreErrors();
 
         if (!this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
             // Warm up our selected interpreter for the extension

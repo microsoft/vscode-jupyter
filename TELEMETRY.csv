@@ -260,7 +260,12 @@ OCaml is one such kernel.","boolean","",true
 "DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","Code we run post starting a kernel seems to have failed.","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","The error value of the failure","string","",false
 "DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL","Sent when we have opened any Jupyter notebook in a VS Code session.
 Not tagging as a user action as this could be something like auto opening a file
-from a previous session and not a direct user action.","Telemetry.OpenNotebookAll","IanMatthewHuff","N/A","","","","","","",""
+from a previous session and not a direct user action.","Telemetry.OpenNotebookAll","IanMatthewHuff","N/A","","","nbformat","Major Format of the Notebook.
+Useful in determining the most popular versions of nbformats used by users.","","null or <empty> ",false
+"DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL","Sent when we have opened any Jupyter notebook in a VS Code session.
+Not tagging as a user action as this could be something like auto opening a file
+from a previous session and not a direct user action.","Telemetry.OpenNotebookAll","IanMatthewHuff","N/A","","","nbformat_minor","Minor Format of the Notebook.
+Useful in determining the most popular versions of nbformats used by users.","","null or <empty> ",false
 "DATASCIENCE.NO_ACTIVE_KERNEL_SESSION","Send when we want to install data viewer dependendies, but don't have an active kernel session.
 Used by the dataViewerDependencyService.","Telemetry.NoActiveKernelSession","IanMatthewHuff","DataFrameViewer","","","","","","",""
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
