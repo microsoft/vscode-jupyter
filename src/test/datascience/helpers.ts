@@ -26,8 +26,6 @@ import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { isWeb } from '../../platform/common/utils/misc';
 import { IControllerSelection } from '../../notebooks/controllers/types';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
-import { KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../kernels/types';
-import { createInterpreterKernelSpec, getKernelId } from '../../kernels/helpers';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { isEqual } from '../../platform/vscode-path/resources';
 
@@ -148,26 +146,14 @@ export async function submitFromPythonFile(
     disposables.push(tempFile);
     const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
     await vscode.window.showTextDocument(untitledPythonFile);
-    let connection: KernelConnectionMetadata | undefined;
     if (apiProvider && activeInterpreterPath) {
-        const interpreterService = await api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         await setActiveInterpreter(apiProvider, untitledPythonFile.uri, activeInterpreterPath);
         await interpreterService.refreshInterpreters();
         const interpreter = await interpreterService.getActiveInterpreter();
         assert.ok(isEqual(interpreter?.uri, activeInterpreterPath), `Active interpreter not set`);
-        const spec = await createInterpreterKernelSpec(interpreter);
-        connection = <PythonKernelConnectionMetadata>{
-            kind: 'startUsingPythonInterpreter',
-            kernelSpec: spec,
-            interpreter,
-            id: getKernelId(spec, interpreter)
-        };
     }
-    const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
-        untitledPythonFile.uri,
-        connection
-    )) as InteractiveWindow;
-    await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+    const activeInteractiveWindow = await runCurrentFile(interactiveWindowProvider, untitledPythonFile);
     const notebook = await waitForInteractiveWindow(activeInteractiveWindow);
     await verifySelectedControllerIsRemoteForRemoteTests(notebook);
     return { activeInteractiveWindow, untitledPythonFile };
