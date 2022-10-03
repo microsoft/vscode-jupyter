@@ -2083,24 +2083,11 @@ export class IEventNamePropertyMapping {
     /**
      * We started up a webview.
      */
-    [Telemetry.WebviewStartup]: TelemetryEventInfo<
-        {
-            /**
-             * The type of webview started up.
-             */
-            type: string;
-        } & DurationMeasurement
-    > = {
+    [Telemetry.WebviewStartup]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'IanMatthewHuff',
         feature: 'N/A',
         source: 'N/A',
-        measures: commonClassificationForDurationProperties(),
-        properties: {
-            type: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
+        measures: commonClassificationForDurationProperties()
     };
     /**
      * Sent to measure the time taken to register an interpreter as a Jupyter kernel.
@@ -3152,6 +3139,24 @@ export class IEventNamePropertyMapping {
         owner: 'IanMatthewHuff',
         feature: ['VariableViewer'],
         source: 'N/A'
+    };
+    /**
+     * The Data Viewer webview was loaded.
+     */
+    [Telemetry.DataViewerWebviewLoaded]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'IanMatthewHuff',
+        feature: ['DataFrameViewer'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * The Plot Viewer webview was loaded.
+     */
+    [Telemetry.PlotViewerWebviewLoaded]: TelemetryEventInfo<DurationMeasurement> = {
+        owner: 'IanMatthewHuff',
+        feature: ['PlotViewer'],
+        source: 'N/A',
+        measures: commonClassificationForDurationProperties()
     };
     /**
      * A command that the extension contributes is executed.

@@ -2152,6 +2152,18 @@ Expand each section to see more information about that event.
 
 
 
+* DATAVIEWER.WEBVIEW_LOADED  (Telemetry.DataViewerWebviewLoaded)  
+      Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
+    ```
+    The Data Viewer webview was loaded.  
+    ```
+
+    - Measures:  
+        - `duration`: `number`  
+        Duration of a measure in milliseconds.  
+        Common measurement used across a number of events.  
+
+
 * DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF  (Telemetry.ActiveInterpreterListingPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
@@ -4998,9 +5010,6 @@ In such cases we do not notify user of any failures or the like.
     We started up a webview.  
     ```
 
-    - Properties:  
-        - `type`: `string`  
-        The type of webview started up.  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
@@ -5151,5 +5160,17 @@ In such cases we do not notify user of any failures or the like.
     Telemetry event sent when user opens the data viewer via the variable view and we successfully open the view.  
     ```
 
+
+
+* PLOTVIEWER.WEBVIEW_LOADED  (Telemetry.PlotViewerWebviewLoaded)  
+      Owner: [@IanMatthewHuff](https://github.com/IanMatthewHuff)  
+    ```
+    The Plot Viewer webview was loaded.  
+    ```
+
+    - Measures:  
+        - `duration`: `number`  
+        Duration of a measure in milliseconds.  
+        Common measurement used across a number of events.  
 
 

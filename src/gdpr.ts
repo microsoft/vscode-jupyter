@@ -1098,6 +1098,15 @@
      ]
    }
  */
+//Telemetry.DataViewerWebviewLoaded
+/* __GDPR__
+   "DATAVIEWER.WEBVIEW_LOADED" : {
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.ActiveInterpreterListingPerf
 /* __GDPR__
    "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF" : {
@@ -2242,7 +2251,6 @@
 //Telemetry.WebviewStartup
 /* __GDPR__
    "DS_INTERNAL.WEBVIEW_STARTUP" : {
-     "type": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The type of webview started up.","owner":"IanMatthewHuff"},
      "${include}": [
        "${F1}"
 
@@ -2354,6 +2362,15 @@
 //EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX" : {
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.PlotViewerWebviewLoaded
+/* __GDPR__
+   "PLOTVIEWER.WEBVIEW_LOADED" : {
      "${include}": [
        "${F1}"
 
