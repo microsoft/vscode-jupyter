@@ -303,6 +303,7 @@ export async function createEmptyPythonNotebook(
 }
 
 async function shutdownAllNotebooks() {
+    traceVerbose('Shutting down all kernels');
     const api = await initialize();
     const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider) as IKernelProvider;
     await Promise.all(kernelProvider.kernels.map((k) => k.dispose().catch(noop)));
@@ -343,6 +344,7 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     if (!isInsiders()) {
         return false;
     }
+    traceVerbose('Closing all notebooks');
     const api = await initialize();
     VSCodeNotebookController.kernelAssociatedWithDocument = undefined;
     const notebooks = api.serviceManager.get<IVSCodeNotebook>(IVSCodeNotebook) as VSCodeNotebook;
