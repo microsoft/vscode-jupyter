@@ -569,7 +569,9 @@ export enum Telemetry {
     JupyterInstalled = 'JUPYTER_IS_INSTALLED',
     NoActiveKernelSession = 'DATASCIENCE.NO_ACTIVE_KERNEL_SESSION',
     DataViewerUsingInterpreter = 'DATAVIEWER.USING_INTERPRETER',
-    DataViewerUsingKernel = 'DATAVIEWER.USING_KERNEL'
+    DataViewerUsingKernel = 'DATAVIEWER.USING_KERNEL',
+    DataViewerWebviewLoaded = 'DATAVIEWER.WEBVIEW_LOADED',
+    PlotViewerWebviewLoaded = 'PLOTVIEWER.WEBVIEW_LOADED'
 }
 
 export enum JupyterCommands {

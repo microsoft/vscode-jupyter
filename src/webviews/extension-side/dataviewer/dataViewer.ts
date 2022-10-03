@@ -7,7 +7,7 @@ import '../../../platform/common/extensions';
 import { inject, injectable, named } from 'inversify';
 import { EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 
-import { sendTelemetryEvent } from '../../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { JupyterDataRateLimitError } from '../../../platform/errors/jupyterDataRateLimitError';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
@@ -98,6 +98,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         this.onDidDispose(this.dataViewerDisposed, this);
     }
 
+    @capturePerfTelemetry(Telemetry.DataViewerWebviewLoaded)
     public async showData(
         dataProvider: IDataViewerDataProvider | IJupyterVariableDataProvider,
         title: string
