@@ -42,9 +42,7 @@ export class Activation implements IExtensionSingleActivationService {
         }
         this.notebookOpened = true;
         this.PreWarmDaemonPool().ignoreErrors();
-        getNotebookFormat(e)
-            .then((format) => sendTelemetryEvent(Telemetry.OpenNotebookAll, format))
-            .ignoreErrors();
+        sendTelemetryEvent(Telemetry.OpenNotebookAll, getNotebookFormat(e));
 
         if (!this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
             // Warm up our selected interpreter for the extension

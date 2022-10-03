@@ -168,10 +168,10 @@ export function getNotebookMetadata(document: NotebookDocument | NotebookData): 
     return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
 }
 
-export async function getNotebookFormat(document: NotebookDocument): Promise<{
+export function getNotebookFormat(document: NotebookDocument): {
     nbformat: number | undefined;
     nbformat_minor: number | undefined;
-}> {
+} {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
     // Create a clone.
