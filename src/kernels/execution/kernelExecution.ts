@@ -8,7 +8,7 @@ import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import { KernelMessage } from '@jupyterlab/services';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
+import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { createDeferred, waitForPromise } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -328,6 +328,7 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
         workspace.onDidCloseNotebookDocument(
             async (e: NotebookDocument) => {
                 if (e === document) {
+                    traceVerbose(`Cancel executions after closing notebook ${getDisplayPath(e.uri)}`);
                     if (!newCellExecutionQueue.failed || !newCellExecutionQueue.isEmpty) {
                         await newCellExecutionQueue.cancel(true);
                     }

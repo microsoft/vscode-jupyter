@@ -51,7 +51,7 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { ExportFormat, IExportDialog, IFileConverter } from '../../notebooks/export/types';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
-import { traceError, traceInfo } from '../../platform/logging';
+import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
 import { generateCellsFromDocument } from '../editor-integration/cellFactory';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { INotebookEditorProvider } from '../../notebooks/types';
@@ -433,6 +433,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
             if (iw && iw.notebookDocument) {
                 const kernel = this.kernelProvider.get(iw.notebookDocument);
                 if (kernel) {
+                    traceVerbose(`Interrupt kernel due to debug stop of IW ${uri.toString()}`);
                     // If we have a matching iw, then stop current execution
                     await kernel.interrupt();
                 }

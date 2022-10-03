@@ -53,7 +53,7 @@ import {
     PYTHON_LANGUAGE
 } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
+import { traceInfo, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -97,6 +97,7 @@ import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpda
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
 import { IServerConnectionType } from '../../../kernels/jupyter/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -296,10 +297,13 @@ export async function createEmptyPythonNotebook(
         await verifySelectedControllerIsRemoteForRemoteTests();
     }
     await deleteAllCellsAndWait();
-    return vscodeNotebook.activeNotebookEditor!.notebook;
+    const notebook = vscodeNotebook.activeNotebookEditor!.notebook;
+    traceVerbose(`Empty notebook created ${getDisplayPath(notebook.uri)}`);
+    return notebook;
 }
 
 async function shutdownAllNotebooks() {
+    traceVerbose('Shutting down all kernels');
     const api = await initialize();
     const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider) as IKernelProvider;
     await Promise.all(kernelProvider.kernels.map((k) => k.dispose().catch(noop)));
@@ -340,6 +344,7 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     if (!isInsiders()) {
         return false;
     }
+    traceVerbose('Closing all notebooks');
     const api = await initialize();
     VSCodeNotebookController.kernelAssociatedWithDocument = undefined;
     const notebooks = api.serviceManager.get<IVSCodeNotebook>(IVSCodeNotebook) as VSCodeNotebook;

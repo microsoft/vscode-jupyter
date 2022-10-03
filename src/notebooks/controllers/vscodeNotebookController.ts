@@ -460,6 +460,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     private handleInterrupt(notebook: NotebookDocument) {
+        traceVerbose(`VS Code interrupted kernel for ${getDisplayPath(notebook.uri)}`);
         notebook.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         this.commandManager
             .executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: notebook.uri } })
