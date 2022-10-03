@@ -1061,6 +1061,8 @@ Note: This could be just ignoring the UI so not a user action.","Telemetry.UserD
 "DATASCIENCE.USER_INSTALLED_PANDAS","Installed the python Pandas package.","Telemetry.UserInstalledPandas","IanMatthewHuff","DataFrameViewer","","","","","","",""
 "DATAVIEWER.USING_INTERPRETER","When the Data Viewer installer is using a Python interpreter to do the install.","Telemetry.DataViewerUsingInterpreter","IanMatthewHuff","DataFrameViewer","","","","","","",""
 "DATAVIEWER.USING_KERNEL","When the Data Viewer installer is using the Kernel to do the install.","Telemetry.DataViewerUsingKernel","IanMatthewHuff","DataFrameViewer","","","","","","",""
+"DATAVIEWER.WEBVIEW_LOADED","The Data Viewer webview was loaded.","Telemetry.DataViewerWebviewLoaded","IanMatthewHuff","DataFrameViewer","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","Total time taken by Python extension to return the active Python environment.","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.","number","",false
 "DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF","Total time taken by Python extension to return the active Python environment.","Telemetry.ActiveInterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
 (fetching kernels first time in the session is slower, later its cached).
@@ -2730,7 +2732,6 @@ This is required to identify output types that we're not mapping correctly.","st
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","type","The type of webview started up.","string","",false
 "DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING","Telemetry event sent when the ZMQ native binaries do work.","Telemetry.ZMQSupported","donjayamanne","N/A","KernelStartup","","","","","",""
 "DS_INTERNAL.ZMQ_NATIVE_BINARIES_NOT_LOADING","Telemetry event sent when the ZMQ native binaries do not work.","Telemetry.ZMQNotSupported","donjayamanne","N/A","KernelStartup","","","","","",""
 "ENVFILE_VARIABLE_SUBSTITUTION","Telemetry event sent when substituting Environment variables to calculate value of variables.
@@ -2769,3 +2770,5 @@ I.e. jupyter can be found in the path as defined by the env variable process.env
 "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX","Telemetry event sent when user opens the data viewer via the variable view and there is an error in doing so.","EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR","IanMatthewHuff","DataFrameViewer, VariableViewer","","","","","","",""
 "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX","Telemetry event sent when user opens the data viewer via the variable view.","EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST","IanMatthewHuff","DataFrameViewer, VariableViewer","","","","","","",""
 "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX","Telemetry event sent when user opens the data viewer via the variable view and we successfully open the view.","EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS","IanMatthewHuff","DataFrameViewer, VariableViewer","","","","","","",""
+"PLOTVIEWER.WEBVIEW_LOADED","The Plot Viewer webview was loaded.","Telemetry.PlotViewerWebviewLoaded","IanMatthewHuff","PlotViewer","","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.","number","",false
