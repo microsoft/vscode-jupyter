@@ -64,7 +64,13 @@ import {
     areKernelConnectionsEqual,
     getKernelRegistrationInfo
 } from '../../kernels/helpers';
-import { IKernel, IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
+import {
+    IKernel,
+    IKernelProvider,
+    isLocalConnection,
+    KernelConnectionMetadata,
+    RemoteKernelConnectionMetadata
+} from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
@@ -82,6 +88,7 @@ import { KernelMessage } from '@jupyterlab/services';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../kernels/telemetry/helper';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
+import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -157,7 +164,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly appShell: IApplicationShell,
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
-        private serviceContainer: IServiceContainer
+        private serviceContainer: IServiceContainer,
+        private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -182,7 +190,11 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             kernelConnection.kind === 'connectToLiveRemoteKernel'
                 ? getRemoteKernelSessionInformation(kernelConnection)
                 : '';
-        this.controller.kind = getKernelConnectionCategory(kernelConnection);
+        getKernelConnectionCategory(kernelConnection, this.serverUriStorage)
+            .then((kind) => {
+                this.controller.kind = kind;
+            })
+            .catch(noop);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
@@ -676,12 +688,17 @@ async function updateNotebookDocumentMetadata(
     }
 }
 
-function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata) {
+async function getKernelConnectionCategory(
+    kernelConnection: KernelConnectionMetadata,
+    serverUriStorage: IJupyterServerUriStorage
+): Promise<string> {
     switch (kernelConnection.kind) {
         case 'connectToLiveRemoteKernel':
-            return DataScience.kernelCategoryForJupyterSession();
+            const remoteDisplayNameSession = await getRemoteServerDisplayName(kernelConnection, serverUriStorage);
+            return DataScience.kernelCategoryForJupyterSession().format(remoteDisplayNameSession);
         case 'startUsingRemoteKernelSpec':
-            return DataScience.kernelCategoryForRemoteJupyterKernel();
+            const remoteDisplayNameSpec = await getRemoteServerDisplayName(kernelConnection, serverUriStorage);
+            return DataScience.kernelCategoryForRemoteJupyterKernel().format(remoteDisplayNameSpec);
         case 'startUsingLocalKernelSpec':
             return DataScience.kernelCategoryForJupyterKernel();
         case 'startUsingPythonInterpreter': {
@@ -709,4 +726,20 @@ function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata)
             }
         }
     }
+}
+
+// For Remote connections, check if we have a saved display name for the server.
+async function getRemoteServerDisplayName(
+    kernelConnection: RemoteKernelConnectionMetadata,
+    serverUriStorage: IJupyterServerUriStorage
+): Promise<string> {
+    const savedUriList = await serverUriStorage.getSavedUriList();
+    const targetConnection = savedUriList.find((uriEntry) => uriEntry.serverId === kernelConnection.serverId);
+
+    // We only show this if we have a display name and the name is not the same as the URI (this prevents showing the long token for user entered URIs).
+    if (targetConnection && targetConnection.displayName && targetConnection.uri !== targetConnection.displayName) {
+        return targetConnection.displayName;
+    }
+
+    return DataScience.kernelDefaultRemoteDisplayName();
 }

@@ -102,14 +102,17 @@
         "message": "Choose the kernels that are available in the kernel picker.",
         "comment": ["{Locked='kernel'}"]
     },
-    "jupyter.kernel.category.jupyterSession": "(Remote) Jupyter Session",
+    "jupyter.kernel.category.jupyterSession": "({0}) Jupyter Session",
     "jupyter.kernel.category.jupyterKernel": {
         "message": "Jupyter Kernel",
         "comment": ["{Locked='Kernel'}"]
     },
     "jupyter.kernel.category.jupyterRemoteKernel": {
-        "message": "(Remote) Jupyter Kernel",
+        "message": "({0}) Jupyter Kernel",
         "comment": ["{Locked='Kernel'}"]
+    },
+    "DataScience.kernelDefaultRemoteDisplayName": {
+        "message": "Remote"
     },
     "jupyter.kernel.category.conda": "Conda Env",
     "jupyter.kernel.category.poetry": {

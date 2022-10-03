@@ -136,7 +136,8 @@ export class ControllerRegistration implements IControllerRegistration {
                         this.appShell,
                         this.browser,
                         this.extensionChecker,
-                        this.serviceContainer
+                        this.serviceContainer,
+                        this.serverUriStorage
                     );
                     controller.onDidDispose(
                         () => {
