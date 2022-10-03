@@ -491,6 +491,8 @@
 //Telemetry.OpenNotebookAll
 /* __GDPR__
    "DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL" : {
+     "nbformat": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Major Format of the Notebook. Useful in determining the most popular versions of nbformats used by users.","owner":"IanMatthewHuff","isMeasurement":true},
+     "nbformat_minor": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Minor Format of the Notebook. Useful in determining the most popular versions of nbformats used by users.","owner":"IanMatthewHuff","isMeasurement":true},
      "${include}": [
        "${F1}"
 

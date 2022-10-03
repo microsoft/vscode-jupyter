@@ -168,6 +168,19 @@ export function getNotebookMetadata(document: NotebookDocument | NotebookData): 
     return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
 }
 
+export function getNotebookFormat(document: NotebookDocument): {
+    nbformat: number | undefined;
+    nbformat_minor: number | undefined;
+} {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
+    // Create a clone.
+    return {
+        nbformat: notebookContent?.nbformat,
+        nbformat_minor: notebookContent?.nbformat_minor
+    };
+}
+
 export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDocument | undefined {
     return workspace.notebookDocuments.find(
         (notebook) => isJupyterNotebook(notebook) && notebook.getCells().some((cell) => cell.document === document)

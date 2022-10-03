@@ -738,6 +738,17 @@ Expand each section to see more information about that event.
     from a previous session and not a direct user action.  
     ```
 
+    - Properties:  
+        - `nbformat`: `<see below>`  
+        Major Format of the Notebook.  
+        Useful in determining the most popular versions of nbformats used by users.  
+        Possible values include:  
+            - `null or <empty>`  
+        - `nbformat_minor`: `<see below>`  
+        Minor Format of the Notebook.  
+        Useful in determining the most popular versions of nbformats used by users.  
+        Possible values include:  
+            - `null or <empty>`  
 
 
 * DATASCIENCE.NO_ACTIVE_KERNEL_SESSION  (Telemetry.NoActiveKernelSession)  
