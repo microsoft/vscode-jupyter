@@ -1,5 +1,51 @@
 # Changelog
 
+## 2022.9.100 (4 October 2022)
+
+### Enhancements
+
+1. Add code folding regions for `# %%` cells within python files.
+   ([#1527](https://github.com/Microsoft/vscode-jupyter/issues/1527))
+2. Deleting a cell in the interactive window is now an undo-able operation.
+   ([#7756](https://github.com/Microsoft/vscode-jupyter/issues/7756))
+3. Add cell tag and slideshow editing support.
+   ([#1121](https://github.com/microsoft/vscode-jupyter/issues/1121))
+
+### Fixes
+
+1. The cell scrolled to will be selected after using the go to cell code lens.
+   ([#7687](https://github.com/Microsoft/vscode-jupyter/issues/7687))
+1. Make sure the "Install Python" and "Install Python Extension" commands only show up after we have loaded our controllers.
+   ([#10960](https://github.com/Microsoft/vscode-jupyter/issues/10960))
+1. Ensure the cache of kernels is not updated when kernel discovery ends midway.
+   ([#11240](https://github.com/Microsoft/vscode-jupyter/issues/11240))
+1. Don't show unclickable links when failing to connect to a jupyter server in the web extension.
+   ([#11285](https://github.com/Microsoft/vscode-jupyter/issues/11285))
+
+### Code Health
+
+1. Removed delayed scrolling reveal in the interactive window now that core does auto-scrolling.
+   ([#7686](https://github.com/Microsoft/vscode-jupyter/issues/7686))
+1. Ignore errors when disposing a kernel.
+   ([#11304](https://github.com/Microsoft/vscode-jupyter/issues/11304))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 ## 2022.8.100 (30 August 2022)
 
 ### Fixes
