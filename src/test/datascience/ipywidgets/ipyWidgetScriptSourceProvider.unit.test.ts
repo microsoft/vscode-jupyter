@@ -93,6 +93,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
             instance(memento)
         );
         const cdnScriptProvider = mock<CDNWidgetScriptSourceProvider>();
+        when(cdnScriptProvider.isOnCDN(anything())).thenResolve(false);
         scriptSourceProvider = new IPyWidgetScriptSourceProvider(
             instance(kernel),
             instance(resourceConverter),
