@@ -2658,8 +2658,10 @@ Expand each section to see more information about that event.
         Hash of the widget module.  
         If the widget is found on a CDN, then the unhashed name is sent in `moduleName`.  
         - `moduleName`?: `string`  
-        Name of the widget module, sent only for cases where `source` is `cdn`.  
+        Name of the widget module, sent only for cases where `source` is `cdn` or when module is found on cdn.  
         As that is the onl time we can safely send the name (if its on public CDN then its public information).  
+        - `moduleVersion`?: `string`  
+        Version of the Module used, sent only for cases where `source` is `cdn` or when module is found on cdn.  
         - `source`?: `<see below>`  
         Where did we find the hashed name (CDN or user environment or remote jupyter).  
         Possible values include:  

@@ -36,6 +36,7 @@ import { IRawNotebookProvider } from '../../kernels/raw/types';
 import { IControllerSelection, IVSCodeNotebookController } from './types';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 /**
  * Class used for connecting a controller to an instance of an IKernel
@@ -256,7 +257,11 @@ export class KernelConnector {
         disposables: IDisposable[],
         onAction: (action: KernelAction, kernel: IBaseKernel | IKernel) => void = () => noop()
     ): Promise<IBaseKernel | IKernel> {
-        traceVerbose(`${initialContext} the kernel, options.disableUI=${options.disableUI}`);
+        traceVerbose(
+            `${initialContext} the kernel, options.disableUI=${options.disableUI} for ${getDisplayPath(
+                'notebook' in notebookResource ? notebookResource.notebook.uri : notebookResource.resource
+            )}`
+        );
 
         let currentPromise = this.getKernelInfo(notebookResource);
         if (!options.disableUI && currentPromise?.options.disableUI) {

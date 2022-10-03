@@ -15,6 +15,8 @@ import {
     IWidgetScriptSourceProviderFactory,
     WidgetScriptSource
 } from '../types';
+import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
+import { noop } from '../../../../platform/common/utils/misc';
 
 /**
  * This class decides where to get widget scripts from.
@@ -34,7 +36,8 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         private readonly configurationSettings: IConfigurationService,
         private readonly httpClient: IHttpClient,
         private readonly sourceProviderFactory: IWidgetScriptSourceProviderFactory,
-        private readonly isWebViewOnline: Promise<boolean>
+        private readonly isWebViewOnline: Promise<boolean>,
+        private readonly cdnScriptProvider: CDNWidgetScriptSourceProvider
     ) {
         this.scriptProviders = this.sourceProviderFactory.getProviders(
             this.kernel,
@@ -88,19 +91,25 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 break;
             }
         }
+        (found.source === 'cdn' ? Promise.resolve(true) : this.cdnScriptProvider.isOnCDN(moduleName))
+            .then(async (isOnCDN) => {
+                isOnCDN = isOnCDN || found.source === 'cdn';
+                // If the module name is found on CDN, then its not PII, its public information.
+                // The telemetry reporter assumes the presence of a `/` or `\` indicates these are file paths
+                // and obscures them. We don't want that, so we replace them with `_`.
+                const telemetrySafeModuleName = isOnCDN
+                    ? found.moduleName.replace(/\//g, '_').replace(/\\/g, '_')
+                    : undefined;
 
-        // The telemetry reporter assumes the presence of a `/` or `\` indicates these are file paths
-        // and obscures them. We don't want that, so we replace them with `_`.
-        const telemetrySafeModuleName =
-            found.source === 'cdn' ? found.moduleName.replace(/\//g, '_').replace(/\\/g, '_') : undefined;
-
-        sendTelemetryEvent(Telemetry.HashedIPyWidgetNameUsed, undefined, {
-            hashedName: await getTelemetrySafeHashedString(found.moduleName),
-            moduleName: telemetrySafeModuleName,
-            source: found.source,
-            cdnSearched: this.configuredScriptSources.length > 0
-        });
-
+                sendTelemetryEvent(Telemetry.HashedIPyWidgetNameUsed, undefined, {
+                    hashedName: await getTelemetrySafeHashedString(found.moduleName),
+                    moduleName: telemetrySafeModuleName,
+                    source: found.source,
+                    moduleVersion: isOnCDN ? moduleVersion : undefined,
+                    cdnSearched: this.configuredScriptSources.length > 0
+                });
+            })
+            .then(noop, noop);
         if (!found.scriptUri) {
             traceError(`Script source for Widget ${moduleName}@${moduleVersion} not found`);
         } else {

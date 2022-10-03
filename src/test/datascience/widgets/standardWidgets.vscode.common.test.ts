@@ -103,13 +103,17 @@ suite('Standard IPyWidget Tests', function () {
     // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
     this.retries(1);
     suiteSetup(async function () {
-        traceInfo('Suite Setup VS Code Notebook - Execution');
+        traceInfo('Suite Setup Standard IPyWidget Tests');
         this.timeout(120_000);
         api = await initialize();
+        traceInfo('Suite Setup Standard IPyWidget Tests, Step 2');
         const config = workspace.getConfiguration('jupyter', undefined);
         await config.update('widgetScriptSources', widgetScriptSourcesValue, ConfigurationTarget.Global);
+        traceInfo('Suite Setup Standard IPyWidget Tests, Step 3');
         await startJupyterServer();
+        traceInfo('Suite Setup Standard IPyWidget Tests, Step 4');
         await prewarmNotebooks();
+        traceInfo('Suite Setup Standard IPyWidget Tests, Step 5');
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
