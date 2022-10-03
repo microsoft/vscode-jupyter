@@ -25,7 +25,7 @@ import {
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
-import { traceError, traceInfoIfCI } from '../platform/logging';
+import { traceError, traceInfoIfCI, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
 
@@ -201,8 +201,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (this.preferredController) {
             // Also start connecting to our kernel but don't wait for it to finish
             this.startKernel(this.preferredController.controller, this.preferredController.connection).ignoreErrors();
-        } else if (this.isWebExtension) {
-            this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
+        } else {
+            traceWarning('No preferred controller found for Interactive Window');
+            if (this.isWebExtension) {
+                this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
+            }
         }
 
         // Create the code generator right away to start watching the notebook

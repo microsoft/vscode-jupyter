@@ -195,14 +195,18 @@ export class InteractiveWindowProvider
         // Ensure we don't end up calling this method multiple times when creating an IW for the same resource.
         this.pendingCreations.push(creationInProgress.promise);
         try {
-            traceInfo(`Starting interactive window for resource '${getDisplayPath(resource)}'`);
-
             // Set it as soon as we create it. The .ctor for the interactive window
             // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
             // Find our preferred controller
             const preferredController = connection
                 ? this.controllerRegistration.get(connection, InteractiveWindowView)
                 : await this.controllerDefaultService.computeDefaultController(resource, InteractiveWindowView);
+
+            traceInfo(
+                `Starting interactive window for resource '${getDisplayPath(resource)}' with controller '${
+                    preferredController?.id
+                }'`
+            );
 
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
             const [inputUri, editor] = await this.createEditor(preferredController, resource, mode, commandManager);
