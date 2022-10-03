@@ -3,10 +3,17 @@
 
 'use strict';
 
+import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Memento } from 'vscode';
 import { IApplicationShell } from '../../../../platform/common/application/types';
 import { Telemetry } from '../../../../platform/common/constants';
-import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../../../platform/common/types';
+import {
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    IHttpClient,
+    IMemento,
+    WidgetCDNs
+} from '../../../../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { noop } from '../../../../platform/common/utils/misc';
@@ -67,6 +74,7 @@ function getCDNPrefix(cdn?: WidgetCDNs): string | undefined {
  * Given an widget module name & version, this will attempt to find the Url on a CDN.
  * We'll need to stick to the order of preference prescribed by the user.
  */
+@injectable()
 export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
     private cache = new Map<string, Promise<WidgetScriptSource>>();
     private isOnCDNCache = new Map<string, Promise<boolean>>();
@@ -77,10 +85,10 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     }
     private configurationPromise?: Deferred<void>;
     constructor(
-        private readonly appShell: IApplicationShell,
-        private readonly globalMemento: Memento,
-        private readonly configurationSettings: IConfigurationService,
-        private readonly httpClient: IHttpClient
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService,
+        @inject(IHttpClient) private readonly httpClient: IHttpClient
     ) {}
     public dispose() {
         this.cache.clear();
