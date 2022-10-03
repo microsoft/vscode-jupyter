@@ -106,10 +106,14 @@ suite('Standard IPyWidget Tests', function () {
         traceInfo('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
         api = await initialize();
+        traceInfo('Suite Setup VS Code Notebook - Execution, Step 2');
         const config = workspace.getConfiguration('jupyter', undefined);
         await config.update('widgetScriptSources', widgetScriptSourcesValue, ConfigurationTarget.Global);
+        traceInfo('Suite Setup VS Code Notebook - Execution, Step 3');
         await startJupyterServer();
+        traceInfo('Suite Setup VS Code Notebook - Execution, Step 4');
         await prewarmNotebooks();
+        traceInfo('Suite Setup VS Code Notebook - Execution, Step 5');
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
