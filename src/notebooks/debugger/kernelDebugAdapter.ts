@@ -18,10 +18,10 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
     protected override async dumpCell(index: number): Promise<void> {
         const cell = this.notebookDocument.cellAt(index);
         try {
-            const response = await this.session.customRequest('dumpCell', {
+            const response = (await this.session.customRequest('dumpCell', {
                 code: cell.document.getText().replace(/\r\n/g, '\n')
-            });
-            const norm = KernelDebugAdapterBase.extractDumpFilePathOnKernelSide(response as IDumpCellResponse);
+            })) as IDumpCellResponse;
+            const norm = KernelDebugAdapterBase.normalizeFsAware(response.sourcePath);
             this.fileToCell.set(norm, cell.document.uri);
             this.cellToFile.set(cell.document.uri.toString(), norm);
         } catch (err) {
