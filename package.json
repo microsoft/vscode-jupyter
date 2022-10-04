@@ -1994,9 +1994,9 @@
                     "scope": "resource",
                     "description": "%jupyter.configuration.jupyter.experimental.kernelPickerType.description%",
                     "enumDescriptions": [
-                            "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.stable%",
-                            "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.onlyonetypeofkernel%",
-                            "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.insiders%"
+                        "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.stable%",
+                        "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.onlyonetypeofkernel%",
+                        "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.insiders%"
                     ],
                     "default": "Stable"
                 }
@@ -2309,6 +2309,7 @@
         "@vscode/test-electron": "^2.1.5",
         "@vscode/test-web": "^0.0.29",
         "acorn": "^6.4.1",
+        "await-lock": "^2.2.2",
         "babel-polyfill": "^6.26.0",
         "bufferutil": "^4.0.6",
         "chai": "^4.3.0",

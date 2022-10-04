@@ -89,6 +89,7 @@ import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../..
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import AwaitLock from 'await-lock';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -108,6 +109,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     public readonly controller: NotebookController;
+    private lock = new AwaitLock();
     /**
      * Used purely for testing purposes.
      */
@@ -294,7 +296,11 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         // Notebook is trusted. Continue to execute cells
-        await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
+        await Promise.all(cells.map(async (cell) => {
+            await this.lock.acquireAsync();
+            await this.executeCell(notebook, cell);
+            this.lock.release();
+        }));
     }
     private warnWhenUsingOutdatedPython() {
         const pyVersion = this.kernelConnection.interpreter?.version;
