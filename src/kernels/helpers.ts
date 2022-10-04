@@ -569,10 +569,7 @@ export type SilentExecutionErrorOptions = {
     // This optional message will be displayed as a prefix for the error or warning message
     traceErrorsMessage?: string;
     // Setting this will log telemetry on the given name
-    telemetryName?:
-        | Telemetry.InteractiveWindowDebugSetupCodeFailure
-        | Telemetry.KernelStartupCodeFailure
-        | Telemetry.PythonVariableFetchingCodeFailure;
+    telemetryName?: Telemetry.InteractiveWindowDebugSetupCodeFailure | Telemetry.PythonVariableFetchingCodeFailure;
 };
 
 export async function executeSilently(

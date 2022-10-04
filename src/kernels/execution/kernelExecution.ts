@@ -103,7 +103,6 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
         traceInfoIfCI(`Dispose KernelExecution`);
         this.disposables.forEach((d) => d.dispose());
     }
-    @capturePerfTelemetry(Telemetry.Interrupt)
     private async interruptExecution(
         session: IKernelConnectionSession,
         pendingExecutions: Promise<unknown>

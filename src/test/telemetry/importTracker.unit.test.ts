@@ -61,15 +61,6 @@ suite('Import Tracker', async () => {
             resourceType: ResourceTypeTelemetryProperty['resourceType'] = undefined,
             ...hashes: string[]
         ) {
-            await waitForCondition(
-                async () => {
-                    expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_PERF);
-                    return true;
-                },
-                1_000,
-                'Hashed package perf event not sent'
-            );
-            expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_PERF);
             if (hashes.length > 0) {
                 await waitForCondition(
                     async () => {

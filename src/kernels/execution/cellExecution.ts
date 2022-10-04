@@ -21,10 +21,9 @@ import { analyzeKernelErrors, createOutputWithErrorMessageForDisplay } from '../
 import { BaseError } from '../../platform/errors/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
-import { IDisposable, Resource } from '../../platform/common/types';
+import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { Telemetry } from '../../telemetry';
 import { noop } from '../../platform/common/utils/misc';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
@@ -32,7 +31,6 @@ import { activeNotebookCellExecution, CellExecutionMessageHandler } from './cell
 import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
 import { IKernelConnectionSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { NotebookCellStateTracker, traceCellMessage } from './helpers';
-import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 /**
@@ -44,14 +42,9 @@ export class CellExecutionFactory {
         private readonly requestListener: CellExecutionMessageHandlerService
     ) {}
 
-    public create(
-        cell: NotebookCell,
-        code: string | undefined,
-        metadata: Readonly<KernelConnectionMetadata>,
-        resourceUri: Resource
-    ) {
+    public create(cell: NotebookCell, code: string | undefined, metadata: Readonly<KernelConnectionMetadata>) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        return CellExecution.fromCell(cell, code, metadata, this.controller, this.requestListener, resourceUri);
+        return CellExecution.fromCell(cell, code, metadata, this.controller, this.requestListener);
     }
 }
 
@@ -71,10 +64,8 @@ export class CellExecution implements IDisposable {
     public get preExecute(): Event<NotebookCell> {
         return this._preExecuteEmitter.event;
     }
-    private static sentExecuteCellTelemetry?: boolean;
 
     private stopWatch = new StopWatch();
-    private stopWatchForTelemetry = new StopWatch();
 
     private readonly _result = createDeferred<NotebookCellRunState>();
 
@@ -94,7 +85,6 @@ export class CellExecution implements IDisposable {
         private readonly codeOverride: string | undefined,
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
         private readonly controller: NotebookController,
-        private readonly resourceUri: Resource,
         private readonly requestListener: CellExecutionMessageHandlerService
     ) {
         workspace.onDidCloseTextDocument(
@@ -141,10 +131,9 @@ export class CellExecution implements IDisposable {
         code: string | undefined,
         metadata: Readonly<KernelConnectionMetadata>,
         controller: NotebookController,
-        requestListener: CellExecutionMessageHandlerService,
-        resourceUri: Resource
+        requestListener: CellExecutionMessageHandlerService
     ) {
-        return new CellExecution(cell, code, metadata, controller, resourceUri, requestListener);
+        return new CellExecution(cell, code, metadata, controller, requestListener);
     }
     public async start(session: IKernelConnectionSession) {
         if (this.cancelHandled) {
@@ -226,7 +215,6 @@ export class CellExecution implements IDisposable {
     private completedWithErrors(error: Partial<Error>) {
         traceWarning(`Cell completed with errors`, error);
         traceCellMessage(this.cell, 'Completed with errors');
-        this.sendPerceivedCellExecute();
 
         traceCellMessage(this.cell, 'Update with error state & output');
         let errorMessage: string | undefined;
@@ -259,7 +247,6 @@ export class CellExecution implements IDisposable {
     }
     private completedSuccessfully() {
         traceCellMessage(this.cell, 'Completed successfully');
-        this.sendPerceivedCellExecute();
         // If we requested a cancellation, then assume it did not even run.
         // If it did, then we'd get an interrupt error in the output.
         let runState = this.isEmptyCodeCell ? NotebookCellRunState.Idle : NotebookCellRunState.Success;
@@ -306,18 +293,6 @@ export class CellExecution implements IDisposable {
         this._result.resolve(NotebookCellRunState.Idle);
     }
 
-    private sendPerceivedCellExecute() {
-        if (!CellExecution.sentExecuteCellTelemetry) {
-            CellExecution.sentExecuteCellTelemetry = true;
-            sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCellPerceivedCold, {
-                duration: this.stopWatchForTelemetry.elapsedTime
-            });
-        } else {
-            sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCellPerceivedWarm, {
-                duration: this.stopWatchForTelemetry.elapsedTime
-            });
-        }
-    }
     private canExecuteCell() {
         // Raw cells cannot be executed.
         if (isPythonKernelConnection(this.kernelConnection) && this.cell.document.languageId === 'raw') {

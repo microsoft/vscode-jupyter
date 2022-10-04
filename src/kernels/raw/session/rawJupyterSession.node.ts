@@ -104,7 +104,6 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                     undefined,
                     error
                 );
-                sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartUserCancel);
                 traceVerbose('Starting of raw session cancelled by user');
                 throw error;
             } else {

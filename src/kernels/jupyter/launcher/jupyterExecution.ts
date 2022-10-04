@@ -127,10 +127,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Create a server tha  t we will then attempt to connect to.
                     result = await this.notebookServerFactory.createNotebookServer(connection);
                     traceInfo(`Connection complete server`);
-
-                    sendTelemetryEvent(
-                        options.localJupyter ? Telemetry.ConnectLocalJupyter : Telemetry.ConnectRemoteJupyter
-                    );
                     return result;
                 } catch (err) {
                     lastTryError = err;

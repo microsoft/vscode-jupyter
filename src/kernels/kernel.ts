@@ -525,8 +525,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         const startupCode = await this.gatherInternalStartupCode();
         await this.executeSilently(session, startupCode, {
             traceErrors: true,
-            traceErrorsMessage: 'Error executing jupyter extension internal startup code',
-            telemetryName: Telemetry.KernelStartupCodeFailure
+            traceErrorsMessage: 'Error executing jupyter extension internal startup code'
         });
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             // Run user specified startup commands
@@ -730,7 +729,6 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
     }
     private _visibleExecutionCount = 0;
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
-    private perceivedJupyterStartupTelemetryCaptured?: boolean;
     constructor(
         uri: Uri,
         resourceUri: Resource,
@@ -787,47 +785,15 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         );
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
         this.sendKernelStartedTelemetry();
-        const stopWatch = new StopWatch();
         const sessionPromise = this.startJupyterSession();
         const promise = this.kernelExecution.executeCell(sessionPromise, cell, codeOverride);
-        this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
         promise.finally(() => (this._visibleExecutionCount += 1));
         promise.then((state) => traceVerbose(`Cell ${cell.index} executed with state ${state}`), noop);
         return promise;
     }
     public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
-        const stopWatch = new StopWatch();
         const sessionPromise = this.startJupyterSession();
-        const promise = sessionPromise.then((session) => executeSilently(session, code));
-        this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
-        return promise;
-    }
-    protected async trackNotebookCellPerceivedColdTime(
-        stopWatch: StopWatch,
-        started: Promise<unknown>,
-        executionPromise: Promise<unknown>
-    ): Promise<void> {
-        if (this.perceivedJupyterStartupTelemetryCaptured) {
-            return;
-        }
-        const session = await started;
-        if (!session) {
-            return;
-        }
-        // Setup telemetry
-        if (!this.perceivedJupyterStartupTelemetryCaptured) {
-            this.perceivedJupyterStartupTelemetryCaptured = true;
-            sendKernelTelemetryEvent(this.resourceUri, Telemetry.PerceivedJupyterStartupNotebook, {
-                duration: stopWatch.elapsedTime
-            });
-            executionPromise
-                .finally(() =>
-                    sendKernelTelemetryEvent(this.resourceUri, Telemetry.StartExecuteNotebookCellPerceivedCold, {
-                        duration: stopWatch.elapsedTime
-                    })
-                )
-                .catch(noop);
-        }
+        return sessionPromise.then((session) => executeSilently(session, code));
     }
     protected override async initializeAfterStart(session: IKernelConnectionSession | undefined) {
         this._visibleExecutionCount = 0;

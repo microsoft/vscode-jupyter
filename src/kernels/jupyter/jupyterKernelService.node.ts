@@ -220,7 +220,6 @@ export class JupyterKernelService implements IJupyterKernelService {
             );
         }
 
-        sendTelemetryEvent(Telemetry.RegisterAndUseInterpreterAsKernel);
         return kernelSpecFilePath.fsPath;
     }
     private async updateKernelEnvironment(

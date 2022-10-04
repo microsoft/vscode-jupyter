@@ -149,7 +149,6 @@ suite('Telemetry validation', function () {
 
         // Right now this is the guaranteed list. Might want to expand this.
         assertEvent(Telemetry.RunFileInteractive);
-        assertEvent(Telemetry.ExecuteCellPerceivedWarm);
         assertEvent(Telemetry.SwitchKernel);
     });
 });

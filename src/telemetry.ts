@@ -546,44 +546,17 @@ export class IEventNamePropertyMapping {
          * Time taken to activate the extension.
          */
         totalActivateTime: number;
-        /**
-         * Time taken to load the code.
-         */
-        codeLoadingTime: number;
-        /**
-         * Time when activation started.
-         */
-        startActivateTime: number;
-        /**
-         * Time when activation completed.
-         */
-        endActivateTime: number;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
         measures: {
-            codeLoadingTime: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
             totalActivateTime: {
                 classification: 'SystemMetaData',
                 purpose: 'PerformanceAndHealth',
                 isMeasurement: true
             },
             workspaceFolderCount: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            endActivateTime: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            startActivateTime: {
                 classification: 'SystemMetaData',
                 purpose: 'PerformanceAndHealth',
                 isMeasurement: true
@@ -845,15 +818,6 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
-     * Time taken to hash python packages found in the code.
-     */
-    [EventName.HASHED_PACKAGE_PERF]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
      * Telemetry event sent when user opens the data viewer via the variable view.
      */
     [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: TelemetryEventInfo<never | undefined> = {
@@ -906,24 +870,6 @@ export class IEventNamePropertyMapping {
         properties: commonClassificationForErrorProperties()
     };
     /**
-     * Sent when we have successfully connected to a local jupyter server.
-     */
-    [Telemetry.ConnectLocalJupyter]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
-    };
-    /**
-     * Sent when we have successfully connected to a remote jupyter server.
-     */
-    [Telemetry.ConnectRemoteJupyter]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup', 'Remote']
-    };
-    /**
      * Connecting to an existing Jupyter server, but connecting to localhost.
      */
     [Telemetry.ConnectRemoteJupyterViaLocalHost]: TelemetryEventInfo<never | undefined> = {
@@ -955,16 +901,6 @@ export class IEventNamePropertyMapping {
      * Jupyter server's certificate has expired.
      */
     [Telemetry.ConnectRemoteExpiredCertFailedJupyter]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
-    };
-    /**
-     * Similar to `Telemetry.RegisterInterpreterAsKernel`.
-     * But sent when we have successfully registered the interpreter as a kernel.
-     */
-    [Telemetry.RegisterAndUseInterpreterAsKernel]: TelemetryEventInfo<never | undefined> = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
@@ -1057,51 +993,10 @@ export class IEventNamePropertyMapping {
         source: 'User Action'
     };
     /**
-     * Telemetry sent to capture first time execution of a cell.
-     * If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.
-     */
-    [Telemetry.ExecuteCellPerceivedCold]: TelemetryEventInfo<DurationMeasurement & ResourceTypeTelemetryProperty> = {
-        owner: 'donjayamanne',
-        feature: ['InteractiveWindow', 'Notebook'],
-        tags: ['Cell Execution'],
-        source: 'N/A',
-        properties: commonClassificationForResourceType(),
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * Telemetry sent to capture subsequent execution of a cell.
-     * If `notebook = true`, this its telemetry for native editor/notebooks.
-     * (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)
-     */
-    [Telemetry.ExecuteCellPerceivedWarm]: TelemetryEventInfo<DurationMeasurement & ResourceTypeTelemetryProperty> = {
-        owner: 'donjayamanne',
-        feature: ['InteractiveWindow', 'Notebook'],
-        tags: ['Cell Execution'],
-        source: 'N/A',
-        properties: commonClassificationForResourceType(),
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
      * Time take for jupyter server to start and be ready to run first user cell.
      * (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)
      */
     [Telemetry.PerceivedJupyterStartupNotebook]: TelemetryEventInfo<
-        DurationMeasurement & ResourceSpecificTelemetryProperties
-    > = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        properties: commonClassificationForResourceSpecificTelemetryProperties().properties,
-        measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
-        }
-    };
-    /**
-     * Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.
-     */
-    [Telemetry.StartExecuteNotebookCellPerceivedCold]: TelemetryEventInfo<
         DurationMeasurement & ResourceSpecificTelemetryProperties
     > = {
         owner: 'donjayamanne',
@@ -1271,15 +1166,6 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A'
-    };
-    /**
-     * User interrupts a cell
-     */
-    [Telemetry.Interrupt]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: ['InteractiveWindow', 'Notebook'],
-        source: 'User Action',
-        measures: commonClassificationForDurationProperties()
     };
     /**
      * Total number of cells executed. Telemetry Sent when VS Code is closed.
@@ -2351,12 +2237,14 @@ export class IEventNamePropertyMapping {
      * Total time taken to discover all IPyWidgets.
      * This is how long it takes to discover all widgets on disc (from python environment).
      */
-    [Telemetry.DiscoverIPyWidgetNamesPerf]: TelemetryEventInfo<{
-        /**
-         * Whether we're looking for widgets on local Jupyter environment (local connections) or remote.
-         */
-        type: 'local' | 'remote';
-    }> = {
+    [Telemetry.DiscoverIPyWidgetNamesPerf]: TelemetryEventInfo<
+        {
+            /**
+             * Whether we're looking for widgets on local Jupyter environment (local connections) or remote.
+             */
+            type: 'local' | 'remote';
+        } & DurationMeasurement
+    > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         tags: ['Widgets'],
@@ -2366,7 +2254,8 @@ export class IEventNamePropertyMapping {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
-        }
+        },
+        measures: commonClassificationForDurationProperties()
     };
     /**
      * Something went wrong in looking for a widget.
@@ -2585,16 +2474,6 @@ export class IEventNamePropertyMapping {
         }
     };
 
-    /**
-     * Telemetry send when we create a notebook for a raw kernel or jupyter
-     */
-    [Telemetry.RawKernelCreatingNotebook]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        measures: commonClassificationForDurationProperties()
-    };
     /**
      * After starting a kernel we send a request to get the kernel info.
      * This tracks the total time taken to get the response back (or wether we timedout).
@@ -2829,20 +2708,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-     * E.g. possible the user chose another kernel or the like.
-     */
-    [Telemetry.RawKernelSessionStartUserCancel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        source: 'N/A',
-        properties: {
-            ...commonClassificationForResourceType(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().properties
-        },
-        measures: commonClassificationForResourceSpecificTelemetryProperties().measures
-    };
-    /**
      * Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
      * This is useful to see what the user does with this error message.
      */
@@ -2996,13 +2861,6 @@ export class IEventNamePropertyMapping {
              */
             kernelLiveCount: number;
             /**
-             * Total number of conda environments that share the same interpreter
-             * This happens when we create conda envs without the `python` argument.
-             * Such conda envs don't work today in the extension.
-             * Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.
-             */
-            condaEnvsSharingSameInterpreter: number;
-            /**
              * Total number of local kernel specs in the list.
              */
             localKernelSpecCount: number;
@@ -3024,11 +2882,6 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForDurationProperties(),
             ...commonClassificationForResourceSpecificTelemetryProperties().measures,
             kernelSpecCount: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight',
-                isMeasurement: true
-            },
-            condaEnvsSharingSameInterpreter: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight',
                 isMeasurement: true
@@ -3454,33 +3307,6 @@ export class IEventNamePropertyMapping {
         }
     };
 
-    /**
-     * Code we run post starting a kernel seems to have failed.
-     */
-    [Telemetry.KernelStartupCodeFailure]: TelemetryEventInfo<{
-        /**
-         * The error name of the failure.
-         */
-        ename: string;
-        /**
-         * The error value of the failure
-         */
-        evalue: string;
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        source: 'N/A',
-        properties: {
-            ename: {
-                classification: 'CallstackOrException',
-                purpose: 'PerformanceAndHealth'
-            },
-            evalue: {
-                classification: 'CallstackOrException',
-                purpose: 'PerformanceAndHealth'
-            }
-        }
-    };
     /**
      * The Python code that we ran to fetch variables had a failure.
      */
