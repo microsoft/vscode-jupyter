@@ -132,19 +132,23 @@ export class PythonKernelInterruptDaemon {
                         .splitLines({ trim: true, removeEmptyEntries: true })
                         .filter((output) => output.includes('INTERRUPT:'))
                         .forEach((output) => {
-                            const [command, id, response] = output.split(':');
-                            const deferred = this.messages.get(parseInt(id, 10));
-                            if (deferred) {
-                                traceVerbose(`Got a response of ${response} for ${command}:${id}`);
-                                deferred.resolve(response);
-                            } else {
-                                traceError(
-                                    `Got a response of ${response} for ${command}:${id} but no command entry found`
-                                );
+                            try {
+                                const [command, id, response] = output.split(':');
+                                const deferred = this.messages.get(parseInt(id, 10));
+                                if (deferred) {
+                                    traceVerbose(`Got a response of ${response} for ${command}:${id}`);
+                                    deferred.resolve(response);
+                                } else {
+                                    traceError(
+                                        `Got a response of ${response} for ${command}:${id} but no command entry found in ${out.out}`
+                                    );
+                                }
+                            } catch (ex) {
+                                traceError(`Failed to parse interrupt daemon response, ${out.out}`, ex);
                             }
                         });
                 } else {
-                    traceWarning(out.out);
+                    traceWarning(`Error output in interrupt daemon response ${out.out}`);
                 }
             });
             this.disposableRegistry.push(new Disposable(() => subscription.unsubscribe()));
