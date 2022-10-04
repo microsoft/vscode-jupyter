@@ -5,7 +5,6 @@
 import { inject, injectable, multiInject } from 'inversify';
 import { NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../platform/common/application/types';
-import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -41,7 +40,6 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
@@ -82,8 +80,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
                     return sendTelemetryForPythonKernelExecutable(
                         kernel.session,
                         kernel.resourceUri,
-                        kernel.kernelConnectionMetadata,
-                        this.pythonExecutionFactory
+                        kernel.kernelConnectionMetadata
                     );
                 } else {
                     return Promise.resolve();

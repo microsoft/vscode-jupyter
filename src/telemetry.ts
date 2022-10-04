@@ -615,39 +615,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Telemetry sent for local Python Kernels.
-     * Tracking whether we have managed to launch the kernel that matches the interpreter.
-     * If match=false, then this means we have failed to launch the right kernel.
-     */
-    [Telemetry.PythonKerneExecutableMatches]: TelemetryEventInfo<{
-        /**
-         * Whether we've managed to correctly identify the Python Environment.
-         */
-        match: 'true' | 'false';
-        /**
-         * Type of kernel connection, whether its local, remote or a python environment.
-         */
-        kernelConnectionType:
-            | 'startUsingLocalKernelSpec'
-            | 'startUsingPythonInterpreter'
-            | 'startUsingRemoteKernelSpec';
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        properties: {
-            kernelConnectionType: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            match: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            }
-        }
-    };
-    /**
      * Time taken to list the Python interpreters.
      */
     [Telemetry.InterpreterListingPerf]: TelemetryEventInfo<{
