@@ -198,9 +198,13 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
                 )}`
             );
         }
-        sendTelemetryEvent(Telemetry.DiscoverIPyWidgetNamesPerf, stopWatch.elapsedTime, {
-            type: isLocalConnection(this.kernel.kernelConnectionMetadata) ? 'local' : 'remote'
-        });
+        sendTelemetryEvent(
+            Telemetry.DiscoverIPyWidgetNamesPerf,
+            { duration: stopWatch.elapsedTime },
+            {
+                type: isLocalConnection(this.kernel.kernelConnectionMetadata) ? 'local' : 'remote'
+            }
+        );
         return config && Object.keys(config).length ? config : undefined;
     }
 }

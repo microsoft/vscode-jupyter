@@ -173,8 +173,6 @@ as the context already, in which case the import command doesn't ask for selecti
 'file' ",false
 "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","Error information from the debugger output channel while running initialization code.","Telemetry.InteractiveWindowDebugSetupCodeFailure","roblourens","InteractiveWindow, Debugger","","","ename","The error name of the failure.","string","",false
 "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","Error information from the debugger output channel while running initialization code.","Telemetry.InteractiveWindowDebugSetupCodeFailure","roblourens","InteractiveWindow, Debugger","","","evalue","The error value of the failure.","string","",false
-"DATASCIENCE.INTERRUPT","User interrupts a cell","Telemetry.Interrupt","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
 "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","Telemetry sent when an extension attempts to use our 3rd party API.","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","allowed","Whether or not the extension was able to use the API.","","'yes' 
 'no' ",false
 "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","Telemetry sent when an extension attempts to use our 3rd party API.","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","extensionId","Extension Id that's attempting to use the API.","string","",false
@@ -256,8 +254,6 @@ Common to most of the events.","boolean","",true
 "DATASCIENCE.KERNEL_SPEC_LANGUAGE","Sent to detect the different languages of kernel specs used.","Telemetry.KernelSpecLanguage","donjayamanne","N/A","KernelStartup","","language","Language of the kernelSpec.","string","",false
 "DATASCIENCE.KERNEL_SPEC_LANGUAGE","Sent to detect the different languages of kernel specs used.","Telemetry.KernelSpecLanguage","donjayamanne","N/A","KernelStartup","","usesShell","Whether shell is used to start the kernel. E.g. `""/bin/sh""` is used in the argv of the kernelSpec.
 OCaml is one such kernel.","boolean","",true
-"DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","Code we run post starting a kernel seems to have failed.","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","ename","The error name of the failure.","string","",false
-"DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE","Code we run post starting a kernel seems to have failed.","Telemetry.KernelStartupCodeFailure","donjayamanne","Notebook, InteractiveWindow","","","evalue","The error value of the failure","string","",false
 "DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL","Sent when we have opened any Jupyter notebook in a VS Code session.
 Not tagging as a user action as this could be something like auto opening a file
 from a previous session and not a direct user action.","Telemetry.OpenNotebookAll","IanMatthewHuff","N/A","","","nbformat","Major Format of the Notebook.
@@ -1099,7 +1095,6 @@ Common to most of the events.","string","",true
 Common to most of the events.","string","",true
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","Sent when we have failed to connect to the local Jupyter server we started.","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","stackTrace","Node stacktrace without PII.
 Common to most of the events.","string","",false
-"DS_INTERNAL.CONNECTLOCALJUPYTER","Sent when we have successfully connected to a local jupyter server.","Telemetry.ConnectLocalJupyter","donjayamanne","N/A","KernelStartup","","","","","",""
 "DS_INTERNAL.CONNECTREMOTEEXPIREDCERTFAILEDJUPYTER","Jupyter server's certificate has expired.","Telemetry.ConnectRemoteExpiredCertFailedJupyter","donjayamanne","N/A","KernelStartup","","","","","",""
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","Sent when we fail to connect to a remote jupyter server.","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","failed","Whether there was a failure.
 Common to most of the events.","true","",false
@@ -1115,25 +1110,8 @@ Common to most of the events.","string","",true
 Common to most of the events.","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","Sent when we fail to connect to a remote jupyter server.","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","stackTrace","Node stacktrace without PII.
 Common to most of the events.","string","",false
-"DS_INTERNAL.CONNECTREMOTEJUPYTER","Sent when we have successfully connected to a remote jupyter server.","Telemetry.ConnectRemoteJupyter","donjayamanne","N/A","KernelStartup, Remote","","","","","",""
 "DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST","Connecting to an existing Jupyter server, but connecting to localhost.","Telemetry.ConnectRemoteJupyterViaLocalHost","donjayamanne","N/A","KernelStartup","","","","","",""
 "DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER","Jupyter server's certificate is not from a trusted authority.","Telemetry.ConnectRemoteSelfCertFailedJupyter","donjayamanne","N/A","KernelStartup","","","","","",""
-"DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD","Telemetry sent to capture first time execution of a cell.
-If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.","Telemetry.ExecuteCellPerceivedCold","donjayamanne","InteractiveWindow, Notebook","Cell Execution","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD","Telemetry sent to capture first time execution of a cell.
-If `notebook = true`, this its telemetry for Jupyter notebooks, else applies to IW.","Telemetry.ExecuteCellPerceivedCold","donjayamanne","InteractiveWindow, Notebook","Cell Execution","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
-Common to most of the events.","","'notebook' 
-'interactive' ",true
-"DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM","Telemetry sent to capture subsequent execution of a cell.
-If `notebook = true`, this its telemetry for native editor/notebooks.
-(Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.ExecuteCellPerceivedWarm","donjayamanne","InteractiveWindow, Notebook","Cell Execution","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM","Telemetry sent to capture subsequent execution of a cell.
-If `notebook = true`, this its telemetry for native editor/notebooks.
-(Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.ExecuteCellPerceivedWarm","donjayamanne","InteractiveWindow, Notebook","Cell Execution","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
-Common to most of the events.","","'notebook' 
-'interactive' ",true
 "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC","Sent when we fail to update the kernel spec json file.","Telemetry.FailedToUpdateKernelSpec","donjayamanne","N/A","KernelStartup","","failed","Whether there was a failure.
 Common to most of the events.","true","",false
 "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC","Sent when we fail to update the kernel spec json file.","Telemetry.FailedToUpdateKernelSpec","donjayamanne","N/A","KernelStartup","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
@@ -1188,6 +1166,9 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
 (fetching kernels first time in the session is slower, later its cached).
 This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
+"DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS","Total time taken to discover all IPyWidgets.
+This is how long it takes to discover all widgets on disc (from python environment).","Telemetry.DiscoverIPyWidgetNamesPerf","donjayamanne","Notebook, InteractiveWindow","Widgets","","duration","Duration of a measure in milliseconds.
+Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS","Total time taken to discover all IPyWidgets.
 This is how long it takes to discover all widgets on disc (from python environment).","Telemetry.DiscoverIPyWidgetNamesPerf","donjayamanne","Notebook, InteractiveWindow","Widgets","","type","Whether we're looking for widgets on local Jupyter environment (local connections) or remote.","","'local' 
 'remote' ",false
@@ -1416,10 +1397,6 @@ Common to most of the events.","","jupyterExtension ()
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
 In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
 Common to most of the events.","boolean","",true
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","condaEnvsSharingSameInterpreter","Total number of conda environments that share the same interpreter
-This happens when we create conda envs without the `python` argument.
-Such conda envs don't work today in the extension.
-Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
 Common to most of the events.","boolean","",true
@@ -1760,8 +1737,6 @@ Common to most of the events.","","'notebook'
 'dismissed' 
 'download' ",false
 "DS_INTERNAL.RANK_KERNELS_PERF","Time taken to load kernels if needed and rank them all.","Telemetry.RankKernelsPerf","IanMatthewHuff","KernelPicker","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK","Telemetry send when we create a notebook for a raw kernel or jupyter","Telemetry.RawKernelCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
@@ -2440,101 +2415,8 @@ Common to most of the events.","number","",true
 Common to most of the events.","number","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","Telemetry sent when we start (or fail to start) a raw kernel","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","Sent when we fail to restart a kernel. ","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.
-Common to most of the events.","","jupyterExtension ()
-3rdPartyExtension ()",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
-In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
-Common to most of the events.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
-If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
-Common to most of the events.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
-Common to most of the events.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
-Common to most of the events.","KernelConnectionMetadata['kind']","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.
-Common to most of the events.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.
-Common to most of the events.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
-If we restart or run this notebook tomorrow, this id will be different.
-Id could be something as simple as a hash of the current Epoch time.
-Common to most of the events.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
-Common to most of the events.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
-Common to most of the events.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.
-Common to most of the events.","","Unknown ()
-Conda ()
-VirtualEnv ()
-PipEnv ()
-Pyenv ()
-Venv ()
-WindowsStore ()
-Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
-Common to most of the events.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.
-Used to check whether a particular notebook fails across time or not.
-This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
-and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
-we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
-and have a better understanding of what is going on, e.g. why something failed.
-Common to most of the events.","string","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
-Common to most of the events.","","'notebook' 
-'interactive' ",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL","Telemetry event sent to indicate the fact that the kernel failed to start as the user canceled it in some way.
-E.g. possible the user chose another kernel or the like.","Telemetry.RawKernelSessionStartUserCancel","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.
-Common to most of the events.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_START_RAW_SESSION","Sent to measure the time taken to start a raw kernel session.","Telemetry.RawKernelStartRawSession","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL","Similar to `Telemetry.RegisterInterpreterAsKernel`.
-But sent when we have successfully registered the interpreter as a kernel.","Telemetry.RegisterAndUseInterpreterAsKernel","donjayamanne","N/A","KernelStartup","","","","","",""
 "DS_INTERNAL.RESTART_KERNEL","Total time taken to restart a kernel.","Telemetry.RestartKernel","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RUNTEST","A automated test has been run","Telemetry.RunTest","amunger","N/A","","","commitHash","The git commit that the test was run against.","string","",true
@@ -2562,76 +2444,6 @@ Note: Not a failure state, as we prompt for install after this.","Telemetry.Pand
 pandas and choose to cancel the operation.","Telemetry.PandasInstallCanceled","IanMatthewHuff","DataFrameViewer","","","","","","",""
 "DS_INTERNAL.SHOW_DATA_PANDAS_OK","When opening the data viewer the version of Pandas installed was ok.","Telemetry.PandasOK","IanMatthewHuff","DataFrameViewer","","","","","","",""
 "DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD","When opening the data viewer the version of Pandas installed was too old.","Telemetry.PandasTooOld","IanMatthewHuff","DataFrameViewer","","","","","","",""
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","actionSource","Whether this was started by Jupyter extension or a 3rd party.
-Common to most of the events.","","jupyterExtension ()
-3rdPartyExtension ()",false
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","capturedEnvVars","Whether we managed to capture the environment variables or not.
-In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
-Common to most of the events.","boolean","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
-If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
-Common to most of the events.","boolean","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
-Common to most of the events.","boolean","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
-Common to most of the events.","KernelConnectionMetadata['kind']","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","kernelId","Hash of the Kernel Connection id.
-Common to most of the events.","string","",false
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","kernelLanguage","Language of the kernel connection.
-Common to most of the events.","string","",false
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","kernelSessionId","Unique identifier for an instance of a notebook session.
-If we restart or run this notebook tomorrow, this id will be different.
-Id could be something as simple as a hash of the current Epoch time.
-Common to most of the events.","string","",false
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
-Common to most of the events.","string","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
-Common to most of the events.","string","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.
-Common to most of the events.","","Unknown ()
-Conda ()
-VirtualEnv ()
-PipEnv ()
-Pyenv ()
-Venv ()
-WindowsStore ()
-Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
-Common to most of the events.","string","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.
-Used to check whether a particular notebook fails across time or not.
-This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
-and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
-we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
-and have a better understanding of what is going on, e.g. why something failed.
-Common to most of the events.","string","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
-Common to most of the events.","","'notebook' 
-'interactive' ",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD","Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.","Telemetry.StartExecuteNotebookCellPerceivedCold","donjayamanne","N/A","KernelStartup","","userExecutedCell","Whether the user executed a cell.
-Common to most of the events.","boolean","",true
 "DS_INTERNAL.START_JUPYTER_PROCESS","Time taken to start the Jupyter server.","Telemetry.StartJupyterProcess","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.START_SESSION_FAILED_JUPYTER","Telemetry event sent when starting a session for a local connection failed.","Telemetry.StartSessionFailedJupyter","donjayamanne","N/A","KernelStartup","","","","","",""
@@ -2742,9 +2554,6 @@ E.g. user has a a .env file with tokens that need to be replaced with env variab
 such as an env file having the variable `${HOME}`.
 Gives us an idea of whether users have variable references in their .env files or not.","EventName.ENVFILE_VARIABLE_SUBSTITUTION","donjayamanne","N/A","","","","","","",""
 "ENVFILE_WORKSPACE","Telemetry event sent when an environment file is detected in the workspace.","EventName.ENVFILE_WORKSPACE","donjayamanne","N/A","","","","","","",""
-"EXTENSION.LOAD","Telemetry event sent with perf measures related to activation and loading of extension.","EventName.EXTENSION_LOAD","donjayamanne","N/A","","","codeLoadingTime","Time taken to load the code.","number","",false
-"EXTENSION.LOAD","Telemetry event sent with perf measures related to activation and loading of extension.","EventName.EXTENSION_LOAD","donjayamanne","N/A","","","endActivateTime","Time when activation completed.","number","",false
-"EXTENSION.LOAD","Telemetry event sent with perf measures related to activation and loading of extension.","EventName.EXTENSION_LOAD","donjayamanne","N/A","","","startActivateTime","Time when activation started.","number","",false
 "EXTENSION.LOAD","Telemetry event sent with perf measures related to activation and loading of extension.","EventName.EXTENSION_LOAD","donjayamanne","N/A","","","totalActivateTime","Time taken to activate the extension.","number","",false
 "EXTENSION.LOAD","Telemetry event sent with perf measures related to activation and loading of extension.","EventName.EXTENSION_LOAD","donjayamanne","N/A","","","workspaceFolderCount","Number of workspace folders opened","number","",false
 "HASHED_PACKAGE_NAME","Telemetry event sent with hash of an imported python package.
@@ -2759,8 +2568,6 @@ Common to most of the events.","","'notebook'
 Used to detect the popularity of a package, that would help determine which packages
 need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.","EventName.HASHED_PACKAGE_NAME","donjayamanne","N/A","","","when","Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.","","'onExecution' 
 'onOpenCloseOrSave' ",false
-"HASHED_PACKAGE_PERF","Time taken to hash python packages found in the code.","EventName.HASHED_PACKAGE_PERF","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
 "JUPYTER_IS_INSTALLED","Telemetry sent with result of detecting Jupyter in the current path.","Telemetry.JupyterInstalled","donjayamanne","N/A","","/* Detection of jupyter failed ","failed","Failed to detect Jupyter.","true","",false
 "JUPYTER_IS_INSTALLED","Telemetry sent with result of detecting Jupyter in the current path.","Telemetry.JupyterInstalled","donjayamanne","N/A","","/* Detection of jupyter failed ","frontEnd","Whether this is jupyter lab or notebook.","","'notebook' 
 'lab' ",false

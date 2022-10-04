@@ -375,15 +375,6 @@
      ]
    }
  */
-//Telemetry.Interrupt
-/* __GDPR__
-   "DATASCIENCE.INTERRUPT" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.JupyterKernelApiAccess
 /* __GDPR__
    "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS" : {
@@ -471,17 +462,6 @@
      "kind": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether this is a local or remote kernel.","owner":"donjayamanne"},
      "language": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the kernelSpec.","owner":"donjayamanne"},
      "usesShell": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether shell is used to start the kernel. E.g. `\"/bin/sh\"` is used in the argv of the kernelSpec. OCaml is one such kernel.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.KernelStartupCodeFailure
-/* __GDPR__
-   "DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE" : {
-     "ename": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"The error name of the failure.","owner":"donjayamanne"},
-     "evalue": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"The error value of the failure","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1157,15 +1137,6 @@
      ]
    }
  */
-//Telemetry.ConnectLocalJupyter
-/* __GDPR__
-   "DS_INTERNAL.CONNECTLOCALJUPYTER" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.ConnectRemoteExpiredCertFailedJupyter
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTEEXPIREDCERTFAILEDJUPYTER" : {
@@ -1184,15 +1155,6 @@
      ]
    }
  */
-//Telemetry.ConnectRemoteJupyter
-/* __GDPR__
-   "DS_INTERNAL.CONNECTREMOTEJUPYTER" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.ConnectRemoteJupyterViaLocalHost
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST" : {
@@ -1205,26 +1167,6 @@
 //Telemetry.ConnectRemoteSelfCertFailedJupyter
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.ExecuteCellPerceivedCold
-/* __GDPR__
-   "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD" : {
-     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.ExecuteCellPerceivedWarm
-/* __GDPR__
-   "DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM" : {
-     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1525,7 +1467,6 @@
      "kernelSpecCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "kernelLiveCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "kernelInterpreterCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "condaEnvsSharingSameInterpreter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of conda environments that share the same interpreter This happens when we create conda envs without the `python` argument. Such conda envs don't work today in the extension. Hence users with such environments could hvae issues with starting kernels or packages not getting loaded correctly or at all.","owner":"donjayamanne","isMeasurement":true},
      "localKernelSpecCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of local kernel specs in the list.","owner":"donjayamanne","isMeasurement":true},
      "remoteKernelSpecCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of remote kernel specs in the list.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
@@ -1762,15 +1703,6 @@
      ]
    }
  */
-//Telemetry.RawKernelCreatingNotebook
-/* __GDPR__
-   "DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.RawKernelInfoResponse
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE" : {
@@ -1990,50 +1922,9 @@
      ]
    }
  */
-//Telemetry.RawKernelSessionStartUserCancel
-/* __GDPR__
-   "DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL" : {
-     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
-     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
-     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
-     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
-     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
-     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
-     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
-     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
-     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
-     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
-     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
-     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
-     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
-     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
-     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
-     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.RawKernelStartRawSession
 /* __GDPR__
    "DS_INTERNAL.RAWKERNEL_START_RAW_SESSION" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.RegisterAndUseInterpreterAsKernel
-/* __GDPR__
-   "DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL" : {
      "${include}": [
        "${F1}"
 
@@ -2122,38 +2013,6 @@
 //Telemetry.PandasTooOld
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.StartExecuteNotebookCellPerceivedCold
-/* __GDPR__
-   "DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD" : {
-     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
-     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
-     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
-     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
-     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
-     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
-     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
-     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
-     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
-     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
-     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
-     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
-     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
-     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
-     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
-     "interruptCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after we attempt a restart or change kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "switchKernelCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times the kernel was changed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "startFailureCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Number of times starting the kernel failed. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "restartCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"This number gets reset after change the kernel. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "pythonEnvironmentCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of python environments. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "kernelSpecCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "kernelLiveCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "kernelInterpreterCount": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 
@@ -2296,11 +2155,8 @@
 //EventName.EXTENSION_LOAD
 /* __GDPR__
    "EXTENSION.LOAD" : {
-     "codeLoadingTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Time taken to load the code.","owner":"donjayamanne","isMeasurement":true},
      "totalActivateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Time taken to activate the extension.","owner":"donjayamanne","isMeasurement":true},
      "workspaceFolderCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Number of workspace folders opened","owner":"donjayamanne","isMeasurement":true},
-     "endActivateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Time when activation completed.","owner":"donjayamanne","isMeasurement":true},
-     "startActivateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Time when activation started.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 
@@ -2313,15 +2169,6 @@
      "hashedNamev2": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Hash of the package name","owner":"donjayamanne"},
      "when": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//EventName.HASHED_PACKAGE_PERF
-/* __GDPR__
-   "HASHED_PACKAGE_PERF" : {
      "${include}": [
        "${F1}"
 

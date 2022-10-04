@@ -12,7 +12,7 @@ import {
     TextDocument,
     Uri
 } from 'vscode';
-import { capturePerfTelemetry, ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemetry';
+import { ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -170,7 +170,6 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         }
     }
 
-    @capturePerfTelemetry(EventName.HASHED_PACKAGE_PERF)
     private lookForImports(lines: string[]) {
         const packageNames: string[] = [];
         try {
