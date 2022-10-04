@@ -15,9 +15,7 @@ import { JupyterSettings } from '../../platform/common/configSettings';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
 import { GlobalActivation } from '../../standalone/activation/globalActivation';
-import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider';
 import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService.node';
-import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { pruneCell } from '../../platform/common/utils';
 
@@ -25,7 +23,6 @@ import { pruneCell } from '../../platform/common/utils';
 suite('DataScience Tests', () => {
     let dataScience: GlobalActivation;
     let cmdManager: CommandManager;
-    let dataScienceCodeLensProvider: IDataScienceCodeLensProvider;
     let configService: IConfigurationService;
     let docManager: IDocumentManager;
     let workspaceService: IWorkspaceService;
@@ -35,7 +32,6 @@ suite('DataScience Tests', () => {
     let rawNotebookSupported: IRawNotebookSupportedService;
     setup(() => {
         cmdManager = mock(CommandManager);
-        dataScienceCodeLensProvider = mock(DataScienceCodeLensProvider);
         configService = mock(ConfigurationService);
         workspaceService = mock(WorkspaceService);
         docManager = mock(DocumentManager);
@@ -46,9 +42,6 @@ suite('DataScience Tests', () => {
             instance(cmdManager),
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             [] as any,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { subscriptions: [] } as any,
-            instance(dataScienceCodeLensProvider),
             instance(configService),
             instance(docManager),
             instance(workspaceService),

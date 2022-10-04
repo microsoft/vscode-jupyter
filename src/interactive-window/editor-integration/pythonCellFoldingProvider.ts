@@ -14,16 +14,20 @@ import {
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { PYTHON_FILE_ANY_SCHEME } from '../../platform/common/constants';
+import { IExtensionContext } from '../../platform/common/types';
 import { IDataScienceCodeLensProvider } from './types';
 
 @injectable()
 export class PythonCellFoldingProvider implements IExtensionSyncActivationService, FoldingRangeProvider {
     constructor(
-        @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider
+        @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
+        @inject(IExtensionContext) private extensionContext: IExtensionContext
     ) {}
 
     public activate() {
-        languages.registerFoldingRangeProvider([PYTHON_FILE_ANY_SCHEME], this);
+        this.extensionContext.subscriptions.push(
+            languages.registerFoldingRangeProvider([PYTHON_FILE_ANY_SCHEME], this)
+        );
     }
 
     provideFoldingRanges(
