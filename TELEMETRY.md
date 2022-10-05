@@ -3215,7 +3215,7 @@ Expand each section to see more information about that event.
         - `count`: `number`  
         Total number of notebooks opened in a session.  
         Not unique.  
-        If usre opens & closes a notebook, that counts as 2.  
+        If user opens & closes a notebook, that counts as 2.  
 
 
 * DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT  (Telemetry.NotebookRunCount)  

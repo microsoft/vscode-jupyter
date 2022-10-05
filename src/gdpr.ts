@@ -1549,7 +1549,7 @@
 //Telemetry.NotebookOpenCount
 /* __GDPR__
    "DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT" : {
-     "count": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of notebooks opened in a session. Not unique. If usre opens & closes a notebook, that counts as 2.","owner":"donjayamanne","isMeasurement":true},
+     "count": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of notebooks opened in a session. Not unique. If user opens & closes a notebook, that counts as 2.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 

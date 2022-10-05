@@ -1183,7 +1183,7 @@ export class IEventNamePropertyMapping {
         /**
          * Total number of notebooks opened in a session.
          * Not unique.
-         * If usre opens & closes a notebook, that counts as 2.
+         * If user opens & closes a notebook, that counts as 2.
          */
         count: number;
     }> = {
