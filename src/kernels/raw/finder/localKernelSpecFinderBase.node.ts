@@ -24,6 +24,7 @@ import {
 } from '../../../kernels/types';
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
+import { ITrustedKernelPaths } from './types';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
@@ -63,7 +64,8 @@ export abstract class LocalKernelSpecFinderBase {
         protected readonly fs: IFileSystemNode,
         protected readonly workspaceService: IWorkspaceService,
         protected readonly extensionChecker: IPythonExtensionChecker,
-        protected readonly globalState: Memento
+        protected readonly globalState: Memento,
+        private readonly trustedKernelSpecPaths: ITrustedKernelPaths
     ) {}
 
     @testOnlyMethod()
@@ -137,6 +139,9 @@ export abstract class LocalKernelSpecFinderBase {
         globalSpecRootPath?: Uri,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
+        if (!this.trustedKernelSpecPaths.isTrusted(specPath)) {
+            return;
+        }
         // This is a backup folder for old kernels created by us.
         if (specPath.fsPath.includes(oldKernelsSpecFolderName)) {
             return;

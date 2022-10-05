@@ -21,6 +21,7 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { sendKernelSpecTelemetry } from './helper';
+import { ITrustedKernelPaths } from './types';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
@@ -34,9 +35,10 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) memento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) memento: Memento,
+        @inject(ITrustedKernelPaths) trustedKernelSpecPaths: ITrustedKernelPaths
     ) {
-        super(fs, workspaceService, extensionChecker, memento);
+        super(fs, workspaceService, extensionChecker, memento, trustedKernelSpecPaths);
         if (this.oldKernelSpecsFolder) {
             traceInfo(
                 `Old kernelSpecs (created by Jupyter Extension) stored in directory ${this.oldKernelSpecsFolder}`

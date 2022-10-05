@@ -342,7 +342,7 @@
         "message": "Behavior of the Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
         "comment": ["{Locked='perFile'}", "{Locked=\"'single'\"}", "{Locked=\"'multiple'\"}"]
     },
-    "jupyter.configuration.jupyter.interactiveWindowViewColumn.description":{
+    "jupyter.configuration.jupyter.interactiveWindowViewColumn.description": {
         "message": "Where to open an Interactive Window that is not associated with a python file. 'beside' will open the interactive window to the right of the active editor. 'active' will open the interactive window in place of the active editor. 'secondGroup' will open the interactive window in the second editor group.",
         "comment": ["{Locked='beside'}", "{Locked=\"'active'\"}", "{Locked=\"'secondGroup'\"}"]
     },
@@ -844,6 +844,9 @@
         "message": "Failed to interrupt the Kernel.",
         "comment": ["{Locked='Kernel'}"]
     },
+    "DataScience.updateSettingToTrustKernelSpecs": "Update setting to trust kernels",
+    "DataScience.untrustedKernelSpecsHidden": "Kernels found in an insecure location have not been loaded.",
+    "jupyter.configuration.jupyter.kernels.trusted.markdownDescription": "Enter fully qualified paths to Kernel specification files that are to be trusted. E.g. 'C:\\Program Data\\Jupyter\\kernels\\python3\\kernel.json'.  \n**Note**: Kernels can execute code with user privileges. Click [here](https://aka.ms/JupyterTrustedKernelPaths) for further details.",
     "DataScience.kernelDied": {
         "message": "The kernel died. View Jupyter [log](command:jupyter.viewOutput) for further details. \nError: {0}...",
         "comment": ["{Locked='command:jupyter.viewOutput'}"]

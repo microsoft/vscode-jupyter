@@ -45,6 +45,9 @@ import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { PythonKernelInterruptDaemon } from './raw/finder/pythonKernelInterruptDaemon.node';
 import { LocalKernelFinder } from './raw/finder/localKernelFinder.node';
 import { DebugStartupCodeProvider } from './debuggerStartupCodeProvider';
+import { TrustedKernelPaths } from './raw/finder/trustedKernelSpecPaths.node';
+import { ITrustedKernelPaths } from './raw/finder/types';
+import { HiddenKernelNotification } from './hiddenKernelNotification.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
@@ -52,6 +55,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         PortAttributesProviders
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        HiddenKernelNotification
     );
     serviceManager.addSingleton<IRawNotebookSupportedService>(
         IRawNotebookSupportedService,
@@ -74,6 +81,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
 
     serviceManager.addSingleton<JupyterPaths>(JupyterPaths, JupyterPaths);
+    serviceManager.addSingleton<ITrustedKernelPaths>(ITrustedKernelPaths, TrustedKernelPaths);
     serviceManager.addSingleton<LocalKnownPathKernelSpecFinder>(
         LocalKnownPathKernelSpecFinder,
         LocalKnownPathKernelSpecFinder

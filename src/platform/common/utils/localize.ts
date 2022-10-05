@@ -537,6 +537,13 @@ export namespace DataScience {
             },
             'The kernel died. Error: {0}... View Jupyter [log](command:jupyter.viewOutput) for further details.'
         );
+    export const untrustedKernelSpecsHidden = () =>
+        localize(
+            'DataScience.untrustedKernelSpecsHidden',
+            'Kernels found in an insecure location have not been loaded.'
+        );
+    export const updateSettingToTrustKernelSpecs = () =>
+        localize('DataScience.updateSettingToTrustKernelSpecs', 'Update setting to trust kernels');
     export const kernelDiedWithoutError = () =>
         localize(
             {

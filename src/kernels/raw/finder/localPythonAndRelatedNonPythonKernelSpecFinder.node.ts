@@ -33,6 +33,7 @@ import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/in
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ResourceSet } from '../../../platform/vscode-path/map';
+import { ITrustedKernelPaths } from './types';
 
 /**
  * Returns all Python kernels and any related kernels registered in the python environment.
@@ -52,9 +53,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(LocalKnownPathKernelSpecFinder)
         private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
+        @inject(ITrustedKernelPaths) trustedKernelSpecPaths: ITrustedKernelPaths
     ) {
-        super(fs, workspaceService, extensionChecker, globalState);
+        super(fs, workspaceService, extensionChecker, globalState, trustedKernelSpecPaths);
     }
     public async listKernelSpecs(resource: Resource, ignoreCache?: boolean, cancelToken?: CancellationToken) {
         // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
