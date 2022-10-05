@@ -17,7 +17,6 @@ import { IApplicationShell, IVSCodeNotebook } from '../../platform/common/applic
 import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import {
     IConfigurationService,
     IDisposable,
@@ -39,7 +38,6 @@ suite('KernelProvider Node', () => {
     let outputTracker: CellOutputDisplayIdTracker;
     let vscNotebook: IVSCodeNotebook;
     let statusProvider: IStatusProvider;
-    let pythonExecFactory: IPythonExecutionFactory;
     let context: IExtensionContext;
     let onDidCloseNotebookDocument: EventEmitter<NotebookDocument>;
     const sampleUri1 = Uri.file('sample1.ipynb');
@@ -74,7 +72,6 @@ suite('KernelProvider Node', () => {
         vscNotebook = mock<IVSCodeNotebook>();
         statusProvider = mock<IStatusProvider>();
         context = mock<IExtensionContext>();
-        pythonExecFactory = mock<IPythonExecutionFactory>();
         const configSettings = mock<IWatchableJupyterSettings>();
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(configService.getSettings(anything())).thenReturn(instance(configSettings));
@@ -92,7 +89,6 @@ suite('KernelProvider Node', () => {
             instance(appShell),
             instance(outputTracker),
             instance(vscNotebook),
-            instance(pythonExecFactory),
             instance(statusProvider),
             instance(context),
             [],

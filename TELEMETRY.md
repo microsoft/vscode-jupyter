@@ -3421,28 +3421,6 @@ Expand each section to see more information about that event.
             - `'download'`  
 
 
-* DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES  (Telemetry.PythonKerneExecutableMatches)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Telemetry sent for local Python Kernels.  
-    Tracking whether we have managed to launch the kernel that matches the interpreter.  
-    If match=false, then this means we have failed to launch the right kernel.  
-    ```
-
-    - Properties:  
-        - `kernelConnectionType`: `<see below>`  
-        Type of kernel connection, whether its local, remote or a python environment.  
-        Possible values include:  
-            - `'startUsingLocalKernelSpec'`  
-            - `'startUsingPythonInterpreter'`  
-            - `'startUsingRemoteKernelSpec'`  
-        - `match`: `<see below>`  
-        Whether we've managed to correctly identify the Python Environment.  
-        Possible values include:  
-            - `'true'`  
-            - `'false'`  
-
-
 * DS_INTERNAL.PYTHON_MODULE_INSTALL  (Telemetry.PythonModuleInstall)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```

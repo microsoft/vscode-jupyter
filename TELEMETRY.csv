@@ -1680,15 +1680,6 @@ Common to most of the events.","","'notebook'
 "DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED","The kernel picker command to install python extension was shown.","Telemetry.PythonExtensionNotInstalled","IanMatthewHuff","KernelPicker","","","action","The message was displayed, or indicate that the user dismissed or downloaded the message.","","'displayed' 
 'dismissed' 
 'download' ",false
-"DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES","Telemetry sent for local Python Kernels.
-Tracking whether we have managed to launch the kernel that matches the interpreter.
-If match=false, then this means we have failed to launch the right kernel.","Telemetry.PythonKerneExecutableMatches","donjayamanne","N/A","KernelStartup","","kernelConnectionType","Type of kernel connection, whether its local, remote or a python environment.","","'startUsingLocalKernelSpec' 
-'startUsingPythonInterpreter' 
-'startUsingRemoteKernelSpec' ",false
-"DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES","Telemetry sent for local Python Kernels.
-Tracking whether we have managed to launch the kernel that matches the interpreter.
-If match=false, then this means we have failed to launch the right kernel.","Telemetry.PythonKerneExecutableMatches","donjayamanne","N/A","KernelStartup","","match","Whether we've managed to correctly identify the Python Environment.","","'true' 
-'false' ",false
 "DS_INTERNAL.PYTHON_MODULE_INSTALL","Telemetry sent when user is presented with a dialog to install a python package.
 Also sent with the user's response to the dialog.","Telemetry.PythonModuleInstall","donjayamanne","N/A","","","action","Action taken by the user or the extension.","","'cancelled' 
 'displayed' 
