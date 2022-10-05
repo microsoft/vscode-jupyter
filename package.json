@@ -1951,12 +1951,6 @@
                     "description": "%jupyter.configuration.jupyter.newCellOnRunLast.description%",
                     "scope": "resource"
                 },
-                "jupyter.pylanceHandlesNotebooks": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%jupyter.configuration.jupyter.pylanceHandlesNotebooks.description%",
-                    "scope": "machine"
-                },
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",
                     "default": ".%'\"",

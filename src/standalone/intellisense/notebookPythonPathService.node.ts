@@ -10,7 +10,6 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IPythonApiProvider } from '../../platform/api/types';
 import { PylanceExtension, PythonExtension } from '../../platform/common/constants';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { IConfigurationService } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import * as semver from 'semver';
 import { traceInfo, traceVerbose } from '../../platform/logging';
@@ -31,8 +30,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
         if (!this._isPylanceExtensionInstalled()) {
             this.extensionChangeHandler = extensions.onDidChange(this.extensionsChangeHandler.bind(this));
@@ -80,7 +78,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
      */
     public isPylanceUsingLspNotebooks() {
         if (this._isEnabled === undefined) {
-            const isInTreatmentGroup = this.configService.getSettings().pylanceLspNotebooksEnabled;
+            const isInTreatmentGroup = true;
             const pythonVersion = extensions.getExtension(PythonExtension)?.packageJSON.version;
             const pylanceVersion = extensions.getExtension(PylanceExtension)?.packageJSON.version;
 

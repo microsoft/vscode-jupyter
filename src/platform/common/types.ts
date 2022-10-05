@@ -109,8 +109,6 @@ export interface IJupyterSettings {
     readonly variableTooltipFields: IVariableTooltipFields;
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;
-    readonly pylanceHandlesNotebooks?: boolean;
-    readonly pylanceLspNotebooksEnabled?: boolean;
     readonly pythonCompletionTriggerCharacters?: string;
     readonly logKernelOutputSeparately: boolean;
     readonly poetryPath: string;
