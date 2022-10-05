@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2022.10.100",
+    "version": "2022.10.1002861108",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -1887,6 +1887,15 @@
                             }
                         ]
                     ]
+                },
+                "jupyter.kernels.trusted": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [],
+                    "markdownDescription": "%jupyter.configuration.jupyter.kernels.trusted.markdownDescription%",
+                    "scope": "machine"
                 },
                 "jupyter.interactiveWindowMode": {
                     "type": "string",
