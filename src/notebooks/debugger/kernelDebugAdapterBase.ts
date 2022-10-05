@@ -276,7 +276,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                     sourcePath
                 )}`
             );
-            norm = sourcePath;
+            norm = path.posix.normalize(sourcePath);
         }
         return norm;
     }
