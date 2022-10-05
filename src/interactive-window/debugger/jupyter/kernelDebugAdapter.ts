@@ -91,6 +91,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
 
             // We know jupyter will strip out leading white spaces, hence take that into account.
             const norm = KernelDebugAdapterBase.normalizeFsAware(response.sourcePath);
+            traceInfoIfCI(`KernelDebugAdapter::dumpCell ${response.sourcePath} -> ${norm}`);
             this.fileToCell.set(norm, Uri.parse(metadata.interactive.uristring));
 
             // If this cell doesn't have a cell marker, then

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { traceError } from '../../platform/logging';
+import { traceError, traceInfoIfCI } from '../../platform/logging';
 import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDumpCellResponse } from './debuggingTypes';
@@ -22,6 +22,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
                 code: cell.document.getText().replace(/\r\n/g, '\n')
             })) as IDumpCellResponse;
             const norm = KernelDebugAdapterBase.normalizeFsAware(response.sourcePath);
+            traceInfoIfCI(`KernelDebugAdapter::dumpCell ${response.sourcePath} -> ${norm}`);
             this.fileToCell.set(norm, cell.document.uri);
             this.cellToFile.set(cell.document.uri.toString(), norm);
         } catch (err) {
