@@ -4,23 +4,20 @@
 'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, multiInject, optional } from 'inversify';
-import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
-import { PYTHON_FILE_ANY_SCHEME, PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
+import { PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import '../../platform/common/extensions';
 import {
     IConfigurationService,
     IDataScienceCommandListener,
     IDisposable,
-    IDisposableRegistry,
-    IExtensionContext
+    IDisposableRegistry
 } from '../../platform/common/types';
 import { debounceAsync, swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
 import { EditorContexts } from '../../platform/common/constants';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -37,10 +34,6 @@ export class GlobalActivation implements IExtensionSingleActivationService {
     constructor(
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IExtensionContext) private extensionContext: IExtensionContext,
-        @inject(IDataScienceCodeLensProvider)
-        @optional()
-        private dataScienceCodeLensProvider: IDataScienceCodeLensProvider | undefined,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
@@ -56,12 +49,6 @@ export class GlobalActivation implements IExtensionSingleActivationService {
     }
 
     public async activate(): Promise<void> {
-        if (this.dataScienceCodeLensProvider) {
-            this.extensionContext.subscriptions.push(
-                vscode.languages.registerCodeLensProvider([PYTHON_FILE_ANY_SCHEME], this.dataScienceCodeLensProvider)
-            );
-        }
-
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();
         this.changeHandler = this.configuration.getSettings(undefined).onDidChange(this.onSettingsChanged.bind(this));
