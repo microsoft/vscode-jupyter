@@ -1467,7 +1467,6 @@
      "kernelSpecCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of kernel specs in the kernel list. Total number of kernel specs in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "kernelLiveCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of live kernels in the kernel list. Total number of live kernels in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
      "kernelInterpreterCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of interpreters in the kernel list. Total number of interpreters in the kernel spec list. Common to most of the events.","owner":"donjayamanne","isMeasurement":true},
-     "condaEnvsSharingSameInterpreter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"donjayamanne","isMeasurement":true},
      "localKernelSpecCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of local kernel specs in the list.","owner":"donjayamanne","isMeasurement":true},
      "remoteKernelSpecCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of remote kernel specs in the list.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
@@ -2145,11 +2144,8 @@
 //EventName.EXTENSION_LOAD
 /* __GDPR__
    "EXTENSION.LOAD" : {
-     "codeLoadingTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne","isMeasurement":true},
      "totalActivateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Time taken to activate the extension.","owner":"donjayamanne","isMeasurement":true},
      "workspaceFolderCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Number of workspace folders opened","owner":"donjayamanne","isMeasurement":true},
-     "endActivateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne","isMeasurement":true},
-     "startActivateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 
