@@ -189,7 +189,7 @@
         "message": "Import Jupyter Notebook",
         "comment": ["{Locked='Notebook'}"]
     },
-    "jupyter.command.jupyter.importnotebookfile.title": "Convert to Python Script",
+    "jupyter.command.jupyter.importnotebookfile.title": "Import Notebook to Script",
     "jupyter.command.jupyter.exportoutputasnotebook.title": {
         "message": "Export Interactive Window as Jupyter Notebook",
         "comment": ["{Locked='Notebook'}"]

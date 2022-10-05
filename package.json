@@ -875,7 +875,7 @@
                     "when": "editorFocus && editorLangId == python && !notebookEditorFocused && isWorkspaceTrusted"
                 },
                 {
-                    "when": "editorFocus && editorLangId == python && resourceLangId == jupyter && !notebookEditorFocused && isWorkspaceTrusted",
+                    "when": "editorFocus && editorLangId == python && resourceExtname == .ipynb && !notebookEditorFocused && isWorkspaceTrusted",
                     "command": "jupyter.importnotebook",
                     "group": "Jupyter3@1"
                 },
@@ -1060,7 +1060,7 @@
                     "group": "Jupyter2"
                 },
                 {
-                    "when": "resourceLangId == jupyter && isWorkspaceTrusted",
+                    "when": "resourceExtname == .ipynb && isWorkspaceTrusted",
                     "command": "jupyter.importnotebookfile",
                     "group": "Jupyter"
                 }
