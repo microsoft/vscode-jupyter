@@ -92,7 +92,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.disposables);
     }
 
-    private async getLanguageClient(notebook: NotebookDocument) {
+    public async getLanguageClient(notebook: NotebookDocument) {
         const controller = this.notebookControllerSelection.getSelected(notebook);
         const interpreter = controller
             ? controller.connection.interpreter
