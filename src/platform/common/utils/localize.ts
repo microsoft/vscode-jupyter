@@ -1354,16 +1354,6 @@ export namespace DataScience {
         localize('DataScience.activatingEnvironment', "Activating Python Environment '{0}'");
 
     export const cellAtFormat = () => localize('DataScience.cellAtFormat', '{0} Cell {1}');
-    export const usingNonPrereleaseYes = () => localize('DataScience.usingNonPrereleaseYes', 'Yes');
-    export const usingNonPrereleaseNo = () => localize('DataScience.usingNonPrereleaseNo', 'No');
-    export const usingNonPrereleaseNoAndDontAskAgain = () =>
-        localize('DataScience.usingNonPrereleaseNoAndDontAskAgain', `Don't Ask Again`);
-
-    export const usingNonPrerelease = () =>
-        localize(
-            'DataScience.usingNonPrerelease',
-            `The 'prerelease' version of the Jupyter Extension is recommended when running on VS Code insiders. Would you like to switch?`
-        );
 
     export const jupyterServerConsoleOutputChannel = () =>
         localize('DataScience.jupyterServerConsoleOutputChannel', `Jupyter Server Console`);
