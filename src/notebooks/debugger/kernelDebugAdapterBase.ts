@@ -271,6 +271,11 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         if (sourcePath.match(/^[A-Za-z]:/)) {
             norm = path.win32.normalize(sourcePath);
         } else {
+            traceInfoIfCI(
+                `KernelDebugAdapter::normalizeFsAware ${sourcePath} would normalize to ${path.posix.normalize(
+                    sourcePath
+                )}`
+            );
             norm = sourcePath;
         }
         return norm;
