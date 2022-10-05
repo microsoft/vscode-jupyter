@@ -87,10 +87,10 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
         }
         try {
             const code = (metadata.generatedCode?.code || cell.document.getText()).replace(/\r\n/g, '\n');
-            const response = (await this.session.customRequest('dumpCell', { code })) as IDumpCellResponse;
+            const response = await this.session.customRequest('dumpCell', { code });
 
             // We know jupyter will strip out leading white spaces, hence take that into account.
-            const norm = KernelDebugAdapterBase.normalizeFsAware(response.sourcePath);
+            const norm = path.normalize((response as IDumpCellResponse).sourcePath);
             this.fileToCell.set(norm, Uri.parse(metadata.interactive.uristring));
 
             // If this cell doesn't have a cell marker, then
@@ -131,10 +131,8 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
         if (!cell) {
             return;
         }
-
         source.name = path.basename(cell.interactiveWindow.path);
-        source.path = cell.interactiveWindow.path;
-
+        source.path = cell.interactiveWindow.toString();
         if (typeof lines?.endLine === 'number') {
             lines.endLine = lines.endLine + (cell.lineOffset || 0);
         }
