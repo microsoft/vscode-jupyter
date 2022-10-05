@@ -197,8 +197,15 @@ export class JupyterKernelService implements IJupyterKernelService {
         try {
             await this.fs.writeFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
         } catch (ex) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any);
+            const name = kernel.kernelSpec.name;
+            const language = kernel.kernelSpec.language;
+            sendTelemetryEvent(
+                Telemetry.FailedToUpdateKernelSpec,
+                undefined,
+                { name, language, failed: true },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ex as any
+            );
             throw ex;
         }
         if (cancelToken.isCancellationRequested) {

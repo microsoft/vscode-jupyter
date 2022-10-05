@@ -97,7 +97,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                         cancelToken
                     );
                     if (kernelSpec) {
-                        sendKernelSpecTelemetry(kernelSpec, 'local').ignoreErrors();
+                        sendKernelSpecTelemetry(kernelSpec, 'local');
                         results.push(kernelSpec);
                     }
                 } catch (ex) {

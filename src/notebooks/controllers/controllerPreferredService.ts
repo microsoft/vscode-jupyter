@@ -32,7 +32,6 @@ import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
 import { sendTelemetryEvent } from '../../telemetry';
 import { findKernelSpecMatchingInterpreter } from './kernelRanking/helpers';
 import {
@@ -138,7 +137,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     notebookMetadata,
                     preferredConnection,
                     preferredInterpreter
-                ).ignoreErrors();
+                );
 
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredSearchToken.token.isCancellationRequested && !preferredConnection) {
@@ -298,7 +297,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
 
         return { rankedConnections, preferredConnection };
     }
-    private async sendPreferredKernelTelemetry(
+    private sendPreferredKernelTelemetry(
         resource: Resource,
         notebookMetadata?: INotebookMetadata,
         preferredConnection?: KernelConnectionMetadata,
@@ -306,15 +305,13 @@ export class ControllerPreferredService implements IControllerPreferredService, 
     ) {
         // Send telemetry on searching for a preferred connection
         const resourceType = getResourceType(resource);
-        const telemetrySafeLanguage =
-            resourceType === 'interactive'
-                ? PYTHON_LANGUAGE
-                : await getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
+        const language =
+            resourceType === 'interactive' ? PYTHON_LANGUAGE : getLanguageInNotebookMetadata(notebookMetadata) || '';
 
         sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
             result: preferredConnection ? 'found' : 'notfound',
             resourceType,
-            language: telemetrySafeLanguage,
+            language: language,
             hasActiveInterpreter: !!preferredInterpreter
         });
     }

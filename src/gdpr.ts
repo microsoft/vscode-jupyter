@@ -1176,6 +1176,8 @@
 //Telemetry.FailedToUpdateKernelSpec
 /* __GDPR__
    "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC" : {
+     "name": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the kernel spec.","owner":"donjayamanne"},
+     "language": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Language of the kernel spec.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 

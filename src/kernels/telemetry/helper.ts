@@ -5,7 +5,7 @@ import { Resource } from '../../platform/common/types';
 import { WorkspaceInterpreterTracker } from '../../platform/interpreter/workspaceInterpreterTracker';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { InterpreterCountTracker } from '../../platform/interpreter/interpreterCountTracker';
-import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { getNormalizedInterpreterPath } from '../../platform/pythonEnvironments/info/interpreter';
 import { getResourceType } from '../../platform/common/utils';
 import { getComparisonKey } from '../../platform/vscode-path/resources';
@@ -127,7 +127,7 @@ export async function trackKernelResourceInformation(
                 break;
         }
         [currentData.kernelLanguage, currentData.kernelId] = await Promise.all([
-            getTelemetrySafeLanguage(language),
+            language,
             getTelemetrySafeHashedString(kernelConnection.id)
         ]);
 

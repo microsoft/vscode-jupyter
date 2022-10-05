@@ -467,7 +467,7 @@ Expand each section to see more information about that event.
         - `pythonErrorPackage`?: `string`  
         Hash of the module that contains the file in the last frame (from Python stack trace).  
         Common to most of the events.  
-        - `stackTrace`: `string`  
+        - `stackTrace`?: `string`  
         Node stacktrace without PII.  
         Common to most of the events.  
 
@@ -698,8 +698,10 @@ Expand each section to see more information about that event.
         Possible values include:  
             - `'local'`  
             - `'remote'`  
-        - `language`: `string`  
+        - `language`: `<see below>`  
         Language of the kernelSpec.  
+        Possible values include:  
+            - `null or <empty>`  
         - `usesShell`?: `boolean`  
         Whether shell is used to start the kernel. E.g. `"/bin/sh"` is used in the argv of the kernelSpec.  
         OCaml is one such kernel.  
@@ -941,7 +943,7 @@ Expand each section to see more information about that event.
             Possible values include:  
                 - `'notebook'`  
                 - `'interactive'`  
-            - `stackTrace`: `string`  
+            - `stackTrace`?: `string`  
             Node stacktrace without PII.  
             Common to most of the events.  
             - `userExecutedCell`?: `boolean`  
@@ -1181,7 +1183,7 @@ Expand each section to see more information about that event.
             Possible values include:  
                 - `'notebook'`  
                 - `'interactive'`  
-            - `stackTrace`: `string`  
+            - `stackTrace`?: `string`  
             Node stacktrace without PII.  
             Common to most of the events.  
             - `userExecutedCell`?: `boolean`  
@@ -1309,7 +1311,7 @@ Expand each section to see more information about that event.
         Possible values include:  
             - `'notebook'`  
             - `'interactive'`  
-        - `stackTrace`: `string`  
+        - `stackTrace`?: `string`  
         Node stacktrace without PII.  
         Common to most of the events.  
         - `userExecutedCell`?: `boolean`  
@@ -2228,7 +2230,7 @@ Expand each section to see more information about that event.
         - `pythonErrorPackage`?: `string`  
         Hash of the module that contains the file in the last frame (from Python stack trace).  
         Common to most of the events.  
-        - `stackTrace`: `string`  
+        - `stackTrace`?: `string`  
         Node stacktrace without PII.  
         Common to most of the events.  
 
@@ -2266,7 +2268,7 @@ Expand each section to see more information about that event.
         - `pythonErrorPackage`?: `string`  
         Hash of the module that contains the file in the last frame (from Python stack trace).  
         Common to most of the events.  
-        - `stackTrace`: `string`  
+        - `stackTrace`?: `string`  
         Node stacktrace without PII.  
         Common to most of the events.  
 
@@ -2303,6 +2305,12 @@ Expand each section to see more information about that event.
         - `failureSubCategory`?: `string`  
         Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
         Common to most of the events.  
+        - `language`: `<see below>`  
+        Language of the kernel spec.  
+        Possible values include:  
+            - `null or <empty>`  
+        - `name`: `string`  
+        Name of the kernel spec.  
         - `pythonErrorFile`?: `string`  
         Hash of the file name that contains the file in the last frame (from Python stack trace).  
         Common to most of the events.  
@@ -2312,7 +2320,7 @@ Expand each section to see more information about that event.
         - `pythonErrorPackage`?: `string`  
         Hash of the module that contains the file in the last frame (from Python stack trace).  
         Common to most of the events.  
-        - `stackTrace`: `string`  
+        - `stackTrace`?: `string`  
         Node stacktrace without PII.  
         Common to most of the events.  
 
@@ -2713,7 +2721,7 @@ Expand each section to see more information about that event.
             Possible values include:  
                 - `'notebook'`  
                 - `'interactive'`  
-            - `stackTrace`: `string`  
+            - `stackTrace`?: `string`  
             Node stacktrace without PII.  
             Common to most of the events.  
             - `userExecutedCell`?: `boolean`  
@@ -3144,7 +3152,7 @@ Expand each section to see more information about that event.
             - `pythonErrorPackage`?: `string`  
             Hash of the module that contains the file in the last frame (from Python stack trace).  
             Common to most of the events.  
-            - `stackTrace`: `string`  
+            - `stackTrace`?: `string`  
             Node stacktrace without PII.  
             Common to most of the events.  
 
@@ -4333,7 +4341,7 @@ In such cases we do not notify user of any failures or the like.
             Possible values include:  
                 - `'notebook'`  
                 - `'interactive'`  
-            - `stackTrace`: `string`  
+            - `stackTrace`?: `string`  
             Node stacktrace without PII.  
             Common to most of the events.  
             - `userExecutedCell`?: `boolean`  

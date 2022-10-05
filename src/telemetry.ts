@@ -936,12 +936,33 @@ export class IEventNamePropertyMapping {
     /**
      * Sent when we fail to update the kernel spec json file.
      */
-    [Telemetry.FailedToUpdateKernelSpec]: TelemetryEventInfo<TelemetryErrorProperties> = {
+    [Telemetry.FailedToUpdateKernelSpec]: TelemetryEventInfo<
+        {
+            /**
+             * Name of the kernel spec.
+             */
+            name: string;
+            /**
+             * Language of the kernel spec.
+             */
+            language: string | undefined;
+        } & TelemetryErrorProperties
+    > = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
         tags: ['KernelStartup'],
-        properties: commonClassificationForErrorProperties()
+        properties: {
+            ...commonClassificationForErrorProperties(),
+            name: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            language: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
@@ -2005,7 +2026,7 @@ export class IEventNamePropertyMapping {
         /**
          * Language of the kernelSpec.
          */
-        language: string;
+        language: string | undefined;
         /**
          * Whether this is a local or remote kernel.
          */
