@@ -9,7 +9,6 @@ import { registerTypes as registerCommonTypes } from './common/serviceRegistry.n
 import { registerTypes as registerTerminalTypes } from './terminals/serviceRegistry.node';
 import { DataScienceStartupTime } from './common/constants';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
-import { PreReleaseChecker } from './common/prereleaseChecker.node';
 import { IConfigurationService, IDataScienceCommandListener } from './common/types';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { ProgressReporter } from './progress/progressReporter';
@@ -59,10 +58,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelProgressReporter
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        PreReleaseChecker
     );
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, OutputCommandListener);
 

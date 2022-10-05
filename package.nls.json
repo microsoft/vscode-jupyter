@@ -1098,10 +1098,6 @@
     "DataScience.exportingToFormat": "Exporting to {0}.",
     "DataScience.matplotlibWidgetInsteadOfOther": "'%matplotlib widget' or '%matplotlib inline' works best in VS Code notebooks.",
     "DataScience.matplotlibWidgetCodeActionTitle": "More information",
-    "DataScience.usingNonPrereleaseYes": "Yes",
-    "DataScience.usingNonPrereleaseNo": "No",
-    "DataScience.usingNonPrereleaseNoAndDontAskAgain": "Don't ask again",
-    "DataScience.usingNonPrerelease": "The 'prerelease' version of the Jupyter Extension is recommended when running on VS Code Insiders. Would you like to switch?",
     "DataScience.cellAtFormat": "{0} Cell {1}'",
     "DataScience.jupyterServerConsoleOutputChannel": "Jupyter Server Console",
     "DataScience.kernelConsoleOutputChannel": {
