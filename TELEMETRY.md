@@ -4493,18 +4493,6 @@ In such cases we do not notify user of any failures or the like.
 
 
 
-* DS_INTERNAL.START_JUPYTER_PROCESS  (Telemetry.StartJupyterProcess)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Time taken to start the Jupyter server.  
-    ```
-
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
-
-
 * DS_INTERNAL.START_SESSION_FAILED_JUPYTER  (Telemetry.StartSessionFailedJupyter)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
@@ -4678,22 +4666,6 @@ In such cases we do not notify user of any failures or the like.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
-
-
-* DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING  (Telemetry.ZMQSupported)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Telemetry event sent when the ZMQ native binaries do work.  
-    ```
-
-
-
-* DS_INTERNAL.ZMQ_NATIVE_BINARIES_NOT_LOADING  (Telemetry.ZMQNotSupported)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Telemetry event sent when the ZMQ native binaries do not work.  
-    ```
-
 
 
 * ENVFILE_VARIABLE_SUBSTITUTION  (EventName.ENVFILE_VARIABLE_SUBSTITUTION)  

@@ -2010,15 +2010,6 @@
      ]
    }
  */
-//Telemetry.StartJupyterProcess
-/* __GDPR__
-   "DS_INTERNAL.START_JUPYTER_PROCESS" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.StartSessionFailedJupyter
 /* __GDPR__
    "DS_INTERNAL.START_SESSION_FAILED_JUPYTER" : {
@@ -2101,24 +2092,6 @@
 //Telemetry.WebviewStartup
 /* __GDPR__
    "DS_INTERNAL.WEBVIEW_STARTUP" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.ZMQSupported
-/* __GDPR__
-   "DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.ZMQNotSupported
-/* __GDPR__
-   "DS_INTERNAL.ZMQ_NATIVE_BINARIES_NOT_LOADING" : {
      "${include}": [
        "${F1}"
 
