@@ -30,7 +30,6 @@ import {
     Resource,
     WORKSPACE_MEMENTO
 } from '../platform/common/types';
-import { chainable } from '../platform/common/utils/decorators';
 import * as localize from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { IServiceContainer } from '../platform/ioc/types';
@@ -139,7 +138,6 @@ export class InteractiveWindowProvider
         this._updateWindowCache();
     }
 
-    @chainable()
     public async getOrCreate(resource: Resource, connection?: KernelConnectionMetadata): Promise<IInteractiveWindow> {
         if (!this.workspaceService.isTrusted) {
             // This should not happen, but if it does, then just throw an error.
@@ -160,8 +158,8 @@ export class InteractiveWindowProvider
         if (!result) {
             // No match. Create a new item.
             result = await this.create(resource, mode, connection);
-            // start the kernel
-            result.start();
+            // ensure events are wired up and kernel is started.
+            result.initialize();
         } else {
             const preferredController = connection
                 ? this.controllerRegistration.get(connection, InteractiveWindowView)
@@ -186,17 +184,11 @@ export class InteractiveWindowProvider
         return noop();
     }
 
-    // Note to future devs: this function must be synchronous. Do not await on anything before calling
-    // the interactive window ctor and adding the interactive window to the provider's list of known windows.
-    // Otherwise we risk a race condition where e.g. multiple run cell requests come in quick and we end up
-    // instantiating multiples.
     private async create(resource: Resource, mode: InteractiveWindowMode, connection?: KernelConnectionMetadata) {
+        // track when a creation is pending, so consumers can wait before checking for an existing one.
         const creationInProgress = createDeferred<void>();
-        // Ensure we don't end up calling this method multiple times when creating an IW for the same resource.
         this.pendingCreations.push(creationInProgress.promise);
         try {
-            // Set it as soon as we create it. The .ctor for the interactive window
-            // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
             // Find our preferred controller
             const preferredController = connection
                 ? this.controllerRegistration.get(connection, InteractiveWindowView)

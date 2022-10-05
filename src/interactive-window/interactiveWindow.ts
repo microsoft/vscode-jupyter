@@ -100,6 +100,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get kernelConnectionMetadata(): KernelConnectionMetadata | undefined {
         return this.currentKernelInfo.metadata;
     }
+    private initialized = false;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent = new EventEmitter<void>();
     private _submitters: Uri[] = [];
@@ -180,7 +181,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    public start() {
+    public initialize() {
+        if (this.initialized) {
+            return;
+        }
+        this.initialized = true;
         window.onDidChangeActiveNotebookEditor((e) => {
             if (e === this.notebookEditor) {
                 this._onDidChangeViewState.fire();
@@ -228,7 +233,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             }
         }
 
-        this.start();
+        this.initialize();
     }
 
     /**

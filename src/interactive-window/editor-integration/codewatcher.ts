@@ -20,7 +20,6 @@ import {
 
 import { IDocumentManager } from '../../platform/common/application/types';
 import { ICellRange, IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
-import { chainable } from '../../platform/common/utils/decorators';
 import { isUri, noop } from '../../platform/common/utils/misc';
 import { capturePerfTelemetry, captureUsageTelemetry } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
@@ -984,9 +983,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    @chainable()
     private getActiveInteractiveWindow() {
-        // This should be chained so that a queue forms when getting the interactive window
         return this.interactiveWindowProvider.getOrCreate(this.document?.uri);
     }
     private async addCode(
