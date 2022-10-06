@@ -1951,12 +1951,6 @@
                     "description": "%jupyter.configuration.jupyter.newCellOnRunLast.description%",
                     "scope": "resource"
                 },
-                "jupyter.pylanceHandlesNotebooks": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%jupyter.configuration.jupyter.pylanceHandlesNotebooks.description%",
-                    "scope": "machine"
-                },
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",
                     "default": ".%'\"",
@@ -2165,7 +2159,7 @@
         "@nteract/messaging": "^7.0.0",
         "@vscode/extension-telemetry": "^0.6.2",
         "@vscode/jupyter-ipywidgets": "^1.0.9",
-        "@vscode/jupyter-lsp-middleware": "^0.2.49",
+        "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "ajv-keywords": "^3.5.2",
         "ansi-to-html": "^0.6.7",
         "arch": "^2.1.0",
