@@ -6,6 +6,7 @@
 import { traceError, traceInfoIfCI } from '../../platform/logging';
 import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { IDumpCellResponse } from './debuggingTypes';
 
 /**
  * Concrete implementation of the KernelDebugAdapterBase class that will dump cells
@@ -17,7 +18,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
     protected override async dumpCell(index: number): Promise<void> {
         const cell = this.notebookDocument.cellAt(index);
         try {
-            const response = await this.session.customRequest('dumpCell', {
+            const response = (await this.session.customRequest('dumpCell', {
                 code: cell.document.getText().replace(/\r\n/g, '\n')
             })) as IDumpCellResponse;
             const norm = KernelDebugAdapterBase.normalizeFsAware(response.sourcePath);
