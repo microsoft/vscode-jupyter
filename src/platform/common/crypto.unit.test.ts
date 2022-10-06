@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import { CryptoUtils } from './crypto';
 
-suite.only('Crypto Utils', async () => {
+suite('Crypto Utils', async () => {
     let crypto: CryptoUtils;
     setup(() => {
         crypto = new CryptoUtils();
