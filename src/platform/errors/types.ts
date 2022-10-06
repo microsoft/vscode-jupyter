@@ -94,7 +94,7 @@ export type TelemetryErrorProperties = {
      * Node stacktrace without PII.
      * Common to most of the events.
      */
-    stackTrace: string;
+    stackTrace?: string;
     /**
      * A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
      * Common to most of the events.

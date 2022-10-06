@@ -161,7 +161,7 @@ Common to most of the events.","string","",true
 "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).
 Common to most of the events.","string","",true
 "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER","Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).","Telemetry.FailedToCreateNotebookController","IanMatthewHuff","KernelPicker","","","stackTrace","Node stacktrace without PII.
-Common to most of the events.","string","",false
+Common to most of the events.","string","",true
 "DATASCIENCE.GOTO_NEXT_CELL_IN_FILE","Cell Navigation Command in Interactive Window","Telemetry.GotoNextCellInFile","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.GOTO_PREV_CELL_IN_FILE","Cell Navigation Command in Interactive Window","Telemetry.GotoPrevCellInFile","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
@@ -251,7 +251,7 @@ Common to most of the events.","number","",true
 Common to most of the events.","boolean","",true
 "DATASCIENCE.KERNEL_SPEC_LANGUAGE","Sent to detect the different languages of kernel specs used.","Telemetry.KernelSpecLanguage","donjayamanne","N/A","KernelStartup","","kind","Whether this is a local or remote kernel.","","'local' 
 'remote' ",false
-"DATASCIENCE.KERNEL_SPEC_LANGUAGE","Sent to detect the different languages of kernel specs used.","Telemetry.KernelSpecLanguage","donjayamanne","N/A","KernelStartup","","language","Language of the kernelSpec.","string","",false
+"DATASCIENCE.KERNEL_SPEC_LANGUAGE","Sent to detect the different languages of kernel specs used.","Telemetry.KernelSpecLanguage","donjayamanne","N/A","KernelStartup","","language","Language of the kernelSpec.","","null or <empty> ",false
 "DATASCIENCE.KERNEL_SPEC_LANGUAGE","Sent to detect the different languages of kernel specs used.","Telemetry.KernelSpecLanguage","donjayamanne","N/A","KernelStartup","","usesShell","Whether shell is used to start the kernel. E.g. `""/bin/sh""` is used in the argv of the kernelSpec.
 OCaml is one such kernel.","boolean","",true
 "DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL","Sent when we have opened any Jupyter notebook in a VS Code session.
@@ -467,7 +467,7 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 Common to most of the events.","number","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","stackTrace","Node stacktrace without PII.
-Common to most of the events.","string","",false
+Common to most of the events.","string","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","startFailureCount","Number of times starting the kernel failed.
 Common to most of the events.","number","",true
@@ -677,7 +677,7 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 Common to most of the events.","number","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","stackTrace","Node stacktrace without PII.
-Common to most of the events.","string","",false
+Common to most of the events.","string","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","startFailureCount","Number of times starting the kernel failed.
 Common to most of the events.","number","",true
@@ -762,7 +762,7 @@ Common to most of the events.","","'notebook'
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","restartCount","This number gets reset after change the kernel.
 Common to most of the events.","number","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","stackTrace","Node stacktrace without PII.
-Common to most of the events.","string","",false
+Common to most of the events.","string","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","startFailureCount","Number of times starting the kernel failed.
 Common to most of the events.","number","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","switchKernelCount","Number of times the kernel was changed.
@@ -1094,7 +1094,7 @@ Common to most of the events.","string","",true
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","Sent when we have failed to connect to the local Jupyter server we started.","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).
 Common to most of the events.","string","",true
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","Sent when we have failed to connect to the local Jupyter server we started.","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","stackTrace","Node stacktrace without PII.
-Common to most of the events.","string","",false
+Common to most of the events.","string","",true
 "DS_INTERNAL.CONNECTREMOTEEXPIREDCERTFAILEDJUPYTER","Jupyter server's certificate has expired.","Telemetry.ConnectRemoteExpiredCertFailedJupyter","donjayamanne","N/A","KernelStartup","","","","","",""
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","Sent when we fail to connect to a remote jupyter server.","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","failed","Whether there was a failure.
 Common to most of the events.","true","",false
@@ -1109,7 +1109,7 @@ Common to most of the events.","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","Sent when we fail to connect to a remote jupyter server.","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).
 Common to most of the events.","string","",true
 "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER","Sent when we fail to connect to a remote jupyter server.","Telemetry.ConnectRemoteFailedJupyter","donjayamanne","N/A","KernelStartup","","stackTrace","Node stacktrace without PII.
-Common to most of the events.","string","",false
+Common to most of the events.","string","",true
 "DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST","Connecting to an existing Jupyter server, but connecting to localhost.","Telemetry.ConnectRemoteJupyterViaLocalHost","donjayamanne","N/A","KernelStartup","","","","","",""
 "DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER","Jupyter server's certificate is not from a trusted authority.","Telemetry.ConnectRemoteSelfCertFailedJupyter","donjayamanne","N/A","KernelStartup","","","","","",""
 "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC","Sent when we fail to update the kernel spec json file.","Telemetry.FailedToUpdateKernelSpec","donjayamanne","N/A","KernelStartup","","failed","Whether there was a failure.
@@ -1118,6 +1118,8 @@ Common to most of the events.","true","",false
 Common to most of the events.","string","",true
 "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC","Sent when we fail to update the kernel spec json file.","Telemetry.FailedToUpdateKernelSpec","donjayamanne","N/A","KernelStartup","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
 Common to most of the events.","string","",true
+"DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC","Sent when we fail to update the kernel spec json file.","Telemetry.FailedToUpdateKernelSpec","donjayamanne","N/A","KernelStartup","","language","Language of the kernel spec.","","null or <empty> ",false
+"DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC","Sent when we fail to update the kernel spec json file.","Telemetry.FailedToUpdateKernelSpec","donjayamanne","N/A","KernelStartup","","name","Name of the kernel spec.","string","",false
 "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC","Sent when we fail to update the kernel spec json file.","Telemetry.FailedToUpdateKernelSpec","donjayamanne","N/A","KernelStartup","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).
 Common to most of the events.","string","",true
 "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC","Sent when we fail to update the kernel spec json file.","Telemetry.FailedToUpdateKernelSpec","donjayamanne","N/A","KernelStartup","","pythonErrorFolder","Hash of the folder that contains the file in the last frame (from Python stack trace).
@@ -1125,7 +1127,7 @@ Common to most of the events.","string","",true
 "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC","Sent when we fail to update the kernel spec json file.","Telemetry.FailedToUpdateKernelSpec","donjayamanne","N/A","KernelStartup","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).
 Common to most of the events.","string","",true
 "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC","Sent when we fail to update the kernel spec json file.","Telemetry.FailedToUpdateKernelSpec","donjayamanne","N/A","KernelStartup","","stackTrace","Node stacktrace without PII.
-Common to most of the events.","string","",false
+Common to most of the events.","string","",true
 "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
 Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentVariables","donjayamanne","N/A","","","duration","Time taken.","number","",false
 "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
@@ -1308,7 +1310,7 @@ Common to most of the events.","","'notebook'
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","Sent to measure the time taken to start a Jupyter Notebook.","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","restartCount","This number gets reset after change the kernel.
 Common to most of the events.","number","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","Sent to measure the time taken to start a Jupyter Notebook.","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","stackTrace","Node stacktrace without PII.
-Common to most of the events.","string","",false
+Common to most of the events.","string","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","Sent to measure the time taken to start a Jupyter Notebook.","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","startFailureCount","Number of times starting the kernel failed.
 Common to most of the events.","number","",true
 "DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK","Sent to measure the time taken to start a Jupyter Notebook.","Telemetry.JupyterCreatingNotebook","donjayamanne","Notebook, InteractiveWindow","KernelStartup","When things fail ","switchKernelCount","Number of times the kernel was changed.
@@ -1552,7 +1554,7 @@ Common to most of the events.","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).
 Common to most of the events.","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","stackTrace","Node stacktrace without PII.
-Common to most of the events.","string","",false
+Common to most of the events.","string","",true
 "DS_INTERNAL.KERNEL_LISTING_PERF","Time taken to list the kernels.","Telemetry.KernelListingPerf","donjayamanne","N/A","","","duration","Total time taken to list kernels.","number","",false
 "DS_INTERNAL.KERNEL_LISTING_PERF","Time taken to list the kernels.","Telemetry.KernelListingPerf","donjayamanne","N/A","","","kind","Whether this telemetry is for listing of all kernels or just python or just non-python.
 (fetching kernels first time in the session is slower, later its cached).","","'remote' 
@@ -1565,7 +1567,7 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE","The Variable View webview was made visible.","Telemetry.NativeVariableViewMadeVisible","IanMatthewHuff","VariableViewer","","","","","","",""
 "DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT","Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.","Telemetry.NotebookOpenCount","donjayamanne","InteractiveWindow, Notebook","","","count","Total number of notebooks opened in a session.
 Not unique.
-If usre opens & closes a notebook, that counts as 2.","number","",false
+If user opens & closes a notebook, that counts as 2.","number","",false
 "DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT","Total number of cells executed. Telemetry Sent when VS Code is closed.","Telemetry.NotebookRunCount","donjayamanne","InteractiveWindow, Notebook","","","count","Number of cells executed.
 If a cell is executed 10 times, thats counted as 10.","number","",false
 "DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE","Telemetry event sent when a user runs the interactive window with a new file","Telemetry.NewFileForInteractiveWindow","amunger","InteractiveWindow","","","","","","",""
@@ -1680,15 +1682,6 @@ Common to most of the events.","","'notebook'
 "DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED","The kernel picker command to install python extension was shown.","Telemetry.PythonExtensionNotInstalled","IanMatthewHuff","KernelPicker","","","action","The message was displayed, or indicate that the user dismissed or downloaded the message.","","'displayed' 
 'dismissed' 
 'download' ",false
-"DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES","Telemetry sent for local Python Kernels.
-Tracking whether we have managed to launch the kernel that matches the interpreter.
-If match=false, then this means we have failed to launch the right kernel.","Telemetry.PythonKerneExecutableMatches","donjayamanne","N/A","KernelStartup","","kernelConnectionType","Type of kernel connection, whether its local, remote or a python environment.","","'startUsingLocalKernelSpec' 
-'startUsingPythonInterpreter' 
-'startUsingRemoteKernelSpec' ",false
-"DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES","Telemetry sent for local Python Kernels.
-Tracking whether we have managed to launch the kernel that matches the interpreter.
-If match=false, then this means we have failed to launch the right kernel.","Telemetry.PythonKerneExecutableMatches","donjayamanne","N/A","KernelStartup","","match","Whether we've managed to correctly identify the Python Environment.","","'true' 
-'false' ",false
 "DS_INTERNAL.PYTHON_MODULE_INSTALL","Telemetry sent when user is presented with a dialog to install a python package.
 Also sent with the user's response to the dialog.","Telemetry.PythonModuleInstall","donjayamanne","N/A","","","action","Action taken by the user or the extension.","","'cancelled' 
 'displayed' 
@@ -2408,7 +2401,7 @@ Common to most of the events.","","'notebook'
 "DS_INTERNAL.RAWKERNEL_SESSION_START","Telemetry sent when we start (or fail to start) a raw kernel","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","Sent when we fail to restart a kernel. ","restartCount","This number gets reset after change the kernel.
 Common to most of the events.","number","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","Telemetry sent when we start (or fail to start) a raw kernel","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","Sent when we fail to restart a kernel. ","stackTrace","Node stacktrace without PII.
-Common to most of the events.","string","",false
+Common to most of the events.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","Telemetry sent when we start (or fail to start) a raw kernel","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","Sent when we fail to restart a kernel. ","startFailureCount","Number of times starting the kernel failed.
 Common to most of the events.","number","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_START","Telemetry sent when we start (or fail to start) a raw kernel","Telemetry.RawKernelSessionStart","donjayamanne","Notebook, InteractiveWindow","","Sent when we fail to restart a kernel. ","switchKernelCount","Number of times the kernel was changed.

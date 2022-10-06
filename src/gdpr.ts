@@ -1176,6 +1176,8 @@
 //Telemetry.FailedToUpdateKernelSpec
 /* __GDPR__
    "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC" : {
+     "name": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the kernel spec.","owner":"donjayamanne"},
+     "language": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Language of the kernel spec.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1547,7 +1549,7 @@
 //Telemetry.NotebookOpenCount
 /* __GDPR__
    "DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT" : {
-     "count": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of notebooks opened in a session. Not unique. If usre opens & closes a notebook, that counts as 2.","owner":"donjayamanne","isMeasurement":true},
+     "count": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of notebooks opened in a session. Not unique. If user opens & closes a notebook, that counts as 2.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 
@@ -1652,17 +1654,6 @@
 /* __GDPR__
    "DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED" : {
      "action": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The message was displayed, or indicate that the user dismissed or downloaded the message.","owner":"IanMatthewHuff"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.PythonKerneExecutableMatches
-/* __GDPR__
-   "DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES" : {
-     "kernelConnectionType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Type of kernel connection, whether its local, remote or a python environment.","owner":"donjayamanne"},
-     "match": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether we've managed to correctly identify the Python Environment.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 

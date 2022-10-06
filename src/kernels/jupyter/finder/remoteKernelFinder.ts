@@ -301,7 +301,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
                 // Turn them both into a combined list
                 const mappedSpecs = await Promise.all(
                     specs.map(async (s) => {
-                        await sendKernelSpecTelemetry(s, 'remote');
+                        sendKernelSpecTelemetry(s, 'remote');
                         const kernel: RemoteKernelSpecConnectionMetadata = {
                             kind: 'startUsingRemoteKernelSpec',
                             interpreter: await this.getInterpreter(s, connInfo.baseUrl),
