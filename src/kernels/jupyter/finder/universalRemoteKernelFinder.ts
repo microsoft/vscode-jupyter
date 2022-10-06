@@ -88,6 +88,7 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         this.id = `${this.kind}-${serverUri.serverId}`;
 
         // Create a reasonable display name for this kernel finder
+        // IANHU: Localize
         this.displayName = `Remote - ${serverUri.displayName || serverUri.uri}`;
 
         this._initializedPromise = new Promise<void>((resolve) => {

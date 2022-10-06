@@ -58,9 +58,10 @@ export class UniversalRemoteKernelFinderController implements IExtensionSingleAc
         currentServers.forEach(this.createRemoteKernelFinder.bind(this));
 
         // Check for when more URIs are added
-        this.serverUriStorage.onDidAddUri(this.createRemoteKernelFinder.bind(this));
+        this.serverUriStorage.onDidAddUri(this.createRemoteKernelFinder, this, this.disposables);
 
         // Also check for when a URI is removed
+        this.serverUriStorage.onDidRemoveUris(this.urisRemoved, this, this.disposables);
     }
 
     createRemoteKernelFinder(serverUri: IJupyterServerUriEntry) {
@@ -85,5 +86,10 @@ export class UniversalRemoteKernelFinderController implements IExtensionSingleAc
 
             finder.activate().then(noop, noop);
         }
+    }
+
+    // When a URI is removed, dispose the kernel finder for it
+    urisRemoved(_uris: IJupyterServerUriEntry[]) {
+        // IANHU: Hook up to the dispose for mapping entries
     }
 }
