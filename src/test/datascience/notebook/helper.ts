@@ -344,7 +344,11 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     if (!isInsiders()) {
         return false;
     }
-    traceVerbose('Closing all notebooks');
+    traceVerbose(
+        `Before Closing all notebooks, currently opened ${workspace.notebookDocuments
+            .map((item) => getDisplayPath(item.uri))
+            .join(', ')}`
+    );
     const api = await initialize();
     VSCodeNotebookController.kernelAssociatedWithDocument = undefined;
     const notebooks = api.serviceManager.get<IVSCodeNotebook>(IVSCodeNotebook) as VSCodeNotebook;
@@ -352,6 +356,15 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     await closeActiveWindows();
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
+    if (workspace.notebookDocuments.length) {
+        traceVerbose(
+            `After Closing all notebooks, currently opened ${workspace.notebookDocuments
+                .map((item) => getDisplayPath(item.uri))
+                .join(', ')}`
+        );
+    } else {
+        traceVerbose(`Closed all notebooks`);
+    }
 }
 
 let waitForKernelPendingPromise: Promise<void> | undefined;
