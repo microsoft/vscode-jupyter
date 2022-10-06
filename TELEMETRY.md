@@ -3205,18 +3205,6 @@ Expand each section to see more information about that event.
 
 
 
-* DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT  (Telemetry.NotebookRunCount)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Total number of cells executed. Telemetry Sent when VS Code is closed.  
-    ```
-
-    - Measures:  
-        - `count`: `number`  
-        Number of cells executed.  
-        If a cell is executed 10 times, thats counted as 10.  
-
-
 * DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE  (Telemetry.NewFileForInteractiveWindow)  
       Owner: [@amunger](https://github.com/amunger)  
     ```

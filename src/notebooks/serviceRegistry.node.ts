@@ -13,7 +13,6 @@ import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
 import { INotebookCompletionProvider, INotebookEditorProvider } from './types';
-import { NotebookUsageTracker } from './notebookUsageTracker';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 import { ITracebackFormatter } from '../kernels/types';
@@ -70,10 +69,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         ErrorRendererCommunicationHandler
     );
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        NotebookUsageTracker
-    );
     serviceManager.addBinding(INotebookCompletionProvider, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

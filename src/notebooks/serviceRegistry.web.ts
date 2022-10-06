@@ -10,7 +10,6 @@ import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI';
 import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
 import { RemoteSwitcher } from './controllers/remoteSwitcher';
 import { INotebookEditorProvider } from './types';
-import { NotebookUsageTracker } from './notebookUsageTracker';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 import { ITracebackFormatter } from '../kernels/types';
@@ -60,10 +59,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         LiveKernelSwitcher
     );
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        NotebookUsageTracker
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         RemoteKernelControllerWatcher
