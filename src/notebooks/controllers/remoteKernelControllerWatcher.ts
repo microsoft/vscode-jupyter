@@ -34,6 +34,9 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
     private async addProviderHandlers() {
         const providers = await this.providerRegistry.getProviders();
         providers.forEach((provider) => {
+            // clear out any old handlers
+            this.onProviderHandlesChanged(provider).catch(noop);
+
             if (provider.onDidChangeHandles && !this.handledProviders.has(provider)) {
                 provider.onDidChangeHandles(this.onProviderHandlesChanged.bind(this, provider), this, this.disposables);
             }
