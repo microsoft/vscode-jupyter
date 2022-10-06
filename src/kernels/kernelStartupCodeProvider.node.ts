@@ -16,6 +16,11 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider {
     constructor(@inject(KernelWorkingFolder) private readonly kernelWorkingFolder: KernelWorkingFolder) {}
 
     async getCode(kernel: IKernel): Promise<string[]> {
+        // We cannot change paths for remote live kernels.
+        if (kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
+            return [];
+        }
+        // Only local kernels are supported.
         if (
             !isLocalConnection(kernel.kernelConnectionMetadata) &&
             !isLocalHostConnection(kernel.kernelConnectionMetadata)
@@ -26,6 +31,10 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider {
             return [];
         }
 
+        // If this is a live kernel, we shouldn't be changing anything by running startup code.
+        if (!isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
+            return [];
+        }
         const suggestedDir = await this.kernelWorkingFolder.getWorkingDirectory(kernel);
         if (suggestedDir) {
             traceInfo('UpdateWorkingDirectoryAndPath in Kernel');

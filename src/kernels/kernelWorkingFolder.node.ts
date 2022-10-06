@@ -10,14 +10,12 @@ import { IFileSystem } from '../platform/common/platform/types';
 import { IConfigurationService, Resource } from '../platform/common/types';
 import { isLocalHostConnection, isPythonKernelConnection } from './helpers';
 import { expandWorkingDir } from './jupyter/jupyterUtils';
-import { IKernel, isLocalConnection, StartupCodePriority } from './types';
+import { IKernel, isLocalConnection } from './types';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 
 @injectable()
 export class KernelWorkingFolder {
-    public priority = StartupCodePriority.Base;
-
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
@@ -28,9 +26,11 @@ export class KernelWorkingFolder {
         // If this is a remote kernel, we shouldn't be changing the startup directory
         if (
             !isLocalConnection(kernel.kernelConnectionMetadata) &&
-            !isLocalHostConnection(kernel.kernelConnectionMetadata) &&
-            !isPythonKernelConnection(kernel.kernelConnectionMetadata)
+            !isLocalHostConnection(kernel.kernelConnectionMetadata)
         ) {
+            return;
+        }
+        if (!isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
             return;
         }
 

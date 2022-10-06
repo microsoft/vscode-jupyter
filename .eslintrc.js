@@ -266,7 +266,7 @@ module.exports = {
                         message: 'Importing test modules from ./src/test into extension code is not allowed.'
                     },
                     {
-                        target: './src/**[!test]**/**/*[!.node].ts',
+                        target: './src/**[!test]**/**/*[!.node|.unit].ts',
                         from: './src/**/*.node.ts',
                         message: 'Importing node modules into non node files is not allowed.'
                     },
