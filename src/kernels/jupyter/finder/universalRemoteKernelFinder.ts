@@ -33,6 +33,7 @@ import { computeServerId } from '../jupyterUtils';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { DisplayOptions } from '../../displayOptions';
+import * as localize from '../../../platform/common/utils/localize';
 import { isArray } from '../../../platform/common/utils/sysTypes';
 import { deserializeKernelConnection } from '../../helpers';
 import { noop } from '../../../platform/common/utils/misc';
@@ -88,8 +89,9 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         this.id = `${this.kind}-${serverUri.serverId}`;
 
         // Create a reasonable display name for this kernel finder
-        // IANHU: Localize
-        this.displayName = `Remote - ${serverUri.displayName || serverUri.uri}`;
+        this.displayName = localize.DataScience.universalRemoteKernelFinderDisplayName().format(
+            serverUri.displayName || serverUri.uri
+        );
 
         this._initializedPromise = new Promise<void>((resolve) => {
             this._initializeResolve = resolve;

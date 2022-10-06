@@ -23,6 +23,7 @@ import { KernelFinder } from '../../kernelFinder';
 import { LocalKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import { CondaService } from '../../../platform/common/process/condaService.node';
+import * as localize from '../../../platform/common/utils/localize';
 import { debounceAsync } from '../../../platform/common/utils/decorators';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -35,7 +36,7 @@ import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleActivationService {
     kind: string = 'local';
     id: string = 'local';
-    displayName: string = 'Local Kernels'; // IANHU: Localize
+    displayName: string = localize.DataScience.localKernelFinderDisplayName();
 
     private _onDidChangeKernels = new EventEmitter<void>();
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
