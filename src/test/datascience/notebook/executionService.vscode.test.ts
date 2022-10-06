@@ -1266,7 +1266,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             () => `Cell not replaced, it is ${cellsPostExecute[2].document.getText()}`
         );
     });
-    test.only('Updating display data with async code in Python cells', async function () {
+    test('Updating display data with async code in Python cells', async function () {
         await insertCodeCell(dedent`
         from asyncio import sleep, create_task, gather
         from typing import Awaitable, List
@@ -1277,13 +1277,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             return get_ipython().kernel.get_parent()["header"]['msg_id']
 
         async def say_hi_to_after(message:str, x:str, tasks: Awaitable[None]):
-            print(f"Started {message} {x}")
             current_cell_msg_id = get_msg_id()
             await tasks
             get_ipython().kernel.get_parent()["header"]["msg_id"] = x
-            display("HI")
+            display(f"HI {message}")
             get_ipython().kernel.get_parent()["header"]["msg_id"] = current_cell_msg_id
-            print(f"Completed {message} {x}")
             `);
         await insertCodeCell('x = get_msg_id()');
         await insertCodeCell(dedent`
@@ -1300,7 +1298,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell4);
 
-        await waitForTextOutput(cell2, 'HI Y', 1, false);
+        await waitForTextOutput(cell2, 'HI Y', 0, false);
         await waitForTextOutput(cell2, 'HI Z', 1, false);
     });
 
