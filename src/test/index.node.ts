@@ -162,7 +162,7 @@ export async function run(): Promise<void> {
     v8.setFlagsFromString('--expose_gc');
     const options = configure();
     const mocha = new Mocha(options);
-    const testsRoot = path.join(__dirname);
+    const testsRoot = path.join(__dirname, '..');
     // Enable source map support.
     require('source-map-support').install();
 

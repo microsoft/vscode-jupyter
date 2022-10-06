@@ -4,10 +4,9 @@
 'use strict';
 
 import { assert } from 'chai';
-import { CryptoUtils } from '../../platform/common/crypto';
+import { CryptoUtils } from './crypto';
 
-// eslint-disable-next-line
-suite('Crypto Utils', async () => {
+suite.only('Crypto Utils', async () => {
     let crypto: CryptoUtils;
     setup(() => {
         crypto = new CryptoUtils();
