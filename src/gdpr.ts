@@ -1546,26 +1546,6 @@
      ]
    }
  */
-//Telemetry.NotebookOpenCount
-/* __GDPR__
-   "DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT" : {
-     "count": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of notebooks opened in a session. Not unique. If user opens & closes a notebook, that counts as 2.","owner":"donjayamanne","isMeasurement":true},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.NotebookRunCount
-/* __GDPR__
-   "DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT" : {
-     "count": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of cells executed. If a cell is executed 10 times, thats counted as 10.","owner":"donjayamanne","isMeasurement":true},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.NewFileForInteractiveWindow
 /* __GDPR__
    "DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE" : {
