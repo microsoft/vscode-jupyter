@@ -62,7 +62,7 @@ import {
     IsWebExtension
 } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
-import { IKernelProvider } from '../../../kernels/types';
+import { IKernelProvider, INotebookProvider } from '../../../kernels/types';
 import { noop } from '../../core';
 import { closeActiveWindows, isInsiders } from '../../initialize';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -95,9 +95,16 @@ import {
 } from '../../../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpdater';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
-import { IServerConnectionType } from '../../../kernels/jupyter/types';
+import {
+    IJupyterServerUriStorage,
+    IJupyterSessionManager,
+    IJupyterSessionManagerFactory,
+    IServerConnectionType
+} from '../../../kernels/jupyter/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { DisplayOptions } from '../../../kernels/displayOptions';
+import { KernelAPI } from '@jupyterlab/services';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -319,6 +326,41 @@ export async function ensureNewNotebooksHavePythonCells() {
         await globalMemento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE).then(noop, noop);
     }
 }
+async function shutdownRemoteKernels() {
+    const api = await initialize();
+    const serverUriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
+    const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
+    const jupyterSessionManagerFactory =
+        api.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
+    const uri = await serverUriStorage.getRemoteUri();
+    if (!uri) {
+        return;
+    }
+    const cancelToken = new CancellationTokenSource();
+    let sessionManager: IJupyterSessionManager | undefined;
+    try {
+        const connection = await notebookProvider.connect({
+            resource: undefined,
+            ui: new DisplayOptions(false),
+            localJupyter: false,
+            token: cancelToken.token,
+            serverId: serverUriStorage.currentServerId!
+        });
+        if (connection.type !== 'jupyter') {
+            return;
+        }
+        const sessionManager = await jupyterSessionManagerFactory.create(connection);
+        const liveKernels = await sessionManager.getRunningKernels();
+        await Promise.all(
+            liveKernels.filter((item) => item.id).map((item) => KernelAPI.shutdownKernel(item.id!).catch(noop))
+        );
+    } catch {
+        // ignore
+    } finally {
+        cancelToken.dispose();
+        await sessionManager?.dispose().catch(noop);
+    }
+}
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
     if (!IS_SMOKE_TEST()) {
         // When running smoke tests, we won't have access to these.
@@ -332,6 +374,7 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
     await ensureNewNotebooksHavePythonCells();
+    await shutdownRemoteKernels(); // Shutdown remote kernels, else the number of live kernels keeps growing.
     try {
         await commands.executeCommand('python.clearWorkspaceInterpreter');
     } catch (ex) {
