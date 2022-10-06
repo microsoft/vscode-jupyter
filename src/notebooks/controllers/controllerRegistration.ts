@@ -195,6 +195,9 @@ export class ControllerRegistration implements IControllerRegistration {
 
         if (this.inKernelExperiment) {
             return userFiltered || connectionTypeFiltered || urlFiltered;
+        } else if (this.configuration.getSettings().kernelPickerType === 'Insiders') {
+            // In the 'Insiders' experiment remove the connectionType and url filters as we want to register everything.
+            return userFiltered;
         }
 
         return userFiltered || urlFiltered;

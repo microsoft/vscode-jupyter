@@ -43,6 +43,8 @@ import {
     IServerConnectionType
 } from './types';
 import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker';
+import { IConfigurationService } from '../../platform/common/types';
+import { UniversalRemoteKernelFinderController } from './finder/universalRemoteKernelFinderController';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
@@ -92,4 +94,16 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IExtensionSyncActivationService,
         CellOutputMimeTypeTracker
     );
+    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
+    if (configuration.getSettings().kernelPickerType === 'Insiders') {
+        serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            UniversalRemoteKernelFinderController
+        );
+    } else {
+        serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            RemoteKernelFinder
+        );
+    }
 }

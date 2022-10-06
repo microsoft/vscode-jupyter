@@ -34,6 +34,8 @@ import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 @injectable()
 export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleActivationService {
     kind: string = 'local';
+    id: string = 'local';
+    displayName: string = 'Local Kernels'; // IANHU: Localize
 
     private _onDidChangeKernels = new EventEmitter<void>();
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
