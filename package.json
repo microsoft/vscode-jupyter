@@ -2443,6 +2443,7 @@
         "jquery-ui@<1.13.2": "1.13.2",
         "@jupyterlab/coreutils": {
             "url-parse": "$url-parse"
-        }
+        },
+        "d3-color": "3.1.0"
     }
 }
