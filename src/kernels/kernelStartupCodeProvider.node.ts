@@ -32,12 +32,7 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider {
         ) {
             return [];
         }
-        if (
-            !(
-                isLocalConnection(kernel.kernelConnectionMetadata) &&
-                !this.configService.getSettings(undefined).forceIPyKernelDebugger
-            )
-        ) {
+        if (!isLocalConnection(kernel.kernelConnectionMetadata)) {
             return [];
         }
 
