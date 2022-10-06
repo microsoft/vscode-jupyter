@@ -1177,28 +1177,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.
-     */
-    [Telemetry.NotebookOpenCount]: TelemetryEventInfo<{
-        /**
-         * Total number of notebooks opened in a session.
-         * Not unique.
-         * If user opens & closes a notebook, that counts as 2.
-         */
-        count: number;
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['InteractiveWindow', 'Notebook'],
-        source: 'N/A',
-        measures: {
-            count: {
-                classification: 'SystemMetaData',
-                isMeasurement: true,
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * User tried to open the data viewer and Pandas package was not installed.
      * Note: Not a failure state, as we prompt for install after this.
      */

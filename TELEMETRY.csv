@@ -1565,9 +1565,6 @@ Common to most of the events.","string","",true
 "DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED","The Variable View webview was loaded.","Telemetry.NativeVariableViewLoaded","IanMatthewHuff","VariableViewer","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE","The Variable View webview was made visible.","Telemetry.NativeVariableViewMadeVisible","IanMatthewHuff","VariableViewer","","","","","","",""
-"DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT","Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.","Telemetry.NotebookOpenCount","donjayamanne","InteractiveWindow, Notebook","","","count","Total number of notebooks opened in a session.
-Not unique.
-If user opens & closes a notebook, that counts as 2.","number","",false
 "DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT","Total number of cells executed. Telemetry Sent when VS Code is closed.","Telemetry.NotebookRunCount","donjayamanne","InteractiveWindow, Notebook","","","count","Number of cells executed.
 If a cell is executed 10 times, thats counted as 10.","number","",false
 "DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE","Telemetry event sent when a user runs the interactive window with a new file","Telemetry.NewFileForInteractiveWindow","amunger","InteractiveWindow","","","","","","",""
