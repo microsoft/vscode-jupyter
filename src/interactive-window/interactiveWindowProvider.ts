@@ -85,7 +85,7 @@ export class InteractiveWindowProvider
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
-    private pendingCreations: Promise<void>[] = [];
+    private pendingCreations: Promise<void> | undefined;
     private _windows: InteractiveWindow[] = [];
 
     constructor(
@@ -147,13 +147,12 @@ export class InteractiveWindowProvider
         // Ask for a configuration change if appropriate
         const mode = await this.getInteractiveMode(resource);
 
-        // See if we already have a match
-        if (this.pendingCreations.length) {
-            // Possible its still in the process of getting created, hence wait on the creations to complete.
-            // But ignore errors.
-            const promises = Promise.all(this.pendingCreations.map((item) => item.catch(noop)));
-            await promises.catch(noop);
+        // Ensure we wait for a previous creation to finish.
+        if (this.pendingCreations) {
+            await this.pendingCreations.catch(noop);
         }
+
+        // See if we already have a match
         let result = this.getExisting(resource, mode, connection) as IInteractiveWindow;
         if (!result) {
             // No match. Create a new item.
@@ -187,7 +186,8 @@ export class InteractiveWindowProvider
     private async create(resource: Resource, mode: InteractiveWindowMode, connection?: KernelConnectionMetadata) {
         // track when a creation is pending, so consumers can wait before checking for an existing one.
         const creationInProgress = createDeferred<void>();
-        this.pendingCreations.push(creationInProgress.promise);
+        // Ensure we don't end up calling this method multiple times when creating an IW for the same resource.
+        this.pendingCreations = creationInProgress.promise;
         try {
             // Find our preferred controller
             const preferredController = connection
@@ -227,7 +227,6 @@ export class InteractiveWindowProvider
             return result;
         } finally {
             creationInProgress.resolve();
-            this.pendingCreations = this.pendingCreations.filter((item) => item !== creationInProgress.promise);
         }
     }
     private async createEditor(
