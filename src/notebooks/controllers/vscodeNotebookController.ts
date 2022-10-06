@@ -173,7 +173,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             controller: VSCodeNotebookController;
         }>();
 
-        traceVerbose(`Creating notebook controller with name ${label}`);
+        traceVerbose(
+            `Creating notebook controller for ${kernelConnection.kind} (id=${kernelConnection.id}) with name ${label}`
+        );
         this.controller = this.notebookApi.createNotebookController(
             id,
             _viewType,
@@ -237,6 +239,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     public dispose() {
+        if (this.isDisposed) {
+            return;
+        }
         const nbDocumentUris = this.notebookApi.notebookDocuments
             .filter((item) => this.associatedDocuments.has(item))
             .map((item) => item.uri.toString());
@@ -245,16 +250,10 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 nbDocumentUris.length ? 'and documents ' + nbDocumentUris.join(', ') : ''
             }`
         );
-        if (this.isDisposed) {
-            // If we don't see this again, then we can remove this check and exit this function early.
-            // Else the code needs to be fixed to ensure we don't dispose twice or don't depend on the events again.
-            traceVerbose(`Disposing controller ${this.id} again`);
-        } else {
-            this.isDisposed = true;
-            this._onNotebookControllerSelected.dispose();
-            this._onNotebookControllerSelectionChanged.dispose();
-            this.controller.dispose();
-        }
+        this.isDisposed = true;
+        this._onNotebookControllerSelected.dispose();
+        this._onNotebookControllerSelectionChanged.dispose();
+        this.controller.dispose();
         this._onDidDispose.fire();
         this._onDidDispose.dispose();
         disposeAllDisposables(this.disposables);

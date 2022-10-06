@@ -83,6 +83,7 @@ export class NotebookStarter implements INotebookStarter {
         let exitCode: number | null = 0;
         let starter: JupyterConnectionWaiter | undefined;
         const disposables: IDisposable[] = [];
+        const stopWatch = new StopWatch();
         const progress = KernelProgressReporter.reportProgress(resource, ReportableAction.NotebookStart);
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
@@ -101,7 +102,6 @@ export class NotebookStarter implements INotebookStarter {
 
             // Then use this to launch our notebook process.
             traceInfo('Starting Jupyter Notebook');
-            const stopWatch = new StopWatch();
             const [launchResult, tempDir] = await Promise.all([
                 this.jupyterInterpreterService.startNotebook(args || [], {
                     throwOnStdErr: false,
@@ -152,9 +152,6 @@ export class NotebookStarter implements INotebookStarter {
                 throw new CancellationError();
             }
 
-            // Fire off telemetry for the process being talkable
-            sendTelemetryEvent(Telemetry.StartJupyterProcess, { duration: stopWatch.elapsedTime });
-
             try {
                 const port = parseInt(url.parse(connection.baseUrl).port || '0', 10);
                 if (port && !isNaN(port)) {
@@ -167,6 +164,7 @@ export class NotebookStarter implements INotebookStarter {
                 traceError(`Parsing failed ${connection.baseUrl}`, ex);
             }
             disposeAllDisposables(disposables);
+            sendTelemetryEvent(Telemetry.StartJupyter, { duration: stopWatch.elapsedTime });
             return connection;
         } catch (err) {
             disposeAllDisposables(disposables);

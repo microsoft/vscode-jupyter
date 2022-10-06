@@ -1898,16 +1898,6 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
-     * Time taken to start the Jupyter server.
-     */
-    [Telemetry.StartJupyterProcess]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
      * Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.
      */
     [Telemetry.JupyterInstalledButNotKernelSpecModule]: TelemetryEventInfo<never | undefined> = {
@@ -2146,24 +2136,6 @@ export class IEventNamePropertyMapping {
         owner: 'amunger',
         feature: ['InteractiveWindow'],
         source: 'N/A'
-    };
-    /**
-     * Telemetry event sent when the ZMQ native binaries do not work.
-     */
-    [Telemetry.ZMQNotSupported]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
-    };
-    /**
-     * Telemetry event sent when the ZMQ native binaries do work.
-     */
-    [Telemetry.ZMQSupported]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
     };
     /**
      * Telemetry event sent with name of a Widget that is used.

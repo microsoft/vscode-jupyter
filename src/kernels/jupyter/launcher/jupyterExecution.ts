@@ -14,7 +14,7 @@ import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCerts
 import { JupyterWaitForIdleError } from '../../errors/jupyterWaitForIdleError';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, capturePerfTelemetry, Telemetry } from '../../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { expandWorkingDir } from '../jupyterUtils';
 import { IJupyterConnection } from '../../types';
 import {
@@ -214,8 +214,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    // eslint-disable-next-line
-    @capturePerfTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(
         resource: Resource,
         useDefaultConfig: boolean,

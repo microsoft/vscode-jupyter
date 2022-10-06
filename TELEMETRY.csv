@@ -2437,8 +2437,6 @@ Note: Not a failure state, as we prompt for install after this.","Telemetry.Pand
 pandas and choose to cancel the operation.","Telemetry.PandasInstallCanceled","IanMatthewHuff","DataFrameViewer","","","","","","",""
 "DS_INTERNAL.SHOW_DATA_PANDAS_OK","When opening the data viewer the version of Pandas installed was ok.","Telemetry.PandasOK","IanMatthewHuff","DataFrameViewer","","","","","","",""
 "DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD","When opening the data viewer the version of Pandas installed was too old.","Telemetry.PandasTooOld","IanMatthewHuff","DataFrameViewer","","","","","","",""
-"DS_INTERNAL.START_JUPYTER_PROCESS","Time taken to start the Jupyter server.","Telemetry.StartJupyterProcess","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.START_SESSION_FAILED_JUPYTER","Telemetry event sent when starting a session for a local connection failed.","Telemetry.StartSessionFailedJupyter","donjayamanne","N/A","KernelStartup","","","","","",""
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.
@@ -2540,8 +2538,6 @@ This is required to identify output types that we're not mapping correctly.","st
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.WEBVIEW_STARTUP","We started up a webview.","Telemetry.WebviewStartup","IanMatthewHuff","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING","Telemetry event sent when the ZMQ native binaries do work.","Telemetry.ZMQSupported","donjayamanne","N/A","KernelStartup","","","","","",""
-"DS_INTERNAL.ZMQ_NATIVE_BINARIES_NOT_LOADING","Telemetry event sent when the ZMQ native binaries do not work.","Telemetry.ZMQNotSupported","donjayamanne","N/A","KernelStartup","","","","","",""
 "ENVFILE_VARIABLE_SUBSTITUTION","Telemetry event sent when substituting Environment variables to calculate value of variables.
 E.g. user has a a .env file with tokens that need to be replaced with env variables.
 such as an env file having the variable `${HOME}`.
