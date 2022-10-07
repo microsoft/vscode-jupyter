@@ -13,7 +13,6 @@
       "pythonErrorFolder": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Hash of the folder that contains the file in the last frame (from Python stack trace). Common to most of the events."},
       "pythonErrorPackage": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Hash of the module that contains the file in the last frame (from Python stack trace). Common to most of the events."},
       "stackTrace": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Node stacktrace without PII. Common to most of the events."},
-      "installSource": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Determine where an extension was installed from. Common to all events."},
       "isamlcompute": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether this is an AML compute instance. Common to all events."},
       "isInsiderExtension": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether this is the Insider version of the Jupyter extension or not. Common to all events."},
       "isPythonExtensionInstalled": {"classification":"SystemMetaData","purpose":"FeatureInsight","isMeasurement":false,"comment":"Whether Python extension is installed or not. Common to all events."},
