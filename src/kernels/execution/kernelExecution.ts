@@ -13,8 +13,7 @@ import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { createDeferred, waitForPromise } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
-import { trackKernelResourceInformation } from '../telemetry/helper';
-import { capturePerfTelemetry, Telemetry } from '../../telemetry';
+import { Telemetry } from '../../telemetry';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import {
     IKernelConnectionSession,
@@ -181,7 +180,6 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
         });
     }
 
-    @capturePerfTelemetry(Telemetry.RestartKernel)
     private async restartExecution(session: IKernelConnectionSession): Promise<void> {
         // Just use the internal session. Pending cells should have been canceled by the caller
         await session.restart();
@@ -257,7 +255,6 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
     public override async interrupt(sessionPromise?: Promise<IKernelConnectionSession>): Promise<InterruptResult> {
-        await trackKernelResourceInformation(this.kernel.resourceUri, { interruptKernel: true });
         const executionQueue = this.documentExecutions.get(this.kernel.notebook);
         if (!executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             return InterruptResult.Success;
@@ -285,7 +282,6 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
     public override async restart(sessionPromise?: Promise<IKernelConnectionSession>): Promise<void> {
-        await trackKernelResourceInformation(this.kernel.resourceUri, { restartKernel: true });
         const executionQueue = this.documentExecutions.get(this.kernel.notebook);
         // Possible we don't have a notebook.
         const session = sessionPromise ? await sessionPromise.catch(() => undefined) : undefined;

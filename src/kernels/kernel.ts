@@ -34,7 +34,7 @@ import { sleep } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
-import { concatMultilineString } from '../platform/common/utils';
+import { concatMultilineString, getResourceType } from '../platform/common/utils';
 import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import {
@@ -180,7 +180,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     }
     public async interrupt(): Promise<void> {
         await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
-        await trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
         traceInfo(`Interrupt requested ${getDisplayPath(this.resourceUri || this.uri)}`);
         this.startCancellation.cancel();
         const interruptResultPromise = this.kernelExecution.interrupt(this._jupyterSessionPromise);
@@ -243,6 +242,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     }
     public async restart(): Promise<void> {
         try {
+            const resourceType = getResourceType(this.resourceUri);
             await Promise.all(this.eventHooks.map((h) => h('willRestart')));
             traceInfo(`Restart requested ${this.uri}`);
             this.startCancellation.cancel();
@@ -261,9 +261,12 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
                 await (this._jupyterSessionPromise
                     ? this.kernelExecution.restart(this._jupyterSessionPromise)
                     : this.start(new DisplayOptions(false)));
-                sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, {
-                    duration: stopWatch.elapsedTime
-                });
+                sendKernelTelemetryEvent(
+                    this.resourceUri,
+                    Telemetry.NotebookRestart,
+                    { duration: stopWatch.elapsedTime },
+                    { resourceType }
+                );
             } catch (ex) {
                 traceError(`Restart failed ${getDisplayPath(this.uri)}`, ex);
                 this._ignoreJupyterSessionDisposedErrors = true;

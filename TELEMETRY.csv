@@ -56,28 +56,18 @@ Common to most of the events.","boolean","",true
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
 Common to most of the events.","boolean","",true
-"DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
 Common to most of the events.","KernelConnectionMetadata['kind']","",true
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
-"DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
@@ -107,12 +97,6 @@ Common to most of the events.","string","",true
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
-"DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.EXPORT_NOTEBOOK_AS","Called on the completion of exporting a Jupyter notebook into a new format
@@ -190,28 +174,18 @@ Common to most of the events.","boolean","",true
 "DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
 Common to most of the events.","boolean","",true
-"DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
 "DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
 Common to most of the events.","KernelConnectionMetadata['kind']","",true
 "DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
-"DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
 "DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
 "DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
@@ -241,12 +215,6 @@ Common to most of the events.","string","",true
 "DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
-"DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
 "DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.KERNEL_SPEC_LANGUAGE","Sent to detect the different languages of kernel specs used.","Telemetry.KernelSpecLanguage","donjayamanne","N/A","KernelStartup","","kind","Whether this is a local or remote kernel.","","'local' 
@@ -280,9 +248,6 @@ Common to most of the events.","boolean","",true
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
@@ -292,25 +257,13 @@ Common to most of the events.","KernelConnectionMetadata['kind']","",true
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
@@ -347,18 +300,9 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 Common to most of the events.","","'notebook' 
 'interactive' ",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","result","The result of the interrupt,","","success ()
 timeout ()
 restart ()",false
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
@@ -387,9 +331,6 @@ Common to most of the events.","string","",true
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
 Common to most of the events.","string","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
@@ -399,25 +340,13 @@ Common to most of the events.","KernelConnectionMetadata['kind']","",true
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
@@ -463,130 +392,18 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 Common to most of the events.","","'notebook' 
 'interactive' ",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","stackTrace","Node stacktrace without PII.
 Common to most of the events.","string","",true
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","actionSource","Whether this was started by Jupyter extension or a 3rd party.
-Common to most of the events.","","jupyterExtension ()
-3rdPartyExtension ()",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","capturedEnvVars","Whether we managed to capture the environment variables or not.
-In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
-Common to most of the events.","boolean","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
-If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
-Common to most of the events.","boolean","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","duration","Duration of a measure in milliseconds.
+Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
-Common to most of the events.","boolean","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
-Common to most of the events.","KernelConnectionMetadata['kind']","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","kernelId","Hash of the Kernel Connection id.
-Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","kernelLanguage","Language of the kernel connection.
-Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","kernelSessionId","Unique identifier for an instance of a notebook session.
-If we restart or run this notebook tomorrow, this id will be different.
-Id could be something as simple as a hash of the current Epoch time.
-Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
-Common to most of the events.","string","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
-Common to most of the events.","string","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.
-Common to most of the events.","","Unknown ()
-Conda ()
-VirtualEnv ()
-PipEnv ()
-Pyenv ()
-Venv ()
-WindowsStore ()
-Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
-Common to most of the events.","string","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.
-Used to check whether a particular notebook fails across time or not.
-This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
-and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
-we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
-and have a better understanding of what is going on, e.g. why something failed.
-Common to most of the events.","string","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
+Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","startTimeOnly","If true, this is the total time taken to restart the kernel (excluding times to stop current cells and the like).
-Also in the case of raw kernels, we keep a separate process running, and when restarting we just switch to that process.
-In such cases this value will be `undefined`. In the case of raw kernels this will be true only when starting a new kernel process from scratch.","true","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","Sent to capture just the time taken to restart, see comments. ","userExecutedCell","Whether the user executed a cell.
-Common to most of the events.","boolean","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","actionSource","Whether this was started by Jupyter extension or a 3rd party.
-Common to most of the events.","","jupyterExtension ()
-3rdPartyExtension ()",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","capturedEnvVars","Whether we managed to capture the environment variables or not.
-In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
-Common to most of the events.","boolean","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
-If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
-Common to most of the events.","boolean","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","failed","Whether there was a failure.
 Common to most of the events.","true","",false
@@ -595,60 +412,6 @@ Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Te
 Common to most of the events.","string","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
-Common to most of the events.","string","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
-Common to most of the events.","boolean","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
-Common to most of the events.","KernelConnectionMetadata['kind']","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","kernelId","Hash of the Kernel Connection id.
-Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","kernelLanguage","Language of the kernel connection.
-Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","kernelSessionId","Unique identifier for an instance of a notebook session.
-If we restart or run this notebook tomorrow, this id will be different.
-Id could be something as simple as a hash of the current Epoch time.
-Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
-Common to most of the events.","string","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
-Common to most of the events.","string","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.
-Common to most of the events.","","Unknown ()
-Conda ()
-VirtualEnv ()
-PipEnv ()
-Pyenv ()
-Venv ()
-WindowsStore ()
-Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).
@@ -660,33 +423,12 @@ Common to most of the events.","string","",true
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","pythonErrorPackage","Hash of the module that contains the file in the last frame (from Python stack trace).
 Common to most of the events.","string","",true
 "DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.
-Used to check whether a particular notebook fails across time or not.
-This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
-and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
-we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
-and have a better understanding of what is going on, e.g. why something failed.
-Common to most of the events.","string","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
 "DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","stackTrace","Node stacktrace without PII.
 Common to most of the events.","string","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_RESTART","Telemetry sent when user Restarts the Kernel.
-Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookRestart","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions. ","userExecutedCell","Whether the user executed a cell.
-Common to most of the events.","boolean","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","actionSource","Whether this was started by Jupyter extension or a 3rd party.
 Common to most of the events.","","jupyterExtension ()
 3rdPartyExtension ()",false
@@ -702,28 +444,18 @@ Common to most of the events.","true","",false
 Common to most of the events.","string","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","failureSubCategory","Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
 Common to most of the events.","string","",true
-"DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
 Common to most of the events.","KernelConnectionMetadata['kind']","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
@@ -759,14 +491,8 @@ Common to most of the events.","string","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
-"DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","stackTrace","Node stacktrace without PII.
 Common to most of the events.","string","",true
-"DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.OPEN_PLOT_VIEWER","A new instance of the plot viewer was opened.","Telemetry.OpenPlotViewer","IanMatthewHuff","PlotViewer","","","","","","",""
@@ -783,74 +509,6 @@ Common to most of the events.","boolean","",true
 'doNotShowAgain' ",false
 "DATASCIENCE.RECOMMENT_EXTENSION","Telemetry sent when we recommend installing an extension.","Telemetry.RecommendExtension","IanMatthewHuff","N/A","","","extensionId","Extension we recommended the user to install.","string","",false
 "DATASCIENCE.REFRESH_DATA_VIEWER","Sent when the jupyter.refreshDataViewer command is invoked","Telemetry.RefreshDataViewer","IanMatthewHuff","DataFrameViewer","","","","","","",""
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.
-Common to most of the events.","","jupyterExtension ()
-3rdPartyExtension ()",false
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
-In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
-Common to most of the events.","boolean","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
-If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
-Common to most of the events.","boolean","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
-Common to most of the events.","boolean","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
-Common to most of the events.","KernelConnectionMetadata['kind']","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","kernelId","Hash of the Kernel Connection id.
-Common to most of the events.","string","",false
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","kernelLanguage","Language of the kernel connection.
-Common to most of the events.","string","",false
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","kernelSessionId","Unique identifier for an instance of a notebook session.
-If we restart or run this notebook tomorrow, this id will be different.
-Id could be something as simple as a hash of the current Epoch time.
-Common to most of the events.","string","",false
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
-Common to most of the events.","string","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
-Common to most of the events.","string","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.
-Common to most of the events.","","Unknown ()
-Conda ()
-VirtualEnv ()
-PipEnv ()
-Pyenv ()
-Venv ()
-WindowsStore ()
-Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
-Common to most of the events.","string","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-If we run the same notebook tomorrow, the hash will be the same.
-Used to check whether a particular notebook fails across time or not.
-This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
-and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
-we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
-and have a better understanding of what is going on, e.g. why something failed.
-Common to most of the events.","string","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
-Common to most of the events.","","'notebook' 
-'interactive' ",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
-"DATASCIENCE.RESTART_KERNEL_COMMAND","Telemetry event sent when IW or Notebook is restarted","Telemetry.RestartKernelCommand","donjayamanne","InteractiveWindow, Notebook","","","userExecutedCell","Whether the user executed a cell.
-Common to most of the events.","boolean","",true
 "DATASCIENCE.RUN_ALL_CELLS","Command to Run all cells from the active python file in the Interactive Window","Telemetry.RunAllCells","amunger","InteractiveWindow","","","","","","",""
 "DATASCIENCE.RUN_ALL_CELLS_ABOVE","Command to Run all the above cells in the Interactive Window","Telemetry.RunAllCellsAbove","amunger","InteractiveWindow","","","","","","",""
 "DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER","Fired when a user hovers a variable while debugging the IW.","Telemetry.RunByLineVariableHover","roblourens","Debugger","","","","","","",""
@@ -900,28 +558,18 @@ Common to most of the events.","boolean","",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
 Common to most of the events.","boolean","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
 Common to most of the events.","KernelConnectionMetadata['kind']","",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
@@ -951,12 +599,6 @@ Common to most of the events.","string","",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.
@@ -968,28 +610,18 @@ Common to most of the events.","boolean","",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
 Common to most of the events.","boolean","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
 Common to most of the events.","KernelConnectionMetadata['kind']","",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
@@ -1019,12 +651,6 @@ Common to most of the events.","string","",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.SELFCERTSMESSAGECLOSE","Sent when users chose not to allow connecting to Jupyter over HTTPS when certificate isn't trusted by a trusted CA.","Telemetry.SelfCertsMessageClose","donjayamanne","N/A","","","","","","",""
@@ -1250,8 +876,6 @@ If its not displayed, then its considered an auto start (start in the background
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
@@ -1259,26 +883,15 @@ Common to most of the events.","KernelConnectionMetadata['kind']","",true
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.
-Total number of interpreters in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.
-Total number of live kernels in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.
-Total number of kernel specs in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","localKernelSpecCount","Total number of local kernel specs in the list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
@@ -1309,12 +922,6 @@ Common to most of the events.","string","",true
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","actionSource","Whether this was started by Jupyter extension or a 3rd party.
@@ -1328,28 +935,18 @@ If its not displayed, then its considered an auto start (start in the background
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
 Common to most of the events.","KernelConnectionMetadata['kind']","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
-"DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
@@ -1379,12 +976,6 @@ Common to most of the events.","string","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","failed","Whether there was a failure.
@@ -1431,9 +1022,6 @@ Common to most of the events.","boolean","",true
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
-(Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
@@ -1443,25 +1031,13 @@ Common to most of the events.","KernelConnectionMetadata['kind']","",true
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
-(Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
-(Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
-(Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
-(Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
@@ -1497,15 +1073,6 @@ Common to most of the events.","string","",true
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
-(Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
-(Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
-(Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
@@ -1602,11 +1169,6 @@ Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
-or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
-This tracks the total time taken to get the response back (or wether we timedout).
-If we timeout and later we find successful comms for this session, then timeout is too low
 or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
@@ -1622,18 +1184,8 @@ Common to most of the events.","string","",false
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
-or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
-This tracks the total time taken to get the response back (or wether we timedout).
-If we timeout and later we find successful comms for this session, then timeout is too low
 or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
-This tracks the total time taken to get the response back (or wether we timedout).
-If we timeout and later we find successful comms for this session, then timeout is too low
-or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
@@ -1641,16 +1193,6 @@ or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Not
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
-This tracks the total time taken to get the response back (or wether we timedout).
-If we timeout and later we find successful comms for this session, then timeout is too low
-or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
-This tracks the total time taken to get the response back (or wether we timedout).
-If we timeout and later we find successful comms for this session, then timeout is too low
-or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
@@ -1701,21 +1243,6 @@ Common to most of the events.","","'notebook'
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
-or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
-This tracks the total time taken to get the response back (or wether we timedout).
-If we timeout and later we find successful comms for this session, then timeout is too low
-or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
-This tracks the total time taken to get the response back (or wether we timedout).
-If we timeout and later we find successful comms for this session, then timeout is too low
-or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
-This tracks the total time taken to get the response back (or wether we timedout).
-If we timeout and later we find successful comms for this session, then timeout is too low
 or we need more attempts.","Telemetry.RawKernelInfoResponse","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","timedout","Whether we timedout while waiting for response for Kernel info request.","boolean","",false
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
@@ -1737,9 +1264,6 @@ Used to determine what part of the code that shut down the session, so as to det
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
@@ -1749,25 +1273,13 @@ Common to most of the events.","KernelConnectionMetadata['kind']","",true
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
@@ -1804,18 +1316,9 @@ Used to determine what part of the code that shut down the session, so as to det
 Common to most of the events.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","stacktrace","This is the callstack at the time that the `dispose` method
 is called, intended for us to be able to identify who called
 `dispose` on the RawSession.","","null or <empty> ",false
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
@@ -1837,9 +1340,6 @@ RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donja
 RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","exitReason","The kernel process's exit reason, based on the error
 object's reason","","null or <empty> ",false
 "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
-RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
 RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
@@ -1849,25 +1349,13 @@ Common to most of the events.","KernelConnectionMetadata['kind']","",true
 RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
-RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
 RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
-RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
 RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
-RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
-RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
 RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
@@ -1904,17 +1392,59 @@ RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donja
 Common to most of the events.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
-RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
-RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
-RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
 RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.
+Common to most of the events.","","jupyterExtension ()
+3rdPartyExtension ()",false
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","capturedEnvVars","Whether we managed to capture the environment variables or not.
+In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.
+Common to most of the events.","boolean","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
+If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
+Common to most of the events.","boolean","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
+Common to most of the events.","boolean","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","kernelConnectionType","Whether kernel was started using kernel spec, interpreter, etc.
+Common to most of the events.","KernelConnectionMetadata['kind']","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.
+Common to most of the events.","string","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.
+Common to most of the events.","string","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
+If we restart or run this notebook tomorrow, this id will be different.
+Id could be something as simple as a hash of the current Epoch time.
+Common to most of the events.","string","",false
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
+Common to most of the events.","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPath","A key, so that rest of the information is tied to this. (hash)
+Common to most of the events.","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentType","Found plenty of issues when starting kernels with conda, hence useful to capture this info.
+Common to most of the events.","","Unknown ()
+Conda ()
+VirtualEnv ()
+PipEnv ()
+Pyenv ()
+Venv ()
+WindowsStore ()
+Poetry ()
+VirtualEnvWrapper ()
+Global ()
+System ()",true
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
+Common to most of the events.","string","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
 This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","reason","Captures the result of the error message, whether user dismissed this or picked a new kernel or the like.","","0 (Enum Member: KernelInterpreterDependencyResponse.ok,Could mean dependencies are already installed
 or user clicked ok to install and it got installed.)
@@ -1925,9 +1455,21 @@ or user clicked ok to install and it got installed.)
 as the kernel startup is part of a background process.
 In such cases we do not notify user of any failures or the like.)",false
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+If we run the same notebook tomorrow, the hash will be the same.
+Used to check whether a particular notebook fails across time or not.
+This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,
+and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or
+we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points
+and have a better understanding of what is going on, e.g. why something failed.
+Common to most of the events.","string","",true
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
 This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
+"DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
+This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.
+Common to most of the events.","boolean","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","actionSource","Whether this was started by Jupyter extension or a 3rd party.
 Common to most of the events.","","jupyterExtension ()
@@ -1940,9 +1482,6 @@ Common to most of the events.","boolean","",true
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","disableUI","Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
 Common to most of the events.","boolean","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","isRequestToShutdownRestartSession","This indicates whether the session being shutdown is a restart session.","","true 
 false 
@@ -1957,25 +1496,13 @@ Common to most of the events.","KernelConnectionMetadata['kind']","",true
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
@@ -2012,23 +1539,12 @@ Used to determine what part of the code that shut down the session, so as to det
 Common to most of the events.","","'notebook' 
 'interactive' ",true
 "DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","stacktrace","This is the callstack at the time that the `shutdownSession`
 method is called, intended for us to be ale to identify who
 tried to shutdown the session.","","null or <empty> ",false
 "DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
-Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
-"DS_INTERNAL.RESTART_KERNEL","Total time taken to restart a kernel.","Telemetry.RestartKernel","donjayamanne","InteractiveWindow, Notebook","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.RUNTEST","A automated test has been run","Telemetry.RunTest","amunger","N/A","","","commitHash","The git commit that the test was run against.","string","",true
 "DS_INTERNAL.RUNTEST","A automated test has been run","Telemetry.RunTest","amunger","N/A","","","perfWarmup","If the test was an initial run to warmup the product.","'true'","",true
 "DS_INTERNAL.RUNTEST","A automated test has been run","Telemetry.RunTest","amunger","N/A","","","testName","The name of the test.","string","",false
@@ -2068,9 +1584,6 @@ WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence 
 If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
-WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","interruptCount","This number gets reset after we attempt a restart or change kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","isUsingActiveInterpreter","Whether this resource is using the active Python interpreter or not.
 Common to most of the events.","boolean","",true
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
@@ -2080,25 +1593,13 @@ Common to most of the events.","KernelConnectionMetadata['kind']","",true
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","kernelId","Hash of the Kernel Connection id.
 Common to most of the events.","string","",false
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
-WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","kernelInterpreterCount","Total number of interpreters in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","kernelLanguage","Language of the kernel connection.
 Common to most of the events.","string","",false
-"DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
-WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","kernelLiveCount","Total number of live kernels in the kernel spec list.
-Common to most of the events.","number","",false
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","kernelSessionId","Unique identifier for an instance of a notebook session.
 If we restart or run this notebook tomorrow, this id will be different.
 Id could be something as simple as a hash of the current Epoch time.
 Common to most of the events.","string","",false
-"DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
-WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","kernelSpecCount","Total number of kernel specs in the kernel spec list.
-Common to most of the events.","number","",false
-"DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
-WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","pythonEnvironmentCount","Total number of python environments.
-Common to most of the events.","number","",true
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","pythonEnvironmentPackages","Comma delimited list of hashed packages & their versions.
 Common to most of the events.","string","",true
@@ -2134,15 +1635,6 @@ Common to most of the events.","string","",true
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
 Common to most of the events.","","'notebook' 
 'interactive' ",true
-"DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
-WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","restartCount","This number gets reset after change the kernel.
-Common to most of the events.","number","",true
-"DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
-WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","startFailureCount","Number of times starting the kernel failed.
-Common to most of the events.","number","",true
-"DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
-WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","switchKernelCount","Number of times the kernel was changed.
-Common to most of the events.","number","",true
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true

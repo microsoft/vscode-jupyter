@@ -339,56 +339,6 @@ function commonClassificationForResourceSpecificTelemetryProperties(): PropertyM
                 purpose: 'PerformanceAndHealth'
             },
             ...commonClassificationForResourceType()
-        },
-        measures: {
-            interruptCount: {
-                classification: 'PublicNonPersonalData',
-                comment: '',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            switchKernelCount: {
-                classification: 'PublicNonPersonalData',
-                comment: '',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            startFailureCount: {
-                classification: 'PublicNonPersonalData',
-                comment: '',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            restartCount: {
-                classification: 'PublicNonPersonalData',
-                comment: '',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            pythonEnvironmentCount: {
-                classification: 'PublicNonPersonalData',
-                comment: '',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            kernelSpecCount: {
-                classification: 'PublicNonPersonalData',
-                comment: '',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            kernelLiveCount: {
-                classification: 'PublicNonPersonalData',
-                comment: '',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            },
-            kernelInterpreterCount: {
-                classification: 'PublicNonPersonalData',
-                comment: '',
-                purpose: 'PerformanceAndHealth',
-                isMeasurement: true
-            }
         }
     };
 }
@@ -466,11 +416,6 @@ export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty 
          */
         pythonEnvironmentVersion?: string;
         /**
-         * Total number of python environments.
-         * Common to most of the events.
-         */
-        pythonEnvironmentCount?: number;
-        /**
          * Comma delimited list of hashed packages & their versions.
          * Common to most of the events.
          */
@@ -485,41 +430,6 @@ export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty 
          * Common to most of the events.
          */
         kernelLanguage: string;
-        /**
-         * This number gets reset after we attempt a restart or change kernel.
-         * Common to most of the events.
-         */
-        interruptCount?: number;
-        /**
-         * This number gets reset after change the kernel.
-         * Common to most of the events.
-         */
-        restartCount?: number;
-        /**
-         * Number of times starting the kernel failed.
-         * Common to most of the events.
-         */
-        startFailureCount?: number;
-        /**
-         * Number of times the kernel was changed.
-         * Common to most of the events.
-         */
-        switchKernelCount?: number;
-        /**
-         * Total number of kernel specs in the kernel spec list.
-         * Common to most of the events.
-         */
-        kernelSpecCount: number;
-        /**
-         * Total number of interpreters in the kernel spec list.
-         * Common to most of the events.
-         */
-        kernelInterpreterCount: number;
-        /**
-         * Total number of live kernels in the kernel spec list.
-         * Common to most of the events.
-         */
-        kernelLiveCount: number;
         /**
          * Whether this was started by Jupyter extension or a 3rd party.
          * Common to most of the events.
@@ -993,8 +903,7 @@ export class IEventNamePropertyMapping {
         tags: ['KernelStartup'],
         properties: commonClassificationForResourceSpecificTelemetryProperties().properties,
         measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
+            ...commonClassificationForDurationProperties()
         }
     };
     /**
@@ -1229,28 +1138,6 @@ export class IEventNamePropertyMapping {
         owner: 'IanMatthewHuff',
         feature: ['PlotViewer'],
         source: 'User Action'
-    };
-    /**
-     * Total time taken to restart a kernel.
-     */
-    [Telemetry.RestartKernel]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: ['InteractiveWindow', 'Notebook'],
-        source: 'User Action',
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * Telemetry event sent when IW or Notebook is restarted
-     */
-    [Telemetry.RestartKernelCommand]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
-        owner: 'donjayamanne',
-        feature: ['InteractiveWindow', 'Notebook'],
-        source: 'User Action',
-        properties: commonClassificationForResourceSpecificTelemetryProperties().properties,
-        measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
-        }
     };
     /**
      * Command to Run all cells from the active python file in the Interactive Window
@@ -1502,11 +1389,7 @@ export class IEventNamePropertyMapping {
         owner: 'IanMatthewHuff',
         source: 'N/A',
         feature: ['KernelPicker'],
-        properties: commonClassificationForResourceSpecificTelemetryProperties().properties,
-        measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
-        }
+        properties: commonClassificationForResourceSpecificTelemetryProperties().properties
     };
     /**
      * Kernel was switched to a remote kernel connection.
@@ -1515,11 +1398,7 @@ export class IEventNamePropertyMapping {
         owner: 'IanMatthewHuff',
         source: 'N/A',
         feature: ['KernelPicker'],
-        properties: commonClassificationForResourceSpecificTelemetryProperties().properties,
-        measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
-        }
+        properties: commonClassificationForResourceSpecificTelemetryProperties().properties
     };
     /**
      * Sent when we display a message informing the user about Jupyter not being installed (or not detected).
@@ -2027,8 +1906,7 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForResourceSpecificTelemetryProperties().properties
         },
         measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
+            ...commonClassificationForDurationProperties()
         }
     };
     /**
@@ -2416,7 +2294,6 @@ export class IEventNamePropertyMapping {
         tags: ['KernelStartup'],
         measures: {
             ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures,
             attempts: {
                 classification: 'SystemMetaData',
                 purpose: 'PerformanceAndHealth',
@@ -2453,9 +2330,6 @@ export class IEventNamePropertyMapping {
         properties: {
             ...commonClassificationForResourceSpecificTelemetryProperties().properties,
             ...commonClassificationForErrorProperties()
-        },
-        measures: {
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
         }
     };
     /**
@@ -2468,10 +2342,6 @@ export class IEventNamePropertyMapping {
         feature: ['Notebook', 'InteractiveWindow'],
         source: 'N/A',
         tags: ['KernelStartup'],
-        measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
-        },
         properties: {
             ...commonClassificationForResourceSpecificTelemetryProperties().properties,
             ...commonClassificationForErrorProperties()
@@ -2485,7 +2355,6 @@ export class IEventNamePropertyMapping {
         owner: 'IanMatthewHuff',
         feature: ['Notebook', 'InteractiveWindow'],
         source: 'N/A',
-        measures: commonClassificationForResourceSpecificTelemetryProperties().measures,
         properties: commonClassificationForResourceSpecificTelemetryProperties().properties
     };
     /**
@@ -2517,8 +2386,7 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForResourceSpecificTelemetryProperties().properties
         },
         measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
+            ...commonClassificationForDurationProperties()
         }
     };
     /**
@@ -2526,33 +2394,18 @@ export class IEventNamePropertyMapping {
      * Check the `resourceType` to determine whether its a Jupyter Notebook or IW.
      */
     [Telemetry.NotebookRestart]: TelemetryEventInfo<
-        | /** Sent to capture just the time taken to restart, see comments. */ ({
-              /**
-               * If true, this is the total time taken to restart the kernel (excluding times to stop current cells and the like).
-               * Also in the case of raw kernels, we keep a separate process running, and when restarting we just switch to that process.
-               * In such cases this value will be `undefined`. In the case of raw kernels this will be true only when starting a new kernel process from scratch.
-               */
-              startTimeOnly: true;
-          } & DurationMeasurement &
-              ResourceSpecificTelemetryProperties)
-        | /** If there are unhandled exceptions. */ (ResourceSpecificTelemetryProperties & TelemetryErrorProperties)
+        | (ResourceTypeTelemetryProperty & DurationMeasurement)
+        | /** If there are unhandled exceptions. */ (ResourceTypeTelemetryProperty & TelemetryErrorProperties)
     > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         source: 'User Action',
         properties: {
-            startTimeOnly: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
             ...commonClassificationForResourceType(),
             ...commonClassificationForErrorProperties(),
             ...commonClassificationForResourceSpecificTelemetryProperties().properties
         },
-        measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
-        }
+        measures: commonClassificationForDurationProperties()
     };
     /**
      * Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
@@ -2564,13 +2417,14 @@ export class IEventNamePropertyMapping {
              * Captures the result of the error message, whether user dismissed this or picked a new kernel or the like.
              */
             reason: KernelInterpreterDependencyResponse;
-        } & ResourceTypeTelemetryProperty
+        } & ResourceSpecificTelemetryProperties
     > = {
         owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         source: 'N/A',
         properties: {
-            ...commonClassificationForResourceType()
+            ...commonClassificationForResourceType(),
+            ...commonClassificationForResourceSpecificTelemetryProperties().properties
         },
         measures: {
             reason: {
@@ -2609,7 +2463,6 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForResourceSpecificTelemetryProperties().properties
         },
         measures: {
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures,
             exitCode: {
                 classification: 'CallstackOrException',
                 purpose: 'PerformanceAndHealth',
@@ -2650,8 +2503,7 @@ export class IEventNamePropertyMapping {
             },
             ...commonClassificationForResourceType(),
             ...commonClassificationForResourceSpecificTelemetryProperties().properties
-        },
-        measures: commonClassificationForResourceSpecificTelemetryProperties().measures
+        }
     };
     /**
      * This event is sent when a RawSession's `dispose` method is called.
@@ -2677,8 +2529,7 @@ export class IEventNamePropertyMapping {
             },
             ...commonClassificationForResourceType(),
             ...commonClassificationForResourceSpecificTelemetryProperties().properties
-        },
-        measures: commonClassificationForResourceSpecificTelemetryProperties().measures
+        }
     };
 
     /**
@@ -2727,7 +2578,6 @@ export class IEventNamePropertyMapping {
         },
         measures: {
             ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures,
             kernelSpecCount: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight',
@@ -3218,8 +3068,7 @@ export class IEventNamePropertyMapping {
         properties: {
             ...commonClassificationForResourceSpecificTelemetryProperties().properties,
             ...commonClassificationForResourceType()
-        },
-        measures: commonClassificationForResourceSpecificTelemetryProperties().measures
+        }
     };
     /**
      * Called when a controller that would have been shown is hidden by a filter.

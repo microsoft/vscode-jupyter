@@ -229,27 +229,11 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                     options.token
                 )
         );
-        const stopwatch = new StopWatch();
-        const promise = KernelProgressReporter.wrapAndReportProgress(
+        return KernelProgressReporter.wrapAndReportProgress(
             this.resource,
             DataScience.waitingForJupyterSessionToBeIdle(),
             () => this.postStartRawSession(options, process)
         );
-        if (options.purpose === 'restart') {
-            promise
-                .then(() =>
-                    sendKernelTelemetryEvent(
-                        this.resource,
-                        Telemetry.NotebookRestart,
-                        { duration: stopwatch.elapsedTime },
-                        {
-                            startTimeOnly: true
-                        }
-                    )
-                )
-                .ignoreErrors();
-        }
-        return promise;
     }
     private async postStartRawSession(
         options: { token: CancellationToken; ui: IDisplayOptions },
