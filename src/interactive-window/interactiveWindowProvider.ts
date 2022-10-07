@@ -124,12 +124,20 @@ export class InteractiveWindowProvider
                 return;
             }
 
+            const tab = interactiveWindowMapping.get(iw.uriString);
+            const notebookEditor = window.visibleNotebookEditors.find(
+                (e) => e.notebook.uri.toString() === tab?.input.uri.toString()
+            );
+            if (!notebookEditor) {
+                return;
+            }
+
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 iw.owner !== undefined ? Uri.from(iw.owner) : undefined,
                 iw.mode,
                 undefined,
-                interactiveWindowMapping.get(iw.uriString)!,
+                notebookEditor,
                 Uri.parse(iw.inputBoxUriString)
             );
             this._windows.push(result);
