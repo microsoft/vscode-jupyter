@@ -210,7 +210,6 @@ export class CellExecution implements IDisposable {
     public dispose() {
         traceCellMessage(this.cell, 'Execution disposed');
         disposeAllDisposables(this.disposables);
-        this.cellExecutionHandler?.dispose();
     }
     private completedWithErrors(error: Partial<Error>) {
         traceWarning(`Cell completed with errors`, error);
