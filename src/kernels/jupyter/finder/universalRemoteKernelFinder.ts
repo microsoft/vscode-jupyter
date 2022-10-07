@@ -40,7 +40,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
 import { RemoteKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
-import { IContributedKernelFinderInfo } from '../../internalTypes';
+import { ContributedKernelFinderKind, IContributedKernelFinderInfo } from '../../internalTypes';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 // Even after shutting down a kernel, the server API still returns the old information.
@@ -53,7 +53,7 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
      * List of ids of kernels that should be hidden from the kernel picker.
      */
     private readonly kernelIdsToHide = new Set<string>();
-    kind: string = 'remote';
+    kind = ContributedKernelFinderKind.Remote;
     id: string;
     displayName: string;
     private _cacheUpdateCancelTokenSource: CancellationTokenSource | undefined;
@@ -116,12 +116,16 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         // we have live sessions possible)
         // Note, this is a perf optimization for right now. We should not need
         // to check for remote if the future when we support live sessions on local
-        this.kernelProvider.onDidStartKernel((k) => {
-            if (isRemoteConnection(k.kernelConnectionMetadata)) {
-                // update remote kernels
-                this.updateCache().then(noop, noop);
-            }
-        });
+        this.kernelProvider.onDidStartKernel(
+            (k) => {
+                if (isRemoteConnection(k.kernelConnectionMetadata)) {
+                    // update remote kernels
+                    this.updateCache().then(noop, noop);
+                }
+            },
+            this,
+            this.disposables
+        );
 
         // For kernel dispose we need to wait a bit, otherwise the list comes back the
         // same
