@@ -4,7 +4,6 @@
 import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Tab, Uri } from 'vscode';
 import { IDebuggingManager } from '../notebooks/debugger/debuggingTypes';
 import { IKernel, KernelConnectionMetadata } from '../kernels/types';
-import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';
 import { IFileGeneratedCodes } from './editor-integration/types';
 
@@ -67,8 +66,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly inputUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
     closed: Event<void>;
-    initialize(): void;
-    restore(preferredController: IVSCodeNotebookController | undefined): Promise<void>;
+    ensureInitialized(): void;
     addCode(code: string, file: Uri, line: number): Promise<boolean>;
     addErrorMessage(message: string, cell: NotebookCell): Promise<void>;
     debugCode(code: string, file: Uri, line: number): Promise<boolean>;

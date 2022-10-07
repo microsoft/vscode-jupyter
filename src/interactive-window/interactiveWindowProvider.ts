@@ -141,6 +141,11 @@ export class InteractiveWindowProvider
                 Uri.parse(iw.inputBoxUriString)
             );
             this._windows.push(result);
+
+            const handler = result.closed(this.onInteractiveWindowClosed.bind(this, result));
+            this.disposables.push(result);
+            this.disposables.push(handler);
+            this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
         });
 
         this._updateWindowCache();
@@ -165,15 +170,9 @@ export class InteractiveWindowProvider
         if (!result) {
             // No match. Create a new item.
             result = await this.create(resource, mode, connection);
-            // ensure events are wired up and kernel is started.
-            result.initialize();
-        } else {
-            const preferredController = connection
-                ? this.controllerRegistration.get(connection, InteractiveWindowView)
-                : await this.controllerDefaultService.computeDefaultController(resource, InteractiveWindowView);
-
-            await result.restore(preferredController);
         }
+
+        result.ensureInitialized();
 
         return result;
     }

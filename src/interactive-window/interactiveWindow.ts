@@ -95,6 +95,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get kernelConnectionMetadata(): KernelConnectionMetadata | undefined {
         return this.currentKernelInfo.metadata;
     }
+    private initialized = false;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent = new EventEmitter<void>();
     private _submitters: Uri[] = [];
@@ -135,7 +136,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly serviceContainer: IServiceContainer,
         private _owner: Resource,
         public mode: InteractiveWindowMode,
-        private preferredController: IVSCodeNotebookController | undefined,
+        preferredController: IVSCodeNotebookController | undefined,
         public readonly notebookEditor: NotebookEditor,
         public readonly inputUri: Uri
     ) {
@@ -159,6 +160,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.controllerRegistration = this.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         this._notebookUri = notebookEditor.notebook.uri;
 
+        if (preferredController) {
+            this.currentKernelInfo = {
+                controller: preferredController.controller,
+                metadata: preferredController.connection
+            };
+        }
+
         // Set our owner and first submitter
         if (this._owner) {
             this._submitters.push(this._owner);
@@ -175,33 +183,28 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             }
         }, this.internalDisposables);
 
-        this.cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
         if (window.activeNotebookEditor === this.notebookEditor) {
             this._onDidChangeViewState.fire();
         }
 
         this.listenForControllerSelection();
 
+        this.cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
         // Create the code generator right away to start watching the notebook
         this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
     }
 
-    public initialize() {
-        if (this.preferredController) {
+    public ensureInitialized() {
+        if (this.currentKernelInfo) {
             // Also start connecting to our kernel but don't wait for it to finish
-            this.startKernel(this.preferredController.controller, this.preferredController.connection).ignoreErrors();
+            this.startKernel().ignoreErrors();
         } else {
-            traceWarning('No preferred controller found for Interactive Window');
+            traceWarning('No controller selected for Interactive Window');
             if (this.isWebExtension) {
                 this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
             }
         }
-    }
-
-    public async restore(preferredController: IVSCodeNotebookController | undefined) {
-        if (preferredController && !this.preferredController) {
-            this.preferredController = preferredController;
-        }
+        this.initialized = true;
     }
 
     /**
@@ -216,20 +219,21 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    private async startKernel(
-        controller: NotebookController | undefined = this.currentKernelInfo.controller,
-        metadata: KernelConnectionMetadata | undefined = this.currentKernelInfo.metadata
-    ): Promise<IKernel> {
+    private async startKernel(): Promise<IKernel> {
+        if (this.currentKernelInfo.kernel) {
+            return this.currentKernelInfo.kernel.promise;
+        }
+
+        const controller = this.currentKernelInfo.controller;
+        const metadata = this.currentKernelInfo.metadata;
         if (!controller || !metadata) {
             // This cannot happen, but we need to make typescript happy.
             throw new Error('Controller not selected');
         }
-        if (this.currentKernelInfo.kernel) {
-            return this.currentKernelInfo.kernel.promise;
-        }
+
         const kernelPromise = createDeferred<IKernel>();
         kernelPromise.promise.catch(noop);
-        this.currentKernelInfo = { controller, metadata, kernel: kernelPromise };
+        this.currentKernelInfo.kernel = kernelPromise;
 
         const sysInfoCell = this.insertSysInfoMessage(metadata, SysInfoReason.Start);
         try {
@@ -429,7 +433,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 // Clear cached kernel when the selected controller for this document changes
                 if (e.controller.id !== this.currentKernelInfo.controller?.id) {
                     this.disconnectKernel();
-                    this.startKernel(e.controller.controller, e.controller.connection).ignoreErrors();
+                    this.currentKernelInfo = {
+                        controller: e.controller.controller,
+                        metadata: e.controller.connection
+                    };
+                    if (this.initialized) {
+                        this.startKernel().ignoreErrors();
+                    }
                 }
             },
             this,
