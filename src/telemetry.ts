@@ -182,11 +182,6 @@ type PropertyMeasureDefinition<P> = P extends never
 
 function globallySharedProperties(): PropertyMeasureDefinition<SharedPropertyMapping>['properties'] {
     return {
-        installSource: {
-            classification: 'SystemMetaData',
-            purpose: 'FeatureInsight',
-            comment: ' Determine where an extension was installed from. Common to all events.'
-        },
         isamlcompute: {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',
