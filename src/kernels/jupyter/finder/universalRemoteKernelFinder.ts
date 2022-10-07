@@ -16,7 +16,7 @@ import {
     RemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
-import { IDisposable, IDisposableRegistry, IExtensions, Resource } from '../../../platform/common/types';
+import { IDisposable, IExtensions, Resource } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import {
@@ -41,6 +41,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 import { KernelFinder } from '../../kernelFinder';
 import { RemoteKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
 import { IContributedKernelFinderInfo } from '../../internalTypes';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -64,6 +65,8 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
     private _initializeResolve: () => void;
     private _initializedPromise: Promise<void>;
 
+    private readonly disposables: IDisposable[] = [];
+
     get initialized(): Promise<void> {
         return this._initializedPromise;
     }
@@ -79,7 +82,6 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         private readonly env: IApplicationEnvironment,
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
         kernelFinder: KernelFinder,
-        private readonly disposables: IDisposableRegistry,
         private readonly kernelProvider: IKernelProvider,
         private readonly extensions: IExtensions,
         private isWebExtension: boolean,
@@ -97,12 +99,13 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
             this._initializeResolve = resolve;
         });
 
-        kernelFinder.registerKernelFinder(this);
+        // When we register, add a disposable to clean ourselves up from the main kernel finder list
+        // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
+        this.disposables.push(kernelFinder.registerKernelFinder(this));
     }
 
     dispose(): void | undefined {
-        // throw new Error('Method not implemented.');
-        // IANHU: Instead of passing in disposables, do we need our own disposable store here?
+        disposeAllDisposables(this.disposables);
     }
 
     async activate(): Promise<void> {
@@ -365,7 +368,6 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
 
     private getCacheKey() {
         // For Universal finders key each one per serverId
-        // IANHU: Note, might not be cleaning these up? Check that.
         return `${RemoteKernelSpecsCacheKey}-${this.serverUri.serverId}`;
     }
 

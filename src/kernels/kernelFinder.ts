@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
-import { IDisposableRegistry, Resource } from '../platform/common/types';
+import { IDisposable, IDisposableRegistry, Resource } from '../platform/common/types';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { traceInfoIfCI } from '../platform/logging';
 import { IContributedKernelFinder } from './internalTypes';
@@ -22,9 +22,27 @@ export class KernelFinder implements IKernelFinder {
 
     constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {}
 
-    public registerKernelFinder(finder: IContributedKernelFinder) {
+    public registerKernelFinder(finder: IContributedKernelFinder): IDisposable {
         this._finders.push(finder);
-        this.disposables.push(finder.onDidChangeKernels(() => this._onDidChangeKernels.fire()));
+        const onDidChangeDisposable = finder.onDidChangeKernels(() => this._onDidChangeKernels.fire());
+        this.disposables.push(onDidChangeDisposable);
+
+        // Registering a new kernel finder should notifiy of possible kernel changes
+        this._onDidChangeKernels.fire();
+
+        // Register a disposable so kernel finders can remove themselves from the list if they are disposed
+        return {
+            dispose: () => {
+                const removeIndex = this._finders.findIndex((listFinder) => {
+                    return listFinder === finder;
+                });
+                this._finders.splice(removeIndex, 1);
+                onDidChangeDisposable.dispose();
+
+                // Notify that kernels have changed
+                this._onDidChangeKernels.fire();
+            }
+        };
     }
 
     public async listKernels(

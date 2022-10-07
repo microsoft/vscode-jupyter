@@ -75,12 +75,12 @@ export class UniversalRemoteKernelFinderController implements IExtensionSingleAc
                 this.env,
                 this.cachedRemoteKernelValidator,
                 this.kernelFinder,
-                this.disposables,
                 this.kernelProvider,
                 this.extensions,
                 this.isWebExtension,
                 serverUri
             );
+            this.disposables.push(finder);
 
             this.serverFinderMapping.set(serverUri.serverId, finder);
 
@@ -89,7 +89,11 @@ export class UniversalRemoteKernelFinderController implements IExtensionSingleAc
     }
 
     // When a URI is removed, dispose the kernel finder for it
-    urisRemoved(_uris: IJupyterServerUriEntry[]) {
-        // IANHU: Hook up to the dispose for mapping entries
+    urisRemoved(uris: IJupyterServerUriEntry[]) {
+        uris.forEach((uri) => {
+            const serverFinder = this.serverFinderMapping.get(uri.serverId);
+            serverFinder && serverFinder.dispose();
+            this.serverFinderMapping.delete(uri.serverId);
+        });
     }
 }
