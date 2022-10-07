@@ -437,6 +437,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                         controller: e.controller.controller,
                         metadata: e.controller.connection
                     };
+                    // don't start the kernel if the IW has only been restored from a previous session
                     if (this.initialized) {
                         this.startKernel().ignoreErrors();
                     }
