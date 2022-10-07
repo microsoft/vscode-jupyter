@@ -2432,55 +2432,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Sent to measure the time taken to start a Jupyter Notebook.
-     */
-    [Telemetry.JupyterCreatingNotebook]: TelemetryEventInfo<
-        | /** When things fail */ (DurationMeasurement & ResourceSpecificTelemetryProperties & TelemetryErrorProperties)
-        | /** When successfully created */ (DurationMeasurement & ResourceSpecificTelemetryProperties)
-    > = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
-        },
-        properties: {
-            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
-            ...commonClassificationForErrorProperties()
-        }
-    };
-
-    /**
-     * Sent to measure the total time taken to start and connect to a raw kernel session.
-     */
-    [Telemetry.RawKernelSessionConnect]: TelemetryEventInfo<DurationMeasurement & ResourceSpecificTelemetryProperties> =
-        {
-            owner: 'donjayamanne',
-            feature: ['Notebook', 'InteractiveWindow'],
-            source: 'N/A',
-            tags: ['KernelStartup'],
-            measures: {
-                ...commonClassificationForDurationProperties(),
-                ...commonClassificationForResourceSpecificTelemetryProperties().measures
-            },
-            properties: {
-                ...commonClassificationForResourceSpecificTelemetryProperties().properties,
-                ...commonClassificationForErrorProperties()
-            }
-        };
-    /**
-     * Sent to measure the time taken to start a raw kernel session.
-     */
-    [Telemetry.RawKernelStartRawSession]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
      * Sent to measure time taken to spawn the raw kernel process.
      */
     [Telemetry.RawKernelProcessLaunch]: TelemetryEventInfo<DurationMeasurement> = {
@@ -2594,27 +2545,6 @@ export class IEventNamePropertyMapping {
                 classification: 'SystemMetaData',
                 purpose: 'PerformanceAndHealth'
             },
-            ...commonClassificationForResourceType(),
-            ...commonClassificationForErrorProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().properties
-        },
-        measures: {
-            ...commonClassificationForDurationProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().measures
-        }
-    };
-
-    /**
-     * Telemetry sent when we start (or fail to start) a raw kernel
-     */
-    [Telemetry.RawKernelSessionStart]: TelemetryEventInfo<
-        | /** When started successfully. */ (DurationMeasurement & ResourceSpecificTelemetryProperties)
-        | /** Sent when we fail to restart a kernel. */ (ResourceSpecificTelemetryProperties & TelemetryErrorProperties)
-    > = {
-        owner: 'donjayamanne',
-        feature: ['Notebook', 'InteractiveWindow'],
-        source: 'N/A',
-        properties: {
             ...commonClassificationForResourceType(),
             ...commonClassificationForErrorProperties(),
             ...commonClassificationForResourceSpecificTelemetryProperties().properties
