@@ -49,13 +49,8 @@ import { INotebookExporter } from '../kernels/jupyter/types';
 import { IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
-import {
-    IInteractiveWindowLoadable,
-    IInteractiveWindowDebugger,
-    IInteractiveWindowDebuggingManager,
-    InteractiveTab
-} from './types';
-import { generateInteractiveCode, isInteractiveInputTab } from './helpers';
+import { IInteractiveWindowLoadable, IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager } from './types';
+import { generateInteractiveCode } from './helpers';
 import {
     IControllerRegistration,
     IControllerSelection,
@@ -100,7 +95,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get kernelConnectionMetadata(): KernelConnectionMetadata | undefined {
         return this.currentKernelInfo.metadata;
     }
-    private initialized = false;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent = new EventEmitter<void>();
     private _submitters: Uri[] = [];
@@ -116,11 +110,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         controller?: NotebookController;
         metadata?: KernelConnectionMetadata;
     } = {};
-
-    private _notebookEditor!: NotebookEditor;
-    public get notebookEditor(): NotebookEditor {
-        return this._notebookEditor;
-    }
 
     private _notebookUri: Uri;
     public get notebookUri(): Uri {
@@ -147,7 +136,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private _owner: Resource,
         public mode: InteractiveWindowMode,
         private preferredController: IVSCodeNotebookController | undefined,
-        private readonly notebookEditorOrTab: NotebookEditor | InteractiveTab,
+        public readonly notebookEditor: NotebookEditor,
         public readonly inputUri: Uri
     ) {
         this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
@@ -168,24 +157,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         );
         this.isWebExtension = this.serviceContainer.get<boolean>(IsWebExtension);
         this.controllerRegistration = this.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-        this._notebookUri = isInteractiveInputTab(notebookEditorOrTab)
-            ? notebookEditorOrTab.input.uri
-            : notebookEditorOrTab.notebook.uri;
-        if (!isInteractiveInputTab(notebookEditorOrTab)) {
-            this._notebookEditor = notebookEditorOrTab;
-        }
+        this._notebookUri = notebookEditor.notebook.uri;
 
         // Set our owner and first submitter
         if (this._owner) {
             this._submitters.push(this._owner);
         }
-    }
 
-    public initialize() {
-        if (this.initialized) {
-            return;
-        }
-        this.initialized = true;
         window.onDidChangeActiveNotebookEditor((e) => {
             if (e === this.notebookEditor) {
                 this._onDidChangeViewState.fire();
@@ -203,6 +181,12 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         this.listenForControllerSelection();
+
+        // Create the code generator right away to start watching the notebook
+        this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
+    }
+
+    public initialize() {
         if (this.preferredController) {
             // Also start connecting to our kernel but don't wait for it to finish
             this.startKernel(this.preferredController.controller, this.preferredController.connection).ignoreErrors();
@@ -212,28 +196,12 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
             }
         }
-
-        // Create the code generator right away to start watching the notebook
-        this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
     }
 
     public async restore(preferredController: IVSCodeNotebookController | undefined) {
-        if (preferredController) {
+        if (preferredController && !this.preferredController) {
             this.preferredController = preferredController;
         }
-        if (!this.notebookEditor) {
-            if (isInteractiveInputTab(this.notebookEditorOrTab)) {
-                const document = await workspace.openNotebookDocument(this.notebookEditorOrTab.input.uri);
-                const editor = await window.showNotebookDocument(document, {
-                    viewColumn: this.notebookEditorOrTab.group.viewColumn
-                });
-                this._notebookEditor = editor;
-            } else {
-                this._notebookEditor = this.notebookEditorOrTab;
-            }
-        }
-
-        this.initialize();
     }
 
     /**
