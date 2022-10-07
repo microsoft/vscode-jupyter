@@ -40,8 +40,6 @@ import { getResourceType } from '../../platform/common/utils';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 import { isTestExecution } from '../../platform/common/constants';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function suppressShutdownErrors(realKernel: any) {
@@ -203,16 +201,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     }
     public async restart(): Promise<void> {
         if (this.session?.isRemoteSession && this.session.kernel) {
-            const stopWatch = new StopWatch();
             await this.session.kernel.restart();
-            sendKernelTelemetryEvent(
-                this.resource,
-                Telemetry.NotebookRestart,
-                { duration: stopWatch.elapsedTime },
-                {
-                    startTimeOnly: true
-                }
-            );
             this.setSession(this.session, true);
             return;
         }

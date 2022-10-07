@@ -89,10 +89,8 @@ import {
     STANDARD_OUTPUT_CHANNEL
 } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths';
-import { IFileSystemNode } from './platform/common/platform/types.node';
 import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
-import { setExtensionInstallTelemetryProperties } from './platform/telemetry/extensionInstallTelemetry.node';
 import { Container } from 'inversify/lib/container/container';
 import { ServiceContainer } from './platform/ioc/container';
 import { ServiceManager } from './platform/ioc/serviceManager';
@@ -335,10 +333,6 @@ async function activateLegacy(
     registerInteractiveTypes(serviceManager);
     registerStandaloneTypes(context, serviceManager, isDevMode);
     registerWebviewTypes(serviceManager);
-
-    // We need to setup this property before any telemetry is sent
-    const fs = serviceManager.get<IFileSystemNode>(IFileSystemNode);
-    await setExtensionInstallTelemetryProperties(fs);
 
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync

@@ -374,8 +374,6 @@ export enum Telemetry {
     RunSelectionOrLine = 'DATASCIENCE.RUN_SELECTION_OR_LINE',
     RunToLine = 'DATASCIENCE.RUN_TO_LINE',
     RunFromLine = 'DATASCIENCE.RUN_FROM_LINE',
-    RestartKernel = 'DS_INTERNAL.RESTART_KERNEL',
-    RestartKernelCommand = 'DATASCIENCE.RESTART_KERNEL_COMMAND',
     /**
      * Whether auto save feature in VS Code is enabled or not.
      */
@@ -502,11 +500,7 @@ export enum Telemetry {
     IPyWidgetOverhead = 'DS_INTERNAL.IPYWIDGET_OVERHEAD',
     IPyWidgetRenderFailure = 'DS_INTERNAL.IPYWIDGET_RENDER_FAILURE',
     IPyWidgetUnhandledMessage = 'DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE',
-    JupyterCreatingNotebook = 'DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK',
-    RawKernelSessionConnect = 'DS_INTERNAL.RAWKERNEL_SESSION_CONNECT',
-    RawKernelStartRawSession = 'DS_INTERNAL.RAWKERNEL_START_RAW_SESSION',
     RawKernelInfoResponse = 'DS_INTERNAL.RAWKERNEL_INFO_RESPONSE',
-    RawKernelSessionStart = 'DS_INTERNAL.RAWKERNEL_SESSION_START',
     RawKernelSessionStartNoIpykernel = 'DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
     RawKernelSessionShutdown = 'DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN',
