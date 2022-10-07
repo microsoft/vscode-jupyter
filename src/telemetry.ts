@@ -1890,7 +1890,7 @@ export class IEventNamePropertyMapping {
      * Total time taken to Launch a raw kernel.
      */
     [Telemetry.KernelLauncherPerf]: TelemetryEventInfo<
-        (DurationMeasurement & ResourceSpecificTelemetryProperties) | TelemetryErrorProperties
+        (DurationMeasurement & ResourceTypeTelemetryProperty) | TelemetryErrorProperties
     > = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -1898,7 +1898,7 @@ export class IEventNamePropertyMapping {
         tags: ['KernelStartup'],
         properties: {
             ...commonClassificationForErrorProperties(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().properties
+            ...commonClassificationForResourceType()
         },
         measures: {
             ...commonClassificationForDurationProperties()
@@ -2562,15 +2562,12 @@ export class IEventNamePropertyMapping {
              */
             remoteKernelSpecCount: number;
         } & DurationMeasurement &
-            ResourceSpecificTelemetryProperties
+            ResourceTypeTelemetryProperty
     > = {
         owner: 'donjayamanne',
         feature: ['KernelPicker'],
         source: 'N/A',
-        properties: {
-            ...commonClassificationForResourceType(),
-            ...commonClassificationForResourceSpecificTelemetryProperties().properties
-        },
+        properties: commonClassificationForResourceType(),
         measures: {
             ...commonClassificationForDurationProperties(),
             kernelSpecCount: {
