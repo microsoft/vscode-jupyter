@@ -15,7 +15,9 @@ export enum IpykernelCheckResult {
 }
 
 export async function isUsingIpykernel6OrLater(kernel: IKernel): Promise<IpykernelCheckResult> {
-    const code = 'import ipykernel\nprint(ipykernel.__version__)';
+    const code = `import builtins
+import ipykernel
+builtins.print(ipykernel.__version__)`;
     const output = await kernel.executeHidden(code);
 
     if (output[0].text) {
