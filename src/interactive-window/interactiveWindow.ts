@@ -196,7 +196,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     public ensureInitialized() {
         if (this.currentKernelInfo) {
-            // Also start connecting to our kernel but don't wait for it to finish
             this.startKernel().ignoreErrors();
         } else {
             traceWarning('No controller selected for Interactive Window');
