@@ -16,7 +16,7 @@ suite('UpdateNotebookMetadata', () => {
         uri: Uri.file('/usr/bin/python36'),
         sysPrefix: '/usr',
         displayName: 'Python 3.6',
-        envType: EnvironmentType.Global,
+        envType: EnvironmentType.Unknown,
         sysVersion: '3.6.0',
         version: { major: 3, minor: 6, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
     };
@@ -30,7 +30,7 @@ suite('UpdateNotebookMetadata', () => {
         uri: Uri.file('/usr/bin/python36'),
         sysPrefix: '/usr',
         displayName: 'Python 3.7',
-        envType: EnvironmentType.Global,
+        envType: EnvironmentType.Unknown,
         sysVersion: '3.7.0',
         version: { major: 3, minor: 7, patch: 0, build: [], prerelease: [], raw: '3.7.0' }
     };

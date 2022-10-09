@@ -253,7 +253,7 @@ suite('Kernel Environment Variables Service', () => {
     }
 
     test('PYTHONNOUSERSITE should not be set for Global Interpreters', async () => {
-        await testPYTHONNOUSERSITE(EnvironmentType.Global, false);
+        await testPYTHONNOUSERSITE(EnvironmentType.Unknown, false);
     });
     test('PYTHONNOUSERSITE should be set for Conda Env', async () => {
         await testPYTHONNOUSERSITE(EnvironmentType.Conda, true);

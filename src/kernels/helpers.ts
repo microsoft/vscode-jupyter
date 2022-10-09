@@ -242,7 +242,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
         case 'startUsingLocalKernelSpec': {
             if (
                 kernelConnection.interpreter?.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Global
+                kernelConnection.interpreter.envType !== EnvironmentType.Unknown
             ) {
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
@@ -263,7 +263,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
         case 'startUsingPythonInterpreter':
             if (
                 kernelConnection.interpreter.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Global
+                kernelConnection.interpreter.envType !== EnvironmentType.Unknown
             ) {
                 const pythonVersion = `Python ${
                     getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''

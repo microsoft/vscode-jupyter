@@ -342,7 +342,7 @@ import { noop } from '../../../platform/common/utils/misc';
             uri: Uri.file(isWindows ? 'C:/Python/Python2/scripts/python.exe' : '/usr/bin/python27'),
             sysPrefix: isWindows ? 'C:/Python/Python2' : '/usr',
             displayName: 'Python 2.7',
-            envType: EnvironmentType.Global,
+            envType: EnvironmentType.Unknown,
             sysVersion: '2.7.0',
             version: { major: 2, minor: 7, patch: 0, build: [], prerelease: [], raw: '2.7.0' }
         };
@@ -350,7 +350,7 @@ import { noop } from '../../../platform/common/utils/misc';
             uri: Uri.file(isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36'),
             sysPrefix: isWindows ? 'C:/Python/Python3.6' : '/usr',
             displayName: 'Python 3.6',
-            envType: EnvironmentType.Global,
+            envType: EnvironmentType.Unknown,
             sysVersion: '3.6.0',
             version: { major: 3, minor: 6, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
         };
@@ -358,7 +358,7 @@ import { noop } from '../../../platform/common/utils/misc';
             uri: Uri.file(isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37'),
             sysPrefix: isWindows ? 'C:/Python/Python3.7' : '/usr',
             displayName: 'Python 3.7',
-            envType: EnvironmentType.Global,
+            envType: EnvironmentType.Unknown,
             sysVersion: '3.7.0',
             version: { major: 3, minor: 7, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
         };

@@ -86,7 +86,7 @@ suite('Notebook Controller Manager', () => {
                 interpreter: {
                     uri: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
-                    envType: EnvironmentType.Global
+                    envType: EnvironmentType.Unknown
                 }
             });
             assert.strictEqual(name, 'kspecname');
@@ -224,7 +224,7 @@ suite('Notebook Controller Manager', () => {
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
-                    envType: EnvironmentType.Global
+                    envType: EnvironmentType.Unknown
                 }
             });
             assert.strictEqual(name, 'kspecname');
@@ -397,7 +397,7 @@ suite('Notebook Controller Manager', () => {
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
-                    envType: EnvironmentType.Global
+                    envType: EnvironmentType.Unknown
                 }
             });
             assert.strictEqual(name, 'kspecname');

@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IServiceContainer } from '../../ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
 import { traceDecoratorVerbose, traceError, traceInfo } from '../../logging';
 import { getDisplayPath } from '../platform/fs-paths';
@@ -13,7 +13,7 @@ import { IConfigurationService, IDisposable, IDisposableRegistry } from '../type
 import { ProcessService } from './proc.node';
 import { PythonDaemonFactory } from './pythonDaemonFactory.node';
 import { PythonDaemonExecutionServicePool } from './pythonDaemonPool.node';
-import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment.node';
+import { createCondaEnv, createPythonEnv } from './pythonEnvironment.node';
 import { createPythonProcessService } from './pythonProcess.node';
 import {
     DaemonExecutionFactoryCreationOptions,
@@ -60,13 +60,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
 
-        return createPythonService(
-            options.interpreter,
-            processService,
-            this.fileSystem,
-            undefined,
-            options.interpreter.envType === EnvironmentType.WindowsStore
-        );
+        return createPythonService(options.interpreter, processService, this.fileSystem, undefined);
     }
 
     @traceDecoratorVerbose('Create daemon', TraceOptions.BeforeCall | TraceOptions.Arguments)
@@ -194,15 +188,12 @@ function createPythonService(
             name: string;
             path: string;
         }
-    ],
-    isWindowsStore?: boolean
+    ]
 ): IPythonExecutionService {
     let env = createPythonEnv(interpreter, procService, fs);
     if (conda) {
         const [condaPath, condaInfo] = conda;
         env = createCondaEnv(condaPath, condaInfo, interpreter, procService, fs);
-    } else if (isWindowsStore) {
-        env = createWindowsStoreEnv(interpreter, procService);
     }
     const procs = createPythonProcessService(procService, env);
     return {

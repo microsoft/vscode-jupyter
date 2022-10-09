@@ -149,27 +149,3 @@ export function createCondaEnv(
     );
     return new PythonEnvironment(interpreter, deps);
 }
-
-export function createWindowsStoreEnv(
-    interpreter: PyEnv,
-    // These are used to generate the deps.
-    procs: IProcessService
-): PythonEnvironment {
-    const deps = createDeps(
-        /**
-         * With windows store python apps, we have generally use the
-         * symlinked python executable.  The actual file is not accessible
-         * by the user due to permission issues (& rest of exension fails
-         * when using that executable).  Hence lets not resolve the
-         * executable using sys.executable for windows store python
-         * interpreters.
-         */
-        async (_f: Uri) => true,
-        // We use the default: [pythonPath].
-        undefined,
-        undefined,
-        (file, args, opts) => procs.exec(file, args, opts),
-        (command, opts) => procs.shellExec(command, opts)
-    );
-    return new PythonEnvironment(interpreter, deps);
-}

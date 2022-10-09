@@ -11,11 +11,7 @@ import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../../platform/common/platform/types';
-import {
-    createCondaEnv,
-    createPythonEnv,
-    createWindowsStoreEnv
-} from '../../../platform/common/process/pythonEnvironment.node';
+import { createCondaEnv, createPythonEnv } from '../../../platform/common/process/pythonEnvironment.node';
 import { IProcessService, StdErrError } from '../../../platform/common/process/types.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
@@ -370,23 +366,5 @@ suite('CondaEnvironment', () => {
         const result = env.getExecutionObservableInfo(args);
 
         expect(result).to.deep.equal(expected);
-    });
-});
-
-suite('WindowsStoreEnvironment', () => {
-    let processService: TypeMoq.IMock<IProcessService>;
-    const pythonPath = Uri.file('foo');
-
-    setup(() => {
-        processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
-    });
-
-    test('Should return pythonPath if it is the path to the windows store interpreter', async () => {
-        const env = createWindowsStoreEnv({ uri: pythonPath } as PythonEnvironment, processService.object);
-
-        const executablePath = await env.getExecutablePath();
-
-        expect(executablePath).to.equal(pythonPath);
-        processService.verifyAll();
     });
 });

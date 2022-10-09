@@ -71,7 +71,7 @@ suite('Common - Conda Installer', () => {
     });
     test('Installer is not supported when current env is not a conda env', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Global,
+            envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
             sysPrefix: '0'
         };

@@ -86,7 +86,7 @@ suite('Pip installer', async () => {
 
     test('Method isSupported() returns true if pip module is installed', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Global,
+            envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
             sysPrefix: '0'
         };
@@ -99,7 +99,7 @@ suite('Pip installer', async () => {
 
     test('Method isSupported() returns false if pip module is not installed', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Global,
+            envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
             sysPrefix: '0'
         };
@@ -113,7 +113,7 @@ suite('Pip installer', async () => {
 
     test('Method isSupported() returns false if checking if pip module is installed fails with error', async () => {
         const interpreter: PythonEnvironment = {
-            envType: EnvironmentType.Global,
+            envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
             sysPrefix: '0'
         };
@@ -147,11 +147,7 @@ suite('Pip installer', async () => {
                 await pipInstaller.installModule(Product.ipykernel, interpreter, cancellationToken);
 
                 let args = ['-m', 'pip', 'install', '-U', 'ipykernel'];
-                if (
-                    envType === EnvironmentType.Global ||
-                    envType === EnvironmentType.System ||
-                    envType === EnvironmentType.WindowsStore
-                ) {
+                if (envType === EnvironmentType.Unknown) {
                     args = ['-m', 'pip', 'install', '-U', '--user', 'ipykernel'];
                 }
                 assert.deepEqual(capture(pythonExecutionService.execObservable).first()[0], args);

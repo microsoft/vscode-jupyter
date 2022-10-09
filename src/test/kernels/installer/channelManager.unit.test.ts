@@ -23,7 +23,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
 
     let showNoInstallersMessage: sinon.SinonStub<any>;
     const interpreter: PythonEnvironment = {
-        envType: EnvironmentType.Global,
+        envType: EnvironmentType.Unknown,
         uri: Uri.file('foobar'),
         sysPrefix: '0'
     };
@@ -93,7 +93,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
 suite('InstallationChannelManager - getInstallationChannels()', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     const interpreter: PythonEnvironment = {
-        envType: EnvironmentType.Global,
+        envType: EnvironmentType.Unknown,
         uri: Uri.file('foobar'),
         sysPrefix: '0'
     };

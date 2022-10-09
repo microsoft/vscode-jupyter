@@ -25,11 +25,8 @@ export enum EnvironmentType {
     Pipenv = 'PipEnv',
     Pyenv = 'Pyenv',
     Venv = 'Venv',
-    WindowsStore = 'WindowsStore',
     Poetry = 'Poetry',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
-    Global = 'Global',
-    System = 'System',
 }
 
 /**
