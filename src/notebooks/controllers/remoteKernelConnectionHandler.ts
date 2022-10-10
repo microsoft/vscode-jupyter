@@ -43,6 +43,9 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
         notebook: NotebookDocument;
         controller: IVSCodeNotebookController;
     }) {
+        if (notebook.isClosed) {
+            return;
+        }
         if (controller.connection.kind === 'connectToLiveRemoteKernel' && controller.connection.kernelModel.id) {
             if (selected) {
                 this.liveKernelTracker.trackKernelIdAsUsed(
