@@ -15,7 +15,7 @@ import {
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
-import { IDisposableRegistry, IConfigurationService, IsPreRelease } from '../../platform/common/types';
+import { IDisposableRegistry, IConfigurationService } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { INotebookCompletionProvider, INotebookEditorProvider } from '../../notebooks/types';
@@ -49,7 +49,6 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IsPreRelease) private readonly isPreRelease: Promise<boolean>,
         @inject(NotebookPythonPathService) private readonly notebookPythonPathService: NotebookPythonPathService
     ) {}
 
@@ -235,20 +234,12 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
 
     private async ensureLanguageServer(interpreter: PythonEnvironment | undefined, notebook: NotebookDocument) {
         // We should have one language server per active interpreter.
-
-        // Check the setting to determine if we let pylance handle notebook intellisense or not
-        const middlewareType =
-            this.configService.getSettings(notebook.uri).pylanceHandlesNotebooks || (await this.isPreRelease)
-                ? 'pylance'
-                : 'jupyter';
-
         // See if we already have one for this interpreter or not
         const id = interpreter ? getComparisonKey(interpreter.uri) : undefined;
         if (id && !this.servers.has(id) && interpreter) {
             // We don't already have one. Create a new one for this interpreter.
             // The logic for whether or not
             const languageServerPromise = LanguageServer.createLanguageServer(
-                middlewareType,
                 interpreter,
                 this.shouldAllowIntellisense.bind(this),
                 this.getNotebookHeader.bind(this)
@@ -264,10 +255,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
     }
 
     private onDidChangeConfiguration(event: ConfigurationChangeEvent) {
-        if (
-            event.affectsConfiguration('jupyter.pylanceHandlesNotebooks') ||
-            event.affectsConfiguration('python.languageServer')
-        ) {
+        if (event.affectsConfiguration('python.languageServer')) {
             // Dispose all servers and start over for each open notebook
             this.servers.forEach((p) => p.then((s) => s?.dispose()));
             this.servers.clear();

@@ -189,7 +189,7 @@
         "message": "Import Jupyter Notebook",
         "comment": ["{Locked='Notebook'}"]
     },
-    "jupyter.command.jupyter.importnotebookfile.title": "Convert to Python Script",
+    "jupyter.command.jupyter.importnotebookfile.title": "Import Notebook to Script",
     "jupyter.command.jupyter.exportoutputasnotebook.title": {
         "message": "Export Interactive Window as Jupyter Notebook",
         "comment": ["{Locked='Notebook'}"]
@@ -361,7 +361,6 @@
     "jupyter.configuration.jupyter.debugJustMyCode.description": "When debugging, debug just my code.",
     "jupyter.configuration.jupyter.showOutlineButtonInNotebookToolbar.description": "Show the Outline button in the Jupyter notebook toolbar.",
     "jupyter.configuration.jupyter.newCellOnRunLast.description": "Append a new empty cell to an interactive window file on running the currently last cell.",
-    "jupyter.configuration.jupyter.pylanceHandlesNotebooks.description": "Determines if Pylance manages notebook concat doc creation.",
     "jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.description": "Characters which trigger auto completion on a python jupyter kernel.",
     "jupyter.configuration.jupyter.logKernelOutputSeparately.description": "Creates separate output panels for kernels/jupyter server console output",
     "jupyter.configuration.jupyter.excludeUserSitePackages.description": {

@@ -5,8 +5,8 @@ import { Resource } from '../../platform/common/types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { Telemetry } from '../../platform/common/constants';
-import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
+import { sendTelemetryEvent } from '../../telemetry';
 
 export async function sendKernelListTelemetry(
     resource: Resource,
@@ -44,6 +44,6 @@ export async function sendKernelListTelemetry(
     });
     await trackKernelResourceInformation(resource, counters);
     if (stopWatch) {
-        sendKernelTelemetryEvent(resource, Telemetry.KernelCount, { duration: stopWatch.elapsedTime, ...counters });
+        sendTelemetryEvent(Telemetry.KernelCount, { duration: stopWatch.elapsedTime, ...counters });
     }
 }

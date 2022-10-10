@@ -875,7 +875,7 @@
                     "when": "editorFocus && editorLangId == python && !notebookEditorFocused && isWorkspaceTrusted"
                 },
                 {
-                    "when": "editorFocus && editorLangId == python && resourceLangId == jupyter && !notebookEditorFocused && isWorkspaceTrusted",
+                    "when": "editorFocus && editorLangId == python && resourceExtname == .ipynb && !notebookEditorFocused && isWorkspaceTrusted",
                     "command": "jupyter.importnotebook",
                     "group": "Jupyter3@1"
                 },
@@ -1060,7 +1060,7 @@
                     "group": "Jupyter2"
                 },
                 {
-                    "when": "resourceLangId == jupyter && isWorkspaceTrusted",
+                    "when": "resourceExtname == .ipynb && isWorkspaceTrusted",
                     "command": "jupyter.importnotebookfile",
                     "group": "Jupyter"
                 }
@@ -1951,12 +1951,6 @@
                     "description": "%jupyter.configuration.jupyter.newCellOnRunLast.description%",
                     "scope": "resource"
                 },
-                "jupyter.pylanceHandlesNotebooks": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%jupyter.configuration.jupyter.pylanceHandlesNotebooks.description%",
-                    "scope": "machine"
-                },
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",
                     "default": ".%'\"",
@@ -2000,9 +1994,9 @@
                     "scope": "resource",
                     "description": "%jupyter.configuration.jupyter.experimental.kernelPickerType.description%",
                     "enumDescriptions": [
-                            "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.stable%",
-                            "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.onlyonetypeofkernel%",
-                            "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.insiders%"
+                        "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.stable%",
+                        "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.onlyonetypeofkernel%",
+                        "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.insiders%"
                     ],
                     "default": "Stable"
                 }
@@ -2165,7 +2159,7 @@
         "@nteract/messaging": "^7.0.0",
         "@vscode/extension-telemetry": "^0.6.2",
         "@vscode/jupyter-ipywidgets": "^1.0.9",
-        "@vscode/jupyter-lsp-middleware": "^0.2.49",
+        "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "ajv-keywords": "^3.5.2",
         "ansi-to-html": "^0.6.7",
         "arch": "^2.1.0",

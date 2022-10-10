@@ -25,8 +25,6 @@ import { IKernel, IKernelProvider } from '../kernels/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
 import { traceInfo, traceVerbose } from '../platform/logging';
-import { Telemetry } from '../telemetry';
-import { trackKernelResourceInformation } from '../kernels/telemetry/helper';
 import { INotebookEditorProvider } from './types';
 import { IServiceContainer } from '../platform/ioc/types';
 import { endCellAndDisplayErrorsInCell } from '../kernels/execution/helpers';
@@ -35,7 +33,6 @@ import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { getNotebookMetadata } from '../platform/common/utils';
 import { KernelConnector } from './controllers/kernelConnector';
 import { IControllerSelection } from './controllers/types';
-import { sendKernelTelemetryEvent } from '../kernels/telemetry/sendKernelTelemetryEvent';
 
 /**
  * Registers commands specific to the notebook UI
@@ -201,8 +198,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
 
         if (kernel) {
             traceVerbose(`Interrupt kernel command handler for ${getDisplayPath(document.uri)}`);
-            sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.RestartKernelCommand);
-            await trackKernelResourceInformation(kernel.resourceUri, { restartKernel: true });
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage();

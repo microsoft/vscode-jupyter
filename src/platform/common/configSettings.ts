@@ -103,8 +103,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public verboseLogging: boolean = false;
     public showVariableViewWhenDebugging: boolean = true;
     public newCellOnRunLast: boolean = true;
-    public pylanceHandlesNotebooks: boolean = true;
-    public pylanceLspNotebooksEnabled: boolean = false;
     public pythonCompletionTriggerCharacters: string = '';
     public logKernelOutputSeparately: boolean = false;
     public poetryPath: string = '';
@@ -259,7 +257,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         // Special case poetryPath. It actually comes from the python settings
         if (pythonConfig) {
             replacer('poetryPath', pythonConfig);
-            replacer('pylanceLspNotebooksEnabled', pythonConfig);
         }
     }
 

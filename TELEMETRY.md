@@ -325,31 +325,6 @@ Expand each section to see more information about that event.
         - `userExecutedCell`?: `boolean`  
         Whether the user executed a cell.  
         Common to most of the events.  
-    - Measures:  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        Common to most of the events.  
 
 
 * DATASCIENCE.EXPORT_NOTEBOOK_AS  (Telemetry.ExportNotebookAs)  
@@ -659,31 +634,6 @@ Expand each section to see more information about that event.
         - `userExecutedCell`?: `boolean`  
         Whether the user executed a cell.  
         Common to most of the events.  
-    - Measures:  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        Common to most of the events.  
 
 
 * DATASCIENCE.KERNEL_SPEC_LANGUAGE  (Telemetry.KernelSpecLanguage)  
@@ -829,30 +779,6 @@ Expand each section to see more information about that event.
             - `duration`: `number`  
             Duration of a measure in milliseconds.  
             Common measurement used across a number of events.  
-            - `interruptCount`?: `number`  
-            This number gets reset after we attempt a restart or change kernel.  
-            Common to most of the events.  
-            - `kernelInterpreterCount`: `number`  
-            Total number of interpreters in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelLiveCount`: `number`  
-            Total number of live kernels in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelSpecCount`: `number`  
-            Total number of kernel specs in the kernel spec list.  
-            Common to most of the events.  
-            - `pythonEnvironmentCount`?: `number`  
-            Total number of python environments.  
-            Common to most of the events.  
-            - `restartCount`?: `number`  
-            This number gets reset after change the kernel.  
-            Common to most of the events.  
-            - `startFailureCount`?: `number`  
-            Number of times starting the kernel failed.  
-            Common to most of the events.  
-            - `switchKernelCount`?: `number`  
-            Number of times the kernel was changed.  
-            Common to most of the events.  
     - `If there are unhandled exceptions`:  
         - Properties:  
             - `actionSource`: `<see below>`  
@@ -953,30 +879,6 @@ Expand each section to see more information about that event.
             - `duration`: `number`  
             Duration of a measure in milliseconds.  
             Common measurement used across a number of events.  
-            - `interruptCount`?: `number`  
-            This number gets reset after we attempt a restart or change kernel.  
-            Common to most of the events.  
-            - `kernelInterpreterCount`: `number`  
-            Total number of interpreters in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelLiveCount`: `number`  
-            Total number of live kernels in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelSpecCount`: `number`  
-            Total number of kernel specs in the kernel spec list.  
-            Common to most of the events.  
-            - `pythonEnvironmentCount`?: `number`  
-            Total number of python environments.  
-            Common to most of the events.  
-            - `restartCount`?: `number`  
-            This number gets reset after change the kernel.  
-            Common to most of the events.  
-            - `startFailureCount`?: `number`  
-            Number of times starting the kernel failed.  
-            Common to most of the events.  
-            - `switchKernelCount`?: `number`  
-            Number of times the kernel was changed.  
-            Common to most of the events.  
 
 
 * DATASCIENCE.NOTEBOOK_RESTART  (Telemetry.NotebookRestart)  
@@ -986,129 +888,20 @@ Expand each section to see more information about that event.
     Check the `resourceType` to determine whether its a Jupyter Notebook or IW.  
     ```
 
-    - `Sent to capture just the time taken to restart, see comments.`:  
+    -  Group 1:  
         - Properties:  
-            - `actionSource`: `<see below>`  
-            Whether this was started by Jupyter extension or a 3rd party.  
-            Common to most of the events.  
-            Possible values include:  
-                - `jupyterExtension`  
-                - `3rdPartyExtension`  
-            - `capturedEnvVars`?: `boolean`  
-            Whether we managed to capture the environment variables or not.  
-            In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-            Common to most of the events.  
-            - `disableUI`?: `boolean`  
-            Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-            If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-            Common to most of the events.  
-            - `isUsingActiveInterpreter`?: `boolean`  
-            Whether this resource is using the active Python interpreter or not.  
-            Common to most of the events.  
-            - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-            Whether kernel was started using kernel spec, interpreter, etc.  
-            Common to most of the events.  
-            - `kernelId`: `string`  
-            Hash of the Kernel Connection id.  
-            Common to most of the events.  
-            - `kernelLanguage`: `string`  
-            Language of the kernel connection.  
-            Common to most of the events.  
-            - `kernelSessionId`: `string`  
-            Unique identifier for an instance of a notebook session.  
-            If we restart or run this notebook tomorrow, this id will be different.  
-            Id could be something as simple as a hash of the current Epoch time.  
-            Common to most of the events.  
-            - `pythonEnvironmentPackages`?: `string`  
-            Comma delimited list of hashed packages & their versions.  
-            Common to most of the events.  
-            - `pythonEnvironmentPath`?: `string`  
-            A key, so that rest of the information is tied to this. (hash)  
-            Common to most of the events.  
-            - `pythonEnvironmentType`?: `<see below>`  
-            Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-            Common to most of the events.  
-            Possible values include:  
-                - `Unknown`  
-                - `Conda`  
-                - `VirtualEnv`  
-                - `PipEnv`  
-                - `Pyenv`  
-                - `Venv`  
-                - `WindowsStore`  
-                - `Poetry`  
-                - `VirtualEnvWrapper`  
-                - `Global`  
-                - `System`  
-            - `pythonEnvironmentVersion`?: `string`  
-            Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-            Common to most of the events.  
-            - `resourceHash`?: `string`  
-            Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-            If we run the same notebook tomorrow, the hash will be the same.  
-            Used to check whether a particular notebook fails across time or not.  
-            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-            and have a better understanding of what is going on, e.g. why something failed.  
-            Common to most of the events.  
             - `resourceType`?: `<see below>`  
             Used to determine whether this event is related to a Notebooks or Interactive window.  
             Common to most of the events.  
             Possible values include:  
                 - `'notebook'`  
                 - `'interactive'`  
-            - `startTimeOnly`: `true`  
-            If true, this is the total time taken to restart the kernel (excluding times to stop current cells and the like).  
-            Also in the case of raw kernels, we keep a separate process running, and when restarting we just switch to that process.  
-            In such cases this value will be `undefined`. In the case of raw kernels this will be true only when starting a new kernel process from scratch.  
-            - `userExecutedCell`?: `boolean`  
-            Whether the user executed a cell.  
-            Common to most of the events.  
         - Measures:  
             - `duration`: `number`  
             Duration of a measure in milliseconds.  
             Common measurement used across a number of events.  
-            - `interruptCount`?: `number`  
-            This number gets reset after we attempt a restart or change kernel.  
-            Common to most of the events.  
-            - `kernelInterpreterCount`: `number`  
-            Total number of interpreters in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelLiveCount`: `number`  
-            Total number of live kernels in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelSpecCount`: `number`  
-            Total number of kernel specs in the kernel spec list.  
-            Common to most of the events.  
-            - `pythonEnvironmentCount`?: `number`  
-            Total number of python environments.  
-            Common to most of the events.  
-            - `restartCount`?: `number`  
-            This number gets reset after change the kernel.  
-            Common to most of the events.  
-            - `startFailureCount`?: `number`  
-            Number of times starting the kernel failed.  
-            Common to most of the events.  
-            - `switchKernelCount`?: `number`  
-            Number of times the kernel was changed.  
-            Common to most of the events.  
     - `If there are unhandled exceptions.`:  
         - Properties:  
-            - `actionSource`: `<see below>`  
-            Whether this was started by Jupyter extension or a 3rd party.  
-            Common to most of the events.  
-            Possible values include:  
-                - `jupyterExtension`  
-                - `3rdPartyExtension`  
-            - `capturedEnvVars`?: `boolean`  
-            Whether we managed to capture the environment variables or not.  
-            In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-            Common to most of the events.  
-            - `disableUI`?: `boolean`  
-            Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-            If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-            Common to most of the events.  
             - `failed`: `true`  
             Whether there was a failure.  
             Common to most of the events.  
@@ -1117,47 +910,6 @@ Expand each section to see more information about that event.
             Common to most of the events.  
             - `failureSubCategory`?: `string`  
             Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-            Common to most of the events.  
-            - `isUsingActiveInterpreter`?: `boolean`  
-            Whether this resource is using the active Python interpreter or not.  
-            Common to most of the events.  
-            - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-            Whether kernel was started using kernel spec, interpreter, etc.  
-            Common to most of the events.  
-            - `kernelId`: `string`  
-            Hash of the Kernel Connection id.  
-            Common to most of the events.  
-            - `kernelLanguage`: `string`  
-            Language of the kernel connection.  
-            Common to most of the events.  
-            - `kernelSessionId`: `string`  
-            Unique identifier for an instance of a notebook session.  
-            If we restart or run this notebook tomorrow, this id will be different.  
-            Id could be something as simple as a hash of the current Epoch time.  
-            Common to most of the events.  
-            - `pythonEnvironmentPackages`?: `string`  
-            Comma delimited list of hashed packages & their versions.  
-            Common to most of the events.  
-            - `pythonEnvironmentPath`?: `string`  
-            A key, so that rest of the information is tied to this. (hash)  
-            Common to most of the events.  
-            - `pythonEnvironmentType`?: `<see below>`  
-            Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-            Common to most of the events.  
-            Possible values include:  
-                - `Unknown`  
-                - `Conda`  
-                - `VirtualEnv`  
-                - `PipEnv`  
-                - `Pyenv`  
-                - `Venv`  
-                - `WindowsStore`  
-                - `Poetry`  
-                - `VirtualEnvWrapper`  
-                - `Global`  
-                - `System`  
-            - `pythonEnvironmentVersion`?: `string`  
-            Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
             Common to most of the events.  
             - `pythonErrorFile`?: `string`  
             Hash of the file name that contains the file in the last frame (from Python stack trace).  
@@ -1168,15 +920,6 @@ Expand each section to see more information about that event.
             - `pythonErrorPackage`?: `string`  
             Hash of the module that contains the file in the last frame (from Python stack trace).  
             Common to most of the events.  
-            - `resourceHash`?: `string`  
-            Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-            If we run the same notebook tomorrow, the hash will be the same.  
-            Used to check whether a particular notebook fails across time or not.  
-            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-            and have a better understanding of what is going on, e.g. why something failed.  
-            Common to most of the events.  
             - `resourceType`?: `<see below>`  
             Used to determine whether this event is related to a Notebooks or Interactive window.  
             Common to most of the events.  
@@ -1185,34 +928,6 @@ Expand each section to see more information about that event.
                 - `'interactive'`  
             - `stackTrace`?: `string`  
             Node stacktrace without PII.  
-            Common to most of the events.  
-            - `userExecutedCell`?: `boolean`  
-            Whether the user executed a cell.  
-            Common to most of the events.  
-        - Measures:  
-            - `interruptCount`?: `number`  
-            This number gets reset after we attempt a restart or change kernel.  
-            Common to most of the events.  
-            - `kernelInterpreterCount`: `number`  
-            Total number of interpreters in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelLiveCount`: `number`  
-            Total number of live kernels in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelSpecCount`: `number`  
-            Total number of kernel specs in the kernel spec list.  
-            Common to most of the events.  
-            - `pythonEnvironmentCount`?: `number`  
-            Total number of python environments.  
-            Common to most of the events.  
-            - `restartCount`?: `number`  
-            This number gets reset after change the kernel.  
-            Common to most of the events.  
-            - `startFailureCount`?: `number`  
-            Number of times starting the kernel failed.  
-            Common to most of the events.  
-            - `switchKernelCount`?: `number`  
-            Number of times the kernel was changed.  
             Common to most of the events.  
 
 
@@ -1317,31 +1032,6 @@ Expand each section to see more information about that event.
         - `userExecutedCell`?: `boolean`  
         Whether the user executed a cell.  
         Common to most of the events.  
-    - Measures:  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        Common to most of the events.  
 
 
 * DATASCIENCE.OPEN_PLOT_VIEWER  (Telemetry.OpenPlotViewer)  
@@ -1394,113 +1084,6 @@ Expand each section to see more information about that event.
     Sent when the jupyter.refreshDataViewer command is invoked  
     ```
 
-
-
-* DATASCIENCE.RESTART_KERNEL_COMMAND  (Telemetry.RestartKernelCommand)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Telemetry event sent when IW or Notebook is restarted  
-    ```
-
-    - Properties:  
-        - `actionSource`: `<see below>`  
-        Whether this was started by Jupyter extension or a 3rd party.  
-        Common to most of the events.  
-        Possible values include:  
-            - `jupyterExtension`  
-            - `3rdPartyExtension`  
-        - `capturedEnvVars`?: `boolean`  
-        Whether we managed to capture the environment variables or not.  
-        In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-        Common to most of the events.  
-        - `disableUI`?: `boolean`  
-        Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-        If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-        Common to most of the events.  
-        - `isUsingActiveInterpreter`?: `boolean`  
-        Whether this resource is using the active Python interpreter or not.  
-        Common to most of the events.  
-        - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-        Whether kernel was started using kernel spec, interpreter, etc.  
-        Common to most of the events.  
-        - `kernelId`: `string`  
-        Hash of the Kernel Connection id.  
-        Common to most of the events.  
-        - `kernelLanguage`: `string`  
-        Language of the kernel connection.  
-        Common to most of the events.  
-        - `kernelSessionId`: `string`  
-        Unique identifier for an instance of a notebook session.  
-        If we restart or run this notebook tomorrow, this id will be different.  
-        Id could be something as simple as a hash of the current Epoch time.  
-        Common to most of the events.  
-        - `pythonEnvironmentPackages`?: `string`  
-        Comma delimited list of hashed packages & their versions.  
-        Common to most of the events.  
-        - `pythonEnvironmentPath`?: `string`  
-        A key, so that rest of the information is tied to this. (hash)  
-        Common to most of the events.  
-        - `pythonEnvironmentType`?: `<see below>`  
-        Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-        Common to most of the events.  
-        Possible values include:  
-            - `Unknown`  
-            - `Conda`  
-            - `VirtualEnv`  
-            - `PipEnv`  
-            - `Pyenv`  
-            - `Venv`  
-            - `WindowsStore`  
-            - `Poetry`  
-            - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
-        - `pythonEnvironmentVersion`?: `string`  
-        Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-        Common to most of the events.  
-        - `resourceHash`?: `string`  
-        Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-        If we run the same notebook tomorrow, the hash will be the same.  
-        Used to check whether a particular notebook fails across time or not.  
-        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-        and have a better understanding of what is going on, e.g. why something failed.  
-        Common to most of the events.  
-        - `resourceType`?: `<see below>`  
-        Used to determine whether this event is related to a Notebooks or Interactive window.  
-        Common to most of the events.  
-        Possible values include:  
-            - `'notebook'`  
-            - `'interactive'`  
-        - `userExecutedCell`?: `boolean`  
-        Whether the user executed a cell.  
-        Common to most of the events.  
-    - Measures:  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        Common to most of the events.  
 
 
 * DATASCIENCE.RUN_ALL_CELLS  (Telemetry.RunAllCells)  
@@ -1840,31 +1423,6 @@ Expand each section to see more information about that event.
         - `userExecutedCell`?: `boolean`  
         Whether the user executed a cell.  
         Common to most of the events.  
-    - Measures:  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        Common to most of the events.  
 
 
 * DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL  (Telemetry.SelectRemoteJupyterKernel)  
@@ -1946,31 +1504,6 @@ Expand each section to see more information about that event.
             - `'interactive'`  
         - `userExecutedCell`?: `boolean`  
         Whether the user executed a cell.  
-        Common to most of the events.  
-    - Measures:  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
         Common to most of the events.  
 
 
@@ -2625,241 +2158,6 @@ Expand each section to see more information about that event.
         Version of the module.  
 
 
-* DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK  (Telemetry.JupyterCreatingNotebook)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Sent to measure the time taken to start a Jupyter Notebook.  
-    ```
-
-    - `When things fail`:  
-        - Properties:  
-            - `actionSource`: `<see below>`  
-            Whether this was started by Jupyter extension or a 3rd party.  
-            Common to most of the events.  
-            Possible values include:  
-                - `jupyterExtension`  
-                - `3rdPartyExtension`  
-            - `capturedEnvVars`?: `boolean`  
-            Whether we managed to capture the environment variables or not.  
-            In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-            Common to most of the events.  
-            - `disableUI`?: `boolean`  
-            Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-            If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-            Common to most of the events.  
-            - `failed`: `true`  
-            Whether there was a failure.  
-            Common to most of the events.  
-            - `failureCategory`?: `string`  
-            A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
-            Common to most of the events.  
-            - `failureSubCategory`?: `string`  
-            Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-            Common to most of the events.  
-            - `isUsingActiveInterpreter`?: `boolean`  
-            Whether this resource is using the active Python interpreter or not.  
-            Common to most of the events.  
-            - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-            Whether kernel was started using kernel spec, interpreter, etc.  
-            Common to most of the events.  
-            - `kernelId`: `string`  
-            Hash of the Kernel Connection id.  
-            Common to most of the events.  
-            - `kernelLanguage`: `string`  
-            Language of the kernel connection.  
-            Common to most of the events.  
-            - `kernelSessionId`: `string`  
-            Unique identifier for an instance of a notebook session.  
-            If we restart or run this notebook tomorrow, this id will be different.  
-            Id could be something as simple as a hash of the current Epoch time.  
-            Common to most of the events.  
-            - `pythonEnvironmentPackages`?: `string`  
-            Comma delimited list of hashed packages & their versions.  
-            Common to most of the events.  
-            - `pythonEnvironmentPath`?: `string`  
-            A key, so that rest of the information is tied to this. (hash)  
-            Common to most of the events.  
-            - `pythonEnvironmentType`?: `<see below>`  
-            Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-            Common to most of the events.  
-            Possible values include:  
-                - `Unknown`  
-                - `Conda`  
-                - `VirtualEnv`  
-                - `PipEnv`  
-                - `Pyenv`  
-                - `Venv`  
-                - `WindowsStore`  
-                - `Poetry`  
-                - `VirtualEnvWrapper`  
-                - `Global`  
-                - `System`  
-            - `pythonEnvironmentVersion`?: `string`  
-            Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-            Common to most of the events.  
-            - `pythonErrorFile`?: `string`  
-            Hash of the file name that contains the file in the last frame (from Python stack trace).  
-            Common to most of the events.  
-            - `pythonErrorFolder`?: `string`  
-            Hash of the folder that contains the file in the last frame (from Python stack trace).  
-            Common to most of the events.  
-            - `pythonErrorPackage`?: `string`  
-            Hash of the module that contains the file in the last frame (from Python stack trace).  
-            Common to most of the events.  
-            - `resourceHash`?: `string`  
-            Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-            If we run the same notebook tomorrow, the hash will be the same.  
-            Used to check whether a particular notebook fails across time or not.  
-            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-            and have a better understanding of what is going on, e.g. why something failed.  
-            Common to most of the events.  
-            - `resourceType`?: `<see below>`  
-            Used to determine whether this event is related to a Notebooks or Interactive window.  
-            Common to most of the events.  
-            Possible values include:  
-                - `'notebook'`  
-                - `'interactive'`  
-            - `stackTrace`?: `string`  
-            Node stacktrace without PII.  
-            Common to most of the events.  
-            - `userExecutedCell`?: `boolean`  
-            Whether the user executed a cell.  
-            Common to most of the events.  
-        - Measures:  
-            - `duration`: `number`  
-            Duration of a measure in milliseconds.  
-            Common measurement used across a number of events.  
-            - `interruptCount`?: `number`  
-            This number gets reset after we attempt a restart or change kernel.  
-            Common to most of the events.  
-            - `kernelInterpreterCount`: `number`  
-            Total number of interpreters in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelLiveCount`: `number`  
-            Total number of live kernels in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelSpecCount`: `number`  
-            Total number of kernel specs in the kernel spec list.  
-            Common to most of the events.  
-            - `pythonEnvironmentCount`?: `number`  
-            Total number of python environments.  
-            Common to most of the events.  
-            - `restartCount`?: `number`  
-            This number gets reset after change the kernel.  
-            Common to most of the events.  
-            - `startFailureCount`?: `number`  
-            Number of times starting the kernel failed.  
-            Common to most of the events.  
-            - `switchKernelCount`?: `number`  
-            Number of times the kernel was changed.  
-            Common to most of the events.  
-    - `When successfully created`:  
-        - Properties:  
-            - `actionSource`: `<see below>`  
-            Whether this was started by Jupyter extension or a 3rd party.  
-            Common to most of the events.  
-            Possible values include:  
-                - `jupyterExtension`  
-                - `3rdPartyExtension`  
-            - `capturedEnvVars`?: `boolean`  
-            Whether we managed to capture the environment variables or not.  
-            In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-            Common to most of the events.  
-            - `disableUI`?: `boolean`  
-            Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-            If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-            Common to most of the events.  
-            - `isUsingActiveInterpreter`?: `boolean`  
-            Whether this resource is using the active Python interpreter or not.  
-            Common to most of the events.  
-            - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-            Whether kernel was started using kernel spec, interpreter, etc.  
-            Common to most of the events.  
-            - `kernelId`: `string`  
-            Hash of the Kernel Connection id.  
-            Common to most of the events.  
-            - `kernelLanguage`: `string`  
-            Language of the kernel connection.  
-            Common to most of the events.  
-            - `kernelSessionId`: `string`  
-            Unique identifier for an instance of a notebook session.  
-            If we restart or run this notebook tomorrow, this id will be different.  
-            Id could be something as simple as a hash of the current Epoch time.  
-            Common to most of the events.  
-            - `pythonEnvironmentPackages`?: `string`  
-            Comma delimited list of hashed packages & their versions.  
-            Common to most of the events.  
-            - `pythonEnvironmentPath`?: `string`  
-            A key, so that rest of the information is tied to this. (hash)  
-            Common to most of the events.  
-            - `pythonEnvironmentType`?: `<see below>`  
-            Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-            Common to most of the events.  
-            Possible values include:  
-                - `Unknown`  
-                - `Conda`  
-                - `VirtualEnv`  
-                - `PipEnv`  
-                - `Pyenv`  
-                - `Venv`  
-                - `WindowsStore`  
-                - `Poetry`  
-                - `VirtualEnvWrapper`  
-                - `Global`  
-                - `System`  
-            - `pythonEnvironmentVersion`?: `string`  
-            Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-            Common to most of the events.  
-            - `resourceHash`?: `string`  
-            Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-            If we run the same notebook tomorrow, the hash will be the same.  
-            Used to check whether a particular notebook fails across time or not.  
-            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-            and have a better understanding of what is going on, e.g. why something failed.  
-            Common to most of the events.  
-            - `resourceType`?: `<see below>`  
-            Used to determine whether this event is related to a Notebooks or Interactive window.  
-            Common to most of the events.  
-            Possible values include:  
-                - `'notebook'`  
-                - `'interactive'`  
-            - `userExecutedCell`?: `boolean`  
-            Whether the user executed a cell.  
-            Common to most of the events.  
-        - Measures:  
-            - `duration`: `number`  
-            Duration of a measure in milliseconds.  
-            Common measurement used across a number of events.  
-            - `interruptCount`?: `number`  
-            This number gets reset after we attempt a restart or change kernel.  
-            Common to most of the events.  
-            - `kernelInterpreterCount`: `number`  
-            Total number of interpreters in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelLiveCount`: `number`  
-            Total number of live kernels in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelSpecCount`: `number`  
-            Total number of kernel specs in the kernel spec list.  
-            Common to most of the events.  
-            - `pythonEnvironmentCount`?: `number`  
-            Total number of python environments.  
-            Common to most of the events.  
-            - `restartCount`?: `number`  
-            This number gets reset after change the kernel.  
-            Common to most of the events.  
-            - `startFailureCount`?: `number`  
-            Number of times starting the kernel failed.  
-            Common to most of the events.  
-            - `switchKernelCount`?: `number`  
-            Number of times the kernel was changed.  
-            Common to most of the events.  
-
-
 * DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE  (Telemetry.JupyterCommandLineNonDefault)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
@@ -2907,120 +2205,26 @@ Expand each section to see more information about that event.
     ```
 
     - Properties:  
-        - `actionSource`: `<see below>`  
-        Whether this was started by Jupyter extension or a 3rd party.  
-        Common to most of the events.  
-        Possible values include:  
-            - `jupyterExtension`  
-            - `3rdPartyExtension`  
-        - `capturedEnvVars`?: `boolean`  
-        Whether we managed to capture the environment variables or not.  
-        In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-        Common to most of the events.  
-        - `disableUI`?: `boolean`  
-        Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-        If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-        Common to most of the events.  
-        - `isUsingActiveInterpreter`?: `boolean`  
-        Whether this resource is using the active Python interpreter or not.  
-        Common to most of the events.  
-        - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-        Whether kernel was started using kernel spec, interpreter, etc.  
-        Common to most of the events.  
-        - `kernelId`: `string`  
-        Hash of the Kernel Connection id.  
-        Common to most of the events.  
-        - `kernelLanguage`: `string`  
-        Language of the kernel connection.  
-        Common to most of the events.  
-        - `kernelSessionId`: `string`  
-        Unique identifier for an instance of a notebook session.  
-        If we restart or run this notebook tomorrow, this id will be different.  
-        Id could be something as simple as a hash of the current Epoch time.  
-        Common to most of the events.  
-        - `pythonEnvironmentPackages`?: `string`  
-        Comma delimited list of hashed packages & their versions.  
-        Common to most of the events.  
-        - `pythonEnvironmentPath`?: `string`  
-        A key, so that rest of the information is tied to this. (hash)  
-        Common to most of the events.  
-        - `pythonEnvironmentType`?: `<see below>`  
-        Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-        Common to most of the events.  
-        Possible values include:  
-            - `Unknown`  
-            - `Conda`  
-            - `VirtualEnv`  
-            - `PipEnv`  
-            - `Pyenv`  
-            - `Venv`  
-            - `WindowsStore`  
-            - `Poetry`  
-            - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
-        - `pythonEnvironmentVersion`?: `string`  
-        Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-        Common to most of the events.  
-        - `resourceHash`?: `string`  
-        Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-        If we run the same notebook tomorrow, the hash will be the same.  
-        Used to check whether a particular notebook fails across time or not.  
-        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-        and have a better understanding of what is going on, e.g. why something failed.  
-        Common to most of the events.  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
         Common to most of the events.  
         Possible values include:  
             - `'notebook'`  
             - `'interactive'`  
-        - `userExecutedCell`?: `boolean`  
-        Whether the user executed a cell.  
-        Common to most of the events.  
     - Measures:  
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
         - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel list.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
         Total number of interpreters in the kernel list.  
         - `kernelLiveCount`: `number`  
         Total number of live kernels in the kernel list.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        Total number of live kernels in the kernel list.  
         - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel list.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
         Total number of kernel specs in the kernel list.  
         - `localKernelSpecCount`: `number`  
         Total number of local kernel specs in the list.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
         - `remoteKernelSpecCount`: `number`  
         Total number of remote kernel specs in the list.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        Common to most of the events.  
 
 
 * DS_INTERNAL.KERNEL_LAUNCHER_PERF  (Telemetry.KernelLauncherPerf)  
@@ -3031,107 +2235,16 @@ Expand each section to see more information about that event.
 
     -  Group 1:  
         - Properties:  
-            - `actionSource`: `<see below>`  
-            Whether this was started by Jupyter extension or a 3rd party.  
-            Common to most of the events.  
-            Possible values include:  
-                - `jupyterExtension`  
-                - `3rdPartyExtension`  
-            - `capturedEnvVars`?: `boolean`  
-            Whether we managed to capture the environment variables or not.  
-            In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-            Common to most of the events.  
-            - `disableUI`?: `boolean`  
-            Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-            If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-            Common to most of the events.  
-            - `isUsingActiveInterpreter`?: `boolean`  
-            Whether this resource is using the active Python interpreter or not.  
-            Common to most of the events.  
-            - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-            Whether kernel was started using kernel spec, interpreter, etc.  
-            Common to most of the events.  
-            - `kernelId`: `string`  
-            Hash of the Kernel Connection id.  
-            Common to most of the events.  
-            - `kernelLanguage`: `string`  
-            Language of the kernel connection.  
-            Common to most of the events.  
-            - `kernelSessionId`: `string`  
-            Unique identifier for an instance of a notebook session.  
-            If we restart or run this notebook tomorrow, this id will be different.  
-            Id could be something as simple as a hash of the current Epoch time.  
-            Common to most of the events.  
-            - `pythonEnvironmentPackages`?: `string`  
-            Comma delimited list of hashed packages & their versions.  
-            Common to most of the events.  
-            - `pythonEnvironmentPath`?: `string`  
-            A key, so that rest of the information is tied to this. (hash)  
-            Common to most of the events.  
-            - `pythonEnvironmentType`?: `<see below>`  
-            Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-            Common to most of the events.  
-            Possible values include:  
-                - `Unknown`  
-                - `Conda`  
-                - `VirtualEnv`  
-                - `PipEnv`  
-                - `Pyenv`  
-                - `Venv`  
-                - `WindowsStore`  
-                - `Poetry`  
-                - `VirtualEnvWrapper`  
-                - `Global`  
-                - `System`  
-            - `pythonEnvironmentVersion`?: `string`  
-            Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-            Common to most of the events.  
-            - `resourceHash`?: `string`  
-            Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-            If we run the same notebook tomorrow, the hash will be the same.  
-            Used to check whether a particular notebook fails across time or not.  
-            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-            and have a better understanding of what is going on, e.g. why something failed.  
-            Common to most of the events.  
             - `resourceType`?: `<see below>`  
             Used to determine whether this event is related to a Notebooks or Interactive window.  
             Common to most of the events.  
             Possible values include:  
                 - `'notebook'`  
                 - `'interactive'`  
-            - `userExecutedCell`?: `boolean`  
-            Whether the user executed a cell.  
-            Common to most of the events.  
         - Measures:  
             - `duration`: `number`  
             Duration of a measure in milliseconds.  
             Common measurement used across a number of events.  
-            - `interruptCount`?: `number`  
-            This number gets reset after we attempt a restart or change kernel.  
-            Common to most of the events.  
-            - `kernelInterpreterCount`: `number`  
-            Total number of interpreters in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelLiveCount`: `number`  
-            Total number of live kernels in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelSpecCount`: `number`  
-            Total number of kernel specs in the kernel spec list.  
-            Common to most of the events.  
-            - `pythonEnvironmentCount`?: `number`  
-            Total number of python environments.  
-            Common to most of the events.  
-            - `restartCount`?: `number`  
-            This number gets reset after change the kernel.  
-            Common to most of the events.  
-            - `startFailureCount`?: `number`  
-            Number of times starting the kernel failed.  
-            Common to most of the events.  
-            - `switchKernelCount`?: `number`  
-            Number of times the kernel was changed.  
-            Common to most of the events.  
     -  Group 2:  
         - Properties:  
             - `failed`: `true`  
@@ -3203,31 +2316,6 @@ Expand each section to see more information about that event.
     The Variable View webview was made visible.  
     ```
 
-
-
-* DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT  (Telemetry.NotebookOpenCount)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Total number of Jupyter notebooks or IW opened. Telemetry Sent when VS Code is closed.  
-    ```
-
-    - Measures:  
-        - `count`: `number`  
-        Total number of notebooks opened in a session.  
-        Not unique.  
-        If user opens & closes a notebook, that counts as 2.  
-
-
-* DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT  (Telemetry.NotebookRunCount)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Total number of cells executed. Telemetry Sent when VS Code is closed.  
-    ```
-
-    - Measures:  
-        - `count`: `number`  
-        Number of cells executed.  
-        If a cell is executed 10 times, thats counted as 10.  
 
 
 * DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE  (Telemetry.NewFileForInteractiveWindow)  
@@ -3336,30 +2424,6 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        Common to most of the events.  
 
 
 * DS_INTERNAL.PREFERRED_KERNEL  (Telemetry.PreferredKernel)  
@@ -3610,30 +2674,6 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        Common to most of the events.  
 
 
 * DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH  (Telemetry.RawKernelProcessLaunch)  
@@ -3646,116 +2686,6 @@ Expand each section to see more information about that event.
         - `duration`: `number`  
         Duration of a measure in milliseconds.  
         Common measurement used across a number of events.  
-
-
-* DS_INTERNAL.RAWKERNEL_SESSION_CONNECT  (Telemetry.RawKernelSessionConnect)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Sent to measure the total time taken to start and connect to a raw kernel session.  
-    ```
-
-    - Properties:  
-        - `actionSource`: `<see below>`  
-        Whether this was started by Jupyter extension or a 3rd party.  
-        Common to most of the events.  
-        Possible values include:  
-            - `jupyterExtension`  
-            - `3rdPartyExtension`  
-        - `capturedEnvVars`?: `boolean`  
-        Whether we managed to capture the environment variables or not.  
-        In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-        Common to most of the events.  
-        - `disableUI`?: `boolean`  
-        Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-        If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-        Common to most of the events.  
-        - `isUsingActiveInterpreter`?: `boolean`  
-        Whether this resource is using the active Python interpreter or not.  
-        Common to most of the events.  
-        - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-        Whether kernel was started using kernel spec, interpreter, etc.  
-        Common to most of the events.  
-        - `kernelId`: `string`  
-        Hash of the Kernel Connection id.  
-        Common to most of the events.  
-        - `kernelLanguage`: `string`  
-        Language of the kernel connection.  
-        Common to most of the events.  
-        - `kernelSessionId`: `string`  
-        Unique identifier for an instance of a notebook session.  
-        If we restart or run this notebook tomorrow, this id will be different.  
-        Id could be something as simple as a hash of the current Epoch time.  
-        Common to most of the events.  
-        - `pythonEnvironmentPackages`?: `string`  
-        Comma delimited list of hashed packages & their versions.  
-        Common to most of the events.  
-        - `pythonEnvironmentPath`?: `string`  
-        A key, so that rest of the information is tied to this. (hash)  
-        Common to most of the events.  
-        - `pythonEnvironmentType`?: `<see below>`  
-        Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-        Common to most of the events.  
-        Possible values include:  
-            - `Unknown`  
-            - `Conda`  
-            - `VirtualEnv`  
-            - `PipEnv`  
-            - `Pyenv`  
-            - `Venv`  
-            - `WindowsStore`  
-            - `Poetry`  
-            - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
-        - `pythonEnvironmentVersion`?: `string`  
-        Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-        Common to most of the events.  
-        - `resourceHash`?: `string`  
-        Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-        If we run the same notebook tomorrow, the hash will be the same.  
-        Used to check whether a particular notebook fails across time or not.  
-        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-        and have a better understanding of what is going on, e.g. why something failed.  
-        Common to most of the events.  
-        - `resourceType`?: `<see below>`  
-        Used to determine whether this event is related to a Notebooks or Interactive window.  
-        Common to most of the events.  
-        Possible values include:  
-            - `'notebook'`  
-            - `'interactive'`  
-        - `userExecutedCell`?: `boolean`  
-        Whether the user executed a cell.  
-        Common to most of the events.  
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        Common to most of the events.  
 
 
 * DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED  (Telemetry.RawKernelSessionDisposed)  
@@ -3844,31 +2774,6 @@ Expand each section to see more information about that event.
             - `null or <empty>`  
         - `userExecutedCell`?: `boolean`  
         Whether the user executed a cell.  
-        Common to most of the events.  
-    - Measures:  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
         Common to most of the events.  
 
 
@@ -3961,30 +2866,6 @@ Expand each section to see more information about that event.
     - Measures:  
         - `exitCode`: `number`  
         The kernel process's exit code.  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        Common to most of the events.  
 
 
 * DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL  (Telemetry.RawKernelSessionStartNoIpykernel)  
@@ -3995,6 +2876,61 @@ Expand each section to see more information about that event.
     ```
 
     - Properties:  
+        - `actionSource`: `<see below>`  
+        Whether this was started by Jupyter extension or a 3rd party.  
+        Common to most of the events.  
+        Possible values include:  
+            - `jupyterExtension`  
+            - `3rdPartyExtension`  
+        - `capturedEnvVars`?: `boolean`  
+        Whether we managed to capture the environment variables or not.  
+        In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
+        Common to most of the events.  
+        - `disableUI`?: `boolean`  
+        Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
+        If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
+        Common to most of the events.  
+        - `isUsingActiveInterpreter`?: `boolean`  
+        Whether this resource is using the active Python interpreter or not.  
+        Common to most of the events.  
+        - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
+        Whether kernel was started using kernel spec, interpreter, etc.  
+        Common to most of the events.  
+        - `kernelId`: `string`  
+        Hash of the Kernel Connection id.  
+        Common to most of the events.  
+        - `kernelLanguage`: `string`  
+        Language of the kernel connection.  
+        Common to most of the events.  
+        - `kernelSessionId`: `string`  
+        Unique identifier for an instance of a notebook session.  
+        If we restart or run this notebook tomorrow, this id will be different.  
+        Id could be something as simple as a hash of the current Epoch time.  
+        Common to most of the events.  
+        - `pythonEnvironmentPackages`?: `string`  
+        Comma delimited list of hashed packages & their versions.  
+        Common to most of the events.  
+        - `pythonEnvironmentPath`?: `string`  
+        A key, so that rest of the information is tied to this. (hash)  
+        Common to most of the events.  
+        - `pythonEnvironmentType`?: `<see below>`  
+        Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
+        Common to most of the events.  
+        Possible values include:  
+            - `Unknown`  
+            - `Conda`  
+            - `VirtualEnv`  
+            - `PipEnv`  
+            - `Pyenv`  
+            - `Venv`  
+            - `WindowsStore`  
+            - `Poetry`  
+            - `VirtualEnvWrapper`  
+            - `Global`  
+            - `System`  
+        - `pythonEnvironmentVersion`?: `string`  
+        Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
+        Common to most of the events.  
         - `reason`: `<see below>`  
         Captures the result of the error message, whether user dismissed this or picked a new kernel or the like.  
         Possible values include:  
@@ -4014,12 +2950,24 @@ or user clicked ok to install and it got installed.
         Missing dependencies not installed and UI not displayed to the user
 as the kernel startup is part of a background process.
 In such cases we do not notify user of any failures or the like.  
+        - `resourceHash`?: `string`  
+        Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
+        If we run the same notebook tomorrow, the hash will be the same.  
+        Used to check whether a particular notebook fails across time or not.  
+        This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
+        and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
+        we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
+        and have a better understanding of what is going on, e.g. why something failed.  
+        Common to most of the events.  
         - `resourceType`?: `<see below>`  
         Used to determine whether this event is related to a Notebooks or Interactive window.  
         Common to most of the events.  
         Possible values include:  
             - `'notebook'`  
             - `'interactive'`  
+        - `userExecutedCell`?: `boolean`  
+        Whether the user executed a cell.  
+        Common to most of the events.  
 
 
 * DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN  (Telemetry.RawKernelSessionShutdown)  
@@ -4115,287 +3063,6 @@ In such cases we do not notify user of any failures or the like.
         - `userExecutedCell`?: `boolean`  
         Whether the user executed a cell.  
         Common to most of the events.  
-    - Measures:  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
-        Common to most of the events.  
-
-
-* DS_INTERNAL.RAWKERNEL_SESSION_START  (Telemetry.RawKernelSessionStart)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Telemetry sent when we start (or fail to start) a raw kernel  
-    ```
-
-    - `When started successfully.`:  
-        - Properties:  
-            - `actionSource`: `<see below>`  
-            Whether this was started by Jupyter extension or a 3rd party.  
-            Common to most of the events.  
-            Possible values include:  
-                - `jupyterExtension`  
-                - `3rdPartyExtension`  
-            - `capturedEnvVars`?: `boolean`  
-            Whether we managed to capture the environment variables or not.  
-            In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-            Common to most of the events.  
-            - `disableUI`?: `boolean`  
-            Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-            If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-            Common to most of the events.  
-            - `isUsingActiveInterpreter`?: `boolean`  
-            Whether this resource is using the active Python interpreter or not.  
-            Common to most of the events.  
-            - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-            Whether kernel was started using kernel spec, interpreter, etc.  
-            Common to most of the events.  
-            - `kernelId`: `string`  
-            Hash of the Kernel Connection id.  
-            Common to most of the events.  
-            - `kernelLanguage`: `string`  
-            Language of the kernel connection.  
-            Common to most of the events.  
-            - `kernelSessionId`: `string`  
-            Unique identifier for an instance of a notebook session.  
-            If we restart or run this notebook tomorrow, this id will be different.  
-            Id could be something as simple as a hash of the current Epoch time.  
-            Common to most of the events.  
-            - `pythonEnvironmentPackages`?: `string`  
-            Comma delimited list of hashed packages & their versions.  
-            Common to most of the events.  
-            - `pythonEnvironmentPath`?: `string`  
-            A key, so that rest of the information is tied to this. (hash)  
-            Common to most of the events.  
-            - `pythonEnvironmentType`?: `<see below>`  
-            Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-            Common to most of the events.  
-            Possible values include:  
-                - `Unknown`  
-                - `Conda`  
-                - `VirtualEnv`  
-                - `PipEnv`  
-                - `Pyenv`  
-                - `Venv`  
-                - `WindowsStore`  
-                - `Poetry`  
-                - `VirtualEnvWrapper`  
-                - `Global`  
-                - `System`  
-            - `pythonEnvironmentVersion`?: `string`  
-            Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-            Common to most of the events.  
-            - `resourceHash`?: `string`  
-            Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-            If we run the same notebook tomorrow, the hash will be the same.  
-            Used to check whether a particular notebook fails across time or not.  
-            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-            and have a better understanding of what is going on, e.g. why something failed.  
-            Common to most of the events.  
-            - `resourceType`?: `<see below>`  
-            Used to determine whether this event is related to a Notebooks or Interactive window.  
-            Common to most of the events.  
-            Possible values include:  
-                - `'notebook'`  
-                - `'interactive'`  
-            - `userExecutedCell`?: `boolean`  
-            Whether the user executed a cell.  
-            Common to most of the events.  
-        - Measures:  
-            - `duration`: `number`  
-            Duration of a measure in milliseconds.  
-            Common measurement used across a number of events.  
-            - `interruptCount`?: `number`  
-            This number gets reset after we attempt a restart or change kernel.  
-            Common to most of the events.  
-            - `kernelInterpreterCount`: `number`  
-            Total number of interpreters in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelLiveCount`: `number`  
-            Total number of live kernels in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelSpecCount`: `number`  
-            Total number of kernel specs in the kernel spec list.  
-            Common to most of the events.  
-            - `pythonEnvironmentCount`?: `number`  
-            Total number of python environments.  
-            Common to most of the events.  
-            - `restartCount`?: `number`  
-            This number gets reset after change the kernel.  
-            Common to most of the events.  
-            - `startFailureCount`?: `number`  
-            Number of times starting the kernel failed.  
-            Common to most of the events.  
-            - `switchKernelCount`?: `number`  
-            Number of times the kernel was changed.  
-            Common to most of the events.  
-    - `Sent when we fail to restart a kernel.`:  
-        - Properties:  
-            - `actionSource`: `<see below>`  
-            Whether this was started by Jupyter extension or a 3rd party.  
-            Common to most of the events.  
-            Possible values include:  
-                - `jupyterExtension`  
-                - `3rdPartyExtension`  
-            - `capturedEnvVars`?: `boolean`  
-            Whether we managed to capture the environment variables or not.  
-            In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work.  
-            Common to most of the events.  
-            - `disableUI`?: `boolean`  
-            Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.  
-            If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)  
-            Common to most of the events.  
-            - `failed`: `true`  
-            Whether there was a failure.  
-            Common to most of the events.  
-            - `failureCategory`?: `string`  
-            A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.  
-            Common to most of the events.  
-            - `failureSubCategory`?: `string`  
-            Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.  
-            Common to most of the events.  
-            - `isUsingActiveInterpreter`?: `boolean`  
-            Whether this resource is using the active Python interpreter or not.  
-            Common to most of the events.  
-            - `kernelConnectionType`?: `KernelConnectionMetadata['kind']`  
-            Whether kernel was started using kernel spec, interpreter, etc.  
-            Common to most of the events.  
-            - `kernelId`: `string`  
-            Hash of the Kernel Connection id.  
-            Common to most of the events.  
-            - `kernelLanguage`: `string`  
-            Language of the kernel connection.  
-            Common to most of the events.  
-            - `kernelSessionId`: `string`  
-            Unique identifier for an instance of a notebook session.  
-            If we restart or run this notebook tomorrow, this id will be different.  
-            Id could be something as simple as a hash of the current Epoch time.  
-            Common to most of the events.  
-            - `pythonEnvironmentPackages`?: `string`  
-            Comma delimited list of hashed packages & their versions.  
-            Common to most of the events.  
-            - `pythonEnvironmentPath`?: `string`  
-            A key, so that rest of the information is tied to this. (hash)  
-            Common to most of the events.  
-            - `pythonEnvironmentType`?: `<see below>`  
-            Found plenty of issues when starting kernels with conda, hence useful to capture this info.  
-            Common to most of the events.  
-            Possible values include:  
-                - `Unknown`  
-                - `Conda`  
-                - `VirtualEnv`  
-                - `PipEnv`  
-                - `Pyenv`  
-                - `Venv`  
-                - `WindowsStore`  
-                - `Poetry`  
-                - `VirtualEnvWrapper`  
-                - `Global`  
-                - `System`  
-            - `pythonEnvironmentVersion`?: `string`  
-            Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
-            Common to most of the events.  
-            - `pythonErrorFile`?: `string`  
-            Hash of the file name that contains the file in the last frame (from Python stack trace).  
-            Common to most of the events.  
-            - `pythonErrorFolder`?: `string`  
-            Hash of the folder that contains the file in the last frame (from Python stack trace).  
-            Common to most of the events.  
-            - `pythonErrorPackage`?: `string`  
-            Hash of the module that contains the file in the last frame (from Python stack trace).  
-            Common to most of the events.  
-            - `resourceHash`?: `string`  
-            Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
-            If we run the same notebook tomorrow, the hash will be the same.  
-            Used to check whether a particular notebook fails across time or not.  
-            This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash,  
-            and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or  
-            we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points  
-            and have a better understanding of what is going on, e.g. why something failed.  
-            Common to most of the events.  
-            - `resourceType`?: `<see below>`  
-            Used to determine whether this event is related to a Notebooks or Interactive window.  
-            Common to most of the events.  
-            Possible values include:  
-                - `'notebook'`  
-                - `'interactive'`  
-            - `stackTrace`?: `string`  
-            Node stacktrace without PII.  
-            Common to most of the events.  
-            - `userExecutedCell`?: `boolean`  
-            Whether the user executed a cell.  
-            Common to most of the events.  
-        - Measures:  
-            - `interruptCount`?: `number`  
-            This number gets reset after we attempt a restart or change kernel.  
-            Common to most of the events.  
-            - `kernelInterpreterCount`: `number`  
-            Total number of interpreters in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelLiveCount`: `number`  
-            Total number of live kernels in the kernel spec list.  
-            Common to most of the events.  
-            - `kernelSpecCount`: `number`  
-            Total number of kernel specs in the kernel spec list.  
-            Common to most of the events.  
-            - `pythonEnvironmentCount`?: `number`  
-            Total number of python environments.  
-            Common to most of the events.  
-            - `restartCount`?: `number`  
-            This number gets reset after change the kernel.  
-            Common to most of the events.  
-            - `startFailureCount`?: `number`  
-            Number of times starting the kernel failed.  
-            Common to most of the events.  
-            - `switchKernelCount`?: `number`  
-            Number of times the kernel was changed.  
-            Common to most of the events.  
-
-
-* DS_INTERNAL.RAWKERNEL_START_RAW_SESSION  (Telemetry.RawKernelStartRawSession)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Sent to measure the time taken to start a raw kernel session.  
-    ```
-
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
-
-
-* DS_INTERNAL.RESTART_KERNEL  (Telemetry.RestartKernel)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Total time taken to restart a kernel.  
-    ```
-
-    - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
 
 
 * DS_INTERNAL.RUNTEST  (Telemetry.RunTest)  
@@ -4581,31 +3248,6 @@ In such cases we do not notify user of any failures or the like.
             - `'interactive'`  
         - `userExecutedCell`?: `boolean`  
         Whether the user executed a cell.  
-        Common to most of the events.  
-    - Measures:  
-        - `interruptCount`?: `number`  
-        This number gets reset after we attempt a restart or change kernel.  
-        Common to most of the events.  
-        - `kernelInterpreterCount`: `number`  
-        Total number of interpreters in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelLiveCount`: `number`  
-        Total number of live kernels in the kernel spec list.  
-        Common to most of the events.  
-        - `kernelSpecCount`: `number`  
-        Total number of kernel specs in the kernel spec list.  
-        Common to most of the events.  
-        - `pythonEnvironmentCount`?: `number`  
-        Total number of python environments.  
-        Common to most of the events.  
-        - `restartCount`?: `number`  
-        This number gets reset after change the kernel.  
-        Common to most of the events.  
-        - `startFailureCount`?: `number`  
-        Number of times starting the kernel failed.  
-        Common to most of the events.  
-        - `switchKernelCount`?: `number`  
-        Number of times the kernel was changed.  
         Common to most of the events.  
 
 
