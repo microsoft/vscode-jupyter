@@ -79,11 +79,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
 "DATASCIENCE.EXECUTE_CELL","Sent when a user executes a cell.","Telemetry.ExecuteCell","donjayamanne","Notebook, InteractiveWindow","Cell Execution","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
@@ -197,11 +194,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
 "DATASCIENCE.KERNEL_CRASH","Sent when Kernel crashes.","Telemetry.KernelCrash","donjayamanne","Notebook, InteractiveWindow","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
@@ -278,11 +272,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","When interrupt is a success ","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
@@ -361,11 +352,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DATASCIENCE.NOTEBOOK_INTERRUPT","Telemetry sent when user interrupts the kernel.
 Check the `resourceType` to determine whether its a Jupyter Notebook or IW.","Telemetry.NotebookInterrupt","donjayamanne","Notebook, InteractiveWindow","","If there are unhandled exceptions ","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
@@ -467,11 +455,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","pythonErrorFile","Hash of the file name that contains the file in the last frame (from Python stack trace).
@@ -581,11 +566,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
 "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL","Kernel was switched to a local kernel connection.","Telemetry.SelectLocalJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
@@ -633,11 +615,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
 "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL","Kernel was switched to a remote kernel connection.","Telemetry.SelectRemoteJupyterKernel","IanMatthewHuff","KernelPicker","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
@@ -763,11 +742,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
 Also lets us know whether it worked or not.","Telemetry.GetActivatedEnvironmentVariables","donjayamanne","N/A","","","failed","Whether the env variables were fetched successfully or not.","boolean","",false
 "DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES","Used to capture time taken to get environment variables for a python environment.
@@ -954,11 +930,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK","Time take for jupyter server to start and be ready to run first user cell.
 (Note: The property `notebook` only gets sent correctly in Jupyter version 2022.8.0 or later)","Telemetry.PerceivedJupyterStartupNotebook","donjayamanne","N/A","KernelStartup","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
@@ -1024,11 +997,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DS_INTERNAL.PYTHON_MODULE_INSTALL","Telemetry sent when user is presented with a dialog to install a python package.
 Also sent with the user's response to the dialog.","Telemetry.PythonModuleInstall","donjayamanne","N/A","","","resourceHash","Hash of the resource (notebook.uri or pythonfile.uri associated with this).
 If we run the same notebook tomorrow, the hash will be the same.","string","",true
@@ -1115,11 +1085,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DS_INTERNAL.RAWKERNEL_INFO_RESPONSE","After starting a kernel we send a request to get the kernel info.
 This tracks the total time taken to get the response back (or wether we timedout).
 If we timeout and later we find successful comms for this session, then timeout is too low
@@ -1196,11 +1163,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED","This event is sent when a RawSession's `dispose` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionDisposed","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
@@ -1272,11 +1236,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED","This event is sent when the underlying kernelProcess for a
 RawJupyterSession exits.","Telemetry.RawKernelSessionKernelProcessExited","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
@@ -1339,11 +1300,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL","Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
 This is useful to see what the user does with this error message.","Telemetry.RawKernelSessionStartNoIpykernel","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
@@ -1419,11 +1377,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN","This event is sent when a RawJupyterSession's `shutdownSession` method is called.
 Used to determine what part of the code that shut down the session, so as to determine when and how the kernel session crashed.","Telemetry.RawKernelSessionShutdown","donjayamanne","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true
@@ -1516,11 +1471,8 @@ VirtualEnv ()
 PipEnv ()
 Pyenv ()
 Venv ()
-WindowsStore ()
 Poetry ()
-VirtualEnvWrapper ()
-Global ()
-System ()",true
+VirtualEnvWrapper ()",true
 "DS_INTERNAL.SWITCH_KERNEL","Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.","Telemetry.SwitchKernel","IanMatthewHuff","Notebook, InteractiveWindow","","","pythonEnvironmentVersion","Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)
 Common to most of the events.","string","",true

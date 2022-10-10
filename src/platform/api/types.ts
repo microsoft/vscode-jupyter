@@ -13,6 +13,7 @@ export interface IPythonApiProvider {
     onDidActivatePythonExtension: Event<void>;
     pythonExtensionHooked: Promise<void>;
     getApi(): Promise<PythonApi>;
+    getNewApi(): Promise<ProposedExtensionAPI | undefined>;
     setApi(api: PythonApi): void;
 }
 export const IPythonExtensionChecker = Symbol('IPythonExtensionChecker');
@@ -25,7 +26,7 @@ export interface IPythonExtensionChecker {
 }
 
 /**
- * This allows Python exntension to update Product enum without breaking Jupyter.
+ * This allows Python extension to update Product enum without breaking Jupyter.
  * I.e. we have a strict contract, else using numbers (in enums) is bound to break across products.
  */
 export enum JupyterProductToInstall {
@@ -72,7 +73,7 @@ export interface IInterpreterQuickPickItem_PythonApi extends QuickPickItem {
     interpreter: PythonEnvironment_PythonApi;
 }
 
-export type PythonApi = ProposedExtensionAPI['environments'] & {
+export type PythonApi = {
     /**
      * IEnvironmentActivationService
      */
@@ -119,26 +120,4 @@ export type PythonApi = ProposedExtensionAPI['environments'] & {
      * @param func : The function that Python should call when requesting the notebook URI.
      */
     registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void;
-    /***
-     * Returns a promise if a refresh is going on.
-     */
-    getRefreshPromise?(): Promise<void> | undefined;
-};
-
-export type RefreshInterpretersOptions = {
-    clearCache?: boolean;
-};
-export type IPythonProposedApi = {
-    environments: ProposedExtensionAPI['environments'];
-    environment: {
-        /**
-         * This API will re-trigger environment discovery. Extensions can wait on the returned
-         * promise to get the updated interpreters list. If there is a refresh already going on
-         * then it returns the promise for that refresh.
-         * @param options : [optional]
-         *     * clearCache : When true, this will clear the cache before interpreter refresh
-         *                    is triggered.
-         */
-        refreshInterpreters(options?: RefreshInterpretersOptions): Promise<string[] | undefined>;
-    };
 };

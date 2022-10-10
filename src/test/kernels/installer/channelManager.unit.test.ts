@@ -25,6 +25,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Unknown,
         uri: Uri.file('foobar'),
+        id: Uri.file('foobar').fsPath,
         sysPrefix: '0'
     };
     let installChannelManager: InstallationChannelManager;
@@ -95,6 +96,7 @@ suite('InstallationChannelManager - getInstallationChannels()', () => {
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Unknown,
         uri: Uri.file('foobar'),
+        id: Uri.file('foobar').fsPath,
         sysPrefix: '0'
     };
 
@@ -163,6 +165,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
         const activeInterpreter = {
             envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: ''
         };
         appShell
@@ -178,6 +181,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
         const activeInterpreter = {
             envType: EnvironmentType.Pipenv,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: ''
         };
         appShell
@@ -218,6 +222,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
                 const activeInterpreter = {
                     envType: interpreterType,
                     uri: Uri.file('foobar'),
+                    id: Uri.file('foobar').fsPath,
                     sysPrefix: ''
                 };
                 const platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -246,6 +251,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
         const activeInterpreter = {
             envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: ''
         };
         const platformService = TypeMoq.Mock.ofType<IPlatformService>();

@@ -76,6 +76,7 @@ suite('Preferred Controller', () => {
         interpreter: {
             sysPrefix: '/usr/local/bin/python',
             uri: Uri.file('/usr/local/bin/python'),
+            id: Uri.file('/usr/local/bin/python').fsPath,
             displayName: 'Python 3'
         },
         kernelSpec: {

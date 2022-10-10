@@ -174,7 +174,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }>();
 
         traceVerbose(
-            `Creating notebook controller for ${kernelConnection.kind} (id=${kernelConnection.id}) with name ${label}`
+            `Creating notebook controller for ${kernelConnection.kind} (id=${kernelConnection.id}) with name '${label}'`
         );
         this.controller = this.notebookApi.createNotebookController(
             id,

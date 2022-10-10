@@ -68,6 +68,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix'
                 }
             });
@@ -85,6 +86,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envType: EnvironmentType.Unknown
                 }
@@ -103,6 +105,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something',
@@ -123,6 +126,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
@@ -143,6 +147,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something',
@@ -163,6 +168,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
@@ -201,6 +207,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit'
@@ -221,6 +228,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
@@ -242,6 +250,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     version: undefined,
@@ -264,6 +273,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
@@ -285,6 +295,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
@@ -312,6 +323,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
@@ -339,6 +351,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
@@ -368,6 +381,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit'
@@ -388,6 +402,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
@@ -409,6 +424,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something',
@@ -430,6 +446,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',

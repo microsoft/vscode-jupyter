@@ -49,6 +49,7 @@ export type PythonVersion = {
     patch: number;
 };
 export type PythonEnvironment = {
+    id: string;
     displayName?: string;
     uri: Uri;
     version?: PythonVersion;
