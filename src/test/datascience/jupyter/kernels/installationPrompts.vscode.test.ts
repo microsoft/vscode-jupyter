@@ -269,6 +269,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
+        traceVerbose('Step1 of Enure IPyKernel prompt');
         // This is a complex test that tests the following workflow (which used to fail)
         // Verify errors are displayed against the cells being executed.
         // 1. Run cell against env that does not have ipykernel
@@ -287,8 +288,10 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             { dismissPrompt: true },
             disposables
         );
+        traceVerbose('Step2 of Enure IPyKernel prompt');
         const pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
         const source = 'print(__file__)';
+        traceVerbose('Step3 of Enure IPyKernel prompt');
         const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
             interactiveWindowProvider,
             source,
@@ -296,46 +299,63 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             pythonApiProvider,
             venvNoKernelPath
         );
+        traceVerbose('Step4 of Enure IPyKernel prompt');
         const notebookDocument = workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         )!;
+        traceVerbose('Step5 of Enure IPyKernel prompt');
 
         // The prompt should be displayed when we run a cell.
         await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
+        traceVerbose('Step6 of Enure IPyKernel prompt');
         await verifyIPyKernelPromptDisplayed(prompt, venvNoKernelPath.fsPath);
+        traceVerbose('Step7 of Enure IPyKernel prompt');
         await verifyErrorInCellOutput(notebookDocument, venvNoKernelPath.fsPath);
+        traceVerbose('Step8 of Enure IPyKernel prompt');
 
         // Submitting code again should display the same prompt again.
         prompt.reset();
+        traceVerbose('Step9 of Enure IPyKernel prompt');
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        traceVerbose('Step10 of Enure IPyKernel prompt');
         await verifyIPyKernelPromptDisplayed(prompt, venvNoKernelPath.fsPath);
+        traceVerbose('Step11 of Enure IPyKernel prompt');
         await verifyErrorInCellOutput(notebookDocument, venvNoKernelPath.fsPath);
+        traceVerbose('Step12 of Enure IPyKernel prompt');
 
         // Submitting code again should display the same prompt again.
         prompt.reset();
+        traceVerbose('Step13 of Enure IPyKernel prompt');
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        traceVerbose('Step14 of Enure IPyKernel prompt');
         await verifyIPyKernelPromptDisplayed(prompt, venvNoKernelPath.fsPath);
+        traceVerbose('Step15 of Enure IPyKernel prompt');
         await verifyErrorInCellOutput(notebookDocument, venvNoKernelPath.fsPath);
+        traceVerbose('Step16 of Enure IPyKernel prompt');
 
         await sleep(1_000);
 
         // Verify we didn't get a prompt again.
         // In the past when we dismissed the prompt, we would get a prompt again.
+        traceVerbose('Step17 of Enure IPyKernel prompt');
         assert.strictEqual(prompt.getDisplayCount(), 1, 'Should not display additional prompts');
 
         prompt.dispose();
+        traceVerbose('Step18 of Enure IPyKernel prompt');
         // Next, lets try to run again, but select a kernel that doesn't have ipykernel.
         // At this point we should get the prompt again for this new kernel.
         const promptOptions: WindowPromptStubButtonClickOptions = {
             result: DataScience.selectKernel(),
             clickImmediately: true
         };
+        traceVerbose('Step19 of Enure IPyKernel prompt');
         prompt = await hijackPrompt(
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
             promptOptions,
             disposables
         );
+        traceVerbose('Step20 of Enure IPyKernel prompt');
 
         // Hijack the select kernel functionality so it selects the correct kernel
         const stub = sinon.stub(kernelSelector, 'selectKernel').callsFake(async function () {
@@ -351,9 +371,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             return true;
         } as any);
         disposables.push({ dispose: () => stub.restore() });
+        traceVerbose('Step21 of Enure IPyKernel prompt');
 
         // Submitting code again should display the same prompt again, but this time we're going to select another kernel.
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        traceVerbose('Step22 of Enure IPyKernel prompt');
 
         await Promise.all([
             // The prompt should be displayed when we run a cell.
@@ -386,34 +408,49 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 )}`
             )
         ]);
+        traceVerbose('Step23 of Enure IPyKernel prompt');
 
         // Submitting code again should display the same prompt again.
         prompt.reset();
+        traceVerbose('Step24 of Enure IPyKernel prompt');
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        traceVerbose('Step25 of Enure IPyKernel prompt');
         await verifyIPyKernelPromptDisplayed(prompt, venvNoRegPath.fsPath);
+        traceVerbose('Step26 of Enure IPyKernel prompt');
         await verifyErrorInCellOutput(notebookDocument, venvNoRegPath.fsPath);
+        traceVerbose('Step27 of Enure IPyKernel prompt');
 
         // Submitting code again should display the same prompt again.
         prompt.reset();
+        traceVerbose('Step28 of Enure IPyKernel prompt');
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        traceVerbose('Step29 of Enure IPyKernel prompt');
         await verifyIPyKernelPromptDisplayed(prompt, venvNoRegPath.fsPath);
+        traceVerbose('Step30 of Enure IPyKernel prompt');
         await verifyErrorInCellOutput(notebookDocument, venvNoRegPath.fsPath);
+        traceVerbose('Step31 of Enure IPyKernel prompt');
 
         // Now install ipykernel and ensure we can run a cell & that it runs against the right environment.
         prompt.reset();
         promptOptions.dismissPrompt = false;
         promptOptions.result = Common.install();
+        traceVerbose('Step32 of Enure IPyKernel prompt');
 
         await activeInteractiveWindow
             .addCode(`import sys${EOL}print(sys.executable)`, untitledPythonFile.uri, 0)
             .catch(noop);
+        traceVerbose('Step33 of Enure IPyKernel prompt');
         await waitForCondition(() => prompt.displayed, defaultNotebookTestTimeout, 'Prompt not displayed');
+        traceVerbose('Step34 of Enure IPyKernel prompt');
         const lastCodeCell = notebookDocument
             .getCells()
             .reverse()
             .find((cell) => cell.kind == NotebookCellKind.Code)!;
+        traceVerbose('Step35 of Enure IPyKernel prompt');
         await waitForExecutionCompletedSuccessfully(lastCodeCell);
+        traceVerbose('Step36 of Enure IPyKernel prompt');
         const sysExecutable = Uri.file(getCellOutputs(lastCodeCell).trim());
+        traceVerbose('Step37 of Enure IPyKernel prompt');
 
         assert.ok(
             areInterpreterPathsSame(venvNoRegPath, sysExecutable),
