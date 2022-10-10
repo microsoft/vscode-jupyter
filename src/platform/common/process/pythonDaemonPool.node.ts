@@ -3,7 +3,6 @@
 
 import { IPlatformService } from '../../common/platform/types';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
-import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getDisplayPath } from '../platform/fs-paths';
 import { IDisposableRegistry } from '../types';
 import { sleep } from '../utils/async';
@@ -65,10 +64,6 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
     }
     public dispose() {
         this._disposed = true;
-    }
-    public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
-        const msg = { args: ['GetPythonVersion'] };
-        return this.wrapCall((daemon) => daemon.getInterpreterInformation(), msg);
     }
     public async getExecutablePath(): Promise<string> {
         const msg = { args: ['getExecutablePath'] };

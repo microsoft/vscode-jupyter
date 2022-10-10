@@ -6,7 +6,7 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
 
 import { Newable } from '../../ioc/types';
-import { InterpreterInformation, PythonEnvironment } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { BaseError } from '../../errors/types';
 import { IDisposable } from '../types';
 import { EnvironmentVariables } from '../variables/types';
@@ -153,7 +153,6 @@ export interface IPythonExecutionFactory {
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
 
 export interface IPythonExecutionService {
-    getInterpreterInformation(): Promise<InterpreterInformation | undefined>;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
     getExecutionInfo(pythonArgs?: string[]): PythonExecInfo;

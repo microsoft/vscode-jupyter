@@ -197,7 +197,6 @@ function createPythonService(
     }
     const procs = createPythonProcessService(procService, env);
     return {
-        getInterpreterInformation: () => env.getInterpreterInformation(),
         getExecutablePath: () => env.getExecutablePath().then((p) => p.fsPath),
         isModuleInstalled: (m) => env.isModuleInstalled(m),
         getExecutionInfo: (a) => env.getExecutionInfo(a),
