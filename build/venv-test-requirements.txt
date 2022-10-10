@@ -12,7 +12,9 @@ jupyter
 livelossplot
 versioneer
 pythreejs
-ipysheet
+# Pinned per ipywidget 8 support: https://github.com/microsoft/vscode-jupyter/issues/11598
+ipywidgets==7.7.2
+ipysheet==0.5.0
 ipyvolume
 beakerx
 beakerx_kernel_java
