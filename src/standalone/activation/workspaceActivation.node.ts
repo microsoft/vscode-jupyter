@@ -59,7 +59,7 @@ export class WorkspaceActivation implements IExtensionSingleActivationService {
 
         // Get latest interpreter list in the background.
         if (this.extensionChecker.isPythonExtensionActive) {
-            this.interpreterService.getInterpreters(resource).ignoreErrors();
+            this.interpreterService.getInterpreters().ignoreErrors();
         }
 
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);

@@ -347,14 +347,14 @@ export class InterpreterService implements IInterpreterService {
     }
 
     @traceDecoratorVerbose('Get Interpreters', TraceOptions.Arguments | TraceOptions.BeforeCall)
-    public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
+    public getInterpreters(): Promise<PythonEnvironment[]> {
         const stopWatch = new StopWatch();
         this.hookupOnDidChangeInterpreterEvent();
         // Cache result as it only changes when the interpreter list changes or we add more workspace folders
         const firstTime = !!this.interpretersFetchedOnceBefore;
         this.interpretersFetchedOnceBefore = true;
         if (!this.interpreterListCachePromise) {
-            this.interpreterListCachePromise = this.getInterpretersImpl(resource);
+            this.interpreterListCachePromise = this.getInterpretersImpl();
         }
         this.interpreterListCachePromise
             .then(() => {
@@ -442,10 +442,7 @@ export class InterpreterService implements IInterpreterService {
     }
 
     @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
-    public async getInterpreterDetails(
-        pythonPathOrPythonId: Uri | string,
-        _resource?: Uri
-    ): Promise<undefined | PythonEnvironment> {
+    public async getInterpreterDetails(pythonPathOrPythonId: Uri | string): Promise<undefined | PythonEnvironment> {
         this.hookupOnDidChangeInterpreterEvent();
         try {
             return await this.getApi().then(async (api) => {
@@ -493,7 +490,7 @@ export class InterpreterService implements IInterpreterService {
     private onDidChangeWorkspaceFolders() {
         this.interpreterListCachePromise = undefined;
     }
-    private async getInterpretersImpl(_resource: Resource): Promise<PythonEnvironment[]> {
+    private async getInterpretersImpl(): Promise<PythonEnvironment[]> {
         const allInterpreters: PythonEnvironment[] = [];
         await this.getApi().then(async (api) => {
             if (!api) {

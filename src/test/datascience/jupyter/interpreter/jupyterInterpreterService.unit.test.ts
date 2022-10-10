@@ -62,8 +62,8 @@ suite('DataScience - Jupyter Interpreter Service', () => {
             instance(interpreterService),
             instance(appShell)
         );
-        when(interpreterService.getInterpreterDetails(pythonInterpreter.uri, undefined)).thenResolve(pythonInterpreter);
-        when(interpreterService.getInterpreterDetails(secondPythonInterpreter.uri, undefined)).thenResolve(
+        when(interpreterService.getInterpreterDetails(pythonInterpreter.uri)).thenResolve(pythonInterpreter);
+        when(interpreterService.getInterpreterDetails(secondPythonInterpreter.uri)).thenResolve(
             secondPythonInterpreter
         );
         when(memento.update(anything(), anything())).thenResolve();
