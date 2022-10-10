@@ -55,6 +55,7 @@ suite('DataScience - JupyterKernelService', () => {
                 display_name: 'Python 3 Environment'
             },
             interpreter: {
+                id: '/usr/bin/python3',
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/bin/python3'),
                 sysPrefix: 'python',
@@ -74,6 +75,7 @@ suite('DataScience - JupyterKernelService', () => {
                 display_name: 'Conda Environment'
             },
             interpreter: {
+                id: '/usr/bin/conda/python3',
                 displayName: 'Conda Environment',
                 uri: Uri.file('/usr/bin/conda/python3'),
                 sysPrefix: 'conda',
@@ -100,6 +102,7 @@ suite('DataScience - JupyterKernelService', () => {
                 }
             },
             interpreter: {
+                id: '/usr/bin/python3',
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/bin/python3'),
                 sysPrefix: 'python',
@@ -130,6 +133,7 @@ suite('DataScience - JupyterKernelService', () => {
                 display_name: 'Python 2 on Disk'
             },
             interpreter: {
+                id: '/usr/bin/python',
                 displayName: 'Python 2 Environment',
                 uri: Uri.file('/usr/bin/python'),
                 sysPrefix: 'python',
@@ -156,6 +160,7 @@ suite('DataScience - JupyterKernelService', () => {
                 }
             },
             interpreter: {
+                id: '/usr/bin/python3',
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/bin/python3'),
                 sysPrefix: 'python',
@@ -186,6 +191,7 @@ suite('DataScience - JupyterKernelService', () => {
                 display_name: 'Python 2 on Disk'
             },
             interpreter: {
+                id: '/usr/bin/python',
                 displayName: 'Python 2 Environment',
                 uri: Uri.file('/usr/bin/python'),
                 sysPrefix: 'python',
@@ -212,6 +218,7 @@ suite('DataScience - JupyterKernelService', () => {
                 }
             },
             interpreter: {
+                id: '/usr/bin/python3',
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/bin/python3'),
                 sysPrefix: 'python',
@@ -242,6 +249,7 @@ suite('DataScience - JupyterKernelService', () => {
                 display_name: 'Python 2 on Disk'
             },
             interpreter: {
+                id: '/usr/bin/python',
                 displayName: 'Python 2 Environment',
                 uri: Uri.file('/usr/bin/python'),
                 sysPrefix: 'python',
@@ -271,6 +279,7 @@ suite('DataScience - JupyterKernelService', () => {
                     '/usr/share../../kernels/e10e222d04b8ec3cc7034c3de1b1269b088e2bcd875030a8acab068e59af3990/kernel.json'
             },
             interpreter: {
+                id: '/usr/conda/envs/base/python',
                 displayName: 'Conda base environment',
                 uri: Uri.file('/usr/conda/envs/base/python'),
                 sysPrefix: 'conda',
@@ -300,6 +309,7 @@ suite('DataScience - JupyterKernelService', () => {
                 }
             },
             interpreter: {
+                id: '/usr/don/home/envs/sample/bin/python',
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
                 sysPrefix: 'python',
@@ -329,6 +339,7 @@ suite('DataScience - JupyterKernelService', () => {
                 }
             },
             interpreter: {
+                id: '/usr/don/home/envs/sample/bin/python',
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
                 sysPrefix: 'python',
@@ -358,6 +369,7 @@ suite('DataScience - JupyterKernelService', () => {
                 }
             },
             interpreter: {
+                id: '/usr/don/home/envs/sample/bin/python',
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
                 sysPrefix: 'python',

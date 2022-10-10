@@ -30,6 +30,7 @@ suite('DataScience - NotebookServerProvider', () => {
     let interpreterService: IInterpreterService;
     const workingPython: PythonEnvironment = {
         uri: Uri.file('/foo/bar/python.exe'),
+        id: Uri.file('/foo/bar/python.exe').fsPath,
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python'

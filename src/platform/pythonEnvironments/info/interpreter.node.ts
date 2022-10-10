@@ -19,6 +19,7 @@ export function extractInterpreterInfo(python: Uri, raw: PythonEnvInfo): Interpr
     const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;
     return {
         uri: python,
+        id: python.fsPath,
         version: parsePythonVersion(rawVersion),
         sysVersion: raw.sysVersion,
         sysPrefix: raw.sysPrefix,

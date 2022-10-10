@@ -46,7 +46,6 @@ export type PythonEnvInfo = {
     exe: string;
 };
 
-
 //============================
 // completion.py
 
