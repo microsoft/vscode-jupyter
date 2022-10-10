@@ -56,7 +56,7 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
                 const firstCondaInterpreter = interpreters.find((i) => i.envType === EnvironmentType.Conda);
                 pythonApi = await pythonApiProvider.getApi();
                 if (firstCondaInterpreter) {
-                    await pythonApi.setActiveInterpreter(getFilePath(firstCondaInterpreter.uri));
+                    await pythonApi.updateActiveEnvironmentPath(getFilePath(firstCondaInterpreter.uri));
                 }
                 activeCondaInterpreter = firstCondaInterpreter!;
             } else {
@@ -87,7 +87,7 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
     });
     suiteTeardown(() => {
         if (originalActiveInterpreter && pythonApi) {
-            pythonApi.setActiveInterpreter(getFilePath(originalActiveInterpreter.uri)).ignoreErrors();
+            pythonApi.updateActiveEnvironmentPath(getFilePath(originalActiveInterpreter.uri)).ignoreErrors();
         }
     });
     function createService(serviceContainer: IServiceContainer) {

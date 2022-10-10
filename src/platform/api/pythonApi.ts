@@ -9,8 +9,7 @@ import {
     IPythonExtensionChecker,
     IPythonProposedApi,
     PythonApi,
-    PythonEnvironment_PythonApi,
-    RefreshInterpretersOptions
+    PythonEnvironment_PythonApi
 } from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
@@ -24,10 +23,11 @@ import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
-import { PythonEnvironment } from '../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { TraceOptions } from '../logging/types';
-import { noop } from '../common/utils/misc';
+import { isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
+import { KnownEnvironmentTools, ResolvedEnvironment } from './pythonApiTypes';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined
@@ -47,6 +47,42 @@ export function deserializePythonEnvironment(
         }
         return result;
     }
+}
+export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironment {
+    const envTools = env.tools as KnownEnvironmentTools[];
+    // Map the Python env tool to a Jupyter environment type.
+    const orderOrEnvs: [pythonEnvTool: KnownEnvironmentTools, JupyterEnv: EnvironmentType][] = [
+        ['Conda', EnvironmentType.Conda],
+        ['Pyenv', EnvironmentType.Pyenv],
+        ['Pipenv', EnvironmentType.Pipenv],
+        ['Poetry', EnvironmentType.Poetry],
+        ['VirtualEnvWrapper', EnvironmentType.VirtualEnvWrapper],
+        ['VirtualEnv', EnvironmentType.VirtualEnv],
+        ['Venv', EnvironmentType.Venv]
+    ];
+    let envType = envTools.length ? (envTools[0] as EnvironmentType) : EnvironmentType.Unknown;
+    for (const [pythonEnvTool, JupyterEnv] of orderOrEnvs) {
+        if (envTools.includes(pythonEnvTool)) {
+            envType = JupyterEnv;
+            break;
+        }
+    }
+    return {
+        sysPrefix: env.executable.sysPrefix,
+        envPath: env.executable.uri,
+        envName: env.environment?.name,
+        uri: env.executable.uri!,
+        displayName: env.environment?.name,
+        envType,
+        version: env.version
+            ? {
+                  major: env.version.major,
+                  minor: env.version.minor,
+                  patch: env.version.micro,
+                  raw: env.version.sysVersion
+              }
+            : undefined
+    };
 }
 
 export function serializePythonEnvironment(
@@ -120,17 +156,8 @@ export class PythonApiProvider implements IPythonApiProvider {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const unifiedApi: PythonApi = {} as any;
         Object.assign(unifiedApi, pythonProposedApi.environment);
+        Object.assign(unifiedApi, pythonProposedApi.environments);
         Object.assign(unifiedApi, api);
-
-        // Workaround API name changes (only used in test code at the moment)
-        if (!unifiedApi.refreshInterpreters && (unifiedApi as any).refreshEnvironment) {
-            unifiedApi.refreshInterpreters = (options: RefreshInterpretersOptions) => {
-                return (unifiedApi as any).refreshEnvironment(options);
-            };
-            unifiedApi.setActiveInterpreter = (path: string, resource?: Resource) => {
-                return (unifiedApi as any).setActiveEnvironment(path, resource);
-            };
-        }
 
         this.api.resolve(unifiedApi);
     }
@@ -259,8 +286,9 @@ export class InterpreterSelector implements IInterpreterSelector {
     public async getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
         const api = await this.apiProvider.getApi();
 
-        let suggestions =
-            'getKnownSuggestions' in api ? api.getKnownSuggestions(resource) : await api.getSuggestions(resource);
+        let suggestions = api.getKnownSuggestions
+            ? api.getKnownSuggestions(resource)
+            : await api.getSuggestions(resource);
 
         const deserializedSuggestions: IInterpreterQuickPickItem[] = [];
         suggestions.forEach((item) => {
@@ -347,33 +375,34 @@ export class InterpreterService implements IInterpreterService {
 
     public async refreshInterpreters() {
         const api = await this.getApi();
+        if (!api) {
+            return;
+        }
         try {
-            if (api?.refreshInterpreters) {
-                const newItems = await api.refreshInterpreters({ clearCache: false });
-                this.interpreterListCachePromise = undefined;
-                this.didChangeInterpreters.fire();
-                traceVerbose(`Refreshed Environments and got ${newItems}`);
-            } else if ((api as any).refreshEnvironment) {
-                const newItems = await (api as any).refreshEnvironment({ clearCache: false });
-                this.interpreterListCachePromise = undefined;
-                this.didChangeInterpreters.fire();
-                traceVerbose(`Refreshed Environments and got ${newItems}`);
-            }
+            await api.refreshEnvironments({ forceRefresh: false });
+            this.interpreterListCachePromise = undefined;
+            this.didChangeInterpreters.fire();
+            traceVerbose(`Refreshed Environments`);
         } catch (ex) {
             traceError(`Failed to refresh the list of interpreters`);
         }
     }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @traceDecoratorVerbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
-    public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
+    public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         const stopWatch = new StopWatch();
         this.hookupOnDidChangeInterpreterEvent();
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
         let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
         if (!promise) {
-            promise = this.getApi()
-                .then((api) => api?.getActiveInterpreter(resource))
-                .then(deserializePythonEnvironment);
+            promise = this.getApi().then(async (api) => {
+                if (!api) {
+                    return;
+                }
+                const envPath = api.getActiveEnvironmentPath(resource);
+                const env = await api.resolveEnvironment(envPath);
+                return env && pythonEnvToJupyterEnv(env);
+            });
 
             if (promise) {
                 this.workspaceCachedActiveInterpreter.set(workspaceId, promise);
@@ -410,12 +439,30 @@ export class InterpreterService implements IInterpreterService {
     }
 
     @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
-    public async getInterpreterDetails(pythonPath: Uri, resource?: Uri): Promise<undefined | PythonEnvironment> {
+    public async getInterpreterDetails(
+        pythonPathOrPythonId: Uri | string,
+        _resource?: Uri
+    ): Promise<undefined | PythonEnvironment> {
         this.hookupOnDidChangeInterpreterEvent();
         try {
-            return await this.getApi()
-                .then((api) => api?.getInterpreterDetails(getFilePath(pythonPath), resource))
-                .then(deserializePythonEnvironment);
+            return await this.getApi().then(async (api) => {
+                if (!api) {
+                    return;
+                }
+                if (isUri(pythonPathOrPythonId)) {
+                    // Find the Env with the same Uri.
+                    const matchedPythonEnv = api.known.find((item) => {
+                        return areInterpreterPathsSame(item.executable.uri, pythonPathOrPythonId);
+                    });
+                    if (matchedPythonEnv) {
+                        const env = await api.resolveEnvironment(matchedPythonEnv.id);
+                        return env && pythonEnvToJupyterEnv(env);
+                    }
+                } else {
+                    const env = await api.resolveEnvironment(pythonPathOrPythonId);
+                    return env && pythonEnvToJupyterEnv(env);
+                }
+            });
         } catch {
             // If the python extension cannot get the details here, don't fail. Just don't use them.
             return undefined;
@@ -443,24 +490,25 @@ export class InterpreterService implements IInterpreterService {
         this.interpreterListCachePromise = undefined;
     }
     private async getInterpretersImpl(resource?: Uri): Promise<PythonEnvironment[]> {
-        // Python uses the resource to look up the workspace folder. For Jupyter
-        // we want all interpreters regardless of workspace folder so call this multiple times
-        const folders = this.workspace.workspaceFolders;
-        const activeInterpreterPromise = this.getActiveInterpreter(resource);
-        const all = folders
-            ? await Promise.all(
-                  [...folders, undefined].map((f) => this.getApi().then((api) => api?.getInterpreters(f?.uri)))
-              )
-            : await Promise.all([await this.getApi().then((api) => api?.getInterpreters(undefined))]);
-        const activeInterpreter = await activeInterpreterPromise;
-        // Remove dupes
-        const result: PythonEnvironment[] = [];
-        const allInterpreters = [...all.flat()]
-            .map(deserializePythonEnvironment)
-            .filter((item) => !!item) as PythonEnvironment[];
-        if (activeInterpreter) {
-            allInterpreters.push(activeInterpreter);
-        }
+        const allInterpreters: PythonEnvironment[] = [];
+        await this.getApi().then(async (api) => {
+            if (!api) {
+                return [];
+            }
+            await api.refreshEnvironments();
+            await Promise.all(
+                api.known.map(async (item) => {
+                    try {
+                        const env = await api.resolveEnvironment(item.id);
+                        if (env) {
+                            allInterpreters.push(pythonEnvToJupyterEnv(env));
+                        }
+                    } catch (ex) {
+                        traceError(`Failed to get env details from Python API for ${item.id}`, ex);
+                    }
+                })
+            );
+        });
         traceVerbose(
             `Full interpreter list for ${getDisplayPath(resource)} is length: ${
                 allInterpreters.length
@@ -468,12 +516,7 @@ export class InterpreterService implements IInterpreterService {
                 .map((item) => `${item.displayName}:${item.envType}:${getDisplayPath(item.uri)}`)
                 .join(', ')}`
         );
-        allInterpreters.forEach((interpreter) => {
-            if (interpreter && !result.find((r) => areInterpreterPathsSame(r.uri, interpreter.uri))) {
-                result.push(interpreter);
-            }
-        });
-        return result;
+        return allInterpreters;
     }
 
     private hookupOnDidChangeInterpreterEvent() {
@@ -485,7 +528,7 @@ export class InterpreterService implements IInterpreterService {
             .then((api) => {
                 if (!this.eventHandlerAdded && api) {
                     this.eventHandlerAdded = true;
-                    api.onDidChangeInterpreter(
+                    api.onDidChangeActiveEnvironmentPath(
                         () => {
                             this.interpreterListCachePromise = undefined;
                             this.workspaceCachedActiveInterpreter.clear();
@@ -494,7 +537,7 @@ export class InterpreterService implements IInterpreterService {
                         this,
                         this.disposables
                     );
-                    api.onDidChangeInterpreters(
+                    api.onDidChangeEnvironments(
                         () => {
                             this.interpreterListCachePromise = undefined;
                             this.didChangeInterpreters.fire();

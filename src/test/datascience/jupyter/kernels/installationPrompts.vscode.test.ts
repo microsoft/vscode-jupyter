@@ -126,7 +126,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         previousDisableJupyterAutoStartValue = configSettings.disableJupyterAutoStart;
         configSettings.disableJupyterAutoStart = true;
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
-        await pythonApi.refreshInterpreters({ clearCache: true });
+        await pythonApi.refreshEnvironments({ forceRefresh: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const [interpreter1, interpreter2, interpreter3] = await Promise.all([
             interpreterService.getInterpreterDetails(venvNoKernelPath),

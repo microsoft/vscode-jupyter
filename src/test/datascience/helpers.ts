@@ -130,7 +130,7 @@ export async function setActiveInterpreter(
 ) {
     if (interpreter) {
         const pythonApi = await apiProvider.getApi();
-        return pythonApi.setActiveInterpreter(getFilePath(interpreter), resource);
+        return pythonApi.updateActiveEnvironmentPath(getFilePath(interpreter), resource);
     }
 }
 
@@ -174,7 +174,7 @@ export async function submitFromPythonFileUsingCodeWatcher(
     if (activeInterpreterPath) {
         const pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
         const pythonApi = await pythonApiProvider.getApi();
-        await pythonApi.setActiveInterpreter(activeInterpreterPath.fsPath, untitledPythonFile.uri);
+        await pythonApi.updateActiveEnvironmentPath(activeInterpreterPath.fsPath, untitledPythonFile.uri);
     }
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
         untitledPythonFile.uri

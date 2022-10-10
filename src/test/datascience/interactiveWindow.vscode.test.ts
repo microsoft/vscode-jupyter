@@ -73,7 +73,7 @@ suite(`Interactive window Execution`, async function () {
     });
     async function preSwitch() {
         const pythonApi = await pythonApiProvider.getApi();
-        await pythonApi.refreshInterpreters({ clearCache: true });
+        await pythonApi.refreshEnvironments({ forceRefresh: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const interpreters = await interpreterService.getInterpreters();
         const venvNoKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvnokernel'));
