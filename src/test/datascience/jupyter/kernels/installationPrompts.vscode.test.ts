@@ -126,8 +126,8 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         configSettings = configService.getSettings(undefined) as any;
         previousDisableJupyterAutoStartValue = configSettings.disableJupyterAutoStart;
         configSettings.disableJupyterAutoStart = true;
-        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
-        await pythonApi.environments.refreshEnvironments({ forceRefresh: true });
+        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getNewApi();
+        await pythonApi?.environments.refreshEnvironments({ forceRefresh: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const [interpreter1, interpreter2, interpreter3] = await Promise.all([
             interpreterService.getInterpreterDetails(venvNoKernelPath),
@@ -146,8 +146,8 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
         configSettings = configService.getSettings(undefined) as any;
         configSettings.disableJupyterAutoStart = true;
-        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
-        const env = await pythonApi.environments.resolveEnvironment(venvNoKernelPath.fsPath);
+        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getNewApi();
+        const env = await pythonApi?.environments.resolveEnvironment(venvNoKernelPath.fsPath);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);

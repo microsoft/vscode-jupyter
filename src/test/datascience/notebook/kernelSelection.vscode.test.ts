@@ -157,8 +157,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             undefined,
             ConfigurationTarget.Global
         );
-        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
-        const env = await pythonApi.environments.resolveEnvironment(venvNoKernelPythonPath.fsPath);
+        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getNewApi();
+        const env = await pythonApi?.environments.resolveEnvironment(venvNoKernelPythonPath.fsPath);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile1 = await createTemporaryNotebookFromFile(templateIPynbFile, disposables, venvNoKernelDisplayName);
