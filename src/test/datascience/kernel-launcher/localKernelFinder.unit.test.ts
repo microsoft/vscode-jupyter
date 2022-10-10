@@ -126,7 +126,7 @@ import { noop } from '../../../platform/common/utils/misc';
                 distinctInterpreters.add(activeInterpreter);
             }
             testData.interpreters = Array.from(distinctInterpreters);
-            when(interpreterService.getInterpreters(anything())).thenResolve(Array.from(distinctInterpreters));
+            when(interpreterService.getInterpreters()).thenResolve(Array.from(distinctInterpreters));
             when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
             when(interpreterService.getInterpreterDetails(anything())).thenResolve();
             platformService = mock(PlatformService);

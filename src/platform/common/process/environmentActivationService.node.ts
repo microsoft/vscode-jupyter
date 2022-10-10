@@ -362,7 +362,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
     public async getActivatedEnvVarsUsingActivationCommands(resource: Resource, interpreter: PythonEnvironment) {
         const shellInfo = defaultShells[this.platform.osType]!;
-        const interpreterDetails = await this.interpreterService.getInterpreterDetails(interpreter.uri, resource);
+        const interpreterDetails = await this.interpreterService.getInterpreterDetails(interpreter.uri);
         const envType = interpreterDetails?.envType;
         const stopWatch = new StopWatch();
         try {

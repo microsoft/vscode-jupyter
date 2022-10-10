@@ -755,7 +755,7 @@ suite('Jupyter Execution', async () => {
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-        when(interpreterService.getInterpreters(anything())).thenResolve([
+        when(interpreterService.getInterpreters()).thenResolve([
             workingPython,
             missingKernelPython,
             missingNotebookPython
@@ -1080,7 +1080,7 @@ suite('Jupyter Execution', async () => {
 
     test('Failing notebook throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
-        when(interpreterService.getInterpreters(anything())).thenResolve([missingNotebookPython]);
+        when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
         const ui = new DisplayOptions(true);
         const token = new CancellationTokenSource();
         try {
