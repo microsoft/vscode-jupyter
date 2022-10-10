@@ -32,6 +32,7 @@ suite('DataScience - DataViewerDependencyService (PythonEnvironment, Node)', () 
     setup(async () => {
         interpreter = {
             displayName: '',
+            id: Uri.file(path.join('users', 'python', 'bin', 'python.exe')).fsPath,
             uri: Uri.file(path.join('users', 'python', 'bin', 'python.exe')),
             sysPrefix: '',
             sysVersion: '',

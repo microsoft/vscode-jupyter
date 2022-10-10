@@ -89,6 +89,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: '0'
         };
 
@@ -102,6 +103,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: '0'
         };
         const settings = mock(JupyterSettings);
@@ -119,6 +121,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
             uri: Uri.file(path.join(project1, '.venv', 'scripts', 'python.exe')),
+            id: Uri.file(path.join(project1, '.venv', 'scripts', 'python.exe')).fsPath,
             sysPrefix: '0'
         };
 
@@ -137,6 +140,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: '0'
         };
 
@@ -155,6 +159,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: '0'
         };
 

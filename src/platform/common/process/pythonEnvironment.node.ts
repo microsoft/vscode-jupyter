@@ -2,20 +2,15 @@
 // Licensed under the MIT License.
 
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
-import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getExecutablePath } from '../../pythonEnvironments/info/executable.node';
-import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter.node';
-import { traceError, traceInfo } from '../../logging';
 import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types.node';
 import { compare, SemVer } from 'semver';
 import type { PythonEnvironment as PyEnv } from '../../pythonEnvironments/info';
-import { getDisplayPath, getFilePath } from '../platform/fs-paths';
+import { getFilePath } from '../platform/fs-paths';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../platform/types';
 class PythonEnvironment {
-    private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
-
     constructor(
         protected readonly interpreter: PyEnv,
         // "deps" is the externally defined functionality used by the class.
@@ -37,14 +32,6 @@ class PythonEnvironment {
         const python = this.deps.getObservablePythonArgv(this.interpreter.uri);
         return buildPythonExecInfo(python, pythonArgs);
     }
-
-    public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
-        if (this.cachedInterpreterInformation === null) {
-            this.cachedInterpreterInformation = await this.getInterpreterInformationImpl();
-        }
-        return this.cachedInterpreterInformation;
-    }
-
     public async getExecutablePath(): Promise<Uri> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
@@ -65,15 +52,6 @@ class PythonEnvironment {
             return false;
         }
         return true;
-    }
-
-    private async getInterpreterInformationImpl(): Promise<InterpreterInformation | undefined> {
-        try {
-            const python = this.getExecutionInfo();
-            return await getInterpreterInfo(python, this.deps.shellExec, { info: traceInfo, error: traceError });
-        } catch (ex) {
-            traceError(`Failed to get interpreter information for '${getDisplayPath(this.interpreter.uri)}'`, ex);
-        }
     }
 }
 

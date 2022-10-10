@@ -103,6 +103,7 @@ suite('Jupyter Execution', async () => {
     let ipykernelInstallCount = 0;
     let notebookStarter: NotebookStarter;
     const workingPython: PythonEnvironment = {
+        id: '/foo/bar/python.exe',
         uri: Uri.file('/foo/bar/python.exe'),
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
@@ -110,6 +111,7 @@ suite('Jupyter Execution', async () => {
     };
 
     const missingKernelPython: PythonEnvironment = {
+        id: '/foo/baz/python.exe',
         uri: Uri.file('/foo/baz/python.exe'),
         version: new SemVer('3.1.1-final'),
         sysVersion: '1.0.0.0',
@@ -117,6 +119,7 @@ suite('Jupyter Execution', async () => {
     };
 
     const missingNotebookPython: PythonEnvironment = {
+        id: '/bar/baz/python.exe',
         uri: Uri.file('/bar/baz/python.exe'),
         version: new SemVer('2.1.1-final'),
         sysVersion: '1.0.0.0',
@@ -124,6 +127,7 @@ suite('Jupyter Execution', async () => {
     };
 
     const missingNotebookPython2: PythonEnvironment = {
+        id: '/two/baz/python.exe',
         uri: Uri.file('/two/baz/python.exe'),
         version: new SemVer('2.1.1'),
         sysVersion: '1.0.0.0',
@@ -401,7 +405,6 @@ suite('Jupyter Execution', async () => {
         setupPythonService(service, 'jupyter', ['nbconvert', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupPythonService(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupPythonService(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
-        service.setup((x) => x.getInterpreterInformation()).returns(() => Promise.resolve(workingPython));
 
         // Don't mind the goofy path here. It's supposed to not find the item. It's just testing the internal regex works
         setupPythonServiceWithFunc(service, 'jupyter', ['kernelspec', 'list', '--json'], () => {
@@ -489,7 +492,6 @@ suite('Jupyter Execution', async () => {
     ) {
         setupPythonService(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupPythonService(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
-        service.setup((x) => x.getInterpreterInformation()).returns(() => Promise.resolve(missingKernelPython));
         const kernelSpecs = createKernelSpecs([{ name: 'working', resourceDir: path.dirname(workingKernelSpec) }]);
         setupPythonService(
             service,
@@ -536,7 +538,6 @@ suite('Jupyter Execution', async () => {
             .returns(() => {
                 throw new Error('Not supported');
             });
-        service.setup((x) => x.getInterpreterInformation()).returns(() => Promise.resolve(missingNotebookPython));
     }
 
     function setupWorkingProcessService(service: TypeMoq.IMock<IProcessService>, notebookStdErr?: string[]) {

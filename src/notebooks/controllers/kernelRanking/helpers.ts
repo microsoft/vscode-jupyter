@@ -40,6 +40,15 @@ export async function findKernelSpecMatchingInterpreter(
             if (
                 kernel.kind === 'startUsingPythonInterpreter' &&
                 getKernelRegistrationInfo(kernel.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
+                kernel.interpreter.id === interpreter.id &&
+                kernel.interpreter.envName === interpreter.envName
+            ) {
+                result.push(kernel);
+                return;
+            }
+            if (
+                kernel.kind === 'startUsingPythonInterpreter' &&
+                getKernelRegistrationInfo(kernel.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
                 (await getInterpreterHash(kernel.interpreter)) === (await getInterpreterHash(interpreter)) &&
                 kernel.interpreter.envName === interpreter.envName
             ) {

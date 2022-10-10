@@ -20,6 +20,7 @@ const info: PythonEnvironment = {
     displayName: '',
     envName: '',
     uri: Uri.file(''),
+    id: Uri.file('').fsPath,
     envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
