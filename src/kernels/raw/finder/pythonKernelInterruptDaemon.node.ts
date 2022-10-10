@@ -23,8 +23,7 @@ function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironm
     // At least this way user will  not have to exit vscode completely to delete such files/folders.
     if (
         isSupportedPythonVersion(interpreter) &&
-        (interpreter?.envType === EnvironmentType.Global ||
-            interpreter?.envType === EnvironmentType.WindowsStore ||
+        (interpreter?.envType === EnvironmentType.Unknown ||
             interpreter?.envType === EnvironmentType.Pyenv ||
             interpreter?.envType === EnvironmentType.Conda)
     ) {

@@ -242,7 +242,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
         case 'startUsingLocalKernelSpec': {
             if (
                 kernelConnection.interpreter?.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Global
+                kernelConnection.interpreter.envType !== EnvironmentType.Unknown
             ) {
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
@@ -263,7 +263,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
         case 'startUsingPythonInterpreter':
             if (
                 kernelConnection.interpreter.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Global
+                kernelConnection.interpreter.envType !== EnvironmentType.Unknown
             ) {
                 const pythonVersion = `Python ${
                     getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
@@ -390,12 +390,12 @@ export function getInterpreterFromKernelConnectionMetadata(
     }
     const model = kernelConnectionMetadataHasKernelModel(kernelConnection) ? kernelConnection.kernelModel : undefined;
     if (model?.metadata?.interpreter) {
-        return deserializePythonEnvironment(model?.metadata?.interpreter);
+        return deserializePythonEnvironment(model?.metadata?.interpreter, '');
     }
     const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
         ? kernelConnection.kernelSpec
         : undefined;
-    return deserializePythonEnvironment(kernelSpec?.metadata?.interpreter);
+    return deserializePythonEnvironment(kernelSpec?.metadata?.interpreter, '');
 }
 export function isPythonKernelConnection(kernelConnection?: KernelConnectionMetadata): boolean {
     if (!kernelConnection) {
@@ -704,7 +704,7 @@ export function deserializeKernelConnection(kernelConnection: any): KernelConnec
         return {
             ...kernelConnection,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            interpreter: deserializePythonEnvironment(kernelConnection.interpreter as any)!
+            interpreter: deserializePythonEnvironment(kernelConnection.interpreter as any, '')!
         };
     }
     return kernelConnection;

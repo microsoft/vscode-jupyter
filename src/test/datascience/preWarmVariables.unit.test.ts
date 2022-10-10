@@ -30,6 +30,7 @@ suite('DataScience - PreWarm Env Vars', () => {
     setup(() => {
         interpreter = {
             uri: Uri.file(''),
+            id: Uri.file('').fsPath,
             sysPrefix: '',
             sysVersion: ''
         };

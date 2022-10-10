@@ -17,7 +17,6 @@ import { OSType } from '../utils/platform';
 import { EnvironmentVariables, ICustomEnvironmentVariablesProvider } from '../variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { IPythonApiProvider } from '../../api/types';
 import { StopWatch } from '../utils/stopWatch';
 import { Memento, Uri } from 'vscode';
@@ -287,7 +286,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
-        const key = `${workspaceKey}_${interpreter && (await getInterpreterHash(interpreter))}`;
+        const key = `${workspaceKey}_${interpreter?.id || ''}`;
 
         if (this.activatedEnvVariablesCache.has(key)) {
             traceVerbose(`Got activation Env Vars from cached promise with key ${key}`);

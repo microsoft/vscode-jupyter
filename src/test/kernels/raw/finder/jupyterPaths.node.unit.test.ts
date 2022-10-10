@@ -39,7 +39,8 @@ suite('Jupyter Paths', () => {
     const extensionUri = Uri.file('extension');
     const interpreter: PythonEnvironment = {
         sysPrefix: `PythonEnv${path.sep}PythonSysPrefix`,
-        uri: Uri.file('PythonEnv')
+        uri: Uri.file('PythonEnv'),
+        id: Uri.file('PythonEnv').fsPath
     };
     const unixHomeDir = Uri.file('/users/username');
     const macHomeDir = Uri.file('/users/username');
