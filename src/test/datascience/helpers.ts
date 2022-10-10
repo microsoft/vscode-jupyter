@@ -130,7 +130,7 @@ export async function setActiveInterpreter(
     interpreter: vscode.Uri | undefined
 ) {
     if (interpreter) {
-        const [pythonApi, api] = await Promise.all([apiProvider.getApi(), initialize()]);
+        const [pythonApi, api] = await Promise.all([apiProvider.getNewApi(), initialize()]);
         // if we have one workspace, then use the Uri of the workspace folder.
         const workspace = api.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         resource = workspace.workspaceFolders?.length === 1 ? workspace.workspaceFolders[0].uri : resource;
@@ -180,8 +180,8 @@ export async function submitFromPythonFileUsingCodeWatcher(
     const editor = await vscode.window.showTextDocument(untitledPythonFile);
     if (activeInterpreterPath) {
         const pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
-        const pythonApi = await pythonApiProvider.getApi();
-        await pythonApi.environments.updateActiveEnvironmentPath(activeInterpreterPath.fsPath, untitledPythonFile.uri);
+        const pythonApi = await pythonApiProvider.getNewApi();
+        await pythonApi?.environments.updateActiveEnvironmentPath(activeInterpreterPath.fsPath, untitledPythonFile.uri);
     }
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
         untitledPythonFile.uri
