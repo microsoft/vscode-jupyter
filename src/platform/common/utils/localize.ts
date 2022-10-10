@@ -1408,6 +1408,12 @@ export namespace DataScience {
             { key: 'DataScience.failedToInstallPandas', comment: ['{Locked="Pandas"}'] },
             'Failed to install Pandas to use the Data Viewer.'
         );
+    export const localKernelFinderDisplayName = () =>
+        localize('DataScience.localKernelFinderDisplayName', 'Local Kernels');
+    export const universalRemoteKernelFinderDisplayName = () =>
+        localize('DataScience.universalRemoteKernelFinderDisplayName', 'Remote - {0}');
+    export const remoteKernelFinderDisplayName = () =>
+        localize('DataScience.remoteKernelFinderDisplayName', 'Current Remote');
 }
 
 export namespace Deprecated {

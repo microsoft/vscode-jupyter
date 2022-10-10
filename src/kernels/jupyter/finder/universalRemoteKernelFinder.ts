@@ -3,12 +3,10 @@
 
 'use strict';
 
-import { injectable, inject, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { getKernelId, getLanguageInKernelSpec, serializeKernelConnection } from '../../helpers';
 import {
     IJupyterKernelSpec,
-    IKernelFinder,
     IKernelProvider,
     INotebookProvider,
     INotebookProviderConnection,
@@ -18,23 +16,15 @@ import {
     RemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
-import {
-    GLOBAL_MEMENTO,
-    IDisposableRegistry,
-    IExtensions,
-    IMemento,
-    IsWebExtension,
-    Resource
-} from '../../../platform/common/types';
+import { IDisposable, IExtensions, Resource } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import {
     IJupyterSessionManagerFactory,
     IJupyterSessionManager,
-    IJupyterServerUriStorage,
-    IServerConnectionType,
     IJupyterRemoteCachedKernelValidator,
-    IRemoteKernelFinder
+    IRemoteKernelFinder,
+    IJupyterServerUriEntry
 } from '../types';
 import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
 import { traceError, traceWarning, traceInfoIfCI } from '../../../platform/logging';
@@ -43,30 +33,29 @@ import { computeServerId } from '../jupyterUtils';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { DisplayOptions } from '../../displayOptions';
+import * as localize from '../../../platform/common/utils/localize';
 import { isArray } from '../../../platform/common/utils/sysTypes';
 import { deserializeKernelConnection } from '../../helpers';
-import * as localize from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
 import { RemoteKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
-import { ContributedKernelFinderKind } from '../../internalTypes';
+import { ContributedKernelFinderKind, IContributedKernelFinderInfo } from '../../internalTypes';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
 const REMOTE_KERNEL_REFRESH_INTERVAL = 2_000;
 
-// This class finds kernels from the current selected Jupyter URI
-@injectable()
-export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingleActivationService {
+// This class watches a single jupyter server URI and returns kernels from it
+export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContributedKernelFinderInfo, IDisposable {
     /**
      * List of ids of kernels that should be hidden from the kernel picker.
      */
     private readonly kernelIdsToHide = new Set<string>();
     kind = ContributedKernelFinderKind.Remote;
-    id: string = 'currentremote';
-    displayName: string = localize.DataScience.remoteKernelFinderDisplayName();
+    id: string;
+    displayName: string;
     private _cacheUpdateCancelTokenSource: CancellationTokenSource | undefined;
     private cache: RemoteKernelConnectionMetadata[] = [];
 
@@ -76,6 +65,11 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     private _initializeResolve: () => void;
     private _initializedPromise: Promise<void>;
 
+    private readonly disposables: IDisposable[] = [];
+
+    // Track our delay timer for when we update on kernel dispose
+    private kernelDisposeDelayTimer: NodeJS.Timeout | number | undefined;
+
     get initialized(): Promise<void> {
         return this._initializedPromise;
     }
@@ -83,38 +77,49 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     private wasPythonInstalledWhenFetchingKernels = false;
 
     constructor(
-        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
-        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
-        @inject(IJupyterRemoteCachedKernelValidator)
+        private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        private interpreterService: IInterpreterService,
+        private extensionChecker: IPythonExtensionChecker,
+        private readonly notebookProvider: INotebookProvider,
+        private readonly globalState: Memento,
+        private readonly env: IApplicationEnvironment,
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
-        @inject(IKernelFinder) kernelFinder: KernelFinder,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IsWebExtension) private isWebExtension: boolean
+        kernelFinder: KernelFinder,
+        private readonly kernelProvider: IKernelProvider,
+        private readonly extensions: IExtensions,
+        private isWebExtension: boolean,
+        private readonly serverUri: IJupyterServerUriEntry
     ) {
+        // Register with remote-serverId as our ID
+        this.id = `${this.kind}-${serverUri.serverId}`;
+
+        // Create a reasonable display name for this kernel finder
+        this.displayName = localize.DataScience.universalRemoteKernelFinderDisplayName().format(
+            serverUri.displayName || serverUri.uri
+        );
+
         this._initializedPromise = new Promise<void>((resolve) => {
             this._initializeResolve = resolve;
         });
 
-        kernelFinder.registerKernelFinder(this);
+        // When we register, add a disposable to clean ourselves up from the main kernel finder list
+        // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
+        this.disposables.push(kernelFinder.registerKernelFinder(this));
+
+        this.disposables.push(this._onDidChangeKernels);
+    }
+
+    dispose(): void | undefined {
+        if (this.kernelDisposeDelayTimer) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            clearTimeout(this.kernelDisposeDelayTimer as any);
+        }
+        disposeAllDisposables(this.disposables);
     }
 
     async activate(): Promise<void> {
         // warm up the cache
         this.loadCache().then(noop, noop);
-
-        this.disposables.push(
-            this.serverUriStorage.onDidChangeUri(() => {
-                this.updateCache().then(noop, noop);
-            })
-        );
 
         // If we create a new kernel, we need to refresh if the kernel is remote (because
         // we have live sessions possible)
@@ -136,9 +141,16 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         this.kernelProvider.onDidDisposeKernel(
             (k) => {
                 if (k && isRemoteConnection(k.kernelConnectionMetadata)) {
+                    if (this.kernelDisposeDelayTimer) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        clearTimeout(this.kernelDisposeDelayTimer as any);
+                        this.kernelDisposeDelayTimer = undefined;
+                    }
                     const timer = setTimeout(() => {
                         this.updateCache().then(noop, noop);
                     }, REMOTE_KERNEL_REFRESH_INTERVAL);
+
+                    this.kernelDisposeDelayTimer = timer;
 
                     return timer;
                 }
@@ -160,14 +172,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         this.wasPythonInstalledWhenFetchingKernels = this.extensionChecker.isPythonExtensionInstalled;
     }
 
-    public async loadCache() {
-        traceInfoIfCI('Remote Kernel Finder load cache', this.serverConnectionType.isLocalLaunch);
-
-        if (this.serverConnectionType.isLocalLaunch) {
-            await this.writeToCache([]);
-            this._initializeResolve();
-            return;
-        }
+    private async loadCache() {
+        traceInfoIfCI(`Remote Kernel Finder load cache Server: ${this.id}`);
 
         const kernelsFromCache = await this.getFromCache();
 
@@ -233,16 +239,12 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         cancelToken?: CancellationToken
     ): Promise<INotebookProviderConnection | undefined> {
         const ui = new DisplayOptions(false);
-        const uri = await this.serverUriStorage.getRemoteUri();
-        if (!uri) {
-            return;
-        }
         return this.notebookProvider.connect({
             resource: undefined,
             ui,
             localJupyter: false,
             token: cancelToken,
-            serverId: this.serverUriStorage.currentServerId!
+            serverId: this.serverUri.serverId
         });
     }
 
@@ -307,7 +309,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
                 // Turn them both into a combined list
                 const mappedSpecs = await Promise.all(
                     specs.map(async (s) => {
-                        sendKernelSpecTelemetry(s, 'remote');
+                        await sendKernelSpecTelemetry(s, 'remote');
                         const kernel: RemoteKernelSpecConnectionMetadata = {
                             kind: 'startUsingRemoteKernelSpec',
                             interpreter: await this.getInterpreter(s, connInfo.baseUrl),
@@ -385,7 +387,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     }
 
     private getCacheKey() {
-        return RemoteKernelSpecsCacheKey;
+        // For Universal finders key each one per serverId
+        return `${RemoteKernelSpecsCacheKey}-${this.serverUri.serverId}`;
     }
 
     private async writeToCache(values: RemoteKernelConnectionMetadata[]) {
