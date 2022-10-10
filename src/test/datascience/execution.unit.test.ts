@@ -103,6 +103,7 @@ suite('Jupyter Execution', async () => {
     let ipykernelInstallCount = 0;
     let notebookStarter: NotebookStarter;
     const workingPython: PythonEnvironment = {
+        id: '/foo/bar/python.exe',
         uri: Uri.file('/foo/bar/python.exe'),
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
@@ -110,6 +111,7 @@ suite('Jupyter Execution', async () => {
     };
 
     const missingKernelPython: PythonEnvironment = {
+        id: '/foo/baz/python.exe',
         uri: Uri.file('/foo/baz/python.exe'),
         version: new SemVer('3.1.1-final'),
         sysVersion: '1.0.0.0',
@@ -117,6 +119,7 @@ suite('Jupyter Execution', async () => {
     };
 
     const missingNotebookPython: PythonEnvironment = {
+        id: '/bar/baz/python.exe',
         uri: Uri.file('/bar/baz/python.exe'),
         version: new SemVer('2.1.1-final'),
         sysVersion: '1.0.0.0',
@@ -124,6 +127,7 @@ suite('Jupyter Execution', async () => {
     };
 
     const missingNotebookPython2: PythonEnvironment = {
+        id: '/two/baz/python.exe',
         uri: Uri.file('/two/baz/python.exe'),
         version: new SemVer('2.1.1'),
         sysVersion: '1.0.0.0',

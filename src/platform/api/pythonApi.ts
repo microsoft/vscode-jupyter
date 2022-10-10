@@ -18,7 +18,7 @@ import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
 import { createDeferred } from '../common/utils/async';
-import { traceDecoratorVerbose, traceError, traceInfo, traceVerbose } from '../logging';
+import { traceDecoratorVerbose, traceError, traceInfo, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -30,13 +30,15 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { KnownEnvironmentTools, ResolvedEnvironment } from './pythonApiTypes';
 
 export function deserializePythonEnvironment(
-    pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined
+    pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
+    pythonEnvId: string
 ): PythonEnvironment | undefined {
     if (pythonVersion) {
         const result = {
             ...pythonVersion,
             sysPrefix: pythonVersion.sysPrefix || '',
             uri: Uri.file(pythonVersion.path || ''),
+            id: pythonEnvId || (pythonVersion as any).id,
             envPath: pythonVersion.envPath ? Uri.file(pythonVersion.envPath) : undefined
         };
 
@@ -61,15 +63,23 @@ export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironme
         ['Venv', EnvironmentType.Venv]
     ];
     let envType = envTools.length ? (envTools[0] as EnvironmentType) : EnvironmentType.Unknown;
-    for (const [pythonEnvTool, JupyterEnv] of orderOrEnvs) {
-        if (envTools.includes(pythonEnvTool)) {
-            envType = JupyterEnv;
-            break;
+    if (env.environment?.type === 'Conda') {
+        envType = EnvironmentType.Conda;
+    } else {
+        for (const [pythonEnvTool, JupyterEnv] of orderOrEnvs) {
+            if (envTools.includes(pythonEnvTool)) {
+                envType = JupyterEnv;
+                break;
+            }
+        }
+        if (envType === EnvironmentType.Unknown && env.environment?.type === 'VirtualEnvironment') {
+            envType = EnvironmentType.VirtualEnv;
         }
     }
     return {
+        id: env.id,
         sysPrefix: env.executable.sysPrefix,
-        envPath: env.executable.uri,
+        envPath: Uri.file(env.path),
         envName: env.environment?.name,
         uri: env.executable.uri!,
         displayName: env.environment?.name,
@@ -156,7 +166,7 @@ export class PythonApiProvider implements IPythonApiProvider {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const unifiedApi: PythonApi = {} as any;
         Object.assign(unifiedApi, pythonProposedApi.environment);
-        Object.assign(unifiedApi, pythonProposedApi.environments);
+        Object.assign(unifiedApi, pythonProposedApi);
         Object.assign(unifiedApi, api);
 
         this.api.resolve(unifiedApi);
@@ -291,12 +301,18 @@ export class InterpreterSelector implements IInterpreterSelector {
             : await api.getSuggestions(resource);
 
         const deserializedSuggestions: IInterpreterQuickPickItem[] = [];
-        suggestions.forEach((item) => {
-            const interpreter = deserializePythonEnvironment(item.interpreter);
-            if (interpreter) {
-                deserializedSuggestions.push({ ...item, interpreter: interpreter });
-            }
-        });
+        await Promise.all(
+            suggestions.map(async (item) => {
+                const env = await api.environments.resolveEnvironment(item.interpreter.path);
+                if (!env) {
+                    return;
+                }
+                const interpreter = deserializePythonEnvironment(item.interpreter, env?.id);
+                if (interpreter) {
+                    deserializedSuggestions.push({ ...item, interpreter: interpreter });
+                }
+            })
+        );
         return deserializedSuggestions;
     }
 }
@@ -373,13 +389,13 @@ export class InterpreterService implements IInterpreterService {
         return this.interpreterListCachePromise;
     }
 
-    public async refreshInterpreters() {
+    public async refreshInterpreters(forceRefresh: boolean = false) {
         const api = await this.getApi();
         if (!api) {
             return;
         }
         try {
-            await api.refreshEnvironments({ forceRefresh: false });
+            await api.environments.refreshEnvironments({ forceRefresh });
             this.interpreterListCachePromise = undefined;
             this.didChangeInterpreters.fire();
             traceVerbose(`Refreshed Environments`);
@@ -392,6 +408,11 @@ export class InterpreterService implements IInterpreterService {
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         const stopWatch = new StopWatch();
         this.hookupOnDidChangeInterpreterEvent();
+        // If there's only one workspace folder, and we don't have a resource, then use the
+        // workspace uri of the single workspace folder.
+        if (!resource && this.workspace.workspaceFolders?.length === 1) {
+            resource = this.workspace.workspaceFolders[0].uri;
+        }
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
         let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
         if (!promise) {
@@ -399,8 +420,8 @@ export class InterpreterService implements IInterpreterService {
                 if (!api) {
                     return;
                 }
-                const envPath = api.getActiveEnvironmentPath(resource);
-                const env = await api.resolveEnvironment(envPath);
+                const envPath = api.environments.getActiveEnvironmentPath(resource);
+                const env = await api.environments.resolveEnvironment(envPath);
                 return env && pythonEnvToJupyterEnv(env);
             });
 
@@ -415,10 +436,11 @@ export class InterpreterService implements IInterpreterService {
                             { firstTime: true }
                         );
                     })
-                    .catch(() => {
+                    .catch((ex) => {
                         if (this.workspaceCachedActiveInterpreter.get(workspaceId) === promise) {
                             this.workspaceCachedActiveInterpreter.delete(workspaceId);
                         }
+                        traceWarning(`Failed to get active interpreter from Python for workspace ${workspaceId}`, ex);
                     });
                 if (isCI || [ExtensionMode.Development, ExtensionMode.Test].includes(this.context.extensionMode)) {
                     promise
@@ -451,15 +473,15 @@ export class InterpreterService implements IInterpreterService {
                 }
                 if (isUri(pythonPathOrPythonId)) {
                     // Find the Env with the same Uri.
-                    const matchedPythonEnv = api.known.find((item) => {
+                    const matchedPythonEnv = api.environments.known.find((item) => {
                         return areInterpreterPathsSame(item.executable.uri, pythonPathOrPythonId);
                     });
                     if (matchedPythonEnv) {
-                        const env = await api.resolveEnvironment(matchedPythonEnv.id);
+                        const env = await api.environments.resolveEnvironment(matchedPythonEnv.id);
                         return env && pythonEnvToJupyterEnv(env);
                     }
                 } else {
-                    const env = await api.resolveEnvironment(pythonPathOrPythonId);
+                    const env = await api.environments.resolveEnvironment(pythonPathOrPythonId);
                     return env && pythonEnvToJupyterEnv(env);
                 }
             });
@@ -489,19 +511,33 @@ export class InterpreterService implements IInterpreterService {
     private onDidChangeWorkspaceFolders() {
         this.interpreterListCachePromise = undefined;
     }
-    private async getInterpretersImpl(resource?: Uri): Promise<PythonEnvironment[]> {
+    private async getInterpretersImpl(_resource: Resource): Promise<PythonEnvironment[]> {
         const allInterpreters: PythonEnvironment[] = [];
         await this.getApi().then(async (api) => {
             if (!api) {
                 return [];
             }
-            await api.refreshEnvironments();
+            await api.environments.refreshEnvironments();
+            traceVerbose(
+                `Full interpreter list after refreshing is length: ${
+                    api.environments.known.length
+                }, ${api.environments.known
+                    .map(
+                        (item) =>
+                            `${item.id}:${item.environment?.name}:${item.tools.join(',')}:${getDisplayPath(
+                                item.executable.uri
+                            )}:${item.path}`
+                    )
+                    .join(', ')}`
+            );
             await Promise.all(
-                api.known.map(async (item) => {
+                api.environments.known.map(async (item) => {
                     try {
-                        const env = await api.resolveEnvironment(item.id);
+                        const env = await api.environments.resolveEnvironment(item.id);
                         if (env) {
                             allInterpreters.push(pythonEnvToJupyterEnv(env));
+                        } else {
+                            traceError(`Failed to get env details from Python API for ${item.id} without an error`);
                         }
                     } catch (ex) {
                         traceError(`Failed to get env details from Python API for ${item.id}`, ex);
@@ -510,10 +546,8 @@ export class InterpreterService implements IInterpreterService {
             );
         });
         traceVerbose(
-            `Full interpreter list for ${getDisplayPath(resource)} is length: ${
-                allInterpreters.length
-            }, ${allInterpreters
-                .map((item) => `${item.displayName}:${item.envType}:${getDisplayPath(item.uri)}`)
+            `Full interpreter list is length: ${allInterpreters.length}, ${allInterpreters
+                .map((item) => `${item.id}:${item.displayName}:${item.envType}:${getDisplayPath(item.uri)}`)
                 .join(', ')}`
         );
         return allInterpreters;
@@ -528,7 +562,7 @@ export class InterpreterService implements IInterpreterService {
             .then((api) => {
                 if (!this.eventHandlerAdded && api) {
                     this.eventHandlerAdded = true;
-                    api.onDidChangeActiveEnvironmentPath(
+                    api.environments.onDidChangeActiveEnvironmentPath(
                         () => {
                             this.interpreterListCachePromise = undefined;
                             this.workspaceCachedActiveInterpreter.clear();
@@ -537,7 +571,7 @@ export class InterpreterService implements IInterpreterService {
                         this,
                         this.disposables
                     );
-                    api.onDidChangeEnvironments(
+                    api.environments.onDidChangeEnvironments(
                         () => {
                             this.interpreterListCachePromise = undefined;
                             this.didChangeInterpreters.fire();

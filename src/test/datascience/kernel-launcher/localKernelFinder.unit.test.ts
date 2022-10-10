@@ -340,6 +340,7 @@ import { noop } from '../../../platform/common/utils/misc';
         };
         const python2Global: PythonEnvironment = {
             uri: Uri.file(isWindows ? 'C:/Python/Python2/scripts/python.exe' : '/usr/bin/python27'),
+            id: Uri.file(isWindows ? 'C:/Python/Python2/scripts/python.exe' : '/usr/bin/python27').fsPath,
             sysPrefix: isWindows ? 'C:/Python/Python2' : '/usr',
             displayName: 'Python 2.7',
             envType: EnvironmentType.Unknown,
@@ -348,6 +349,7 @@ import { noop } from '../../../platform/common/utils/misc';
         };
         const python36Global: PythonEnvironment = {
             uri: Uri.file(isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36'),
+            id: Uri.file(isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36').fsPath,
             sysPrefix: isWindows ? 'C:/Python/Python3.6' : '/usr',
             displayName: 'Python 3.6',
             envType: EnvironmentType.Unknown,
@@ -356,6 +358,7 @@ import { noop } from '../../../platform/common/utils/misc';
         };
         const python37Global: PythonEnvironment = {
             uri: Uri.file(isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37'),
+            id: Uri.file(isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37').fsPath,
             sysPrefix: isWindows ? 'C:/Python/Python3.7' : '/usr',
             displayName: 'Python 3.7',
             envType: EnvironmentType.Unknown,
@@ -366,6 +369,8 @@ import { noop } from '../../../platform/common/utils/misc';
             uri: Uri.file(
                 isWindows ? 'C:/pyenv/envs/temp/scripts/python.exe' : '/users/username/pyenv/envs/temp/python'
             ),
+            id: Uri.file(isWindows ? 'C:/pyenv/envs/temp/scripts/python.exe' : '/users/username/pyenv/envs/temp/python')
+                .fsPath,
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp' : '/users/username/pyenv/envs/temp',
             displayName: 'Temporary Python 3.9',
             envName: 'temp',
@@ -377,6 +382,9 @@ import { noop } from '../../../platform/common/utils/misc';
             uri: Uri.file(
                 isWindows ? 'C:/pyenv/envs/temp1/scripts/python.exe' : '/users/username/pyenv/envs/temp1/bin/python'
             ),
+            id: Uri.file(
+                isWindows ? 'C:/pyenv/envs/temp1/scripts/python.exe' : '/users/username/pyenv/envs/temp1/bin/python'
+            ).fsPath,
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp1' : '/users/username/pyenv/envs/temp1',
             displayName: 'Temporary Python 3.8 64bit Environment',
             envName: 'temp1',
@@ -388,6 +396,9 @@ import { noop } from '../../../platform/common/utils/misc';
             uri: Uri.file(
                 isWindows ? 'C:/pyenv/envs/temp2/scripts/python.exe' : '/users/username/pyenv/envs/temp2/bin/python'
             ),
+            id: Uri.file(
+                isWindows ? 'C:/pyenv/envs/temp2/scripts/python.exe' : '/users/username/pyenv/envs/temp2/bin/python'
+            ).fsPath,
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp2' : '/users/username/pyenv/envs/temp2',
             displayName: 'Temporary Python 3.8 64bit Environment',
             envName: 'temp2',
@@ -399,6 +410,9 @@ import { noop } from '../../../platform/common/utils/misc';
             uri: Uri.file(
                 isWindows ? 'C:/pyenv/envs/temp3/scripts/python.exe' : '/users/username/pyenv/envs/temp3/bin/python'
             ),
+            id: Uri.file(
+                isWindows ? 'C:/pyenv/envs/temp3/scripts/python.exe' : '/users/username/pyenv/envs/temp3/bin/python'
+            ).fsPath,
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp3' : '/users/username/pyenv/envs/temp3',
             displayName: 'Temporary Python 3.8 64bit Environment',
             envName: 'temp3',
@@ -414,6 +428,9 @@ import { noop } from '../../../platform/common/utils/misc';
             uri: Uri.file(
                 isWindows ? 'C:/pyenv/envs/temp4/scripts/python.exe' : '/users/username/pyenv/envs/temp4/python'
             ),
+            id: Uri.file(
+                isWindows ? 'C:/pyenv/envs/temp4/scripts/python.exe' : '/users/username/pyenv/envs/temp4/python'
+            ).fsPath,
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp4' : '/users/username/pyenv/envs/temp4',
             displayName: 'Temporary Python 3.8 64bit Environment',
             envName: 'temp4',
@@ -426,6 +443,8 @@ import { noop } from '../../../platform/common/utils/misc';
             uri: Uri.file(
                 isWindows ? 'C:/temp/venv/.venv/scripts/python.exe' : '/users/username/temp/.venv/bin/python'
             ),
+            id: Uri.file(isWindows ? 'C:/temp/venv/.venv/scripts/python.exe' : '/users/username/temp/.venv/bin/python')
+                .fsPath,
             sysPrefix: isWindows ? 'C:/temp/venv/.venv' : '/users/username/temp/.venv',
             displayName: 'Virtual Env Python 3.8',
             envName: '.venv',
@@ -435,6 +454,7 @@ import { noop } from '../../../platform/common/utils/misc';
         };
         const condaEnv1: PythonEnvironment = {
             uri: Uri.file(isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python'),
+            id: Uri.file(isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python').fsPath,
             sysPrefix: isWindows ? 'C:/conda/envs/env1' : '/conda/envs/env1',
             envName: 'env1',
             displayName: 'Conda Env1 3.6',

@@ -88,6 +88,7 @@ suite('Pip installer', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: '0'
         };
         when(pythonExecutionService.isModuleInstalled('pip')).thenResolve(true);
@@ -101,6 +102,7 @@ suite('Pip installer', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: '0'
         };
 
@@ -115,6 +117,7 @@ suite('Pip installer', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Unknown,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: '0'
         };
         when(pythonExecutionService.isModuleInstalled('pip')).thenReject(
@@ -132,6 +135,7 @@ suite('Pip installer', async () => {
                 const interpreter: PythonEnvironment = {
                     envType,
                     uri: Uri.file('foobar'),
+                    id: Uri.file('foobar').fsPath,
                     sysPrefix: '0'
                 };
                 when(pythonExecutionService.isModuleInstalled('pip')).thenReject(

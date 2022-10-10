@@ -72,7 +72,7 @@ export interface IInterpreterQuickPickItem_PythonApi extends QuickPickItem {
     interpreter: PythonEnvironment_PythonApi;
 }
 
-export type PythonApi = ProposedExtensionAPI['environments'] & {
+export type PythonApi = ProposedExtensionAPI & {
     /**
      * IEnvironmentActivationService
      */

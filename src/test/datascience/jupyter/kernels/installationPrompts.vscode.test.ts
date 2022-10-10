@@ -23,7 +23,7 @@ import { createDeferred, sleep } from '../../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
-import { areInterpreterPathsSame, getInterpreterHash } from '../../../../platform/pythonEnvironments/info/interpreter';
+import { areInterpreterPathsSame } from '../../../../platform/pythonEnvironments/info/interpreter';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../../common.node';
 import {
     EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -68,6 +68,7 @@ import { isUri } from '../../../../platform/common/utils/misc';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../kernels/execution/helpers';
 import { BaseKernelError } from '../../../../kernels/errors/types';
 import { IControllerRegistration, IControllerSelection } from '../../../../notebooks/controllers/types';
+import { traceVerbose } from '../../../../platform/logging';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {
@@ -126,7 +127,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         previousDisableJupyterAutoStartValue = configSettings.disableJupyterAutoStart;
         configSettings.disableJupyterAutoStart = true;
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
-        await pythonApi.refreshEnvironments({ forceRefresh: true });
+        await pythonApi.environments.refreshEnvironments({ forceRefresh: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const [interpreter1, interpreter2, interpreter3] = await Promise.all([
             interpreterService.getInterpreterDetails(venvNoKernelPath),
@@ -145,18 +146,13 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
         configSettings = configService.getSettings(undefined) as any;
         configSettings.disableJupyterAutoStart = true;
-
+        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
+        const env = await pythonApi.environments.resolveEnvironment(venvNoKernelPath.fsPath);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
         // Update hash in notebook metadata.
-        fs.writeFileSync(
-            nbFile.fsPath,
-            fs
-                .readFileSync(nbFile.fsPath)
-                .toString('utf8')
-                .replace('<hash>', await getInterpreterHash({ uri: venvNoKernelPath }))
-        );
+        fs.writeFileSync(nbFile.fsPath, fs.readFileSync(nbFile.fsPath).toString('utf8').replace('<id>', env!.id));
         await Promise.all([
             installIPyKernel(venvKernelPath.fsPath),
             uninstallIPyKernel(venvNoKernelPath.fsPath),

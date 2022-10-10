@@ -28,6 +28,8 @@ export class MockPythonExecutionService implements IPythonExecutionService {
     public getInterpreterInformation(): Promise<InterpreterInformation> {
         return Promise.resolve({
             uri: Uri.file(''),
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            id: Uri.file('').fsPath,
             version: new SemVer('3.6.0-beta'),
             sysVersion: '1.0',
             sysPrefix: '1.0'

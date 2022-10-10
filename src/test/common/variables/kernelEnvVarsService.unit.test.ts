@@ -36,6 +36,7 @@ suite('Kernel Environment Variables Service', () => {
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Conda,
         uri: pathFile,
+        id: pathFile.fsPath,
         sysPrefix: '0'
     };
     let kernelSpec: IJupyterKernelSpec;
@@ -208,6 +209,7 @@ suite('Kernel Environment Variables Service', () => {
         when(interpreterService.getInterpreterDetails(anything())).thenResolve({
             envType: EnvironmentType.Conda,
             uri: Uri.joinPath(Uri.file('env'), 'foopath'),
+            id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath,
             sysPrefix: 'foosysprefix'
         });
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
@@ -232,6 +234,7 @@ suite('Kernel Environment Variables Service', () => {
         when(interpreterService.getInterpreterDetails(anything())).thenResolve({
             envType,
             uri: Uri.file('foopath'),
+            id: Uri.file('foopath').fsPath,
             sysPrefix: 'foosysprefix'
         });
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({

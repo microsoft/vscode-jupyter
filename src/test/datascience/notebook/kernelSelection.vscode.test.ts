@@ -6,16 +6,13 @@ import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { commands, ConfigurationTarget, QuickInputButtons, Uri, window } from 'vscode';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { IKernelProvider, isLocalConnection, isRemoteConnection } from '../../../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import {
-    getInterpreterHash,
-    getNormalizedInterpreterPath
-} from '../../../platform/pythonEnvironments/info/interpreter';
+import { getNormalizedInterpreterPath } from '../../../platform/pythonEnvironments/info/interpreter';
 import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize.node';
@@ -160,17 +157,13 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             undefined,
             ConfigurationTarget.Global
         );
+        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
+        const env = await pythonApi.environments.resolveEnvironment(venvNoKernelPythonPath.fsPath);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile1 = await createTemporaryNotebookFromFile(templateIPynbFile, disposables, venvNoKernelDisplayName);
         // Update hash in notebook metadata.
-        fs.writeFileSync(
-            nbFile1.fsPath,
-            fs
-                .readFileSync(nbFile1.fsPath)
-                .toString('utf8')
-                .replace('<hash>', await getInterpreterHash({ uri: venvNoKernelPythonPath }))
-        );
+        fs.writeFileSync(nbFile1.fsPath, fs.readFileSync(nbFile1.fsPath).toString('utf8').replace('<id>', env!.id));
         await closeActiveWindows();
         sinon.restore();
         console.log(`Start Test completed ${this.currentTest?.title}`);
