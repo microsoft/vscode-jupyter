@@ -45,6 +45,7 @@ import { createPromiseFromCancellation } from '../../../platform/common/cancella
 import { DisplayOptions } from '../../displayOptions';
 import { isArray } from '../../../platform/common/utils/sysTypes';
 import { deserializeKernelConnection } from '../../helpers';
+import * as localize from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
@@ -65,7 +66,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     private readonly kernelIdsToHide = new Set<string>();
     kind = ContributedKernelFinderKind.Remote;
     id: string = 'currentremote';
-    displayName: string = 'Current Remote';
+    displayName: string = localize.DataScience.remoteKernelFinderDisplayName();
     private _cacheUpdateCancelTokenSource: CancellationTokenSource | undefined;
     private cache: RemoteKernelConnectionMetadata[] = [];
 

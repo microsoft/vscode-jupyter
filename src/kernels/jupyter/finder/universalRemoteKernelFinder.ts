@@ -67,6 +67,9 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
 
     private readonly disposables: IDisposable[] = [];
 
+    // Track our delay timer for when we update on kernel dispose
+    private kernelDisposeDelayTimer: NodeJS.Timeout | number | undefined;
+
     get initialized(): Promise<void> {
         return this._initializedPromise;
     }
@@ -102,9 +105,15 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         // When we register, add a disposable to clean ourselves up from the main kernel finder list
         // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
         this.disposables.push(kernelFinder.registerKernelFinder(this));
+
+        this.disposables.push(this._onDidChangeKernels);
     }
 
     dispose(): void | undefined {
+        if (this.kernelDisposeDelayTimer) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            clearTimeout(this.kernelDisposeDelayTimer as any);
+        }
         disposeAllDisposables(this.disposables);
     }
 
@@ -132,9 +141,16 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         this.kernelProvider.onDidDisposeKernel(
             (k) => {
                 if (k && isRemoteConnection(k.kernelConnectionMetadata)) {
+                    if (this.kernelDisposeDelayTimer) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        clearTimeout(this.kernelDisposeDelayTimer as any);
+                        this.kernelDisposeDelayTimer = undefined;
+                    }
                     const timer = setTimeout(() => {
                         this.updateCache().then(noop, noop);
                     }, REMOTE_KERNEL_REFRESH_INTERVAL);
+
+                    this.kernelDisposeDelayTimer = timer;
 
                     return timer;
                 }
@@ -156,7 +172,7 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         this.wasPythonInstalledWhenFetchingKernels = this.extensionChecker.isPythonExtensionInstalled;
     }
 
-    public async loadCache() {
+    private async loadCache() {
         traceInfoIfCI(`Remote Kernel Finder load cache Server: ${this.id}`);
 
         const kernelsFromCache = await this.getFromCache();
