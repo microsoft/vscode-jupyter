@@ -79,10 +79,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
 
         this.interpreters.onDidChangeInterpreters(
             async () => {
-                // Don't do anything if the interpreter list is still being refreshed
-                if (!this.interpreters.refreshing) {
-                    this.updateCache(undefined).then(noop, noop);
-                }
+                this.updateCache(undefined).then(noop, noop);
             },
             this,
             this.disposables
