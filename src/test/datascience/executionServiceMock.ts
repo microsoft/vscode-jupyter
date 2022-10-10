@@ -13,7 +13,6 @@ import {
     ObservableExecutionResult,
     SpawnOptions
 } from '../../platform/common/process/types.node';
-import { buildPythonExecInfo } from '../../platform/pythonEnvironments/exec';
 import { InterpreterInformation } from '../../platform/pythonEnvironments/info';
 import { Uri } from 'vscode';
 
@@ -28,15 +27,14 @@ export class MockPythonExecutionService implements IPythonExecutionService {
     public getInterpreterInformation(): Promise<InterpreterInformation> {
         return Promise.resolve({
             uri: Uri.file(''),
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            id: Uri.file('').fsPath,
             version: new SemVer('3.6.0-beta'),
             sysVersion: '1.0',
             sysPrefix: '1.0'
         });
     }
 
-    public getExecutablePath(): Promise<string> {
-        return Promise.resolve(this.pythonPath);
-    }
     public isModuleInstalled(moduleName: string): Promise<boolean> {
         return this.procService
             .exec(this.pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true })
@@ -76,8 +74,5 @@ export class MockPythonExecutionService implements IPythonExecutionService {
         }
 
         return result;
-    }
-    public getExecutionInfo(args: string[]) {
-        return buildPythonExecInfo(this.pythonPath, args);
     }
 }
