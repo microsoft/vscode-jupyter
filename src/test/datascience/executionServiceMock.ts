@@ -13,7 +13,6 @@ import {
     ObservableExecutionResult,
     SpawnOptions
 } from '../../platform/common/process/types.node';
-import { buildPythonExecInfo } from '../../platform/pythonEnvironments/exec';
 import { InterpreterInformation } from '../../platform/pythonEnvironments/info';
 import { Uri } from 'vscode';
 
@@ -36,9 +35,6 @@ export class MockPythonExecutionService implements IPythonExecutionService {
         });
     }
 
-    public getExecutablePath(): Promise<string> {
-        return Promise.resolve(this.pythonPath);
-    }
     public isModuleInstalled(moduleName: string): Promise<boolean> {
         return this.procService
             .exec(this.pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true })
@@ -78,8 +74,5 @@ export class MockPythonExecutionService implements IPythonExecutionService {
         }
 
         return result;
-    }
-    public getExecutionInfo(args: string[]) {
-        return buildPythonExecInfo(this.pythonPath, args);
     }
 }
