@@ -344,7 +344,7 @@ import { noop } from '../../../platform/common/utils/misc';
             displayName: 'Python 2.7',
             envType: EnvironmentType.Unknown,
             sysVersion: '2.7.0',
-            version: { major: 2, minor: 7, patch: 0, build: [], prerelease: [], raw: '2.7.0' }
+            version: { major: 2, minor: 7, patch: 0, raw: '2.7.0' }
         };
         const python36Global: PythonEnvironment = {
             uri: Uri.file(isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36'),
@@ -352,7 +352,7 @@ import { noop } from '../../../platform/common/utils/misc';
             displayName: 'Python 3.6',
             envType: EnvironmentType.Unknown,
             sysVersion: '3.6.0',
-            version: { major: 3, minor: 6, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
+            version: { major: 3, minor: 6, patch: 0, raw: '3.6.0' }
         };
         const python37Global: PythonEnvironment = {
             uri: Uri.file(isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37'),
@@ -360,7 +360,7 @@ import { noop } from '../../../platform/common/utils/misc';
             displayName: 'Python 3.7',
             envType: EnvironmentType.Unknown,
             sysVersion: '3.7.0',
-            version: { major: 3, minor: 7, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
+            version: { major: 3, minor: 7, patch: 0, raw: '3.6.0' }
         };
         const python39PyEnv_HelloWorld: PythonEnvironment = {
             uri: Uri.file(
@@ -371,7 +371,7 @@ import { noop } from '../../../platform/common/utils/misc';
             envName: 'temp',
             envType: EnvironmentType.Pyenv,
             sysVersion: '3.9.0',
-            version: { major: 3, minor: 9, patch: 0, build: [], prerelease: [], raw: '3.9.0' }
+            version: { major: 3, minor: 9, patch: 0, raw: '3.9.0' }
         };
         const python38PyEnv_temp1: PythonEnvironment = {
             uri: Uri.file(
@@ -382,7 +382,7 @@ import { noop } from '../../../platform/common/utils/misc';
             envName: 'temp1',
             envType: EnvironmentType.Pyenv,
             sysVersion: '3.8.0',
-            version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
+            version: { major: 3, minor: 8, patch: 0, raw: '3.8.0' }
         };
         const python38PyEnv_temp2_duplicateNameAsTemp1: PythonEnvironment = {
             uri: Uri.file(
@@ -393,7 +393,7 @@ import { noop } from '../../../platform/common/utils/misc';
             envName: 'temp2',
             envType: EnvironmentType.Pyenv,
             sysVersion: '3.8.0',
-            version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
+            version: { major: 3, minor: 8, patch: 0, raw: '3.8.0' }
         };
         const python38PyEnv_temp3_duplicateNameAsTemp1: PythonEnvironment = {
             uri: Uri.file(
@@ -404,7 +404,7 @@ import { noop } from '../../../platform/common/utils/misc';
             envName: 'temp3',
             envType: EnvironmentType.Pyenv,
             sysVersion: '3.8.11',
-            version: { major: 3, minor: 8, patch: 11, build: [], prerelease: [], raw: '3.8.11' }
+            version: { major: 3, minor: 8, patch: 11, raw: '3.8.11' }
         };
         /**
          * Identical to python38PyEnv_temp2_duplicateNameAsTemp1 & python38PyEnv_temp2_duplicateNameAsTemp2
@@ -419,7 +419,7 @@ import { noop } from '../../../platform/common/utils/misc';
             envName: 'temp4',
             envType: EnvironmentType.Pyenv,
             sysVersion: '3.8.0',
-            version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
+            version: { major: 3, minor: 8, patch: 0, raw: '3.8.0' }
         };
         const duplicate1OfPython38PyEnv_temp1 = python38PyEnv_temp1;
         const python38VenvEnv: PythonEnvironment = {
@@ -431,7 +431,7 @@ import { noop } from '../../../platform/common/utils/misc';
             envName: '.venv',
             envType: EnvironmentType.VirtualEnv,
             sysVersion: '3.8.0',
-            version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
+            version: { major: 3, minor: 8, patch: 0, raw: '3.8.0' }
         };
         const condaEnv1: PythonEnvironment = {
             uri: Uri.file(isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python'),
@@ -440,7 +440,7 @@ import { noop } from '../../../platform/common/utils/misc';
             displayName: 'Conda Env1 3.6',
             envType: EnvironmentType.Conda,
             sysVersion: '3.6.0',
-            version: { major: 3, minor: 6, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
+            version: { major: 3, minor: 6, patch: 0, raw: '3.6.0' }
         };
         const javaKernelSpec: KernelSpec.ISpecModel = {
             argv: ['java', 'xyz.jar', '{connection_file}', 'moreargs'],

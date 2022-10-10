@@ -58,7 +58,7 @@ suite('DataScience - JupyterKernelService', () => {
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/bin/python3'),
                 sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '0'
         },
@@ -95,7 +95,7 @@ suite('DataScience - JupyterKernelService', () => {
                         displayName: 'Python 3 Environment',
                         path: '/usr/bin/python3',
                         sysPrefix: 'python',
-                        version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                        version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
                     }
                 }
             },
@@ -103,7 +103,7 @@ suite('DataScience - JupyterKernelService', () => {
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/bin/python3'),
                 sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '2'
         },
@@ -133,7 +133,7 @@ suite('DataScience - JupyterKernelService', () => {
                 displayName: 'Python 2 Environment',
                 uri: Uri.file('/usr/bin/python'),
                 sysPrefix: 'python',
-                version: { major: 2, minor: 7, raw: '2.7', build: ['0'], patch: 0, prerelease: ['0'] }
+                version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
             },
             id: '4'
         },
@@ -151,7 +151,7 @@ suite('DataScience - JupyterKernelService', () => {
                         displayName: 'Python 3 Environment',
                         path: '/usr/bin/python3',
                         sysPrefix: 'python',
-                        version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                        version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
                     }
                 }
             },
@@ -159,7 +159,7 @@ suite('DataScience - JupyterKernelService', () => {
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/bin/python3'),
                 sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '5'
         },
@@ -189,7 +189,7 @@ suite('DataScience - JupyterKernelService', () => {
                 displayName: 'Python 2 Environment',
                 uri: Uri.file('/usr/bin/python'),
                 sysPrefix: 'python',
-                version: { major: 2, minor: 7, raw: '2.7', build: ['0'], patch: 0, prerelease: ['0'] }
+                version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
             },
             id: '7'
         },
@@ -207,7 +207,7 @@ suite('DataScience - JupyterKernelService', () => {
                         displayName: 'Python 3 Environment',
                         path: '/usr/bin/python3',
                         sysPrefix: 'python',
-                        version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                        version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
                     }
                 }
             },
@@ -215,7 +215,7 @@ suite('DataScience - JupyterKernelService', () => {
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/bin/python3'),
                 sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '8'
         },
@@ -245,7 +245,7 @@ suite('DataScience - JupyterKernelService', () => {
                 displayName: 'Python 2 Environment',
                 uri: Uri.file('/usr/bin/python'),
                 sysPrefix: 'python',
-                version: { major: 2, minor: 7, raw: '2.7', build: ['0'], patch: 0, prerelease: ['0'] }
+                version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
             },
             id: '10'
         },
@@ -292,7 +292,7 @@ suite('DataScience - JupyterKernelService', () => {
                         displayName: 'Python 3 Environment',
                         path: '/usr/don/home/envs/sample/bin/python',
                         sysPrefix: 'python',
-                        version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                        version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
                     }
                 },
                 env: {
@@ -303,7 +303,7 @@ suite('DataScience - JupyterKernelService', () => {
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
                 sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '12'
         },
@@ -321,7 +321,7 @@ suite('DataScience - JupyterKernelService', () => {
                         displayName: 'Python 3 Environment',
                         path: '/usr/don/home/envs/sample/bin/python',
                         sysPrefix: 'python',
-                        version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                        version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
                     }
                 },
                 env: {
@@ -332,7 +332,7 @@ suite('DataScience - JupyterKernelService', () => {
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
                 sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '13'
         },
@@ -350,7 +350,7 @@ suite('DataScience - JupyterKernelService', () => {
                         displayName: 'Python 3 Environment',
                         path: '/usr/don/home/envs/sample/bin/python',
                         sysPrefix: 'python',
-                        version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                        version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
                     }
                 },
                 env: {
@@ -361,7 +361,7 @@ suite('DataScience - JupyterKernelService', () => {
                 displayName: 'Python 3 Environment',
                 uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
                 sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
+                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '14'
         }
