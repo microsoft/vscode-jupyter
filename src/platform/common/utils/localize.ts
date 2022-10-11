@@ -537,13 +537,6 @@ export namespace DataScience {
             },
             'The kernel died. Error: {0}... View Jupyter [log](command:jupyter.viewOutput) for further details.'
         );
-    export const untrustedKernelSpecsHidden = () =>
-        localize(
-            'DataScience.untrustedKernelSpecsHidden',
-            'Kernels found in an insecure location have not been loaded.'
-        );
-    export const updateSettingToTrustKernelSpecs = () =>
-        localize('DataScience.updateSettingToTrustKernelSpecs', 'Update setting to trust kernels');
     export const kernelDiedWithoutError = () =>
         localize(
             {
@@ -551,6 +544,11 @@ export namespace DataScience {
                 comment: ['{Locked="command:jupyter.viewOutput"}', '{Locked="vscodeJupyterKernelCrash"}']
             },
             "The kernel '{0}' died. Click [here](https://aka.ms/vscodeJupyterKernelCrash) for more info. View Jupyter [log](command:jupyter.viewOutput) for further details."
+        );
+    export const failedToStartAnUntrustedKernelSpec = () =>
+        localize(
+            'DataScience.failedToStartAnUntrustedKernelSpec',
+            "The kernel '{0}' was not started as it is located in an insecure location '{1}'.  \nClick [here](https://aka.ms/JupyterTrustedKernelPaths) for further details, optionally update the setting [jupyter.kernels.trusted](command:workbench.action.openSettings?[\"jupyter.kernels.trusted\"]) to trust the kernel."
         );
     export const kernelDiedWithoutErrorAndAutoRestarting = () =>
         localize(

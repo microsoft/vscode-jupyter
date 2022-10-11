@@ -61,7 +61,6 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { CondaService } from '../../../platform/common/process/condaService.node';
 import { noop } from '../../../platform/common/utils/misc';
-import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -230,15 +229,12 @@ import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
             when(fs.copy(anything(), anything())).thenResolve();
             when(fs.copy(anything(), anything(), anything())).thenResolve();
             when(fs.exists(anything())).thenResolve(true);
-            const trustedKernelSpecs = mock<ITrustedKernelPaths>();
-            when(trustedKernelSpecs.isTrusted(anything())).thenReturn(true);
             const nonPythonKernelSpecFinder = new LocalKnownPathKernelSpecFinder(
                 instance(fs),
                 instance(workspaceService),
                 jupyterPaths,
                 instance(extensionChecker),
-                instance(memento),
-                instance(trustedKernelSpecs)
+                instance(memento)
             );
             when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2', anything())).thenReturn([]);
             when(memento.get('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenReturn([]);
@@ -265,8 +261,7 @@ import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
                     jupyterPaths,
                     instance(extensionChecker),
                     nonPythonKernelSpecFinder,
-                    instance(memento),
-                    instance(trustedKernelSpecs)
+                    instance(memento)
                 ),
                 instance(memento),
                 instance(fs),
@@ -277,8 +272,7 @@ import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
                 instance(interpreterService),
                 instance(condaService),
                 instance(extensions),
-                instance(workspaceService),
-                instance(trustedKernelSpecs)
+                instance(workspaceService)
             );
             localKernelFinder.activate().then(noop, noop);
 
