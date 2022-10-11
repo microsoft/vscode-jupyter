@@ -29,7 +29,6 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { ContributedKernelFinderKind } from '../../internalTypes';
-import { ITrustedKernelPaths } from './types';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -68,8 +67,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(CondaService) private readonly condaService: CondaService,
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(ITrustedKernelPaths) private readonly trustedKernelSpecPaths: ITrustedKernelPaths
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {
         this._initializedPromise = new Promise<void>((resolve) => {
             this._initializeResolve = resolve;
@@ -342,12 +340,6 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
                 return this.fs.exists(kernel.interpreter.uri);
 
             case 'startUsingLocalKernelSpec':
-                if (
-                    kernel.kernelSpec.specFile &&
-                    !this.trustedKernelSpecPaths.isTrusted(Uri.file(kernel.kernelSpec.specFile))
-                ) {
-                    return false;
-                }
                 // Spec files have to still exist and interpreters have to exist
                 const promiseSpec = kernel.kernelSpec.specFile
                     ? this.fs.exists(Uri.file(kernel.kernelSpec.specFile))
