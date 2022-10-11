@@ -299,11 +299,8 @@ Expand each section to see more information about that event.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `pythonEnvironmentVersion`?: `string`  
         Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
         Common to most of the events.  
@@ -608,11 +605,8 @@ Expand each section to see more information about that event.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `pythonEnvironmentVersion`?: `string`  
         Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
         Common to most of the events.  
@@ -743,11 +737,8 @@ Expand each section to see more information about that event.
                 - `PipEnv`  
                 - `Pyenv`  
                 - `Venv`  
-                - `WindowsStore`  
                 - `Poetry`  
                 - `VirtualEnvWrapper`  
-                - `Global`  
-                - `System`  
             - `pythonEnvironmentVersion`?: `string`  
             Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
             Common to most of the events.  
@@ -837,11 +828,8 @@ Expand each section to see more information about that event.
                 - `PipEnv`  
                 - `Pyenv`  
                 - `Venv`  
-                - `WindowsStore`  
                 - `Poetry`  
                 - `VirtualEnvWrapper`  
-                - `Global`  
-                - `System`  
             - `pythonEnvironmentVersion`?: `string`  
             Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
             Common to most of the events.  
@@ -994,11 +982,8 @@ Expand each section to see more information about that event.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `pythonEnvironmentVersion`?: `string`  
         Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
         Common to most of the events.  
@@ -1397,11 +1382,8 @@ Expand each section to see more information about that event.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `pythonEnvironmentVersion`?: `string`  
         Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
         Common to most of the events.  
@@ -1479,11 +1461,8 @@ Expand each section to see more information about that event.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `pythonEnvironmentVersion`?: `string`  
         Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
         Common to most of the events.  
@@ -1875,11 +1854,8 @@ Expand each section to see more information about that event.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `failed`: `boolean`  
         Whether the env variables were fetched successfully or not.  
         - `reason`?: `<see below>`  
@@ -2394,11 +2370,8 @@ Expand each section to see more information about that event.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `pythonEnvironmentVersion`?: `string`  
         Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
         Common to most of the events.  
@@ -2536,11 +2509,8 @@ Expand each section to see more information about that event.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `resourceHash`?: `string`  
         Hash of the resource (notebook.uri or pythonfile.uri associated with this).  
         If we run the same notebook tomorrow, the hash will be the same.  
@@ -2640,11 +2610,8 @@ Expand each section to see more information about that event.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `pythonEnvironmentVersion`?: `string`  
         Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
         Common to most of the events.  
@@ -2743,11 +2710,8 @@ Expand each section to see more information about that event.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `pythonEnvironmentVersion`?: `string`  
         Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
         Common to most of the events.  
@@ -2837,11 +2801,8 @@ Expand each section to see more information about that event.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `pythonEnvironmentVersion`?: `string`  
         Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
         Common to most of the events.  
@@ -2923,11 +2884,8 @@ Expand each section to see more information about that event.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `pythonEnvironmentVersion`?: `string`  
         Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
         Common to most of the events.  
@@ -3031,11 +2989,8 @@ In such cases we do not notify user of any failures or the like.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `pythonEnvironmentVersion`?: `string`  
         Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
         Common to most of the events.  
@@ -3223,11 +3178,8 @@ In such cases we do not notify user of any failures or the like.
             - `PipEnv`  
             - `Pyenv`  
             - `Venv`  
-            - `WindowsStore`  
             - `Poetry`  
             - `VirtualEnvWrapper`  
-            - `Global`  
-            - `System`  
         - `pythonEnvironmentVersion`?: `string`  
         Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date)  
         Common to most of the events.  

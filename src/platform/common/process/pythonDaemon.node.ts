@@ -4,14 +4,11 @@
 'use strict';
 
 import { ChildProcess } from 'child_process';
-import { MessageConnection, RequestType, RequestType0 } from 'vscode-jsonrpc';
-import { PythonExecInfo } from '../../pythonEnvironments/exec';
-import { InterpreterInformation, PythonEnvironment } from '../../pythonEnvironments/info';
-import { extractInterpreterInfo } from '../../pythonEnvironments/info/interpreter.node';
+import { MessageConnection, RequestType } from 'vscode-jsonrpc';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { traceWarning } from '../../logging';
 import { IPlatformService } from '../platform/types';
 import { BasePythonDaemon, ConnectionClosedError, DaemonError } from './baseDaemon.node';
-import { PythonEnvInfo } from './internal/scripts/index.node';
 import {
     IPythonDaemonExecutionService,
     IPythonExecutionService,
@@ -33,38 +30,6 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
         connection: MessageConnection
     ) {
         super(pythonExecutionService, platformService, interpreter, proc, connection);
-    }
-    public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
-        try {
-            this.throwIfRPCConnectionIsDead();
-            const request = new RequestType0<PythonEnvInfo & ErrorResponse, void>('get_interpreter_information');
-            const response = await this.sendRequestWithoutArgs(request);
-            if (response.error) {
-                throw Error(response.error);
-            }
-            return extractInterpreterInfo(this.interpreter.uri, response);
-        } catch (ex) {
-            traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
-            return this.pythonExecutionService.getInterpreterInformation();
-        }
-    }
-    public async getExecutablePath(): Promise<string> {
-        try {
-            this.throwIfRPCConnectionIsDead();
-            type ExecutablePathResponse = ErrorResponse & { path: string };
-            const request = new RequestType0<ExecutablePathResponse, void>('get_executable');
-            const response = await this.sendRequestWithoutArgs(request);
-            if (response.error) {
-                throw new DaemonError(response.error);
-            }
-            return response.path;
-        } catch (ex) {
-            traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
-            return this.pythonExecutionService.getExecutablePath();
-        }
-    }
-    public getExecutionInfo(pythonArgs?: string[]): PythonExecInfo {
-        return this.pythonExecutionService.getExecutionInfo(pythonArgs);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         try {

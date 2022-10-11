@@ -489,11 +489,7 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
                 kernelConnection.interpreter?.envPath
             )} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         }
-    } else if (
-        kernelConnection.interpreter?.envType === EnvironmentType.Global ||
-        kernelConnection.interpreter?.envType === EnvironmentType.WindowsStore ||
-        kernelConnection.interpreter?.envType === EnvironmentType.System
-    ) {
+    } else if (kernelConnection.interpreter?.envType === EnvironmentType.Unknown) {
         installerCommand = `${getFilePath(
             kernelConnection.interpreter.uri
         ).fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;

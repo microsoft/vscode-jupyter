@@ -83,10 +83,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
 
         this.interpreters.onDidChangeInterpreters(
             async () => {
-                // Don't do anything if the interpreter list is still being refreshed
-                if (!this.interpreters.refreshing) {
-                    this.updateCache(undefined).then(noop, noop);
-                }
+                this.updateCache(undefined).then(noop, noop);
             },
             this,
             this.disposables
@@ -190,7 +187,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
             (item) => item.envType === EnvironmentType.Conda
         ).length;
 
-        await this.interpreters.refreshInterpreters();
+        await this.interpreters.refreshInterpreters(true);
         // Possible discovering interpreters is very quick and we've already discovered it, hence refresh kernels immediately.
         await this.updateCache(undefined);
 
@@ -206,7 +203,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
                 if (condaEnvCount > previousCondaEnvCount) {
                     return true;
                 }
-                await this.interpreters.refreshInterpreters();
+                await this.interpreters.refreshInterpreters(true);
                 return false;
             },
             15_000,

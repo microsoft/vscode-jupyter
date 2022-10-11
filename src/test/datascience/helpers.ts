@@ -28,6 +28,7 @@ import { IControllerSelection } from '../../notebooks/controllers/types';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { isEqual } from '../../platform/vscode-path/resources';
+import { IWorkspaceService } from '../../platform/common/application/types';
 
 export async function openNotebook(ipynbFile: vscode.Uri) {
     traceInfo(`Opening notebook ${getFilePath(ipynbFile)}`);
@@ -129,8 +130,11 @@ export async function setActiveInterpreter(
     interpreter: vscode.Uri | undefined
 ) {
     if (interpreter) {
-        const pythonApi = await apiProvider.getApi();
-        return pythonApi.setActiveInterpreter(getFilePath(interpreter), resource);
+        const [pythonApi, api] = await Promise.all([apiProvider.getNewApi(), initialize()]);
+        // if we have one workspace, then use the Uri of the workspace folder.
+        const workspace = api.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        resource = workspace.workspaceFolders?.length === 1 ? workspace.workspaceFolders[0].uri : resource;
+        await pythonApi?.environments.updateActiveEnvironmentPath(getFilePath(interpreter), resource);
     }
 }
 
@@ -151,7 +155,10 @@ export async function submitFromPythonFile(
         await setActiveInterpreter(apiProvider, untitledPythonFile.uri, activeInterpreterPath);
         await interpreterService.refreshInterpreters();
         const interpreter = await interpreterService.getActiveInterpreter();
-        assert.ok(isEqual(interpreter?.uri, activeInterpreterPath), `Active interpreter not set`);
+        assert.ok(
+            isEqual(interpreter?.uri, activeInterpreterPath),
+            `Active interpreter not set, actual ${interpreter?.uri.fsPath}, expected ${activeInterpreterPath}`
+        );
     }
     const activeInteractiveWindow = await runCurrentFile(interactiveWindowProvider, untitledPythonFile);
     const notebook = await waitForInteractiveWindow(activeInteractiveWindow);
@@ -173,8 +180,8 @@ export async function submitFromPythonFileUsingCodeWatcher(
     const editor = await vscode.window.showTextDocument(untitledPythonFile);
     if (activeInterpreterPath) {
         const pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
-        const pythonApi = await pythonApiProvider.getApi();
-        await pythonApi.setActiveInterpreter(activeInterpreterPath.fsPath, untitledPythonFile.uri);
+        const pythonApi = await pythonApiProvider.getNewApi();
+        await pythonApi?.environments.updateActiveEnvironmentPath(activeInterpreterPath.fsPath, untitledPythonFile.uri);
     }
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
         untitledPythonFile.uri

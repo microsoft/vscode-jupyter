@@ -30,7 +30,7 @@ suite('3rd Party Kernel Service API', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo('Suite Setup VS Code Notebook - Execution');
+        traceInfo('Suite Setup 3rd Party Kernel Service API');
         this.timeout(120_000);
         try {
             api = await initialize();
@@ -40,7 +40,7 @@ suite('3rd Party Kernel Service API', function () {
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             traceInfo('Suite Setup (completed)');
         } catch (e) {
-            traceInfo('Suite Setup (failed) - Execution');
+            traceInfo('Suite Setup (failed) - 3rd Party Kernel Service API');
             await captureScreenShot('API-suite');
             throw e;
         }

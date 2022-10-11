@@ -53,7 +53,7 @@ import {
     PYTHON_LANGUAGE
 } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { traceInfo, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
+import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -468,8 +468,27 @@ async function waitForKernelToChangeImpl(
                 // eslint-disable-next-line local-rules/dont-use-fspath
                 k.connection.interpreter!.uri.fsPath.toLowerCase().includes(interpreterPath.fsPath.toLowerCase())
             );
+        if (controller) {
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            traceVerbose(`Did match a controller that matches the interpreter ${interpreterPath.fsPath}`);
+        } else {
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            traceWarning(`Did not find a controller that matches the interpreter ${interpreterPath.fsPath}`);
+        }
     }
-    traceInfo(`Switching to kernel id ${controller?.id}`);
+    traceInfo(
+        `Switching to kernel id ${controller?.id}, current controllers ${controllerRegistration.all
+            .map(
+                (c) =>
+                    `${c.kind} with id ${c.id} and ${
+                        'interpreter' in c
+                            ? // eslint-disable-next-line local-rules/dont-use-fspath
+                              `has interpreter with details = ${c.interpreter?.id}:${c.interpreter?.uri.fsPath}`
+                            : 'does not have an interpreter'
+                    } `
+            )
+            .join(', ')}`
+    );
     const isRightKernel = () => {
         const doc = vscodeNotebook.activeNotebookEditor?.notebook;
         if (!doc) {

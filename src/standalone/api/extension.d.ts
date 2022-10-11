@@ -32,11 +32,8 @@ export enum EnvironmentType {
     Pipenv = 'PipEnv',
     Pyenv = 'Pyenv',
     Venv = 'Venv',
-    WindowsStore = 'WindowsStore',
     Poetry = 'Poetry',
-    VirtualEnvWrapper = 'VirtualEnvWrapper',
-    Global = 'Global',
-    System = 'System'
+    VirtualEnvWrapper = 'VirtualEnvWrapper'
 }
 
 /**
@@ -50,13 +47,9 @@ export type PythonVersion = {
     major: number;
     minor: number;
     patch: number;
-    build: string[];
-    /**
-     * Identifies a tag in the release process (e.g. beta 1)
-     */
-    prerelease: string[];
 };
 export type PythonEnvironment = {
+    id: string;
     displayName?: string;
     uri: Uri;
     version?: PythonVersion;

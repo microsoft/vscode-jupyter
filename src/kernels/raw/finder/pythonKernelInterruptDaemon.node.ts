@@ -23,8 +23,7 @@ function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironm
     // At least this way user will  not have to exit vscode completely to delete such files/folders.
     if (
         isSupportedPythonVersion(interpreter) &&
-        (interpreter?.envType === EnvironmentType.Global ||
-            interpreter?.envType === EnvironmentType.WindowsStore ||
+        (interpreter?.envType === EnvironmentType.Unknown ||
             interpreter?.envType === EnvironmentType.Pyenv ||
             interpreter?.envType === EnvironmentType.Conda)
     ) {
@@ -95,12 +94,12 @@ export class PythonKernelInterruptDaemon {
         };
     }
 
-    private async getInterpreter(interpreter: PythonEnvironment, resource: Resource) {
+    private async getInterpreter(interpreter: PythonEnvironment) {
         if (interpreter && isBestPythonInterpreterForAnInterruptDaemon(interpreter)) {
             return interpreter;
         }
 
-        const interpreters = await this.interpreters.getInterpreters(resource);
+        const interpreters = await this.interpreters.getInterpreters();
         if (interpreters.length === 0) {
             return interpreter;
         }
@@ -115,7 +114,7 @@ export class PythonKernelInterruptDaemon {
             return this.startupPromise;
         }
         const promise = (async () => {
-            const interpreter = await this.getInterpreter(pythonEnvironment, resource);
+            const interpreter = await this.getInterpreter(pythonEnvironment);
             const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
                 interpreter,
                 resource
