@@ -68,7 +68,6 @@ import { isUri } from '../../../../platform/common/utils/misc';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../kernels/execution/helpers';
 import { BaseKernelError } from '../../../../kernels/errors/types';
 import { IControllerRegistration, IControllerSelection } from '../../../../notebooks/controllers/types';
-import { traceVerbose } from '../../../../platform/logging';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {
