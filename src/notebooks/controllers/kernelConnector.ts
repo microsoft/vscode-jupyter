@@ -38,7 +38,7 @@ import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
-import { KernelSpecNotTrustedError } from '../../kernels/errors/KernelSpecNotTrustedError';
+import { KernelSpecNotTrustedError } from '../../kernels/errors/kernelSpecNotTrustedError';
 
 /**
  * Class used for connecting a controller to an instance of an IKernel
