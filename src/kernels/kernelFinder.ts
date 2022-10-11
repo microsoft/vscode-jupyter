@@ -6,7 +6,7 @@ import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IDisposable, IDisposableRegistry, Resource } from '../platform/common/types';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { traceInfoIfCI } from '../platform/logging';
-import { IContributedKernelFinder } from './internalTypes';
+import { IContributedKernelFinder, IContributedKernelFinderInfo } from './internalTypes';
 import { IKernelFinder, KernelConnectionMetadata } from './types';
 
 /**
@@ -72,5 +72,10 @@ export class KernelFinder implements IKernelFinder {
         );
 
         return kernels;
+    }
+
+    // Give the info for what kernel finders are currently registered
+    public getRegisteredKernelFinderInfos(): IContributedKernelFinderInfo[] {
+        return this._finders as IContributedKernelFinderInfo[];
     }
 }

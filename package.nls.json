@@ -1116,6 +1116,7 @@
     "DataScience.switchToLocalKernelsTitle": "Connect to Local Kernels",
     "DataScience.switchToRemoteKernelsTitle": "Connect to a Jupyter Server",
     "DataScience.switchToAnotherRemoteKernelsTitle": "Connect to Another Jupyter Server",
+    "DataScience.pickDocumentKernelSourceTitle": "Select Kernel Source",
     "DataScience.failedToInstallPythonExtension": "Failed to install the Python Extension.",
     "DataScience.kernelPrefixForRemote": "(Remote)",
     "DataScience.pythonFileOverridesPythonPackage": "This file could potentially override an existing Python package and interfere with kernel execution, consider renaming it.",
