@@ -4,12 +4,9 @@
 import { inject, injectable } from 'inversify';
 import { TextDocument } from 'vscode';
 import { sendActivationTelemetry } from '../../platform/telemetry/envFileTelemetry.node';
-import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IWorkspaceService, IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposable, Resource } from '../../platform/common/types';
-import { Deferred } from '../../platform/common/utils/async';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceDecoratorError } from '../../platform/logging';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IFileSystem } from '../../platform/common/platform/types';
@@ -20,16 +17,13 @@ import { IFileSystem } from '../../platform/common/platform/types';
 @injectable()
 export class WorkspaceActivation implements IExtensionSingleActivationService {
     public readonly activatedWorkspaces = new Set<string>();
-    protected readonly isInterpreterSetForWorkspacePromises = new Map<string, Deferred<void>>();
     private readonly disposables: IDisposable[] = [];
     private docOpenedHandler?: IDisposable;
 
     constructor(
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem
     ) {}
 
     public async activate(): Promise<void> {
@@ -56,11 +50,6 @@ export class WorkspaceActivation implements IExtensionSingleActivationService {
             return;
         }
         this.activatedWorkspaces.add(key);
-
-        // Get latest interpreter list in the background.
-        if (this.extensionChecker.isPythonExtensionActive) {
-            this.interpreterService.getInterpreters().ignoreErrors();
-        }
 
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
     }
