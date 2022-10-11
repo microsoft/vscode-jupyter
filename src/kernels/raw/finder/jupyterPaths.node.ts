@@ -381,8 +381,12 @@ export class JupyterPaths {
         return this.globalState.get<string[]>(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, []).map((s) => Uri.parse(s));
     }
 
-    private updateCachedPaths(paths: Uri[]) {
-        return this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, paths.map(Uri.toString));
+    private async updateCachedPaths(paths: Uri[]) {
+        const currentValue = this.globalState.get<string[]>(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, []);
+        const newValue = paths.map(Uri.toString);
+        if (currentValue.join(',') !== newValue.join(',')) {
+            await this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, newValue);
+        }
     }
 
     private getCachedRootPath(): Uri | undefined {
