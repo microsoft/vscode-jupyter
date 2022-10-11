@@ -125,10 +125,13 @@ export class InteractiveWindowProvider
             }
 
             const tab = interactiveWindowMapping.get(iw.uriString);
-            const notebookEditor = window.visibleNotebookEditors.find(
-                (e) => e.notebook.uri.toString() === tab?.input.uri.toString()
-            );
-            if (!notebookEditor) {
+
+            // const notebookEditor = window.visibleNotebookEditors.find(
+            //     (editor) => editor.notebook.uri.toString() === tab?.input.uri.toString()
+            // );
+            // var editorOrTab = notebookEditor ? notebookEditor : tab;
+
+            if (!tab) {
                 return;
             }
 
@@ -137,7 +140,7 @@ export class InteractiveWindowProvider
                 iw.owner !== undefined ? Uri.from(iw.owner) : undefined,
                 iw.mode,
                 undefined,
-                notebookEditor,
+                tab,
                 Uri.parse(iw.inputBoxUriString)
             );
             this._windows.push(result);
@@ -172,7 +175,7 @@ export class InteractiveWindowProvider
             result = await this.create(resource, mode, connection);
         }
 
-        result.ensureInitialized();
+        await result.ensureInitialized();
 
         return result;
     }

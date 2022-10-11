@@ -49,8 +49,13 @@ import { INotebookExporter } from '../kernels/jupyter/types';
 import { IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
-import { IInteractiveWindowLoadable, IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager } from './types';
-import { generateInteractiveCode } from './helpers';
+import {
+    IInteractiveWindowLoadable,
+    IInteractiveWindowDebugger,
+    IInteractiveWindowDebuggingManager,
+    InteractiveTab
+} from './types';
+import { generateInteractiveCode, isInteractiveInputTab } from './helpers';
 import {
     IControllerRegistration,
     IControllerSelection,
@@ -111,11 +116,12 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         controller?: NotebookController;
         metadata?: KernelConnectionMetadata;
     } = {};
-
-    private _notebookUri: Uri;
-    public get notebookUri(): Uri {
-        return this._notebookUri;
+    private _notebookEditor: NotebookEditor;
+    public get notebookEditor(): NotebookEditor {
+        return this._notebookEditor;
     }
+
+    public readonly notebookUri: Uri;
 
     private readonly documentManager: IDocumentManager;
     private readonly fs: IFileSystem;
@@ -137,7 +143,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private _owner: Resource,
         public mode: InteractiveWindowMode,
         preferredController: IVSCodeNotebookController | undefined,
-        public readonly notebookEditor: NotebookEditor,
+        notebookEditorOrTab: NotebookEditor | InteractiveTab,
         public readonly inputUri: Uri
     ) {
         this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
@@ -158,7 +164,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         );
         this.isWebExtension = this.serviceContainer.get<boolean>(IsWebExtension);
         this.controllerRegistration = this.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-        this._notebookUri = notebookEditor.notebook.uri;
+        this.notebookUri = isInteractiveInputTab(notebookEditorOrTab)
+            ? notebookEditorOrTab.input.uri
+            : notebookEditorOrTab.notebook.uri;
+
+        if (!isInteractiveInputTab(notebookEditorOrTab)) {
+            this._notebookEditor = notebookEditorOrTab;
+        }
 
         if (preferredController) {
             this.currentKernelInfo = {
@@ -190,11 +202,19 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.listenForControllerSelection();
 
         this.cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
-        // Create the code generator right away to start watching the notebook
-        this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
     }
 
-    public ensureInitialized() {
+    public async ensureInitialized() {
+        const visibleEditor = window.visibleNotebookEditors.find(
+            (editor) => editor.notebook.uri.toString() === this.notebookUri.toString()
+        );
+        if (!this._notebookEditor || !visibleEditor) {
+            const document = await workspace.openNotebookDocument(this.notebookUri);
+            this._notebookEditor = await window.showNotebookDocument(document);
+
+            this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
+        }
+
         if (this.currentKernelInfo) {
             this.startKernel().ignoreErrors();
         } else {
@@ -425,7 +445,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // Ensure we hear about any controller changes so we can update our cached promises
         this.notebookControllerSelection.onControllerSelected(
             (e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) => {
-                if (e.notebook !== this.notebookEditor.notebook) {
+                if (e.notebook.uri.toString() !== this.notebookUri.toString()) {
                     return;
                 }
 
