@@ -66,7 +66,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly inputUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
     closed: Event<void>;
-    ensureInitialized(): void;
+    ensureInitialized(): Promise<void>;
     addCode(code: string, file: Uri, line: number): Promise<boolean>;
     addErrorMessage(message: string, cell: NotebookCell): Promise<void>;
     debugCode(code: string, file: Uri, line: number): Promise<boolean>;
