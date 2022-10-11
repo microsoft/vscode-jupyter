@@ -97,8 +97,9 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 // If the module name is found on CDN, then its not PII, its public information.
                 // The telemetry reporter assumes the presence of a `/` or `\` indicates these are file paths
                 // and obscures them. We don't want that, so we replace them with `_`.
+                // Replace @ as these could cause telemetry module to treat them as emails.
                 const telemetrySafeModuleName = isOnCDN
-                    ? found.moduleName.replace(/\//g, '_').replace(/\\/g, '_')
+                    ? found.moduleName.replace(/\//g, '_').replace(/\\/g, '_').replace(/@/g, '_at_')
                     : undefined;
 
                 sendTelemetryEvent(Telemetry.HashedIPyWidgetNameUsed, undefined, {
