@@ -548,7 +548,7 @@ export namespace DataScience {
     export const failedToStartAnUntrustedKernelSpec = () =>
         localize(
             'DataScience.failedToStartAnUntrustedKernelSpec',
-            "The kernel '{0}' was not started as it is located in an insecure location '{1}'.  \nClick [here](https://aka.ms/vscodeJupyterKernelCrash) for further details, optionally update the setting [jupyter.kernels.trusted](command:workbench.action.openSettings?[\"jupyter.kernels.trusted\"]) to trust the kernel."
+            "The kernel '{0}' was not started as it is located in an insecure location '{1}'.  \nClick [here](https://aka.ms/JupyterTrustedKernelPaths) for further details, optionally update the setting [jupyter.kernels.trusted](command:workbench.action.openSettings?[\"jupyter.kernels.trusted\"]) to trust the kernel."
         );
     export const kernelDiedWithoutErrorAndAutoRestarting = () =>
         localize(
