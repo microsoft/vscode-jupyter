@@ -336,7 +336,7 @@ suite('Jupyter Paths', () => {
         when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
         const jupyter_Paths = [__filename];
         process.env['JUPYTER_PATH'] = jupyter_Paths.join(path.delimiter);
-        const allUserProfilePath = (process.env['ALLUSERSPROFILE'] = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp'));
+        const allUserProfilePath = (process.env['PROGRAMDATA'] = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp'));
 
         const paths = await jupyterPaths.getKernelSpecRootPaths();
         const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');

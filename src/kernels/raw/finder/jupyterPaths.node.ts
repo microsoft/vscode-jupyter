@@ -303,8 +303,8 @@ export class JupyterPaths {
                 paths.add(winPath);
             }
 
-            if (process.env.ALLUSERSPROFILE) {
-                paths.add(Uri.file(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels')));
+            if (process.env.PROGRAMDATA) {
+                paths.add(Uri.file(path.join(process.env.PROGRAMDATA, 'jupyter', 'kernels')));
             }
         } else {
             // Unix based

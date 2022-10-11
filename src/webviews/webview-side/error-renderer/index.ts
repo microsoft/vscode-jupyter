@@ -13,36 +13,44 @@ let Localizations = {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-const handleInnerClick = (target: HTMLAnchorElement, context: RendererContext<any>) => {
+/**
+ * Handle a click on an anchor element.
+ * @return {boolean} `true` if the event has been handled, else `false`
+ */
+function handleInnerClick(target: HTMLAnchorElement, context: RendererContext<any>) {
     if (target.href && context.postMessage) {
         if (target.href.indexOf('file') === 0) {
             context.postMessage({
                 message: 'open_link',
                 payload: target.href
             });
-            return;
+            return true;
         }
         if (target.href.indexOf('vscode-notebook-cell') === 0) {
             context.postMessage({
                 message: 'open_link',
                 payload: target.href
             });
-            return;
+            return true;
+        } else if (target.href.indexOf('command:workbench.action.openSettings') === 0) {
+            // Let the webview handle this.
+            return false;
         } else if (target.href.indexOf('command') === 0) {
             context.postMessage({
                 message: 'open_link',
                 payload: target.href
             });
-            return;
+            return true;
         } else if (target.href.indexOf('https://aka.ms/') === 0) {
             context.postMessage({
                 message: 'open_link',
                 payload: target.href
             });
-            return;
+            return true;
         }
     }
-};
+    return false;
+}
 
 if (!String.prototype.format) {
     String.prototype.format = function (this: string) {
@@ -90,10 +98,9 @@ function handleANSIOutput(context: RendererContext<any>, converter: ansiToHtml, 
     }
     tracebackElm.addEventListener('click', (e) => {
         const a = e.target as HTMLAnchorElement;
-        if (a && a.href) {
+        if (a && a.href && handleInnerClick(a, context)) {
             e.stopImmediatePropagation();
             e.preventDefault();
-            handleInnerClick(a, context);
         }
     });
     return tracebackElm;

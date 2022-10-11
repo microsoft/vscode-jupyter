@@ -29,6 +29,7 @@ import { IPlatformService } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
+import { IServiceContainer } from '../../platform/ioc/types';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { ResourceSet } from '../../platform/vscode-path/map';
 import * as path from '../../platform/vscode-path/path';
@@ -65,9 +66,18 @@ export class DebuggingManager
         @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook,
         @inject(IConfigurationService) private readonly settings: IConfigurationService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IDebugService) private readonly debugService: IDebugService
+        @inject(IDebugService) private readonly debugService: IDebugService,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        super(kernelProvider, controllerLoader, controllerSelection, commandManager, appShell, vscNotebook);
+        super(
+            kernelProvider,
+            controllerLoader,
+            controllerSelection,
+            commandManager,
+            appShell,
+            vscNotebook,
+            serviceContainer
+        );
         this.runByLineCells = new ContextKey(EditorContexts.RunByLineCells, commandManager);
         this.runByLineDocuments = new ContextKey(EditorContexts.RunByLineDocuments, commandManager);
         this.debugDocuments = new ContextKey(EditorContexts.DebugDocuments, commandManager);
