@@ -27,6 +27,9 @@ import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
 import { IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { noop } from '../../platform/common/utils/misc';
 import { IControllerLoader, IControllerSelection } from '../controllers/types';
+import { KernelConnector } from '../controllers/kernelConnector';
+import { IServiceContainer } from '../../platform/ioc/types';
+import { DisplayOptions } from '../../kernels/displayOptions';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -44,7 +47,8 @@ export abstract class DebuggingManagerBase implements IDisposable {
         private readonly notebookControllerSelection: IControllerSelection,
         protected readonly commandManager: ICommandManager,
         protected readonly appShell: IApplicationShell,
-        protected readonly vscNotebook: IVSCodeNotebook
+        protected readonly vscNotebook: IVSCodeNotebook,
+        protected readonly serviceContainer: IServiceContainer
     ) {}
 
     public async activate() {
@@ -145,19 +149,21 @@ export abstract class DebuggingManagerBase implements IDisposable {
     protected async ensureKernelIsRunning(doc: NotebookDocument): Promise<IKernel | undefined> {
         await this.notebookControllerLoader.loaded;
         const controller = this.notebookControllerSelection.getSelected(doc);
-
         let kernel = this.kernelProvider.get(doc);
-        if (!kernel && controller) {
-            kernel = this.kernelProvider.getOrCreate(doc, {
-                metadata: controller.connection,
-                controller: controller?.controller,
-                resourceUri: doc.uri
-            });
+        if (controller && (!kernel || (kernel && kernel.status === 'unknown'))) {
+            kernel = await KernelConnector.connectToNotebookKernel(
+                controller.connection,
+                this.serviceContainer,
+                {
+                    notebook: doc,
+                    controller: controller.controller,
+                    resource: doc.uri
+                },
+                new DisplayOptions(false),
+                this.disposables,
+                'jupyterExtension'
+            );
         }
-        if (kernel && kernel.status === 'unknown') {
-            await kernel.start();
-        }
-
         return kernel;
     }
 

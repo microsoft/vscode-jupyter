@@ -7,10 +7,9 @@ import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { IPlatformService } from '../../../../platform/common/platform/types';
+import { TrustedKernelPaths } from '../../../../kernels/raw/finder/trustedKernelPaths.node';
 import { ITrustedKernelPaths } from '../../../../kernels/raw/finder/types';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
-import { TrustedKernelPaths } from '../../../../kernels/raw/finder/trustedKernelPaths.node';
-import { TrustedKernelPaths as TrustedKernelSpecPathsWeb } from '../../../../kernels/raw/finder/trustedKernelPaths.web';
 
 suite('Trusted Kernel paths', () => {
     suite('Desktop', () => {
@@ -73,16 +72,6 @@ suite('Trusted Kernel paths', () => {
             ]);
             assert.isTrue(trustedKernelPaths.isTrusted(Uri.file('C:/ProgramData/jupyter/kernels/a/foo.json')));
             assert.isTrue(trustedKernelPaths.isTrusted(Uri.file('C:/ProgramData/jupyter/kernels/b/foo.json')));
-        });
-    });
-    suite('Web', () => {
-        const trustedKernelPaths = new TrustedKernelSpecPathsWeb();
-        test('All paths are trusted on the web', () => {
-            assert.isTrue(trustedKernelPaths.isTrusted(Uri.file('foo')));
-            assert.isTrue(trustedKernelPaths.isTrusted(Uri.file('foo')));
-            assert.isTrue(trustedKernelPaths.isTrusted(Uri.file('C:/Something/venv/shared/jupyter/kernels/foo.json')));
-            assert.isTrue(trustedKernelPaths.isTrusted(Uri.file('C:/Windows/venv/shared/jupyter/kernels/foo.json')));
-            assert.isTrue(trustedKernelPaths.isTrusted(Uri.file('C:/Program Files/jupyter/kernels/foo.json')));
         });
     });
 });

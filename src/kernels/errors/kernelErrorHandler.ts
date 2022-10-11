@@ -453,12 +453,21 @@ function getUserFriendlyErrorMessage(error: Error | string, errorContext?: Kerne
         return getCombinedErrorMessage(errorPrefix, errorMessage);
     }
 }
+function doesErrorHaveMarkdownLinks(message: string) {
+    const markdownLinks = new RegExp(/\[([^\[]+)\]\((.*)\)/);
+    return (markdownLinks.exec(message)?.length ?? 0) > 0;
+}
 function getCombinedErrorMessage(prefix?: string, message?: string) {
     const errorMessage = [prefix || '', message || '']
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
         .join(' \n');
-    if (errorMessage.length && errorMessage.indexOf('command:jupyter.viewOutput') === -1) {
+
+    if (
+        !doesErrorHaveMarkdownLinks(errorMessage) &&
+        errorMessage.length &&
+        errorMessage.indexOf('command:jupyter.viewOutput') === -1
+    ) {
         return `${
             errorMessage.endsWith('.') ? errorMessage : errorMessage + '.'
         } \n${DataScience.viewJupyterLogForFurtherInfo()}`;

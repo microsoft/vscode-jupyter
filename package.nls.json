@@ -844,8 +844,7 @@
         "message": "Failed to interrupt the Kernel.",
         "comment": ["{Locked='Kernel'}"]
     },
-    "DataScience.updateSettingToTrustKernelSpecs": "Update setting to trust kernels",
-    "DataScience.untrustedKernelSpecsHidden": "Kernels found in an insecure location have not been loaded.",
+    "DataScience.failedToStartAnUntrustedKernelSpec": "The kernel '{0}' was not started as it is located in an insecure location '{1}'.  \nClick [here](https://aka.ms/JupyterTrustedKernelPaths) for further details, optionally update the setting [jupyter.kernels.trusted](command:workbench.action.openSettings?[\"jupyter.kernels.trusted\"]) to trust the kernel.",
     "jupyter.configuration.jupyter.kernels.trusted.markdownDescription": "Enter fully qualified paths to Kernel specification files that are to be trusted. E.g. 'C:\\Program Data\\Jupyter\\kernels\\python3\\kernel.json'.  \n**Note**: Kernels can execute code with user privileges. Click [here](https://aka.ms/JupyterTrustedKernelPaths) for further details.",
     "DataScience.kernelDied": {
         "message": "The kernel died. View Jupyter [log](command:jupyter.viewOutput) for further details. \nError: {0}...",
