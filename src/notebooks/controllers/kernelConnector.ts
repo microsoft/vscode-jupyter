@@ -37,6 +37,8 @@ import { IControllerSelection, IVSCodeNotebookController } from './types';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
+import { KernelSpecNotTrustedError } from '../../kernels/errors/KernelSpecNotTrustedError';
 
 /**
  * Class used for connecting a controller to an instance of an IKernel
@@ -383,6 +385,16 @@ export class KernelConnector {
         }
     }
 
+    private static async canStartKernel(metadata: KernelConnectionMetadata, serviceContainer: IServiceContainer) {
+        if (!isLocalConnection(metadata) || !metadata.kernelSpec.specFile) {
+            return;
+        }
+        const trustedKernelPaths = serviceContainer.get<ITrustedKernelPaths>(ITrustedKernelPaths);
+        if (!trustedKernelPaths.isTrusted(Uri.file(metadata.kernelSpec.specFile))) {
+            throw new KernelSpecNotTrustedError(metadata);
+        }
+    }
+
     private static async wrapKernelMethodImpl(
         metadata: KernelConnectionMetadata,
         initialContext: KernelAction,
@@ -401,6 +413,9 @@ export class KernelConnector {
         let currentMethod = KernelConnector.convertContextToFunction(initialContext, options);
         let currentContext = initialContext;
         let controller = 'controller' in notebookResource ? notebookResource.controller : undefined;
+        if (initialContext === 'start') {
+            await KernelConnector.canStartKernel(metadata, serviceContainer);
+        }
         while (kernel === undefined) {
             // Try to create the kernel (possibly again)
             kernel =
