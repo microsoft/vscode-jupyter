@@ -61,7 +61,11 @@ export class KernelFinder implements IKernelFinder {
         const kernels: KernelConnectionMetadata[] = [];
 
         for (const finder of this._finders) {
-            const contributedKernels = finder.listContributedKernels(resource);
+            const contributedKernels = finder.listContributedKernels(resource).map((kernelConnection) => {
+                // Tag our connections with the kernel finder info that located them
+                kernelConnection.kernelFinderInfo = finder;
+                return kernelConnection;
+            });
             kernels.push(...contributedKernels);
         }
 
