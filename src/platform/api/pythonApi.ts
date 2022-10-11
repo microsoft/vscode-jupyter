@@ -384,7 +384,7 @@ export class InterpreterService implements IInterpreterService {
             traceError(`Failed to refresh the list of interpreters`);
         }
     }
-    private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
+    private workspaceCachedActiveInterpreter = new Set<string>();
     @traceDecoratorVerbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         const stopWatch = new StopWatch();
@@ -395,48 +395,42 @@ export class InterpreterService implements IInterpreterService {
             resource = this.workspace.workspaceFolders[0].uri;
         }
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
-        let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
-        if (!promise) {
-            promise = this.getApi().then(async (api) => {
-                if (!api) {
-                    return;
-                }
-                const envPath = api.environments.getActiveEnvironmentPath(resource);
-                const env = await api.environments.resolveEnvironment(envPath);
-                return env && pythonEnvToJupyterEnv(env);
-            });
-
-            if (promise) {
-                this.workspaceCachedActiveInterpreter.set(workspaceId, promise);
-                // If there was a problem in getting the details, remove the cached info.
-                promise
-                    .then(() => {
-                        sendTelemetryEvent(
-                            Telemetry.ActiveInterpreterListingPerf,
-                            { duration: stopWatch.elapsedTime },
-                            { firstTime: true }
-                        );
-                    })
-                    .catch((ex) => {
-                        if (this.workspaceCachedActiveInterpreter.get(workspaceId) === promise) {
-                            this.workspaceCachedActiveInterpreter.delete(workspaceId);
-                        }
-                        traceWarning(`Failed to get active interpreter from Python for workspace ${workspaceId}`, ex);
-                    });
-                if (isCI || [ExtensionMode.Development, ExtensionMode.Test].includes(this.context.extensionMode)) {
-                    promise
-                        .then((item) =>
-                            traceInfo(
-                                `Active Interpreter in Python API for resource '${getDisplayPath(
-                                    resource
-                                )}' is ${getDisplayPath(item?.uri)}, EnvType: ${item?.envType}, EnvName: '${
-                                    item?.envName
-                                }', Version: ${item?.version?.raw}`
-                            )
-                        )
-                        .catch(noop);
-                }
+        const promise = this.getApi().then(async (api) => {
+            if (!api) {
+                return;
             }
+            const envPath = api.environments.getActiveEnvironmentPath(resource);
+            const env = await api.environments.resolveEnvironment(envPath);
+            return env && pythonEnvToJupyterEnv(env);
+        });
+
+        // If there was a problem in getting the details, remove the cached info.
+        promise
+            .then(() => {
+                if (!this.workspaceCachedActiveInterpreter.has(workspaceId)) {
+                    this.workspaceCachedActiveInterpreter.add(workspaceId);
+                    sendTelemetryEvent(
+                        Telemetry.ActiveInterpreterListingPerf,
+                        { duration: stopWatch.elapsedTime },
+                        { firstTime: true }
+                    );
+                }
+            })
+            .catch((ex) => {
+                traceWarning(`Failed to get active interpreter from Python for workspace ${workspaceId}`, ex);
+            });
+        if (isCI || [ExtensionMode.Development, ExtensionMode.Test].includes(this.context.extensionMode)) {
+            promise
+                .then((item) =>
+                    traceInfo(
+                        `Active Interpreter in Python API for resource '${getDisplayPath(
+                            resource
+                        )}' is ${getDisplayPath(item?.uri)}, EnvType: ${item?.envType}, EnvName: '${
+                            item?.envName
+                        }', Version: ${item?.version?.raw}`
+                    )
+                )
+                .catch(noop);
         }
         return promise;
     }

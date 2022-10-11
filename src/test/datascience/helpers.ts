@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
@@ -134,8 +134,7 @@ export async function setActiveInterpreter(
         // if we have one workspace, then use the Uri of the workspace folder.
         const workspace = api.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         resource = workspace.workspaceFolders?.length === 1 ? workspace.workspaceFolders[0].uri : resource;
-        traceVerbose(`Updating Python Environment to ${interpreter.fsPath} for ${resource?.toString()}`);
-        return pythonApi?.environments.updateActiveEnvironmentPath(getFilePath(interpreter), resource);
+        await pythonApi?.environments.updateActiveEnvironmentPath(getFilePath(interpreter), resource);
     }
 }
 

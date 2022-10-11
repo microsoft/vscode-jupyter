@@ -8,7 +8,7 @@ import { registerTypes as registerApiTypes } from './api/serviceRegistry.node';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.node';
 import { registerTypes as registerTerminalTypes } from './terminals/serviceRegistry.node';
 import { DataScienceStartupTime } from './common/constants';
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
+import { IExtensionSyncActivationService } from './activation/types';
 import { IConfigurationService, IDataScienceCommandListener } from './common/types';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { ProgressReporter } from './progress/progressReporter';
@@ -35,7 +35,6 @@ import { IInterpreterPackages, IReservedPythonNamedProvider } from './interprete
 import { ReservedNamedProvider } from './interpreter/reservedNamedProvider.node';
 import { InterpreterPackages } from './interpreter/interpreterPackages.node';
 import { WorkspaceInterpreterTracker } from './interpreter/workspaceInterpreterTracker';
-import { InterpreterCountTracker } from './interpreter/interpreterCountTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
@@ -68,9 +67,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         WorkspaceInterpreterTracker
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        InterpreterCountTracker
     );
 }
