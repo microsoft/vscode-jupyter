@@ -42,12 +42,12 @@ import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { takeTopRankKernel } from './localKernelFinder.unit.test';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../../kernels/common/commonFinder';
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { IExtensions } from '../../../platform/common/types';
+import { takeTopRankKernel } from '../../../kernels/raw/finder/localKernelFinder.unit.test';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];

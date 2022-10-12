@@ -29,6 +29,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { ContributedKernelFinderKind } from '../../internalTypes';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -138,7 +139,11 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         try {
             await Promise.all([this.nonPythonKernelFinder.initialized, this.pythonKernelFinder.initialized]);
             let kernels: LocalKernelConnectionMetadata[] = [];
-            kernels = kernels.concat(this.nonPythonKernelFinder.kernels).concat(this.pythonKernelFinder.kernels);
+            // Exclude python kernel specs (we'll get that from the pythonKernelFinder)
+            const nonPythonKernels = this.nonPythonKernelFinder.kernels.filter(
+                (item) => item.kernelSpec.language !== PYTHON_LANGUAGE
+            );
+            kernels = kernels.concat(nonPythonKernels).concat(this.pythonKernelFinder.kernels);
             await this.writeToCache(kernels);
         } catch (ex) {
             traceError(`Exception Saving loaded kernels: ${ex}`);
