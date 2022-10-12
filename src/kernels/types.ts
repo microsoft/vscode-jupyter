@@ -621,7 +621,7 @@ export interface IKernelFinder {
     /*
      * Return basic info on all currently registered kernel finders
      */
-    getRegisteredKernelFinderInfos(): IContributedKernelFinderInfo[];
+    registered: IContributedKernelFinderInfo[];
 }
 
 export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';

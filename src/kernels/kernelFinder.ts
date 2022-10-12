@@ -79,7 +79,7 @@ export class KernelFinder implements IKernelFinder {
     }
 
     // Give the info for what kernel finders are currently registered
-    public getRegisteredKernelFinderInfos(): IContributedKernelFinderInfo[] {
+    public get registered(): IContributedKernelFinderInfo[] {
         return this._finders as IContributedKernelFinderInfo[];
     }
 }

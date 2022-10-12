@@ -24,7 +24,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
     ) {}
 
     public async selectKernelSource(notebook: NotebookDocument): Promise<void> {
-        const quickPickItems = this.kernelFinder.getRegisteredKernelFinderInfos().map(this.toQuickPickItem);
+        const quickPickItems = this.kernelFinder.registered.map(this.toQuickPickItem);
         const selectedItem = await this.applicationShell.showQuickPick(quickPickItems);
 
         // If we selected something persist that value
