@@ -10,13 +10,12 @@ import { IExtensionSyncActivationService } from '../../../platform/activation/ty
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { IControllerRegistration, INotebookKernelSourceTracker, IVSCodeNotebookController } from '../types';
 
-// Tracks what kernel source is assigned to which document, also will persist that data
+// Controls which kernel source is associated with each document, and controls hiding and showing kernel sources for them.
 @injectable()
 export class NotebookKernelSourceTracker implements INotebookKernelSourceTracker, IExtensionSyncActivationService {
-    // IANHU: Maybe go back to weak map here?
     private documentSourceMapping: Map<NotebookDocument, IContributedKernelFinderInfo | undefined> = new Map<
         NotebookDocument,
-        IContributedKernelFinderInfo
+        IContributedKernelFinderInfo | undefined
     >();
 
     constructor(
@@ -43,6 +42,7 @@ export class NotebookKernelSourceTracker implements INotebookKernelSourceTracker
         this.updateControllerAffinity(notebook, kernelSource);
     }
 
+    // When a controller is created, see if it shows or hides for all open documents
     private onCreatedController(controller: IVSCodeNotebookController) {
         this.documentSourceMapping.forEach((finderInfo, notebook) => {
             if (
@@ -59,36 +59,34 @@ export class NotebookKernelSourceTracker implements INotebookKernelSourceTracker
     }
 
     private updateControllerAffinity(notebook: NotebookDocument, kernelSource: IContributedKernelFinderInfo) {
-        const nonAssociatedControllers = this.controllerRegistration.registered.filter((controller) => {
-            if (
-                !controller.connection.kernelFinderInfo ||
-                controller.connection.kernelFinderInfo.id !== kernelSource.id
-            ) {
-                return true;
-            }
-            return false;
-        });
+        // Find the controller associated with the given kernel source
+        const nonAssociatedControllers = this.controllerRegistration.registered.filter(
+            (controller) => !this.controllerMatchesKernelSource(controller, kernelSource)
+        );
+        const associatedControllers = this.controllerRegistration.registered.filter((controller) =>
+            this.controllerMatchesKernelSource(controller, kernelSource)
+        );
 
-        const associatedControllers = this.controllerRegistration.registered.filter((controller) => {
-            if (
-                !controller.connection.kernelFinderInfo ||
-                controller.connection.kernelFinderInfo.id !== kernelSource.id
-            ) {
-                return false;
-            }
-            return true;
-        });
+        // At this point we need to pipe in our suggestion engine, right now everything will end up with default priority
 
-        // IANHU: Bug here. First off, the above reversal is ugly. Second when reassociating everything is set to default
-        // at this point we should do a new suggested check to see our best suggestion from what is available
-
+        // Change the visibility on our controllers for that document
         nonAssociatedControllers.forEach((controller) => {
             this.disassociateController(notebook, controller);
         });
-
         associatedControllers.forEach((controller) => {
             this.associateController(notebook, controller);
         });
+    }
+
+    // Matching function to filter if controllers match a specific source
+    private controllerMatchesKernelSource(
+        controller: IVSCodeNotebookController,
+        kernelSource: IContributedKernelFinderInfo
+    ): boolean {
+        if (controller.connection.kernelFinderInfo && controller.connection.kernelFinderInfo.id === kernelSource.id) {
+            return true;
+        }
+        return false;
     }
 
     private associateController(notebook: NotebookDocument, controller: IVSCodeNotebookController) {
@@ -101,15 +99,20 @@ export class NotebookKernelSourceTracker implements INotebookKernelSourceTracker
 
     private onDidOpenNotebookDocument(notebook: NotebookDocument) {
         this.documentSourceMapping.set(notebook, undefined);
-        // IANHU: Default thing to use here? We should persist this, but for now when it's opened
-        // just disassociate from everything, then we can add them in as we select kernel sources
+
+        // We need persistance here moving forward, but for now, we just default to a fresh state of
+        // not having a kernel source selected when we first open a document.
         this.controllerRegistration.registered.forEach((controller) => {
             this.disassociateController(notebook, controller);
         });
     }
 
     private onDidCloseNotebookDocument(notebook: NotebookDocument) {
-        // IANHU: Also need to reassociate here?
+        // Associate controller back to default on close
+        this.controllerRegistration.registered.forEach((controller) => {
+            this.associateController(notebook, controller);
+        });
+
         this.documentSourceMapping.delete(notebook);
     }
 }

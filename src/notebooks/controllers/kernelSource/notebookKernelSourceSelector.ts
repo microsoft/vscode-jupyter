@@ -14,6 +14,7 @@ interface KernelFinderQuickPickItem extends QuickPickItem {
     kernelFinderInfo: IContributedKernelFinderInfo;
 }
 
+// Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
 export class NotebookKernelSourceSelector implements INotebookKernelSourceSelector {
     constructor(

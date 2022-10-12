@@ -42,7 +42,7 @@ export class PickDocumentKernelSourceCommand implements IExtensionSingleActivati
     }
 
     private async pickDocumentKernelSource(_notebook?: NotebookDocument) {
-        // IANHU: Can we get context here? Do we know that document triggered this? As far as I know, it might not be the active document
+        // We want to get the context here from the command, but that needs a fix on the core side: https://github.com/microsoft/vscode/issues/161445
         if (window.activeNotebookEditor && this.configService.getSettings().kernelPickerType === 'Insiders') {
             await this.kernelSourceSelector.selectKernelSource(window.activeNotebookEditor.notebook);
         }
