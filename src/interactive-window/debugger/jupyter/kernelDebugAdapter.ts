@@ -9,7 +9,7 @@ import { DebugAdapterTracker, DebugSession, NotebookDocument, Uri } from 'vscode
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernel, IKernelConnectionSession } from '../../../kernels/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
-import { IDumpCellResponse, IDebugLocationTrackerFactory } from '../../../notebooks/debugger/debuggingTypes';
+import { IDebugLocationTrackerFactory } from '../../../notebooks/debugger/debuggingTypes';
 import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { getInteractiveCellMetadata } from '../../../interactive-window/helpers';
 import { KernelDebugAdapterBase } from '../../../notebooks/debugger/kernelDebugAdapterBase';
@@ -90,7 +90,8 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             const response = await this.session.customRequest('dumpCell', { code });
 
             // We know jupyter will strip out leading white spaces, hence take that into account.
-            const norm = path.normalize((response as IDumpCellResponse).sourcePath);
+            const norm = KernelDebugAdapterBase.normalizeFsAware(response.sourcePath);
+            traceInfoIfCI(`KernelDebugAdapter::dumpCell ${response.sourcePath} -> ${norm}`);
             this.fileToCell.set(norm, Uri.parse(metadata.interactive.uristring));
 
             // If this cell doesn't have a cell marker, then

@@ -264,6 +264,23 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         });
     }
 
+    static normalizeFsAware(sourcePath: string) {
+        // If the kernel runs on Windows, then do windows-style path normalization
+        // (see https://github.com/ipython/ipykernel/issues/995).
+        let norm = '';
+        if (sourcePath.match(/^[A-Za-z]:/)) {
+            norm = path.win32.normalize(sourcePath);
+        } else {
+            traceInfoIfCI(
+                `KernelDebugAdapter::normalizeFsAware ${sourcePath} would normalize to ${path.posix.normalize(
+                    sourcePath
+                )}`
+            );
+            norm = path.posix.normalize(sourcePath);
+        }
+        return norm;
+    }
+
     private lookupCellByLongName(sourcePath: string) {
         if (!this.platformService.isWindows) {
             return undefined;
