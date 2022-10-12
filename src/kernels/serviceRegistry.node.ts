@@ -46,6 +46,8 @@ import { PythonKernelInterruptDaemon } from './raw/finder/pythonKernelInterruptD
 import { LocalKernelFinder } from './raw/finder/localKernelFinder.node';
 import { DebugStartupCodeProvider } from './debuggerStartupCodeProvider';
 import { KernelWorkingFolder } from './kernelWorkingFolder.node';
+import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.node';
+import { ITrustedKernelPaths } from './raw/finder/types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
@@ -75,6 +77,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
 
     serviceManager.addSingleton<JupyterPaths>(JupyterPaths, JupyterPaths);
+    serviceManager.addSingleton<ITrustedKernelPaths>(ITrustedKernelPaths, TrustedKernelPaths);
     serviceManager.addSingleton<LocalKnownPathKernelSpecFinder>(
         LocalKnownPathKernelSpecFinder,
         LocalKnownPathKernelSpecFinder

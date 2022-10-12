@@ -89,6 +89,7 @@ import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../..
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -174,7 +175,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }>();
 
         traceVerbose(
-            `Creating notebook controller for ${kernelConnection.kind} (id=${kernelConnection.id}) with name ${label}`
+            `Creating notebook controller for ${kernelConnection.kind} (id=${kernelConnection.id}) with name '${label}'`
         );
         this.controller = this.notebookApi.createNotebookController(
             id,
@@ -646,9 +647,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             return;
         }
         // Auto start the local kernels.
+        const trustedKernelPaths = this.serviceContainer.get<ITrustedKernelPaths>(ITrustedKernelPaths);
         if (
             !this.configuration.getSettings(undefined).disableJupyterAutoStart &&
-            isLocalConnection(this.kernelConnection)
+            isLocalConnection(this.kernelConnection) &&
+            this.kernelConnection.kernelSpec.specFile &&
+            trustedKernelPaths.isTrusted(Uri.file(this.kernelConnection.kernelSpec.specFile))
         ) {
             // Startup could fail due to missing dependencies or the like.
             this.connectToKernel(document, new DisplayOptions(true)).catch(noop);

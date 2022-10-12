@@ -37,8 +37,8 @@ import { ResourceSet } from '../../../platform/vscode-path/map';
 /**
  * Returns all Python kernels and any related kernels registered in the python environment.
  * If Python extension is not installed, this will return all Python kernels registered globally.
- * If Python extension is intalled,
- *     - This will return Python kernels regsitered by us in global locations.
+ * If Python extension is installed,
+ *     - This will return Python kernels registered by us in global locations.
  *     - This will return Python interpreters that can be started as kernels.
  *     - This will return any non-python kernels that are registered in Python environments (e.g. Java kernels within a conda environment)
  */
@@ -77,7 +77,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         cancelToken?: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
-            ? await this.interpreterService.getInterpreters(resource)
+            ? await this.interpreterService.getInterpreters()
             : [];
 
         traceInfoIfCI(`Listing kernels for ${interpreters.length} interpreters`);

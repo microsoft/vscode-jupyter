@@ -655,7 +655,7 @@ export function createOutputWithErrorMessageForDisplay(errorMessage: string) {
         return;
     }
     // If we have markdown links to run a command, turn that into a link.
-    const regex = /\[(?<name>.*)\]\((?<command>command:\S*)\)/gm;
+    const regex = /\[([^\[\]]*)\]\((.*?)\)/gm;
     let matches: RegExpExecArray | undefined | null;
     while ((matches = regex.exec(errorMessage)) !== null) {
         if (matches.length === 3) {

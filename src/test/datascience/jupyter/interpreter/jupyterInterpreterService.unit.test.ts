@@ -35,11 +35,13 @@ suite('DataScience - Jupyter Interpreter Service', () => {
     const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
     const pythonInterpreter: PythonEnvironment = {
         uri: Uri.file('some path'),
+        id: Uri.file('some path').fsPath,
         sysPrefix: '',
         sysVersion: ''
     };
     const secondPythonInterpreter: PythonEnvironment = {
         uri: Uri.file('second interpreter path'),
+        id: Uri.file('second interpreter path').fsPath,
         sysPrefix: '',
         sysVersion: ''
     };
@@ -60,8 +62,8 @@ suite('DataScience - Jupyter Interpreter Service', () => {
             instance(interpreterService),
             instance(appShell)
         );
-        when(interpreterService.getInterpreterDetails(pythonInterpreter.uri, undefined)).thenResolve(pythonInterpreter);
-        when(interpreterService.getInterpreterDetails(secondPythonInterpreter.uri, undefined)).thenResolve(
+        when(interpreterService.getInterpreterDetails(pythonInterpreter.uri)).thenResolve(pythonInterpreter);
+        when(interpreterService.getInterpreterDetails(secondPythonInterpreter.uri)).thenResolve(
             secondPythonInterpreter
         );
         when(memento.update(anything(), anything())).thenResolve();

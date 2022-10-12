@@ -68,6 +68,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix'
                 }
             });
@@ -85,8 +86,9 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
-                    envType: EnvironmentType.Global
+                    envType: EnvironmentType.Unknown
                 }
             });
             assert.strictEqual(name, 'kspecname');
@@ -103,6 +105,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something',
@@ -123,6 +126,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
@@ -143,6 +147,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something',
@@ -163,6 +168,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
@@ -201,6 +207,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit'
@@ -221,10 +228,11 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
-                    envType: EnvironmentType.Global
+                    envType: EnvironmentType.Unknown
                 }
             });
             assert.strictEqual(name, 'kspecname');
@@ -242,6 +250,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     version: undefined,
@@ -264,6 +273,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
@@ -285,15 +295,14 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
                     version: {
-                        build: [],
                         major: 9,
                         minor: 8,
                         patch: 1,
-                        prerelease: [],
                         raw: '9.8.7.6-pre'
                     },
                     envType: EnvironmentType.Conda
@@ -314,15 +323,14 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
                     version: {
-                        build: [],
                         major: 9,
                         minor: 8,
                         patch: 1,
-                        prerelease: [],
                         raw: '9.8.7.6-pre'
                     },
                     envType: EnvironmentType.Conda
@@ -343,15 +351,14 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
                     version: {
-                        build: [],
                         major: 9,
                         minor: 8,
                         patch: 1,
-                        prerelease: [],
                         raw: '9.8.7.6-pre'
                     },
                     envType: EnvironmentType.Conda
@@ -374,6 +381,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit'
@@ -394,10 +402,11 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
-                    envType: EnvironmentType.Global
+                    envType: EnvironmentType.Unknown
                 }
             });
             assert.strictEqual(name, 'kspecname');
@@ -415,6 +424,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something',
@@ -436,6 +446,7 @@ suite('Notebook Controller Manager', () => {
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
+                    id: Uri.file('pyPath').fsPath,
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
@@ -450,11 +461,9 @@ suite('Notebook Controller Manager', () => {
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.envName).thenReturn('');
             when(interpreter.version).thenReturn({
-                build: [],
                 major: 9,
                 minor: 8,
                 patch: 1,
-                prerelease: [],
                 raw: '9.8.7.6-pre'
             });
             when(interpreter.displayName).thenReturn('Something 64-bit');
@@ -474,11 +483,9 @@ suite('Notebook Controller Manager', () => {
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.envName).thenReturn('.env');
             when(interpreter.version).thenReturn({
-                build: [],
                 major: 9,
                 minor: 8,
                 patch: 1,
-                prerelease: [],
                 raw: '9.8.7.6-pre'
             });
             when(interpreter.displayName).thenReturn('Something');
@@ -498,11 +505,9 @@ suite('Notebook Controller Manager', () => {
             when(kernelSpec.language).thenReturn('python');
             when(interpreter.envName).thenReturn('.env');
             when(interpreter.version).thenReturn({
-                build: [],
                 major: 9,
                 minor: 8,
                 patch: 1,
-                prerelease: [],
                 raw: '9.8.7.6-pre'
             });
             when(interpreter.displayName).thenReturn('Something 64-bit');

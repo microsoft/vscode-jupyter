@@ -14,11 +14,12 @@ import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvi
 suite('UpdateNotebookMetadata', () => {
     const python36Global: PythonEnvironment = {
         uri: Uri.file('/usr/bin/python36'),
+        id: Uri.file('/usr/bin/python36').fsPath,
         sysPrefix: '/usr',
         displayName: 'Python 3.6',
-        envType: EnvironmentType.Global,
+        envType: EnvironmentType.Unknown,
         sysVersion: '3.6.0',
-        version: { major: 3, minor: 6, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
+        version: { major: 3, minor: 6, patch: 0, raw: '3.6.0' }
     };
     const pythonDefaultKernelSpec: IJupyterKernelSpec = {
         argv: ['python', '-f', '{connection_file}'],
@@ -28,11 +29,12 @@ suite('UpdateNotebookMetadata', () => {
     };
     const python37Global: PythonEnvironment = {
         uri: Uri.file('/usr/bin/python36'),
+        id: Uri.file('/usr/bin/python36').fsPath,
         sysPrefix: '/usr',
         displayName: 'Python 3.7',
-        envType: EnvironmentType.Global,
+        envType: EnvironmentType.Unknown,
         sysVersion: '3.7.0',
-        version: { major: 3, minor: 7, patch: 0, build: [], prerelease: [], raw: '3.7.0' }
+        version: { major: 3, minor: 7, patch: 0, raw: '3.7.0' }
     };
     test('UpdateNotebookMetadata Empty call does not change anything', async () => {
         const value = await updateNotebookMetadata();

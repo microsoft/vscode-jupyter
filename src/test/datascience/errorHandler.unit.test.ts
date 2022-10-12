@@ -55,6 +55,7 @@ suite('DataScience Error Handler Unit Tests', () => {
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
         uri: Uri.file('Some Path'),
+        id: Uri.file('Some Path').fsPath,
         sysPrefix: ''
     };
 
@@ -147,6 +148,7 @@ suite('DataScience Error Handler Unit Tests', () => {
                 kind: 'startUsingPythonInterpreter',
                 interpreter: {
                     uri: Uri.file('Hello There'),
+                    id: Uri.file('Hello There').fsPath,
                     sysPrefix: 'Something else',
                     displayName: 'Hello (Some Path)'
                 },

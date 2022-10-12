@@ -36,6 +36,7 @@ suite('Kernel Environment Variables Service', () => {
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Conda,
         uri: pathFile,
+        id: pathFile.fsPath,
         sysPrefix: '0'
     };
     let kernelSpec: IJupyterKernelSpec;
@@ -208,6 +209,7 @@ suite('Kernel Environment Variables Service', () => {
         when(interpreterService.getInterpreterDetails(anything())).thenResolve({
             envType: EnvironmentType.Conda,
             uri: Uri.joinPath(Uri.file('env'), 'foopath'),
+            id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath,
             sysPrefix: 'foosysprefix'
         });
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
@@ -232,6 +234,7 @@ suite('Kernel Environment Variables Service', () => {
         when(interpreterService.getInterpreterDetails(anything())).thenResolve({
             envType,
             uri: Uri.file('foopath'),
+            id: Uri.file('foopath').fsPath,
             sysPrefix: 'foosysprefix'
         });
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
@@ -253,7 +256,7 @@ suite('Kernel Environment Variables Service', () => {
     }
 
     test('PYTHONNOUSERSITE should not be set for Global Interpreters', async () => {
-        await testPYTHONNOUSERSITE(EnvironmentType.Global, false);
+        await testPYTHONNOUSERSITE(EnvironmentType.Unknown, false);
     });
     test('PYTHONNOUSERSITE should be set for Conda Env', async () => {
         await testPYTHONNOUSERSITE(EnvironmentType.Conda, true);

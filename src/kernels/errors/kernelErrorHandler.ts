@@ -453,12 +453,21 @@ function getUserFriendlyErrorMessage(error: Error | string, errorContext?: Kerne
         return getCombinedErrorMessage(errorPrefix, errorMessage);
     }
 }
+function doesErrorHaveMarkdownLinks(message: string) {
+    const markdownLinks = new RegExp(/\[([^\[]+)\]\((.*)\)/);
+    return (markdownLinks.exec(message)?.length ?? 0) > 0;
+}
 function getCombinedErrorMessage(prefix?: string, message?: string) {
     const errorMessage = [prefix || '', message || '']
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
         .join(' \n');
-    if (errorMessage.length && errorMessage.indexOf('command:jupyter.viewOutput') === -1) {
+
+    if (
+        !doesErrorHaveMarkdownLinks(errorMessage) &&
+        errorMessage.length &&
+        errorMessage.indexOf('command:jupyter.viewOutput') === -1
+    ) {
         return `${
             errorMessage.endsWith('.') ? errorMessage : errorMessage + '.'
         } \n${DataScience.viewJupyterLogForFurtherInfo()}`;
@@ -489,11 +498,7 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
                 kernelConnection.interpreter?.envPath
             )} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         }
-    } else if (
-        kernelConnection.interpreter?.envType === EnvironmentType.Global ||
-        kernelConnection.interpreter?.envType === EnvironmentType.WindowsStore ||
-        kernelConnection.interpreter?.envType === EnvironmentType.System
-    ) {
+    } else if (kernelConnection.interpreter?.envType === EnvironmentType.Unknown) {
         installerCommand = `${getFilePath(
             kernelConnection.interpreter.uri
         ).fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;

@@ -8,7 +8,7 @@ import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Mement
 import { IKernelFinder, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { traceInfo, ignoreLogging, traceDecoratorError, traceError } from '../../../platform/logging';
+import { traceInfo, ignoreLogging, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento, Resource } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { ILocalKernelFinder } from '../types';
@@ -83,10 +83,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
 
         this.interpreters.onDidChangeInterpreters(
             async () => {
-                // Don't do anything if the interpreter list is still being refreshed
-                if (!this.interpreters.refreshing) {
-                    this.updateCache(undefined).then(noop, noop);
-                }
+                this.updateCache(undefined).then(noop, noop);
             },
             this,
             this.disposables
@@ -108,6 +105,8 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
     }
 
     private async loadCache() {
+        traceVerbose('LocalKernelFinder: load cache');
+
         // loading cache, which is resource agnostic
         const kernelsFromCache = await this.getFromCache();
         let kernels: LocalKernelConnectionMetadata[] = [];
@@ -121,7 +120,10 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
                 traceError(`Exception loading kernels: ${ex}`);
             }
         }
+
         await this.writeToCache(kernels);
+
+        traceVerbose('LocalKernelFinder: load cache finished');
         this._initializeResolve();
     }
 
@@ -190,7 +192,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
             (item) => item.envType === EnvironmentType.Conda
         ).length;
 
-        await this.interpreters.refreshInterpreters();
+        await this.interpreters.refreshInterpreters(true);
         // Possible discovering interpreters is very quick and we've already discovered it, hence refresh kernels immediately.
         await this.updateCache(undefined);
 
@@ -206,7 +208,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
                 if (condaEnvCount > previousCondaEnvCount) {
                     return true;
                 }
-                await this.interpreters.refreshInterpreters();
+                await this.interpreters.refreshInterpreters(true);
                 return false;
             },
             15_000,
@@ -250,48 +252,60 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
     }
 
     private async getFromCache(cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]> {
-        let results: LocalKernelConnectionMetadata[] = this.cache;
+        try {
+            traceVerbose('LocalKernelFinder: get from cache');
 
-        // If not in memory, check memento
-        if (!results || results.length === 0) {
-            // Check memento too
-            const values = this.globalState.get<{ kernels: LocalKernelConnectionMetadata[]; extensionVersion: string }>(
-                this.getCacheKey(),
-                { kernels: [], extensionVersion: '' }
-            );
+            let results: LocalKernelConnectionMetadata[] = this.cache;
 
-            /**
-             * The cached list of raw kernels is pointing to kernelSpec.json files in the extensions directory.
-             * Assume you have version 1 of extension installed.
-             * Now you update to version 2, at this point the cache still points to version 1 and the kernelSpec.json files are in the directory version 1.
-             * Those files in directory for version 1 could get deleted by VS Code at any point in time, as thats an old version of the extension and user has now installed version 2.
-             * Hence its wrong and buggy to use those files.
-             * To ensure we don't run into weird issues with the use of cached kernelSpec.json files, we ensure the cache is tied to each version of the extension.
-             */
-            if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
-                results = values.kernels.map(deserializeKernelConnection) as LocalKernelConnectionMetadata[];
-                this.cache = results;
-            }
-        }
+            // If not in memory, check memento
+            if (!results || results.length === 0) {
+                // Check memento too
+                const values = this.globalState.get<{
+                    kernels: LocalKernelConnectionMetadata[];
+                    extensionVersion: string;
+                }>(this.getCacheKey(), { kernels: [], extensionVersion: '' });
 
-        // Validate
-        const validValues: LocalKernelConnectionMetadata[] = [];
-        const promise = Promise.all(
-            results.map(async (item) => {
-                if (await this.isValidCachedKernel(item)) {
-                    validValues.push(item);
+                /**
+                 * The cached list of raw kernels is pointing to kernelSpec.json files in the extensions directory.
+                 * Assume you have version 1 of extension installed.
+                 * Now you update to version 2, at this point the cache still points to version 1 and the kernelSpec.json files are in the directory version 1.
+                 * Those files in directory for version 1 could get deleted by VS Code at any point in time, as thats an old version of the extension and user has now installed version 2.
+                 * Hence its wrong and buggy to use those files.
+                 * To ensure we don't run into weird issues with the use of cached kernelSpec.json files, we ensure the cache is tied to each version of the extension.
+                 */
+                if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
+                    results = values.kernels.map(deserializeKernelConnection) as LocalKernelConnectionMetadata[];
+                    this.cache = results;
                 }
-            })
-        );
-        if (cancelToken) {
-            await Promise.race([
-                promise,
-                createPromiseFromCancellation({ token: cancelToken, cancelAction: 'resolve', defaultValue: undefined })
-            ]);
-        } else {
-            await promise;
+            }
+
+            // Validate
+            const validValues: LocalKernelConnectionMetadata[] = [];
+            const promise = Promise.all(
+                results.map(async (item) => {
+                    if (await this.isValidCachedKernel(item)) {
+                        validValues.push(item);
+                    }
+                })
+            );
+            if (cancelToken) {
+                await Promise.race([
+                    promise,
+                    createPromiseFromCancellation({
+                        token: cancelToken,
+                        cancelAction: 'resolve',
+                        defaultValue: undefined
+                    })
+                ]);
+            } else {
+                await promise;
+            }
+            return validValues;
+        } catch (ex) {
+            traceError('LocalKernelFinder: Failed to get from cache', ex);
         }
-        return validValues;
+
+        return [];
     }
 
     /**
@@ -327,15 +341,19 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
     }
 
     private async writeToCache(values: LocalKernelConnectionMetadata[]) {
-        this.cache = values;
-        const serialized = values.map(serializeKernelConnection);
-        await Promise.all([
-            removeOldCachedItems(this.globalState),
-            this.globalState.update(this.getCacheKey(), {
-                kernels: serialized,
-                extensionVersion: this.env.extensionVersion
-            })
-        ]);
+        try {
+            this.cache = values;
+            const serialized = values.map(serializeKernelConnection);
+            await Promise.all([
+                removeOldCachedItems(this.globalState),
+                this.globalState.update(this.getCacheKey(), {
+                    kernels: serialized,
+                    extensionVersion: this.env.extensionVersion
+                })
+            ]);
+        } catch (ex) {
+            traceError('LocalKernelFinder: Failed to write to cache', ex);
+        }
     }
 
     private getCacheKey() {

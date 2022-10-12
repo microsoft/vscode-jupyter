@@ -21,6 +21,7 @@ suite('Installation - installation channels', () => {
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Conda,
         uri: Uri.file('foobar'),
+        id: Uri.file('foobar').fsPath,
         sysPrefix: '0'
     };
 

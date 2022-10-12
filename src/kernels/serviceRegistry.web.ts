@@ -24,6 +24,8 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { KernelAutoReConnectFailedMonitor } from './kernelAutoReConnectFailedMonitor';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { DebugStartupCodeProvider } from './debuggerStartupCodeProvider';
+import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.web';
+import { ITrustedKernelPaths } from './raw/finder/types';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -63,6 +65,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         KernelAutoReconnectMonitor
     );
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
+    serviceManager.addSingleton<ITrustedKernelPaths>(ITrustedKernelPaths, TrustedKernelPaths);
     serviceManager.addSingleton<IThirdPartyKernelProvider>(IThirdPartyKernelProvider, ThirdPartyKernelProvider);
     serviceManager.addSingleton<PreferredRemoteKernelIdProvider>(
         PreferredRemoteKernelIdProvider,

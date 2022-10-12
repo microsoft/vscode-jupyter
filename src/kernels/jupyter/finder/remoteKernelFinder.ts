@@ -37,7 +37,7 @@ import {
     IRemoteKernelFinder
 } from '../types';
 import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
-import { traceError, traceWarning, traceInfoIfCI } from '../../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { computeServerId } from '../jupyterUtils';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -161,7 +161,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     }
 
     public async loadCache() {
-        traceInfoIfCI('Remote Kernel Finder load cache', this.serverConnectionType.isLocalLaunch);
+        traceVerbose('RemoteKernelFinder: load cache', this.serverConnectionType.isLocalLaunch);
 
         if (this.serverConnectionType.isLocalLaunch) {
             await this.writeToCache([]);
@@ -177,15 +177,21 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
             kernels = kernelsFromCache;
         } else {
-            const kernelsWithoutCachePromise = (async () => {
-                const connInfo = await this.getRemoteConnectionInfo();
-                return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
-            })();
+            try {
+                const kernelsWithoutCachePromise = (async () => {
+                    const connInfo = await this.getRemoteConnectionInfo();
+                    return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
+                })();
 
-            kernels = await kernelsWithoutCachePromise;
+                kernels = await kernelsWithoutCachePromise;
+            } catch (ex) {
+                traceError('RemoteKernelFinder: Failed to get kernels without cache', ex);
+            }
         }
 
         await this.writeToCache(kernels);
+
+        traceVerbose('RemoteKernelFinder: load cache finished');
         this._initializeResolve();
     }
 
@@ -250,41 +256,53 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     }
 
     private async getFromCache(cancelToken?: CancellationToken): Promise<RemoteKernelConnectionMetadata[]> {
-        let results: RemoteKernelConnectionMetadata[] = this.cache;
-        const key = this.getCacheKey();
+        try {
+            traceVerbose('RemoteKernelFinder: get from cache');
 
-        // If not in memory, check memento
-        if (!results || results.length === 0) {
-            // Check memento too
-            const values = this.globalState.get<{
-                kernels: RemoteKernelConnectionMetadata[];
-                extensionVersion: string;
-            }>(key, { kernels: [], extensionVersion: '' });
+            let results: RemoteKernelConnectionMetadata[] = this.cache;
+            const key = this.getCacheKey();
 
-            if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
-                results = values.kernels.map(deserializeKernelConnection) as RemoteKernelConnectionMetadata[];
-                this.cache = results;
-            }
-        }
+            // If not in memory, check memento
+            if (!results || results.length === 0) {
+                // Check memento too
+                const values = this.globalState.get<{
+                    kernels: RemoteKernelConnectionMetadata[];
+                    extensionVersion: string;
+                }>(key, { kernels: [], extensionVersion: '' });
 
-        // Validate
-        const validValues: RemoteKernelConnectionMetadata[] = [];
-        const promise = Promise.all(
-            results.map(async (item) => {
-                if (await this.isValidCachedKernel(item)) {
-                    validValues.push(item);
+                if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
+                    results = values.kernels.map(deserializeKernelConnection) as RemoteKernelConnectionMetadata[];
+                    this.cache = results;
                 }
-            })
-        );
-        if (cancelToken) {
-            await Promise.race([
-                promise,
-                createPromiseFromCancellation({ token: cancelToken, cancelAction: 'resolve', defaultValue: undefined })
-            ]);
-        } else {
-            await promise;
+            }
+
+            // Validate
+            const validValues: RemoteKernelConnectionMetadata[] = [];
+            const promise = Promise.all(
+                results.map(async (item) => {
+                    if (await this.isValidCachedKernel(item)) {
+                        validValues.push(item);
+                    }
+                })
+            );
+            if (cancelToken) {
+                await Promise.race([
+                    promise,
+                    createPromiseFromCancellation({
+                        token: cancelToken,
+                        cancelAction: 'resolve',
+                        defaultValue: undefined
+                    })
+                ]);
+            } else {
+                await promise;
+            }
+            return validValues;
+        } catch (ex) {
+            traceError('RemoteKernelFinder: Failed to get from cache', ex);
         }
-        return validValues;
+
+        return [];
     }
 
     // Talk to the remote server to determine sessions
@@ -392,13 +410,18 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     }
 
     private async writeToCache(values: RemoteKernelConnectionMetadata[]) {
-        const key = this.getCacheKey();
-        this.cache = values;
-        const serialized = values.map(serializeKernelConnection);
-        await Promise.all([
-            removeOldCachedItems(this.globalState),
-            this.globalState.update(key, { kernels: serialized, extensionVersion: this.env.extensionVersion })
-        ]);
+        try {
+            traceVerbose(`RemoteKernelFinder: Writing ${values.length} remote kernel connection metadata to cache`);
+            const key = this.getCacheKey();
+            this.cache = values;
+            const serialized = values.map(serializeKernelConnection);
+            await Promise.all([
+                removeOldCachedItems(this.globalState),
+                this.globalState.update(key, { kernels: serialized, extensionVersion: this.env.extensionVersion })
+            ]);
+        } catch (ex) {
+            traceError('RemoteKernelFinder: Failed to write to cache', ex);
+        }
     }
 
     private async isValidCachedKernel(kernel: RemoteKernelConnectionMetadata): Promise<boolean> {
