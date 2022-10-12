@@ -10,6 +10,7 @@ import {
     getKernelRegistrationInfo,
     isDefaultKernelSpec,
     isDefaultPythonKernelSpecName,
+    isPythonKernelConnection,
     isPythonNotebook
 } from '../../../kernels/helpers';
 import { IJupyterKernelSpec, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
@@ -125,9 +126,15 @@ export async function rankKernels(
         notebookMetadata?.language_info?.name.toLowerCase() ||
         (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language?.toLowerCase();
     let possibleNbMetadataLanguage = actualNbMetadataLanguage;
-
     // If the notebook has a language set, remove anything not that language as we don't want to rank those items
     kernels = kernels.filter((kernel) => {
+        if (
+            possibleNbMetadataLanguage &&
+            possibleNbMetadataLanguage === PYTHON_LANGUAGE &&
+            isPythonKernelConnection(kernel)
+        ) {
+            return true;
+        }
         if (
             possibleNbMetadataLanguage &&
             possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&

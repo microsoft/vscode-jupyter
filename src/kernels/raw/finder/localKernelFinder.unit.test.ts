@@ -101,11 +101,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
              */
             globalKernelSpecs?: KernelSpec.ISpecModel[];
         };
-        async function initialize(
-            testData: TestData,
-            activeInterpreter?: PythonEnvironment,
-            doNotAddActiveInterpreterIntoListOfInterpreters?: boolean
-        ) {
+        async function initialize(testData: TestData, activeInterpreter?: PythonEnvironment) {
             disposables.push(cancelToken);
             cancelToken = new CancellationTokenSource();
             const getRealPathStub = sinon.stub(fsExtra, 'realpath');
@@ -122,9 +118,6 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
                 testData.interpreters = testData.interpreters || [];
-                if (!doNotAddActiveInterpreterIntoListOfInterpreters) {
-                    // testData.interpreters.push(activeInterpreter);
-                }
             }
             const distinctInterpreters = new Set<PythonEnvironment>();
             (testData.interpreters || []).forEach((item) =>
@@ -1256,7 +1249,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 
                         await verifyKernels(expectedKernels);
                     });
-                    async function testMatchingNotebookMetadata(activeInterpreterIsInListOfInterpreters = true) {
+                    async function testMatchingNotebookMetadata() {
                         const testData: TestData = {
                             globalKernelSpecs: [juliaKernelSpec, rKernelSpec, rV1KernelSpec, python2spec],
                             interpreters: [
@@ -1309,17 +1302,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                                 }
                             ]
                         };
-                        if (!activeInterpreterIsInListOfInterpreters && activePythonEnv && testData.interpreters) {
-                            // We need to test a scenario where active interpreter is not in the list of all interpreters.
-                            // Hence remove that.
-                            testData.interpreters = testData.interpreters.filter((item) => {
-                                if ('interpreter' in item) {
-                                    return item.interpreter !== activePythonEnv;
-                                }
-                                return item !== activePythonEnv;
-                            });
-                        }
-                        await initialize(testData, activePythonEnv, !activeInterpreterIsInListOfInterpreters);
+                        await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
                         const nbUri = Uri.file('test.ipynb');
                         let kernel: KernelConnectionMetadata | undefined;
@@ -1692,9 +1675,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         );
                         assert.isUndefined(kernel, 'Should not return a kernel');
                     }
-                    test('Can match based on notebook metadata', async () => testMatchingNotebookMetadata(true));
-                    test('Can match based on notebook metadata, even when active interpreter is not in list of all interpreter', async () =>
-                        testMatchingNotebookMetadata(false));
+                    test('Can match based on notebook metadata', async () => testMatchingNotebookMetadata());
                     test('Return active interpreter for interactive window', async function () {
                         if (!activePythonEnv) {
                             return this.skip();
