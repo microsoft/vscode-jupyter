@@ -286,19 +286,19 @@ module.exports = {
                         message: 'Importing node modules into extension.web.ts is not allowed.'
                     },
                     {
-                        target: './src/kernels/**/*.ts',
+                        target: './src/kernels/**/*[!.unit].ts',
                         from: './src/**[!platform,telemetry,kernels]**/**/*.ts',
                         message:
                             'Only modules from ./src/platform and ./src/telemetry can be imported into ./src/kernels.'
                     },
                     {
-                        target: './src/notebooks/**/*.ts',
+                        target: './src/notebooks/**/*[!.unit].ts',
                         from: './src/**[!platform,telemetry,kernels,notebooks]**/**/*.ts',
                         message:
                             'Only modules from ./src/platform, ./src/telemetry and ./src/kernels can be imported into ./src/notebooks.'
                     },
                     {
-                        target: './src/interactive-window/**/*.ts',
+                        target: './src/interactive-window/**/*[!.unit].ts',
                         from: './src/**webview**/**/*.ts',
                         message:
                             'Only modules from ./src/platform, ./src/telemetry, ./src/kernels and ./src/notebooks can be imported into ./src/interactive-window.'

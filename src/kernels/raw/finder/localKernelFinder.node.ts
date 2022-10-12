@@ -271,7 +271,15 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
     private async writeToCache(values: LocalKernelConnectionMetadata[]) {
         try {
             const oldValues = this.cache;
-            this.cache = this.filterKernels(values);
+            const uniqueIds = new Set<string>();
+            const uniqueKernels = values.filter((item) => {
+                if (uniqueIds.has(item.id)) {
+                    return false;
+                }
+                uniqueIds.add(item.id);
+                return true;
+            });
+            this.cache = this.filterKernels(uniqueKernels);
             if (JSON.stringify(oldValues) === JSON.stringify(this.cache)) {
                 return;
             }
