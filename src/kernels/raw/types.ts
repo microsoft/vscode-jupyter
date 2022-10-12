@@ -58,11 +58,11 @@ export interface IKernelProcess extends IAsyncDisposable {
     interrupt(): Promise<void>;
 }
 
-export interface ILocalKernelFinder extends IContributedKernelFinder {
+export interface ILocalKernelFinder extends IContributedKernelFinder<KernelConnectionMetadata> {
     /**
      * Finds all kernel specs including Python.
      */
-    listKernels(resource: Resource, cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
+    listKernels(resource: Resource, cancelToken: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
 }
 
 /**

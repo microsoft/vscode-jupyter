@@ -33,7 +33,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvi
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
-import { EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationTokenSource, EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable, IExtensionContext, IExtensions } from '../../../platform/common/types';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -78,7 +78,7 @@ import { noop } from '../../../platform/common/utils/misc';
         let preferredRemote: PreferredRemoteKernelIdProvider;
         let pythonExecService: IPythonExecutionService;
         let kernelRankHelper: IKernelRankingHelper;
-
+        let cancelToken: CancellationTokenSource;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -102,6 +102,8 @@ import { noop } from '../../../platform/common/utils/misc';
             activeInterpreter?: PythonEnvironment,
             doNotAddActiveInterpreterIntoListOfInterpreters?: boolean
         ) {
+            disposables.push(cancelToken);
+            cancelToken = new CancellationTokenSource();
             const getRealPathStub = sinon.stub(fsExtra, 'realpath');
             getRealPathStub.returnsArg(0);
             const getOSTypeStub = sinon.stub(platform, 'getOSType');
@@ -271,8 +273,7 @@ import { noop } from '../../../platform/common/utils/misc';
                 instance(extensionChecker),
                 instance(interpreterService),
                 instance(condaService),
-                instance(extensions),
-                instance(workspaceService)
+                instance(extensions)
             );
             localKernelFinder.activate().then(noop, noop);
 
@@ -569,7 +570,7 @@ import { noop } from '../../../platform/common/utils/misc';
                     const interpreter = expectedInterpreters.find(
                         (item) => kernelSpec.language === PYTHON_LANGUAGE && item.uri.fsPath === kernelSpec.argv[0]
                     );
-                    const spec = await loadKernelSpec(Uri.file(kernelspecFile), instance(fs));
+                    const spec = await loadKernelSpec(Uri.file(kernelspecFile), instance(fs), cancelToken.token);
                     if (spec) {
                         expectedKernelSpecs.push(<LocalKernelConnectionMetadata>{
                             id: getKernelId(spec!, interpreter),
@@ -590,7 +591,12 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernelspec.name,
                         'kernel.json'
                     );
-                    const spec = await loadKernelSpec(Uri.file(kernelSpecFile), instance(fs), interpreter);
+                    const spec = await loadKernelSpec(
+                        Uri.file(kernelSpecFile),
+                        instance(fs),
+                        cancelToken.token,
+                        interpreter
+                    );
                     if (spec) {
                         expectedKernelSpecs.push(<LocalKernelConnectionMetadata>{
                             id: getKernelId(spec!, interpreter),
@@ -674,7 +680,9 @@ import { noop } from '../../../platform/common/utils/misc';
          * Gets the list of kernels from the kernel provider and compares them against what's expected.
          */
         async function verifyKernels(expectations: ExpectedKernels) {
-            const actualKernels = await localKernelFinder.listKernels(undefined);
+            const cancellation = new CancellationTokenSource();
+            disposables.push(cancellation);
+            const actualKernels = await localKernelFinder.listKernels(undefined, cancellation.token);
             const expectedKernels = await generateExpectedKernels(
                 expectations.expectedGlobalKernelSpecs || [],
                 expectations.expectedInterpreterKernelSpecFiles || [],
@@ -831,7 +839,9 @@ import { noop } from '../../../platform/common/utils/misc';
                 ]
             };
             await initialize(testData);
-            const kernels = await localKernelFinder.listKernels(undefined);
+            const cancelToken = new CancellationTokenSource();
+            disposables.push(cancelToken);
+            const kernels = await localKernelFinder.listKernels(undefined, cancelToken.token);
             verifyGlobalKernelSpec(
                 kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
                 juliaKernelSpec
@@ -861,7 +871,9 @@ import { noop } from '../../../platform/common/utils/misc';
                 ]
             };
             await initialize(testData);
-            const kernels = await localKernelFinder.listKernels(undefined);
+            const cancelToken = new CancellationTokenSource();
+            disposables.push(cancelToken);
+            const kernels = await localKernelFinder.listKernels(undefined, cancelToken.token);
             assert.isUndefined(
                 kernels.find(
                     (item) =>
@@ -1061,7 +1073,9 @@ import { noop } from '../../../platform/common/utils/misc';
 
                         // Nothing should be started using the Python interpreter.
                         // Why? Because we don't have the Python extension.
-                        const actualKernels = await localKernelFinder.listKernels(undefined);
+                        const cancelToken = new CancellationTokenSource();
+                        disposables.push(cancelToken);
+                        const actualKernels = await localKernelFinder.listKernels(undefined, cancelToken.token);
                         assert.isUndefined(
                             actualKernels.find((kernel) => kernel.kind === 'startUsingPythonInterpreter')
                         );

@@ -13,7 +13,6 @@ import {
     INotebookProvider,
     INotebookProviderConnection,
     isRemoteConnection,
-    KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
@@ -231,7 +230,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
      *
      * Remote kernel finder is resource agnostic.
      */
-    listContributedKernels(_resource: Resource): KernelConnectionMetadata[] {
+    listContributedKernels(_resource: Resource): RemoteKernelConnectionMetadata[] {
         return this.cache;
     }
 

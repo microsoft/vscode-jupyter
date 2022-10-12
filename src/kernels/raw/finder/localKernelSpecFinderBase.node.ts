@@ -34,7 +34,9 @@ export const oldKernelsSpecFolderName = '__old_vscode_kernelspecs';
 /**
  * Base class for searching for local kernels that are based on a kernel spec file.
  */
-export abstract class LocalKernelSpecFinderBase {
+export abstract class LocalKernelSpecFinderBase<
+    T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+> {
     private _oldKernelSpecsFolder?: string;
     private findKernelSpecsInPathCache = new Map<string, Promise<KernelSpecFileWithContainingInterpreter[]>>();
 
@@ -52,7 +54,7 @@ export abstract class LocalKernelSpecFinderBase {
         {
             usesPython: boolean;
             wasPythonExtInstalled: boolean;
-            promise: Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>;
+            promise: Promise<T[]>;
         }
     >();
 
@@ -79,9 +81,9 @@ export abstract class LocalKernelSpecFinderBase {
     protected async listKernelsWithCache(
         cacheKey: string,
         dependsOnPythonExtension: boolean,
-        finder: () => Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
+        finder: () => Promise<T[]>,
         ignoreCache?: boolean
-    ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+    ): Promise<T[]> {
         // If we have already searched for this resource, then use that.
         const result = this.kernelSpecCache.get(cacheKey);
         if (result && !ignoreCache) {
@@ -96,10 +98,7 @@ export abstract class LocalKernelSpecFinderBase {
             }
         }
         const promise = finder().then((items) => {
-            const distinctKernelMetadata = new Map<
-                string,
-                LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
-            >();
+            const distinctKernelMetadata = new Map<string, T>();
             items.map((kernelSpec) => {
                 // Check if we have already seen this.
                 if (!distinctKernelMetadata.has(kernelSpec.id)) {
@@ -133,9 +132,9 @@ export abstract class LocalKernelSpecFinderBase {
      */
     protected async getKernelSpec(
         specPath: Uri,
+        cancelToken: CancellationToken,
         interpreter?: PythonEnvironment,
-        globalSpecRootPath?: Uri,
-        cancelToken?: CancellationToken
+        globalSpecRootPath?: Uri
     ): Promise<IJupyterKernelSpec | undefined> {
         // This is a backup folder for old kernels created by us.
         if (specPath.fsPath.includes(oldKernelsSpecFolderName)) {
@@ -144,7 +143,7 @@ export abstract class LocalKernelSpecFinderBase {
         const key = getComparisonKey(specPath);
         // If we have not already loaded this kernel spec, then load it
         if (!this.pathToKernelSpec.has(key)) {
-            this.pathToKernelSpec.set(key, this.loadKernelSpec(specPath, interpreter, cancelToken));
+            this.pathToKernelSpec.set(key, this.loadKernelSpec(specPath, cancelToken, interpreter));
         }
         // ! as the has and set above verify that we have a return here
         return this.pathToKernelSpec.get(key)!.then((kernelSpec) => {
@@ -187,15 +186,15 @@ export abstract class LocalKernelSpecFinderBase {
      */
     private async loadKernelSpec(
         specPath: Uri,
-        interpreter?: PythonEnvironment,
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken,
+        interpreter?: PythonEnvironment
     ): Promise<IJupyterKernelSpec | undefined> {
-        return loadKernelSpec(specPath, this.fs, interpreter, cancelToken);
+        return loadKernelSpec(specPath, this.fs, cancelToken, interpreter);
     }
     // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
     protected async findKernelSpecsInPaths(
         paths: (Uri | { interpreter: PythonEnvironment; kernelSearchPath: Uri })[],
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<KernelSpecFileWithContainingInterpreter[]> {
         const items = await Promise.all(paths.map((searchItem) => this.findKernelSpecsInPath(searchItem, cancelToken)));
         return flatten(items);
@@ -203,7 +202,7 @@ export abstract class LocalKernelSpecFinderBase {
     // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
     private async findKernelSpecsInPath(
         searchItem: Uri | { interpreter: PythonEnvironment; kernelSearchPath: Uri },
-        cancelToken?: CancellationToken
+        cancelToken: CancellationToken
     ): Promise<KernelSpecFileWithContainingInterpreter[]> {
         const cacheKey = isUri(searchItem)
             ? getComparisonKey(searchItem)
@@ -216,7 +215,7 @@ export abstract class LocalKernelSpecFinderBase {
         const searchPath = isUri(searchItem) ? searchItem : searchItem.kernelSearchPath;
         const promise = (async () => {
             if (await this.fs.exists(searchPath)) {
-                if (cancelToken?.isCancellationRequested) {
+                if (cancelToken.isCancellationRequested) {
                     return [];
                 }
                 const files = await this.fs.searchLocal(`**/kernel.json`, searchPath.fsPath, true);
@@ -234,14 +233,12 @@ export abstract class LocalKernelSpecFinderBase {
             }
         })();
         this.findKernelSpecsInPathCache.set(cacheKey, promise);
-        if (cancelToken) {
-            const disposable = cancelToken.onCancellationRequested(() => {
-                if (this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
-                    this.findKernelSpecsInPathCache.delete(cacheKey);
-                }
-            });
-            promise.finally(() => disposable.dispose());
-        }
+        const disposable = cancelToken.onCancellationRequested(() => {
+            if (this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
+                this.findKernelSpecsInPathCache.delete(cacheKey);
+            }
+        });
+        promise.finally(() => disposable.dispose());
         promise.catch((ex) => {
             if (this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
                 this.findKernelSpecsInPathCache.delete(cacheKey);
@@ -258,8 +255,8 @@ export abstract class LocalKernelSpecFinderBase {
 export async function loadKernelSpec(
     specPath: Uri,
     fs: IFileSystemNode,
-    interpreter?: PythonEnvironment,
-    cancelToken?: CancellationToken
+    cancelToken: CancellationToken,
+    interpreter?: PythonEnvironment
 ): Promise<IJupyterKernelSpec | undefined> {
     // This is a backup folder for old kernels created by us.
     if (specPath.fsPath.includes(oldKernelsSpecFolderName)) {
@@ -277,7 +274,7 @@ export async function loadKernelSpec(
         traceError(`Failed to parse kernelspec ${specPath}`, ex);
         return;
     }
-    if (cancelToken?.isCancellationRequested) {
+    if (cancelToken.isCancellationRequested) {
         return;
     }
 
@@ -286,6 +283,9 @@ export async function loadKernelSpec(
     // the kernel instead
     // kernelJson.originalName = kernelJson.name;
     kernelJson.name = interpreter ? await getInterpreterKernelSpecName(interpreter) : kernelJson.name;
+    if (cancelToken.isCancellationRequested) {
+        return;
+    }
 
     // Update the display name too if we have an interpreter.
     const isDefaultPythonName = kernelJson.display_name.toLowerCase().match(isDefaultPythonKernelSpecSpecName);
