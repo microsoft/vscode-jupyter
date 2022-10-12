@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IKernelFinder, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
@@ -121,24 +121,14 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         const kernelsFromCache = await this.getFromCache();
         let kernels: LocalKernelConnectionMetadata[] = [];
 
-        this.nonPythonKernelFinder.initialized.catch(noop);
-        this.pythonKernelFinder.initialized.catch(noop);
+        this.updateCache().catch(noop);
 
         if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
             kernels = kernelsFromCache;
+            await this.writeToCache(kernels);
         } else {
-            const cancellation = new CancellationTokenSource();
-            try {
-                await Promise.all([this.nonPythonKernelFinder.initialized, this.pythonKernelFinder.initialized]);
-                kernels = kernels.concat(this.nonPythonKernelFinder.kernels).concat(this.pythonKernelFinder.kernels);
-            } catch (ex) {
-                traceError(`Exception loading kernels: ${ex}`);
-            } finally {
-                cancellation.dispose();
-            }
+            await this.updateCache();
         }
-
-        await this.writeToCache(kernels);
 
         traceVerbose('LocalKernelFinder: load cache finished');
         this._initializeResolve();
@@ -146,6 +136,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
 
     private async updateCache() {
         try {
+            await Promise.all([this.nonPythonKernelFinder.initialized, this.pythonKernelFinder.initialized]);
             let kernels: LocalKernelConnectionMetadata[] = [];
             kernels = kernels.concat(this.nonPythonKernelFinder.kernels).concat(this.pythonKernelFinder.kernels);
             await this.writeToCache(kernels);
