@@ -828,8 +828,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             trim: false,
             removeEmptyEntries: false
         });
-        assert.equal(output1Lines.length, 4);
-        assert.equal(output2Lines.length, 3);
+        assert.equal(output1Lines.length, 4, `${output1Lines.length} != 4, output is ${output1Lines.join('')}`);
+        assert.equal(output2Lines.length, 3, `${output2Lines.length} != 4, output is ${output2Lines.join('')}`);
     });
     test('Stderr & stdout outputs should go into separate outputs', async function () {
         await insertCodeCell(
