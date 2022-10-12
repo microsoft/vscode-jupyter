@@ -9,16 +9,7 @@ import * as fs from 'fs';
 import * as path from '../../../platform/vscode-path/path';
 import dedent from 'dedent';
 import * as sinon from 'sinon';
-import {
-    commands,
-    NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellKind,
-    NotebookCellOutput,
-    Uri,
-    window,
-    workspace
-} from 'vscode';
+import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, Uri, window, workspace } from 'vscode';
 import { Common } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
