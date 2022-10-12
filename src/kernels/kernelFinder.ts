@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
-import { IDisposable, IDisposableRegistry, Resource } from '../platform/common/types';
+import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { traceInfoIfCI } from '../platform/logging';
 import { IContributedKernelFinder, IContributedKernelFinderInfo } from './internalTypes';
@@ -49,10 +49,7 @@ export class KernelFinder implements IKernelFinder {
         };
     }
 
-    public async listKernels(
-        resource: Resource,
-        cancelToken: CancellationToken | undefined
-    ): Promise<KernelConnectionMetadata[]> {
+    public async listKernels(cancelToken?: CancellationToken): Promise<KernelConnectionMetadata[]> {
         this.startTimeForFetching = this.startTimeForFetching ?? new StopWatch();
 
         // Wait all finders to warm up their cache first
@@ -68,7 +65,7 @@ export class KernelFinder implements IKernelFinder {
         this.connectionFinderMapping.clear();
 
         for (const finder of this._finders) {
-            const contributedKernels = finder.listContributedKernels(resource);
+            const contributedKernels = finder.kernels;
 
             // Add our connection => finder mapping
             contributedKernels.forEach((connection) => {

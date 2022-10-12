@@ -129,7 +129,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         // First off set our context to false as we are about to refresh
         await this.controllersLoadedContext.set(false);
 
-        let connections = await this.kernelFinder.listKernels(undefined, cancelToken);
+        let connections = await this.kernelFinder.listKernels(cancelToken);
 
         if (cancelToken.isCancellationRequested) {
             return;

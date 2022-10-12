@@ -1314,17 +1314,22 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         ]);
 
                         // Try an empty python Notebook without any kernelspec in metadata.
-                        kernel = takeTopRankKernel(
-                            await kernelRankHelper.rankKernels(
-                                nbUri,
-                                {
-                                    language_info: { name: PYTHON_LANGUAGE },
-                                    orig_nbformat: 4
-                                },
-                                activePythonEnv
-                            )
-                        ) as LocalKernelConnectionMetadata;
-                        assert.equal(kernel?.kernelSpec?.language, 'python');
+                        const rankedKernels = await kernelRankHelper.rankKernels(
+                            nbUri,
+                            {
+                                language_info: { name: PYTHON_LANGUAGE },
+                                orig_nbformat: 4
+                            },
+                            activePythonEnv
+                        );
+                        kernel = takeTopRankKernel(rankedKernels) as LocalKernelConnectionMetadata;
+                        assert.equal(
+                            kernel?.kernelSpec?.language,
+                            'python',
+                            `Python != ${kernel?.kernelSpec?.language}, ranked kernels include ${JSON.stringify(
+                                rankedKernels
+                            )}\n and all kernels ${JSON.stringify(localKernelFinder.kernels)}`
+                        );
                         assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
                         assert.notStrictEqual(
                             getKernelRegistrationInfo(kernel!.kernelSpec),

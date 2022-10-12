@@ -9,7 +9,7 @@ import { IKernelFinder, LocalKernelConnectionMetadata } from '../../../kernels/t
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { traceInfo, ignoreLogging, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
-import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento, Resource } from '../../../platform/common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { ILocalKernelFinder } from '../types';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
@@ -187,7 +187,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         await this.updateCache();
     }
 
-    listContributedKernels(_resource: Resource): LocalKernelConnectionMetadata[] {
+    public get kernels(): LocalKernelConnectionMetadata[] {
         return this.cache;
     }
 
