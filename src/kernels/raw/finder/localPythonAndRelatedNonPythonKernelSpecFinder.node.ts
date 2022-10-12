@@ -28,7 +28,7 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IMemento, GLOBAL_MEMENTO, IDisposable } from '../../../platform/common/types';
+import { IMemento, GLOBAL_MEMENTO, IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
@@ -63,9 +63,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(LocalKnownPathKernelSpecFinder)
         private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        super(fs, workspaceService, extensionChecker, globalState);
+        super(fs, workspaceService, extensionChecker, globalState, disposables);
         interpreterService.onDidChangeInterpreters(() => this.refresh().catch(noop), this, this.disposables);
         kernelSpecsFromKnownLocations.onDidChangeKernels(() => this.refresh().catch(noop), this, this.disposables);
         interpreterService.onDidChangeInterpreter(() => this.refresh().catch(noop), this, this.disposables);
@@ -81,9 +82,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     }
     public dispose() {
         disposeAllDisposables(this.disposables);
-    }
-    public async listKernelSpecs(ignoreCache: boolean, cancelToken: CancellationToken) {
-        return this.listKernelsWithCache('1', true, () => this.listKernelsImplementation(cancelToken), ignoreCache);
     }
     private refreshCancellation?: CancellationTokenSource;
     private async refresh() {

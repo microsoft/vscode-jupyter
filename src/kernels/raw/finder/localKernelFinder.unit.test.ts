@@ -238,7 +238,8 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                 instance(workspaceService),
                 jupyterPaths,
                 instance(extensionChecker),
-                instance(memento)
+                instance(memento),
+                disposables
             );
             when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2', anything())).thenReturn([]);
             when(memento.get('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenReturn([]);
@@ -265,7 +266,8 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                     jupyterPaths,
                     instance(extensionChecker),
                     nonPythonKernelSpecFinder,
-                    instance(memento)
+                    instance(memento),
+                    disposables
                 ),
                 instance(memento),
                 instance(fs),

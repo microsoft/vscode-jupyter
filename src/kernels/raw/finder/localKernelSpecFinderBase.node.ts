@@ -12,7 +12,7 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceVerbose, traceError, traceDecoratorError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { ReadWrite } from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry, ReadWrite } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { isUri, noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -36,7 +36,8 @@ export const oldKernelsSpecFolderName = '__old_vscode_kernelspecs';
  */
 export abstract class LocalKernelSpecFinderBase<
     T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
-> {
+> implements IDisposable
+{
     private _oldKernelSpecsFolder?: string;
     private findKernelSpecsInPathCache = new Map<string, Promise<KernelSpecFileWithContainingInterpreter[]>>();
 
@@ -65,14 +66,18 @@ export abstract class LocalKernelSpecFinderBase<
         protected readonly fs: IFileSystemNode,
         protected readonly workspaceService: IWorkspaceService,
         protected readonly extensionChecker: IPythonExtensionChecker,
-        protected readonly globalState: Memento
-    ) {}
+        protected readonly globalState: Memento,
+        disposables: IDisposableRegistry
+    ) {
+        disposables.push(this);
+    }
 
     @testOnlyMethod()
     public clearCache() {
         this.kernelSpecCache.clear();
         this.findKernelSpecsInPathCache.clear();
     }
+    public abstract dispose(): void | undefined;
     /**
      * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.
      * If for instance first Python Extension isn't installed, then we call this again, after installing it, then the cache will be blown away

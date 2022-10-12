@@ -14,7 +14,7 @@ import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
+import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { sendKernelSpecTelemetry } from './helper';
 import { noop } from '../../../platform/common/utils/misc';
@@ -43,9 +43,10 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase<Lo
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) memento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) memento: Memento,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        super(fs, workspaceService, extensionChecker, memento);
+        super(fs, workspaceService, extensionChecker, memento, disposables);
         if (this.oldKernelSpecsFolder) {
             traceInfo(
                 `Old kernelSpecs (created by Jupyter Extension) stored in directory ${this.oldKernelSpecsFolder}`
@@ -55,63 +56,52 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase<Lo
     public get kernels(): LocalKernelSpecConnectionMetadata[] {
         return this._cachedKernels;
     }
+    public dispose(): void | undefined {
+        this._onDidChangeKernels.dispose();
+    }
     /**
      * @param {boolean} includePythonKernels Include/exclude Python kernels in the result.
      */
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localKernelSpec' })
-    public async listKernelSpecs(
-        includePythonKernels: boolean,
-        cancelToken: CancellationToken
-    ): Promise<LocalKernelSpecConnectionMetadata[]> {
-        return this.listKernelsWithCache(
-            includePythonKernels ? 'IncludePythonV2' : 'ExcludePythonV2',
-            false,
-            async () => {
-                // First find the on disk kernel specs and interpreters
-                const kernelSpecs = await this.findKernelSpecs(cancelToken);
+    private async listKernelSpecs(cancelToken: CancellationToken): Promise<LocalKernelSpecConnectionMetadata[]> {
+        return this.listKernelsWithCache('LocalKnownPathKernelSpecFinder', false, async () => {
+            // First find the on disk kernel specs and interpreters
+            const kernelSpecs = await this.findKernelSpecs(cancelToken);
 
-                const mappedKernelSpecs = kernelSpecs
-                    .filter((item) => {
-                        if (includePythonKernels) {
-                            return true;
-                        }
-                        return item.language !== PYTHON_LANGUAGE;
-                    })
-                    .map(
-                        (k) =>
-                            <LocalKernelSpecConnectionMetadata>{
-                                kind: 'startUsingLocalKernelSpec',
-                                kernelSpec: k,
-                                interpreter: undefined,
-                                id: getKernelId(k)
-                            }
-                    );
-                if (cancelToken.isCancellationRequested) {
-                    return [];
-                }
-                const oldKernels = this._cachedKernels;
-                this._cachedKernels = mappedKernelSpecs;
-
-                // Trigger a change event if we have different kernels.
-                oldKernels.sort();
-                mappedKernelSpecs.sort();
-                if (
-                    oldKernels.length !== mappedKernelSpecs.length ||
-                    JSON.stringify(oldKernels) !== JSON.stringify(mappedKernelSpecs)
-                ) {
-                    this._onDidChangeKernels.fire();
-                }
-                this._onDidChangeKernels.fire();
-                return mappedKernelSpecs;
+            const mappedKernelSpecs = kernelSpecs.map(
+                (k) =>
+                    <LocalKernelSpecConnectionMetadata>{
+                        kind: 'startUsingLocalKernelSpec',
+                        kernelSpec: k,
+                        interpreter: undefined,
+                        id: getKernelId(k)
+                    }
+            );
+            if (cancelToken.isCancellationRequested) {
+                return [];
             }
-        );
+            const oldKernels = this._cachedKernels;
+            this._cachedKernels = mappedKernelSpecs;
+
+            // Trigger a change event if we have different kernels.
+            oldKernels.sort();
+            mappedKernelSpecs.sort();
+            if (
+                oldKernels.length !== mappedKernelSpecs.length ||
+                JSON.stringify(oldKernels) !== JSON.stringify(mappedKernelSpecs)
+            ) {
+                this._onDidChangeKernels.fire();
+            }
+            this._onDidChangeKernels.fire();
+            return mappedKernelSpecs;
+        });
     }
     private async initialize(): Promise<void> {
         if (this._initialized) {
             return this._initialized;
         }
         const cancellation = new CancellationTokenSource();
-        return (this._initialized = this.listKernelSpecs(true, cancellation.token)
+        return (this._initialized = this.listKernelSpecs(cancellation.token)
             .then(noop, noop)
             .finally(() => cancellation.dispose()));
     }
