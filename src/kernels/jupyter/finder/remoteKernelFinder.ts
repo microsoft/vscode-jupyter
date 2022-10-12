@@ -190,6 +190,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         }
 
         await this.writeToCache(kernels);
+
+        traceVerbose('RemoteKernelFinder: load cache finished');
         this._initializeResolve();
     }
 
