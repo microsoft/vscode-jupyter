@@ -58,7 +58,7 @@ export interface IKernelProcess extends IAsyncDisposable {
     interrupt(): Promise<void>;
 }
 
-export interface ILocalKernelFinder extends IContributedKernelFinder<KernelConnectionMetadata> {
+export interface ILocalKernelFinder extends IContributedKernelFinder<LocalKernelConnectionMetadata> {
     /**
      * Finds all kernel specs including Python.
      */

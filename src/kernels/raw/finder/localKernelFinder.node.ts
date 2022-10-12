@@ -5,7 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
-import { IKernelFinder, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../kernels/types';
+import { IKernelFinder, LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { traceInfo, ignoreLogging, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
@@ -187,7 +187,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         await this.updateCache();
     }
 
-    listContributedKernels(_resource: Resource): KernelConnectionMetadata[] {
+    listContributedKernels(_resource: Resource): LocalKernelConnectionMetadata[] {
         return this.cache;
     }
 
