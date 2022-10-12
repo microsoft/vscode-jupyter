@@ -238,7 +238,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     ): Promise<INotebookProviderConnection | undefined> {
         const ui = new DisplayOptions(false);
         const uri = await this.serverUriStorage.getRemoteUri();
-        if (!uri) {
+        if (!uri || !uri.isValidated) {
             return;
         }
         return this.notebookProvider.connect({

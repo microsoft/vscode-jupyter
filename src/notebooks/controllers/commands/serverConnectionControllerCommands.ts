@@ -138,7 +138,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         return multiStep.run(
             this.startSwitchRun.bind(
                 this,
-                this.startSwitchingToRemote.bind(this, activeNotebookType, startingLocal, startingUri)
+                this.startSwitchingToRemote.bind(this, activeNotebookType, startingLocal, startingUri?.uri)
             ),
             {}
         );
@@ -199,7 +199,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         return multiStep.run(
             this.startSwitchRun.bind(
                 this,
-                this.startSwitchingToLocal.bind(this, activeNotebookType, startingLocal, startingUri)
+                this.startSwitchingToLocal.bind(this, activeNotebookType, startingLocal, startingUri?.uri)
             ),
             {}
         );

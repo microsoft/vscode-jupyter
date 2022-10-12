@@ -42,7 +42,7 @@ suite('DataScience - NotebookServerProvider', () => {
         interpreterService = mock<IInterpreterService>();
 
         const serverStorage = mock(JupyterServerUriStorage);
-        when(serverStorage.getUri()).thenResolve('local');
+        when(serverStorage.getUri()).thenResolve({ uri: 'local', time: Date.now(), serverId: 'local' });
         when(serverStorage.getRemoteUri()).thenResolve();
         const eventEmitter = new EventEmitter<void>();
         disposables.push(eventEmitter);

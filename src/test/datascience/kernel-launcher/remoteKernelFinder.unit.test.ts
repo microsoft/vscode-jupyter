@@ -152,8 +152,14 @@ suite(`Remote Kernel Finder`, () => {
         when(fs.delete(anything())).thenResolve();
         when(fs.exists(anything())).thenResolve(true);
         const serverUriStorage = mock(JupyterServerUriStorage);
-        when(serverUriStorage.getUri()).thenResolve(connInfo.baseUrl);
-        when(serverUriStorage.getRemoteUri()).thenResolve(connInfo.baseUrl);
+        const serverEntry = {
+            uri: connInfo.baseUrl,
+            time: Date.now(),
+            serverId: connInfo.baseUrl,
+            isValidated: true
+        };
+        when(serverUriStorage.getUri()).thenResolve(serverEntry);
+        when(serverUriStorage.getRemoteUri()).thenResolve(serverEntry);
         const connectionType = mock<IServerConnectionType>();
         when(connectionType.isLocalLaunch).thenReturn(false);
         const onDidChangeEvent = new EventEmitter<void>();

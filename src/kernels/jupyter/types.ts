@@ -254,6 +254,10 @@ export interface IJupyterServerUriEntry {
      * An optional display name to show for this server as opposed to just the Uri
      */
     displayName?: string;
+    /**
+     * Whether the server is validated by its provider or not
+     */
+    isValidated?: boolean;
 }
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
@@ -266,7 +270,7 @@ export interface IJupyterServerUriStorage {
     getSavedUriList(): Promise<IJupyterServerUriEntry[]>;
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
-    getRemoteUri(): Promise<string | undefined>;
+    getRemoteUri(): Promise<IJupyterServerUriEntry | undefined>;
     setUriToLocal(): Promise<void>;
     setUriToRemote(uri: string, displayName: string): Promise<void>;
     setUriToNone(): Promise<void>;
