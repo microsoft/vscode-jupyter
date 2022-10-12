@@ -61,6 +61,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
+import { createEventHandler, TestEventHandler } from '../../../test/common';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -81,6 +82,7 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
         let cancelToken: CancellationTokenSource;
         let onDidChangeInterpreters: EventEmitter<void>;
         let onDidChangeInterpreter: EventEmitter<void>;
+        let changeEventFired: TestEventHandler<void>;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -282,6 +284,7 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                 instance(condaService),
                 instance(extensions)
             );
+            changeEventFired = createEventHandler(localKernelFinder, 'onDidChangeKernels', disposables);
             localKernelFinder.activate().then(noop, noop);
 
             kernelRankHelper = new KernelRankingHelper(kernelFinder, instance(preferredRemote));
@@ -787,7 +790,8 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
             };
             await initialize(testData);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
-            await localKernelFinder.initialized;
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+
             await verifyKernels({
                 expectedGlobalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec]
             });
@@ -799,7 +803,8 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
             };
             await initialize(testData);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
-            await localKernelFinder.initialized;
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+
             await verifyKernels({
                 expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpec],
                 expectedInterpreters: []
@@ -848,7 +853,8 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
             await initialize(testData);
             const cancelToken = new CancellationTokenSource();
             disposables.push(cancelToken);
-            await localKernelFinder.initialized;
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+
             const kernels = await localKernelFinder.listKernels(cancelToken.token);
             verifyGlobalKernelSpec(
                 kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
@@ -881,7 +887,8 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
             await initialize(testData);
             const cancelToken = new CancellationTokenSource();
             disposables.push(cancelToken);
-            await localKernelFinder.initialized;
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+
             const kernels = await localKernelFinder.listKernels(cancelToken.token);
             assert.isUndefined(
                 kernels.find(
@@ -942,7 +949,11 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
+
                         await verifyKernels({
                             expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpec],
                             expectedInterpreters: [python38VenvEnv].concat(activePythonEnv ? [activePythonEnv] : [])
@@ -960,7 +971,11 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
+
                         await verifyKernels({
                             expectedInterpreterKernelSpecFiles: [
                                 {
@@ -978,7 +993,10 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
 
                         await verifyKernels({
                             expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpecForGlobalPython36],
@@ -1001,7 +1019,10 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
 
                         await verifyKernels({
                             expectedInterpreterKernelSpecFiles: [
@@ -1026,7 +1047,10 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
 
                         await verifyKernels({
                             expectedGlobalKernelSpecs: [
@@ -1049,7 +1073,10 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
 
                         await verifyKernels({
                             expectedGlobalKernelSpecs: [
@@ -1074,7 +1101,10 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         };
                         await initialize(testData, undefined);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
 
                         await verifyKernels({
                             expectedGlobalKernelSpecs: [
@@ -1107,7 +1137,10 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
 
                         const expectedKernels: ExpectedKernels = {
                             expectedInterpreters: [python39PyEnv_HelloWorld].concat(
@@ -1134,7 +1167,10 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
 
                         const expectedKernels: ExpectedKernels = {
                             expectedGlobalKernelSpecs: [juliaKernelSpec],
@@ -1185,7 +1221,10 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
 
                         const expectedKernels: ExpectedKernels = {
                             expectedGlobalKernelSpecs: [juliaKernelSpec],
@@ -1284,7 +1323,10 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
                         const nbUri = Uri.file('test.ipynb');
                         let kernel: KernelConnectionMetadata | undefined;
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
 
                         // Try an empty python Notebook without any kernelspec in metadata.
                         kernel = takeTopRankKernel(
@@ -1682,7 +1724,10 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
 
                         const kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
@@ -1732,7 +1777,10 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
 
                         const kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(Uri.file('wow.py'), undefined, activePythonEnv)
@@ -1775,7 +1823,10 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await localKernelFinder.initialized;
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFired(100).catch(noop)
+                        ]);
 
                         const kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
@@ -1818,7 +1869,7 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 
             // Set up the preferred remote id
             when(preferredRemote.getPreferredRemoteKernelId(anything())).thenResolve(activeID);
-            await localKernelFinder.initialized;
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
 
             const isExactMatch = await kernelRankHelper.isExactMatch(nbUri, liveSpec, {
                 language_info: { name: PYTHON_LANGUAGE },
@@ -1844,7 +1895,8 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
         test('isExactMatch interpreter hash matches default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
-            await localKernelFinder.initialized;
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
@@ -1872,7 +1924,8 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
         test('isExactMatch vscode interpreter hash matches default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
-            await localKernelFinder.initialized;
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
@@ -1902,7 +1955,8 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
         test('isExactMatch interpreter hash matches non-default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
-            await localKernelFinder.initialized;
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
@@ -1930,7 +1984,8 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
         test('isExactMatch vscode interpreter hash matches non-default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
-            await localKernelFinder.initialized;
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
@@ -1960,7 +2015,8 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
         test('isExactMatch non-default name matches w/o interpreter', async () => {
             const testData: TestData = {};
             await initialize(testData);
-            await localKernelFinder.initialized;
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
@@ -1986,7 +2042,8 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
         test('isExactMatch default name does not match w/o interpreter', async () => {
             const testData: TestData = {};
             await initialize(testData);
-            await localKernelFinder.initialized;
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(

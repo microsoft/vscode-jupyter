@@ -66,28 +66,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento
     ) {
         super(fs, workspaceService, extensionChecker, globalState);
-        interpreterService.onDidChangeInterpreters(
-            () => {
-                this.refresh()
-                    .then(() => {
-                        this._onDidChangeKernels.fire();
-                    })
-                    .catch(noop);
-            },
-            this,
-            this.disposables
-        );
-        interpreterService.onDidChangeInterpreter(
-            () => {
-                this.refresh()
-                    .then(() => {
-                        this._onDidChangeKernels.fire();
-                    })
-                    .catch(noop);
-            },
-            this,
-            this.disposables
-        );
+        interpreterService.onDidChangeInterpreters(() => this.refresh().catch(noop), this, this.disposables);
+        kernelSpecsFromKnownLocations.onDidChangeKernels(() => this.refresh().catch(noop), this, this.disposables);
+        interpreterService.onDidChangeInterpreter(() => this.refresh().catch(noop), this, this.disposables);
     }
     public async initialize(): Promise<void> {
         if (this._initialized) {
@@ -106,18 +87,26 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     }
     private refreshCancellation?: CancellationTokenSource;
     private async refresh() {
+        const previousListOfKernels = this._cachedKernels;
         this.refreshCancellation?.cancel();
         const cancelToken = (this.refreshCancellation = new CancellationTokenSource());
         this._initialized = this.listKernelsImplementation(cancelToken.token)
             .then(noop, noop)
             .finally(() => cancelToken.dispose());
         await this._initialized;
+        if (
+            this._cachedKernels.length !== previousListOfKernels.length ||
+            JSON.stringify(this._cachedKernels) !== JSON.stringify(previousListOfKernels)
+        ) {
+            this._onDidChangeKernels.fire();
+        }
     }
 
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
     private async listKernelsImplementation(
         cancelToken: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+        await this.kernelSpecsFromKnownLocations.initialized;
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getInterpreters()
             : [];
@@ -127,7 +116,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // then list all of the global python kernel specs.
         let kernels: LocalKernelConnectionMetadata[];
         if (interpreters.length === 0 || !this.extensionChecker.isPythonExtensionInstalled) {
-            kernels = await this.listGlobalPythonKernelSpecs(false, cancelToken);
+            kernels = await this.listGlobalPythonKernelSpecs(false);
         } else {
             kernels = await this.listPythonAndRelatedNonPythonKernelSpecs(interpreters, cancelToken);
         }
@@ -138,12 +127,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         return this._cachedKernels;
     }
     private async listGlobalPythonKernelSpecs(
-        includeKernelsRegisteredByUs: boolean,
-        cancelToken: CancellationToken
+        includeKernelsRegisteredByUs: boolean
     ): Promise<LocalKernelSpecConnectionMetadata[]> {
-        const kernelSpecs = await this.kernelSpecsFromKnownLocations.listKernelSpecs(true, cancelToken);
+        await this.kernelSpecsFromKnownLocations.initialized;
         return (
-            kernelSpecs
+            this.kernelSpecsFromKnownLocations.kernels
                 .filter((item) => item.kernelSpec.language === PYTHON_LANGUAGE)
                 // If there are any kernels that we registered (then don't return them).
                 // Those were registered by us to start kernels from Jupyter extension (not stuff that user created).
@@ -155,7 +143,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     /**
      * Some python environments like conda can have non-python kernel specs as well, this will return those as well.
      * Those kernels can only be started within the context of the Python environment.
-     * I.e. first actiavte the python environment, then attempt to start those non-python environments.
+     * I.e. first activate the python environment, then attempt to start those non-python environments.
      * This is because some python environments setup environment variables required by these non-python kernels (e.g. path to Java executable or the like.
      */
     private async listPythonAndRelatedNonPythonKernelSpecs(
@@ -171,7 +159,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const [kernelSpecs, activeInterpreters, globalKernelSpecs, tempDirForKernelSpecs] = await Promise.all([
             this.findKernelSpecsInInterpreters(interpreters, cancelToken),
             activeInterpreterInAWorkspacePromise,
-            this.listGlobalPythonKernelSpecs(true, cancelToken),
+            this.listGlobalPythonKernelSpecs(true),
             this.jupyterPaths.getKernelSpecTempRegistrationFolder()
         ]);
         if (cancelToken.isCancellationRequested) {
@@ -200,7 +188,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         };
 
         // Copy the interpreter list. We need to filter out those items
-        // which have matched one or more kernelspecs
+        // which have matched one or more kernelSpecs
         let filteredInterpreters = [...interpreters];
 
         // If the user has interpreters, then don't display the default kernel specs such as `python`, `python3`.
@@ -213,7 +201,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // Then go through all of the kernels and generate their metadata
         const distinctKernelMetadata = new Map<string, LocalKernelConnectionMetadata>();
 
-        // Go through the global kernelspecs that use python to launch the kernel and that are not using ipykernel or have a custom environment
+        // Go through the global kernelSpecs that use python to launch the kernel and that are not using ipykernel or have a custom environment
         await Promise.all(
             globalKernelSpecs
                 .filter((item) => {
