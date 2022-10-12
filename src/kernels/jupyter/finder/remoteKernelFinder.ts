@@ -226,7 +226,10 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
      * Remote kernel finder is resource agnostic.
      */
     listContributedKernels(_resource: Resource): KernelConnectionMetadata[] {
-        return this.cache;
+        return this.cache.map((kernelConnection) => {
+            (kernelConnection as KernelConnectionMetadata).kernelFinderInfo = this;
+            return kernelConnection;
+        });
     }
 
     private async getRemoteConnectionInfo(

@@ -218,7 +218,10 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
 
     listContributedKernels(resource: Resource): KernelConnectionMetadata[] {
         if (!resource) {
-            return this.cache;
+            return this.cache.map((kernelConnection) => {
+                (kernelConnection as KernelConnectionMetadata).kernelFinderInfo = this;
+                return kernelConnection;
+            });
         }
 
         const resourceCacheKey = this.getResourceCacheKey(resource);
@@ -229,7 +232,10 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         } else {
             // Trigger a cache update since we don't have a cache for this resource
             this.updateCache(resource).then(noop, noop);
-            return this.cache;
+            return this.cache.map((kernelConnection) => {
+                (kernelConnection as KernelConnectionMetadata).kernelFinderInfo = this;
+                return kernelConnection;
+            });
         }
     }
 
