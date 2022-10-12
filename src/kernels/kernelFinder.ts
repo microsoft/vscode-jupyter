@@ -16,6 +16,10 @@ import { IKernelFinder, KernelConnectionMetadata } from './types';
 export class KernelFinder implements IKernelFinder {
     private startTimeForFetching?: StopWatch;
     private _finders: IContributedKernelFinder[] = [];
+    private connectionFinderMapping: Map<string, IContributedKernelFinderInfo> = new Map<
+        string,
+        IContributedKernelFinderInfo
+    >();
 
     private _onDidChangeKernels = new EventEmitter<void>();
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
@@ -60,12 +64,17 @@ export class KernelFinder implements IKernelFinder {
 
         const kernels: KernelConnectionMetadata[] = [];
 
+        // List kernels might be called after finders or connections are removed so just clear out and regenerate
+        this.connectionFinderMapping.clear();
+
         for (const finder of this._finders) {
-            const contributedKernels = finder.listContributedKernels(resource).map((kernelConnection) => {
-                // Tag our connections with the kernel finder info that located them
-                kernelConnection.kernelFinderInfo = finder;
-                return kernelConnection;
+            const contributedKernels = finder.listContributedKernels(resource);
+
+            // Add our connection => finder mapping
+            contributedKernels.forEach((connection) => {
+                this.connectionFinderMapping.set(connection.id, finder);
             });
+
             kernels.push(...contributedKernels);
         }
 
@@ -76,6 +85,12 @@ export class KernelFinder implements IKernelFinder {
         );
 
         return kernels;
+    }
+
+    // Check our mappings to see what connection supplies this metadata, since metadatas can be created outside of finders
+    // allow for undefined as a return value
+    public getFinderForConnection(kernelMetadata: KernelConnectionMetadata): IContributedKernelFinderInfo | undefined {
+        return this.connectionFinderMapping.get(kernelMetadata.id);
     }
 
     // Give the info for what kernel finders are currently registered

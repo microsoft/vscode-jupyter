@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookControllerAffinity2, NotebookDocument, workspace } from 'vscode';
 import { IContributedKernelFinderInfo } from '../../../kernels/internalTypes';
+import { IKernelFinder } from '../../../kernels/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { IControllerRegistration, INotebookKernelSourceTracker, IVSCodeNotebookController } from '../types';
@@ -20,7 +21,8 @@ export class NotebookKernelSourceTracker implements INotebookKernelSourceTracker
 
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
     ) {}
 
     activate(): void {
@@ -45,11 +47,8 @@ export class NotebookKernelSourceTracker implements INotebookKernelSourceTracker
     // When a controller is created, see if it shows or hides for all open documents
     private onCreatedController(controller: IVSCodeNotebookController) {
         this.documentSourceMapping.forEach((finderInfo, notebook) => {
-            if (
-                controller.connection.kernelFinderInfo &&
-                finderInfo &&
-                controller.connection.kernelFinderInfo.id === finderInfo.id
-            ) {
+            const controllerFinderInfo = this.kernelFinder.getFinderForConnection(controller.connection);
+            if (controllerFinderInfo && finderInfo && controllerFinderInfo.id === finderInfo.id) {
                 // Match, associate with controller
                 this.associateController(notebook, controller);
             } else {
@@ -83,7 +82,8 @@ export class NotebookKernelSourceTracker implements INotebookKernelSourceTracker
         controller: IVSCodeNotebookController,
         kernelSource: IContributedKernelFinderInfo
     ): boolean {
-        if (controller.connection.kernelFinderInfo && controller.connection.kernelFinderInfo.id === kernelSource.id) {
+        const controllerFinderInfo = this.kernelFinder.getFinderForConnection(controller.connection);
+        if (controllerFinderInfo && controllerFinderInfo.id === kernelSource.id) {
             return true;
         }
         return false;

@@ -95,13 +95,7 @@ export type PythonKernelConnectionMetadata = Readonly<{
  * This ensure we don't update is somewhere unnecessarily (such updates would be unexpected).
  * Unexpected as connections are defined once & not changed, if we need to change then user needs to create a new connection.
  */
-export type KernelConnectionMetadata = (RemoteKernelConnectionMetadata | LocalKernelConnectionMetadata) & {
-    /**
-     * Kernel Connections may optionally be tagged with the info for the kernel finder that contributed them
-     */
-    kernelFinderInfo?: IContributedKernelFinderInfo;
-};
-
+export type KernelConnectionMetadata = RemoteKernelConnectionMetadata | LocalKernelConnectionMetadata;
 /**
  * Connection metadata for local kernels. Makes it easier to not have to check for the live connection type.
  */
@@ -618,6 +612,10 @@ export const IKernelFinder = Symbol('IKernelFinder');
 export interface IKernelFinder {
     onDidChangeKernels: Event<void>;
     listKernels(resource: Resource, cancelToken?: CancellationToken): Promise<KernelConnectionMetadata[]>;
+    /*
+     * For a given kernel connection metadata return what kernel finder found it
+     */
+    getFinderForConnection(kernelMetadata: KernelConnectionMetadata): IContributedKernelFinderInfo | undefined;
     /*
      * Return basic info on all currently registered kernel finders
      */
