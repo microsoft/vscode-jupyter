@@ -279,7 +279,12 @@ export class DebuggingManager
         };
         const opts: DebugSessionOptions | undefined =
             mode === KernelDebugMode.RunByLine
-                ? { debugUI: { simple: true }, suppressSaveBeforeStart: true }
+                ? {
+                      suppressDebugStatusbar: true,
+                      suppressDebugToolbar: true,
+                      suppressDebugView: true,
+                      suppressSaveBeforeStart: true
+                  }
                 : { suppressSaveBeforeStart: true };
         return this.startDebuggingConfig(doc, config, opts);
     }
