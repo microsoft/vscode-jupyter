@@ -248,7 +248,6 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
     @traceDecoratorError('List kernels failed')
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
     public async listKernels(
-        _resource: Resource,
         @ignoreLogging() _cancelToken: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
         return this.cache;

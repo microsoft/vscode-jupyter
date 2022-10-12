@@ -62,7 +62,7 @@ export interface ILocalKernelFinder extends IContributedKernelFinder<KernelConne
     /**
      * Finds all kernel specs including Python.
      */
-    listKernels(resource: Resource, cancelToken: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
+    listKernels(cancelToken: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
 }
 
 /**

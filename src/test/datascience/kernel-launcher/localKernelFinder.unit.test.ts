@@ -682,7 +682,7 @@ import { noop } from '../../../platform/common/utils/misc';
         async function verifyKernels(expectations: ExpectedKernels) {
             const cancellation = new CancellationTokenSource();
             disposables.push(cancellation);
-            const actualKernels = await localKernelFinder.listKernels(undefined, cancellation.token);
+            const actualKernels = await localKernelFinder.listKernels(cancellation.token);
             const expectedKernels = await generateExpectedKernels(
                 expectations.expectedGlobalKernelSpecs || [],
                 expectations.expectedInterpreterKernelSpecFiles || [],
@@ -841,7 +841,7 @@ import { noop } from '../../../platform/common/utils/misc';
             await initialize(testData);
             const cancelToken = new CancellationTokenSource();
             disposables.push(cancelToken);
-            const kernels = await localKernelFinder.listKernels(undefined, cancelToken.token);
+            const kernels = await localKernelFinder.listKernels(cancelToken.token);
             verifyGlobalKernelSpec(
                 kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
                 juliaKernelSpec
@@ -873,7 +873,7 @@ import { noop } from '../../../platform/common/utils/misc';
             await initialize(testData);
             const cancelToken = new CancellationTokenSource();
             disposables.push(cancelToken);
-            const kernels = await localKernelFinder.listKernels(undefined, cancelToken.token);
+            const kernels = await localKernelFinder.listKernels(cancelToken.token);
             assert.isUndefined(
                 kernels.find(
                     (item) =>
@@ -1075,7 +1075,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         // Why? Because we don't have the Python extension.
                         const cancelToken = new CancellationTokenSource();
                         disposables.push(cancelToken);
-                        const actualKernels = await localKernelFinder.listKernels(undefined, cancelToken.token);
+                        const actualKernels = await localKernelFinder.listKernels(cancelToken.token);
                         assert.isUndefined(
                             actualKernels.find((kernel) => kernel.kind === 'startUsingPythonInterpreter')
                         );
