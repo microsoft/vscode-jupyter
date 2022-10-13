@@ -9,6 +9,7 @@ import { KernelConnectionMetadata } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import { IDisposable, Resource } from '../../platform/common/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { IContributedKernelFinderInfo } from '../../kernels/internalTypes';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
 
@@ -160,4 +161,17 @@ export enum PreferredKernelExactMatchReason {
     WasPreferredInterpreter = 1 << 1,
     IsExactMatch = 1 << 2,
     IsNonPythonKernelLanguageMatch = 1 << 3
+}
+
+// Provides the UI to select a kernel source for a notebook document
+export const INotebookKernelSourceSelector = Symbol('INotebookKernelSourceSelector');
+export interface INotebookKernelSourceSelector {
+    selectKernelSource(notebook: vscode.NotebookDocument): Promise<void>;
+}
+
+// Track what kernel source is selected for each open notebook document and persist that data
+export const INotebookKernelSourceTracker = Symbol('INotebookKernelSourceTracker');
+export interface INotebookKernelSourceTracker {
+    getKernelSourceForNotebook(notebook: vscode.NotebookDocument): IContributedKernelFinderInfo | undefined;
+    setKernelSourceForNotebook(notebook: vscode.NotebookDocument, kernelFinderInfo: IContributedKernelFinderInfo): void;
 }

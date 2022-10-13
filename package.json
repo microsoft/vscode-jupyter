@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2022.10.100",
+    "version": "2022.10.110",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -835,6 +835,10 @@
             {
                 "command": "jupyter.switchToAnotherRemoteKernels",
                 "title": "%DataScience.switchToAnotherRemoteKernelsTitle%"
+            },
+            {
+                "command": "jupyter.pickDocumentKernelSource",
+                "title": "%DataScience.pickDocumentKernelSourceTitle%"
             }
         ],
         "menus": {
@@ -997,6 +1001,10 @@
                 {
                     "command": "jupyter.switchToAnotherRemoteKernels",
                     "when": "jupyter.showingRemoteKernels"
+                },
+                {
+                    "command": "jupyter.pickDocumentKernelSource",
+                    "when": "jupyter.pickDocumentKernelSourceContext"
                 }
             ],
             "interactive/toolbar": [
@@ -1491,6 +1499,10 @@
                 {
                     "command": "jupyter.interactive.clearAllCells",
                     "when": "activeEditor == 'workbench.editor.interactive' && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.pickDocumentKernelSource",
+                    "when": "false"
                 }
             ],
             "debug/variables/context": [
@@ -1888,6 +1900,15 @@
                         ]
                     ]
                 },
+                "jupyter.kernels.trusted": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [],
+                    "markdownDescription": "%jupyter.configuration.jupyter.kernels.trusted.markdownDescription%",
+                    "scope": "machine"
+                },
                 "jupyter.interactiveWindowMode": {
                     "type": "string",
                     "enum": [
@@ -2078,7 +2099,6 @@
     },
     "enabledApiProposals": [
         "notebookControllerKind",
-        "notebookDebugOptions",
         "notebookDeprecated",
         "notebookMessaging",
         "notebookMime",
@@ -2086,7 +2106,8 @@
         "portsAttributes",
         "quickPickSortByLabel",
         "notebookKernelSource",
-        "interactiveWindow"
+        "interactiveWindow",
+        "notebookControllerAffinityHidden"
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",

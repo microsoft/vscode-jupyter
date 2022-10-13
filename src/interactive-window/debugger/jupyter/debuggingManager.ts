@@ -41,6 +41,7 @@ import { buildSourceMap } from '../helper';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInteractiveWindowDebuggingManager } from '../../types';
 import { IControllerLoader, IControllerSelection } from '../../../notebooks/controllers/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -61,9 +62,18 @@ export class InteractiveWindowDebuggingManager
         @inject(IDebugLocationTrackerFactory)
         private readonly debugLocationTrackerFactory: IDebugLocationTrackerFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IDebugService) private readonly debugService: IDebugService
+        @inject(IDebugService) private readonly debugService: IDebugService,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        super(kernelProvider, controllerLoader, controllerSelection, commandManager, appShell, vscNotebook);
+        super(
+            kernelProvider,
+            controllerLoader,
+            controllerSelection,
+            commandManager,
+            appShell,
+            vscNotebook,
+            serviceContainer
+        );
     }
 
     public override async activate(): Promise<void> {

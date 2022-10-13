@@ -58,12 +58,7 @@ export interface IKernelProcess extends IAsyncDisposable {
     interrupt(): Promise<void>;
 }
 
-export interface ILocalKernelFinder extends IContributedKernelFinder {
-    /**
-     * Finds all kernel specs including Python.
-     */
-    listKernels(resource: Resource, cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
-}
+export interface ILocalKernelFinder extends IContributedKernelFinder<LocalKernelConnectionMetadata> {}
 
 /**
  * The daemon responsible for the Python Kernel.

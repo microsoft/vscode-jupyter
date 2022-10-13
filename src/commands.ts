@@ -205,4 +205,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.SwitchToLocalKernels]: [];
     [DSCommands.SwitchToRemoteKernels]: [];
     [DSCommands.SwitchToAnotherRemoteKernels]: [];
+    [DSCommands.PickDocumentKernelSource]: [NotebookDocument | undefined];
 }

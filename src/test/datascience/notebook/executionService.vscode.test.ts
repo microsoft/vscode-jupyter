@@ -9,16 +9,7 @@ import * as fs from 'fs';
 import * as path from '../../../platform/vscode-path/path';
 import dedent from 'dedent';
 import * as sinon from 'sinon';
-import {
-    commands,
-    NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellKind,
-    NotebookCellOutput,
-    Uri,
-    window,
-    workspace
-} from 'vscode';
+import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, Uri, window, workspace } from 'vscode';
 import { Common } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
@@ -763,74 +754,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             )
         ]);
     });
-    test('Outputs with support for ansic code `\u001b[A`', async function () {
-        // Ansi Code `<esc>[A` means move cursor up, i.e. replace previous line with the new output (or erase previous line & start there).
-        const cell1 = await insertCodeCell(
-            dedent`
-            import sys
-            import os
-            sys.stdout.write(f"Line1{os.linesep}")
-            sys.stdout.flush()
-            sys.stdout.write(os.linesep)
-            sys.stdout.flush()
-            sys.stdout.write(f"Line3{os.linesep}")
-            sys.stdout.flush()
-            sys.stdout.write("Line4")
-            `,
-            { index: 0 }
-        );
-        const cell2 = await insertCodeCell(
-            dedent`
-            import sys
-            import os
-            sys.stdout.write(f"Line1{os.linesep}")
-            sys.stdout.flush()
-            sys.stdout.write(os.linesep)
-            sys.stdout.flush()
-            sys.stdout.write(u"\u001b[A")
-            sys.stdout.flush()
-            sys.stdout.write(f"Line3{os.linesep}")
-            sys.stdout.flush()
-            sys.stdout.write("Line4")
-            `,
-            { index: 1 }
-        );
-
-        await Promise.all([
-            runAllCellsInActiveNotebook(),
-            waitForTextOutput(cell1, 'Line4', 0, false),
-            waitForTextOutput(cell2, 'Line4', 0, false)
-        ]);
-
-        // In cell 1 we should have the output
-        // Line1
-        //
-        // Line2
-        // Line3
-        // & in cell 2 we should have the output
-        // Line1
-        // Line2
-        // Line3
-
-        // Work around https://github.com/ipython/ipykernel/issues/729
-        const ignoreEmptyOutputs = (output: NotebookCellOutput) => {
-            return output.items.filter((item) => item.mime !== 'text/plain').length > 0;
-        };
-        assert.equal(cell1.outputs.filter(ignoreEmptyOutputs).length, 1, 'Incorrect number of output');
-        assert.equal(cell2.outputs.filter(ignoreEmptyOutputs).length, 1, 'Incorrect number of output');
-
-        // Confirm the output
-        const output1Lines: string[] = getTextOutputValue(cell1.outputs[0]).splitLines({
-            trim: false,
-            removeEmptyEntries: false
-        });
-        const output2Lines: string[] = getTextOutputValue(cell2.outputs[0]).splitLines({
-            trim: false,
-            removeEmptyEntries: false
-        });
-        assert.equal(output1Lines.length, 4);
-        assert.equal(output2Lines.length, 3);
-    });
     test('Stderr & stdout outputs should go into separate outputs', async function () {
         await insertCodeCell(
             dedent`
@@ -902,33 +825,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             assert.deepEqual(output.metadata, expected.metadata, `Metadata is incorrect for cell ${index}`);
             assert.deepEqual(getTextOutputValue(output), expected.text, `Text is incorrect for cell ${index}`);
         }
-    });
-
-    test('Handling of carriage returns', async () => {
-        await insertCodeCell('print("one\\r", end="")\nprint("two\\r", end="")\nprint("three\\r", end="")', {
-            index: 0
-        });
-        await insertCodeCell('print("one\\r")\nprint("two\\r")\nprint("three\\r")', { index: 1 });
-        await insertCodeCell('print("1\\r2\\r3")', { index: 2 });
-        await insertCodeCell('print("1\\r2")', { index: 3 });
-        await insertCodeCell(
-            'import time\nfor i in range(10):\n    s = str(i) + "%"\n    print("{0}\\r".format(s),end="")\n    time.sleep(0.0001)',
-            { index: 4 }
-        );
-        await insertCodeCell('print("\\rExecute\\rExecute\\nExecute 8\\rExecute 9\\r\\r")', { index: 5 });
-
-        const cells = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
-        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[5])]);
-
-        // Wait for the outputs.
-        await Promise.all([
-            waitForTextOutput(cells[0], 'three\r', 0, true),
-            waitForTextOutput(cells[1], 'one\ntwo\nthree\n', 0, true),
-            waitForTextOutput(cells[2], '3\n', 0, true),
-            waitForTextOutput(cells[3], '2\n', 0, true),
-            waitForTextOutput(cells[4], '9%\r', 0, true),
-            waitForTextOutput(cells[5], 'Execute\nExecute 9\n', 0, true)
-        ]);
     });
 
     test('Execute all cells and run after error', async () => {

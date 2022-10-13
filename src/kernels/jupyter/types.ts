@@ -364,7 +364,7 @@ export interface IServerConnectionType {
     onDidChange: Event<void>;
 }
 
-export interface IRemoteKernelFinder extends IContributedKernelFinder {
+export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {
     listKernelsFromConnection(
         connInfo: INotebookProviderConnection | undefined
     ): Promise<RemoteKernelConnectionMetadata[]>;

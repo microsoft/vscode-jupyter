@@ -42,12 +42,12 @@ import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { takeTopRankKernel } from './localKernelFinder.unit.test';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../../kernels/common/commonFinder';
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { IExtensions } from '../../../platform/common/types';
+import { takeTopRankKernel } from '../../../kernels/raw/finder/localKernelFinder.unit.test';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -143,7 +143,7 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
         interpreterService = mock<IInterpreterService>();
         localKernelFinder = mock(LocalKernelFinder);
-        when(localKernelFinder.listKernels(anything(), anything())).thenResolve([]);
+        when(localKernelFinder.kernels).thenReturn([]);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         const notebookProvider = mock(NotebookProvider);
@@ -356,7 +356,7 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManager.getKernelSpecs()).thenResolve([]);
         await remoteKernelFinder.loadCache();
 
-        const kernels = await kernelFinder.listKernels(Uri.file('a.ipynb'), undefined);
+        const kernels = await kernelFinder.listKernels();
         assert.lengthOf(kernels, 0);
 
         verify(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).once();
@@ -417,7 +417,7 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManager.getKernelSpecs()).thenResolve([]);
         await remoteKernelFinder.loadCache();
 
-        const kernels = await kernelFinder.listKernels(Uri.file('a.ipynb'), undefined);
+        const kernels = await kernelFinder.listKernels();
         assert.lengthOf(kernels, 1);
         assert.deepEqual(kernels, [liveRemoteKernel]);
 
