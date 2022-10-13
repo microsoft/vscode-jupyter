@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { NotebookDocument, Uri, Event, CancellationToken, CancellationTokenSource } from 'vscode';
+import type { NotebookDocument, Uri, Event } from 'vscode';
 import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
@@ -49,7 +49,7 @@ export async function waitForCondition(
     errorMessage: string | (() => string),
     intervalTimeoutMs: number = 10,
     throwOnError: boolean = false,
-    cancelToken?: CancellationToken
+    cancelToken?: { isCancellationRequested: boolean; onCancellationRequested: Function }
 ): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
         const disposables: IDisposable[] = [];
@@ -145,11 +145,26 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
         return this.handledEvents;
     }
     private readonly handler: IDisposable;
-    private readonly cancellationToken = new CancellationTokenSource();
+    private readonly cancellationToken: {
+        isCancellationRequested: boolean;
+        onCancellationRequested: (cb: Function) => IDisposable;
+    };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private readonly handledEvents: any[] = [];
+    private readonly cancellationHandlers = new Set<Function>();
     constructor(event: Event<T>, private readonly eventNameForErrorMessages: string, disposables: IDisposable[] = []) {
         disposables.push(this);
+        this.cancellationToken = {
+            isCancellationRequested: false,
+            onCancellationRequested: (cb: Function) => {
+                this.cancellationHandlers.add(cb);
+                return {
+                    dispose: () => {
+                        this.cancellationHandlers.delete(cb);
+                    }
+                };
+            }
+        };
         this.handler = event(this.listener, this);
     }
     public reset() {
@@ -167,7 +182,7 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
             () => `${this.eventNameForErrorMessages} event fired ${this.count}, expected ${numberOfTimesFired}`,
             undefined,
             undefined,
-            this.cancellationToken.token
+            this.cancellationToken
         );
     }
     public async assertFiredAtLeast(numberOfTimesFired: number, waitPeriod: number = 2_000): Promise<void> {
@@ -175,10 +190,10 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
             async () => this.count >= numberOfTimesFired,
             waitPeriod,
             () =>
-                `${this.eventNameForErrorMessages} event fired ${this.count}, expected at least ${numberOfTimesFired} and ${this.cancellationToken.token.isCancellationRequested}.`,
+                `${this.eventNameForErrorMessages} event fired ${this.count}, expected at least ${numberOfTimesFired}.`,
             undefined,
             undefined,
-            this.cancellationToken.token
+            this.cancellationToken
         );
     }
     public atIndex(index: number): T {
@@ -187,8 +202,8 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
 
     public dispose() {
         this.handler.dispose();
-        this.cancellationToken.cancel();
-        this.cancellationToken.dispose();
+        this.cancellationToken.isCancellationRequested = true;
+        this.cancellationHandlers.forEach((cb) => cb());
     }
 
     private listener(e: T) {
