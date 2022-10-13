@@ -841,16 +841,11 @@ Useful in prioritizing which widgets to work on if things fail to work.","Teleme
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.JUPYTERSTARTUPCOST","Time taken to start the Jupyter server.","Telemetry.StartJupyter","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","localKernelSpecCount","Total number of local kernel specs in the list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","remoteKernelSpecCount","Total number of remote kernel specs in the list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
-Common to most of the events.","","'notebook' 
-'interactive' ",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.

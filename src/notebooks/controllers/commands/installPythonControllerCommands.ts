@@ -186,7 +186,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
                     // Trigger a load of our notebook controllers, we want to await it here so that any in
                     // progress executions get passed to the suggested controller
-                    await this.controllerLoader.loadControllers(true);
+                    await this.controllerLoader.loaded;
                 } else {
                     traceError('Failed to install Python Extension via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {

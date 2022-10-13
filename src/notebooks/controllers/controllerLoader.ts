@@ -15,9 +15,8 @@ import { ContextKey } from '../../platform/common/contextKey';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { createActiveInterpreterController } from './helpers';
 import { IControllerLoader, IControllerRegistration } from './types';
@@ -47,50 +46,23 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
 
     public activate(): void {
         // Make sure to reload whenever we do something that changes state
-        this.kernelFinder.onDidChangeKernels(
-            () => {
-                this.loadControllers(true)
-                    .then(noop)
-                    .catch((ex) => traceError('Error reloading notebook controllers', ex));
-            },
-            this,
-            this.disposables
-        );
+        this.kernelFinder.onDidChangeKernels(() => this.loadControllers(), this, this.disposables);
 
         // Sign up for document either opening or closing
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
+        this.registration.onCreated(() => this.refreshedEmitter.fire(), this, this.disposables);
 
-        this.loadControllers(true).ignoreErrors();
+        this.loadControllers();
 
         this.controllersLoadedContext.set(false).then(noop, noop);
     }
-    public loadControllers(refresh?: boolean | undefined): Promise<void> {
-        if (!this.controllersPromise || refresh) {
-            const stopWatch = new StopWatch();
-            this.controllersPromise = this.loadControllersImpl()
-                .catch((e) => {
-                    traceError('Error loading notebook controllers', e);
-                    if (!isCancellationError(e, true)) {
-                        // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
-                        // Hence swallow cancellation errors.
-                        throw e;
-                    }
-                })
-                .finally(() => {
-                    // Send telemetry related to fetching the kernel connections. Do it here
-                    // because it's the combined result of cached and non cached.
-                    sendKernelListTelemetry(
-                        vscode.Uri.file('test.ipynb'), // Give a dummy ipynb value, we need this as its used in telemetry to determine the resource.
-                        this.registration.registered.map((v) => v.connection),
-                        stopWatch
-                    ).ignoreErrors();
+    private loadControllers() {
+        this.loadControllersImpl();
+        sendKernelListTelemetry(this.registration.registered.map((v) => v.connection));
 
-                    traceInfoIfCI(`Providing notebook controllers with length ${this.registration.registered.length}.`);
-                });
-        }
-        return this.controllersPromise;
+        traceInfoIfCI(`Providing notebook controllers with length ${this.registration.registered.length}.`);
     }
     public get refreshed(): vscode.Event<void> {
         return this.refreshedEmitter.event;
@@ -119,10 +91,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         }
     }
 
-    private async loadControllersImpl() {
-        // First off set our context to false as we are about to refresh
-        await Promise.all([this.controllersLoadedContext.set(false)]);
-
+    private loadControllersImpl() {
         const connections = this.kernelFinder.kernels;
         traceVerbose(`Found ${connections.length} cached controllers`);
         this.createNotebookControllers(connections);
@@ -147,11 +116,9 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
             controller.dispose(); // This should remove it from the registered list
         });
 
-        // Indicate a refresh
-        this.refreshedEmitter.fire();
-
         // Set that we have loaded controllers
-        await this.controllersLoadedContext.set(true);
+        this.controllersLoadedContext.set(true).ignoreErrors();
+        this.controllersPromise = this.controllersPromise || Promise.resolve();
     }
     private createNotebookControllers(
         kernelConnections: KernelConnectionMetadata[],

@@ -2539,37 +2539,32 @@ export class IEventNamePropertyMapping {
     /**
      * Telemetry sent with the total number of different types of kernels in the kernel picker.
      */
-    [Telemetry.KernelCount]: TelemetryEventInfo<
-        {
-            /**
-             * Total number of kernel specs in the kernel list.
-             */
-            kernelSpecCount: number;
-            /**
-             * Total number of interpreters in the kernel list.
-             */
-            kernelInterpreterCount: number;
-            /**
-             * Total number of live kernels in the kernel list.
-             */
-            kernelLiveCount: number;
-            /**
-             * Total number of local kernel specs in the list.
-             */
-            localKernelSpecCount: number;
-            /**
-             * Total number of remote kernel specs in the list.
-             */
-            remoteKernelSpecCount: number;
-        } & DurationMeasurement &
-            ResourceTypeTelemetryProperty
-    > = {
+    [Telemetry.KernelCount]: TelemetryEventInfo<{
+        /**
+         * Total number of kernel specs in the kernel list.
+         */
+        kernelSpecCount: number;
+        /**
+         * Total number of interpreters in the kernel list.
+         */
+        kernelInterpreterCount: number;
+        /**
+         * Total number of live kernels in the kernel list.
+         */
+        kernelLiveCount: number;
+        /**
+         * Total number of local kernel specs in the list.
+         */
+        localKernelSpecCount: number;
+        /**
+         * Total number of remote kernel specs in the list.
+         */
+        remoteKernelSpecCount: number;
+    }> = {
         owner: 'donjayamanne',
         feature: ['KernelPicker'],
         source: 'N/A',
-        properties: commonClassificationForResourceType(),
         measures: {
-            ...commonClassificationForDurationProperties(),
             kernelSpecCount: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight',
