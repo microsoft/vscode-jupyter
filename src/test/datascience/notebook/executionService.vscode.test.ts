@@ -827,33 +827,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         }
     });
 
-    test('Handling of carriage returns', async () => {
-        await insertCodeCell('print("one\\r", end="")\nprint("two\\r", end="")\nprint("three\\r", end="")', {
-            index: 0
-        });
-        await insertCodeCell('print("one\\r")\nprint("two\\r")\nprint("three\\r")', { index: 1 });
-        await insertCodeCell('print("1\\r2\\r3")', { index: 2 });
-        await insertCodeCell('print("1\\r2")', { index: 3 });
-        await insertCodeCell(
-            'import time\nfor i in range(10):\n    s = str(i) + "%"\n    print("{0}\\r".format(s),end="")\n    time.sleep(0.0001)',
-            { index: 4 }
-        );
-        await insertCodeCell('print("\\rExecute\\rExecute\\nExecute 8\\rExecute 9\\r\\r")', { index: 5 });
-
-        const cells = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
-        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[5])]);
-
-        // Wait for the outputs.
-        await Promise.all([
-            waitForTextOutput(cells[0], 'three\r', 0, true),
-            waitForTextOutput(cells[1], 'one\ntwo\nthree\n', 0, true),
-            waitForTextOutput(cells[2], '3\n', 0, true),
-            waitForTextOutput(cells[3], '2\n', 0, true),
-            waitForTextOutput(cells[4], '9%\r', 0, true),
-            waitForTextOutput(cells[5], 'Execute\nExecute 9\n', 0, true)
-        ]);
-    });
-
     test('Execute all cells and run after error', async () => {
         await insertCodeCell('raise Error("fail")', { index: 0 });
         await insertCodeCell('print("after fail")', { index: 1 });
