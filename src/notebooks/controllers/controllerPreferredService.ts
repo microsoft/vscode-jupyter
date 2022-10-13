@@ -71,13 +71,26 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook));
-        this.notebook.onDidCloseNotebookDocument((document) => {
-            const token = this.preferredCancelTokens.get(document);
-            if (token) {
-                this.preferredCancelTokens.delete(document);
-                token.cancel();
-            }
-        });
+        this.notebook.onDidCloseNotebookDocument(
+            (document) => {
+                const token = this.preferredCancelTokens.get(document);
+                if (token) {
+                    this.preferredCancelTokens.delete(document);
+                    token.cancel();
+                }
+            },
+            this,
+            this.disposables
+        );
+        this.registration.onCreated(
+            () => {
+                if (this.notebook.activeNotebookEditor) {
+                    this.computePreferred(this.notebook.activeNotebookEditor.notebook).catch(noop);
+                }
+            },
+            this,
+            this.disposables
+        );
     }
     public async computePreferred(
         document: NotebookDocument,
