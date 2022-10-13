@@ -30,7 +30,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     private refreshedEmitter = new vscode.EventEmitter<void>();
     // Promise to resolve when we have loaded our controllers
     private controllersPromise: Promise<void>;
-    private loadCancellationToken: vscode.CancellationTokenSource | undefined;
     private controllersLoadedContext: ContextKey;
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
@@ -70,12 +69,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     public loadControllers(refresh?: boolean | undefined): Promise<void> {
         if (!this.controllersPromise || refresh) {
             const stopWatch = new StopWatch();
-            // Cancel previous load
-            if (this.loadCancellationToken) {
-                this.loadCancellationToken.cancel();
-            }
-            this.loadCancellationToken = new vscode.CancellationTokenSource();
-            this.controllersPromise = this.loadControllersImpl(this.loadCancellationToken.token)
+            this.controllersPromise = this.loadControllersImpl()
                 .catch((e) => {
                     traceError('Error loading notebook controllers', e);
                     if (!isCancellationError(e, true)) {
@@ -125,16 +119,11 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         }
     }
 
-    private async loadControllersImpl(cancelToken: vscode.CancellationToken) {
+    private async loadControllersImpl() {
         // First off set our context to false as we are about to refresh
-        await this.controllersLoadedContext.set(false);
+        await Promise.all([this.controllersLoadedContext.set(false)]);
 
-        let connections = await this.kernelFinder.listKernels(cancelToken);
-
-        if (cancelToken.isCancellationRequested) {
-            return;
-        }
-
+        const connections = this.kernelFinder.kernels;
         traceVerbose(`Found ${connections.length} cached controllers`);
         this.createNotebookControllers(connections);
 
@@ -164,7 +153,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         // Set that we have loaded controllers
         await this.controllersLoadedContext.set(true);
     }
-
     private createNotebookControllers(
         kernelConnections: KernelConnectionMetadata[],
         viewTypes: (typeof InteractiveWindowView | typeof JupyterNotebookView)[] = [

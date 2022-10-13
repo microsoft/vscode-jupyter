@@ -71,10 +71,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         KernelEnvironmentVariablesService
     );
     serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        LocalKernelFinder
-    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LocalKernelFinder);
 
     serviceManager.addSingleton<JupyterPaths>(JupyterPaths, JupyterPaths);
     serviceManager.addSingleton<ITrustedKernelPaths>(ITrustedKernelPaths, TrustedKernelPaths);
@@ -82,10 +79,12 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         LocalKnownPathKernelSpecFinder,
         LocalKnownPathKernelSpecFinder
     );
+    serviceManager.addBinding(LocalKnownPathKernelSpecFinder, IExtensionSyncActivationService);
     serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinder>(
         LocalPythonAndRelatedNonPythonKernelSpecFinder,
         LocalPythonAndRelatedNonPythonKernelSpecFinder
     );
+    serviceManager.addBinding(LocalPythonAndRelatedNonPythonKernelSpecFinder, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         PreWarmActivatedJupyterEnvironmentVariables
