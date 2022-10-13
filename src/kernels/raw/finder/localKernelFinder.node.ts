@@ -46,7 +46,6 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActi
     private wasPythonInstalledWhenFetchingControllers = false;
 
     private cache: LocalKernelConnectionMetadata[] = [];
-    private _initializeResolve: () => void;
 
     constructor(
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
@@ -123,7 +122,6 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActi
         }
 
         traceVerbose('LocalKernelFinder: load cache finished');
-        this._initializeResolve();
     }
 
     @traceDecoratorError('List kernels failed')
