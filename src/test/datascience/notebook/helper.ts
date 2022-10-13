@@ -566,6 +566,44 @@ export async function waitForKernelToGetAutoSelected(
     timeout = 100_000,
     skipAutoSelection: boolean = false
 ) {
+    const { controllerRegistration } = await getServices();
+    let lastLoadedControllerCount = controllerRegistration.all.length;
+    await waitForCondition(
+        async () => {
+            // Wait for controllers to get loaded.
+            // Now that we're lazy loading the controllers, we need to wait for the controllers to get loaded.
+            await waitForCondition(
+                async () => controllerRegistration.all.length > lastLoadedControllerCount,
+                1000,
+                'No new controllers loaded',
+                100,
+                false
+            ).catch(noop);
+            lastLoadedControllerCount = controllerRegistration.all.length;
+
+            // Try the test.
+            await waitForKernelToGetAutoSelectedImpl(
+                notebookEditor,
+                expectedLanguage,
+                preferRemoteKernelSpec,
+                timeout,
+                skipAutoSelection
+            );
+            return true;
+        },
+        timeout,
+        'Kernel not selected',
+        100,
+        true
+    );
+}
+export async function waitForKernelToGetAutoSelectedImpl(
+    notebookEditor?: NotebookEditor,
+    expectedLanguage?: string,
+    preferRemoteKernelSpec: boolean = false,
+    timeout = 100_000,
+    skipAutoSelection: boolean = false
+) {
     traceInfoIfCI('Wait for kernel to get auto selected');
     const {
         controllerLoader,
