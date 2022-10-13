@@ -316,6 +316,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
 
         this.currentUriPromise = Promise.resolve(entry);
         traceInfoIfCI(`setUri: ${uri}`);
+        this._localOnly = (uri === Settings.JupyterServerLocalLaunch || uri === undefined) && !this.isWebExtension;
         this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
 
         // No update the async parts

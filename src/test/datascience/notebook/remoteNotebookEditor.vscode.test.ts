@@ -128,7 +128,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
                 remoteKernelSpecs.forEach((item) => baseUrls.add(item.baseUrl));
                 return remoteKernelSpecs.length > 0;
             },
-            defaultNotebookTestTimeout,
+            defaultNotebookTestTimeout * 2,
             () => `Should have at least one remote kernelspec, ${JSON.stringify(controllerRegistration.registered)}`
         );
 
@@ -248,7 +248,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
                 const controllers = controllerRegistration.registered;
                 return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
             },
-            defaultNotebookTestTimeout,
+            defaultNotebookTestTimeout * 2,
             'Should have at least one remote controller'
         );
 
@@ -303,7 +303,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
                 const controllers = controllerRegistration.registered;
                 return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
             },
-            defaultNotebookTestTimeout,
+            defaultNotebookTestTimeout * 2,
             'Should have at least one remote controller'
         );
 
