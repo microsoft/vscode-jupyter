@@ -7,7 +7,7 @@ import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
-import { IKernelFinder, isLocalConnection, KernelConnectionMetadata } from '../../../kernels/types';
+import { isLocalConnection, KernelConnectionMetadata } from '../../../kernels/types';
 import { Resource } from '../../../platform/common/types';
 import { ignoreLogging, logValue, traceDecoratorVerbose, traceError } from '../../../platform/logging';
 import { TraceOptions } from '../../../platform/logging/types';
@@ -19,7 +19,6 @@ import { IKernelRankingHelper } from '../types';
 @injectable()
 export class KernelRankingHelper implements IKernelRankingHelper {
     constructor(
-        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(PreferredRemoteKernelIdProvider) private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider
     ) {}
 
@@ -27,6 +26,7 @@ export class KernelRankingHelper implements IKernelRankingHelper {
     @capturePerfTelemetry(Telemetry.RankKernelsPerf)
     public async rankKernels(
         resource: Resource,
+        kernels: KernelConnectionMetadata[],
         notebookMetadata?: INotebookMetadata | undefined,
         @logValue<PythonEnvironment>('uri') preferredInterpreter?: PythonEnvironment,
         @ignoreLogging() cancelToken?: CancellationToken,
@@ -34,7 +34,6 @@ export class KernelRankingHelper implements IKernelRankingHelper {
     ): Promise<KernelConnectionMetadata[] | undefined> {
         try {
             // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
-            let kernels = await this.kernelFinder.listKernels(cancelToken);
             if (serverId) {
                 kernels = kernels.filter((kernel) => !isLocalConnection(kernel) && kernel.serverId === serverId);
             }
@@ -42,13 +41,16 @@ export class KernelRankingHelper implements IKernelRankingHelper {
                 resource && this.preferredRemoteFinder
                     ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(resource)
                     : undefined;
-
+            if (cancelToken?.isCancellationRequested) {
+                return;
+            }
             let rankedKernels = await rankKernels(
                 kernels,
                 resource,
                 notebookMetadata,
                 preferredInterpreter,
-                preferredRemoteKernelId
+                preferredRemoteKernelId,
+                cancelToken
             );
 
             return rankedKernels;

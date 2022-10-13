@@ -47,11 +47,6 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
 
     private cache: LocalKernelConnectionMetadata[] = [];
     private _initializeResolve: () => void;
-    private _initializedPromise: Promise<void>;
-
-    get initialized(): Promise<void> {
-        return this._initializedPromise;
-    }
 
     constructor(
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
@@ -67,10 +62,6 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         @inject(CondaService) private readonly condaService: CondaService,
         @inject(IExtensions) private readonly extensions: IExtensions
     ) {
-        this._initializedPromise = new Promise<void>((resolve) => {
-            this._initializeResolve = resolve;
-        });
-
         kernelFinder.registerKernelFinder(this);
     }
 

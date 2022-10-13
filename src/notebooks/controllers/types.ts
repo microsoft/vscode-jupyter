@@ -108,6 +108,7 @@ export const IKernelRankingHelper = Symbol('IKernelRankingHelper');
 export interface IKernelRankingHelper {
     rankKernels(
         resource: Resource,
+        kernels: KernelConnectionMetadata[],
         option?: INotebookMetadata,
         preferredInterpreter?: PythonEnvironment,
         cancelToken?: vscode.CancellationToken,

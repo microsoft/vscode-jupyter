@@ -25,7 +25,6 @@ import {
     KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
     IKernelConnectionSession,
-    INotebookProviderConnection,
     RemoteKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
@@ -360,8 +359,4 @@ export interface IServerConnectionType {
     onDidChange: Event<void>;
 }
 
-export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {
-    listKernelsFromConnection(
-        connInfo: INotebookProviderConnection | undefined
-    ): Promise<RemoteKernelConnectionMetadata[]>;
-}
+export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {}
