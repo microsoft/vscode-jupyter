@@ -21,7 +21,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { KernelFinder } from '../../kernelFinder';
 import { LocalKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { CondaService } from '../../../platform/common/process/condaService.node';
 import * as localize from '../../../platform/common/utils/localize';
 import { debounceAsync } from '../../../platform/common/utils/decorators';
@@ -35,7 +35,7 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
-export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleActivationService {
+export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActivationService {
     kind = ContributedKernelFinderKind.Local;
     id: string = 'local';
     displayName: string = localize.DataScience.localKernelFinderDisplayName();
@@ -65,7 +65,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         kernelFinder.registerKernelFinder(this);
     }
 
-    async activate(): Promise<void> {
+    activate() {
         this.loadInitialState().then(noop, noop);
 
         this.condaService.onCondaEnvironmentsChanged(this.onDidChangeCondaEnvironments, this, this.disposables);
@@ -130,7 +130,6 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
     private async updateCache() {
         try {
-            await Promise.all([this.nonPythonKernelFinder.initialized, this.pythonKernelFinder.initialized]);
             let kernels: LocalKernelConnectionMetadata[] = [];
             // Exclude python kernel specs (we'll get that from the pythonKernelFinder)
             const nonPythonKernels = this.nonPythonKernelFinder.kernels.filter(

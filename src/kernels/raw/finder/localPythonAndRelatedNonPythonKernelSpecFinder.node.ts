@@ -36,6 +36,7 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ResourceSet } from '../../../platform/vscode-path/map';
 import { noop } from '../../../platform/common/utils/misc';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 
 /**
  * Returns all Python kernels and any related kernels registered in the python environment.
@@ -46,13 +47,12 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
  *     - This will return any non-python kernels that are registered in Python environments (e.g. Java kernels within a conda environment)
  */
 @injectable()
-export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelSpecFinderBase<LocalKernelConnectionMetadata> {
+export class LocalPythonAndRelatedNonPythonKernelSpecFinder
+    extends LocalKernelSpecFinderBase<LocalKernelConnectionMetadata>
+    implements IExtensionSyncActivationService
+{
     private _cachedKernels: LocalKernelConnectionMetadata[] = [];
     private readonly disposables: IDisposable[] = [];
-    private _initialized?: Promise<void>;
-    public get initialized() {
-        return this.initialize();
-    }
     private readonly _onDidChangeKernels = new EventEmitter<void>();
     public readonly onDidChangeKernels = this._onDidChangeKernels.event;
     constructor(
@@ -71,11 +71,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         kernelSpecsFromKnownLocations.onDidChangeKernels(() => this.refresh().catch(noop), this, this.disposables);
         interpreterService.onDidChangeInterpreter(() => this.refresh().catch(noop), this, this.disposables);
     }
-    public async initialize(): Promise<void> {
-        if (this._initialized) {
-            return this._initialized;
-        }
-        return (this._initialized = this.refresh());
+    public activate() {
+        this.refresh().ignoreErrors();
     }
     public get kernels(): LocalKernelConnectionMetadata[] {
         return this._cachedKernels;
@@ -88,10 +85,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const previousListOfKernels = this._cachedKernels;
         this.refreshCancellation?.cancel();
         const cancelToken = (this.refreshCancellation = new CancellationTokenSource());
-        this._initialized = this.listKernelsImplementation(cancelToken.token)
+        await this.listKernelsImplementation(cancelToken.token)
             .then(noop, noop)
             .finally(() => cancelToken.dispose());
-        await this._initialized;
         if (
             this._cachedKernels.length !== previousListOfKernels.length ||
             JSON.stringify(this._cachedKernels) !== JSON.stringify(previousListOfKernels)
@@ -104,7 +100,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     private async listKernelsImplementation(
         cancelToken: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
-        await this.kernelSpecsFromKnownLocations.initialized;
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getInterpreters()
             : [];
@@ -127,7 +122,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     private async listGlobalPythonKernelSpecs(
         includeKernelsRegisteredByUs: boolean
     ): Promise<LocalKernelSpecConnectionMetadata[]> {
-        await this.kernelSpecsFromKnownLocations.initialized;
         return (
             this.kernelSpecsFromKnownLocations.kernels
                 .filter((item) => item.kernelSpec.language === PYTHON_LANGUAGE)

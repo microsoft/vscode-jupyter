@@ -63,7 +63,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
 
-[false, true].forEach((isWindows) => {
+[false].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let localKernelFinder: LocalKernelFinder;
         let remoteKernelFinder: RemoteKernelFinder;
@@ -281,7 +281,9 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                 instance(extensions)
             );
             changeEventFired = createEventHandler(localKernelFinder, 'onDidChangeKernels', disposables);
-            localKernelFinder.activate().then(noop, noop);
+            localKernelFinder.activate();
+            nonPythonKernelSpecFinder.activate();
+            localPythonAndRelatedKernelFinder.activate();
 
             kernelRankHelper = new KernelRankingHelper(instance(preferredRemote));
         }
