@@ -39,7 +39,7 @@ suite('DataScience - Kernels Finder', () => {
     });
 
     test('Can list all kernels', async () => {
-        const kernelSpecs = await kernelFinder.listKernels(resourceToUse);
+        const kernelSpecs = await kernelFinder.listKernels();
         assert.isArray(kernelSpecs);
         assert.isAtLeast(kernelSpecs.length, 1);
     });
@@ -141,7 +141,7 @@ suite('DataScience - Kernels Finder', () => {
         if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST) {
             return this.skip();
         }
-        const kernelSpecs = await kernelFinder.listKernels(resourceToUse);
+        const kernelSpecs = await kernelFinder.listKernels();
         const juliaKernelSpec = kernelSpecs.find(
             (item) => item.kind !== 'connectToLiveRemoteKernel' && item?.kernelSpec?.language === 'julia'
         ) as LocalKernelConnectionMetadata;

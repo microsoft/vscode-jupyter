@@ -86,9 +86,9 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         disposeAllDisposables(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(() => {
+    suiteTeardown(async () => {
         if (originalActiveInterpreter && pythonApi) {
-            pythonApi.environments
+            await pythonApi.environments
                 .updateActiveEnvironmentPath(getFilePath(originalActiveInterpreter.uri))
                 .ignoreErrors();
         }

@@ -1007,7 +1007,7 @@ suite('Jupyter Execution', async () => {
             kernelSpec,
             id: getKernelId(kernelSpec)
         };
-        when(kernelFinder.listKernels(anything(), anything())).thenResolve([kernelMetadata]);
+        when(kernelFinder.kernels).thenReturn([kernelMetadata]);
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
         const serverFactory = mock<INotebookServerFactory>();
         const serverUriStorage = mock(JupyterServerUriStorage);

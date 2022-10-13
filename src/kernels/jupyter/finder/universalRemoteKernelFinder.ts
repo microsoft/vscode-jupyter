@@ -11,12 +11,11 @@ import {
     INotebookProvider,
     INotebookProviderConnection,
     isRemoteConnection,
-    KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
-import { IDisposable, IExtensions, Resource } from '../../../platform/common/types';
+import { IDisposable, IExtensions } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import {
@@ -231,7 +230,7 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
      *
      * Remote kernel finder is resource agnostic.
      */
-    listContributedKernels(_resource: Resource): KernelConnectionMetadata[] {
+    public get kernels(): RemoteKernelConnectionMetadata[] {
         return this.cache;
     }
 

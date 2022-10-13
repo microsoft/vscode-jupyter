@@ -4,23 +4,19 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Memento } from 'vscode';
+import { CancellationToken, CancellationTokenSource, EventEmitter, Memento } from 'vscode';
 import { getKernelId } from '../../../kernels/helpers';
-import {
-    IJupyterKernelSpec,
-    LocalKernelSpecConnectionMetadata,
-    PythonKernelConnectionMetadata
-} from '../../../kernels/types';
+import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
+import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { sendKernelSpecTelemetry } from './helper';
+import { noop } from '../../../platform/common/utils/misc';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
@@ -28,56 +24,87 @@ import { sendKernelSpecTelemetry } from './helper';
  * Returns all kernels regardless of whether Python extension is installed or not.
  */
 @injectable()
-export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
+export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase<LocalKernelSpecConnectionMetadata> {
+    private _cachedKernels: LocalKernelSpecConnectionMetadata[] = [];
+    private _initialized?: Promise<void>;
+    public get initialized() {
+        return this.initialize();
+    }
+    private readonly _onDidChangeKernels = new EventEmitter<void>();
+    /**
+     * TODO: We can monitor the known kernel spec folders and files for changes and trigger the change event.
+     * Lets discuss with VS Code core if there are known perf issues.
+     * If there are, then there's no need to monitor these folders/files for now.
+     */
+    public readonly onDidChangeKernels = this._onDidChangeKernels.event;
     constructor(
         @inject(IFileSystemNode) fs: IFileSystemNode,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) memento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) memento: Memento,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        super(fs, workspaceService, extensionChecker, memento);
+        super(fs, workspaceService, extensionChecker, memento, disposables);
         if (this.oldKernelSpecsFolder) {
             traceInfo(
                 `Old kernelSpecs (created by Jupyter Extension) stored in directory ${this.oldKernelSpecsFolder}`
             );
         }
     }
+    public get kernels(): LocalKernelSpecConnectionMetadata[] {
+        return this._cachedKernels;
+    }
+    public dispose(): void | undefined {
+        this._onDidChangeKernels.dispose();
+    }
     /**
      * @param {boolean} includePythonKernels Include/exclude Python kernels in the result.
      */
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localKernelSpec' })
-    public async listKernelSpecs(
-        includePythonKernels: boolean,
-        cancelToken?: CancellationToken
-    ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
-        return this.listKernelsWithCache(
-            includePythonKernels ? 'IncludePythonV2' : 'ExcludePythonV2',
-            false,
-            async () => {
-                // First find the on disk kernel specs and interpreters
-                const kernelSpecs = await this.findKernelSpecs(cancelToken);
+    private async listKernelSpecs(cancelToken: CancellationToken): Promise<LocalKernelSpecConnectionMetadata[]> {
+        return this.listKernelsWithCache('LocalKnownPathKernelSpecFinder', false, async () => {
+            // First find the on disk kernel specs and interpreters
+            const kernelSpecs = await this.findKernelSpecs(cancelToken);
 
-                return kernelSpecs
-                    .filter((item) => {
-                        if (includePythonKernels) {
-                            return true;
-                        }
-                        return item.language !== PYTHON_LANGUAGE;
-                    })
-                    .map(
-                        (k) =>
-                            <LocalKernelSpecConnectionMetadata>{
-                                kind: 'startUsingLocalKernelSpec',
-                                kernelSpec: k,
-                                interpreter: undefined,
-                                id: getKernelId(k)
-                            }
-                    );
+            const mappedKernelSpecs = kernelSpecs.map(
+                (k) =>
+                    <LocalKernelSpecConnectionMetadata>{
+                        kind: 'startUsingLocalKernelSpec',
+                        kernelSpec: k,
+                        interpreter: undefined,
+                        id: getKernelId(k)
+                    }
+            );
+            if (cancelToken.isCancellationRequested) {
+                return [];
             }
-        );
+            const oldKernels = this._cachedKernels;
+            this._cachedKernels = mappedKernelSpecs;
+
+            // Trigger a change event if we have different kernels.
+            oldKernels.sort();
+            mappedKernelSpecs.sort();
+            if (
+                oldKernels.length !== mappedKernelSpecs.length ||
+                JSON.stringify(oldKernels) !== JSON.stringify(mappedKernelSpecs)
+            ) {
+                this._onDidChangeKernels.fire();
+            }
+            this._onDidChangeKernels.fire();
+            return mappedKernelSpecs;
+        });
     }
-    private async findKernelSpecs(cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
+    private async initialize(): Promise<void> {
+        if (this._initialized) {
+            return this._initialized;
+        }
+        const cancellation = new CancellationTokenSource();
+        return (this._initialized = this.listKernelSpecs(cancellation.token)
+            .then(noop, noop)
+            .finally(() => cancellation.dispose()));
+    }
+    private async findKernelSpecs(cancelToken: CancellationToken): Promise<IJupyterKernelSpec[]> {
         let results: IJupyterKernelSpec[] = [];
 
         // Find all the possible places to look for this resource
@@ -85,16 +112,25 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
             this.jupyterPaths.getKernelSpecRootPaths(cancelToken),
             this.jupyterPaths.getKernelSpecRootPath()
         ]);
+        if (cancelToken.isCancellationRequested) {
+            return [];
+        }
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
+        if (cancelToken.isCancellationRequested) {
+            return [];
+        }
         await Promise.all(
             searchResults.map(async (resultPath) => {
                 try {
+                    if (cancelToken.isCancellationRequested) {
+                        return;
+                    }
                     // Add these into our path cache to speed up later finds
                     const kernelSpec = await this.getKernelSpec(
                         resultPath.kernelSpecFile,
+                        cancelToken,
                         resultPath.interpreter,
-                        globalKernelPath,
-                        cancelToken
+                        globalKernelPath
                     );
                     if (kernelSpec) {
                         sendKernelSpecTelemetry(kernelSpec, 'local');

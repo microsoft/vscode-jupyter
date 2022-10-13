@@ -6,7 +6,7 @@
 
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, when } from 'ts-mockito';
-import { ExtensionContext, Memento, Uri } from 'vscode';
+import { CancellationTokenSource, ExtensionContext, Memento, Uri } from 'vscode';
 import { CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
 import { IFileSystem, IPlatformService } from '../../../../platform/common/platform/types';
@@ -44,12 +44,15 @@ suite('Jupyter Paths', () => {
     };
     const unixHomeDir = Uri.file('/users/username');
     const macHomeDir = Uri.file('/users/username');
+    let cancelToken: CancellationTokenSource;
     suiteSetup(function () {
         if (isWeb()) {
             return this.skip();
         }
     });
     setup(() => {
+        cancelToken = new CancellationTokenSource();
+        disposables.push(cancelToken);
         const pythonExecFactory = mock<IPythonExecutionFactory>();
         pythonExecService = mock<IPythonExecutionService>();
         (instance(pythonExecService) as any).then = undefined;
@@ -310,7 +313,7 @@ suite('Jupyter Paths', () => {
         when(platformService.homeDir).thenReturn(windowsHomeDir);
         when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
 
-        const paths = await jupyterPaths.getKernelSpecRootPaths();
+        const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
         const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 
         assert.strictEqual(paths.length, 1, `Expected 1 path, got ${paths.length}, ${JSON.stringify(paths)}`);
@@ -324,7 +327,7 @@ suite('Jupyter Paths', () => {
         const jupyter_Paths = [__filename];
         process.env['JUPYTER_PATH'] = jupyter_Paths.join(path.delimiter);
 
-        const paths = await jupyterPaths.getKernelSpecRootPaths();
+        const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
         const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 
         assert.strictEqual(paths.length, 2, `Expected 2 path, got ${paths.length}, ${JSON.stringify(paths)}`);
@@ -339,7 +342,7 @@ suite('Jupyter Paths', () => {
         process.env['JUPYTER_PATH'] = jupyter_Paths.join(path.delimiter);
         const allUserProfilePath = (process.env['PROGRAMDATA'] = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp'));
 
-        const paths = await jupyterPaths.getKernelSpecRootPaths();
+        const paths = await jupyterPaths.getKernelSpecRootPaths(cancelToken.token);
         const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 
         assert.strictEqual(paths.length, 3, `Expected 3 path, got ${paths.length}, ${JSON.stringify(paths)}`);

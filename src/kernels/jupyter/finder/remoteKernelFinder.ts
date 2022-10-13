@@ -13,7 +13,6 @@ import {
     INotebookProvider,
     INotebookProviderConnection,
     isRemoteConnection,
-    KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
@@ -23,8 +22,7 @@ import {
     IDisposableRegistry,
     IExtensions,
     IMemento,
-    IsWebExtension,
-    Resource
+    IsWebExtension
 } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
@@ -231,7 +229,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
      *
      * Remote kernel finder is resource agnostic.
      */
-    listContributedKernels(_resource: Resource): KernelConnectionMetadata[] {
+    public get kernels(): RemoteKernelConnectionMetadata[] {
         return this.cache;
     }
 

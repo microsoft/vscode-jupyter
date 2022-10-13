@@ -34,7 +34,7 @@ export class KernelRankingHelper implements IKernelRankingHelper {
     ): Promise<KernelConnectionMetadata[] | undefined> {
         try {
             // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
-            let kernels = await this.kernelFinder.listKernels(resource, cancelToken);
+            let kernels = await this.kernelFinder.listKernels(cancelToken);
             if (serverId) {
                 kernels = kernels.filter((kernel) => !isLocalConnection(kernel) && kernel.serverId === serverId);
             }
