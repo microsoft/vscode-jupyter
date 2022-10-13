@@ -83,6 +83,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
         let onDidChangeInterpreters: EventEmitter<void>;
         let onDidChangeInterpreter: EventEmitter<void>;
         let changeEventFired: TestEventHandler<void>;
+        let localPythonAndRelatedKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -256,19 +257,19 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             kernelFinder = new KernelFinder([]);
 
             const condaService = mock<CondaService>();
-
+            localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+                instance(interpreterService),
+                instance(fs),
+                instance(workspaceService),
+                jupyterPaths,
+                instance(extensionChecker),
+                nonPythonKernelSpecFinder,
+                instance(memento),
+                disposables
+            );
             localKernelFinder = new LocalKernelFinder(
                 nonPythonKernelSpecFinder,
-                new LocalPythonAndRelatedNonPythonKernelSpecFinder(
-                    instance(interpreterService),
-                    instance(fs),
-                    instance(workspaceService),
-                    jupyterPaths,
-                    instance(extensionChecker),
-                    nonPythonKernelSpecFinder,
-                    instance(memento),
-                    disposables
-                ),
+                localPythonAndRelatedKernelFinder,
                 instance(memento),
                 instance(fs),
                 instance(env),
@@ -687,7 +688,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
         async function verifyKernels(expectations: ExpectedKernels) {
             const cancellation = new CancellationTokenSource();
             disposables.push(cancellation);
-            const actualKernels = await localKernelFinder.listKernels(cancellation.token);
+            const actualKernels = localKernelFinder.kernels;
             const expectedKernels = await generateExpectedKernels(
                 expectations.expectedGlobalKernelSpecs || [],
                 expectations.expectedInterpreterKernelSpecFiles || [],
@@ -785,7 +786,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             };
             await initialize(testData);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
-            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+            await localKernelFinder.initialized;
 
             await verifyKernels({
                 expectedGlobalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec]
@@ -798,7 +799,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             };
             await initialize(testData);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
-            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+            await localKernelFinder.initialized;
 
             await verifyKernels({
                 expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpec],
@@ -848,23 +849,26 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             await initialize(testData);
             const cancelToken = new CancellationTokenSource();
             disposables.push(cancelToken);
-            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(1000)]);
 
-            const kernels = await localKernelFinder.listKernels(cancelToken.token);
             verifyGlobalKernelSpec(
-                kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
+                localKernelFinder.kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
                 juliaKernelSpec
             );
             verifyGlobalKernelSpec(
-                kernels.find((item) => item.kernelSpec.display_name === javaKernelSpec.display_name),
+                localKernelFinder.kernels.find((item) => item.kernelSpec.display_name === javaKernelSpec.display_name),
                 javaKernelSpec
             );
             verifyGlobalKernelSpec(
-                kernels.find((item) => item.kernelSpec.display_name === defaultPython3Kernel.display_name),
+                localKernelFinder.kernels.find(
+                    (item) => item.kernelSpec.display_name === defaultPython3Kernel.display_name
+                ),
                 defaultPython3Kernel
             );
             verifyGlobalKernelSpec(
-                kernels.find((item) => item.kernelSpec.display_name === fullyQualifiedPythonKernelSpec.display_name),
+                localKernelFinder.kernels.find(
+                    (item) => item.kernelSpec.display_name === fullyQualifiedPythonKernelSpec.display_name
+                ),
                 fullyQualifiedPythonKernelSpec
             );
         });
@@ -882,9 +886,9 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             await initialize(testData);
             const cancelToken = new CancellationTokenSource();
             disposables.push(cancelToken);
-            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(1000)]);
 
-            const kernels = await localKernelFinder.listKernels(cancelToken.token);
+            const kernels = localKernelFinder.kernels;
             assert.isUndefined(
                 kernels.find(
                     (item) =>
@@ -936,6 +940,36 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             suite(
                 activePythonEnv ? `With active Python (${activePythonEnv.displayName})` : 'without active Python',
                 () => {
+                    /**
+                     * As we're using a push model, we need to wait for the events to get triggered.
+                     * How many events do we need to wait for is not deterministic (well for tests it is, but its too complex).
+                     * Hence for the purpose of the test (to make it easier to write them), if
+                     * the test assertion fails, then wait for another change event and then try the assertion again.
+                     *
+                     * This is possible in scenarios where we get a change event from local kernel spec finder,
+                     * but the change event for python kernelspec finder has not been triggered, hence we might have to wait for 2.
+                     */
+                    async function verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry(
+                        expectations: ExpectedKernels,
+                        moreLogging?: boolean
+                    ) {
+                        await Promise.all([
+                            localKernelFinder.initialized,
+                            changeEventFired.assertFiredAtLeast(1, 1000)
+                        ]);
+                        try {
+                            await verifyKernels(expectations);
+                        } catch {
+                            if (moreLogging) {
+                                console.error(`Change event fired ${changeEventFired.count} times`);
+                            }
+                            await changeEventFired.assertFiredAtLeast(2, 2000).catch(noop);
+                            if (moreLogging) {
+                                console.error(`Change event fired.2, ${changeEventFired.count} times`);
+                            }
+                            await verifyKernels(expectations);
+                        }
+                    }
                     test('Discover global custom Python kernelspecs', async () => {
                         const testData: TestData = {
                             globalKernelSpecs: [fullyQualifiedPythonKernelSpec],
@@ -944,12 +978,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        await Promise.all([
-                            localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
-                        ]);
-
-                        await verifyKernels({
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry({
                             expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpec],
                             expectedInterpreters: [python38VenvEnv].concat(activePythonEnv ? [activePythonEnv] : [])
                         });
@@ -966,12 +995,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        await Promise.all([
-                            localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
-                        ]);
-
-                        await verifyKernels({
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry({
                             expectedInterpreterKernelSpecFiles: [
                                 {
                                     interpreter: python38VenvEnv,
@@ -988,12 +1012,8 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await Promise.all([
-                            localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
-                        ]);
 
-                        await verifyKernels({
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry({
                             expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpecForGlobalPython36],
                             expectedInterpreters: [python36Global].concat(activePythonEnv ? [activePythonEnv] : [])
                         });
@@ -1014,12 +1034,8 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await Promise.all([
-                            localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
-                        ]);
 
-                        await verifyKernels({
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry({
                             expectedInterpreterKernelSpecFiles: [
                                 {
                                     interpreter: python38VenvEnv,
@@ -1042,19 +1058,18 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await Promise.all([
-                            localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
-                        ]);
 
-                        await verifyKernels({
-                            expectedGlobalKernelSpecs: [
-                                juliaKernelSpec,
-                                javaKernelSpec,
-                                fullyQualifiedPythonKernelSpec
-                            ],
-                            expectedInterpreters: [python38VenvEnv].concat(activePythonEnv ? [activePythonEnv] : [])
-                        });
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry(
+                            {
+                                expectedGlobalKernelSpecs: [
+                                    juliaKernelSpec,
+                                    javaKernelSpec,
+                                    fullyQualifiedPythonKernelSpec
+                                ],
+                                expectedInterpreters: [python38VenvEnv].concat(activePythonEnv ? [activePythonEnv] : [])
+                            },
+                            true
+                        );
                     });
                     test('Discover multiple global kernelspecs and a custom Python kernelspecs with env vars', async () => {
                         const testData: TestData = {
@@ -1068,12 +1083,8 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await Promise.all([
-                            localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
-                        ]);
 
-                        await verifyKernels({
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry({
                             expectedGlobalKernelSpecs: [
                                 juliaKernelSpec,
                                 javaKernelSpec,
@@ -1096,12 +1107,8 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         };
                         await initialize(testData, undefined);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
-                        await Promise.all([
-                            localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
-                        ]);
 
-                        await verifyKernels({
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry({
                             expectedGlobalKernelSpecs: [
                                 juliaKernelSpec,
                                 javaKernelSpec,
@@ -1116,9 +1123,8 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         // Why? Because we don't have the Python extension.
                         const cancelToken = new CancellationTokenSource();
                         disposables.push(cancelToken);
-                        const actualKernels = await localKernelFinder.listKernels(cancelToken.token);
                         assert.isUndefined(
-                            actualKernels.find((kernel) => kernel.kind === 'startUsingPythonInterpreter')
+                            localKernelFinder.kernels.find((kernel) => kernel.kind === 'startUsingPythonInterpreter')
                         );
                     });
                     test('Default Python kernlespecs should be ignored', async () => {
@@ -1132,18 +1138,13 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await Promise.all([
-                            localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
-                        ]);
-
                         const expectedKernels: ExpectedKernels = {
                             expectedInterpreters: [python39PyEnv_HelloWorld].concat(
                                 activePythonEnv ? [activePythonEnv] : []
                             )
                         };
 
-                        await verifyKernels(expectedKernels);
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry(expectedKernels);
                     });
                     test('Custom Python Kernels with custom env variables are listed', async () => {
                         const testData: TestData = {
@@ -1162,11 +1163,6 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await Promise.all([
-                            localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
-                        ]);
-
                         const expectedKernels: ExpectedKernels = {
                             expectedGlobalKernelSpecs: [juliaKernelSpec],
                             expectedInterpreterKernelSpecFiles: [
@@ -1188,7 +1184,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             )
                         };
 
-                        await verifyKernels(expectedKernels);
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry(expectedKernels);
                     });
                     test('Multiple global & custom Python Kernels', async () => {
                         const testData: TestData = {
@@ -1216,10 +1212,6 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                        await Promise.all([
-                            localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
-                        ]);
 
                         const expectedKernels: ExpectedKernels = {
                             expectedGlobalKernelSpecs: [juliaKernelSpec],
@@ -1249,7 +1241,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             ].concat(activePythonEnv ? [activePythonEnv] : [])
                         };
 
-                        await verifyKernels(expectedKernels);
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry(expectedKernels);
                     });
                     async function testMatchingNotebookMetadata() {
                         const testData: TestData = {
@@ -1310,9 +1302,8 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         let kernel: KernelConnectionMetadata | undefined;
                         await Promise.all([
                             localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
+                            changeEventFired.assertFiredAtLeast(2, 1000).catch(noop)
                         ]);
-
                         // Try an empty python Notebook without any kernelspec in metadata.
                         const rankedKernels = await kernelRankHelper.rankKernels(
                             nbUri,
@@ -1714,7 +1705,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
                         await Promise.all([
                             localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
+                            changeEventFired.assertFiredAtLeast(2, 100).catch(noop)
                         ]);
 
                         const kernel = takeTopRankKernel(
@@ -1767,7 +1758,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
                         await Promise.all([
                             localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
+                            changeEventFired.assertFiredAtLeast(2, 100).catch(noop)
                         ]);
 
                         const kernel = takeTopRankKernel(
@@ -1813,7 +1804,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
                         await Promise.all([
                             localKernelFinder.initialized,
-                            changeEventFired.assertFired(100).catch(noop)
+                            changeEventFired.assertFiredAtLeast(2, 100).catch(noop)
                         ]);
 
                         const kernel = takeTopRankKernel(
@@ -1857,7 +1848,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 
             // Set up the preferred remote id
             when(preferredRemote.getPreferredRemoteKernelId(anything())).thenResolve(activeID);
-            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+            await localKernelFinder.initialized;
 
             const isExactMatch = await kernelRankHelper.isExactMatch(nbUri, liveSpec, {
                 language_info: { name: PYTHON_LANGUAGE },
@@ -1868,6 +1859,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
         test('isExactMatch kernelspec needed for exact match', async () => {
             const testData: TestData = {};
             await initialize(testData);
+            await localKernelFinder.initialized;
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
@@ -1883,7 +1875,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
         test('isExactMatch interpreter hash matches default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
-            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+            await localKernelFinder.initialized;
 
             const nbUri = Uri.file('test.ipynb');
 
@@ -1912,7 +1904,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
         test('isExactMatch vscode interpreter hash matches default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
-            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+            await localKernelFinder.initialized;
 
             const nbUri = Uri.file('test.ipynb');
 
@@ -1943,7 +1935,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
         test('isExactMatch interpreter hash matches non-default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
-            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+            await localKernelFinder.initialized;
 
             const nbUri = Uri.file('test.ipynb');
 
@@ -1972,7 +1964,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
         test('isExactMatch vscode interpreter hash matches non-default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
-            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+            await localKernelFinder.initialized;
 
             const nbUri = Uri.file('test.ipynb');
 
@@ -2003,7 +1995,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
         test('isExactMatch non-default name matches w/o interpreter', async () => {
             const testData: TestData = {};
             await initialize(testData);
-            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+            await localKernelFinder.initialized;
 
             const nbUri = Uri.file('test.ipynb');
 
@@ -2030,7 +2022,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
         test('isExactMatch default name does not match w/o interpreter', async () => {
             const testData: TestData = {};
             await initialize(testData);
-            await Promise.all([localKernelFinder.initialized, changeEventFired.assertFired(100).catch(noop)]);
+            await localKernelFinder.initialized;
 
             const nbUri = Uri.file('test.ipynb');
 

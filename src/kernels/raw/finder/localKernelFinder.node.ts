@@ -8,7 +8,7 @@ import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { traceInfo, ignoreLogging, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
+import { traceInfo, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { ILocalKernelFinder } from '../types';
@@ -135,6 +135,8 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         this._initializeResolve();
     }
 
+    @traceDecoratorError('List kernels failed')
+    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
     private async updateCache() {
         try {
             await Promise.all([this.nonPythonKernelFinder.initialized, this.pythonKernelFinder.initialized]);
@@ -146,7 +148,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
             kernels = kernels.concat(nonPythonKernels).concat(this.pythonKernelFinder.kernels);
             await this.writeToCache(kernels);
         } catch (ex) {
-            traceError(`Exception Saving loaded kernels: ${ex}`);
+            traceError('Exception Saving loaded kernels', ex);
         }
     }
 
@@ -246,16 +248,6 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSingleAc
         }
 
         return [];
-    }
-    /**
-     * Search all our local file system locations for installed kernel specs and return them
-     */
-    @traceDecoratorError('List kernels failed')
-    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
-    public async listKernels(
-        @ignoreLogging() _cancelToken: CancellationToken
-    ): Promise<LocalKernelConnectionMetadata[]> {
-        return this.cache;
     }
 
     private filterKernels(kernels: LocalKernelConnectionMetadata[]) {
