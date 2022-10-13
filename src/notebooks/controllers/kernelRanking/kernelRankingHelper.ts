@@ -26,7 +26,7 @@ export class KernelRankingHelper implements IKernelRankingHelper {
     @capturePerfTelemetry(Telemetry.RankKernelsPerf)
     public async rankKernels(
         resource: Resource,
-        kernels: KernelConnectionMetadata[],
+        @ignoreLogging() kernels: KernelConnectionMetadata[],
         notebookMetadata?: INotebookMetadata | undefined,
         @logValue<PythonEnvironment>('uri') preferredInterpreter?: PythonEnvironment,
         @ignoreLogging() cancelToken?: CancellationToken,
