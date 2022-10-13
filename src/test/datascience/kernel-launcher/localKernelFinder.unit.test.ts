@@ -562,7 +562,7 @@ import { noop } from '../../../platform/common/utils/misc';
                 duplicates.add(item);
                 return true;
             });
-            const expectedKernelSpecs: KernelConnectionMetadata[] = [];
+            const expectedKernelSpecs: LocalKernelConnectionMetadata[] = [];
             await Promise.all(
                 expectedGlobalKernelSpecs.map(async (kernelSpec) => {
                     const kernelspecFile = path.join(globalSpecPath!.fsPath, kernelSpec.name, 'kernel.json');
@@ -571,7 +571,7 @@ import { noop } from '../../../platform/common/utils/misc';
                     );
                     const spec = await loadKernelSpec(Uri.file(kernelspecFile), instance(fs));
                     if (spec) {
-                        expectedKernelSpecs.push(<KernelConnectionMetadata>{
+                        expectedKernelSpecs.push(<LocalKernelConnectionMetadata>{
                             id: getKernelId(spec!, interpreter),
                             kernelSpec: spec,
                             interpreter,
@@ -592,7 +592,7 @@ import { noop } from '../../../platform/common/utils/misc';
                     );
                     const spec = await loadKernelSpec(Uri.file(kernelSpecFile), instance(fs), interpreter);
                     if (spec) {
-                        expectedKernelSpecs.push(<KernelConnectionMetadata>{
+                        expectedKernelSpecs.push(<LocalKernelConnectionMetadata>{
                             id: getKernelId(spec!, interpreter),
                             kernelSpec: spec,
                             interpreter: spec.language === PYTHON_LANGUAGE ? interpreter : undefined,
@@ -607,7 +607,7 @@ import { noop } from '../../../platform/common/utils/misc';
             await Promise.all(
                 expectedInterpreters.map(async (interpreter) => {
                     const spec = await createInterpreterKernelSpec(interpreter, tempDirForKernelSpecs);
-                    expectedKernelSpecs.push(<KernelConnectionMetadata>{
+                    expectedKernelSpecs.push(<LocalKernelConnectionMetadata>{
                         id: getKernelId(spec!, interpreter),
                         kernelSpec: spec,
                         interpreter,

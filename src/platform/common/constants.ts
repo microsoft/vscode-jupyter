@@ -288,6 +288,7 @@ export namespace Commands {
     export const SwitchToLocalKernels = 'jupyter.switchToLocalKernels';
     export const SwitchToRemoteKernels = 'jupyter.switchToRemoteKernels';
     export const SwitchToAnotherRemoteKernels = 'jupyter.switchToAnotherRemoteKernels';
+    export const PickDocumentKernelSource = 'jupyter.pickDocumentKernelSource';
 }
 
 export namespace CodeLensCommands {

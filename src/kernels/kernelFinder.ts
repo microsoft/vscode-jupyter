@@ -6,7 +6,7 @@ import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IDisposable, IDisposableRegistry, Resource } from '../platform/common/types';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { traceInfoIfCI } from '../platform/logging';
-import { IContributedKernelFinder } from './internalTypes';
+import { IContributedKernelFinder, IContributedKernelFinderInfo } from './internalTypes';
 import { IKernelFinder, KernelConnectionMetadata } from './types';
 
 /**
@@ -16,6 +16,10 @@ import { IKernelFinder, KernelConnectionMetadata } from './types';
 export class KernelFinder implements IKernelFinder {
     private startTimeForFetching?: StopWatch;
     private _finders: IContributedKernelFinder[] = [];
+    private connectionFinderMapping: Map<string, IContributedKernelFinderInfo> = new Map<
+        string,
+        IContributedKernelFinderInfo
+    >();
 
     private _onDidChangeKernels = new EventEmitter<void>();
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
@@ -60,8 +64,17 @@ export class KernelFinder implements IKernelFinder {
 
         const kernels: KernelConnectionMetadata[] = [];
 
+        // List kernels might be called after finders or connections are removed so just clear out and regenerate
+        this.connectionFinderMapping.clear();
+
         for (const finder of this._finders) {
             const contributedKernels = finder.listContributedKernels(resource);
+
+            // Add our connection => finder mapping
+            contributedKernels.forEach((connection) => {
+                this.connectionFinderMapping.set(connection.id, finder);
+            });
+
             kernels.push(...contributedKernels);
         }
 
@@ -72,5 +85,16 @@ export class KernelFinder implements IKernelFinder {
         );
 
         return kernels;
+    }
+
+    // Check our mappings to see what connection supplies this metadata, since metadatas can be created outside of finders
+    // allow for undefined as a return value
+    public getFinderForConnection(kernelMetadata: KernelConnectionMetadata): IContributedKernelFinderInfo | undefined {
+        return this.connectionFinderMapping.get(kernelMetadata.id);
+    }
+
+    // Give the info for what kernel finders are currently registered
+    public get registered(): IContributedKernelFinderInfo[] {
+        return this._finders as IContributedKernelFinderInfo[];
     }
 }

@@ -13,7 +13,7 @@ import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
 import { INotebookCompletionProvider, INotebookEditorProvider } from './types';
-import { IDataScienceCommandListener } from '../platform/common/types';
+import { IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 import { ITracebackFormatter } from '../kernels/types';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
@@ -52,6 +52,7 @@ import { IJupyterVariables } from '../kernels/variables/types';
 import { DebuggerVariables } from './debugger/debuggerVariables';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
+import { PickDocumentKernelSourceCommand } from './controllers/commands/pickDocumentKernelSourceCommand';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     registerControllerTypes(serviceManager, isDevMode);
@@ -149,4 +150,12 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
     serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
     serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
+
+    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
+    if (configuration.getSettings().kernelPickerType === 'Insiders') {
+        serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            PickDocumentKernelSourceCommand
+        );
+    }
 }
