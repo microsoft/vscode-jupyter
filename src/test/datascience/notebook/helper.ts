@@ -568,6 +568,7 @@ export async function waitForKernelToGetAutoSelected(
 ) {
     const { controllerRegistration } = await getServices();
     let lastLoadedControllerCount = controllerRegistration.all.length;
+    let lastError: Error | undefined;
     await waitForCondition(
         async () => {
             // Wait for controllers to get loaded.
@@ -582,19 +583,23 @@ export async function waitForKernelToGetAutoSelected(
             lastLoadedControllerCount = controllerRegistration.all.length;
 
             // Try the test.
-            await waitForKernelToGetAutoSelectedImpl(
-                notebookEditor,
-                expectedLanguage,
-                preferRemoteKernelSpec,
-                timeout,
-                skipAutoSelection
-            );
-            return true;
+            try {
+                await waitForKernelToGetAutoSelectedImpl(
+                    notebookEditor,
+                    expectedLanguage,
+                    preferRemoteKernelSpec,
+                    timeout,
+                    skipAutoSelection
+                );
+                return true;
+            } catch (ex) {
+                lastError = ex;
+                return false;
+            }
         },
         timeout,
-        'Kernel not selected',
-        100,
-        true
+        () => `Kernel not selected, last error ${lastError}`,
+        100
     );
 }
 export async function waitForKernelToGetAutoSelectedImpl(
