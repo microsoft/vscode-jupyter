@@ -66,6 +66,7 @@ import {
 } from '../../kernels/helpers';
 import {
     IKernel,
+    IKernelController,
     IKernelProvider,
     isLocalConnection,
     KernelConnectionMetadata,
@@ -91,6 +92,7 @@ import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { IPlatformService } from '../../platform/common/platform/types';
+import { KernelController } from '../../kernels/kernelController';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -475,7 +477,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             .then(noop, (ex) => console.error(ex));
     }
 
-    private createCellExecutionIfNecessary(cell: NotebookCell, controller: NotebookController) {
+    private createCellExecutionIfNecessary(cell: NotebookCell, controller: IKernelController) {
         // Only have one cell in the 'running' state for this notebook
         let currentExecution = this.runningCellExecutions.get(cell.notebook);
         if (!currentExecution || currentExecution.cell === cell) {
@@ -496,12 +498,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceVerbose(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
         // Start execution now (from the user's point of view)
-        let exec = this.createCellExecutionIfNecessary(cell, this.controller);
+        let exec = this.createCellExecutionIfNecessary(cell, new KernelController(this.controller));
 
         // Connect to a matching kernel if possible (but user may pick a different one)
         let currentContext: 'start' | 'execution' = 'start';
         let kernel: IKernel | undefined;
-        let controller = this.controller;
+        let controller: IKernelController = new KernelController(this.controller);
         let kernelStarted = false;
         try {
             kernel = await this.connectToKernel(doc, new DisplayOptions(false));

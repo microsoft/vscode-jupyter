@@ -11,7 +11,6 @@ import {
     Event,
     EventEmitter,
     NotebookCell,
-    NotebookController,
     ColorThemeKind,
     Disposable,
     Uri,
@@ -51,7 +50,8 @@ import {
     IBaseKernel,
     KernelActionSource,
     KernelHooks,
-    IKernelSettings
+    IKernelSettings,
+    IKernelController
 } from './types';
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
@@ -713,7 +713,7 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         notebookProvider: INotebookProvider,
         kernelSettings: IKernelSettings,
         appShell: IApplicationShell,
-        public readonly controller: NotebookController,
+        public readonly controller: IKernelController,
         context: IExtensionContext,
         formatters: ITracebackFormatter[],
         startupCodeProviders: IStartupCodeProvider[],
