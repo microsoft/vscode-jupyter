@@ -1324,7 +1324,6 @@
 //Telemetry.KernelCount
 /* __GDPR__
    "DS_INTERNAL.KERNEL_COUNT" : {
-     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "kernelSpecCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of kernel specs in the kernel list.","owner":"donjayamanne","isMeasurement":true},
      "kernelInterpreterCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of interpreters in the kernel list.","owner":"donjayamanne","isMeasurement":true},
      "kernelLiveCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of live kernels in the kernel list.","owner":"donjayamanne","isMeasurement":true},
