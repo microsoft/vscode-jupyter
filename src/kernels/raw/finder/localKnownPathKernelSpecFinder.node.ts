@@ -17,6 +17,7 @@ import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { sendKernelSpecTelemetry } from './helper';
 import { noop } from '../../../platform/common/utils/misc';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
@@ -24,12 +25,11 @@ import { noop } from '../../../platform/common/utils/misc';
  * Returns all kernels regardless of whether Python extension is installed or not.
  */
 @injectable()
-export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase<LocalKernelSpecConnectionMetadata> {
+export class LocalKnownPathKernelSpecFinder
+    extends LocalKernelSpecFinderBase<LocalKernelSpecConnectionMetadata>
+    implements IExtensionSyncActivationService
+{
     private _cachedKernels: LocalKernelSpecConnectionMetadata[] = [];
-    private _initialized?: Promise<void>;
-    public get initialized() {
-        return this.initialize();
-    }
     private readonly _onDidChangeKernels = new EventEmitter<void>();
     /**
      * TODO: We can monitor the known kernel spec folders and files for changes and trigger the change event.
@@ -51,6 +51,12 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase<Lo
                 `Old kernelSpecs (created by Jupyter Extension) stored in directory ${this.oldKernelSpecsFolder}`
             );
         }
+    }
+    activate(): void {
+        const cancellation = new CancellationTokenSource();
+        this.listKernelSpecs(cancellation.token)
+            .then(noop, noop)
+            .finally(() => cancellation.dispose());
     }
     public get kernels(): LocalKernelSpecConnectionMetadata[] {
         return this._cachedKernels;
@@ -94,15 +100,6 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase<Lo
             this._onDidChangeKernels.fire();
             return mappedKernelSpecs;
         });
-    }
-    private async initialize(): Promise<void> {
-        if (this._initialized) {
-            return this._initialized;
-        }
-        const cancellation = new CancellationTokenSource();
-        return (this._initialized = this.listKernelSpecs(cancellation.token)
-            .then(noop, noop)
-            .finally(() => cancellation.dispose()));
     }
     private async findKernelSpecs(cancelToken: CancellationToken): Promise<IJupyterKernelSpec[]> {
         let results: IJupyterKernelSpec[] = [];

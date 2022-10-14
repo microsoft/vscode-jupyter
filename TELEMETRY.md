@@ -2180,17 +2180,7 @@ Expand each section to see more information about that event.
     Telemetry sent with the total number of different types of kernels in the kernel picker.  
     ```
 
-    - Properties:  
-        - `resourceType`?: `<see below>`  
-        Used to determine whether this event is related to a Notebooks or Interactive window.  
-        Common to most of the events.  
-        Possible values include:  
-            - `'notebook'`  
-            - `'interactive'`  
     - Measures:  
-        - `duration`: `number`  
-        Duration of a measure in milliseconds.  
-        Common measurement used across a number of events.  
         - `kernelInterpreterCount`: `number`  
         Total number of interpreters in the kernel list.  
         - `kernelLiveCount`: `number`  

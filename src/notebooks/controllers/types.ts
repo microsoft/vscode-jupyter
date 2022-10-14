@@ -108,6 +108,7 @@ export const IKernelRankingHelper = Symbol('IKernelRankingHelper');
 export interface IKernelRankingHelper {
     rankKernels(
         resource: Resource,
+        kernels: KernelConnectionMetadata[],
         option?: INotebookMetadata,
         preferredInterpreter?: PythonEnvironment,
         cancelToken?: vscode.CancellationToken,
@@ -137,12 +138,6 @@ export interface IControllerDefaultService {
 export const IControllerLoader = Symbol('IControllerLoader');
 
 export interface IControllerLoader {
-    /**
-     * Call this method to find all and create all of the controllers
-     * @param {boolean} [refresh] Optionally forces a refresh of all local/remote kernels.
-     */
-    loadControllers(refresh?: boolean): Promise<void>;
-
     /**
      * Event fired when all of the controllers have been refreshed
      */

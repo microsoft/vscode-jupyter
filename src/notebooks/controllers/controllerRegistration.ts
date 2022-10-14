@@ -95,7 +95,7 @@ export class ControllerRegistration implements IControllerRegistration {
                     const id = this.getControllerId(metadata, t);
 
                     // Update our list kernel connections.
-                    this.registeredMetadatas.set(id, metadata);
+                    this.registeredMetadatas.set(metadata.id, metadata);
 
                     // Return the id and the metadata for use below
                     return [id, t];

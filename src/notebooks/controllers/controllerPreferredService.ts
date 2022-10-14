@@ -249,12 +249,15 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         let preferredConnection: KernelConnectionMetadata | undefined;
         const rankedConnections = await this.kernelRankHelper.rankKernels(
             uri,
+            this.registration.all,
             notebookMetadata,
             preferredInterpreter,
             cancelToken,
             serverId
         );
-
+        if (cancelToken.isCancellationRequested) {
+            return { preferredConnection: undefined, rankedConnections: undefined };
+        }
         if (rankedConnections && rankedConnections.length) {
             const potentialMatch = rankedConnections[rankedConnections.length - 1];
 
@@ -265,9 +268,15 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             const topMatchIsPreferredInterpreter = await findKernelSpecMatchingInterpreter(preferredInterpreter, [
                 potentialMatch
             ]);
+            if (cancelToken.isCancellationRequested) {
+                return { preferredConnection: undefined, rankedConnections: undefined };
+            }
 
             // Are we an exact match based on metadata hash / name / ect...?
             const isExactMatch = await this.kernelRankHelper.isExactMatch(uri, potentialMatch, notebookMetadata);
+            if (cancelToken.isCancellationRequested) {
+                return { preferredConnection: undefined, rankedConnections: undefined };
+            }
 
             // non-exact matches are ok for non-python kernels, else we revert to active interpreter for non-python kernels.
             const languageInNotebookMetadata = getLanguageInNotebookMetadata(notebookMetadata);

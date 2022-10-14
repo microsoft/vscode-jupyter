@@ -71,13 +71,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     private _onDidChangeKernels = new EventEmitter<void>();
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
 
-    private _initializeResolve: () => void;
-    private _initializedPromise: Promise<void>;
-
-    get initialized(): Promise<void> {
-        return this._initializedPromise;
-    }
-
     private wasPythonInstalledWhenFetchingKernels = false;
 
     constructor(
@@ -97,10 +90,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IsWebExtension) private isWebExtension: boolean
     ) {
-        this._initializedPromise = new Promise<void>((resolve) => {
-            this._initializeResolve = resolve;
-        });
-
         kernelFinder.registerKernelFinder(this);
     }
 
@@ -163,7 +152,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
 
         if (this.serverConnectionType.isLocalLaunch) {
             await this.writeToCache([]);
-            this._initializeResolve();
             return;
         }
 
@@ -190,7 +178,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         await this.writeToCache(kernels);
 
         traceVerbose('RemoteKernelFinder: load cache finished');
-        this._initializeResolve();
     }
 
     private async updateCache() {

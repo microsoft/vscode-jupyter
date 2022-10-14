@@ -61,17 +61,10 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
     private _onDidChangeKernels = new EventEmitter<void>();
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
 
-    private _initializeResolve: () => void;
-    private _initializedPromise: Promise<void>;
-
     private readonly disposables: IDisposable[] = [];
 
     // Track our delay timer for when we update on kernel dispose
     private kernelDisposeDelayTimer: NodeJS.Timeout | number | undefined;
-
-    get initialized(): Promise<void> {
-        return this._initializedPromise;
-    }
 
     private wasPythonInstalledWhenFetchingKernels = false;
 
@@ -96,10 +89,6 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         this.displayName = localize.DataScience.universalRemoteKernelFinderDisplayName().format(
             serverUri.displayName || serverUri.uri
         );
-
-        this._initializedPromise = new Promise<void>((resolve) => {
-            this._initializeResolve = resolve;
-        });
 
         // When we register, add a disposable to clean ourselves up from the main kernel finder list
         // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
@@ -191,7 +180,6 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         }
 
         await this.writeToCache(kernels);
-        this._initializeResolve();
     }
 
     private async updateCache() {

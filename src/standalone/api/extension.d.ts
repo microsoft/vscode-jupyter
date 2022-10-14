@@ -249,9 +249,8 @@ export interface IExportedKernelService {
      * Gets a list of all kernel specifications that can be used to start a new kernel or to connect to an existing kernel.
      * Local, remote kernels are returned, including Python interpreters that
      * are treated as kernelspecs (as we can start Kernels for Python interpreters without Jupyter).
-     * @param {boolean} [refresh] Whether to force a refresh of the kernel specs (useful when dealing with remote kernels, as that list can change).
      */
-    getKernelSpecifications(refresh?: boolean): Promise<KernelConnectionMetadata[]>;
+    getKernelSpecifications(): Promise<KernelConnectionMetadata[]>;
     /**
      * Gets a list of all active kernel connections.
      * If `uri` is undefined, then the kernel is not associated with any resource. I.e its currently not associated with any notebook in Jupyter extension.

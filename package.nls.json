@@ -598,7 +598,7 @@
     "DataScience.jupyterSelectUserAndPasswordTitle": "Enter your user name and password to connect to Jupyter Hub",
     "DataScience.jupyterSelectUserPrompt": "Enter your user name",
     "DataScience.jupyterSelectPasswordPrompt": "Enter your password",
-    "DataScience.jupyterRenameServer": "Change Server Display Name",
+    "DataScience.jupyterRenameServer": "Change Server Display Name (Leave Blank To Use URI)",
     "DataScience.removeRemoteJupyterServerEntryInQuickPick": "Remove",
     "DataScience.jupyterNotebookFailure": "Jupyter notebook failed to launch. \r\n{0}",
     "DataScience.remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid": "The remote Jupyter Server contributed by the extension '{0}' is no longer available.",

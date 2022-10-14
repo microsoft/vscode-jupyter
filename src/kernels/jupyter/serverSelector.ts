@@ -852,14 +852,13 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         });
 
         // Offer the user a change to pick a display name for the server
-        // Prepopulate the value with the uri as the default suggestiong
+        // Leaving it blank will use the URI as the display name
         const newDisplayName = await this.applicationShell.showInputBox({
-            title: DataScience.jupyterRenameServer(),
-            value: uri
+            title: DataScience.jupyterRenameServer()
         });
 
         if (uri) {
-            await this.setJupyterURIToRemote(uri, true, newDisplayName);
+            await this.setJupyterURIToRemote(uri, true, newDisplayName || uri);
         }
     }
 

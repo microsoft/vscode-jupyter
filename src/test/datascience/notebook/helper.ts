@@ -442,7 +442,7 @@ async function waitForKernelToChangeImpl(
     notebookEditor = await waitForActiveNotebookEditor(notebookEditor);
 
     // Get the list of NotebookControllers for this document
-    await controllerLoader.loadControllers();
+    await controllerLoader.loaded;
     const notebookControllers = controllerRegistration.registered;
 
     // Find the kernel id that matches the name we want
@@ -624,7 +624,7 @@ export async function waitForKernelToGetAutoSelectedImpl(
     notebookEditor = await waitForActiveNotebookEditor(notebookEditor);
 
     // Get the list of NotebookControllers for this document
-    await controllerLoader.loadControllers();
+    await controllerLoader.loaded;
     traceInfoIfCI(`Wait for kernel - got notebook controllers`);
     const notebookControllers = controllerRegistration.registered;
 
