@@ -87,12 +87,10 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             }, this)
         );
         this.disposables.add(
-            this.registration.onCreated(() => {
-                if (this.notebook.activeNotebookEditor) {
-                    this.onDidOpenNotebookDocument(this.notebook.activeNotebookEditor.notebook);
-                }
-                this.notebook.notebookDocuments.map((nb) => this.onDidOpenNotebookDocument(nb));
-            }, this)
+            this.registration.onCreated(
+                () => this.notebook.notebookDocuments.map((nb) => this.onDidOpenNotebookDocument(nb)),
+                this
+            )
         );
     }
     public dispose() {
