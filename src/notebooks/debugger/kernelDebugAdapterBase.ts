@@ -224,7 +224,12 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             this.disconnected = true;
             if (this.debugService.activeDebugSession === this.session) {
                 try {
-                    await this.session.customRequest('disconnect', { restart: false });
+                    await Promise.all([
+                        this.deleteDumpedFiles().catch((ex) =>
+                            traceWarning('Error deleting temporary debug files.', ex)
+                        ),
+                        this.session.customRequest('disconnect', { restart: false })
+                    ]);
                 } catch (e) {
                     traceError(`Failed to disconnect debug session`, e);
                 }
@@ -235,7 +240,6 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     }
 
     dispose() {
-        this.deleteDumpedFiles().catch((ex) => traceWarning('Error deleting temporary debug files.', ex));
         this.disposables.forEach((d) => d.dispose());
     }
 
