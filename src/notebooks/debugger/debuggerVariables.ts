@@ -8,19 +8,8 @@ import * as uriPath from '../../platform/vscode-path/resources';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { Identifiers } from '../../platform/common/constants';
-import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
-import { traceError, traceVerbose } from '../../platform/logging';
-import {
-    IConfigurationService,
-    IDataFrameScriptGenerator,
-    IVariableScriptGenerator,
-    Resource
-} from '../../platform/common/types';
-import { DebugLocationTracker } from './debugLocationTracker';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { IDebuggingManager, IJupyterDebugService, KernelDebugMode } from './debuggingTypes';
 import { IKernel } from '../../kernels/types';
+import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from '../../kernels/variables/helpers';
 import { parseDataFrame } from '../../kernels/variables/pythonVariableRequester';
 import {
     IConditionalJupyterVariables,
@@ -28,8 +17,19 @@ import {
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
 } from '../../kernels/variables/types';
-import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from '../../kernels/variables/helpers';
+import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
+import { Identifiers } from '../../platform/common/constants';
+import {
+    IConfigurationService,
+    IDataFrameScriptGenerator,
+    IVariableScriptGenerator,
+    Resource
+} from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
+import { traceError, traceVerbose } from '../../platform/logging';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { IJupyterDebugService, INotebookDebuggingManager, KernelDebugMode } from './debuggingTypes';
+import { DebugLocationTracker } from './debugLocationTracker';
 
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;
@@ -53,7 +53,7 @@ export class DebuggerVariables
 
     constructor(
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
-        @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
+        @inject(INotebookDebuggingManager) private readonly debuggingManager: INotebookDebuggingManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IVariableScriptGenerator) private readonly varScriptGenerator: IVariableScriptGenerator,

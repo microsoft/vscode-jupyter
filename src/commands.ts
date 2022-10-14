@@ -193,11 +193,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
         NotebookDocument | undefined
     ];
     [DSCommands.SelectNativeJupyterUriFromToolBar]: [];
-    [DSCommands.DebugNotebook]: [];
     [DSCommands.RunByLine]: [NotebookCell];
     [DSCommands.RunAndDebugCell]: [NotebookCell];
     [DSCommands.RunByLineNext]: [NotebookCell];
-    [DSCommands.RunByLineStop]: [];
+    [DSCommands.RunByLineStop]: [NotebookCell];
     [DSCommands.ReplayPylanceLog]: [Uri];
     [DSCommands.ReplayPylanceLogStep]: [];
     [DSCommands.InstallPythonExtensionViaKernelPicker]: [];

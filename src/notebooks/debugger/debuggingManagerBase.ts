@@ -12,19 +12,20 @@ import {
     NotebookCell,
     NotebookDocument,
     NotebookEditor,
-    workspace
+    workspace,
+    window
 } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import { traceError, traceInfoIfCI } from '../../platform/logging';
+import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IControllerLoader, IControllerSelection } from '../controllers/types';
 import { DebuggingTelemetry } from './constants';
 import { Debugger } from './debugger';
-import { INotebookDebugConfig } from './debuggingTypes';
+import { IDebuggingManager, INotebookDebugConfig, KernelDebugMode } from './debuggingTypes';
 import { IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
 import { KernelConnector } from '../controllers/kernelConnector';
@@ -34,7 +35,7 @@ import { DisplayOptions } from '../../kernels/displayOptions';
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
-export abstract class DebuggingManagerBase implements IDisposable {
+export abstract class DebuggingManagerBase implements IDisposable, IDebuggingManager {
     protected notebookToDebugger = new Map<NotebookDocument, Debugger>();
     protected notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapterBase>();
     protected notebookInProgress = new Set<NotebookDocument>();
@@ -66,6 +67,9 @@ export abstract class DebuggingManagerBase implements IDisposable {
             })
         );
     }
+
+    abstract getDebugMode(notebook: NotebookDocument): KernelDebugMode | undefined;
+
     public getDebugCell(notebook: NotebookDocument): NotebookCell | undefined {
         return this.notebookToDebugAdapter.get(notebook)?.debugCell;
     }
@@ -114,10 +118,10 @@ export abstract class DebuggingManagerBase implements IDisposable {
     }
 
     protected async endSession(session: DebugSession) {
-        traceInfoIfCI(`Ending debug session ${session.id}`);
+        traceInfo(`Ending debug session ${session.id}`);
         this._doneDebugging.fire();
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
-            if (dbg && session.id === (await dbg.session).id) {
+            if (dbg && session.id === dbg.session.id) {
                 this.notebookToDebugger.delete(doc);
                 this.notebookToDebugAdapter.delete(doc);
                 this.onDidStopDebugging(doc);
@@ -155,10 +159,21 @@ export abstract class DebuggingManagerBase implements IDisposable {
         return kernel;
     }
 
+    private findEditorForCell(cell: NotebookCell): NotebookEditor | undefined {
+        const notebookUri = cell.notebook.uri.toString();
+        return window.visibleNotebookEditors.find((e) => e.notebook.uri.toString() === notebookUri.toString());
+    }
+
     protected async checkIpykernelAndPrompt(
-        editor: NotebookEditor,
+        cell: NotebookCell,
         allowSelectKernel: boolean = true
     ): Promise<IpykernelCheckResult> {
+        const editor = this.findEditorForCell(cell);
+        if (!editor) {
+            this.appShell.showErrorMessage(DataScience.noNotebookToDebug()).then(noop, noop);
+            return IpykernelCheckResult.Unknown;
+        }
+
         const ipykernelResult = await this.checkForIpykernel6(editor.notebook);
         switch (ipykernelResult) {
             case IpykernelCheckResult.NotInstalled:
@@ -172,7 +187,7 @@ export abstract class DebuggingManagerBase implements IDisposable {
             case IpykernelCheckResult.ControllerNotSelected: {
                 if (allowSelectKernel) {
                     await this.commandManager.executeCommand('notebook.selectKernel', { notebookEditor: editor });
-                    await this.checkIpykernelAndPrompt(editor, false);
+                    return await this.checkIpykernelAndPrompt(cell, false);
                 }
             }
         }

@@ -71,7 +71,6 @@ export interface IKernelDebugAdapter extends DebugAdapter {
     getConfiguration(): IBaseNotebookDebugConfig;
 }
 
-export const IDebuggingManager = Symbol('IDebuggingManager');
 export interface IDebuggingManager {
     readonly onDoneDebugging: Event<void>;
     isDebugging(notebook: NotebookDocument): boolean;
@@ -81,6 +80,13 @@ export interface IDebuggingManager {
     getDebugAdapter(notebook: NotebookDocument): IKernelDebugAdapter | undefined;
 }
 
+export const INotebookDebuggingManager = Symbol('INotebookDebuggingManager');
+export interface INotebookDebuggingManager extends IDebuggingManager {
+    tryToStartDebugging(mode: KernelDebugMode, cell: NotebookCell): Promise<void>;
+    runByLineNext(cell: NotebookCell): void;
+    runByLineStop(cell: NotebookCell): void;
+}
+
 export interface IDebuggingDelegate {
     /**
      * Called for every event sent from the debug adapter to the client. Returns true to signal that sending the message is vetoed.
@@ -88,9 +94,14 @@ export interface IDebuggingDelegate {
     willSendEvent?(msg: DebugProtocol.Event): Promise<boolean>;
 
     /**
-     * Called for every request sent from the client to the debug adapter.
+     * Called for every request sent from the client to the debug adapter. Returns true to signal that the request was handled by the delegate.
      */
-    willSendRequest?(request: DebugProtocol.Request): Promise<void>;
+    willSendRequest?(request: DebugProtocol.Request): Promise<boolean>;
+
+    /**
+     * Called for every response returned from the debug adapter to the client.
+     */
+    willSendResponse?(request: DebugProtocol.Response): Promise<void>;
 }
 
 export interface IDumpCellResponse {
@@ -115,7 +126,6 @@ export interface IDebugInfoResponseBreakpoint {
 export enum KernelDebugMode {
     RunByLine,
     Cell,
-    Everything,
     InteractiveWindow
 }
 
@@ -124,11 +134,7 @@ interface IBaseNotebookDebugConfig extends DebugConfiguration {
     __notebookUri: string;
 }
 
-export type INotebookDebugConfig =
-    | IRunByLineDebugConfig
-    | ICellDebugConfig
-    | IEverythingDebugConfig
-    | IInteractiveWindowDebugConfig;
+export type INotebookDebugConfig = IRunByLineDebugConfig | ICellDebugConfig | IInteractiveWindowDebugConfig;
 
 export interface IRunByLineDebugConfig extends IBaseNotebookDebugConfig {
     __mode: KernelDebugMode.RunByLine;
@@ -138,10 +144,6 @@ export interface IRunByLineDebugConfig extends IBaseNotebookDebugConfig {
 export interface ICellDebugConfig extends IBaseNotebookDebugConfig {
     __mode: KernelDebugMode.Cell;
     __cellIndex: number;
-}
-
-export interface IEverythingDebugConfig extends IBaseNotebookDebugConfig {
-    __mode: KernelDebugMode.Everything;
 }
 
 export interface IInteractiveWindowDebugConfig extends IBaseNotebookDebugConfig {

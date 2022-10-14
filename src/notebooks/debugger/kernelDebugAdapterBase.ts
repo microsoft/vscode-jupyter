@@ -165,6 +165,10 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             }
         }
     }
+
+    /**
+     * Handle a message from the client to the debug adapter.
+     */
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
         try {
             traceInfoIfCI(`KernelDebugAdapter::handleMessage ${JSON.stringify(message, undefined, ' ')}`);
@@ -300,9 +304,13 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 true
             );
 
-            control.onReply = (msg) => {
-                const message = msg.content as DebugProtocol.ProtocolMessage;
+            control.onReply = async (msg) => {
+                const message = msg.content as DebugProtocol.Response;
                 getMessageSourceAndHookIt(message, this.translateDebuggerFileToRealFile.bind(this));
+
+                if (this.delegate?.willSendResponse) {
+                    await this.delegate?.willSendResponse(message);
+                }
 
                 this.trace('response', JSON.stringify(message));
                 this.sendMessage.fire(message);
@@ -343,7 +351,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     ): void;
 
     protected abstract getDumpFilesForDeletion(): string[];
-    private async deleteDumpedFiles() {
+    private async deleteDumpedFiles(): Promise<void> {
         const fileValues = this.getDumpFilesForDeletion();
         // Need to have our Jupyter Session and some dumpCell files to delete
         if (this.jupyterSession && fileValues.length) {
@@ -365,7 +373,7 @@ for file in _VSCODE_fileList:
         pass
 del _VSCODE_fileList`;
 
-            return executeSilently(this.jupyterSession, deleteFilesCode, {
+            await executeSilently(this.jupyterSession, deleteFilesCode, {
                 traceErrors: true,
                 traceErrorsMessage: 'Error deleting temporary debugging files'
             });

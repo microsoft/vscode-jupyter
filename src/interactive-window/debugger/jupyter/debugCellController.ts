@@ -5,7 +5,7 @@ import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernel } from '../../../kernels/types';
 import { DebuggingTelemetry } from '../../../notebooks/debugger/constants';
-import { isJustMyCodeNotification } from '../../../notebooks/debugger/debugCellControllers';
+import { isJustMyCodeNotification } from '../../../notebooks/debugger/debugCellController';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../../../notebooks/debugger/debuggingTypes';
 import { cellDebugSetup } from '../../../notebooks/debugger/helper';
 import { traceVerbose } from '../../../platform/logging';
@@ -42,7 +42,7 @@ export class DebugCellController implements IDebuggingDelegate {
     }
 
     private debugCellDumped?: Promise<void>;
-    public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
+    public async willSendRequest(request: DebugProtocol.Request): Promise<boolean> {
         const metadata = getInteractiveCellMetadata(this.debugCell);
         if (request.command === 'setBreakpoints' && metadata && metadata.generatedCode && !this.cellDumpInvoked) {
             if (!this.debugCellDumped) {
@@ -56,5 +56,7 @@ export class DebugCellController implements IDebuggingDelegate {
             }
             await this.debugCellDumped;
         }
+
+        return false;
     }
 }

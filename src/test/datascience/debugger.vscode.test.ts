@@ -2,37 +2,37 @@
 // Licensed under the MIT License.
 
 'use strict';
-import * as sinon from 'sinon';
+import { assert } from 'chai';
 import * as fs from 'fs';
 import * as os from 'os';
-import * as path from '../../platform/vscode-path/path';
-import { noop, sleep } from '../core';
+import * as sinon from 'sinon';
+import { debug } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { IDebuggingManager, INotebookDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
 import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { Commands } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
+import { traceInfo } from '../../platform/logging';
+import * as path from '../../platform/vscode-path/path';
+import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
+import { noop, sleep } from '../core';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
+    defaultNotebookTestTimeout,
+    getCellOutputs,
+    getDebugSessionAndAdapter,
     insertCodeCell,
     prewarmNotebooks,
-    getCellOutputs,
-    defaultNotebookTestTimeout,
-    waitForStoppedEvent,
     runCell,
-    getDebugSessionAndAdapter
+    waitForStoppedEvent
 } from './notebook/helper.node';
-import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
-import { traceInfo } from '../../platform/logging';
-import { assert } from 'chai';
-import { debug } from 'vscode';
 import { ITestWebviewHost } from './testInterfaces';
-import { DebugProtocol } from 'vscode-debugprotocol';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
-import { Commands } from '../../platform/common/constants';
-import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
-import { IDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
+import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
 
 suite('VSCode Notebook - Run By Line', function () {
     let api: IExtensionTestApi;
@@ -58,7 +58,7 @@ suite('VSCode Notebook - Run By Line', function () {
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
-        debuggingManager = api.serviceContainer.get<IDebuggingManager>(IDebuggingManager);
+        debuggingManager = api.serviceContainer.get<IDebuggingManager>(INotebookDebuggingManager);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         traceInfo(`Start Test Suite (completed)`);
     });
@@ -107,7 +107,7 @@ suite('VSCode Notebook - Run By Line', function () {
             await waitForStoppedEvent(debugAdapter!);
 
             // Go head and run to the end now
-            await commandManager.executeCommand(Commands.RunByLineStop);
+            await commandManager.executeCommand(Commands.RunByLineStop, cell);
 
             // Wait until we have finished and have output
             await waitForCondition(
@@ -284,7 +284,7 @@ suite('VSCode Notebook - Run By Line', function () {
             `Print during time loop is not working. Outputs: ${getCellOutputs(cell)}}`,
             1000
         );
-        await commandManager.executeCommand(Commands.RunByLineStop);
+        await commandManager.executeCommand(Commands.RunByLineStop, cell);
         await waitForCondition(
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,

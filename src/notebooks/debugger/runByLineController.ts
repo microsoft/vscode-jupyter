@@ -9,12 +9,13 @@ import { Commands } from '../../platform/common/constants';
 import { IConfigurationService } from '../../platform/common/types';
 import { parseForComments } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
+import { IServiceContainer } from '../../platform/ioc/types';
 import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from './constants';
-import { isJustMyCodeNotification } from './debugCellControllers';
-import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from './debuggingTypes';
+import { isJustMyCodeNotification } from './debugCellController';
+import { IDebuggingDelegate, IKernelDebugAdapter, INotebookDebuggingManager, KernelDebugMode } from './debuggingTypes';
 import { cellDebugSetup } from './helper';
 
 /**
@@ -22,15 +23,18 @@ import { cellDebugSetup } from './helper';
  */
 export class RunByLineController implements IDebuggingDelegate {
     private lastPausedThreadId: number | undefined;
+    private debuggingManager: INotebookDebuggingManager;
 
     constructor(
         private readonly debugAdapter: IKernelDebugAdapter,
         public readonly debugCell: NotebookCell,
         private readonly commandManager: ICommandManager,
         private readonly kernel: IKernel,
-        private readonly settings: IConfigurationService
+        private readonly settings: IConfigurationService,
+        private readonly serviceContainer: IServiceContainer
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunByLine);
+        this.debuggingManager = this.serviceContainer.get<INotebookDebuggingManager>(INotebookDebuggingManager);
     }
 
     public continue(): void {
@@ -74,10 +78,24 @@ export class RunByLineController implements IDebuggingDelegate {
         return false;
     }
 
-    public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
+    public async willSendRequest(request: DebugProtocol.Request): Promise<boolean> {
         traceInfoIfCI(`willSendRequest: ${request.command}`);
         if (request.command === 'configurationDone') {
             await this.initializeExecute();
+        }
+
+        if (request.command === 'restart') {
+            await this.debugAdapter.disconnect();
+            this.doRestart().then(noop, noop);
+            return true;
+        }
+
+        return false;
+    }
+
+    public async willSendResponse(response: DebugProtocol.Response): Promise<void> {
+        if (response.command === 'initialize' && response.body) {
+            (response as DebugProtocol.InitializeResponse).body!.supportsRestartRequest = true;
         }
     }
 
@@ -153,5 +171,9 @@ export class RunByLineController implements IDebuggingDelegate {
                 document: this.debugCell.notebook.uri
             })
             .then(noop, noop);
+    }
+
+    private async doRestart() {
+        return this.debuggingManager.tryToStartDebugging!(KernelDebugMode.RunByLine, this.debugCell);
     }
 }

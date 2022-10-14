@@ -12,7 +12,6 @@ import {
     DebugSessionOptions,
     NotebookCell,
     NotebookDocument,
-    NotebookEditor,
     Uri
 } from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
@@ -23,7 +22,7 @@ import {
     IDebugService,
     IVSCodeNotebook
 } from '../../platform/common/application/types';
-import { Commands as DSCommands, EditorContexts } from '../../platform/common/constants';
+import { EditorContexts } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
@@ -36,7 +35,7 @@ import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IControllerLoader, IControllerSelection } from '../controllers/types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from './constants';
-import { DebugCellController } from './debugCellControllers';
+import { DebugCellController } from './debugCellController';
 import { Debugger } from './debugger';
 import { DebuggingManagerBase } from './debuggingManagerBase';
 import { IDebuggingManager, INotebookDebugConfig, KernelDebugMode } from './debuggingTypes';
@@ -89,76 +88,6 @@ export class DebuggingManager
             // factory for kernel debug adapters
             debug.registerDebugAdapterDescriptorFactory(pythonKernelDebugAdapter, {
                 createDebugAdapterDescriptor: async (session) => this.createDebugAdapterDescriptor(session)
-            }),
-            this.commandManager.registerCommand(DSCommands.DebugNotebook, async () => {
-                const editor = this.vscNotebook.activeNotebookEditor;
-                await this.tryToStartDebugging(KernelDebugMode.Everything, editor);
-            }),
-
-            this.commandManager.registerCommand(DSCommands.RunByLine, async (cell: NotebookCell | undefined) => {
-                sendTelemetryEvent(DebuggingTelemetry.clickedRunByLine);
-                const editor = this.vscNotebook.activeNotebookEditor;
-                if (!cell) {
-                    const range = editor?.selections[0];
-                    if (range) {
-                        cell = editor?.notebook.cellAt(range.start);
-                    }
-                }
-
-                if (!cell) {
-                    return;
-                }
-
-                await this.tryToStartDebugging(KernelDebugMode.RunByLine, editor, cell);
-            }),
-
-            this.commandManager.registerCommand(DSCommands.RunByLineNext, (cell: NotebookCell | undefined) => {
-                if (!cell) {
-                    const editor = this.vscNotebook.activeNotebookEditor;
-                    const range = editor?.selections[0];
-                    if (range) {
-                        cell = editor?.notebook.cellAt(range.start);
-                    }
-                }
-
-                if (!cell) {
-                    return;
-                }
-
-                const controller = this.notebookToRunByLineController.get(cell.notebook);
-                if (controller && controller.debugCell.document.uri.toString() === cell.document.uri.toString()) {
-                    controller.continue();
-                }
-            }),
-
-            this.commandManager.registerCommand(DSCommands.RunByLineStop, () => {
-                const editor = this.vscNotebook.activeNotebookEditor;
-                if (editor) {
-                    const controller = this.notebookToRunByLineController.get(editor.notebook);
-                    if (controller) {
-                        sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, {
-                            reason: 'withKeybinding'
-                        });
-                        controller.stop();
-                    }
-                }
-            }),
-
-            this.commandManager.registerCommand(DSCommands.RunAndDebugCell, async (cell: NotebookCell | undefined) => {
-                sendTelemetryEvent(DebuggingTelemetry.clickedRunAndDebugCell);
-                const editor = this.vscNotebook.activeNotebookEditor;
-                if (!cell) {
-                    const range = editor?.selections[0];
-                    if (range) {
-                        cell = editor?.notebook.cellAt(range.start);
-                    }
-                }
-
-                if (!cell) {
-                    return;
-                }
-
-                await this.tryToStartDebugging(KernelDebugMode.Cell, editor, cell);
             })
         );
     }
@@ -194,29 +123,36 @@ export class DebuggingManager
         this.debugDocuments.set(Array.from(debugDocumentUris.values())).ignoreErrors();
     }
 
-    private async tryToStartDebugging(mode: KernelDebugMode, editor?: NotebookEditor, cell?: NotebookCell) {
+    public async tryToStartDebugging(mode: KernelDebugMode, cell: NotebookCell) {
         traceInfoIfCI(`Starting debugging with mode ${mode}`);
 
-        if (!editor) {
-            this.appShell.showErrorMessage(DataScience.noNotebookToDebug()).then(noop, noop);
-            return;
-        }
-
-        const ipykernelResult = await this.checkIpykernelAndPrompt(editor);
+        const ipykernelResult = await this.checkIpykernelAndPrompt(cell);
         if (ipykernelResult === IpykernelCheckResult.Ok) {
             if (mode === KernelDebugMode.RunByLine || mode === KernelDebugMode.Cell) {
-                await this.startDebuggingCell(editor.notebook, mode, cell!);
-            } else {
-                await this.startDebugging(editor.notebook);
+                await this.startDebuggingCell(mode, cell!);
             }
         }
     }
 
-    private async startDebuggingCell(
-        doc: NotebookDocument,
-        mode: KernelDebugMode.Cell | KernelDebugMode.RunByLine,
-        cell: NotebookCell
-    ) {
+    public runByLineNext(cell: NotebookCell) {
+        const controller = this.notebookToRunByLineController.get(cell.notebook);
+        if (controller && controller.debugCell.document.uri.toString() === cell.document.uri.toString()) {
+            controller.continue();
+        }
+    }
+
+    public runByLineStop(cell: NotebookCell) {
+        const controller = this.notebookToRunByLineController.get(cell.notebook);
+        if (controller) {
+            sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, {
+                reason: 'withKeybinding'
+            });
+            controller.stop();
+        }
+    }
+
+    private async startDebuggingCell(mode: KernelDebugMode.Cell | KernelDebugMode.RunByLine, cell: NotebookCell) {
+        const doc = cell.notebook;
         const config: INotebookDebugConfig = {
             type: pythonKernelDebugAdapter,
             name: path.basename(doc.uri.toString()),
@@ -237,19 +173,6 @@ export class DebuggingManager
                   }
                 : { suppressSaveBeforeStart: true };
         return this.startDebuggingConfig(config, opts);
-    }
-
-    private async startDebugging(doc: NotebookDocument) {
-        const config: INotebookDebugConfig = {
-            type: pythonKernelDebugAdapter,
-            name: path.basename(doc.uri.toString()),
-            request: 'attach',
-            internalConsoleOptions: 'neverOpen',
-            justMyCode: false,
-            __mode: KernelDebugMode.Everything,
-            __notebookUri: doc.uri.toString()
-        };
-        return this.startDebuggingConfig(config);
     }
 
     protected async createDebugAdapterDescriptor(session: DebugSession): Promise<DebugAdapterDescriptor | undefined> {
@@ -303,7 +226,14 @@ export class DebuggingManager
 
             if (config.__mode === KernelDebugMode.RunByLine && typeof config.__cellIndex === 'number') {
                 const cell = notebook.cellAt(config.__cellIndex);
-                const controller = new RunByLineController(adapter, cell, this.commandManager, kernel!, this.settings);
+                const controller = new RunByLineController(
+                    adapter,
+                    cell,
+                    this.commandManager,
+                    kernel!,
+                    this.settings,
+                    this.serviceContainer
+                );
                 adapter.setDebuggingDelegate(controller);
                 this.notebookToRunByLineController.set(notebook, controller);
                 this.updateRunByLineContextKeys();

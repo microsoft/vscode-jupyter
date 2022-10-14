@@ -18,7 +18,6 @@ import { pythonIWKernelDebugAdapter } from '../../../notebooks/debugger/constant
 import { Debugger } from '../../../notebooks/debugger/debugger';
 import { DebuggingManagerBase } from '../../../notebooks/debugger/debuggingManagerBase';
 import {
-    IDebuggingManager,
     IDebugLocationTrackerFactory,
     IInteractiveWindowDebugConfig,
     KernelDebugMode
@@ -41,7 +40,7 @@ import * as path from '../../../platform/vscode-path/path';
 import { IFileGeneratedCodes } from '../../editor-integration/types';
 import { IInteractiveWindowDebuggingManager } from '../../types';
 import { buildSourceMap } from '../helper';
-import { DebugCellController } from './debugCellControllers';
+import { DebugCellController } from './debugCellController';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
 
 /**
@@ -50,7 +49,7 @@ import { KernelDebugAdapter } from './kernelDebugAdapter';
 @injectable()
 export class InteractiveWindowDebuggingManager
     extends DebuggingManagerBase
-    implements IExtensionSingleActivationService, IDebuggingManager, IInteractiveWindowDebuggingManager
+    implements IExtensionSingleActivationService, IInteractiveWindowDebuggingManager
 {
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
@@ -94,7 +93,7 @@ export class InteractiveWindowDebuggingManager
     public async start(editor: NotebookEditor, cell: NotebookCell) {
         traceInfoIfCI(`Starting debugging IW`);
 
-        const ipykernelResult = await this.checkIpykernelAndPrompt(editor);
+        const ipykernelResult = await this.checkIpykernelAndPrompt(cell);
         if (ipykernelResult === IpykernelCheckResult.Ok) {
             await this.startDebuggingCell(editor.notebook, cell);
         }
