@@ -25,7 +25,7 @@ import {
     IBrowserService
 } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { traceError, traceVerbose } from '../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
@@ -192,6 +192,10 @@ export class ControllerRegistration implements IControllerRegistration {
         const userFiltered = this.kernelFilter.isKernelHidden(metadata);
         const connectionTypeFiltered = isLocalConnection(metadata) !== this.isLocalLaunch;
         const urlFiltered = isRemoteConnection(metadata) && this.serverUriStorage.currentServerId !== metadata.serverId;
+
+        traceInfoIfCI(
+            `Kernel ${metadata.id}#${metadata.kind} filter checks: User filtered: ${userFiltered}, connection type filtered: ${connectionTypeFiltered}, url filtered: ${urlFiltered}`
+        );
 
         if (this.inKernelExperiment) {
             return userFiltered || connectionTypeFiltered || urlFiltered;
