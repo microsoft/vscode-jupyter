@@ -145,7 +145,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         ]);
 
         await startJupyterServer();
-        jupyterServerUri = await serverUriStorage.getRemoteUri();
+        jupyterServerUri = (await serverUriStorage.getRemoteUri())?.uri;
         sinon.restore();
     });
 

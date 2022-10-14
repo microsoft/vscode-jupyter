@@ -17,9 +17,14 @@ import {
     IsWebExtension,
     IConfigurationService
 } from '../../../platform/common/types';
-import { traceError, traceInfoIfCI } from '../../../platform/logging';
-import { computeServerId } from '../jupyterUtils';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage, IServerConnectionType } from '../types';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
+import { computeServerId, extractJupyterServerHandleAndId } from '../jupyterUtils';
+import {
+    IJupyterServerUriEntry,
+    IJupyterServerUriStorage,
+    IJupyterUriProviderRegistration,
+    IServerConnectionType
+} from '../types';
 
 export const mementoKeyToIndicateIfConnectingToLocalKernelsOnly = 'connectToLocalKernelsOnly';
 export const currentServerHashKey = 'currentServerHash';
@@ -30,7 +35,7 @@ export const currentServerHashKey = 'currentServerHash';
 @injectable()
 export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServerConnectionType {
     private lastSavedList?: Promise<IJupyterServerUriEntry[]>;
-    private currentUriPromise: Promise<string | undefined> | undefined;
+    private currentUriPromise: Promise<IJupyterServerUriEntry | undefined> | undefined;
     private _currentServerId: string | undefined;
     private _localOnly: boolean = false;
     private _onDidChangeUri = new EventEmitter<void>();
@@ -61,7 +66,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IsWebExtension) readonly isWebExtension: boolean,
-        @inject(IConfigurationService) readonly configService: IConfigurationService
+        @inject(IConfigurationService) readonly configService: IConfigurationService,
+        @inject(IJupyterUriProviderRegistration)
+        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration
     ) {
         // Remember if local only
         traceInfoIfCI(`JupyterServerUriStorage: isWebExtension: ${isWebExtension}`);
@@ -104,8 +111,15 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         });
 
         // Add this entry into the last.
-        const entry = { uri, time, serverId, displayName: displayName || uri };
+        const entry = { uri, time, serverId, displayName: displayName || uri, isValidated: true };
         editedList.push(entry);
+
+        if (this.currentUriPromise) {
+            const currentUri = await this.currentUriPromise;
+            if (currentUri && currentUri.uri === uri) {
+                this.currentUriPromise = Promise.resolve(entry);
+            }
+        }
 
         // Signal that we added in the entry
         this._onDidAddUri.fire(entry);
@@ -119,7 +133,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
 
         const editedList = uriList.filter((f) => f.uri !== uri);
         await this.updateMemento(editedList);
-        if (activeUri === uri) {
+        if (activeUri?.uri === uri) {
             await this.setUriToLocal();
         }
         const removedItem = uriList.find((f) => f.uri === uri);
@@ -177,21 +191,53 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
                 if (blob) {
                     // Make sure same length
                     const split = blob.split(Settings.JupyterServerRemoteLaunchUriSeparator);
-                    const result = [];
-                    for (let i = 0; i < split.length && i < indexes.length; i += 1) {
-                        // Split out the display name and the URI (they were combined because display name may have secret tokens in it too)
-                        const uriAndDisplayName = split[i].split(Settings.JupyterServerRemoteLaunchNameSeparator);
-                        const uri = uriAndDisplayName[0];
-                        const serverId = await computeServerId(uri);
+                    const result = await Promise.all(
+                        split.slice(0, Math.min(split.length, indexes.length)).map(async (item, index) => {
+                            const uriAndDisplayName = item.split(Settings.JupyterServerRemoteLaunchNameSeparator);
+                            const uri = uriAndDisplayName[0];
+                            const serverId = await computeServerId(uri);
+                            // 'same' is specified for the display name to keep storage shorter if it is the same value as the URI
+                            const displayName =
+                                uriAndDisplayName[1] === Settings.JupyterServerRemoteLaunchUriEqualsDisplayName ||
+                                !uriAndDisplayName[1]
+                                    ? uri
+                                    : uriAndDisplayName[1];
+                            const server: IJupyterServerUriEntry = {
+                                time: indexes[index].time,
+                                serverId,
+                                displayName,
+                                uri,
+                                isValidated: true
+                            };
 
-                        // 'same' is specified for the display name to keep storage shorter if it is the same value as the URI
-                        const displayName =
-                            uriAndDisplayName[1] === Settings.JupyterServerRemoteLaunchUriEqualsDisplayName ||
-                            !uriAndDisplayName[1]
-                                ? uri
-                                : uriAndDisplayName[1];
-                        result.push({ time: indexes[i].time, serverId, displayName, uri });
-                    }
+                            if (uri === Settings.JupyterServerLocalLaunch) {
+                                return server;
+                            }
+
+                            try {
+                                const idAndHandle = extractJupyterServerHandleAndId(uri);
+                                if (idAndHandle) {
+                                    return this.jupyterPickerRegistration
+                                        .getJupyterServerUri(idAndHandle.id, idAndHandle.handle)
+                                        .then(
+                                            () => server,
+                                            () => {
+                                                server.isValidated = false;
+                                                return server;
+                                            }
+                                        );
+                                }
+                            } catch (ex) {
+                                traceVerbose(`Failed to extract jupyter server uri ${uri} ${ex}`);
+                                server.isValidated = false;
+                                return server;
+                            }
+
+                            return server;
+                        })
+                    );
+
+                    traceVerbose(`Found ${result.length} saved URIs, ${JSON.stringify(result)}`);
                     return result;
                 }
             }
@@ -219,27 +265,19 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
             })
         );
     }
-    public getUri(): Promise<string | undefined> {
+    public getUri(): Promise<IJupyterServerUriEntry | undefined> {
         if (!this.currentUriPromise) {
             this.currentUriPromise = this.getUriInternal();
         }
 
         return this.currentUriPromise;
     }
-    public async getRemoteUri(): Promise<string | undefined> {
+    public async getRemoteUri(): Promise<IJupyterServerUriEntry | undefined> {
         try {
             const uri = await this.getUri();
-            traceInfoIfCI(`getRemoteUri: ${uri}`);
-            switch (uri) {
-                case Settings.JupyterServerLocalLaunch:
-                    return;
-                case Settings.JupyterServerRemoteLaunch:
-                    // In `getUriInternal` its not possible for us to end up with Settings.JupyterServerRemoteLaunch.
-                    // If we do, then this means the uri was never saved or not in encrypted store, hence no point returning and invalid entry.
-                    return;
-                default:
-                    return uri;
-            }
+            traceInfoIfCI(`getRemoteUri: ${uri?.uri}`);
+
+            return uri;
         } catch (e) {
             traceError(`Exception getting uri: ${e}`);
             return;
@@ -264,8 +302,19 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
 
     public async setUri(uri: string | undefined, displayName: string | undefined) {
         // Set the URI as our current state
-        this.currentUriPromise = Promise.resolve(uri);
         this._currentServerId = uri ? await computeServerId(uri) : undefined;
+        const entry: IJupyterServerUriEntry | undefined =
+            uri && this._currentServerId
+                ? {
+                      uri,
+                      time: Date.now(),
+                      serverId: this._currentServerId,
+                      displayName: displayName || uri,
+                      isValidated: true
+                  }
+                : undefined;
+
+        this.currentUriPromise = Promise.resolve(entry);
         traceInfoIfCI(`setUri: ${uri}`);
         this._localOnly = (uri === Settings.JupyterServerLocalLaunch || uri === undefined) && !this.isWebExtension;
         this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
@@ -283,9 +332,18 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
             await this.encryptedStorage.store(Settings.JupyterServerRemoteLaunchService, key, uri);
         }
     }
-    private async getUriInternal(): Promise<string | undefined> {
+    private async getUriInternal(): Promise<IJupyterServerUriEntry | undefined> {
+        const savedList = await this.getSavedUriList();
         if (this.isLocalLaunch) {
-            return Settings.JupyterServerLocalLaunch;
+            return (
+                savedList.find((item) => item.uri === Settings.JupyterServerLocalLaunch) ?? {
+                    uri: Settings.JupyterServerLocalLaunch,
+                    time: Date.now(),
+                    serverId: '',
+                    displayName: 'local',
+                    isValidated: true
+                }
+            );
         } else {
             // Should be stored in encrypted storage based on the workspace
             const key = await this.getUriAccountKey();
@@ -296,7 +354,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
                 this._currentServerId = await computeServerId(storedUri);
             }
 
-            return storedUri;
+            return savedList.find((item) => item.serverId === this._currentServerId);
         }
     }
 

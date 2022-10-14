@@ -246,6 +246,12 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         await waitForCondition(
             async () => {
                 const controllers = controllerRegistration.registered;
+                traceInfoIfCI(`Check ${controllers.length} registered controllers`);
+                traceInfoIfCI(
+                    `list controllers ${controllers.length}: ${controllers
+                        .map((i) => `${i.connection.id}, ${i.connection.kind}`)
+                        .join('\n')}`
+                );
                 return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
             },
             defaultNotebookTestTimeout,
