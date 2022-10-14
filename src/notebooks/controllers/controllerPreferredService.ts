@@ -28,7 +28,7 @@ import {
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable, IDisposableRegistry, Resource } from '../../platform/common/types';
-import { getNotebookMetadata, getResourceType } from '../../platform/common/utils';
+import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
@@ -40,6 +40,7 @@ import {
     IControllerLoader,
     IControllerPreferredService,
     IControllerRegistration,
+    IControllerSelection,
     IKernelRankingHelper,
     IVSCodeNotebookController,
     PreferredKernelExactMatchReason
@@ -66,7 +67,8 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
-        @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper
+        @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper,
+        @inject(IControllerSelection) private readonly selection: IControllerSelection
     ) {
         disposables.push(this);
     }
@@ -87,9 +89,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         this.disposables.add(
             this.registration.onCreated(() => {
                 if (this.notebook.activeNotebookEditor) {
-                    this.computePreferred(this.notebook.activeNotebookEditor.notebook).catch(noop);
+                    this.onDidOpenNotebookDocument(this.notebook.activeNotebookEditor.notebook);
                 }
-                this.notebook.notebookDocuments.forEach((nb) => this.computePreferred(nb).catch(noop));
+                this.notebook.notebookDocuments.map((nb) => this.onDidOpenNotebookDocument(nb));
             }, this)
         );
     }
@@ -103,6 +105,10 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         preferredConnection?: KernelConnectionMetadata | undefined;
         controller?: IVSCodeNotebookController | undefined;
     }> {
+        if (!isJupyterNotebook(document)) {
+            return {};
+        }
+
         traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
         // Keep track of a token per document so that we can cancel the search if the doc is closed
         this.preferredCancelTokens.get(document)?.cancel();
@@ -252,6 +258,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             (document.notebookType !== JupyterNotebookView && document.notebookType !== InteractiveWindowView) ||
             !workspace.isTrusted
         ) {
+            return;
+        }
+        if (this.selection.getSelected(document)) {
             return;
         }
 
