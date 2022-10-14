@@ -118,7 +118,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         const { editor } = await openNotebook(testCSharpNb);
         await waitForKernelToGetAutoSelected(editor, 'c#');
     });
-    test('New notebook will have a Julia cell if last notebook was a julia nb', async function () {
+    test.skip('New notebook will have a Julia cell if last notebook was a julia nb', async function () {
         return this.skip();
         await openNotebook(testJuliaNb);
         await waitForKernelToGetAutoSelected();
