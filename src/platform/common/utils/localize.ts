@@ -1420,6 +1420,10 @@ export namespace DataScience {
         localize('DataScience.universalRemoteKernelFinderDisplayName', 'Remote - {0}');
     export const remoteKernelFinderDisplayName = () =>
         localize('DataScience.remoteKernelFinderDisplayName', 'Current Remote');
+    export const kernelPickerSelectSourceTitle = () =>
+        localize('DataScience.kernelPickerSelectSourceTitle', 'Select Kernel Source');
+    export const kernelPickerSelectKernelTitle = () =>
+        localize('DataScience.kernelPickerSelectKernelTitle', 'Select Kernel');
 }
 
 export namespace Deprecated {

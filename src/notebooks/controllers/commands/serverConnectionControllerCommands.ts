@@ -30,7 +30,7 @@ import { isLocalConnection } from '../../../kernels/types';
 import { IJupyterServerUriStorage, IServerConnectionType } from '../../../kernels/jupyter/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 
-function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][] {
+export function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][] {
     const result: T[][] = [];
     let currentGroup: T[] | undefined = undefined;
     for (const element of data.slice(0).sort(compare)) {
@@ -44,7 +44,7 @@ function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[
     return result;
 }
 
-function compareIgnoreCase(a: string, b: string) {
+export function compareIgnoreCase(a: string, b: string) {
     return a.localeCompare(b, undefined, { sensitivity: 'accent' });
 }
 
