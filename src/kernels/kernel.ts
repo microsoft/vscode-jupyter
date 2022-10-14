@@ -23,13 +23,7 @@ import { WrappedError } from '../platform/errors/types';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
-import {
-    Resource,
-    IConfigurationService,
-    IDisposable,
-    IDisplayOptions,
-    IExtensionContext
-} from '../platform/common/types';
+import { Resource, IDisposable, IDisplayOptions, IExtensionContext } from '../platform/common/types';
 import { sleep } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
@@ -55,14 +49,14 @@ import {
     KernelSocketInformation,
     NotebookCellRunState,
     IBaseKernel,
-    KernelActionSource
+    KernelActionSource,
+    KernelHooks,
+    IKernelSettings
 } from './types';
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from './displayOptions';
 import { SilentExecutionErrorOptions } from './helpers';
-import { IStatusProvider } from '../platform/progress/types';
-import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { traceCellMessage } from './execution/helpers';
 import { BaseKernelExecution, KernelExecution, ThirdPartyKernelExecution } from './execution/kernelExecution';
 
@@ -130,7 +124,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     private readonly _onDisposed = new EventEmitter<void>();
     private _jupyterSessionPromise?: Promise<IKernelConnectionSession>;
     private readonly hookedSessionForEvents = new WeakSet<IKernelConnectionSession>();
-    private eventHooks: ((ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
+    private eventHooks: ((ev: KernelHooks) => Promise<void>)[] = [];
     private startCancellation = new CancellationTokenSource();
     private startupUI = new DisplayOptions(true);
     protected kernelExecution: TKernelExecution;
@@ -140,13 +134,10 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         public readonly resourceUri: Resource,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         protected readonly notebookProvider: INotebookProvider,
-        protected readonly launchTimeout: number,
-        protected readonly interruptTimeout: number,
+        protected readonly kernelSettings: IKernelSettings,
         protected readonly appShell: IApplicationShell,
-        protected readonly configService: IConfigurationService,
-        protected readonly statusProvider: IStatusProvider,
         protected readonly startupCodeProviders: IStartupCodeProvider[],
-        private readonly _creator: KernelActionSource
+        public readonly _creator: KernelActionSource
     ) {
         this.disposables.push(this._onStatusChanged);
         this.disposables.push(this._onRestarted);
@@ -167,11 +158,11 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         }, this.disposables);
     }
 
-    public addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
+    public addEventHook(hook: (event: KernelHooks) => Promise<void>): void {
         this.eventHooks.push(hook);
     }
 
-    public removeEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
+    public removeEventHook(hook: (event: KernelHooks) => Promise<void>): void {
         this.eventHooks = this.eventHooks.filter((h) => h !== hook);
     }
 
@@ -183,22 +174,22 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         traceInfo(`Interrupt requested ${getDisplayPath(this.resourceUri || this.uri)}`);
         this.startCancellation.cancel();
         const interruptResultPromise = this.kernelExecution.interrupt(this._jupyterSessionPromise);
+        interruptResultPromise
+            .finally(() => {
+                this.eventHooks.map((h) => h('interruptCompleted').ignoreErrors());
+            })
+            .catch(noop);
 
-        const status = this.statusProvider.set(DataScience.interruptKernelStatus());
         let result: InterruptResult | undefined;
-        try {
-            traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.uri)} in notebookEditor.`);
-            result = await interruptResultPromise;
-            if (result === InterruptResult.TimedOut) {
-                const message = DataScience.restartKernelAfterInterruptMessage();
-                const yes = DataScience.restartKernelMessageYes();
-                const v = await this.appShell.showInformationMessage(message, { modal: true }, yes);
-                if (v === yes) {
-                    await this.restart();
-                }
+        traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.uri)} in notebookEditor.`);
+        result = await interruptResultPromise;
+        if (result === InterruptResult.TimedOut) {
+            const message = DataScience.restartKernelAfterInterruptMessage();
+            const yes = DataScience.restartKernelMessageYes();
+            const v = await this.appShell.showInformationMessage(message, { modal: true }, yes);
+            if (v === yes) {
+                await this.restart();
             }
-        } finally {
-            status.dispose();
         }
     }
     public async dispose(): Promise<void> {
@@ -246,15 +237,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             await Promise.all(this.eventHooks.map((h) => h('willRestart')));
             traceInfo(`Restart requested ${this.uri}`);
             this.startCancellation.cancel();
-            // Set our status
-            const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
-            const progress = KernelProgressReporter.createProgressReporter(
-                this.resourceUri,
-                DataScience.restartingKernelStatus().format(
-                    `: ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)}`
-                )
-            );
-
             const stopWatch = new StopWatch();
             try {
                 // If the session died, then start a new session.
@@ -286,9 +268,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
                 await session?.dispose().catch(noop);
                 this._ignoreJupyterSessionDisposedErrors = false;
                 throw ex;
-            } finally {
-                status.dispose();
-                progress.dispose();
             }
 
             // Interactive window needs a restart sys info
@@ -299,6 +278,8 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         } catch (ex) {
             traceError(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;
+        } finally {
+            this.eventHooks.map((h) => h('restartCompleted').ignoreErrors());
         }
     }
     protected async startJupyterSession(
@@ -572,7 +553,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         }
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             traceVerbose('End running kernel initialization, now waiting for idle');
-            await session.waitForIdle(this.launchTimeout, this.startCancellation.token);
+            await session.waitForIdle(this.kernelSettings.launchTimeout, this.startCancellation.token);
             traceVerbose('End running kernel initialization, session is idle');
         }
     }
@@ -598,7 +579,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             if (file) {
                 result.push(`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`);
             }
-            if (!this.configService.getSettings(undefined).enableExtendedKernelCompletions) {
+            if (!this.kernelSettings.enableExtendedKernelCompletions) {
                 result.push(CodeSnippets.DisableJedi);
             }
 
@@ -618,8 +599,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     protected getMatplotLibInitializeCode(): string[] {
         const results: string[] = [];
 
-        const settings = this.configService.getSettings(this.resourceUri);
-        if (settings && settings.themeMatplotlibPlots) {
+        if (this.kernelSettings.themeMatplotlibPlots) {
             // We're theming matplotlibs, so we have to setup our default state.
             traceInfoIfCI(`Initialize config for plots for ${getDisplayPath(this.resourceUri || this.uri)}`);
 
@@ -632,7 +612,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
 
             // TODO: This must be joined with the previous request (else we send two separate requests unnecessarily).
             const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
-            if (!settings.ignoreVscodeTheme) {
+            if (!this.kernelSettings.ignoreVscodeTheme) {
                 // Reset the matplotlib style based on if dark or not.
                 results.push(
                     useDark
@@ -643,7 +623,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         }
 
         // Add in SVG to the figure formats if needed
-        if (settings.generateSVGPlots) {
+        if (this.kernelSettings.generateSVGPlots) {
             results.push(...CodeSnippets.AppendSVGFigureFormat.splitLines({ trim: false }));
             traceVerbose('Add SVG to matplotlib figure formats');
         }
@@ -652,9 +632,8 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     }
 
     protected getUserStartupCommands(): string[] {
-        const settings = this.configService.getSettings(this.resourceUri);
         // Run any startup commands that we specified. Support the old form too
-        let setting = settings.runStartupCommands;
+        let setting = this.kernelSettings.runStartupCommands;
 
         // Convert to string in case we get an array of startup commands.
         if (Array.isArray(setting)) {
@@ -691,11 +670,8 @@ export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> {
         resourceUri: Resource,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         notebookProvider: INotebookProvider,
-        launchTimeout: number,
-        interruptTimeout: number,
         appShell: IApplicationShell,
-        configService: IConfigurationService,
-        statusProvider: IStatusProvider,
+        kernelSettings: IKernelSettings,
         startupCodeProviders: IStartupCodeProvider[]
     ) {
         super(
@@ -703,15 +679,12 @@ export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> {
             resourceUri,
             kernelConnectionMetadata,
             notebookProvider,
-            launchTimeout,
-            interruptTimeout,
+            kernelSettings,
             appShell,
-            configService,
-            statusProvider,
             startupCodeProviders,
             '3rdPartyExtension'
         );
-        this.kernelExecution = new ThirdPartyKernelExecution(this, this.interruptTimeout);
+        this.kernelExecution = new ThirdPartyKernelExecution(this, this.kernelSettings.interruptTimeout);
         this.disposables.push(this.kernelExecution);
     }
 }
@@ -738,13 +711,9 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         public readonly notebook: NotebookDocument,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         notebookProvider: INotebookProvider,
-        launchTimeout: number,
-        interruptTimeout: number,
+        kernelSettings: IKernelSettings,
         appShell: IApplicationShell,
         public readonly controller: NotebookController,
-        configService: IConfigurationService,
-        outputTracker: CellOutputDisplayIdTracker,
-        statusProvider: IStatusProvider,
         context: IExtensionContext,
         formatters: ITracebackFormatter[],
         startupCodeProviders: IStartupCodeProvider[],
@@ -755,11 +724,8 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
             resourceUri,
             kernelConnectionMetadata,
             notebookProvider,
-            launchTimeout,
-            interruptTimeout,
+            kernelSettings,
             appShell,
-            configService,
-            statusProvider,
             startupCodeProviders,
             'jupyterExtension'
         );
@@ -767,8 +733,7 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         this.kernelExecution = new KernelExecution(
             this,
             appShell,
-            interruptTimeout,
-            outputTracker,
+            this.kernelSettings.interruptTimeout,
             context,
             formatters
         );

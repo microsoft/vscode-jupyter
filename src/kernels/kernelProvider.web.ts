@@ -13,8 +13,6 @@ import {
     IExtensionContext
 } from '../platform/common/types';
 import { BaseCoreKernelProvider, BaseThirdPartyKernelProvider } from './kernelProvider.base';
-import { IStatusProvider } from '../platform/progress/types';
-import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { Kernel, ThirdPartyKernel } from './kernel';
 import {
     IThirdPartyKernel,
@@ -26,6 +24,7 @@ import {
     ThirdPartyKernelOptions
 } from './types';
 import { IJupyterServerUriStorage } from './jupyter/types';
+import { createKernelSettings } from './kernelSettings';
 
 /**
  * Web version of a kernel provider. Needed in order to create the web version of a kernel.
@@ -38,9 +37,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IJupyterServerUriStorage) jupyterServerUriStorage: IJupyterServerUriStorage,
         @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
@@ -59,21 +56,15 @@ export class KernelProvider extends BaseCoreKernelProvider {
         this.disposeOldKernel(notebook);
 
         const resourceUri = notebook?.notebookType === InteractiveWindowView ? options.resourceUri : uri;
-        const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;
-        const interruptTimeout = this.configService.getSettings(resourceUri).jupyterInterruptTimeout;
         const kernel = new Kernel(
             uri,
             resourceUri,
             notebook,
             options.metadata,
             this.notebookProvider,
-            waitForIdleTimeout,
-            interruptTimeout,
+            createKernelSettings(this.configService, resourceUri),
             this.appShell,
             options.controller,
-            this.configService,
-            this.outputTracker,
-            this.statusProvider,
             this.context,
             this.formatters,
             this.startupCodeProviders,
@@ -104,7 +95,6 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
     ) {
         super(asyncDisposables, disposables, notebook);
@@ -118,18 +108,13 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         this.disposeOldKernel(uri);
 
         const resourceUri = uri;
-        const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;
-        const interruptTimeout = this.configService.getSettings(resourceUri).jupyterInterruptTimeout;
         const kernel = new ThirdPartyKernel(
             uri,
             resourceUri,
             options.metadata,
             this.notebookProvider,
-            waitForIdleTimeout,
-            interruptTimeout,
             this.appShell,
-            this.configService,
-            this.statusProvider,
+            createKernelSettings(this.configService, resourceUri),
             this.startupCodeProviders
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);

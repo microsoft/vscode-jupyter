@@ -124,6 +124,7 @@ export function isRemoteConnection(
     return !isLocalConnection(kernelConnection);
 }
 
+export type KernelHooks = 'willRestart' | 'willInterrupt' | 'restartCompleted' | 'interruptCompleted';
 export interface IBaseKernel extends IAsyncDisposable {
     readonly uri: Uri;
     /**
@@ -170,8 +171,8 @@ export interface IBaseKernel extends IAsyncDisposable {
     start(options?: IDisplayOptions): Promise<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
-    addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
-    removeEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
+    addEventHook(hook: (event: KernelHooks) => Promise<void>): void;
+    removeEventHook(hook: (event: KernelHooks) => Promise<void>): void;
 }
 
 /**
@@ -653,4 +654,14 @@ export const IStartupCodeProvider = Symbol('IStartupCodeProvider');
 export interface IStartupCodeProvider {
     priority: StartupCodePriority;
     getCode(kernel: IBaseKernel): Promise<string[]>;
+}
+
+export interface IKernelSettings {
+    enableExtendedKernelCompletions: boolean;
+    themeMatplotlibPlots: boolean;
+    ignoreVscodeTheme: boolean;
+    generateSVGPlots: boolean;
+    launchTimeout: number;
+    interruptTimeout: number;
+    runStartupCommands: string | string[];
 }
