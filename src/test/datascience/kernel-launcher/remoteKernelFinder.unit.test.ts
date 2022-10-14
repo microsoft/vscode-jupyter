@@ -48,6 +48,7 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { IExtensions } from '../../../platform/common/types';
 import { takeTopRankKernel } from '../../../kernels/raw/finder/localKernelFinder.unit.test';
+import { createEventHandler, TestEventHandler } from '../../common';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -62,6 +63,7 @@ suite(`Remote Kernel Finder`, () => {
     const dummyEvent = new EventEmitter<number>();
     let interpreterService: IInterpreterService;
     let cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator;
+    let kernelsChanged: TestEventHandler<void>;
     const connInfo: IJupyterConnection = {
         url: 'http://foobar',
         type: 'jupyter',
@@ -172,7 +174,9 @@ suite(`Remote Kernel Finder`, () => {
         const kernelProvider = mock<IKernelProvider>();
         const extensions = mock<IExtensions>();
         kernelFinder = new KernelFinder([]);
-        kernelRankHelper = new KernelRankingHelper(kernelFinder, preferredRemoteKernelIdProvider);
+        kernelsChanged = createEventHandler(kernelFinder, 'onDidChangeKernels');
+        disposables.push(kernelsChanged);
+        kernelRankHelper = new KernelRankingHelper(preferredRemoteKernelIdProvider);
 
         remoteKernelFinder = new RemoteKernelFinder(
             instance(jupyterSessionManagerFactory),
@@ -244,23 +248,24 @@ suite(`Remote Kernel Finder`, () => {
             juliaSpec,
             interpreterSpec
         ]);
+        await kernelsChanged.assertFiredAtLeast(1, 100).catch(noop);
 
         // Try python
-        let kernel = await kernelRankHelper.rankKernels(undefined, {
+        let kernel = await kernelRankHelper.rankKernels(undefined, kernelFinder.kernels, {
             language_info: { name: PYTHON_LANGUAGE },
             orig_nbformat: 4
         });
         assert.ok(kernel, 'No python kernel found matching notebook metadata');
 
         // Julia
-        kernel = await kernelRankHelper.rankKernels(undefined, {
+        kernel = await kernelRankHelper.rankKernels(undefined, kernelFinder.kernels, {
             language_info: { name: 'julia' },
             orig_nbformat: 4
         });
         assert.ok(kernel, 'No julia kernel found matching notebook metadata');
 
         // Python 2
-        kernel = await kernelRankHelper.rankKernels(undefined, {
+        kernel = await kernelRankHelper.rankKernels(undefined, kernelFinder.kernels, {
             kernelspec: {
                 display_name: 'Python 2 on Disk',
                 name: 'python2'
@@ -289,8 +294,9 @@ suite(`Remote Kernel Finder`, () => {
         when(memento.get(ActiveKernelIdList, anything())).thenCall(() => activeKernelIdList);
         const uri = Uri.file('/usr/foobar/foo.ipynb');
         await preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(uri, '2');
+        await kernelsChanged.assertFiredAtLeast(1, 100).catch(noop);
 
-        const kernel = takeTopRankKernel(await kernelRankHelper.rankKernels(uri));
+        const kernel = takeTopRankKernel(await kernelRankHelper.rankKernels(uri, kernelFinder.kernels));
         assert.ok(kernel, 'Kernel not found for uri');
         assert.equal(kernel?.kind, 'connectToLiveRemoteKernel', 'Live kernel not found');
         assert.equal(
@@ -355,9 +361,9 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManager.getRunningSessions()).thenResolve([]);
         when(jupyterSessionManager.getKernelSpecs()).thenResolve([]);
         await remoteKernelFinder.loadCache();
+        await kernelsChanged.assertFiredAtLeast(1, 100).catch(noop);
 
-        const kernels = await kernelFinder.listKernels();
-        assert.lengthOf(kernels, 0);
+        assert.lengthOf(kernelFinder.kernels, 0);
 
         verify(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).once();
     });
@@ -417,9 +423,8 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManager.getKernelSpecs()).thenResolve([]);
         await remoteKernelFinder.loadCache();
 
-        const kernels = await kernelFinder.listKernels();
-        assert.lengthOf(kernels, 1);
-        assert.deepEqual(kernels, [liveRemoteKernel]);
+        assert.lengthOf(kernelFinder.kernels, 1);
+        assert.deepEqual(kernelFinder.kernels, [liveRemoteKernel]);
 
         verify(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).once();
     });

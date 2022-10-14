@@ -611,7 +611,7 @@ export const IKernelFinder = Symbol('IKernelFinder');
 
 export interface IKernelFinder {
     onDidChangeKernels: Event<void>;
-    listKernels(cancelToken?: CancellationToken): Promise<KernelConnectionMetadata[]>;
+    kernels: KernelConnectionMetadata[];
     /*
      * For a given kernel connection metadata return what kernel finder found it
      */

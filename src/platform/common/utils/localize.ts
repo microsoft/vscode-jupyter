@@ -643,7 +643,8 @@ export namespace DataScience {
             'DataScience.jupyterSelectUserAndPasswordTitle',
             'Enter your user name and password to connect to Jupyter Hub'
         );
-    export const jupyterRenameServer = () => localize('DataScience.jupyterRenameServer', 'Change Server Display Name');
+    export const jupyterRenameServer = () =>
+        localize('DataScience.jupyterRenameServer', 'Change Server Display Name (Leave Blank To Use URI)');
     export const jupyterSelectUserPrompt = () =>
         localize('DataScience.jupyterSelectUserPrompt', 'Enter your user name');
     export const jupyterSelectPasswordPrompt = () =>

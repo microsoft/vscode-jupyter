@@ -4,6 +4,7 @@
 'use strict';
 
 import * as nbformat from '@jupyterlab/nbformat';
+import { CancellationToken } from 'vscode';
 import {
     createInterpreterKernelSpec,
     getKernelId,
@@ -90,7 +91,8 @@ export async function rankKernels(
     resource: Resource,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     preferredInterpreter: PythonEnvironment | undefined,
-    preferredRemoteKernelId: string | undefined
+    preferredRemoteKernelId: string | undefined,
+    cancelToken?: CancellationToken
 ): Promise<KernelConnectionMetadata[] | undefined> {
     traceInfo(
         `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
@@ -105,6 +107,9 @@ export async function rankKernels(
     // First calculate what the kernel spec would be for our active interpreter
     let preferredInterpreterKernelSpec =
         preferredInterpreter && (await findKernelSpecMatchingInterpreter(preferredInterpreter, kernels));
+    if (cancelToken?.isCancellationRequested) {
+        return;
+    }
     if (preferredInterpreter && !preferredInterpreterKernelSpec) {
         const spec = await createInterpreterKernelSpec(preferredInterpreter);
         preferredInterpreterKernelSpec = <PythonKernelConnectionMetadata>{
@@ -161,6 +166,9 @@ export async function rankKernels(
                 : (
                       (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
                   )?.toLowerCase();
+    }
+    if (cancelToken?.isCancellationRequested) {
+        return;
     }
 
     const interpreterHashes = new Map<KernelConnectionMetadata, string | undefined>();

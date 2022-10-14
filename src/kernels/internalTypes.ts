@@ -13,7 +13,6 @@ export enum ContributedKernelFinderKind {
 
 export interface IContributedKernelFinder<T extends KernelConnectionMetadata> extends IContributedKernelFinderInfo {
     kind: ContributedKernelFinderKind;
-    initialized: Promise<void>;
     onDidChangeKernels: Event<void>;
     kernels: T[];
 }

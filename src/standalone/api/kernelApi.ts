@@ -155,12 +155,12 @@ class JupyterKernelService implements IExportedKernelService {
         );
         this.controllerLoader.refreshed(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
     }
-    async getKernelSpecifications(refresh?: boolean): Promise<KernelConnectionMetadata[]> {
+    async getKernelSpecifications(): Promise<KernelConnectionMetadata[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getKernelSpecifications'
         });
-        await this.controllerLoader.loadControllers(refresh);
+        await this.controllerLoader.loaded;
         const items = this.controllerRegistration.registered;
         return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item.connection));
     }
@@ -253,7 +253,7 @@ class JupyterKernelService implements IExportedKernelService {
         spec: KernelConnectionMetadata | ActiveKernel,
         uri: Uri
     ): Promise<IKernelConnectionInfo> {
-        await this.controllerLoader.loadControllers();
+        await this.controllerLoader.loaded;
         const connections = this.controllerRegistration.all;
         const connection = connections.find((item) => item.id === spec.id);
         if (!connection) {

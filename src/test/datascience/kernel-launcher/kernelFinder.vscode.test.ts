@@ -39,13 +39,12 @@ suite('DataScience - Kernels Finder', () => {
     });
 
     test('Can list all kernels', async () => {
-        const kernelSpecs = await kernelFinder.listKernels();
-        assert.isArray(kernelSpecs);
-        assert.isAtLeast(kernelSpecs.length, 1);
+        assert.isArray(kernelFinder.kernels);
+        assert.isAtLeast(kernelFinder.kernels.length, 1);
     });
     test('No kernel returned or non exact match if no matching kernel found for language', async () => {
         const kernelSpec = takeTopRankKernel(
-            await rankHelper.rankKernels(resourceToUse, {
+            await rankHelper.rankKernels(resourceToUse, [], {
                 language_info: { name: 'foobar' },
                 orig_nbformat: 4
             })
@@ -63,6 +62,7 @@ suite('DataScience - Kernels Finder', () => {
         const kernelSpec = takeTopRankKernel(
             await rankHelper.rankKernels(
                 resourceToUse,
+                kernelFinder.kernels,
                 {
                     kernelspec: { display_name: 'foobar', name: 'foobar' },
                     orig_nbformat: 4,
@@ -89,6 +89,7 @@ suite('DataScience - Kernels Finder', () => {
         const kernelSpec = takeTopRankKernel(
             await rankHelper.rankKernels(
                 resourceToUse,
+                kernelFinder.kernels,
                 {
                     kernelspec: undefined,
                     orig_nbformat: 4,
@@ -111,7 +112,7 @@ suite('DataScience - Kernels Finder', () => {
     });
     test('Can find a Python kernel based on language', async () => {
         const kernelSpec = takeTopRankKernel(
-            await rankHelper.rankKernels(resourceToUse, {
+            await rankHelper.rankKernels(resourceToUse, kernelFinder.kernels, {
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
             })
@@ -127,7 +128,7 @@ suite('DataScience - Kernels Finder', () => {
         }
 
         const kernelSpec = takeTopRankKernel(
-            await rankHelper.rankKernels(resourceToUse, {
+            await rankHelper.rankKernels(resourceToUse, kernelFinder.kernels, {
                 language_info: { name: 'julia' },
                 orig_nbformat: 4
             })
@@ -141,14 +142,13 @@ suite('DataScience - Kernels Finder', () => {
         if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST) {
             return this.skip();
         }
-        const kernelSpecs = await kernelFinder.listKernels();
-        const juliaKernelSpec = kernelSpecs.find(
+        const juliaKernelSpec = kernelFinder.kernels.find(
             (item) => item.kind !== 'connectToLiveRemoteKernel' && item?.kernelSpec?.language === 'julia'
         ) as LocalKernelConnectionMetadata;
         assert.ok(juliaKernelSpec);
 
         const kernelSpec = takeTopRankKernel(
-            await rankHelper.rankKernels(resourceToUse, {
+            await rankHelper.rankKernels(resourceToUse, kernelFinder.kernels, {
                 kernelspec: juliaKernelSpec?.kernelSpec as any,
                 orig_nbformat: 4
             })
