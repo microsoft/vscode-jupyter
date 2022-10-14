@@ -12,7 +12,7 @@ import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
 import { createDeferred } from '../common/utils/async';
-import { traceDecoratorVerbose, traceError, traceInfo, traceVerbose, traceWarning } from '../logging';
+import { traceDecoratorVerbose, traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -245,6 +245,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
             return;
         }
 
+        traceInfoIfCI('Python extension checker prompted', new Error().stack);
         PythonExtensionChecker.promptDisplayed = true;
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();

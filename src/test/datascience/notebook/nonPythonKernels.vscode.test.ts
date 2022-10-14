@@ -34,7 +34,7 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { NotebookCellLanguageService } from '../../../notebooks/languages/cellLanguageService';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () => {
+suite.only('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () => {
     const juliaNb = Uri.file(
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleJulia.ipynb')
     );
@@ -102,11 +102,11 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         const { editor } = await openNotebook(testJavaNb);
         await waitForKernelToGetAutoSelected(editor, 'java');
     });
-    test.skip('Automatically pick julia kernel when opening a Julia Notebook', async () => {
+    test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
         const { editor } = await openNotebook(testJuliaNb);
         await waitForKernelToGetAutoSelected(editor, 'julia');
     });
-    test.skip('Automatically pick csharp kernel when opening a csharp notebook', async function () {
+    test('Automatically pick csharp kernel when opening a csharp notebook', async function () {
         // The .NET interactive CLI does not work if you do not have Jupyter installed.
         // We install Jupyter on CI when we have tests with Python extension.
         // Hence if python extension is not installed, then assume jupyter is not installed on CI.
