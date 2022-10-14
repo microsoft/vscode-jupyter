@@ -102,7 +102,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         const { editor } = await openNotebook(testJavaNb);
         await waitForKernelToGetAutoSelected(editor, 'java');
     });
-    test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
+    test.skip('Automatically pick julia kernel when opening a Julia Notebook', async () => {
         const { editor } = await openNotebook(testJuliaNb);
         await waitForKernelToGetAutoSelected(editor, 'julia');
     });
@@ -118,7 +118,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         const { editor } = await openNotebook(testCSharpNb);
         await waitForKernelToGetAutoSelected(editor, 'c#');
     });
-    test.skip('New notebook will have a Julia cell if last notebook was a julia nb', async function () {
+    test('New notebook will have a Julia cell if last notebook was a julia nb', async function () {
         return this.skip();
         await openNotebook(testJuliaNb);
         await waitForKernelToGetAutoSelected();
