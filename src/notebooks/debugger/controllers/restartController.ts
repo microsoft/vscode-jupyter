@@ -10,7 +10,7 @@ import { DebuggingTelemetry } from '../constants';
 import { IDebuggingDelegate, IKernelDebugAdapter, INotebookDebuggingManager, KernelDebugMode } from '../debuggingTypes';
 
 /**
- * Listens to event when doing run by line and controls the behavior of the debugger (like auto stepping on moving out of a cell)
+ * Implements the "restart" request.
  */
 export class RestartController implements IDebuggingDelegate {
     private debuggingManager: INotebookDebuggingManager;
@@ -42,6 +42,7 @@ export class RestartController implements IDebuggingDelegate {
     }
 
     private async doRestart() {
+        // We have to implement restart manually because the previous launch config includes the cell index, but the cell index may have changed.
         return this.debuggingManager.tryToStartDebugging(this.mode, this.debugCell);
     }
 }

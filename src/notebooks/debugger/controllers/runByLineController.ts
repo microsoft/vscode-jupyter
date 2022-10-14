@@ -18,7 +18,7 @@ import { cellDebugSetup } from '../helper';
 import { isJustMyCodeNotification } from './debugCellController';
 
 /**
- * Listens to event when doing run by line and controls the behavior of the debugger (like auto stepping on moving out of a cell)
+ * Implements the business logic of RBL (like auto stepping on moving out of a cell)
  */
 export class RunByLineController implements IDebuggingDelegate {
     private lastPausedThreadId: number | undefined;
