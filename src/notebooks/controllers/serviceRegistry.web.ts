@@ -33,7 +33,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IControllerLoader>(IControllerLoader, ControllerLoader);
     serviceManager.addBinding(IControllerLoader, IExtensionSingleActivationService);
     serviceManager.addSingleton<IControllerPreferredService>(IControllerPreferredService, ControllerPreferredService);
-    serviceManager.addBinding(IControllerPreferredService, IExtensionSingleActivationService);
+    serviceManager.addBinding(IControllerPreferredService, IExtensionSyncActivationService);
     serviceManager.addSingleton<IControllerSelection>(IControllerSelection, ControllerSelection);
 
     // Register our kernel source selectors only on the Insiders picker type

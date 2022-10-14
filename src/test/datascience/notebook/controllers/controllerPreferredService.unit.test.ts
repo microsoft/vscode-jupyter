@@ -18,6 +18,7 @@ import {
     IControllerDefaultService,
     IControllerLoader,
     IControllerRegistration,
+    IControllerSelection,
     IKernelRankingHelper,
     IVSCodeNotebookController
 } from '../../../../notebooks/controllers/types';
@@ -52,9 +53,11 @@ suite('Preferred Controller', () => {
         disposables.push(onDidOpenNotebookDocument);
         const onDidCloseNotebookDocument = new EventEmitter<NotebookDocument>();
         disposables.push(onDidCloseNotebookDocument);
+        const selection = mock<IControllerSelection>();
         when(vscNotebook.onDidOpenNotebookDocument).thenReturn(onDidOpenNotebookDocument.event);
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(vscNotebook.notebookDocuments).thenReturn([]);
+        when(selection.getSelected(anything())).thenReturn(undefined);
         preferredControllerService = new ControllerPreferredService(
             instance(controllerRegistrations),
             instance(controllerLoader),
@@ -64,7 +67,8 @@ suite('Preferred Controller', () => {
             disposables,
             instance(extensionChecker),
             instance(serverConnectionType),
-            instance(kernelRankHelper)
+            instance(kernelRankHelper),
+            instance(selection)
         );
     });
     teardown(() => {
