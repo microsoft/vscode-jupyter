@@ -35,13 +35,14 @@ import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IControllerLoader, IControllerSelection } from '../controllers/types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from './constants';
-import { DebugCellController } from './debugCellController';
+import { DebugCellController } from './controllers/debugCellController';
 import { Debugger } from './debugger';
 import { DebuggingManagerBase } from './debuggingManagerBase';
 import { IDebuggingManager, INotebookDebugConfig, KernelDebugMode } from './debuggingTypes';
 import { assertIsDebugConfig, IpykernelCheckResult } from './helper';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
-import { RunByLineController } from './runByLineController';
+import { RunByLineController } from './controllers/runByLineController';
+import { RestartController } from './controllers/restartController';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -226,21 +227,26 @@ export class DebuggingManager
 
             if (config.__mode === KernelDebugMode.RunByLine && typeof config.__cellIndex === 'number') {
                 const cell = notebook.cellAt(config.__cellIndex);
-                const controller = new RunByLineController(
+                const rblController = new RunByLineController(
                     adapter,
                     cell,
                     this.commandManager,
                     kernel!,
-                    this.settings,
-                    this.serviceContainer
+                    this.settings
                 );
-                adapter.setDebuggingDelegate(controller);
-                this.notebookToRunByLineController.set(notebook, controller);
+                adapter.setDebuggingDelegates([
+                    rblController,
+                    new RestartController(KernelDebugMode.RunByLine, adapter, cell, this.serviceContainer)
+                ]);
+                this.notebookToRunByLineController.set(notebook, rblController);
                 this.updateRunByLineContextKeys();
             } else if (config.__mode === KernelDebugMode.Cell && typeof config.__cellIndex === 'number') {
                 const cell = notebook.cellAt(config.__cellIndex);
                 const controller = new DebugCellController(adapter, cell, kernel!, this.commandManager);
-                adapter.setDebuggingDelegate(controller);
+                adapter.setDebuggingDelegates([
+                    controller,
+                    new RestartController(KernelDebugMode.Cell, adapter, cell, this.serviceContainer)
+                ]);
             }
 
             this.trackDebugAdapter(notebook, adapter);

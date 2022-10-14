@@ -62,7 +62,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     private readonly endSession = new EventEmitter<DebugSession>();
     private readonly configuration: INotebookDebugConfig;
     protected readonly disposables: IDisposable[] = [];
-    private delegate: IDebuggingDelegate | undefined;
+    private delegates: IDebuggingDelegate[] | undefined;
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCell: NotebookCell | undefined;
@@ -148,8 +148,8 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         );
     }
 
-    public setDebuggingDelegate(delegate: IDebuggingDelegate) {
-        this.delegate = delegate;
+    public setDebuggingDelegates(delegates: IDebuggingDelegate[]) {
+        this.delegates = delegates;
     }
 
     private trace(tag: string, msg: string) {
@@ -160,9 +160,13 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         traceInfoIfCI(`Debug IO Pub message: ${JSON.stringify(msg)}`);
         if (isDebugEventMsg(msg)) {
             this.trace('event', JSON.stringify(msg));
-            if (!this.delegate?.willSendEvent || !(await this.delegate.willSendEvent(msg.content))) {
-                this.sendMessage.fire(msg.content);
+            for (const d of this.delegates ?? []) {
+                if (await d?.willSendEvent?.(msg.content)) {
+                    return;
+                }
             }
+
+            this.sendMessage.fire(msg.content);
         }
     }
 
@@ -194,7 +198,11 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             }
 
             if (message.type === 'request') {
-                await this.delegate?.willSendRequest?.(message as DebugProtocol.Request);
+                for (const d of this.delegates ?? []) {
+                    if (await d?.willSendRequest?.(message as DebugProtocol.Request)) {
+                        return;
+                    }
+                }
             }
 
             return this.sendRequestToJupyterSession(message);
@@ -308,8 +316,8 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 const message = msg.content as DebugProtocol.Response;
                 getMessageSourceAndHookIt(message, this.translateDebuggerFileToRealFile.bind(this));
 
-                if (this.delegate?.willSendResponse) {
-                    await this.delegate?.willSendResponse(message);
+                for (const d of this.delegates ?? []) {
+                    await d?.willSendResponse?.(message);
                 }
 
                 this.trace('response', JSON.stringify(message));

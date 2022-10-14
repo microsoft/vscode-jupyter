@@ -3,38 +3,34 @@
 
 import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernel } from '../../kernels/types';
-import { ICommandManager } from '../../platform/common/application/types';
-import { Commands } from '../../platform/common/constants';
-import { IConfigurationService } from '../../platform/common/types';
-import { parseForComments } from '../../platform/common/utils';
-import { noop } from '../../platform/common/utils/misc';
-import { IServiceContainer } from '../../platform/ioc/types';
-import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
-import * as path from '../../platform/vscode-path/path';
-import { sendTelemetryEvent } from '../../telemetry';
-import { DebuggingTelemetry } from './constants';
+import { IKernel } from '../../../kernels/types';
+import { ICommandManager } from '../../../platform/common/application/types';
+import { Commands } from '../../../platform/common/constants';
+import { IConfigurationService } from '../../../platform/common/types';
+import { parseForComments } from '../../../platform/common/utils';
+import { noop } from '../../../platform/common/utils/misc';
+import { traceInfoIfCI, traceVerbose } from '../../../platform/logging';
+import * as path from '../../../platform/vscode-path/path';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { DebuggingTelemetry } from '../constants';
+import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../debuggingTypes';
+import { cellDebugSetup } from '../helper';
 import { isJustMyCodeNotification } from './debugCellController';
-import { IDebuggingDelegate, IKernelDebugAdapter, INotebookDebuggingManager, KernelDebugMode } from './debuggingTypes';
-import { cellDebugSetup } from './helper';
 
 /**
  * Listens to event when doing run by line and controls the behavior of the debugger (like auto stepping on moving out of a cell)
  */
 export class RunByLineController implements IDebuggingDelegate {
     private lastPausedThreadId: number | undefined;
-    private debuggingManager: INotebookDebuggingManager;
 
     constructor(
         private readonly debugAdapter: IKernelDebugAdapter,
         public readonly debugCell: NotebookCell,
         private readonly commandManager: ICommandManager,
         private readonly kernel: IKernel,
-        private readonly settings: IConfigurationService,
-        private readonly serviceContainer: IServiceContainer
+        private readonly settings: IConfigurationService
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunByLine);
-        this.debuggingManager = this.serviceContainer.get<INotebookDebuggingManager>(INotebookDebuggingManager);
     }
 
     public continue(): void {
@@ -84,19 +80,7 @@ export class RunByLineController implements IDebuggingDelegate {
             await this.initializeExecute();
         }
 
-        if (request.command === 'restart') {
-            await this.debugAdapter.disconnect();
-            this.doRestart().then(noop, noop);
-            return true;
-        }
-
         return false;
-    }
-
-    public async willSendResponse(response: DebugProtocol.Response): Promise<void> {
-        if (response.command === 'initialize' && response.body) {
-            (response as DebugProtocol.InitializeResponse).body!.supportsRestartRequest = true;
-        }
     }
 
     private async handleStoppedEvent(threadId: number): Promise<boolean> {
@@ -171,9 +155,5 @@ export class RunByLineController implements IDebuggingDelegate {
                 document: this.debugCell.notebook.uri
             })
             .then(noop, noop);
-    }
-
-    private async doRestart() {
-        return this.debuggingManager.tryToStartDebugging!(KernelDebugMode.RunByLine, this.debugCell);
     }
 }

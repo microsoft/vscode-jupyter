@@ -5,7 +5,7 @@ import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernel } from '../../../kernels/types';
 import { DebuggingTelemetry } from '../../../notebooks/debugger/constants';
-import { isJustMyCodeNotification } from '../../../notebooks/debugger/debugCellController';
+import { isJustMyCodeNotification } from '../../../notebooks/debugger/controllers/debugCellController';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../../../notebooks/debugger/debuggingTypes';
 import { cellDebugSetup } from '../../../notebooks/debugger/helper';
 import { traceVerbose } from '../../../platform/logging';

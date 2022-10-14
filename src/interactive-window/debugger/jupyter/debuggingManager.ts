@@ -168,7 +168,7 @@ export class InteractiveWindowDebuggingManager
 
         const cell = notebook.cellAt(config.__cellIndex);
         const controller = new DebugCellController(adapter, cell, kernel!);
-        adapter.setDebuggingDelegate(controller);
+        adapter.setDebuggingDelegates([controller]);
 
         this.trackDebugAdapter(notebook, adapter);
         return new DebugAdapterInlineImplementation(adapter);

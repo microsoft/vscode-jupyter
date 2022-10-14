@@ -3,14 +3,14 @@
 
 import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernel } from '../../kernels/types';
-import { ICommandManager } from '../../platform/common/application/types';
-import { noop } from '../../platform/common/utils/misc';
-import { traceVerbose } from '../../platform/logging';
-import { sendTelemetryEvent } from '../../telemetry';
-import { DebuggingTelemetry } from './constants';
-import { IDebuggingDelegate, IKernelDebugAdapter } from './debuggingTypes';
-import { cellDebugSetup } from './helper';
+import { IKernel } from '../../../kernels/types';
+import { ICommandManager } from '../../../platform/common/application/types';
+import { noop } from '../../../platform/common/utils/misc';
+import { traceVerbose } from '../../../platform/logging';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { DebuggingTelemetry } from '../constants';
+import { IDebuggingDelegate, IKernelDebugAdapter } from '../debuggingTypes';
+import { cellDebugSetup } from '../helper';
 
 export function isJustMyCodeNotification(msg: string): boolean {
     return msg.includes('Frame skipped from debugging during step-in');
