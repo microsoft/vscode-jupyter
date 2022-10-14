@@ -341,7 +341,7 @@ async function shutdownRemoteKernels() {
     try {
         const connection = await notebookProvider.connect({
             resource: undefined,
-            ui: new DisplayOptions(false),
+            ui: new DisplayOptions(true),
             localJupyter: false,
             token: cancelToken.token,
             serverId: serverUriStorage.currentServerId!
