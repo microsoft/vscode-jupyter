@@ -16,7 +16,7 @@ import { getKernelConnectionLanguage, getLanguageInNotebookMetadata, isPythonNot
 import { IServerConnectionType } from '../../kernels/jupyter/types';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
 import { KernelConnectionMetadata } from '../../kernels/types';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import {
@@ -25,8 +25,9 @@ import {
     PYTHON_LANGUAGE,
     Telemetry
 } from '../../platform/common/constants';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { IDisposableRegistry, Resource } from '../../platform/common/types';
+import { IDisposable, IDisposableRegistry, Resource } from '../../platform/common/types';
 import { getNotebookMetadata, getResourceType } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -49,48 +50,51 @@ import {
  * Preferred is determined from the metadata in the notebook. If no metadata is found, the default kernel is used.
  */
 @injectable()
-export class ControllerPreferredService implements IControllerPreferredService, IExtensionSingleActivationService {
-    private preferredControllers = new Map<NotebookDocument, IVSCodeNotebookController>();
-    private preferredCancelTokens = new Map<NotebookDocument, CancellationTokenSource>();
+export class ControllerPreferredService implements IControllerPreferredService, IExtensionSyncActivationService {
+    private preferredControllers = new WeakMap<NotebookDocument, IVSCodeNotebookController>();
+    private preferredCancelTokens = new WeakMap<NotebookDocument, CancellationTokenSource>();
     private get isLocalLaunch(): boolean {
         return this.serverConnectionType.isLocalLaunch;
     }
+    private disposables = new Set<IDisposable>();
     constructor(
         @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
         @inject(IControllerLoader) private readonly loader: IControllerLoader,
         @inject(IControllerDefaultService) private readonly defaultService: IControllerDefaultService,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
         @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper
-    ) {}
-    public async activate() {
+    ) {
+        disposables.push(this);
+    }
+    public activate() {
         // Sign up for document either opening or closing
-        this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
+        this.disposables.add(this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook));
-        this.notebook.onDidCloseNotebookDocument(
-            (document) => {
+        this.disposables.add(
+            this.notebook.onDidCloseNotebookDocument((document) => {
                 const token = this.preferredCancelTokens.get(document);
                 if (token) {
                     this.preferredCancelTokens.delete(document);
                     token.cancel();
                 }
-            },
-            this,
-            this.disposables
+            }, this)
         );
-        this.registration.onCreated(
-            () => {
+        this.disposables.add(
+            this.registration.onCreated(() => {
                 if (this.notebook.activeNotebookEditor) {
                     this.computePreferred(this.notebook.activeNotebookEditor.notebook).catch(noop);
                 }
-            },
-            this,
-            this.disposables
+                this.notebook.notebookDocuments.forEach((nb) => this.computePreferred(nb).catch(noop));
+            }, this)
         );
+    }
+    public dispose() {
+        disposeAllDisposables(Array.from(this.disposables));
     }
     public async computePreferred(
         document: NotebookDocument,
@@ -101,7 +105,10 @@ export class ControllerPreferredService implements IControllerPreferredService, 
     }> {
         traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
         // Keep track of a token per document so that we can cancel the search if the doc is closed
+        this.preferredCancelTokens.get(document)?.cancel();
+        this.preferredCancelTokens.get(document)?.dispose();
         const preferredSearchToken = new CancellationTokenSource();
+        this.disposables.add(preferredSearchToken);
         this.preferredCancelTokens.set(document, preferredSearchToken);
         try {
             let preferredConnection: KernelConnectionMetadata | undefined;
@@ -228,6 +235,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         } catch (ex) {
             traceError('Failed to find & set preferred controllers', ex);
             return {};
+        } finally {
+            preferredSearchToken.dispose();
+            this.disposables.delete(preferredSearchToken);
         }
     }
 
