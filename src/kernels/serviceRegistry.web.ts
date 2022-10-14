@@ -25,6 +25,7 @@ import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { DebugStartupCodeProvider } from './debuggerStartupCodeProvider';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.web';
 import { ITrustedKernelPaths } from './raw/finder/types';
+import { KernelStatusProvider } from './kernelStatusProvider';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -55,6 +56,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelAutoReconnectMonitor
@@ -71,6 +73,9 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
 
-    serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        CellOutputDisplayIdTracker
+    );
     serviceManager.addSingleton<IStartupCodeProvider>(IStartupCodeProvider, DebugStartupCodeProvider);
 }

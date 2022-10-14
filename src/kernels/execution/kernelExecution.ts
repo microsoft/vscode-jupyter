@@ -14,7 +14,6 @@ import { createDeferred, waitForPromise } from '../../platform/common/utils/asyn
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 import { Telemetry } from '../../telemetry';
-import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import {
     IKernelConnectionSession,
     IThirdPartyKernel,
@@ -200,7 +199,6 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
         kernel: IKernel,
         appShell: IApplicationShell,
         interruptTimeout: number,
-        outputTracker: CellOutputDisplayIdTracker,
         context: IExtensionContext,
         formatters: ITracebackFormatter[]
     ) {
@@ -208,7 +206,6 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
         const requestListener = new CellExecutionMessageHandlerService(
             appShell,
             kernel.controller,
-            outputTracker,
             context,
             formatters
         );

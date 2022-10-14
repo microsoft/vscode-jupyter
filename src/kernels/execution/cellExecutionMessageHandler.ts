@@ -26,7 +26,6 @@ import {
 } from 'vscode';
 
 import { Kernel } from '@jupyterlab/services';
-import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
@@ -46,6 +45,7 @@ import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import isObject = require('lodash/isObject');
 import { Identifiers, WIDGET_MIMETYPE } from '../../platform/common/constants';
 import { Lazy } from '../../platform/common/utils/lazy';
+import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -174,7 +174,6 @@ export class CellExecutionMessageHandler implements IDisposable {
         public readonly cell: NotebookCell,
         private readonly applicationService: IApplicationShell,
         private readonly controller: NotebookController,
-        private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[],
         private readonly kernel: Kernel.IKernelConnection,
@@ -507,7 +506,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.clearOutputIfNecessary(this.execution);
         // Keep track of the display_id against the output item, we might need this to update this later.
         if (displayId) {
-            this.outputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput);
+            CellOutputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput);
         }
 
         // Append to the data (we would push here but VS code requires a recreation of the array)
@@ -936,7 +935,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (!displayId) {
             return;
         }
-        const outputToBeUpdated = this.outputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
+        const outputToBeUpdated = CellOutputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
         if (!outputToBeUpdated) {
             return;
         }

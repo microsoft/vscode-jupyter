@@ -7,7 +7,6 @@ import { ITracebackFormatter } from '../../kernels/types';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
-import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 
 /**
@@ -20,7 +19,6 @@ export class CellExecutionMessageHandlerService {
     constructor(
         private readonly appShell: IApplicationShell,
         private readonly controller: NotebookController,
-        private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[]
     ) {
@@ -60,7 +58,6 @@ export class CellExecutionMessageHandlerService {
             cell,
             this.appShell,
             this.controller,
-            this.outputDisplayIdTracker,
             this.context,
             this.formatters,
             options.kernel,
