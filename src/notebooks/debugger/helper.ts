@@ -4,7 +4,12 @@
 import { IDebugEventMsg } from '@jupyterlab/services/lib/kernel/messages';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernel } from '../../kernels/types';
-import { IInteractiveWindowDebugConfig, IKernelDebugAdapter, INotebookDebugConfig, KernelDebugMode } from './debuggingTypes';
+import {
+    IInteractiveWindowDebugConfig,
+    IKernelDebugAdapter,
+    INotebookDebugConfig,
+    KernelDebugMode
+} from './debuggingTypes';
 
 export enum IpykernelCheckResult {
     Unknown,
@@ -43,9 +48,7 @@ export function assertIsDebugConfig(thing: unknown): asserts thing is INotebookD
     }
 }
 
-export function assertIsInteractiveWindowDebugConfig(
-    thing: unknown
-): asserts thing is IInteractiveWindowDebugConfig {
+export function assertIsInteractiveWindowDebugConfig(thing: unknown): asserts thing is IInteractiveWindowDebugConfig {
     assertIsDebugConfig(thing);
     if (thing.__mode !== KernelDebugMode.InteractiveWindow) {
         throw new Error('Invalid launch configuration');
