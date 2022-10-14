@@ -8,7 +8,6 @@ import {
     NotebookCell,
     NotebookCellExecution,
     workspace,
-    NotebookController,
     NotebookCellOutput,
     NotebookCellExecutionState,
     Event,
@@ -29,7 +28,12 @@ import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from
 import { isCancellationError } from '../../platform/common/cancellation';
 import { activeNotebookCellExecution, CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
-import { IKernelConnectionSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import {
+    IKernelConnectionSession,
+    IKernelController,
+    KernelConnectionMetadata,
+    NotebookCellRunState
+} from '../../kernels/types';
 import { NotebookCellStateTracker, traceCellMessage } from './helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
@@ -38,7 +42,7 @@ import { getDisplayPath } from '../../platform/common/platform/fs-paths';
  */
 export class CellExecutionFactory {
     constructor(
-        private readonly controller: NotebookController,
+        private readonly controller: IKernelController,
         private readonly requestListener: CellExecutionMessageHandlerService
     ) {}
 
@@ -84,7 +88,7 @@ export class CellExecution implements IDisposable {
         public readonly cell: NotebookCell,
         private readonly codeOverride: string | undefined,
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
-        private readonly controller: NotebookController,
+        private readonly controller: IKernelController,
         private readonly requestListener: CellExecutionMessageHandlerService
     ) {
         workspace.onDidCloseTextDocument(
@@ -130,7 +134,7 @@ export class CellExecution implements IDisposable {
         cell: NotebookCell,
         code: string | undefined,
         metadata: Readonly<KernelConnectionMetadata>,
-        controller: NotebookController,
+        controller: IKernelController,
         requestListener: CellExecutionMessageHandlerService
     ) {
         return new CellExecution(cell, code, metadata, controller, requestListener);

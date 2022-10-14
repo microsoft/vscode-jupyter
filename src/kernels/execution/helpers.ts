@@ -10,8 +10,7 @@ import {
     NotebookCell,
     NotebookCellData,
     NotebookCellKind,
-    NotebookCellExecutionState,
-    NotebookController
+    NotebookCellExecutionState
 } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { KernelMessage } from '@jupyterlab/services';
@@ -27,7 +26,7 @@ import { getInterpreterHash } from '../../platform/pythonEnvironments/info/inter
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { CellExecutionCreator } from './cellExecutionCreator';
-import { KernelConnectionMetadata } from '../types';
+import { IKernelController, KernelConnectionMetadata } from '../types';
 import {
     isPythonKernelConnection,
     getInterpreterFromKernelConnectionMetadata,
@@ -845,7 +844,7 @@ export async function updateNotebookMetadata(
 
 export async function endCellAndDisplayErrorsInCell(
     cell: NotebookCell,
-    controller: NotebookController,
+    controller: IKernelController,
     errorMessage: string,
     isCancelled: boolean
 ) {
