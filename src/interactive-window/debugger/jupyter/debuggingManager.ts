@@ -176,7 +176,7 @@ export class InteractiveWindowDebuggingManager
         this.disposables.push(adapter.onDidEndSession(this.endSession.bind(this)));
 
         const cell = notebook.cellAt(config.__cellIndex);
-        const controller = new DebugCellController(adapter, cell, kernel!);
+        const controller = new DebugCellController(adapter, cell, this.kernelProvider.getKernelExecution(kernel!));
         adapter.setDebuggingDelegates([controller, new RestartNotSupportedController(cell, this.serviceContainer)]);
         controller.ready
             .then(() => dbgr.resolve())

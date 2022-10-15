@@ -3,7 +3,7 @@
 
 import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernel } from '../../../kernels/types';
+import { INotebookKernelExecution } from '../../../kernels/types';
 import { ICommandManager } from '../../../platform/common/application/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { traceVerbose } from '../../../platform/logging';
@@ -23,7 +23,7 @@ export class DebugCellController implements IDebuggingDelegate {
     constructor(
         private readonly debugAdapter: IKernelDebugAdapter,
         public readonly debugCell: NotebookCell,
-        private readonly kernel: IKernel,
+        private readonly execution: INotebookKernelExecution,
         private readonly commandManager: ICommandManager
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
@@ -46,7 +46,7 @@ export class DebugCellController implements IDebuggingDelegate {
 
     public async willSendRequest(request: DebugProtocol.Request): Promise<undefined> {
         if (request.command === 'configurationDone') {
-            await cellDebugSetup(this.kernel, this.debugAdapter);
+            await cellDebugSetup(this.execution, this.debugAdapter);
 
             this.commandManager
                 .executeCommand('notebook.cell.execute', {

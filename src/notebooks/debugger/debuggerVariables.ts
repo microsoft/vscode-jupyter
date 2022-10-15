@@ -8,7 +8,7 @@ import * as uriPath from '../../platform/vscode-path/resources';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernel } from '../../kernels/types';
+import { IKernel, IKernelProvider } from '../../kernels/types';
 import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from '../../kernels/variables/helpers';
 import { parseDataFrame } from '../../kernels/variables/pythonVariableRequester';
 import {
@@ -57,7 +57,8 @@ export class DebuggerVariables
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IVariableScriptGenerator) private readonly varScriptGenerator: IVariableScriptGenerator,
-        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator
+        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
         super(undefined);
         this.debuggingManager.onDoneDebugging(() => this.refreshEventEmitter.fire(), this);
@@ -80,9 +81,9 @@ export class DebuggerVariables
         if (kernel) {
             this.watchKernel(kernel);
         }
-
+        const execution = kernel && this.kernelProvider.getKernelExecution(kernel);
         const result: IJupyterVariablesResponse = {
-            executionCount: kernel ? kernel.executionCount : request.executionCount,
+            executionCount: execution ? execution.executionCount : request.executionCount,
             pageStartIndex: 0,
             pageResponse: [],
             totalCount: 0,

@@ -67,9 +67,7 @@ suite('Kernel ReConnect Progress Message', () => {
     teardown(() => disposeAllDisposables(disposables));
     function createKernel() {
         const kernel = mock<IKernel>();
-        const onPreExecute = new EventEmitter<NotebookCell>();
         const onRestarted = new EventEmitter<void>();
-        disposables.push(onPreExecute);
         disposables.push(onRestarted);
         const session = mock<IKernelConnectionSession>();
         const kernelConnection = mock<Kernel.IKernelConnection>();
@@ -88,7 +86,6 @@ suite('Kernel ReConnect Progress Message', () => {
         when(kernel.resourceUri).thenReturn(Uri.file('test.ipynb'));
         when(session.kernel).thenReturn(instance(kernelConnection));
         when(kernel.kernelConnectionMetadata).thenReturn(connectionMetadata);
-        when(kernel.onPreExecute).thenReturn(onPreExecute.event);
         when(kernel.onRestarted).thenReturn(onRestarted.event);
         when(kernel.dispose()).thenResolve();
         let onWillRestart: (e: 'willRestart') => Promise<void> = () => Promise.resolve();

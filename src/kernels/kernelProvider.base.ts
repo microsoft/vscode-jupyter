@@ -15,7 +15,8 @@ import {
     IKernel,
     KernelOptions,
     IThirdPartyKernelProvider,
-    ThirdPartyKernelOptions
+    ThirdPartyKernelOptions,
+    INotebookKernelExecution
 } from './types';
 import { IJupyterServerUriEntry } from './jupyter/types';
 
@@ -23,6 +24,8 @@ import { IJupyterServerUriEntry } from './jupyter/types';
  * Provides kernels to the system. Generally backed by a URI or a notebook object.
  */
 export abstract class BaseCoreKernelProvider implements IKernelProvider {
+    protected readonly executions = new WeakMap<IKernel, INotebookKernelExecution>();
+
     /**
      * Use a separate dictionary to track kernels by Notebook, so that
      * the ref to kernel is lost when the notebook is closed.
@@ -81,6 +84,9 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
         } else {
             return this.kernelsByNotebook.get(uriOrNotebook)?.kernel;
         }
+    }
+    public getKernelExecution(kernel: IKernel): INotebookKernelExecution {
+        return this.executions.get(kernel)!;
     }
 
     public getInternal(notebook: NotebookDocument):

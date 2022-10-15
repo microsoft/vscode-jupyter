@@ -10,7 +10,6 @@ import {
     CancellationTokenSource,
     Event,
     EventEmitter,
-    NotebookCell,
     ColorThemeKind,
     Disposable,
     Uri,
@@ -22,7 +21,7 @@ import { WrappedError } from '../platform/errors/types';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
-import { Resource, IDisposable, IDisplayOptions, IExtensionContext } from '../platform/common/types';
+import { Resource, IDisposable, IDisplayOptions } from '../platform/common/types';
 import { sleep } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
@@ -43,10 +42,8 @@ import {
     InterruptResult,
     isLocalConnection,
     IStartupCodeProvider,
-    ITracebackFormatter,
     KernelConnectionMetadata,
     KernelSocketInformation,
-    NotebookCellRunState,
     IBaseKernel,
     KernelActionSource,
     KernelHooks,
@@ -57,7 +54,6 @@ import { Cancellation, isCancellationError } from '../platform/common/cancellati
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from './displayOptions';
 import { SilentExecutionErrorOptions } from './helpers';
-import { traceCellMessage } from './execution/helpers';
 import { BaseKernelExecution, KernelExecution, ThirdPartyKernelExecution } from './execution/kernelExecution';
 
 /**
@@ -166,8 +162,8 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         this.eventHooks = this.eventHooks.filter((h) => h !== hook);
     }
 
-    public async start(options?: IDisplayOptions): Promise<void> {
-        await this.startJupyterSession(options);
+    public async start(options?: IDisplayOptions): Promise<IKernelConnectionSession> {
+        return this.startJupyterSession(options);
     }
     public async interrupt(): Promise<void> {
         await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
@@ -345,6 +341,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
                     throw ex;
                 });
         }
+        this._jupyterSessionPromise.finally(() => this.sendKernelStartedTelemetry()).catch(noop);
         return this._jupyterSessionPromise;
     }
 
@@ -411,6 +408,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         }
     }
     private uiWasDisabledWhenKernelStartupTelemetryWasLastSent?: boolean;
+    private startTelemetrySent?: boolean;
     protected sendKernelStartedTelemetry(): void {
         if (
             this.uiWasDisabledWhenKernelStartupTelemetryWasLastSent &&
@@ -424,8 +422,12 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             // Last time we sent kernel telemetry event, it was sent indicating the fact that the ui was disabled,
             // Now we need to send the event `Telemetry.NotebookStart` again indicating the fact that the ui is enabled & that the kernel was started successfully based on a user action.
         }
+        if (this.startTelemetrySent && !this.startupUI.disableUI) {
+            return;
+        }
 
         this.uiWasDisabledWhenKernelStartupTelemetryWasLastSent = this.startupUI.disableUI === true;
+        this.startTelemetrySent = true;
         // The corresponding failure telemetry property for the `Telemetry.NotebookStart` event will be sent in the Error Handler,
         // after we analyze the error.
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookStart, undefined, {
@@ -672,7 +674,8 @@ export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> {
         notebookProvider: INotebookProvider,
         appShell: IApplicationShell,
         kernelSettings: IKernelSettings,
-        startupCodeProviders: IStartupCodeProvider[]
+        startupCodeProviders: IStartupCodeProvider[],
+        kernelExecution: ThirdPartyKernelExecution
     ) {
         super(
             uri,
@@ -684,11 +687,7 @@ export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> {
             startupCodeProviders,
             '3rdPartyExtension'
         );
-        this.kernelExecution = new ThirdPartyKernelExecution(
-            resourceUri,
-            kernelConnectionMetadata,
-            this.kernelSettings.interruptTimeout
-        );
+        this.kernelExecution = kernelExecution;
         this.disposables.push(this.kernelExecution);
     }
 }
@@ -701,14 +700,6 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         return 'jupyterExtension';
     }
 
-    get onPreExecute(): Event<NotebookCell> {
-        return this._onPreExecute.event;
-    }
-    get executionCount(): number {
-        return this._visibleExecutionCount;
-    }
-    private _visibleExecutionCount = 0;
-    private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     constructor(
         uri: Uri,
         resourceUri: Resource,
@@ -718,10 +709,9 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         kernelSettings: IKernelSettings,
         appShell: IApplicationShell,
         public readonly controller: IKernelController,
-        context: IExtensionContext,
-        formatters: ITracebackFormatter[],
         startupCodeProviders: IStartupCodeProvider[],
-        private readonly sendTelemetryForPythonKernelExecutable: () => Promise<void>
+        private readonly sendTelemetryForPythonKernelExecutable: () => Promise<void>,
+        kernelExecution: KernelExecution
     ) {
         super(
             uri,
@@ -734,44 +724,9 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
             'jupyterExtension'
         );
 
-        this.kernelExecution = new KernelExecution(
-            controller,
-            resourceUri,
-            kernelConnectionMetadata,
-            notebook,
-            appShell,
-            this.kernelSettings.interruptTimeout,
-            context,
-            formatters
-        );
-        this.kernelExecution.onPreExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
-        this.disposables.push(this.kernelExecution);
-        this.disposables.push(this._onPreExecute);
-        this.disposables.push(this.kernelExecution);
-    }
-    public get pendingCells(): readonly NotebookCell[] {
-        return this.kernelExecution.queue;
-    }
-    public async executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState> {
-        traceCellMessage(cell, `kernel.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
-        await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
-            this.resourceUri,
-            this.kernelConnectionMetadata
-        );
-        sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
-        this.sendKernelStartedTelemetry();
-        const sessionPromise = this.startJupyterSession();
-        const promise = this.kernelExecution.executeCell(sessionPromise, cell, codeOverride);
-        promise.finally(() => (this._visibleExecutionCount += 1));
-        promise.then((state) => traceVerbose(`Cell ${cell.index} executed with state ${state}`), noop);
-        return promise;
-    }
-    public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
-        const sessionPromise = this.startJupyterSession();
-        return sessionPromise.then((session) => executeSilently(session, code));
+        this.kernelExecution = kernelExecution;
     }
     protected override async initializeAfterStart(session: IKernelConnectionSession | undefined) {
-        this._visibleExecutionCount = 0;
         if (session && isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // Request completions to warm up the completion engine.
             this.requestEmptyCompletions(session);

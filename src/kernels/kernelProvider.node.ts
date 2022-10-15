@@ -26,6 +26,8 @@ import {
 } from './types';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { createKernelSettings } from './kernelSettings';
+import { KernelExecution, ThirdPartyKernelExecution } from './execution/kernelExecution';
+import { NotebookKernelExecution } from './kernelExecution';
 
 /**
  * Node version of a kernel provider. Needed in order to create the node version of a kernel.
@@ -58,17 +60,27 @@ export class KernelProvider extends BaseCoreKernelProvider {
 
         const uri = notebook.uri;
         const resourceUri = notebook.notebookType === InteractiveWindowView ? options.resourceUri : uri;
+        const settings = createKernelSettings(this.configService, resourceUri);
+        const kernelExecution = new KernelExecution(
+            options.controller,
+            resourceUri,
+            options.metadata,
+            notebook,
+            this.appShell,
+            settings.interruptTimeout,
+            this.context,
+            this.formatters
+        );
+
         const kernel: IKernel = new Kernel(
             uri,
             resourceUri,
             notebook,
             options.metadata,
             this.notebookProvider,
-            createKernelSettings(this.configService, resourceUri),
+            settings,
             this.appShell,
             options.controller,
-            this.context,
-            this.formatters,
             this.startupCodeProviders,
             () => {
                 if (kernel.session) {
@@ -80,16 +92,25 @@ export class KernelProvider extends BaseCoreKernelProvider {
                 } else {
                     return Promise.resolve();
                 }
-            }
+            },
+            kernelExecution
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
-        kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
+        kernel.onDisposed(
+            () => {
+                this._onDidDisposeKernel.fire(kernel);
+                kernelExecution.dispose();
+            },
+            this,
+            this.disposables
+        );
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         kernel.onStatusChanged(
             (status) => this._onKernelStatusChanged.fire({ kernel, status }),
             this,
             this.disposables
         );
+        this.executions.set(kernel, new NotebookKernelExecution(kernel, kernelExecution));
         this.asyncDisposables.push(kernel);
         this.storeKernel(notebook, options, kernel);
         this.deleteMappingIfKernelIsDisposed(uri, kernel);
@@ -120,17 +141,27 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         this.disposeOldKernel(uri);
 
         const resourceUri = uri;
+        const settings = createKernelSettings(this.configService, resourceUri);
+        const kernelExecution = new ThirdPartyKernelExecution(resourceUri, options.metadata, settings.interruptTimeout);
         const kernel: IThirdPartyKernel = new ThirdPartyKernel(
             uri,
             resourceUri,
             options.metadata,
             this.notebookProvider,
             this.appShell,
-            createKernelSettings(this.configService, resourceUri),
-            this.startupCodeProviders
+            settings,
+            this.startupCodeProviders,
+            kernelExecution
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
-        kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
+        kernel.onDisposed(
+            () => {
+                this._onDidDisposeKernel.fire(kernel);
+                kernelExecution.dispose();
+            },
+            this,
+            this.disposables
+        );
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         kernel.onStatusChanged(
             (status) => this._onKernelStatusChanged.fire({ kernel, status }),

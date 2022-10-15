@@ -105,7 +105,8 @@ suite('DataScience - VariableView', function () {
 
         // Verify we don't have any new variables apart from test, test2, os & sys
         const kernel = kernelProvider.get(cell.notebook.uri)!;
-        const outputs = await kernel.executeHidden('%who_ls');
+        const execution = kernelProvider.getKernelExecution(kernel);
+        const outputs = await execution.executeHidden('%who_ls');
         // https://github.com/microsoft/vscode-jupyter/issues/10559
         const varsToIgnore = ['matplotlib_inline', 'matplotlib', 'sys', 'os'];
         // Sample output is `["test", "test2", "os", "sys"]`

@@ -517,7 +517,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             if (kernel.controller.id === this.id) {
                 this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
             }
-            return await kernel.executeCell(cell);
+            return await this.kernelProvider.getKernelExecution(kernel).executeCell(cell);
         } catch (ex) {
             if (!isCancellationError(ex)) {
                 traceError(`Error in execution`, ex);
