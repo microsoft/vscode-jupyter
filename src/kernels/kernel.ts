@@ -701,7 +701,6 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
     }
 
     constructor(
-        uri: Uri,
         resourceUri: Resource,
         public readonly notebook: NotebookDocument,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
@@ -714,7 +713,7 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         kernelExecution: KernelExecution
     ) {
         super(
-            uri,
+            notebook.uri,
             resourceUri,
             kernelConnectionMetadata,
             notebookProvider,

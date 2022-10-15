@@ -113,14 +113,16 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     /**
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.
      */
-    protected deleteMappingIfKernelIsDisposed(uri: Uri, kernel: IKernel) {
+    protected deleteMappingIfKernelIsDisposed(kernel: IKernel) {
         kernel.onDisposed(
             () => {
                 // If the same kernel is associated with this document & it was disposed, then delete it.
                 if (this.get(kernel.notebook) === kernel) {
                     this.kernelsByNotebook.delete(kernel.notebook);
                     traceVerbose(
-                        `Kernel got disposed, hence there is no longer a kernel associated with ${getDisplayPath(uri)}`
+                        `Kernel got disposed, hence there is no longer a kernel associated with ${getDisplayPath(
+                            kernel.uri
+                        )}`
                     );
                 }
                 this.pendingDisposables.delete(kernel);
