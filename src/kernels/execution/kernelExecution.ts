@@ -9,19 +9,18 @@ import { CellExecutionQueue } from './cellExecutionQueue';
 import { KernelMessage } from '@jupyterlab/services';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
-import { IDisposable, IExtensionContext } from '../../platform/common/types';
+import { IDisposable, IExtensionContext, Resource } from '../../platform/common/types';
 import { createDeferred, waitForPromise } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 import { Telemetry } from '../../telemetry';
 import {
     IKernelConnectionSession,
-    IThirdPartyKernel,
     InterruptResult,
     ITracebackFormatter,
     NotebookCellRunState,
-    IKernel,
-    IBaseKernel
+    IKernelController,
+    KernelConnectionMetadata
 } from '../../kernels/types';
 import { traceCellMessage } from './helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
@@ -32,14 +31,18 @@ import { noop } from '../../platform/common/utils/misc';
  * Separate class that deals just with kernel execution.
  * Else the `Kernel` class gets very big.
  */
-export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> implements IDisposable {
+export class BaseKernelExecution implements IDisposable {
     protected readonly disposables: IDisposable[] = [];
     private _interruptPromise?: Promise<InterruptResult>;
     private _restartPromise?: Promise<void>;
     protected get restarting() {
         return this._restartPromise || Promise.resolve();
     }
-    constructor(protected readonly kernel: TKernel, private readonly interruptTimeout: number) {}
+    constructor(
+        protected readonly resourceUri: Resource,
+        protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
+        private readonly interruptTimeout: number
+    ) {}
 
     public async cancel() {
         noop();
@@ -154,7 +157,7 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
 
                 // Otherwise a real error occurred.
                 sendKernelTelemetryEvent(
-                    this.kernel.resourceUri,
+                    this.resourceUri,
                     Telemetry.NotebookInterrupt,
                     { duration: stopWatch.elapsedTime },
                     undefined,
@@ -168,7 +171,7 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
 
         return promise.then((result) => {
             sendKernelTelemetryEvent(
-                this.kernel.resourceUri,
+                this.resourceUri,
                 Telemetry.NotebookInterrupt,
                 { duration: stopWatch.elapsedTime },
                 {
@@ -185,39 +188,37 @@ export class BaseKernelExecution<TKernel extends IBaseKernel = IBaseKernel> impl
     }
 }
 
-export class ThirdPartyKernelExecution extends BaseKernelExecution<IThirdPartyKernel> {}
+export class ThirdPartyKernelExecution extends BaseKernelExecution {}
 
 /**
  * Separate class that deals just with kernel execution.
  * Else the `Kernel` class gets very big.
  */
-export class KernelExecution extends BaseKernelExecution<IKernel> {
+export class KernelExecution extends BaseKernelExecution {
     private readonly documentExecutions = new WeakMap<NotebookDocument, CellExecutionQueue>();
     private readonly executionFactory: CellExecutionFactory;
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     constructor(
-        kernel: IKernel,
+        controller: IKernelController,
+        resourceUri: Resource,
+        kernelConnectionMetadata: KernelConnectionMetadata,
+        private readonly notebook: NotebookDocument,
         appShell: IApplicationShell,
         interruptTimeout: number,
         context: IExtensionContext,
         formatters: ITracebackFormatter[]
     ) {
-        super(kernel, interruptTimeout);
-        const requestListener = new CellExecutionMessageHandlerService(
-            appShell,
-            kernel.controller,
-            context,
-            formatters
-        );
+        super(resourceUri, kernelConnectionMetadata, interruptTimeout);
+        const requestListener = new CellExecutionMessageHandlerService(appShell, controller, context, formatters);
         this.disposables.push(requestListener);
-        this.executionFactory = new CellExecutionFactory(this.kernel.controller, requestListener);
+        this.executionFactory = new CellExecutionFactory(controller, requestListener);
     }
 
     public get onPreExecute() {
         return this._onPreExecute.event;
     }
     public get queue() {
-        return this.documentExecutions.get(this.kernel.notebook)?.queue || [];
+        return this.documentExecutions.get(this.notebook)?.queue || [];
     }
     public async executeCell(
         sessionPromise: Promise<IKernelConnectionSession>,
@@ -241,7 +242,7 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
     }
     public override async cancel() {
         await super.cancel();
-        const executionQueue = this.documentExecutions.get(this.kernel.notebook);
+        const executionQueue = this.documentExecutions.get(this.notebook);
         if (executionQueue) {
             await executionQueue.cancel(true);
         }
@@ -252,15 +253,15 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
     public override async interrupt(sessionPromise?: Promise<IKernelConnectionSession>): Promise<InterruptResult> {
-        const executionQueue = this.documentExecutions.get(this.kernel.notebook);
-        if (!executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
+        const executionQueue = this.documentExecutions.get(this.notebook);
+        if (!executionQueue && this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             return InterruptResult.Success;
         }
         return super.interrupt(sessionPromise);
     }
     protected override async cancelPendingExecutions(): Promise<void> {
-        const executionQueue = this.documentExecutions.get(this.kernel.notebook);
-        if (!executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
+        const executionQueue = this.documentExecutions.get(this.notebook);
+        if (!executionQueue && this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             return;
         }
         traceInfo('Interrupt kernel execution');
@@ -279,7 +280,7 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
     public override async restart(sessionPromise?: Promise<IKernelConnectionSession>): Promise<void> {
-        const executionQueue = this.documentExecutions.get(this.kernel.notebook);
+        const executionQueue = this.documentExecutions.get(this.notebook);
         // Possible we don't have a notebook.
         const session = sessionPromise ? await sessionPromise.catch(() => undefined) : undefined;
         traceInfo('Restart kernel execution');
@@ -311,8 +312,8 @@ export class KernelExecution extends BaseKernelExecution<IKernel> {
         const newCellExecutionQueue = new CellExecutionQueue(
             sessionPromise,
             this.executionFactory,
-            this.kernel.kernelConnectionMetadata,
-            this.kernel.resourceUri
+            this.kernelConnectionMetadata,
+            this.resourceUri
         );
         this.disposables.push(newCellExecutionQueue);
 
