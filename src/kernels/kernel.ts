@@ -48,7 +48,8 @@ import {
     KernelActionSource,
     KernelHooks,
     IKernelSettings,
-    IKernelController
+    IKernelController,
+    IThirdPartyKernel
 } from './types';
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
@@ -663,7 +664,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     }
 }
 
-export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> {
+export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> implements IThirdPartyKernel {
     public override get creator(): '3rdPartyExtension' {
         return '3rdPartyExtension';
     }
