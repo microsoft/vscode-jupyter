@@ -232,7 +232,7 @@ export class DebuggingManager
                     adapter,
                     cell,
                     this.commandManager,
-                    kernel!,
+                    this.kernelProvider.getKernelExecution(kernel!),
                     this.configurationService
                 );
                 adapter.setDebuggingDelegates([
@@ -243,7 +243,12 @@ export class DebuggingManager
                 this.updateRunByLineContextKeys();
             } else if (config.__mode === KernelDebugMode.Cell && typeof config.__cellIndex === 'number') {
                 const cell = notebook.cellAt(config.__cellIndex);
-                const controller = new DebugCellController(adapter, cell, kernel!, this.commandManager);
+                const controller = new DebugCellController(
+                    adapter,
+                    cell,
+                    this.kernelProvider.getKernelExecution(kernel!),
+                    this.commandManager
+                );
                 adapter.setDebuggingDelegates([
                     controller,
                     new RestartController(KernelDebugMode.Cell, adapter, cell, this.serviceContainer)

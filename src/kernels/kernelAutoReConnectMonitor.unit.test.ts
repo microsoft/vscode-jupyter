@@ -6,7 +6,13 @@ import * as fakeTimers from '@sinonjs/fake-timers';
 import { IDisposable } from '../platform/common/types';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IApplicationShell } from '../platform/common/application/types';
-import { IKernel, IKernelConnectionSession, IKernelProvider, RemoteKernelConnectionMetadata } from './types';
+import {
+    IKernel,
+    IKernelConnectionSession,
+    IKernelProvider,
+    INotebookKernelExecution,
+    RemoteKernelConnectionMetadata
+} from './types';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import {
     Disposable,
@@ -26,7 +32,7 @@ import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 import { JupyterNotebookView } from '../platform/common/constants';
 import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './jupyter/types';
 
-suite('Kernel ReConnect Progress Message', () => {
+suite.only('Kernel ReConnect Progress Message', () => {
     const disposables: IDisposable[] = [];
     let monitor: KernelAutoReconnectMonitor;
     let appShell: IApplicationShell;
@@ -37,10 +43,17 @@ suite('Kernel ReConnect Progress Message', () => {
     let onDidDisposeKernel: EventEmitter<IKernel>;
     let onDidRestartKernel: EventEmitter<IKernel>;
     let clock: fakeTimers.InstalledClock;
+    let kernelExecution: INotebookKernelExecution;
+    let onPreExecute: EventEmitter<NotebookCell>;
+    let kernel: IKernel;
+
     setup(() => {
         onDidStartKernel = new EventEmitter<IKernel>();
         onDidDisposeKernel = new EventEmitter<IKernel>();
         onDidRestartKernel = new EventEmitter<IKernel>();
+        kernel = mock<IKernel>();
+        onPreExecute = new EventEmitter<NotebookCell>();
+        disposables.push(onPreExecute);
 
         disposables.push(...[onDidStartKernel, onDidDisposeKernel, onDidRestartKernel]);
         appShell = mock<IApplicationShell>();
@@ -49,6 +62,9 @@ suite('Kernel ReConnect Progress Message', () => {
         when(kernelProvider.onDidStartKernel).thenReturn(onDidStartKernel.event);
         when(kernelProvider.onDidDisposeKernel).thenReturn(onDidDisposeKernel.event);
         when(kernelProvider.onDidRestartKernel).thenReturn(onDidRestartKernel.event);
+        kernelExecution = mock<INotebookKernelExecution>();
+        when(kernelProvider.getKernelExecution(anything())).thenReturn(instance(kernelExecution));
+        when(kernelExecution.onPreExecute).thenReturn(onPreExecute.event);
         clock = fakeTimers.install();
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
         when(jupyterServerUriStorage.getSavedUriList()).thenResolve([]);
@@ -66,10 +82,7 @@ suite('Kernel ReConnect Progress Message', () => {
     });
     teardown(() => disposeAllDisposables(disposables));
     function createKernel() {
-        const kernel = mock<IKernel>();
-        const onPreExecute = new EventEmitter<NotebookCell>();
         const onRestarted = new EventEmitter<void>();
-        disposables.push(onPreExecute);
         disposables.push(onRestarted);
         const session = mock<IKernelConnectionSession>();
         const kernelConnection = mock<Kernel.IKernelConnection>();
@@ -88,7 +101,6 @@ suite('Kernel ReConnect Progress Message', () => {
         when(kernel.resourceUri).thenReturn(Uri.file('test.ipynb'));
         when(session.kernel).thenReturn(instance(kernelConnection));
         when(kernel.kernelConnectionMetadata).thenReturn(connectionMetadata);
-        when(kernel.onPreExecute).thenReturn(onPreExecute.event);
         when(kernel.onRestarted).thenReturn(onRestarted.event);
         when(kernel.dispose()).thenResolve();
         let onWillRestart: (e: 'willRestart') => Promise<void> = () => Promise.resolve();
@@ -137,18 +149,27 @@ suite('Kernel ReConnect Failed Monitor', () => {
     let clock: fakeTimers.InstalledClock;
     let cellExecution: NotebookCellExecutionWrapper;
     let onDidChangeNotebookCellExecutionState: EventEmitter<NotebookCellExecutionStateChangeEvent>;
+    let kernelExecution: INotebookKernelExecution;
+    let onPreExecute: EventEmitter<NotebookCell>;
+    let kernel: IKernel;
     setup(() => {
+        kernel = mock<IKernel>();
         onDidStartKernel = new EventEmitter<IKernel>();
         onDidDisposeKernel = new EventEmitter<IKernel>();
         onDidRestartKernel = new EventEmitter<IKernel>();
-
+        kernelProvider = mock<IKernelProvider>();
+        onPreExecute = new EventEmitter<NotebookCell>();
+        disposables.push(onPreExecute);
         disposables.push(...[onDidStartKernel, onDidDisposeKernel, onDidRestartKernel]);
         appShell = mock<IApplicationShell>();
         when(appShell.showErrorMessage(anything())).thenResolve();
-        kernelProvider = mock<IKernelProvider>();
         when(kernelProvider.onDidStartKernel).thenReturn(onDidStartKernel.event);
         when(kernelProvider.onDidDisposeKernel).thenReturn(onDidDisposeKernel.event);
         when(kernelProvider.onDidRestartKernel).thenReturn(onDidRestartKernel.event);
+        kernelExecution = mock<INotebookKernelExecution>();
+        when(kernelProvider.getKernelExecution(anything())).thenReturn(instance(kernelExecution));
+        when(kernelExecution.onPreExecute).thenReturn(onPreExecute.event);
+
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
         when(jupyterServerUriStorage.getSavedUriList()).thenResolve([]);
         jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
@@ -176,10 +197,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
     });
     teardown(() => disposeAllDisposables(disposables));
     function createKernel() {
-        const kernel = mock<IKernel>();
-        const onPreExecute = new EventEmitter<NotebookCell>();
         const onRestarted = new EventEmitter<void>();
-        disposables.push(onPreExecute);
         disposables.push(onRestarted);
         const session = mock<IKernelConnectionSession>();
         const kernelConnection = mock<Kernel.IKernelConnection>();
@@ -200,7 +218,6 @@ suite('Kernel ReConnect Failed Monitor', () => {
         when(kernel.resourceUri).thenReturn(Uri.file('test.ipynb'));
         when(session.kernel).thenReturn(instance(kernelConnection));
         when(kernel.kernelConnectionMetadata).thenReturn(connectionMetadata);
-        when(kernel.onPreExecute).thenReturn(onPreExecute.event);
         when(kernel.onRestarted).thenReturn(onRestarted.event);
         when(kernel.dispose()).thenResolve();
 

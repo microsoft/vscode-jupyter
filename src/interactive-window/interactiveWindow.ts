@@ -33,6 +33,7 @@ import { IConfigurationService, InteractiveWindowMode, IsWebExtension, Resource 
 import { noop } from '../platform/common/utils/misc';
 import {
     IKernel,
+    IKernelProvider,
     isLocalConnection,
     KernelAction,
     KernelConnectionMetadata,
@@ -144,6 +145,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private readonly isWebExtension: boolean;
     private readonly commandManager: ICommandManager;
     private readonly controllerRegistration: IControllerRegistration;
+    private readonly kernelProvider: IKernelProvider;
     constructor(
         private readonly serviceContainer: IServiceContainer,
         private _owner: Resource,
@@ -165,6 +167,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
         this.codeGeneratorFactory = this.serviceContainer.get<ICodeGeneratorFactory>(ICodeGeneratorFactory);
         this.storageFactory = this.serviceContainer.get<IGeneratedCodeStorageFactory>(IGeneratedCodeStorageFactory);
+        this.kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
         this.debuggingManager = this.serviceContainer.get<IInteractiveWindowDebuggingManager>(
             IInteractiveWindowDebuggingManager
         );
@@ -673,8 +676,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             }
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             const iwCellMetadata = getInteractiveCellMetadata(cell);
+            const execution = this.kernelProvider.getKernelExecution(kernel!);
             success =
-                (await kernel!.executeCell(cell, iwCellMetadata?.generatedCode?.code)) !== NotebookCellRunState.Error;
+                (await execution.executeCell(cell, iwCellMetadata?.generatedCode?.code)) !== NotebookCellRunState.Error;
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell.finished');
         } finally {
             await detachKernel();
@@ -754,15 +758,16 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private async setFileInKernel(file: Uri, kernel: IKernel): Promise<void> {
         // If in perFile mode, set only once
         const path = getFilePath(file);
+        const execution = this.kernelProvider.getKernelExecution(kernel!);
         if (this.mode === 'perFile' && !this.fileInKernel) {
             traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             this.fileInKernel = file;
-            await kernel.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
+            await execution.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
         } else if ((!this.fileInKernel || !this.fs.arePathsSame(this.fileInKernel, file)) && this.mode !== 'perFile') {
             traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
-            await kernel.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
+            await execution.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
         } else {
             traceInfoIfCI(
                 `Not Initializing __file__ in setFileInKernel with ${path} for mode ${this.mode} currently ${this.fileInKernel}`
