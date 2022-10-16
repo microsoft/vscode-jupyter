@@ -520,32 +520,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Time taken to list the Python interpreters.
-     */
-    [Telemetry.InterpreterListingPerf]: TelemetryEventInfo<{
-        /**
-         * Whether this is the first time in the session.
-         * (fetching kernels first time in the session is slower, later its cached).
-         * This is a generic property supported for all telemetry (sent by decorators).
-         */
-        firstTime?: boolean;
-        /**
-         * Total time taken to list interpreters.
-         */
-        duration: number;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            firstTime: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            }
-        },
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
      * Total time taken by Python extension to return the active Python environment.
      */
     [Telemetry.ActiveInterpreterListingPerf]: TelemetryEventInfo<{

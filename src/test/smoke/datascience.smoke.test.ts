@@ -114,8 +114,16 @@ suite('Smoke Tests', () => {
 
         // Now change active interpreter
         const interpreterService = api.serviceManager.get<IInterpreterService>(IInterpreterService);
-        const allInterpreters = await interpreterService.getInterpreters();
-        assert.ok(allInterpreters.length > 1, 'Not enough interpreters to run interactive window smoke test');
+        await waitForCondition(
+            async () => interpreterService.environments.length > 0,
+            15_000,
+            'Waiting for interpreters to be discovered'
+        );
+
+        assert.ok(
+            interpreterService.environments.length > 1,
+            'Not enough interpreters to run interactive window smoke test'
+        );
         // const differentInterpreter = allInterpreters.find((interpreter) => interpreter !== interpreterForCurrentWindow);
         // await vscode.commands.executeCommand<void>('python.setInterpreter', differentInterpreter); // Requires change to Python extension
 

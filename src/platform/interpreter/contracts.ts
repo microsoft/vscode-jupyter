@@ -10,7 +10,6 @@ export interface IInterpreterService {
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreters: Event<void>;
     refreshInterpreters(forceRefresh?: boolean): Promise<void>;
-    getInterpreters(): Promise<PythonEnvironment[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
     getInterpreterDetails(pythonPath: Uri): Promise<undefined | PythonEnvironment>;
 }

@@ -314,7 +314,6 @@ export class InterpreterService implements IInterpreterService {
     private eventHandlerAdded?: boolean;
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
     private apiPromise: Promise<ProposedExtensionAPI | undefined> | undefined;
-    private interpretersFetchedOnceBefore?: boolean;
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
@@ -351,27 +350,12 @@ export class InterpreterService implements IInterpreterService {
         return Array.from(this._interpreters.values()).map((item) => item.resolved);
     }
 
-    @traceDecoratorVerbose('Get Interpreters', TraceOptions.Arguments | TraceOptions.BeforeCall)
-    public getInterpreters(): Promise<PythonEnvironment[]> {
-        const stopWatch = new StopWatch();
+    private getInterpreters(): Promise<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
         // Cache result as it only changes when the interpreter list changes or we add more workspace folders
-        const firstTime = !!this.interpretersFetchedOnceBefore;
-        this.interpretersFetchedOnceBefore = true;
         if (!this.interpreterListCachePromise) {
             this.interpreterListCachePromise = this.getInterpretersImpl();
         }
-        this.interpreterListCachePromise
-            .then(() => {
-                sendTelemetryEvent(
-                    Telemetry.InterpreterListingPerf,
-                    { duration: stopWatch.elapsedTime },
-                    {
-                        firstTime
-                    }
-                );
-            })
-            .ignoreErrors();
         return this.interpreterListCachePromise;
     }
 

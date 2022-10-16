@@ -1134,16 +1134,6 @@
      ]
    }
  */
-//Telemetry.InterpreterListingPerf
-/* __GDPR__
-   "DS_INTERNAL.INTERPRETER_LISTING_PERF" : {
-     "firstTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether this is the first time in the session. (fetching kernels first time in the session is slower, later its cached). This is a generic property supported for all telemetry (sent by decorators).","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.DiscoverIPyWidgetNamesPerf
 /* __GDPR__
    "DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS" : {

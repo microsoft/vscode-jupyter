@@ -1913,22 +1913,6 @@ Expand each section to see more information about that event.
         Common measurement used across a number of events.  
 
 
-* DS_INTERNAL.INTERPRETER_LISTING_PERF  (Telemetry.InterpreterListingPerf)  
-      Owner: [@donjayamanne](https://github.com/donjayamanne)  
-    ```
-    Time taken to list the Python interpreters.  
-    ```
-
-    - Properties:  
-        - `firstTime`?: `boolean`  
-        Whether this is the first time in the session.  
-        (fetching kernels first time in the session is slower, later its cached).  
-        This is a generic property supported for all telemetry (sent by decorators).  
-    - Measures:  
-        - `duration`: `number`  
-        Total time taken to list interpreters.  
-
-
 * DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS  (Telemetry.DiscoverIPyWidgetNamesPerf)  
       Owner: [@donjayamanne](https://github.com/donjayamanne)  
     ```
