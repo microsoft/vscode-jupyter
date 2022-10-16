@@ -175,6 +175,12 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     test('Bogus test (leave this, we need at least 2 tests to pass in non-Python CI)', () => {
         //
     });
+    test('Bogus test2 (leave this, we need at least 2 tests to pass in non-Python CI)', () => {
+        //
+    });
+    test('Bogus test3 (leave this, we need at least 2 tests to pass in non-Python CI)', () => {
+        //
+    });
     test('Can run a CSharp notebook', async function () {
         // C# Kernels can only be installed when you have Jupyter
         // On CI we install Jupyter only when testing with Python extension.
