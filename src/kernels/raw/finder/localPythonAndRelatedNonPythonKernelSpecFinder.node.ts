@@ -101,7 +101,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         cancelToken: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
-            ? await this.interpreterService.getInterpreters()
+            ? this.interpreterService.environments
             : [];
 
         traceInfoIfCI(`Listing kernels for ${interpreters.length} interpreters`);

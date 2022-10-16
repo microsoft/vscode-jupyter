@@ -345,6 +345,11 @@ export class InterpreterService implements IInterpreterService {
         this.hookupOnDidChangeInterpreterEvent();
         return this.didChangeInterpreters.event;
     }
+    private readonly _interpreters = new Map<string, { resolved: PythonEnvironment }>();
+    public get environments(): PythonEnvironment[] {
+        this.hookupOnDidChangeInterpreterEvent();
+        return Array.from(this._interpreters.values()).map((item) => item.resolved);
+    }
 
     @traceDecoratorVerbose('Get Interpreters', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getInterpreters(): Promise<PythonEnvironment[]> {
@@ -401,7 +406,7 @@ export class InterpreterService implements IInterpreterService {
             }
             const envPath = api.environments.getActiveEnvironmentPath(resource);
             const env = await api.environments.resolveEnvironment(envPath);
-            return env && pythonEnvToJupyterEnv(env);
+            return this.trackResolvedEnvironment(env);
         });
 
         // If there was a problem in getting the details, remove the cached info.
@@ -450,11 +455,11 @@ export class InterpreterService implements IInterpreterService {
                     });
                     if (matchedPythonEnv) {
                         const env = await api.environments.resolveEnvironment(matchedPythonEnv.id);
-                        return env && pythonEnvToJupyterEnv(env);
+                        return this.trackResolvedEnvironment(env);
                     }
                 } else {
                     const env = await api.environments.resolveEnvironment(pythonPathOrPythonId);
-                    return env && pythonEnvToJupyterEnv(env);
+                    return this.trackResolvedEnvironment(env);
                 }
             });
         } catch (ex) {
@@ -470,7 +475,23 @@ export class InterpreterService implements IInterpreterService {
             return undefined;
         }
     }
-
+    private trackResolvedEnvironment(env?: ResolvedEnvironment) {
+        if (env) {
+            const resolved = pythonEnvToJupyterEnv(env);
+            let changed = false;
+            if (
+                !this._interpreters.get(env.id) ||
+                JSON.stringify(resolved) !== JSON.stringify(this._interpreters.get(env.id)?.resolved)
+            ) {
+                changed = true;
+                this._interpreters.set(env.id, { resolved });
+            }
+            if (changed) {
+                this.didChangeInterpreters.fire();
+            }
+            return resolved;
+        }
+    }
     private async getApi(): Promise<ProposedExtensionAPI | undefined> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return;
@@ -483,6 +504,9 @@ export class InterpreterService implements IInterpreterService {
 
     private onDidChangeWorkspaceFolders() {
         this.interpreterListCachePromise = undefined;
+    }
+    private populateCachedListOfInterpreters() {
+        this.getInterpreters().ignoreErrors();
     }
     private async getInterpretersImpl(): Promise<PythonEnvironment[]> {
         const allInterpreters: PythonEnvironment[] = [];
@@ -507,8 +531,9 @@ export class InterpreterService implements IInterpreterService {
                 api.environments.known.map(async (item) => {
                     try {
                         const env = await api.environments.resolveEnvironment(item.id);
-                        if (env) {
-                            allInterpreters.push(pythonEnvToJupyterEnv(env));
+                        const resolved = this.trackResolvedEnvironment(env);
+                        if (resolved) {
+                            allInterpreters.push(resolved);
                         } else {
                             traceError(`Failed to get env details from Python API for ${item.id} without an error`);
                         }
@@ -547,6 +572,8 @@ export class InterpreterService implements IInterpreterService {
                     api.environments.onDidChangeEnvironments(
                         () => {
                             this.interpreterListCachePromise = undefined;
+                            this.refreshInterpreters().ignoreErrors();
+                            this.populateCachedListOfInterpreters();
                             this.didChangeInterpreters.fire();
                         },
                         this,

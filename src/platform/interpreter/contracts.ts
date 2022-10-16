@@ -6,6 +6,7 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
+    readonly environments: PythonEnvironment[];
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreters: Event<void>;
     refreshInterpreters(forceRefresh?: boolean): Promise<void>;
