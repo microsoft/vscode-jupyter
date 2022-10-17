@@ -129,7 +129,7 @@ export class JupyterConnection implements IExtensionSyncActivationService {
         }
     }
 
-    public getServerUri(uri: string): IJupyterServerUri | undefined {
+    private getServerUri(uri: string): IJupyterServerUri | undefined {
         const idAndHandle = extractJupyterServerHandleAndId(uri);
         if (idAndHandle) {
             return this.uriToJupyterServerUri.get(uri);
