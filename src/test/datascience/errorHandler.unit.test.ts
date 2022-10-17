@@ -38,6 +38,7 @@ import { Commands } from '../../platform/common/constants';
 import { RemoteJupyterServerUriProviderError } from '../../kernels/errors/remoteJupyterServerUriProviderError';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { DataScienceErrorHandlerNode } from '../../kernels/errors/kernelErrorHandler.node';
+import { JupyterConnection } from '../../kernels/jupyter/jupyterConnection';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -49,6 +50,7 @@ suite('DataScience Error Handler Unit Tests', () => {
     let jupyterInterpreterService: JupyterInterpreterService;
     let kernelDependencyInstaller: IKernelDependencyService;
     let uriStorage: IJupyterServerUriStorage;
+    let jupyterConnection: JupyterConnection;
     let cmdManager: ICommandManager;
     let extensions: IExtensions;
     let reservedPythonNames: IReservedPythonNamedProvider;
@@ -88,6 +90,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(cmdManager),
             false,
             instance(extensions),
+            instance(jupyterConnection),
             instance(reservedPythonNames)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
