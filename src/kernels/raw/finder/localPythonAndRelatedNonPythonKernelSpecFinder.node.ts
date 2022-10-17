@@ -68,7 +68,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
     ) {
         super(fs, workspaceService, extensionChecker, globalState, disposables);
         interpreterService.onDidChangeInterpreters(() => this.refresh().catch(noop), this, this.disposables);
-        kernelSpecsFromKnownLocations.onDidChangeKernels(() => this.refresh().catch(noop), this, this.disposables);
         interpreterService.onDidChangeInterpreter(() => this.refresh().catch(noop), this, this.disposables);
     }
     public activate() {

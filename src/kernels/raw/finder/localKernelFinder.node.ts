@@ -17,7 +17,7 @@ import { isArray } from '../../../platform/common/utils/sysTypes';
 import { deserializeKernelConnection, serializeKernelConnection } from '../../helpers';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { waitForCondition } from '../../../platform/common/utils/async';
-import { noop } from '../../../platform/common/utils/misc';
+import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { KernelFinder } from '../../kernelFinder';
 import { LocalKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
@@ -108,18 +108,18 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActi
 
     private async loadInitialState() {
         traceVerbose('LocalKernelFinder: load cache');
-        // loading cache, which is resource agnostic
-        const kernelsFromCache = await this.getFromCache();
-        let kernels: LocalKernelConnectionMetadata[] = [];
+        // // loading cache, which is resource agnostic
+        // // const kernelsFromCache = await this.getFromCache();
+        // let kernels: LocalKernelConnectionMetadata[] = [];
 
-        this.updateCache().catch(noop);
+        // this.updateCache().catch(noop);
 
-        if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
-            kernels = kernelsFromCache;
-            await this.writeToCache(kernels);
-        } else {
-            await this.updateCache();
-        }
+        // if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
+        //     kernels = kernelsFromCache;
+        //     await this.writeToCache(kernels);
+        // } else {
+        await this.updateCache();
+        // }
 
         traceVerbose('LocalKernelFinder: load cache finished');
     }
@@ -181,62 +181,51 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActi
         return this.cache;
     }
 
-    private async getFromCache(cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]> {
-        try {
-            traceVerbose('LocalKernelFinder: get from cache');
+    // private async getFromCache(): Promise<LocalKernelConnectionMetadata[]> {
+    //     try {
+    //         traceVerbose('LocalKernelFinder: get from cache');
 
-            let results: LocalKernelConnectionMetadata[] = this.cache;
+    //         let results: LocalKernelConnectionMetadata[] = this.cache;
 
-            // If not in memory, check memento
-            if (!results || results.length === 0) {
-                // Check memento too
-                const values = this.globalState.get<{
-                    kernels: LocalKernelConnectionMetadata[];
-                    extensionVersion: string;
-                }>(this.getCacheKey(), { kernels: [], extensionVersion: '' });
+    //         // If not in memory, check memento
+    //         if (!results || results.length === 0) {
+    //             // Check memento too
+    //             const values = this.globalState.get<{
+    //                 kernels: LocalKernelConnectionMetadata[];
+    //                 extensionVersion: string;
+    //             }>(this.getCacheKey(), { kernels: [], extensionVersion: '' });
 
-                /**
-                 * The cached list of raw kernels is pointing to kernelSpec.json files in the extensions directory.
-                 * Assume you have version 1 of extension installed.
-                 * Now you update to version 2, at this point the cache still points to version 1 and the kernelSpec.json files are in the directory version 1.
-                 * Those files in directory for version 1 could get deleted by VS Code at any point in time, as thats an old version of the extension and user has now installed version 2.
-                 * Hence its wrong and buggy to use those files.
-                 * To ensure we don't run into weird issues with the use of cached kernelSpec.json files, we ensure the cache is tied to each version of the extension.
-                 */
-                if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
-                    results = values.kernels.map(deserializeKernelConnection) as LocalKernelConnectionMetadata[];
-                    this.cache = results;
-                }
-            }
+    //             /**
+    //              * The cached list of raw kernels is pointing to kernelSpec.json files in the extensions directory.
+    //              * Assume you have version 1 of extension installed.
+    //              * Now you update to version 2, at this point the cache still points to version 1 and the kernelSpec.json files are in the directory version 1.
+    //              * Those files in directory for version 1 could get deleted by VS Code at any point in time, as thats an old version of the extension and user has now installed version 2.
+    //              * Hence its wrong and buggy to use those files.
+    //              * To ensure we don't run into weird issues with the use of cached kernelSpec.json files, we ensure the cache is tied to each version of the extension.
+    //              */
+    //             if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
+    //                 results = values.kernels.map(deserializeKernelConnection) as LocalKernelConnectionMetadata[];
+    //                 this.cache = results;
+    //             }
+    //         }
 
-            // Validate
-            const validValues: LocalKernelConnectionMetadata[] = [];
-            const promise = Promise.all(
-                results.map(async (item) => {
-                    if (await this.isValidCachedKernel(item)) {
-                        validValues.push(item);
-                    }
-                })
-            );
-            if (cancelToken) {
-                await Promise.race([
-                    promise,
-                    createPromiseFromCancellation({
-                        token: cancelToken,
-                        cancelAction: 'resolve',
-                        defaultValue: undefined
-                    })
-                ]);
-            } else {
-                await promise;
-            }
-            return validValues;
-        } catch (ex) {
-            traceError('LocalKernelFinder: Failed to get from cache', ex);
-        }
+    //         // Validate
+    //         const validValues: LocalKernelConnectionMetadata[] = [];
+    //         const promise = Promise.all(
+    //             results.map(async (item) => {
+    //                 if (await this.isValidCachedKernel(item)) {
+    //                     validValues.push(item);
+    //                 }
+    //             })
+    //         );
+    //         await promise;
+    //         return validValues;
+    //     } catch (ex) {
+    //         traceError('LocalKernelFinder: Failed to get from cache', ex);
+    //     }
 
-        return [];
-    }
+    //     return [];
+    // }
 
     private filterKernels(kernels: LocalKernelConnectionMetadata[]) {
         return kernels.filter(({ kernelSpec }) => {
@@ -265,7 +254,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActi
                 return true;
             });
             this.cache = this.filterKernels(uniqueKernels);
-            if (JSON.stringify(oldValues) === JSON.stringify(this.cache)) {
+            if (areObjectsWithUrisTheSame(oldValues, this.cache)) {
                 return;
             }
 

@@ -25,7 +25,7 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { TraceOptions } from '../logging/types';
-import { isUri, noop } from '../common/utils/misc';
+import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
 
@@ -477,7 +477,7 @@ export class InterpreterService implements IInterpreterService {
             let changed = false;
             if (
                 !this._interpreters.get(env.id) ||
-                JSON.stringify(resolved) !== JSON.stringify(this._interpreters.get(env.id)?.resolved)
+                !areObjectsWithUrisTheSame(resolved, this._interpreters.get(env.id)?.resolved)
             ) {
                 changed = true;
                 this._interpreters.set(env.id, { resolved });
