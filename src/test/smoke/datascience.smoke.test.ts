@@ -115,13 +115,13 @@ suite('Smoke Tests', () => {
         // Now change active interpreter
         const interpreterService = api.serviceManager.get<IInterpreterService>(IInterpreterService);
         await waitForCondition(
-            async () => interpreterService.environments.length > 0,
+            async () => interpreterService.resolvedEnvironments.length > 0,
             15_000,
             'Waiting for interpreters to be discovered'
         );
 
         assert.ok(
-            interpreterService.environments.length > 1,
+            interpreterService.resolvedEnvironments.length > 1,
             'Not enough interpreters to run interactive window smoke test'
         );
         // const differentInterpreter = allInterpreters.find((interpreter) => interpreter !== interpreterForCurrentWindow);

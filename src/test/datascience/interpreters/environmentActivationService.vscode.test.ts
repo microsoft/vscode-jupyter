@@ -54,7 +54,7 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             extensionChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
             originalActiveInterpreter = await interpreterService.getActiveInterpreter();
             if (!originalActiveInterpreter || originalActiveInterpreter.envType !== EnvironmentType.Conda) {
-                const interpreters = interpreterService.environments;
+                const interpreters = interpreterService.resolvedEnvironments;
                 await waitForCondition(
                     () => interpreters.find((i) => i.envType === EnvironmentType.Conda) !== undefined,
                     defaultNotebookTestTimeout,

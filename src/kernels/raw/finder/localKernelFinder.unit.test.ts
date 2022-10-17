@@ -131,7 +131,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             testData.interpreters = Array.from(distinctInterpreters);
             when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
             when(interpreterService.onDidChangeInterpreters).thenReturn(onDidChangeInterpreters.event);
-            when(interpreterService.environments).thenReturn(Array.from(distinctInterpreters));
+            when(interpreterService.resolvedEnvironments).thenReturn(Array.from(distinctInterpreters));
             when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
             when(interpreterService.getInterpreterDetails(anything())).thenResolve();
             platformService = mock(PlatformService);

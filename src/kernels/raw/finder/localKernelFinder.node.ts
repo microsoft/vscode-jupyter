@@ -147,7 +147,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActi
         }
         // A new conda environment was added or removed, hence refresh the kernels.
         // Wait for the new env to be discovered before refreshing the kernels.
-        const previousCondaEnvCount = this.interpreters.environments.filter(
+        const previousCondaEnvCount = this.interpreters.resolvedEnvironments.filter(
             (item) => item.envType === EnvironmentType.Conda
         ).length;
 
@@ -161,7 +161,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActi
         // Wait for around 5s between each try, we know Python extension can be slow to discover interpreters.
         await waitForCondition(
             async () => {
-                const condaEnvCount = this.interpreters.environments.filter(
+                const condaEnvCount = this.interpreters.resolvedEnvironments.filter(
                     (item) => item.envType === EnvironmentType.Conda
                 ).length;
                 if (condaEnvCount > previousCondaEnvCount) {

@@ -345,7 +345,7 @@ export class InterpreterService implements IInterpreterService {
         return this.didChangeInterpreters.event;
     }
     private readonly _interpreters = new Map<string, { resolved: PythonEnvironment }>();
-    public get environments(): PythonEnvironment[] {
+    public get resolvedEnvironments(): PythonEnvironment[] {
         this.hookupOnDidChangeInterpreterEvent();
         return Array.from(this._interpreters.values()).map((item) => item.resolved);
     }
