@@ -270,9 +270,6 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             localKernelFinder = new LocalKernelFinder(
                 nonPythonKernelSpecFinder,
                 localPythonAndRelatedKernelFinder,
-                instance(memento),
-                instance(fs),
-                instance(env),
                 kernelFinder,
                 [],
                 instance(extensionChecker),

@@ -333,7 +333,11 @@ export class InterpreterService implements IInterpreterService {
                 // This event may not fire. It only fires if we're the reason for python extension
                 // activation. VS code does not fire such an event itself if something else activates
                 this.apiProvider.onDidActivatePythonExtension(
-                    this.hookupOnDidChangeInterpreterEvent,
+                    () => {
+                        this.builtListOfInterpretersAtLeastOnce = false;
+                        this.hookupOnDidChangeInterpreterEvent();
+                        this.buildListOfInterpretersForFirstTime();
+                    },
                     this,
                     this.disposables
                 );
@@ -506,39 +510,47 @@ export class InterpreterService implements IInterpreterService {
         this.getInterpreters().ignoreErrors();
     }
     private async getInterpretersImpl(): Promise<PythonEnvironment[]> {
+        if (this.extensionChecker.isPythonExtensionInstalled) {
+            this.builtListOfInterpretersAtLeastOnce = true;
+        }
+
         const allInterpreters: PythonEnvironment[] = [];
         await this.getApi().then(async (api) => {
             if (!api) {
                 return [];
             }
-            await api.environments.refreshEnvironments();
-            traceVerbose(
-                `Full interpreter list after refreshing is length: ${
-                    api.environments.known.length
-                }, ${api.environments.known
-                    .map(
-                        (item) =>
-                            `${item.id}:${item.environment?.name}:${item.tools.join(',')}:${getDisplayPath(
-                                item.executable.uri
-                            )}:${item.path}`
-                    )
-                    .join(', ')}`
-            );
-            await Promise.all(
-                api.environments.known.map(async (item) => {
-                    try {
-                        const env = await api.environments.resolveEnvironment(item.id);
-                        const resolved = this.trackResolvedEnvironment(env);
-                        if (resolved) {
-                            allInterpreters.push(resolved);
-                        } else {
-                            traceError(`Failed to get env details from Python API for ${item.id} without an error`);
+            try {
+                await api.environments.refreshEnvironments();
+                traceVerbose(
+                    `Full interpreter list after refreshing is length: ${
+                        api.environments.known.length
+                    }, ${api.environments.known
+                        .map(
+                            (item) =>
+                                `${item.id}:${item.environment?.name}:${item.tools.join(',')}:${getDisplayPath(
+                                    item.executable.uri
+                                )}:${item.path}`
+                        )
+                        .join(', ')}`
+                );
+                await Promise.all(
+                    api.environments.known.map(async (item) => {
+                        try {
+                            const env = await api.environments.resolveEnvironment(item.id);
+                            const resolved = this.trackResolvedEnvironment(env);
+                            if (resolved) {
+                                allInterpreters.push(resolved);
+                            } else {
+                                traceError(`Failed to get env details from Python API for ${item.id} without an error`);
+                            }
+                        } catch (ex) {
+                            traceError(`Failed to get env details from Python API for ${item.id}`, ex);
                         }
-                    } catch (ex) {
-                        traceError(`Failed to get env details from Python API for ${item.id}`, ex);
-                    }
-                })
-            );
+                    })
+                );
+            } catch (ex) {
+                traceError(`Failed to refresh list of interpreters and get their details`, ex);
+            }
         });
         traceVerbose(
             `Full interpreter list is length: ${allInterpreters.length}, ${allInterpreters
@@ -548,11 +560,35 @@ export class InterpreterService implements IInterpreterService {
         return allInterpreters;
     }
 
+    private builtListOfInterpretersAtLeastOnce?: boolean;
+    private buildListOfInterpretersForFirstTime() {
+        if (this.builtListOfInterpretersAtLeastOnce) {
+            return;
+        }
+        // Get latest interpreter list in the background.
+        if (this.extensionChecker.isPythonExtensionActive) {
+            this.builtListOfInterpretersAtLeastOnce = true;
+            this.populateCachedListOfInterpreters();
+        }
+        this.extensionChecker.onPythonExtensionInstallationStatusChanged(
+            (e) => {
+                if (e !== 'installed') {
+                    return;
+                }
+                if (this.extensionChecker.isPythonExtensionActive) {
+                    this.populateCachedListOfInterpreters();
+                }
+            },
+            this,
+            this.disposables
+        );
+    }
     private hookupOnDidChangeInterpreterEvent() {
         // Only do this once.
         if (this.eventHandlerAdded) {
             return;
         }
+        this.buildListOfInterpretersForFirstTime();
         this.getApi()
             .then((api) => {
                 if (!this.eventHandlerAdded && api) {
