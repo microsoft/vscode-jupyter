@@ -34,7 +34,7 @@ import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/in
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ResourceSet } from '../../../platform/vscode-path/map';
-import { noop } from '../../../platform/common/utils/misc';
+import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 
@@ -68,6 +68,21 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
     ) {
         super(fs, workspaceService, extensionChecker, globalState, disposables);
         interpreterService.onDidChangeInterpreters(() => this.refresh().catch(noop), this, this.disposables);
+        this.kernelSpecsFromKnownLocations.onDidChangeKernels(
+            () => {
+                // Only refresh if we know there are new global Python kernels that we haven't already seen before.
+                const lastKnownPythonKernels = this.lastKnownGlobalPythonKernelSpecs;
+                const newPythonKernels = this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs();
+                if (
+                    lastKnownPythonKernels.length !== newPythonKernels.length ||
+                    !areObjectsWithUrisTheSame(lastKnownPythonKernels, newPythonKernels)
+                ) {
+                    this.refresh().catch(noop);
+                }
+            },
+            this,
+            this.disposables
+        );
         interpreterService.onDidChangeInterpreter(() => this.refresh().catch(noop), this, this.disposables);
     }
     public activate() {
@@ -80,6 +95,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         disposeAllDisposables(this.disposables);
     }
     private refreshCancellation?: CancellationTokenSource;
+    private lastKnownGlobalPythonKernelSpecs: LocalKernelSpecConnectionMetadata[] = [];
     private async refresh() {
         const previousListOfKernels = this._cachedKernels;
         this.refreshCancellation?.cancel();
@@ -118,18 +134,18 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         this._cachedKernels = kernels;
         return this._cachedKernels;
     }
-    private async listGlobalPythonKernelSpecs(
-        includeKernelsRegisteredByUs: boolean
-    ): Promise<LocalKernelSpecConnectionMetadata[]> {
-        return (
-            this.kernelSpecsFromKnownLocations.kernels
-                .filter((item) => item.kernelSpec.language === PYTHON_LANGUAGE)
-                // If there are any kernels that we registered (then don't return them).
-                // Those were registered by us to start kernels from Jupyter extension (not stuff that user created).
-                // We should only return global kernels the user created themselves, others will appear when searching for interprters.
-                .filter((item) => (includeKernelsRegisteredByUs ? true : !getKernelRegistrationInfo(item.kernelSpec)))
-                .map((item) => <LocalKernelSpecConnectionMetadata>item)
-        );
+    private listGlobalPythonKernelSpecs(includeKernelsRegisteredByUs: boolean): LocalKernelSpecConnectionMetadata[] {
+        const pythonKernelSpecs = this.kernelSpecsFromKnownLocations.kernels
+            .filter((item) => item.kernelSpec.language === PYTHON_LANGUAGE)
+            // If there are any kernels that we registered (then don't return them).
+            // Those were registered by us to start kernels from Jupyter extension (not stuff that user created).
+            // We should only return global kernels the user created themselves, others will appear when searching for interprters.
+            .filter((item) => (includeKernelsRegisteredByUs ? true : !getKernelRegistrationInfo(item.kernelSpec)))
+            .map((item) => <LocalKernelSpecConnectionMetadata>item);
+        return pythonKernelSpecs;
+    }
+    private listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs() {
+        return (this.lastKnownGlobalPythonKernelSpecs = this.listGlobalPythonKernelSpecs(true));
     }
     /**
      * Some python environments like conda can have non-python kernel specs as well, this will return those as well.
@@ -150,7 +166,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         const [kernelSpecs, activeInterpreters, globalKernelSpecs, tempDirForKernelSpecs] = await Promise.all([
             this.findKernelSpecsInInterpreters(interpreters, cancelToken),
             activeInterpreterInAWorkspacePromise,
-            this.listGlobalPythonKernelSpecs(true),
+            this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs(),
             this.jupyterPaths.getKernelSpecTempRegistrationFolder()
         ]);
         if (cancelToken.isCancellationRequested) {

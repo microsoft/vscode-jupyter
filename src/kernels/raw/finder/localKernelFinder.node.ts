@@ -61,9 +61,7 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActi
         this.condaService.onCondaEnvironmentsChanged(this.onDidChangeCondaEnvironments, this, this.disposables);
 
         this.interpreters.onDidChangeInterpreters(
-            async () => {
-                this.updateCache().then(noop, noop);
-            },
+            async () => this.updateCache().then(noop, noop),
             this,
             this.disposables
         );
@@ -81,19 +79,11 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActi
             this.disposables
         );
         this.nonPythonKernelFinder.onDidChangeKernels(
-            () => {
-                this.updateCache().then(noop, noop);
-            },
+            () => this.updateCache().then(noop, noop),
             this,
             this.disposables
         );
-        this.pythonKernelFinder.onDidChangeKernels(
-            () => {
-                this.updateCache().then(noop, noop);
-            },
-            this,
-            this.disposables
-        );
+        this.pythonKernelFinder.onDidChangeKernels(() => this.updateCache().then(noop, noop), this, this.disposables);
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
     }
 
@@ -109,9 +99,12 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActi
         try {
             let kernels: LocalKernelConnectionMetadata[] = [];
             // Exclude python kernel specs (we'll get that from the pythonKernelFinder)
-            const nonPythonKernels = this.nonPythonKernelFinder.kernels.filter(
-                (item) => item.kernelSpec.language !== PYTHON_LANGUAGE
-            );
+            const nonPythonKernels = this.nonPythonKernelFinder.kernels.filter((item) => {
+                if (this.extensionChecker.isPythonExtensionInstalled) {
+                    return item.kernelSpec.language !== PYTHON_LANGUAGE;
+                }
+                return true;
+            });
             kernels = kernels.concat(nonPythonKernels).concat(this.pythonKernelFinder.kernels);
             await this.writeToCache(kernels);
         } catch (ex) {

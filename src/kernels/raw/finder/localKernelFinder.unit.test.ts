@@ -778,7 +778,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             });
             assert.deepEqual(actualKernel, expectedKernel, 'Incorrect kernels');
         }
-        test('Discover global kernelspecs (without Python)', async () => {
+        test('Discover global kernelspecs (without Python ext)', async () => {
             const testData: TestData = {
                 globalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec],
                 interpreters: []
@@ -789,6 +789,19 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 
             await verifyKernels({
                 expectedGlobalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec]
+            });
+        });
+        test('Discover global kernelspecs (without Python)', async () => {
+            const testData: TestData = {
+                globalKernelSpecs: [juliaKernelSpec, javaKernelSpec],
+                interpreters: []
+            };
+            await initialize(testData);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
+            await changeEventFired.assertFiredAtLeast(1, 100).catch(noop);
+
+            await verifyKernels({
+                expectedGlobalKernelSpecs: [juliaKernelSpec, javaKernelSpec]
             });
         });
         test('Discover global custom Python kernelspecs (without Python)', async () => {
@@ -835,7 +848,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                 }
             });
         }
-        test('Verify Global KernelSpecs', async () => {
+        test('Verify Global KernelSpecs (without Python)', async () => {
             const testData: TestData = {
                 globalKernelSpecs: [
                     juliaKernelSpec,
@@ -845,6 +858,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                 ]
             };
             await initialize(testData);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
             const cancelToken = new CancellationTokenSource();
             disposables.push(cancelToken);
             await changeEventFired.assertFired(1000);
@@ -868,6 +882,24 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                     (item) => item.kernelSpec.display_name === fullyQualifiedPythonKernelSpec.display_name
                 ),
                 fullyQualifiedPythonKernelSpec
+            );
+        });
+        test('Verify Global KernelSpecs (non-python_', async () => {
+            const testData: TestData = {
+                globalKernelSpecs: [juliaKernelSpec, javaKernelSpec]
+            };
+            await initialize(testData);
+            const cancelToken = new CancellationTokenSource();
+            disposables.push(cancelToken);
+            await changeEventFired.assertFired(1000);
+
+            verifyGlobalKernelSpec(
+                localKernelFinder.kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
+                juliaKernelSpec
+            );
+            verifyGlobalKernelSpec(
+                localKernelFinder.kernels.find((item) => item.kernelSpec.display_name === javaKernelSpec.display_name),
+                javaKernelSpec
             );
         });
         test('Kernelspecs registered by older versions of extensions `should not` be displayed & must be deleted', async () => {
