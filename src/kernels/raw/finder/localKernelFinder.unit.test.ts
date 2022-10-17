@@ -884,7 +884,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                 fullyQualifiedPythonKernelSpec
             );
         });
-        test('Verify Global KernelSpecs (non-python_', async () => {
+        test('Verify Global KernelSpecs (non-python)', async () => {
             const testData: TestData = {
                 globalKernelSpecs: [juliaKernelSpec, javaKernelSpec]
             };

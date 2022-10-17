@@ -40,7 +40,7 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { JupyterServerUriStorage } from '../launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
-import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
+import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { IExtensions } from '../../../platform/common/types';
@@ -344,12 +344,6 @@ suite(`Remote Kernel Finder`, () => {
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
         when(
             memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
-                LocalKernelSpecsCacheKey,
-                anything()
-            )
-        ).thenReturn({ kernels: [], extensionVersion: '' });
-        when(
-            memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
                 RemoteKernelSpecsCacheKey,
                 anything()
             )
@@ -403,12 +397,6 @@ suite(`Remote Kernel Finder`, () => {
         ];
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
         when(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).thenResolve(true);
-        when(
-            memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
-                LocalKernelSpecsCacheKey,
-                anything()
-            )
-        ).thenReturn({ kernels: [], extensionVersion: '' });
         when(
             memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
                 RemoteKernelSpecsCacheKey,
