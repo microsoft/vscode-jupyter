@@ -8,47 +8,44 @@
 import type { Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../../helpers';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { Disposable, EventEmitter, Memento, Uri } from 'vscode';
 import { CryptoUtils } from '../../../platform/common/crypto';
-import { noop } from '../../core';
+import { noop } from '../../../test/core';
 import {
     IJupyterConnection,
     IJupyterKernelSpec,
     IKernelProvider,
     KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata
-} from '../../../kernels/types';
+} from '../../types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager';
-import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory';
-import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernelFinder';
-import { ILocalKernelFinder } from '../../../kernels/raw/types';
-import {
-    ActiveKernelIdList,
-    PreferredRemoteKernelIdProvider
-} from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { JupyterSessionManager } from '../session/jupyterSessionManager';
+import { JupyterSessionManagerFactory } from '../session/jupyterSessionManagerFactory';
+import { RemoteKernelFinder } from './remoteKernelFinder';
+import { ILocalKernelFinder } from '../../raw/types';
+import { ActiveKernelIdList, PreferredRemoteKernelIdProvider } from '../preferredRemoteKernelIdProvider';
 import {
     IJupyterKernel,
     IJupyterRemoteCachedKernelValidator,
     IJupyterSessionManager,
     IServerConnectionType
-} from '../../../kernels/jupyter/types';
-import { KernelFinder } from '../../../kernels/kernelFinder';
-import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
+} from '../types';
+import { KernelFinder } from '../../kernelFinder';
+import { NotebookProvider } from '../launcher/notebookProvider';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
+import { LocalKernelFinder } from '../../raw/finder/localKernelFinder.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
+import { JupyterServerUriStorage } from '../launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
-import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../../kernels/common/commonFinder';
+import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { IExtensions } from '../../../platform/common/types';
-import { takeTopRankKernel } from '../../../kernels/raw/finder/localKernelFinder.unit.test';
-import { createEventHandler, TestEventHandler } from '../../common';
+import { takeTopRankKernel } from '../../raw/finder/localKernelFinder.unit.test';
+import { createEventHandler, TestEventHandler } from '../../../test/common';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
