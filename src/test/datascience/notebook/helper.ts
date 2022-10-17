@@ -436,66 +436,61 @@ async function waitForKernelToChangeImpl(
     timeout = defaultNotebookTestTimeout,
     skipAutoSelection?: boolean
 ) {
-    const { vscodeNotebook, controllerLoader, controllerRegistration, controllerSelection } = await getServices();
+    const { controllerLoader, controllerRegistration, controllerSelection } = await getServices();
 
     // Wait for the active editor to come up
-    notebookEditor = await waitForActiveNotebookEditor(notebookEditor);
+    const editor = await waitForActiveNotebookEditor(notebookEditor);
 
     // Get the list of NotebookControllers for this document
     await controllerLoader.loaded;
-    const notebookControllers = controllerRegistration.registered;
 
     // Find the kernel id that matches the name we want
     let controller: IVSCodeNotebookController | undefined;
-    let labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
-    if (labelOrId) {
-        controller = notebookControllers
-            ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
-            ?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId));
-        if (!controller) {
-            // Try includes instead
-            controller = notebookControllers?.find(
-                (k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId)
-            );
-        }
-    }
-    const interpreterPath = 'interpreterPath' in criteria ? criteria.interpreterPath : undefined;
-    if (interpreterPath && !controller) {
-        controller = notebookControllers
-            ?.filter((k) => k.connection.interpreter)
-            ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
-            .find((k) =>
-                // eslint-disable-next-line local-rules/dont-use-fspath
-                k.connection.interpreter!.uri.fsPath.toLowerCase().includes(interpreterPath.fsPath.toLowerCase())
-            );
-        if (controller) {
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            traceVerbose(`Did match a controller that matches the interpreter ${interpreterPath.fsPath}`);
-        } else {
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            traceWarning(`Did not find a controller that matches the interpreter ${interpreterPath.fsPath}`);
-        }
-    }
-    traceInfo(
-        `Switching to kernel id ${controller?.id}, current controllers ${controllerRegistration.all
-            .map(
-                (c) =>
-                    `${c.kind} with id ${c.id} and ${
-                        'interpreter' in c
-                            ? // eslint-disable-next-line local-rules/dont-use-fspath
-                              `has interpreter with details = ${c.interpreter?.id}:${c.interpreter?.uri.fsPath}`
-                            : 'does not have an interpreter'
-                    } `
-            )
-            .join(', ')}`
-    );
     const isRightKernel = () => {
-        const doc = vscodeNotebook.activeNotebookEditor?.notebook;
-        if (!doc) {
-            return false;
+        let labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
+        if (labelOrId) {
+            controller = controllerRegistration.registered
+                .filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
+                .find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId));
+            if (!controller) {
+                // Try includes instead
+                controller = controllerRegistration.registered.find(
+                    (k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId)
+                );
+            }
         }
+        const interpreterPath = 'interpreterPath' in criteria ? criteria.interpreterPath : undefined;
+        if (interpreterPath && !controller) {
+            controller = controllerRegistration.registered
+                .filter((k) => k.connection.interpreter)
+                .filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
+                .find((k) =>
+                    // eslint-disable-next-line local-rules/dont-use-fspath
+                    k.connection.interpreter!.uri.fsPath.toLowerCase().includes(interpreterPath.fsPath.toLowerCase())
+                );
+            if (controller) {
+                // eslint-disable-next-line local-rules/dont-use-fspath
+                traceVerbose(`Did match a controller that matches the interpreter ${interpreterPath.fsPath}`);
+            } else {
+                // eslint-disable-next-line local-rules/dont-use-fspath
+                traceWarning(`Did not find a controller that matches the interpreter ${interpreterPath.fsPath}`);
+            }
+        }
+        traceInfo(
+            `Switching to kernel id ${controller?.id}, current controllers ${controllerRegistration.all
+                .map(
+                    (c) =>
+                        `${c.kind} with id ${c.id} and ${
+                            'interpreter' in c
+                                ? // eslint-disable-next-line local-rules/dont-use-fspath
+                                  `has interpreter with details = ${c.interpreter?.id}:${c.interpreter?.uri.fsPath}`
+                                : 'does not have an interpreter'
+                        } `
+                )
+                .join(', ')}`
+        );
 
-        const selectedController = controllerSelection.getSelected(doc);
+        const selectedController = controllerSelection.getSelected(editor.notebook);
         if (!selectedController) {
             return false;
         }
@@ -513,7 +508,9 @@ async function waitForKernelToChangeImpl(
                 // Double check not the right kernel (don't select again if already found to be correct)
                 if (!isRightKernel() && !skipAutoSelection) {
                     traceInfoIfCI(
-                        `Notebook select.kernel command switching to kernel id ${controller?.connection.kind}${controller?.id}: Try ${tryCount}`
+                        `Notebook select.kernel command switching to kernel id ${controller?.connection.kind}${
+                            controller?.id
+                        }: Try ${tryCount} for ${JSON.stringify(criteria)}`
                     );
                     // Send a select kernel on the active notebook editor. Keep sending it if it fails.
                     await commands.executeCommand('notebook.selectKernel', {
@@ -576,7 +573,10 @@ export async function waitForKernelToGetAutoSelected(
             await waitForCondition(
                 async () => controllerRegistration.all.length > lastLoadedControllerCount,
                 1000,
-                'No new controllers loaded',
+                () =>
+                    `No new controllers loaded, currently loaded ${controllerRegistration.all
+                        .map((item) => item.id)
+                        .join(',')}`,
                 100,
                 false
             ).catch(noop);
