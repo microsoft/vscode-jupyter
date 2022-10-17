@@ -13,7 +13,6 @@ import { traceInfo, traceVerbose, traceError, traceDecoratorError } from '../../
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable, IDisposableRegistry, ReadWrite } from '../../../platform/common/types';
-import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { isUri, noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers';
@@ -72,11 +71,6 @@ export abstract class LocalKernelSpecFinderBase<
         disposables.push(this);
     }
 
-    @testOnlyMethod()
-    public clearCache() {
-        this.kernelSpecCache.clear();
-        this.findKernelSpecsInPathCache.clear();
-    }
     public abstract dispose(): void | undefined;
     /**
      * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.
