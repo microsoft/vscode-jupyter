@@ -27,9 +27,9 @@ import * as localize from '../../../platform/common/utils/localize';
 import { debounceAsync } from '../../../platform/common/utils/decorators';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { KnownEnvironmentTypes } from '../../../platform/api/pythonApiTypes';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -147,8 +147,8 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActi
         }
         // A new conda environment was added or removed, hence refresh the kernels.
         // Wait for the new env to be discovered before refreshing the kernels.
-        const previousCondaEnvCount = this.interpreters.resolvedEnvironments.filter(
-            (item) => item.envType === EnvironmentType.Conda
+        const previousCondaEnvCount = this.interpreters.environments.filter(
+            (item) => (item.environment?.type as KnownEnvironmentTypes) === 'Conda'
         ).length;
 
         await this.interpreters.refreshInterpreters(true).ignoreErrors();
@@ -161,8 +161,8 @@ export class LocalKernelFinder implements ILocalKernelFinder, IExtensionSyncActi
         // Wait for around 5s between each try, we know Python extension can be slow to discover interpreters.
         await waitForCondition(
             async () => {
-                const condaEnvCount = this.interpreters.resolvedEnvironments.filter(
-                    (item) => item.envType === EnvironmentType.Conda
+                const condaEnvCount = this.interpreters.environments.filter(
+                    (item) => (item.environment?.type as KnownEnvironmentTypes) === 'Conda'
                 ).length;
                 if (condaEnvCount > previousCondaEnvCount) {
                     return true;

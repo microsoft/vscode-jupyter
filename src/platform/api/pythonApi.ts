@@ -4,7 +4,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { EventEmitter, Event, Uri, ExtensionMode } from 'vscode';
-import { IPythonApiProvider, IPythonExtensionChecker, PythonApi, PythonEnvironment_PythonApi } from './types';
+import {
+    IPythonApiProvider,
+    IPythonExtensionChecker,
+    PythonApi,
+    PythonEnvironmentV2,
+    PythonEnvironment_PythonApi
+} from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -314,6 +320,7 @@ export class InterpreterService implements IInterpreterService {
     private eventHandlerAdded?: boolean;
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
     private apiPromise: Promise<ProposedExtensionAPI | undefined> | undefined;
+    private api?: ProposedExtensionAPI;
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
@@ -348,6 +355,11 @@ export class InterpreterService implements IInterpreterService {
     public get resolvedEnvironments(): PythonEnvironment[] {
         this.hookupOnDidChangeInterpreterEvent();
         return Array.from(this._interpreters.values()).map((item) => item.resolved);
+    }
+    public get environments(): readonly PythonEnvironmentV2[] {
+        this.getApi().catch(noop);
+        this.hookupOnDidChangeInterpreterEvent();
+        return this.api?.environments?.known || [];
     }
 
     private getInterpreters(): Promise<PythonEnvironment[]> {
@@ -482,6 +494,7 @@ export class InterpreterService implements IInterpreterService {
         }
         if (!this.apiPromise) {
             this.apiPromise = this.apiProvider.getNewApi();
+            this.apiPromise.then((api) => (api ? (this.api = api) : undefined)).catch(noop);
         }
         return this.apiPromise;
     }
