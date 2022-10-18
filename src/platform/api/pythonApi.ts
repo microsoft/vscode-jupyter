@@ -394,7 +394,10 @@ export class InterpreterService implements IInterpreterService {
         }
     }
     private workspaceCachedActiveInterpreter = new Set<string>();
-    @traceDecoratorVerbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
+    @traceDecoratorVerbose(
+        'Get Active Interpreter',
+        TraceOptions.Arguments | TraceOptions.BeforeCall | TraceOptions.ReturnValue
+    )
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         const stopWatch = new StopWatch();
         this.hookupOnDidChangeInterpreterEvent();
