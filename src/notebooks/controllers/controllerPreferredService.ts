@@ -7,6 +7,7 @@ import { injectable, inject } from 'inversify';
 import {
     CancellationToken,
     CancellationTokenSource,
+    Disposable,
     NotebookControllerAffinity,
     NotebookDocument,
     Uri,
@@ -128,11 +129,17 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 );
                 preferredConnection = defaultPythonController?.connection;
             }
+            if (preferredSearchToken.token.isCancellationRequested) {
+                return {};
+            }
             if (document.notebookType === JupyterNotebookView && !preferredConnection) {
                 const preferredInterpreter =
                     !serverId && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                         ? await this.interpreters.getActiveInterpreter(document.uri)
                         : undefined;
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    return {};
+                }
 
                 // Await looking for the preferred kernel
                 ({ preferredConnection } = await this.findPreferredKernelExactMatch(
@@ -143,6 +150,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     serverId
                 ));
 
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    return {};
+                }
                 // If we didn't find an exact match in the cache, try awaiting for the non-cache version
                 if (!preferredConnection) {
                     // Don't start this ahead of time to save some CPU cycles
@@ -153,6 +163,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                         preferredInterpreter,
                         serverId
                     ));
+                }
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    return {};
                 }
 
                 // Send telemetry on looking for preferred don't await for sending it
@@ -195,6 +208,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 // Wait for our controllers to be loaded before we try to set a preferred on
                 // can happen if a document is opened quick and we have not yet loaded our controllers
                 await this.loader.loaded;
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    return {};
+                }
 
                 // For interactive set the preferred controller as the interpreter or default
                 const defaultInteractiveController = await this.defaultService.computeDefaultController(
@@ -202,6 +218,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     'interactive'
                 );
                 preferredConnection = defaultInteractiveController?.connection;
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    return {};
+                }
             }
 
             // See if the preferred connection is in our registered controllers, add the sufix for the interactive scenario
@@ -219,11 +238,18 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     document,
                     NotebookControllerAffinity.Preferred
                 );
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    return {};
+                }
 
                 await trackKernelResourceInformation(document.uri, {
                     kernelConnection: preferredConnection,
                     isPreferredKernel: true
                 });
+
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    return {};
+                }
 
                 // Save in our map so we can find it in test code.
                 this.preferredControllers.set(document, targetController);
@@ -249,7 +275,10 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         return this.preferredControllers.get(notebook);
     }
 
-    // When a document is opened we need to look for a preferred kernel for it
+    private readonly debouncedPreferredCompute = new WeakMap<NotebookDocument, IDisposable>();
+    /**
+     * When a document is opened we need to look for a preferred kernel for it
+     */
     private onDidOpenNotebookDocument(document: NotebookDocument) {
         // Restrict to only our notebook documents
         if (
@@ -262,7 +291,10 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             return;
         }
 
-        this.computePreferred(document).catch(noop);
+        // This method can get called very frequently, hence compute the preferred once in 100ms
+        const timeout = setTimeout(() => this.computePreferred(document).catch(noop), 100);
+        this.debouncedPreferredCompute.get(document)?.dispose();
+        this.debouncedPreferredCompute.set(document, new Disposable(() => clearTimeout(timeout)));
     }
 
     // Use our kernel finder to rank our kernels, and see if we have an exact match

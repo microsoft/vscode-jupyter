@@ -227,7 +227,7 @@ export abstract class LocalKernelSpecFinderBase<
                         };
                     });
             } else {
-                traceVerbose(`Not Searching for kernels as path not found, ${getDisplayPath(searchPath)}`);
+                traceVerbose(`Not Searching for kernels as path does not exist, ${getDisplayPath(searchPath)}`);
                 return [];
             }
         })();

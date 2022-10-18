@@ -3,7 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { EventEmitter, Event, Uri, ExtensionMode } from 'vscode';
+import { EventEmitter, Event, Uri, ExtensionMode, CancellationTokenSource, CancellationToken } from 'vscode';
 import {
     IPythonApiProvider,
     IPythonExtensionChecker,
@@ -365,12 +365,16 @@ export class InterpreterService implements IInterpreterService {
         this.hookupOnDidChangeInterpreterEvent();
         return this.api?.environments?.known || [];
     }
-
+    private getInterpretersCancellation?: CancellationTokenSource;
     private getInterpreters(): Promise<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
         // Cache result as it only changes when the interpreter list changes or we add more workspace folders
         if (!this.interpreterListCachePromise) {
-            this.interpreterListCachePromise = this.getInterpretersImpl();
+            this.getInterpretersCancellation?.cancel();
+            this.getInterpretersCancellation?.dispose();
+            const cancellation = (this.getInterpretersCancellation = new CancellationTokenSource());
+            this.interpreterListCachePromise = this.getInterpretersImpl(cancellation.token);
+            this.interpreterListCachePromise.finally(() => cancellation.dispose);
         }
         return this.interpreterListCachePromise;
     }
@@ -509,18 +513,21 @@ export class InterpreterService implements IInterpreterService {
     private populateCachedListOfInterpreters() {
         this.getInterpreters().ignoreErrors();
     }
-    private async getInterpretersImpl(): Promise<PythonEnvironment[]> {
+    private async getInterpretersImpl(cancelToken: CancellationToken): Promise<PythonEnvironment[]> {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             this.builtListOfInterpretersAtLeastOnce = true;
         }
 
         const allInterpreters: PythonEnvironment[] = [];
         await this.getApi().then(async (api) => {
-            if (!api) {
+            if (!api || cancelToken.isCancellationRequested) {
                 return [];
             }
             try {
                 await api.environments.refreshEnvironments();
+                if (cancelToken.isCancellationRequested) {
+                    return;
+                }
                 traceVerbose(
                     `Full interpreter list after refreshing is length: ${
                         api.environments.known.length
@@ -552,6 +559,10 @@ export class InterpreterService implements IInterpreterService {
                 traceError(`Failed to refresh list of interpreters and get their details`, ex);
             }
         });
+        if (cancelToken.isCancellationRequested) {
+            return [];
+        }
+
         traceVerbose(
             `Full interpreter list is length: ${allInterpreters.length}, ${allInterpreters
                 .map((item) => `${item.id}:${item.displayName}:${item.envType}:${getDisplayPath(item.uri)}`)
