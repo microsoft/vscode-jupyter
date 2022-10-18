@@ -303,7 +303,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 this.preferredControllers.set(document, targetController);
             }
             traceInfoIfCI(
-                `TargetController not found ID: ${preferredConnection?.id} type ${
+                `TargetController found ID: ${preferredConnection?.id} type ${
                     preferredConnection?.kind
                 } for document ${getDisplayPath(document.uri)}`
             );

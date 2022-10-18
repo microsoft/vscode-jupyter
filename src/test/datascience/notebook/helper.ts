@@ -765,8 +765,11 @@ export async function createNewNotebook() {
     data.metadata = {
         custom: {
             cells: [],
-            metadata: {
-                orig_nbformat: defaultNotebookFormat.major
+            metadata: <nbformat.INotebookMetadata>{
+                orig_nbformat: defaultNotebookFormat.major,
+                language_info: {
+                    name: language
+                }
             },
             nbformat: defaultNotebookFormat.major,
             nbformat_minor: defaultNotebookFormat.minor
