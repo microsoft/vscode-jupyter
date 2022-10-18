@@ -302,7 +302,14 @@ export async function createEmptyPythonNotebook(
     const serverConnectionType = serviceContainer.get<IServerConnectionType>(IServerConnectionType);
     // Don't use same file (due to dirty handling, we might save in dirty.)
     // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-    const nbFile = await createTemporaryNotebook([], disposables, undefined, rootFolder, 'emptyPython');
+    const nbFile = await createTemporaryNotebook(
+        [],
+        disposables,
+        undefined,
+        rootFolder,
+        'emptyPython',
+        PYTHON_LANGUAGE
+    );
     // Open a python notebook and use this for all tests in this test suite.
     await openAndShowNotebook(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
