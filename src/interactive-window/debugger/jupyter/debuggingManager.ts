@@ -15,7 +15,6 @@ import {
 import { IKernelProvider } from '../../../kernels/types';
 import { IControllerLoader, IControllerSelection } from '../../../notebooks/controllers/types';
 import { pythonIWKernelDebugAdapter } from '../../../notebooks/debugger/constants';
-import { Debugger } from '../../../notebooks/debugger/debugger';
 import { DebuggingManagerBase } from '../../../notebooks/debugger/debuggingManagerBase';
 import {
     IDebugLocationTrackerFactory,
@@ -41,6 +40,7 @@ import { IFileGeneratedCodes } from '../../editor-integration/types';
 import { IInteractiveWindowDebuggingManager } from '../../types';
 import { buildSourceMap } from '../helper';
 import { DebugCellController } from './debugCellController';
+import { IWDebugger } from './debugger';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
 
 /**
@@ -112,7 +112,13 @@ export class InteractiveWindowDebuggingManager
             __cellIndex: cell.index
         };
         const opts: DebugSessionOptions = { suppressSaveBeforeStart: true };
-        return this.startDebuggingConfig(config, opts);
+        await this.startDebuggingConfig(config, opts);
+        const dbgr = this.notebookToDebugger.get(doc);
+        if (!dbgr) {
+            traceError('Debugger not found, could not start debugging.');
+            return;
+        }
+        await (dbgr as IWDebugger).ready;
     }
 
     protected async createDebugAdapterDescriptor(session: DebugSession): Promise<DebugAdapterDescriptor | undefined> {
@@ -135,10 +141,11 @@ export class InteractiveWindowDebuggingManager
             return;
         }
 
-        this.notebookToDebugger.set(notebook, new Debugger(notebook, config, session));
+        const dbgr = new IWDebugger(notebook, config, session);
+        this.notebookToDebugger.set(notebook, dbgr);
         try {
             this.notebookInProgress.add(notebook);
-            return await this.doCreateDebugAdapterDescriptor(config, session, notebook);
+            return await this.doCreateDebugAdapterDescriptor(config, session, notebook, dbgr);
         } finally {
             this.notebookInProgress.delete(notebook);
         }
@@ -147,7 +154,8 @@ export class InteractiveWindowDebuggingManager
     private async doCreateDebugAdapterDescriptor(
         config: IInteractiveWindowDebugConfig,
         session: DebugSession,
-        notebook: NotebookDocument
+        notebook: NotebookDocument,
+        dbgr: IWDebugger
     ): Promise<DebugAdapterDescriptor | undefined> {
         const kernel = await this.ensureKernelIsRunning(notebook);
         if (!kernel?.session) {
@@ -169,6 +177,9 @@ export class InteractiveWindowDebuggingManager
         const cell = notebook.cellAt(config.__cellIndex);
         const controller = new DebugCellController(adapter, cell, kernel!);
         adapter.setDebuggingDelegates([controller]);
+        controller.ready
+            .then(() => dbgr.resolve())
+            .catch((ex) => console.error('Failed waiting for controller to be ready', ex));
 
         this.trackDebugAdapter(notebook, adapter);
         return new DebugAdapterInlineImplementation(adapter);

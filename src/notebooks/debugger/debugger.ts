@@ -4,9 +4,6 @@
 'use strict';
 import { DebugConfiguration, DebugSession, NotebookDocument } from 'vscode';
 
-/**
- * Wraps debug start in a promise
- */
 export class Debugger {
     constructor(
         public readonly document: NotebookDocument,
