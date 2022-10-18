@@ -105,6 +105,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { KernelAPI } from '@jupyterlab/services';
+import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -700,7 +701,7 @@ export async function waitForKernelToGetAutoSelectedImpl(
                         d.connection.kind === 'startUsingPythonInterpreter' &&
                         d.connection.interpreter &&
                         activeInterpreter &&
-                        Uri.from(d.connection.interpreter.uri).toString() === Uri.from(activeInterpreter.uri).toString()
+                        areInterpreterPathsSame(d.connection.interpreter.uri, activeInterpreter.uri)
                 ) ?? matches[0];
         }
 
