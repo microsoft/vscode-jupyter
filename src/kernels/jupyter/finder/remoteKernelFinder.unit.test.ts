@@ -169,6 +169,7 @@ suite(`Remote Kernel Finder`, () => {
         when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
         cachedRemoteKernelValidator = mock<IJupyterRemoteCachedKernelValidator>();
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(true);
+        when(cachedRemoteKernelValidator.isValid(anything(), anything())).thenResolve(true);
         const env = mock<IApplicationEnvironment>();
         when(env.extensionVersion).thenReturn('');
         const kernelProvider = mock<IKernelProvider>();
@@ -348,6 +349,7 @@ suite(`Remote Kernel Finder`, () => {
             liveRemoteKernel
         ];
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
+        when(cachedRemoteKernelValidator.isValid(anything(), anything())).thenResolve(false);
         when(
             memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
                 RemoteKernelSpecsCacheKey,
@@ -399,8 +401,8 @@ suite(`Remote Kernel Finder`, () => {
             },
             liveRemoteKernel
         ];
-        when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
-        when(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).thenResolve(true);
+        when(cachedRemoteKernelValidator.isValid(anything(), anything())).thenResolve(false);
+        when(cachedRemoteKernelValidator.isValid(liveRemoteKernel, anything())).thenResolve(true);
         when(
             memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
                 RemoteKernelSpecsCacheKey,
