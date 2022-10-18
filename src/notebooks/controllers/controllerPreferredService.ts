@@ -153,6 +153,12 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     !serverId && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                         ? await this.interpreters.getActiveInterpreter(document.uri)
                         : undefined;
+                traceInfoIfCI(
+                    `Fetching TargetController document  ${getDisplayPath(
+                        document.uri
+                    )}  with preferred Interpreter ${getDisplayPath(preferredInterpreter?.uri)}.`
+                );
+
                 if (preferredSearchToken.token.isCancellationRequested) {
                     traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};

@@ -580,7 +580,7 @@ export async function waitForKernelToGetAutoSelected(
                 1000,
                 () =>
                     `No new controllers loaded, currently loaded ${controllerRegistration.all
-                        .map((item) => item.id)
+                        .map((item) => `${item.kind}:${item.id}`)
                         .join(',')}`,
                 100,
                 false
