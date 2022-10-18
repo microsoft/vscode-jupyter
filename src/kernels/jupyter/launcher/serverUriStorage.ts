@@ -38,7 +38,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     private currentUriPromise: Promise<IJupyterServerUriEntry | undefined> | undefined;
     private _currentServerId: string | undefined;
     private _localOnly: boolean = false;
-    private _onDidChangeUri = new EventEmitter<IJupyterServerUriEntry | undefined>();
+    private _onDidChangeUri = new EventEmitter<void>();
     public get onDidChangeUri() {
         return this._onDidChangeUri.event;
     }
@@ -53,7 +53,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     public get currentServerId(): string | undefined {
         return this._currentServerId;
     }
-    public get onDidChange(): Event<IJupyterServerUriEntry | undefined> {
+    public get onDidChange(): Event<void> {
         return this._onDidChangeUri.event;
     }
     public get isLocalLaunch(): boolean {
@@ -317,7 +317,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         this.currentUriPromise = Promise.resolve(entry);
         traceInfoIfCI(`setUri: ${uri}`);
         this._localOnly = (uri === Settings.JupyterServerLocalLaunch || uri === undefined) && !this.isWebExtension;
-        this._onDidChangeUri.fire(entry); // Needs to happen as soon as we change so that dependencies update synchronously
+        this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
 
         // No update the async parts
         await this.globalMemento.update(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, this._localOnly);

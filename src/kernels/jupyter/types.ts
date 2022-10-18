@@ -262,7 +262,7 @@ export interface IJupyterServerUriEntry {
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
     readonly currentServerId: string | undefined;
-    readonly onDidChangeUri: Event<IJupyterServerUriEntry | undefined>;
+    readonly onDidChangeUri: Event<void>;
     readonly onDidRemoveUris: Event<IJupyterServerUriEntry[]>;
     readonly onDidAddUri: Event<IJupyterServerUriEntry>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
@@ -360,7 +360,7 @@ export const IServerConnectionType = Symbol('IServerConnectionType');
 
 export interface IServerConnectionType {
     isLocalLaunch: boolean;
-    onDidChange: Event<IJupyterServerUriEntry | undefined>;
+    onDidChange: Event<void>;
 }
 
 export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {}
