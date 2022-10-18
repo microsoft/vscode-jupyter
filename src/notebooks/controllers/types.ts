@@ -35,6 +35,12 @@ export interface IVSCodeNotebookController extends IDisposable {
     updateConnection(connection: KernelConnectionMetadata): void;
     setPendingCellAddition(notebook: vscode.NotebookDocument, promise: Promise<void>): void;
 }
+
+export interface IVSCodeNotebookControllerUpdateEvent {
+    added: IVSCodeNotebookController[];
+    removed: IVSCodeNotebookController[];
+}
+
 export const IControllerRegistration = Symbol('IControllerRegistration');
 
 export interface IControllerRegistration {
@@ -46,6 +52,15 @@ export interface IControllerRegistration {
      * Gets every registered connection metadata
      */
     all: KernelConnectionMetadata[];
+    /**
+     * Batch registers new controllers. Disposing a controller unregisters it.
+     * @param a list of metadatas
+     * @param types Types of notebooks to create the controller for
+     */
+    batchAdd(
+        metadatas: KernelConnectionMetadata[],
+        types: (typeof JupyterNotebookView | typeof InteractiveWindowView)[]
+    ): IVSCodeNotebookController[];
     /**
      * Registers a new controller. Disposing a controller unregisters it.
      * @param metadata
@@ -68,6 +83,10 @@ export interface IControllerRegistration {
      * Event fired when a controller is created
      */
     onCreated: vscode.Event<IVSCodeNotebookController>;
+    /**
+     * Event fired when controllers are added or removed
+     */
+    onChanged: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
 }
 
 export const IControllerSelection = Symbol('IControllerSelection');

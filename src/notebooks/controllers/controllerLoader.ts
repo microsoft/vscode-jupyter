@@ -130,9 +130,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         traceVerbose(`Creating ${kernelConnections?.length} controllers`);
 
         try {
-            kernelConnections.forEach((value) => {
-                this.registration.add(value, viewTypes);
-            });
+            this.registration.batchAdd(kernelConnections, viewTypes);
         } catch (ex) {
             if (!isCancellationError(ex, true)) {
                 // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
