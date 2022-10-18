@@ -64,7 +64,7 @@ export class DebuggingManager
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook,
-        @inject(IConfigurationService) private readonly settings: IConfigurationService,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
@@ -268,11 +268,12 @@ export class DebuggingManager
         mode: KernelDebugMode.Cell | KernelDebugMode.RunByLine,
         cell: NotebookCell
     ) {
+        const settings = this.configurationService.getSettings(doc.uri);
         const config: IKernelDebugAdapterConfig = {
             type: pythonKernelDebugAdapter,
             name: path.basename(doc.uri.toString()),
             request: 'attach',
-            justMyCode: true,
+            justMyCode: settings.debugJustMyCode,
             // add a property to the config to know if the session is runByLine
             __mode: mode,
             __cellIndex: cell.index
@@ -339,7 +340,7 @@ export class DebuggingManager
                             cell,
                             this.commandManager,
                             kernel!,
-                            this.settings
+                            this.configurationService
                         );
                         adapter.setDebuggingDelegate(controller);
                         this.notebookToRunByLineController.set(debug.document, controller);
