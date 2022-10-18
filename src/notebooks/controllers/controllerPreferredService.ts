@@ -136,6 +136,13 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     document.notebookType
                 );
                 preferredConnection = defaultPythonController?.connection;
+                if (preferredConnection) {
+                    traceInfoIfCI(
+                        `Found target controller with default controller ${getDisplayPath(document.uri)} ${
+                            preferredConnection.kind
+                        }:${preferredConnection.id}.`
+                    );
+                }
             }
             if (preferredSearchToken.token.isCancellationRequested) {
                 traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
@@ -159,7 +166,13 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     preferredInterpreter,
                     serverId
                 ));
-
+                if (preferredConnection) {
+                    traceInfoIfCI(
+                        `Found target controller with an exact match (1) ${getDisplayPath(document.uri)} ${
+                            preferredConnection.kind
+                        }:${preferredConnection.id}.`
+                    );
+                }
                 if (preferredSearchToken.token.isCancellationRequested) {
                     traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
@@ -174,6 +187,13 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                         preferredInterpreter,
                         serverId
                     ));
+                    if (preferredConnection) {
+                        traceInfoIfCI(
+                            `Found target controller with an exact match (2) ${getDisplayPath(document.uri)} ${
+                                preferredConnection.kind
+                            }:${preferredConnection.id}.`
+                        );
+                    }
                 }
                 if (preferredSearchToken.token.isCancellationRequested) {
                     traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
