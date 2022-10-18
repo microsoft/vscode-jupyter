@@ -1983,10 +1983,17 @@ export class IEventNamePropertyMapping {
          */
         hashedName: string;
         /**
-         * Name of the widget module, sent only for cases where `source` is `cdn` or when module is found on cdn.
-         * As that is the onl time we can safely send the name (if its on public CDN then its public information).
+         * Name of the widget module
+         * Sent only for cases where `source` is `cdn` or when module is found on cdn.
+         * As that is the only time we can safely send the name (if its on public CDN then its public information).
          */
         moduleName?: string;
+        /**
+         * Name of the widget model that's loaded.
+         * Sent only for cases where `source` is `cdn` or when module is found on cdn.
+         * As that is the only time we can safely send the name (if its on public CDN then its public information).
+         */
+        modelName?: string;
         /**
          * Version of the Module used, sent only for cases where `source` is `cdn` or when module is found on cdn.
          */
@@ -2018,6 +2025,10 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             moduleName: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            modelName: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },
