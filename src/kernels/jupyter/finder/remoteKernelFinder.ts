@@ -189,12 +189,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         this._cacheUpdateCancelTokenSource = updateCacheCancellationToken;
 
         try {
-            const kernelsWithoutCachePromise = (async () => {
-                const connInfo = await this.getRemoteConnectionInfo(updateCacheCancellationToken.token);
-                return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
-            })();
-
-            kernels = await kernelsWithoutCachePromise;
+            const connInfo = await this.getRemoteConnectionInfo(updateCacheCancellationToken.token);
+            kernels = connInfo ? await this.listKernelsFromConnection(connInfo) : [];
         } catch (ex) {
             traceWarning(`Could not fetch kernels from the ${this.kind} server, falling back to cache: ${ex}`);
             // Since fetching the remote kernels failed, we fall back to the cache,
@@ -210,8 +206,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         }
 
         await this.writeToCache(kernels);
-
-        this._onDidChangeKernels.fire();
     }
 
     /**
@@ -256,7 +250,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
 
                 if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
                     results = values.kernels.map(deserializeKernelConnection) as RemoteKernelConnectionMetadata[];
-                    this.cache = results;
                 }
             }
 
@@ -403,6 +396,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
                 removeOldCachedItems(this.globalState),
                 this.globalState.update(key, { kernels: serialized, extensionVersion: this.env.extensionVersion })
             ]);
+
+            this._onDidChangeKernels.fire();
         } catch (ex) {
             traceError('RemoteKernelFinder: Failed to write to cache', ex);
         }
