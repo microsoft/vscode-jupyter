@@ -130,6 +130,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 preferredConnection = defaultPythonController?.connection;
             }
             if (preferredSearchToken.token.isCancellationRequested) {
+                traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                 return {};
             }
             if (document.notebookType === JupyterNotebookView && !preferredConnection) {
@@ -138,6 +139,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                         ? await this.interpreters.getActiveInterpreter(document.uri)
                         : undefined;
                 if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
 
@@ -151,6 +153,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 ));
 
                 if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
                 // If we didn't find an exact match in the cache, try awaiting for the non-cache version
@@ -165,6 +168,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     ));
                 }
                 if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
 
@@ -209,6 +213,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 // can happen if a document is opened quick and we have not yet loaded our controllers
                 await this.loader.loaded;
                 if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
 
@@ -219,6 +224,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 );
                 preferredConnection = defaultInteractiveController?.connection;
                 if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
             }
@@ -232,13 +238,16 @@ export class ControllerPreferredService implements IControllerPreferredService, 
 
             if (targetController) {
                 traceVerbose(
-                    `TargetController found ID: ${targetController.id} for document ${getDisplayPath(document.uri)}`
+                    `TargetController found ID: ${targetController.connection.kind}:${
+                        targetController.id
+                    } for document ${getDisplayPath(document.uri)}`
                 );
                 await targetController.controller.updateNotebookAffinity(
                     document,
                     NotebookControllerAffinity.Preferred
                 );
                 if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
 
@@ -248,18 +257,18 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 });
 
                 if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
 
                 // Save in our map so we can find it in test code.
                 this.preferredControllers.set(document, targetController);
-            } else {
-                traceInfoIfCI(
-                    `TargetController not found ID: ${preferredConnection?.id} for document ${getDisplayPath(
-                        document.uri
-                    )}`
-                );
             }
+            traceInfoIfCI(
+                `TargetController not found ID: ${preferredConnection?.id} type ${
+                    preferredConnection?.kind
+                } for document ${getDisplayPath(document.uri)}`
+            );
 
             return { preferredConnection, controller: targetController };
         } catch (ex) {
