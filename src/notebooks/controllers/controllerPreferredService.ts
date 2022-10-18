@@ -32,7 +32,14 @@ import { IDisposable, IDisposableRegistry, Resource } from '../../platform/commo
 import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import {
+    logValue,
+    traceDecoratorVerbose,
+    traceError,
+    traceInfo,
+    traceInfoIfCI,
+    traceVerbose
+} from '../../platform/logging';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { findKernelSpecMatchingInterpreter } from './kernelRanking/helpers';
@@ -97,8 +104,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
     public dispose() {
         disposeAllDisposables(Array.from(this.disposables));
     }
+    @traceDecoratorVerbose('Compute Preferred Controller')
     public async computePreferred(
-        document: NotebookDocument,
+        @logValue<NotebookDocument>('uri') document: NotebookDocument,
         serverId?: string | undefined
     ): Promise<{
         preferredConnection?: KernelConnectionMetadata | undefined;
