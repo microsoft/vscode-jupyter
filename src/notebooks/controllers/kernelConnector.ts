@@ -218,9 +218,14 @@ export class KernelConnector {
                   deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
               }>,
         actionSource: KernelActionSource,
-        onAction: (action: KernelAction, kernel: IBaseKernel) => void,
-        disposables: IDisposable[]
-    ): Promise<IKernel | IBaseKernel> {
+        onAction: (action: KernelAction, kernel: IBaseKernel | IKernel) => void,
+        disposables: IDisposable[],
+        onActionCompleted: (
+            action: KernelAction,
+            actionSource: KernelActionSource,
+            kernel: IBaseKernel | IKernel
+        ) => Promise<void>
+    ): Promise<IBaseKernel | IKernel> {
         const { kernel, deadKernelAction } = await promise;
         // Before returning, but without disposing the kernel, double check it's still valid
         // If a restart didn't happen, then we can't connect. Throw an error.
@@ -243,7 +248,8 @@ export class KernelConnector {
                 notebookResource,
                 options,
                 disposables,
-                onAction
+                onAction,
+                onActionCompleted
             );
         }
         return kernel;
@@ -257,7 +263,12 @@ export class KernelConnector {
         notebookResource: NotebookResource,
         options: IDisplayOptions,
         disposables: IDisposable[],
-        onAction: (action: KernelAction, kernel: IBaseKernel | IKernel) => void = () => noop()
+        onAction: (action: KernelAction, kernel: IBaseKernel | IKernel) => void = () => noop(),
+        onActionCompleted: (
+            action: KernelAction,
+            actionSource: KernelActionSource,
+            kernel: IBaseKernel | IKernel
+        ) => Promise<void> = () => Promise.resolve()
     ): Promise<IBaseKernel | IKernel> {
         traceVerbose(
             `${initialContext} the kernel, options.disableUI=${options.disableUI} for ${getDisplayPath(
@@ -289,7 +300,8 @@ export class KernelConnector {
                 currentPromise.kernel.promise,
                 actionSource,
                 onAction,
-                disposables
+                disposables,
+                onActionCompleted
             );
         }
 
@@ -300,7 +312,8 @@ export class KernelConnector {
             notebookResource,
             options,
             actionSource,
-            onAction
+            onAction,
+            onActionCompleted
         );
         const deferred = createDeferredFromPromise(promise);
         deferred.promise.catch(noop);
@@ -327,7 +340,8 @@ export class KernelConnector {
             deferred.promise,
             actionSource,
             onAction,
-            disposables
+            disposables,
+            onActionCompleted
         );
     }
     private static getKernelInfo(notebookResource: NotebookResource) {
@@ -402,7 +416,12 @@ export class KernelConnector {
         notebookResource: NotebookResource,
         options: IDisplayOptions,
         actionSource: KernelActionSource,
-        onAction: (action: KernelAction, kernel: IBaseKernel) => void
+        onAction: (action: KernelAction, kernel: IBaseKernel) => void,
+        onActionCompleted: (
+            action: KernelAction,
+            actionSource: KernelActionSource,
+            kernel: IBaseKernel
+        ) => Promise<void>
     ): Promise<{
         kernel: IBaseKernel | IKernel;
         deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
@@ -439,6 +458,9 @@ export class KernelConnector {
                 // & if the kernel is dead, prompt to restart.
                 if (initialContext !== 'restart' && isKernelDead(kernel) && !options.disableUI) {
                     const restarted = await KernelConnector.notifyAndRestartDeadKernel(kernel, serviceContainer);
+                    if (restarted) {
+                        await onActionCompleted('restart', actionSource, kernel);
+                    }
                     return {
                         kernel,
                         deadKernelAction: restarted ? 'deadKernelWasRestarted' : 'deadKernelWasNoRestarted'
@@ -452,6 +474,7 @@ export class KernelConnector {
                         await KernelConnector.notifyAndRestartDeadKernel(kernel, serviceContainer);
                     }
                 }
+                await onActionCompleted(currentContext, actionSource, kernel);
             } catch (error) {
                 if (!isCancellationError(error)) {
                     traceWarning(
@@ -498,7 +521,12 @@ export class KernelConnector {
         options: IDisplayOptions,
         disposables: IDisposable[],
         actionSource: KernelActionSource = 'jupyterExtension',
-        onAction: (action: KernelAction, kernel: IKernel) => void = () => noop()
+        onAction: (action: KernelAction, kernel: IKernel) => void = () => noop(),
+        onActionCompleted: (
+            action: KernelAction,
+            actionSource: KernelActionSource,
+            kernel: IKernel
+        ) => Promise<void> = () => Promise.resolve()
     ): Promise<IKernel> {
         return KernelConnector.wrapKernelMethod(
             metadata,
@@ -508,7 +536,12 @@ export class KernelConnector {
             notebookResource,
             options,
             disposables,
-            onAction as (action: KernelAction, kernel: IBaseKernel) => void
+            onAction as (action: KernelAction, kernel: IBaseKernel) => void,
+            onActionCompleted as (
+                action: KernelAction,
+                actionSource: KernelActionSource,
+                kernel: IBaseKernel
+            ) => Promise<void>
         ) as Promise<IKernel>;
     }
 

@@ -74,6 +74,7 @@ export class CellExecution implements IDisposable {
     private _completed?: boolean;
     private startTime?: number;
     private endTime?: number;
+    private disposed?: boolean;
     private execution?: NotebookCellExecution;
     private cancelHandled = false;
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
@@ -208,6 +209,10 @@ export class CellExecution implements IDisposable {
      * Or when execution has been cancelled.
      */
     public dispose() {
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
         traceCellMessage(this.cell, 'Execution disposed');
         disposeAllDisposables(this.disposables);
     }
