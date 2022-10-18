@@ -95,18 +95,18 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
     // https://github.com/microsoft/vscode-jupyter/issues/10900
-    test.skip('Automatically pick java kernel when opening a Java Notebook', async function () {
+    test('Automatically pick java kernel when opening a Java Notebook', async function () {
         if (!testJavaKernels) {
             return this.skip();
         }
         const { editor } = await openNotebook(testJavaNb);
         await waitForKernelToGetAutoSelected(editor, 'java');
     });
-    test.skip('Automatically pick julia kernel when opening a Julia Notebook', async () => {
+    test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
         const { editor } = await openNotebook(testJuliaNb);
         await waitForKernelToGetAutoSelected(editor, 'julia');
     });
-    test.skip('Automatically pick csharp kernel when opening a csharp notebook', async function () {
+    test('Automatically pick csharp kernel when opening a csharp notebook', async function () {
         // The .NET interactive CLI does not work if you do not have Jupyter installed.
         // We install Jupyter on CI when we have tests with Python extension.
         // Hence if python extension is not installed, then assume jupyter is not installed on CI.
