@@ -97,7 +97,9 @@ export async function rankKernels(
     traceInfo(
         `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
             notebookMetadata || {}
-        )} & preferred interpreter ${getDisplayPath(preferredInterpreter?.uri)}`
+        )} & preferred interpreter ${
+            preferredInterpreter?.uri ? getDisplayPath(preferredInterpreter?.uri) : '<undefined>'
+        }`
     );
 
     if (kernels.length === 0) {

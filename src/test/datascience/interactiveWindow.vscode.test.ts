@@ -75,7 +75,16 @@ suite(`Interactive window Execution`, async function () {
         const pythonApi = await pythonApiProvider.getNewApi();
         await pythonApi?.environments.refreshEnvironments({ forceRefresh: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreters = await interpreterService.getInterpreters();
+        const interpreters = interpreterService.resolvedEnvironments;
+        await waitForCondition(
+            () => {
+                const venvNoKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvnokernel'));
+                const venvKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvkernel'));
+                return venvNoKernelInterpreter && venvKernelInterpreter ? true : false;
+            },
+            defaultNotebookTestTimeout,
+            'Waiting for interpreters to be discovered'
+        );
         const venvNoKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvnokernel'));
         const venvKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvkernel'));
 

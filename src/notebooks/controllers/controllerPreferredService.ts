@@ -7,6 +7,7 @@ import { injectable, inject } from 'inversify';
 import {
     CancellationToken,
     CancellationTokenSource,
+    Disposable,
     NotebookControllerAffinity,
     NotebookDocument,
     Uri,
@@ -31,7 +32,14 @@ import { IDisposable, IDisposableRegistry, Resource } from '../../platform/commo
 import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import {
+    logValue,
+    traceDecoratorVerbose,
+    traceError,
+    traceInfo,
+    traceInfoIfCI,
+    traceVerbose
+} from '../../platform/logging';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { findKernelSpecMatchingInterpreter } from './kernelRanking/helpers';
@@ -96,8 +104,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
     public dispose() {
         disposeAllDisposables(Array.from(this.disposables));
     }
+    @traceDecoratorVerbose('Compute Preferred Controller')
     public async computePreferred(
-        document: NotebookDocument,
+        @logValue<NotebookDocument>('uri') document: NotebookDocument,
         serverId?: string | undefined
     ): Promise<{
         preferredConnection?: KernelConnectionMetadata | undefined;
@@ -127,12 +136,37 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     document.notebookType
                 );
                 preferredConnection = defaultPythonController?.connection;
+                if (preferredConnection) {
+                    traceInfoIfCI(
+                        `Found target controller with default controller ${getDisplayPath(document.uri)} ${
+                            preferredConnection.kind
+                        }:${preferredConnection.id}.`
+                    );
+                }
+            }
+            if (preferredSearchToken.token.isCancellationRequested) {
+                traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                return {};
             }
             if (document.notebookType === JupyterNotebookView && !preferredConnection) {
                 const preferredInterpreter =
                     !serverId && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                         ? await this.interpreters.getActiveInterpreter(document.uri)
                         : undefined;
+                traceInfoIfCI(
+                    `Fetching TargetController document  ${getDisplayPath(document.uri)}  with preferred Interpreter ${
+                        preferredInterpreter ? getDisplayPath(preferredInterpreter?.uri) : '<undefined>'
+                    } for condition ${
+                        !serverId && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                    } (${serverId} && ${isPythonNbOrInteractiveWindow} && ${
+                        this.extensionChecker.isPythonExtensionInstalled
+                    }).`
+                );
+
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    return {};
+                }
 
                 // Await looking for the preferred kernel
                 ({ preferredConnection } = await this.findPreferredKernelExactMatch(
@@ -142,7 +176,17 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     preferredInterpreter,
                     serverId
                 ));
-
+                if (preferredConnection) {
+                    traceInfoIfCI(
+                        `Found target controller with an exact match (1) ${getDisplayPath(document.uri)} ${
+                            preferredConnection.kind
+                        }:${preferredConnection.id}.`
+                    );
+                }
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    return {};
+                }
                 // If we didn't find an exact match in the cache, try awaiting for the non-cache version
                 if (!preferredConnection) {
                     // Don't start this ahead of time to save some CPU cycles
@@ -153,6 +197,17 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                         preferredInterpreter,
                         serverId
                     ));
+                    if (preferredConnection) {
+                        traceInfoIfCI(
+                            `Found target controller with an exact match (2) ${getDisplayPath(document.uri)} ${
+                                preferredConnection.kind
+                            }:${preferredConnection.id}.`
+                        );
+                    }
+                }
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    return {};
                 }
 
                 // Send telemetry on looking for preferred don't await for sending it
@@ -195,6 +250,10 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 // Wait for our controllers to be loaded before we try to set a preferred on
                 // can happen if a document is opened quick and we have not yet loaded our controllers
                 await this.loader.loaded;
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    return {};
+                }
 
                 // For interactive set the preferred controller as the interpreter or default
                 const defaultInteractiveController = await this.defaultService.computeDefaultController(
@@ -202,6 +261,10 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     'interactive'
                 );
                 preferredConnection = defaultInteractiveController?.connection;
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    return {};
+                }
             }
 
             // See if the preferred connection is in our registered controllers, add the sufix for the interactive scenario
@@ -213,27 +276,37 @@ export class ControllerPreferredService implements IControllerPreferredService, 
 
             if (targetController) {
                 traceVerbose(
-                    `TargetController found ID: ${targetController.id} for document ${getDisplayPath(document.uri)}`
+                    `TargetController found ID: ${targetController.connection.kind}:${
+                        targetController.id
+                    } for document ${getDisplayPath(document.uri)}`
                 );
                 await targetController.controller.updateNotebookAffinity(
                     document,
                     NotebookControllerAffinity.Preferred
                 );
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    return {};
+                }
 
                 await trackKernelResourceInformation(document.uri, {
                     kernelConnection: preferredConnection,
                     isPreferredKernel: true
                 });
 
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
+                    return {};
+                }
+
                 // Save in our map so we can find it in test code.
                 this.preferredControllers.set(document, targetController);
-            } else {
-                traceInfoIfCI(
-                    `TargetController not found ID: ${preferredConnection?.id} for document ${getDisplayPath(
-                        document.uri
-                    )}`
-                );
             }
+            traceInfoIfCI(
+                `TargetController found ID: ${preferredConnection?.id} type ${
+                    preferredConnection?.kind
+                } for document ${getDisplayPath(document.uri)}`
+            );
 
             return { preferredConnection, controller: targetController };
         } catch (ex) {
@@ -249,7 +322,10 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         return this.preferredControllers.get(notebook);
     }
 
-    // When a document is opened we need to look for a preferred kernel for it
+    private readonly debouncedPreferredCompute = new WeakMap<NotebookDocument, IDisposable>();
+    /**
+     * When a document is opened we need to look for a preferred kernel for it
+     */
     private onDidOpenNotebookDocument(document: NotebookDocument) {
         // Restrict to only our notebook documents
         if (
@@ -262,7 +338,10 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             return;
         }
 
-        this.computePreferred(document).catch(noop);
+        // This method can get called very frequently, hence compute the preferred once in 100ms
+        const timeout = setTimeout(() => this.computePreferred(document).catch(noop), 100);
+        this.debouncedPreferredCompute.get(document)?.dispose();
+        this.debouncedPreferredCompute.set(document, new Disposable(() => clearTimeout(timeout)));
     }
 
     // Use our kernel finder to rank our kernels, and see if we have an exact match

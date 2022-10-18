@@ -162,6 +162,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         // If we finish the cache first, and we don't have any items, in the cache, then load without cache.
         if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
             kernels = kernelsFromCache;
+            // kick off a cache update request
+            this.updateCache().then(noop, noop);
         } else {
             try {
                 const kernelsWithoutCachePromise = (async () => {

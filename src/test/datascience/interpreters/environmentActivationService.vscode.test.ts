@@ -7,7 +7,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { traceInfo } from '../../../platform/logging';
-import { captureScreenShot, IExtensionTestApi } from '../../common.node';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -27,6 +27,7 @@ import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { ProposedExtensionAPI } from '../../../platform/api/pythonApiTypes';
+import { defaultNotebookTestTimeout } from '../notebook/helper';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
     let api: IExtensionTestApi;
@@ -53,7 +54,13 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             extensionChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
             originalActiveInterpreter = await interpreterService.getActiveInterpreter();
             if (!originalActiveInterpreter || originalActiveInterpreter.envType !== EnvironmentType.Conda) {
-                const interpreters = await interpreterService.getInterpreters();
+                const interpreters = interpreterService.resolvedEnvironments;
+                await waitForCondition(
+                    () => interpreters.find((i) => i.envType === EnvironmentType.Conda) !== undefined,
+                    defaultNotebookTestTimeout,
+                    'Waiting for interpreters to be discovered'
+                );
+
                 const firstCondaInterpreter = interpreters.find((i) => i.envType === EnvironmentType.Conda);
                 pythonApi = (await pythonApiProvider.getNewApi())!;
                 if (firstCondaInterpreter) {

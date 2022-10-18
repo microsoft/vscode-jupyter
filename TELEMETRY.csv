@@ -766,10 +766,6 @@ If `jupyter`, then env variables were fetched from Jupyter extension.","","'pyth
 "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","InteractiveWindow","IntelliSense","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","InteractiveWindow","IntelliSense","","isResultNull","Result is null if user signalled cancellation or if we timed out","boolean","",false
-"DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.","number","",false
-"DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
-(fetching kernels first time in the session is slower, later its cached).
-This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
 "DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS","Total time taken to discover all IPyWidgets.
 This is how long it takes to discover all widgets on disc (from python environment).","Telemetry.DiscoverIPyWidgetNamesPerf","donjayamanne","Notebook, InteractiveWindow","Widgets","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
