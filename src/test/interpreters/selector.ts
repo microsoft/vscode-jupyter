@@ -13,7 +13,7 @@ export class InterpreterSelector implements IInterpreterSelector {
     constructor(@inject(IInterpreterService) private readonly interpreterService: IInterpreterService) {}
 
     public async getSuggestions(_resource: Resource): Promise<IInterpreterQuickPickItem[]> {
-        const interpreters = await this.interpreterService.getInterpreters();
+        const interpreters = this.interpreterService.resolvedEnvironments;
         return interpreters.map((item) => {
             const filePath = getDisplayPath(item.uri);
             return {

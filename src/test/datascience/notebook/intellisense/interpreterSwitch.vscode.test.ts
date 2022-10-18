@@ -65,8 +65,17 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         }
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        // Wait for all interpreters so we can make sure we can get details on the paths we have
-        await interpreterService.getInterpreters();
+        await waitForCondition(
+            async () => {
+                if ((await interpreterService.getActiveInterpreter()) !== undefined) {
+                    return true;
+                }
+                return false;
+            },
+            defaultNotebookTestTimeout,
+            'Waiting for interpreters to be discovered'
+        );
+
         const [activeInterpreter, interpreter1, interpreter2] = await Promise.all([
             interpreterService.getActiveInterpreter(),
             interpreterService.getInterpreterDetails(venvNoKernelPython),
