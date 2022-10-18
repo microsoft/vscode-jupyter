@@ -1698,6 +1698,7 @@ Expand each section to see more information about that event.
       Owner: [@amunger](https://github.com/amunger)  
     ```
     How long on average we spent parsing code lens. Sent on shutdown.  
+    We should be able to deprecate in favor of DocumentWithCodeCells, but we should compare the numbers first.  
     ```
 
     - Measures:  
@@ -1799,6 +1800,19 @@ Expand each section to see more information about that event.
     Jupyter server's certificate is not from a trusted authority.  
     ```
 
+
+
+* DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS  (Telemetry.DocumentWithCodeCells)  
+      Owner: [@amunger](https://github.com/amunger)  
+    ```
+    Info about code lenses, count and average time to parse the document.  
+    ```
+
+    - Measures:  
+        - `codeLensUpdateTime`: `number`  
+        Average time taken to aquire code lenses for a document without using the cache  
+        - `maxCellCount`: `number`  
+        Maximum number of code lenses returned for the document  
 
 
 * DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC  (Telemetry.FailedToUpdateKernelSpec)  

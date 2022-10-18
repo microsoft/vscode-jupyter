@@ -1083,6 +1083,17 @@
      ]
    }
  */
+//Telemetry.DocumentWithCodeCells
+/* __GDPR__
+   "DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS" : {
+     "codeLensUpdateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Average time taken to aquire code lenses for a document without using the cache","owner":"amunger","isMeasurement":true},
+     "maxCellCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Maximum number of code lenses returned for the document","owner":"amunger","isMeasurement":true},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.FailedToUpdateKernelSpec
 /* __GDPR__
    "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC" : {

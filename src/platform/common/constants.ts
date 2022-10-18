@@ -441,6 +441,7 @@ export enum Telemetry {
     OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
     DebugCurrentCell = 'DATASCIENCE.DEBUG_CURRENT_CELL',
     CodeLensAverageAcquisitionTime = 'DS_INTERNAL.CODE_LENS_ACQ_TIME',
+    DocumentWithCodeCells = 'DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS',
     /**
      * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
      */

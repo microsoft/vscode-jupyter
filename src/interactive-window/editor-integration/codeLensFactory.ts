@@ -24,7 +24,8 @@ import { getInteractiveCellMetadata } from '../helpers';
 import { IKernelProvider } from '../../kernels/types';
 import { CodeLensCommands, Commands, InteractiveWindowView } from '../../platform/common/constants';
 import { generateCellRangesFromDocument } from './cellFactory';
-import { ICodeLensFactory, IGeneratedCode, IGeneratedCodeStorageFactory } from './types';
+import { CodeLensPerfMeasures, ICodeLensFactory, IGeneratedCode, IGeneratedCodeStorageFactory } from './types';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;
@@ -62,6 +63,10 @@ export class CodeLensFactory implements ICodeLensFactory {
     private updateEvent: EventEmitter<void> = new EventEmitter<void>();
     private notebookData = new Map<string, PerNotebookData>();
     private codeLensCache = new Map<string, CodeLensCacheData>();
+    private totalCodeLensUpdateTimeInMs: number = 0;
+    private codeLensUpdateCount: number = 0;
+    private maxCellCount: number = 0;
+
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -84,6 +89,15 @@ export class CodeLensFactory implements ICodeLensFactory {
             disposables
         );
     }
+
+    public getPerfMeasures(): CodeLensPerfMeasures {
+        return {
+            totalCodeLensUpdateTimeInMs: this.totalCodeLensUpdateTimeInMs,
+            codeLensUpdateCount: this.codeLensUpdateCount,
+            maxCellCount: this.maxCellCount
+        };
+    }
+
     public get updateRequired(): Event<void> {
         return this.updateEvent.event;
     }
@@ -99,6 +113,9 @@ export class CodeLensFactory implements ICodeLensFactory {
     }
 
     private getCodeLensCacheData(document: TextDocument): CodeLensCacheData {
+        const stopWatch = new StopWatch();
+        let updated = false;
+
         // See if we have a cached version of the code lenses for this document
         const key = document.uri.toString();
         let cache = this.codeLensCache.get(key);
@@ -146,6 +163,7 @@ export class CodeLensFactory implements ICodeLensFactory {
 
         // Generate our code lenses if necessary
         if (cache.documentLenses.length === 0 && needUpdate && cache.cellRanges.length) {
+            updated = true;
             // Enumerate the possible commands for the document based code lenses
             const commands = this.enumerateCommands(document.uri);
             traceVerbose(
@@ -190,6 +208,12 @@ export class CodeLensFactory implements ICodeLensFactory {
                     }
                 });
             }
+        }
+
+        if (updated) {
+            this.totalCodeLensUpdateTimeInMs += stopWatch.elapsedTime;
+            this.codeLensUpdateCount += 1;
+            this.maxCellCount = Math.max(this.maxCellCount, cache.cellRanges.length);
         }
 
         return cache;

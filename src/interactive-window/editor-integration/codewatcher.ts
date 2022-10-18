@@ -21,7 +21,7 @@ import {
 import { IDocumentManager } from '../../platform/common/application/types';
 import { ICellRange, IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
 import { isUri, noop } from '../../platform/common/utils/misc';
-import { capturePerfTelemetry, captureUsageTelemetry } from '../../telemetry';
+import { capturePerfTelemetry, captureUsageTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
 import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError';
 import { Telemetry, Commands, Identifiers } from '../../platform/common/constants';
@@ -124,6 +124,14 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(this.documentManager.activeTextEditor.selection, false, true);
     }
     public dispose() {
+        let perfMeasures = this.codeLensFactory.getPerfMeasures();
+        if (perfMeasures && perfMeasures.codeLensUpdateCount > 0) {
+            sendTelemetryEvent(Telemetry.DocumentWithCodeCells, {
+                codeLensUpdateTime: perfMeasures.totalCodeLensUpdateTimeInMs / perfMeasures.codeLensUpdateCount,
+                maxCellCount: perfMeasures.maxCellCount
+            });
+        }
+
         this.codeLensUpdatedEvent.dispose();
         this.closeDocumentDisposable?.dispose(); // NOSONAR
         this.updateRequiredDisposable?.dispose(); // NOSONAR
