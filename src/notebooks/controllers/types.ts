@@ -128,9 +128,9 @@ export interface IKernelRankingHelper {
     rankKernels(
         resource: Resource,
         kernels: KernelConnectionMetadata[],
+        cancelToken: vscode.CancellationToken,
         option?: INotebookMetadata,
         preferredInterpreter?: PythonEnvironment,
-        cancelToken?: vscode.CancellationToken,
         serverId?: string
     ): Promise<KernelConnectionMetadata[] | undefined>;
 

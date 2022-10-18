@@ -401,13 +401,16 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         }
     }
 
-    private async isValidCachedKernel(kernel: RemoteKernelConnectionMetadata): Promise<boolean> {
+    private async isValidCachedKernel(
+        kernel: RemoteKernelConnectionMetadata,
+        cancelToken?: CancellationToken
+    ): Promise<boolean> {
         switch (kernel.kind) {
             case 'startUsingRemoteKernelSpec':
                 // Always fetch the latest kernels from remotes, no need to display cached remote kernels.
                 return false;
             case 'connectToLiveRemoteKernel':
-                return this.cachedRemoteKernelValidator.isValid(kernel);
+                return this.cachedRemoteKernelValidator.isValid(kernel, cancelToken);
         }
     }
 }

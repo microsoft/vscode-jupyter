@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import { CancellationToken } from 'vscode';
 import { traceWarning } from '../../platform/logging';
 import { LiveRemoteKernelConnectionMetadata } from '../types';
 import { extractJupyterServerHandleAndId } from './jupyterUtils';
@@ -24,13 +25,19 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
         @inject(IJupyterServerUriStorage) private readonly uriStorage: IJupyterServerUriStorage,
         @inject(IJupyterUriProviderRegistration) private readonly providerRegistration: IJupyterUriProviderRegistration
     ) {}
-    public async isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean> {
+    public async isValid(
+        kernel: LiveRemoteKernelConnectionMetadata,
+        cancelToken?: CancellationToken
+    ): Promise<boolean> {
         // Only list live kernels that was used by the user,
         if (!this.liveKernelConnectionTracker.wasKernelUsed(kernel)) {
             return false;
         }
         const providersPromise = this.providerRegistration.getProviders();
         const currentList = await this.uriStorage.getSavedUriList();
+        if (cancelToken?.isCancellationRequested) {
+            return false;
+        }
         const item = currentList.find((item) => item.serverId === kernel.serverId);
         if (!item) {
             // Server has been removed and we have some old cached data.
@@ -44,6 +51,9 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
             return true;
         }
         const providers = await providersPromise;
+        if (cancelToken?.isCancellationRequested) {
+            return false;
+        }
         const provider = providers.find((item) => item.id === info.id);
         if (!provider) {
             traceWarning(`Extension may have been uninstalled for provider ${info.id}, handle ${info.handle}`);
@@ -51,6 +61,9 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
         }
         if (provider.getHandles) {
             const handles = await provider.getHandles();
+            if (cancelToken?.isCancellationRequested) {
+                return false;
+            }
             if (handles.includes(info.handle)) {
                 return true;
             } else {

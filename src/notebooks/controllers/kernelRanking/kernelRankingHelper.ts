@@ -27,9 +27,9 @@ export class KernelRankingHelper implements IKernelRankingHelper {
     public async rankKernels(
         resource: Resource,
         @ignoreLogging() kernels: KernelConnectionMetadata[],
+        @ignoreLogging() cancelToken: CancellationToken,
         notebookMetadata?: INotebookMetadata | undefined,
         @logValue<PythonEnvironment>('uri') preferredInterpreter?: PythonEnvironment,
-        @ignoreLogging() cancelToken?: CancellationToken,
         serverId?: string
     ): Promise<KernelConnectionMetadata[] | undefined> {
         try {
@@ -47,10 +47,10 @@ export class KernelRankingHelper implements IKernelRankingHelper {
             let rankedKernels = await rankKernels(
                 kernels,
                 resource,
+                cancelToken,
                 notebookMetadata,
                 preferredInterpreter,
-                preferredRemoteKernelId,
-                cancelToken
+                preferredRemoteKernelId
             );
 
             return rankedKernels;

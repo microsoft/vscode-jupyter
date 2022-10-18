@@ -389,9 +389,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         const rankedConnections = await this.kernelRankHelper.rankKernels(
             uri,
             this.registration.all,
+            cancelToken,
             notebookMetadata,
             preferredInterpreter,
-            cancelToken,
             serverId
         );
         if (cancelToken.isCancellationRequested) {

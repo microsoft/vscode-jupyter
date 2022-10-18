@@ -1334,6 +1334,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         const rankedKernels = await kernelRankHelper.rankKernels(
                             nbUri,
                             localKernelFinder.kernels,
+                            cancelToken.token,
                             {
                                 language_info: { name: PYTHON_LANGUAGE },
                                 orig_nbformat: 4
@@ -1362,6 +1363,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: '',
@@ -1388,6 +1390,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: 'Python',
@@ -1414,6 +1417,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: 'Python 3',
@@ -1440,6 +1444,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: 'Python 3 (IPyKernel)',
@@ -1466,6 +1471,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: 'Python 2 on Disk',
@@ -1494,6 +1500,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     language_info: { name: 'julia' },
                                     orig_nbformat: 4
@@ -1508,6 +1515,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: juliaKernelSpec.display_name,
@@ -1525,6 +1533,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: rV1KernelSpec.display_name,
@@ -1543,6 +1552,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: '',
@@ -1561,6 +1571,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: rV1KernelSpec.display_name,
@@ -1579,6 +1590,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: 'Some unknown name for Python 2',
@@ -1597,6 +1609,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: python2Global.displayName || '',
@@ -1615,6 +1628,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: '',
@@ -1633,6 +1647,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: condaEnv1.displayName || '',
@@ -1651,6 +1666,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: condaEnv1.displayName || '',
@@ -1669,6 +1685,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: 'Will never match',
@@ -1690,6 +1707,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     kernelspec: {
                                         display_name: 'Junk Display Name',
@@ -1709,6 +1727,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 nbUri,
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     language_info: { name: 'someunknownlanguage' },
                                     orig_nbformat: 4
@@ -1754,6 +1773,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 Uri.file('wow.py'),
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     language_info: { name: PYTHON_LANGUAGE },
                                     orig_nbformat: 4
@@ -1805,6 +1825,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 Uri.file('wow.py'),
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 undefined,
                                 activePythonEnv
                             )
@@ -1853,6 +1874,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             await kernelRankHelper.rankKernels(
                                 Uri.file('wow.py'),
                                 localKernelFinder.kernels,
+                                cancelToken.token,
                                 {
                                     language_info: {
                                         name: PYTHON_LANGUAGE

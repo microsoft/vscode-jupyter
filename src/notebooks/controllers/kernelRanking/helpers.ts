@@ -89,10 +89,10 @@ function getInterpreterHashInMetadata(notebookMetadata: nbformat.INotebookMetada
 export async function rankKernels(
     kernels: KernelConnectionMetadata[],
     resource: Resource,
+    cancelToken: CancellationToken,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     preferredInterpreter: PythonEnvironment | undefined,
-    preferredRemoteKernelId: string | undefined,
-    cancelToken?: CancellationToken
+    preferredRemoteKernelId: string | undefined
 ): Promise<KernelConnectionMetadata[] | undefined> {
     traceInfo(
         `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
@@ -109,7 +109,7 @@ export async function rankKernels(
     // First calculate what the kernel spec would be for our active interpreter
     let preferredInterpreterKernelSpec =
         preferredInterpreter && (await findKernelSpecMatchingInterpreter(preferredInterpreter, kernels));
-    if (cancelToken?.isCancellationRequested) {
+    if (cancelToken.isCancellationRequested) {
         return;
     }
     if (preferredInterpreter && !preferredInterpreterKernelSpec) {
@@ -169,7 +169,7 @@ export async function rankKernels(
                       (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
                   )?.toLowerCase();
     }
-    if (cancelToken?.isCancellationRequested) {
+    if (cancelToken.isCancellationRequested) {
         return;
     }
 

@@ -357,7 +357,7 @@ export interface ILiveRemoteKernelConnectionUsageTracker {
 
 export const IJupyterRemoteCachedKernelValidator = Symbol('IJupyterRemoteCachedKernelValidator');
 export interface IJupyterRemoteCachedKernelValidator {
-    isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean>;
+    isValid(kernel: LiveRemoteKernelConnectionMetadata, cancelToken?: CancellationToken): Promise<boolean>;
 }
 
 export const IServerConnectionType = Symbol('IServerConnectionType');
