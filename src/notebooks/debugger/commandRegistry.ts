@@ -42,10 +42,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
             return;
         }
 
-        if (!cell) {
-            return;
-        }
-
         await this.debuggingManager.tryToStartDebugging(KernelDebugMode.RunByLine, cell);
     }
 

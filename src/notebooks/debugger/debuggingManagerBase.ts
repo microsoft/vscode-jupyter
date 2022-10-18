@@ -161,7 +161,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
 
     private findEditorForCell(cell: NotebookCell): NotebookEditor | undefined {
         const notebookUri = cell.notebook.uri.toString();
-        return window.visibleNotebookEditors.find((e) => e.notebook.uri.toString() === notebookUri.toString());
+        return window.visibleNotebookEditors.find((e) => e.notebook.uri.toString() === notebookUri);
     }
 
     protected async checkIpykernelAndPrompt(
