@@ -78,6 +78,7 @@ export class UniversalRemoteKernelFinderController implements IExtensionSingleAc
                 this.kernelProvider,
                 this.extensions,
                 this.isWebExtension,
+                this.serverUriStorage,
                 serverUri
             );
             this.disposables.push(finder);

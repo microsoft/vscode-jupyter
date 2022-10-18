@@ -23,7 +23,8 @@ import {
     IJupyterSessionManager,
     IJupyterRemoteCachedKernelValidator,
     IRemoteKernelFinder,
-    IJupyterServerUriEntry
+    IJupyterServerUriEntry,
+    IJupyterServerUriStorage
 } from '../types';
 import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
 import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
@@ -80,6 +81,7 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         private readonly kernelProvider: IKernelProvider,
         private readonly extensions: IExtensions,
         private isWebExtension: boolean,
+        private readonly serverUriStorage: IJupyterServerUriStorage,
         private readonly serverUri: IJupyterServerUriEntry
     ) {
         // Register with remote-serverId as our ID
@@ -93,6 +95,14 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         // When we register, add a disposable to clean ourselves up from the main kernel finder list
         // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
         this.disposables.push(kernelFinder.registerKernelFinder(this));
+
+        this.disposables.push(
+            this.serverUriStorage.onDidChangeUri((e) => {
+                if (e?.uri === this.serverUri.uri) {
+                    this.updateCache().then(noop, noop);
+                }
+            })
+        );
 
         this.disposables.push(this._onDidChangeKernels);
     }
@@ -216,8 +226,6 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         }
 
         await this.writeToCache(kernels);
-
-        this._onDidChangeKernels.fire();
     }
 
     /**
