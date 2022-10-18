@@ -406,6 +406,10 @@ export class InterpreterService implements IInterpreterService {
         if (!resource && this.workspace.workspaceFolders?.length === 1) {
             resource = this.workspace.workspaceFolders[0].uri;
         }
+        // We need a valid resource, thats associated with a workspace folder
+        if (this.workspace.workspaceFolders?.length) {
+            resource = this.workspace.getWorkspaceFolder(resource)?.uri || this.workspace.workspaceFolders[0].uri;
+        }
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
         const promise = this.getApi().then(async (api) => {
             if (!api) {
