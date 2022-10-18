@@ -252,7 +252,8 @@ export async function createTemporaryNotebook(
     disposables: IDisposable[],
     kernelSpec: nbformat.IKernelspecMetadata = { display_name: 'Python 3', name: 'python3' },
     rootFolder?: Uri,
-    prefix?: string
+    prefix?: string,
+    language?: string
 ): Promise<Uri> {
     cells =
         cells.length == 0
@@ -275,6 +276,11 @@ export async function createTemporaryNotebook(
         nbformat: 4,
         nbformat_minor: 2
     };
+    if (language) {
+        data.metadata.language_info = {
+            name: language
+        };
+    }
     return createTemporaryNotebookFromNotebook(data, disposables, rootFolder, prefix);
 }
 
