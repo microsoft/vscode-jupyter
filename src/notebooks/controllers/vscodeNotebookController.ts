@@ -409,12 +409,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     private getRendererScripts(): NotebookRendererScript[] {
         const scripts: Uri[] = [];
 
-        // Put require.js first
-        scripts.push(
-            Uri.joinPath(this.context.extensionUri, 'out', 'webviews/webview-side', 'ipywidgetsKernel', 'require.js')
-        );
-        scripts.push(Uri.joinPath(this.context.extensionUri, 'out', 'node_modules', 'jquery', 'dist', 'jquery.min.js'));
-
         // Only used in tests & while debugging.
         if (
             this.context.extensionMode === ExtensionMode.Development ||

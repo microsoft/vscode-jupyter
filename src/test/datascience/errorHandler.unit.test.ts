@@ -28,6 +28,7 @@ import { KernelDiedError } from '../../kernels/errors/kernelDiedError';
 import {
     IJupyterInterpreterDependencyManager,
     IJupyterServerUriStorage,
+    IJupyterUriProviderRegistration,
     JupyterInterpreterDependencyResponse
 } from '../../kernels/jupyter/types';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
@@ -49,6 +50,7 @@ suite('DataScience Error Handler Unit Tests', () => {
     let jupyterInterpreterService: JupyterInterpreterService;
     let kernelDependencyInstaller: IKernelDependencyService;
     let uriStorage: IJupyterServerUriStorage;
+    let jupyterUriProviderRegistration: IJupyterUriProviderRegistration;
     let cmdManager: ICommandManager;
     let extensions: IExtensions;
     let reservedPythonNames: IReservedPythonNamedProvider;
@@ -68,6 +70,7 @@ suite('DataScience Error Handler Unit Tests', () => {
         uriStorage = mock<IJupyterServerUriStorage>();
         cmdManager = mock<ICommandManager>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
+        jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         extensions = mock<IExtensions>();
         extensions = mock<IExtensions>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
@@ -88,6 +91,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(cmdManager),
             false,
             instance(extensions),
+            instance(jupyterUriProviderRegistration),
             instance(reservedPythonNames)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();

@@ -63,7 +63,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
 
-[false].forEach((isWindows) => {
+[false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let localKernelFinder: LocalKernelFinder;
         let remoteKernelFinder: RemoteKernelFinder;
