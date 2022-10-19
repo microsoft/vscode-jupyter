@@ -37,7 +37,7 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../no
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-    suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'}`, function () {
+    suite.skip(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'}`, function () {
         let api: IExtensionTestApi;
         const disposables: IDisposable[] = [];
         let vscodeNotebook: IVSCodeNotebook;
