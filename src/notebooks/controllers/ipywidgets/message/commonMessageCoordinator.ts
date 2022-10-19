@@ -65,6 +65,8 @@ export class CommonMessageCoordinator {
     private readonly configService: IConfigurationService;
     private readonly attachedWebviews = new WeakSet<IWebviewCommunication>();
     private modulesForWhichWeHaveDisplayedWidgetErrorMessage = new Set<string>();
+    private queuedMessages: { type: string; payload: unknown }[] = [];
+    private readyMessageReceived?: boolean;
 
     public constructor(
         private readonly document: NotebookDocument,
@@ -102,6 +104,12 @@ export class CommonMessageCoordinator {
                         response: webview.asWebviewUri(e.payload)
                     });
                 } else {
+                    if (!this.readyMessageReceived) {
+                        // Web view is not yet ready to receive messages, hence queue these to be sent later.
+                        this.queuedMessages.push({ type: e.message, payload: e.payload });
+                        return;
+                    }
+                    this.sendPendingWebViewMessages(webview);
                     webview.postMessage({ type: e.message, payload: e.payload }).then(noop, noop);
                 }
             },
@@ -112,6 +120,11 @@ export class CommonMessageCoordinator {
             (m) => {
                 traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator received ${m.type}`);
                 this.onMessage(webview, m.type, m.payload);
+                if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
+                    traceInfoIfCI('Web view is ready to receive widget messages');
+                    this.readyMessageReceived = true;
+                    this.sendPendingWebViewMessages(webview);
+                }
             },
             this,
             this.disposables
@@ -140,6 +153,14 @@ export class CommonMessageCoordinator {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.getIPyWidgetMessageDispatcher().receiveMessage({ message: message as any, payload }); // NOSONAR
         this.getIPyWidgetScriptSource().onMessage(message, payload);
+    }
+    private sendPendingWebViewMessages(webview: IWebviewCommunication) {
+        if (!this.readyMessageReceived) {
+            return;
+        }
+        while (this.queuedMessages.length) {
+            webview.postMessage(this.queuedMessages.shift()!).then(noop, noop);
+        }
     }
 
     private initialize() {
