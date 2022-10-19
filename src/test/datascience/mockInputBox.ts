@@ -28,6 +28,7 @@ export class MockInputBox implements InputBox {
         this._value = value;
         this._times = times;
     }
+    valueSelection = undefined;
     public get onDidChangeValue(): Event<string> {
         return this.didChangeValueEmitter.event;
     }
