@@ -145,7 +145,8 @@ async function start() {
             .concat(['--enable-proposed-api'])
             .concat(['--timeout', '5000'])
             .concat(['--extensions-dir', extensionsDir])
-            .concat(['--user-data-dir', userDataDirectory]),
+            .concat(['--user-data-dir', userDataDirectory])
+            .concat(['--max-memory', '8192']),
         // .concat(['--verbose']), // Too much logging from VS Code, enable this to see what's going on in VSC.
         version: channel,
         extensionTestsEnv: { ...process.env, DISABLE_INSIDERS_EXTENSION: '1' }
