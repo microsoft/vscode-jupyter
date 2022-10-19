@@ -2132,7 +2132,7 @@
         "checkDependencies": "gulp checkDependencies",
         "postinstall": "npm run download-api && node ./build/ci/postInstall.js",
         "installPythonLibs": "gulp installPythonLibs",
-        "test:unittests": "NODE_OPTIONS=--max-old-space-size=8192 mocha --config ./build/.mocha.unittests.js.json ./out/**/*.unit.test.js",
+        "test:unittests": "mocha --config ./build/.mocha.unittests.js.json ./out/**/*.unit.test.js",
         "test:functional": "mocha --require source-map-support/register --config ./build/.mocha.functional.json",
         "test:functional:perf": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.perf.json",
         "test:functional:memleak": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.json",
