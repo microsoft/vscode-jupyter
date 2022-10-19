@@ -35,6 +35,7 @@ export class BaseKernelExecution implements IDisposable {
     protected readonly disposables: IDisposable[] = [];
     private _interruptPromise?: Promise<InterruptResult>;
     private _restartPromise?: Promise<void>;
+    private disposed?: boolean;
     protected get restarting() {
         return this._restartPromise || Promise.resolve();
     }
@@ -101,6 +102,10 @@ export class BaseKernelExecution implements IDisposable {
         await this._restartPromise;
     }
     public dispose() {
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
         traceInfoIfCI(`Dispose KernelExecution`);
         this.disposables.forEach((d) => d.dispose());
     }
