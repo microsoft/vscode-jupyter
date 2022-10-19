@@ -126,11 +126,6 @@ export class InteractiveWindowProvider
 
             const tab = interactiveWindowMapping.get(iw.uriString);
 
-            // const notebookEditor = window.visibleNotebookEditors.find(
-            //     (editor) => editor.notebook.uri.toString() === tab?.input.uri.toString()
-            // );
-            // var editorOrTab = notebookEditor ? notebookEditor : tab;
-
             if (!tab) {
                 return;
             }
