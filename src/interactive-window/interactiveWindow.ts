@@ -209,8 +209,20 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             (editor) => editor.notebook.uri.toString() === this.notebookUri.toString()
         );
         if (!this._notebookEditor || !visibleEditor) {
+            let currentTab: InteractiveTab | undefined;
+            window.tabGroups.all.find((group) => {
+                group.tabs.find((tab) => {
+                    if (isInteractiveInputTab(tab) && tab.input.uri.toString() == this.notebookUri.toString()) {
+                        currentTab = tab;
+                    }
+                });
+            });
+
             const document = await workspace.openNotebookDocument(this.notebookUri);
-            this._notebookEditor = await window.showNotebookDocument(document);
+            this._notebookEditor = await window.showNotebookDocument(document, {
+                preserveFocus: true,
+                viewColumn: currentTab?.group.viewColumn
+            });
 
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
         }
