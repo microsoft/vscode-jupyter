@@ -11,8 +11,7 @@ import {
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
     Range,
-    TextDocument,
-    workspace
+    TextDocument
 } from 'vscode';
 
 import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
@@ -154,11 +153,6 @@ export class CodeLensFactory implements ICodeLensFactory {
             cache.gotoCellLens = [];
             cache.cachedExecutionCounts = new Set<number>(documentCounts);
             needUpdate = true;
-        }
-
-        // Do not generate interactive window codelenses for TextDocuments which are part of NotebookDocuments
-        if (workspace.notebookDocuments.find((notebook) => notebook.uri.toString() === document.uri.toString())) {
-            return cache;
         }
 
         // Generate our code lenses if necessary

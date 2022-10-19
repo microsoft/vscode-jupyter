@@ -13,7 +13,7 @@ import {
     languages
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { PYTHON_FILE_ANY_SCHEME } from '../../platform/common/constants';
+import { PYTHON_FILE, PYTHON_UNTITLED } from '../../platform/common/constants';
 import { IExtensionContext } from '../../platform/common/types';
 import { IDataScienceCodeLensProvider } from './types';
 
@@ -26,7 +26,7 @@ export class PythonCellFoldingProvider implements IExtensionSyncActivationServic
 
     public activate() {
         this.extensionContext.subscriptions.push(
-            languages.registerFoldingRangeProvider([PYTHON_FILE_ANY_SCHEME], this)
+            languages.registerFoldingRangeProvider([PYTHON_FILE, PYTHON_UNTITLED], this)
         );
     }
 
