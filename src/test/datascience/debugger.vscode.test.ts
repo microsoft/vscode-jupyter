@@ -34,7 +34,7 @@ import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { IDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
 
-suite('VSCode Notebook - Run By Line', function () {
+suite.only('VSCode Notebook - Run By Line', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
