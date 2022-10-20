@@ -29,7 +29,7 @@ function requiresPythonExtensionToBeInstalled() {
 }
 
 const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
-    ? 'insiders'
+    ? '148347c67756c567120aca488360db4a5b2442b0'
     : 'stable';
 
 function computePlatform() {
