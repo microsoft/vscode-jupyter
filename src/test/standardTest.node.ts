@@ -10,6 +10,67 @@ import * as tmp from 'tmp';
 import { PythonExtension, PylanceExtension, setTestExecution } from '../platform/common/constants';
 import { DownloadPlatform } from '@vscode/test-electron/out/download';
 
+const hasPerformanceNow = performance && typeof performance.now === 'function';
+
+export class StopWatch {
+    private _highResolution: boolean;
+    private _startTime: number;
+    private _stopTime: number;
+
+    public static create(highResolution: boolean = true): StopWatch {
+        return new StopWatch(highResolution);
+    }
+
+    constructor(highResolution: boolean) {
+        this._highResolution = hasPerformanceNow && highResolution;
+        this._startTime = this._now();
+        this._stopTime = -1;
+    }
+
+    public reset(): void {
+        this._startTime = this._now();
+        this._stopTime = -1;
+    }
+
+    public stop(): void {
+        this._stopTime = this._now();
+    }
+
+    public elapsed(): number {
+        if (this._stopTime !== -1) {
+            return this._stopTime - this._startTime;
+        }
+        return this._now() - this._startTime;
+    }
+
+    private _now(): number {
+        return this._highResolution ? performance.now() : Date.now();
+    }
+}
+
+const sw = new StopWatch(true);
+let tooSlow = false;
+function fib(n: number): number {
+    if (tooSlow) {
+        return 0;
+    }
+    if (sw.elapsed() >= 1000) {
+        tooSlow = true;
+    }
+    if (n <= 2) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+// the following operation took ~16ms (one frame at 64FPS) to complete on my machine. We derive performance observations
+// from that. We also bail if that took too long (>1s)
+sw.reset();
+fib(24);
+
+const time = Math.round(sw.elapsed());
+console.log(`fib(24): ${time}ms`);
+
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_JUPYTER_CI_TEST = '1';
 const workspacePath = process.env.CODE_TESTS_WORKSPACE
