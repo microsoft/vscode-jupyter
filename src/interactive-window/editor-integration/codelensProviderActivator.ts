@@ -5,7 +5,7 @@ import { injectable, inject } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDataScienceCodeLensProvider } from './types';
 import { languages } from 'vscode';
-import { PYTHON_FILE, PYTHON_UNTITLED } from '../../platform/common/constants';
+import { PYTHON_FILE_ANY_SCHEME } from '../../platform/common/constants';
 import { IExtensionContext } from '../../platform/common/types';
 
 @injectable()
@@ -17,7 +17,7 @@ export class CodeLensProviderActivator implements IExtensionSyncActivationServic
 
     public activate() {
         this.extensionContext.subscriptions.push(
-            languages.registerCodeLensProvider([PYTHON_FILE, PYTHON_UNTITLED], this.dataScienceCodeLensProvider)
+            languages.registerCodeLensProvider([PYTHON_FILE_ANY_SCHEME], this.dataScienceCodeLensProvider)
         );
     }
 }
