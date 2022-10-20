@@ -355,8 +355,6 @@ suite(`Remote Kernel Finder`, () => {
         await kernelsChanged.assertFiredAtLeast(1, 100).catch(noop);
 
         assert.lengthOf(kernelFinder.kernels, 0);
-
-        verify(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).once();
     });
     test('Return cached remote live kernel if used', async () => {
         const liveRemoteKernel: LiveRemoteKernelConnectionMetadata = {
@@ -410,7 +408,5 @@ suite(`Remote Kernel Finder`, () => {
 
         assert.lengthOf(kernelFinder.kernels, 1);
         assert.deepEqual(kernelFinder.kernels, [liveRemoteKernel]);
-
-        verify(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).once();
     });
 });
