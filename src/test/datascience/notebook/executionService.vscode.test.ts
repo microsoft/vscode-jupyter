@@ -156,7 +156,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // eslint-disable-next-line local-rules/dont-use-fspath
         await Promise.all([kernelExecution.executeCell(cell), waitForTextOutput(cell, `${uri.fsPath}`)]);
     });
-    test('Test exceptions have hrefs', async () => {
+    test.only('Test exceptions have hrefs', async () => {
         const ipythonVersionCell = await notebook.appendCodeCell(IPYTHON_VERSION_CODE);
         assert.strictEqual(await kernelExecution.executeCell(ipythonVersionCell), NotebookCellRunState.Success);
         const ipythonVersion = parseInt(getTextOutputValue(ipythonVersionCell!.outputs[0]));
