@@ -85,7 +85,7 @@ plt.show()`,
             'Plain Text Mime missing'
         );
     });
-    test('Verify that we generate SVGs when the setting is on', async function () {
+    test.skip('Verify that we generate SVGs when the setting is on', async function () {
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('generateSVGPlots', 'true');
         await startJupyterServer();

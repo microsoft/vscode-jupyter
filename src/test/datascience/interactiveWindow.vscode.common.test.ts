@@ -117,7 +117,7 @@ suite(`Interactive window execution`, async function () {
         await waitForExecutionCompletedSuccessfully(secondCell!);
         await waitForTextOutput(secondCell!, '42');
     });
-    test('__file__ exists even after restarting a kernel', async function () {
+    test.skip('__file__ exists even after restarting a kernel', async function () {
         // Ensure we click `Yes` when prompted to restart the kernel.
         disposables.push(await clickOKForRestartPrompt());
 
@@ -284,7 +284,7 @@ for i in range(10):
         await waitForTextOutput(secondCell!, "'Goodbye'");
     });
 
-    test('Cells with errors cancel execution for others', async () => {
+    test.skip('Cells with errors cancel execution for others', async () => {
         const source =
             '# %%\nprint(1)\n# %%\nimport time\ntime.sleep(1)\nraise Exception("foo")\n# %%\nprint(2)\n# %%\nprint(3)';
         const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(source, disposables);
@@ -358,7 +358,7 @@ ${actualCode}
         assert.equal(actualCellText, actualCode);
     });
 
-    test('Run current file in interactive window (with cells)', async () => {
+    test.skip('Run current file in interactive window (with cells)', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '#%%\na=1\nprint(a)\n#%%\nb=2\nprint(b)\n',
@@ -398,7 +398,7 @@ ${actualCode}
         );
     });
 
-    test('Run a latex cell with a cell marker', async () => {
+    test.skip('Run a latex cell with a cell marker', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             dedent`
@@ -436,7 +436,7 @@ ${actualCode}
         );
     });
 
-    test('Run current file in interactive window (without cells)', async () => {
+    test.skip('Run current file in interactive window (without cells)', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             'a=1\nprint(a)\nb=2\nprint(b)\n',
@@ -456,7 +456,7 @@ ${actualCode}
         await waitForTextOutput(notebookDocument!.cellAt(1), '1\n2');
     });
 
-    test('Error stack traces have correct line hrefs with mix of cell sources', async function () {
+    test.skip('Error stack traces have correct line hrefs with mix of cell sources', async function () {
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('interactiveWindowMode', 'single');
 
@@ -488,7 +488,7 @@ ${actualCode}
         assert.equal(hrefs?.length, 4, '4 hrefs not found in traceback');
     });
 
-    test('Raising an exception from within a function has a stack trace', async function () {
+    test.skip('Raising an exception from within a function has a stack trace', async function () {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '# %%\ndef raiser():\n  raise Exception("error")\n# %%\nraiser()',
@@ -522,7 +522,7 @@ ${actualCode}
         assert.ok(hrefs[3].endsWith("line=2'"), `Wrong last ref line : ${hrefs[2]}`);
     });
 
-    test('Raising an exception from system code has a stack trace', async function () {
+    test.skip('Raising an exception from system code has a stack trace', async function () {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             `# %%\n${IPYTHON_VERSION_CODE}# %%\nimport pathlib as pathlib\nx = pathlib.Path()\ny = None\nx.joinpath(y, "Foo")`,
@@ -558,7 +558,7 @@ ${actualCode}
         }
     });
 
-    test('Running a cell with markdown and code runs two cells', async () => {
+    test.skip('Running a cell with markdown and code runs two cells', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '# %% [markdown]\n# # HEADER\n# **bold**\nprint(1)',
@@ -613,7 +613,7 @@ ${actualCode}
         );
     });
 
-    test('Cells from python files and the input box are executed in correct order', async () => {
+    test.skip('Cells from python files and the input box are executed in correct order', async () => {
         const source = ['# %%', 'x = 1', '# %%', 'import time', 'time.sleep(3)', '# %%', 'print(x)', ''].join('\n');
         const tempFile = await createTemporaryFile({ contents: 'print(42)', extension: '.py' });
         await vscode.window.showTextDocument(tempFile.file);
