@@ -151,7 +151,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         // Clean up dispose
         onDidChangeDispose.dispose();
     });
-    test('Export a basic notebook document with magics commented out', async () => {
+    test.skip('Export a basic notebook document with magics commented out', async () => {
         await insertCodeCell('print("Hello World")', { index: 0 });
         await insertMarkdownCell('# Markdown Header\nmarkdown string', { index: 1 });
         await insertCodeCell('%whos\n!shellcmd', { index: 2 });
@@ -184,7 +184,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         // Clean up dispose
         onDidChangeDispose.dispose();
     });
-    test('Export a basic notebook document with nbconvert', async () => {
+    test.skip('Export a basic notebook document with nbconvert', async () => {
         await insertCodeCell('print("Hello World")', { index: 0 });
         await insertMarkdownCell('# Markdown Header\nmarkdown string', { index: 1 });
         await insertCodeCell('%whos\n!shellcmd', { index: 2 });
