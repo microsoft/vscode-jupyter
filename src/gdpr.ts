@@ -1267,7 +1267,8 @@
      "cdnSearched": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether we searched CDN or not.","owner":"donjayamanne"},
      "hashedName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the widget module. If the widget is found on a CDN, then the unhashed name is sent in `moduleName`.","owner":"donjayamanne"},
      "source": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Where did we find the hashed name (CDN or user environment or remote jupyter).","owner":"donjayamanne"},
-     "moduleName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the widget module, sent only for cases where `source` is `cdn` or when module is found on cdn. As that is the onl time we can safely send the name (if its on public CDN then its public information).","owner":"donjayamanne"},
+     "moduleName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the widget module Sent only for cases where `source` is `cdn` or when module is found on cdn. As that is the only time we can safely send the name (if its on public CDN then its public information).","owner":"donjayamanne"},
+     "modelName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the widget model that's loaded. Sent only for cases where `source` is `cdn` or when module is found on cdn. As that is the only time we can safely send the name (if its on public CDN then its public information).","owner":"donjayamanne"},
      "moduleVersion": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Version of the Module used, sent only for cases where `source` is `cdn` or when module is found on cdn.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"

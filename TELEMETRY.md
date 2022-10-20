@@ -2106,9 +2106,14 @@ Expand each section to see more information about that event.
         - `hashedName`: `string`  
         Hash of the widget module.  
         If the widget is found on a CDN, then the unhashed name is sent in `moduleName`.  
+        - `modelName`?: `string`  
+        Name of the widget model that's loaded.  
+        Sent only for cases where `source` is `cdn` or when module is found on cdn.  
+        As that is the only time we can safely send the name (if its on public CDN then its public information).  
         - `moduleName`?: `string`  
-        Name of the widget module, sent only for cases where `source` is `cdn` or when module is found on cdn.  
-        As that is the onl time we can safely send the name (if its on public CDN then its public information).  
+        Name of the widget module  
+        Sent only for cases where `source` is `cdn` or when module is found on cdn.  
+        As that is the only time we can safely send the name (if its on public CDN then its public information).  
         - `moduleVersion`?: `string`  
         Version of the Module used, sent only for cases where `source` is `cdn` or when module is found on cdn.  
         - `source`?: `<see below>`  
