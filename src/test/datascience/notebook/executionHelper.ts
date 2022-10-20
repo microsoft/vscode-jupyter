@@ -108,6 +108,22 @@ export class TestNotebookDocument implements NotebookDocument {
     ) {
         MockNotebookDocuments.push(this);
     }
+    static async openFile(uri: Uri): Promise<TestNotebookDocument> {
+        const notebook = await workspace.openNotebookDocument(uri);
+        // Its simpler to use VSCode to de-serialize an ipynb, else we need to write more code in the tests.
+        // This could be made faster by reading & parsing the ipynb ourselves instead of relying on VS Code.
+        const nb = new TestNotebookDocument(uri, JupyterNotebookView, notebook.metadata as any, false);
+        await Promise.all(
+            notebook.getCells().map((cell) => {
+                if (cell.kind === NotebookCellKind.Code) {
+                    return nb.appendCodeCell(cell.document.getText(), cell.document.languageId, cell.metadata);
+                } else {
+                    return nb.appendMarkdownCell(cell.document.getText(), cell.metadata);
+                }
+            })
+        );
+        return nb;
+    }
     public async appendCodeCell(
         content: string,
         language: string = PYTHON_LANGUAGE,
