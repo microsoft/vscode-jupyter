@@ -40,6 +40,7 @@ import { Uri, window, workspace } from 'vscode';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { translateCellErrorOutput } from '../../../kernels/execution/helpers';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -359,7 +360,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             // Open a python notebook and use this for all tests in this test suite.
             await openAndShowNotebook(Uri.file(nbFile));
             assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
-            await waitForKernelToGetAutoSelected();
+            await waitForKernelToGetAutoSelected(vscodeNotebook.activeNotebookEditor!, PYTHON_LANGUAGE);
         }
         async function displayErrorAboutOverriddenBuiltInModules() {
             await closeNotebooksAndCleanUpAfterTests(disposables);

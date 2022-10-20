@@ -120,8 +120,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     });
     test('New notebook will have a Julia cell if last notebook was a julia nb', async function () {
         return this.skip();
-        await openNotebook(testJuliaNb);
-        await waitForKernelToGetAutoSelected();
+        let { editor } = await openNotebook(testJuliaNb);
+        await waitForKernelToGetAutoSelected(editor, 'julia');
         await insertMarkdownCell('# Hello');
         await saveActiveNotebook();
 
@@ -137,7 +137,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
             `Default cell language is not Julia, it is ${languageService.getPreferredLanguage().toLowerCase()}`
         );
         // Create a blank notebook & confirm we have a julia code cell & julia kernel.
-        await createNewNotebook();
+        editor = await createNewNotebook();
 
         await waitForCondition(
             async () =>
@@ -147,7 +147,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
                 .cellAt(0)
                 .document.languageId.toLowerCase()}`
         );
-        await waitForKernelToGetAutoSelected(undefined, 'julia');
+        await waitForKernelToGetAutoSelected(editor, 'julia');
 
         // Lets try opening a python nb & validate that.
         await closeNotebooks();
@@ -167,7 +167,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         const cell = editor.notebook.cellAt(0)!;
         // Wait till execution count changes and status is success.
         await Promise.all([
-            runCell(cell),
+            runCell(cell, true, 'julia'),
             waitForExecutionCompletedSuccessfully(cell, 60_000),
             waitForTextOutput(cell, '123456', 0, false)
         ]);
@@ -191,7 +191,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         this.timeout(30_000); // Can be slow to start csharp kernel on CI.
         const { editor } = await openNotebook(testCSharpNb);
         await waitForKernelToGetAutoSelected(editor, 'c#');
-        await runAllCellsInActiveNotebook();
+        await runAllCellsInActiveNotebook(false, editor, 'csharp');
 
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         // Wait till execution count changes and status is success.

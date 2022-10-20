@@ -78,7 +78,7 @@ import {
     InteractiveControllerIdSuffix,
     IVSCodeNotebookController
 } from '../../../notebooks/controllers/types';
-import { IS_SMOKE_TEST } from '../../constants';
+import { IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import uuid from 'uuid/v4';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
@@ -314,7 +314,11 @@ export async function createEmptyPythonNotebook(
     await openAndShowNotebook(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
     if (!dontWaitForKernel) {
-        await waitForKernelToGetAutoSelected(undefined, undefined, !serverConnectionType.isLocalLaunch);
+        await waitForKernelToGetAutoSelected(
+            vscodeNotebook.activeNotebookEditor!,
+            PYTHON_LANGUAGE,
+            !serverConnectionType.isLocalLaunch
+        );
         await verifySelectedControllerIsRemoteForRemoteTests();
     }
     await deleteAllCellsAndWait();
@@ -585,9 +589,45 @@ async function waitForActiveNotebookEditor(notebookEditor?: NotebookEditor): Pro
     return notebookEditor;
 }
 
+export async function selectActiveInterpreterController(
+    notebookEditor: NotebookEditor,
+    timeout = defaultNotebookTestTimeout
+) {
+    const { controllerLoader, controllerRegistration, interpreterService, controllerSelection } = await getServices();
+
+    // Get the list of NotebookControllers for this document
+    const [interpreter] = await Promise.all([
+        interpreterService.getActiveInterpreter(notebookEditor.notebook.uri),
+        controllerLoader.loaded
+    ]);
+
+    // Find the kernel id that matches the name we want
+    const controller = await waitForCondition(
+        () =>
+            controllerRegistration.registered.find(
+                (k) =>
+                    k.connection.kind === 'startUsingPythonInterpreter' &&
+                    areInterpreterPathsSame(k.connection.interpreter.uri, interpreter?.uri)
+            ),
+        timeout,
+        `No matching controller found for interpreter ${interpreter?.id}:${getDisplayPath(interpreter?.uri)}`
+    );
+    if (!controller) {
+        throw new Error('No interpreter controller');
+    }
+    await commands.executeCommand('notebook.selectKernel', {
+        id: controller.id,
+        extension: JVSC_EXTENSION_ID
+    });
+    await waitForCondition(
+        () => controllerSelection.getSelected(notebookEditor.notebook) === controller,
+        timeout,
+        `Controller ${controller.id} not selected`
+    );
+}
 export async function waitForKernelToGetAutoSelected(
-    notebookEditor?: NotebookEditor,
-    expectedLanguage?: string,
+    notebookEditor: NotebookEditor,
+    expectedLanguage: string,
     preferRemoteKernelSpec: boolean = false,
     timeout = 100_000,
     skipAutoSelection: boolean = false
@@ -759,9 +799,13 @@ export async function prewarmNotebooks() {
         if (memento.get(LastSavedNotebookCellLanguage) !== PYTHON_LANGUAGE) {
             await memento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE);
         }
-        await createNewNotebook();
+        const notebookEditor = await createNewNotebook();
         await insertCodeCell('print("Hello World1")', { index: 0 });
-        await waitForKernelToGetAutoSelected();
+        if (IS_REMOTE_NATIVE_TEST()) {
+            await waitForKernelToGetAutoSelected(notebookEditor, PYTHON_LANGUAGE);
+        } else {
+            await selectActiveInterpreterController(notebookEditor, defaultNotebookTestTimeout);
+        }
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0)!;
         traceInfoIfCI(`Running all cells in prewarm notebooks`);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
@@ -792,7 +836,7 @@ export async function createNewNotebook() {
         }
     };
     const doc = await workspace.openNotebookDocument(JupyterNotebookView, data);
-    await window.showNotebookDocument(doc);
+    return window.showNotebookDocument(doc);
 }
 
 function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
@@ -1146,11 +1190,11 @@ export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
 export async function saveActiveNotebook() {
     await commands.executeCommand('workbench.action.files.saveAll');
 }
-export async function runCell(cell: NotebookCell, waitForExecutionToComplete = false) {
+export async function runCell(cell: NotebookCell, waitForExecutionToComplete = false, language = PYTHON_LANGUAGE) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     const notebookEditor = vscodeNotebook.notebookEditors.find((e) => e.notebook === cell.notebook);
-    await waitForKernelToGetAutoSelected(notebookEditor, undefined, false, 60_000);
+    await waitForKernelToGetAutoSelected(notebookEditor!, language, false, 60_000);
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.notebook) {
         throw new Error('No notebook or document');
     }
@@ -1167,11 +1211,12 @@ export async function runCell(cell: NotebookCell, waitForExecutionToComplete = f
 }
 export async function runAllCellsInActiveNotebook(
     waitForExecutionToComplete = false,
-    activeEditor: NotebookEditor | undefined = undefined
+    activeEditor: NotebookEditor | undefined = undefined,
+    language: string = PYTHON_LANGUAGE
 ) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    await waitForKernelToGetAutoSelected(activeEditor, undefined, false, 60_000);
+    await waitForKernelToGetAutoSelected(activeEditor!, language, false, 60_000);
 
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.notebook) {
         throw new Error('No editor or document');

@@ -30,6 +30,7 @@ import {
 import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
 import { getTextOutputValue } from '../../../kernels/execution/helpers';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 
 const templateRootPath: Uri =
     workspace.workspaceFolders && workspace.workspaceFolders.length > 0
@@ -46,8 +47,8 @@ export async function initializeNotebookForWidgetTest(
                   disposables
               )
             : options.notebookFile;
-    await openNotebook(nbUri);
-    await waitForKernelToGetAutoSelected();
+    const {editor} = await openNotebook(nbUri);
+    await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
     // Widgets get rendered only when the output is in view. If we have a very large notebook
     // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
     // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.
