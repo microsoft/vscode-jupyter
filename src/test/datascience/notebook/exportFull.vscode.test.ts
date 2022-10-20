@@ -120,7 +120,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Export a basic notebook document', async () => {
+    test.skip('Export a basic notebook document', async () => {
         await insertCodeCell('print("Hello World")', { index: 0 });
         await insertMarkdownCell('# Markdown Header\nmarkdown string', { index: 1 });
         await insertCodeCell('%whos', { index: 2 });
