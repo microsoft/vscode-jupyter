@@ -176,7 +176,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Should be more than 3 hrefs if ipython 8
         if (ipythonVersion >= 8) {
             const hrefs = /<a\s+href='(.*\?line=\d+)'/gm.exec(html);
-            assert.ok(hrefs, 'Hrefs not found in traceback');
+            assert.ok(hrefs, `Hrefs not found in traceback, HTML = ${html}, output = ${errorOutput.traceback.join('\n')}`);
         }
     });
     test('Leading whitespace not suppressed', async () => {
