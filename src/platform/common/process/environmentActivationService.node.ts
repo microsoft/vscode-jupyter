@@ -143,7 +143,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this.getActivatedEnvironmentVariablesFromPython(resource, interpreter)
         );
 
-        await Promise.race([envVariablesOurSelves.promise.catch(noop), envVariablesFromPython.promise.catch(noop)]);
         envVariablesFromPython.promise
             .then((env) =>
                 traceVerbose(
@@ -176,6 +175,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     ex
                 )
             );
+        await Promise.race([envVariablesOurSelves.promise, envVariablesFromPython.promise]);
         // If this is a conda environment and we get empty env variables from the Python extension,
         // Then try our approach.
         // This could happen when Python extension fails to get the activated env variables.
