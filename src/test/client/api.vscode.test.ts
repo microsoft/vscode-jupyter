@@ -104,7 +104,7 @@ suite('3rd Party Kernel Service API', function () {
         await onDidChangeKernels.assertFiredExactly(2);
     });
 
-    test.skip('Start Kernel', async function () {
+    test('Start Kernel', async function () {
         const kernelService = await api.getKernelService();
         const interpreterService = await api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');

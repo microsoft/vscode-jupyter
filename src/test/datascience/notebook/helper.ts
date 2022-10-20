@@ -656,10 +656,18 @@ export async function waitForKernelToGetAutoSelectedImpl(
         let preferred: IVSCodeNotebookController | undefined;
 
         // Wait for one of them to have affinity as the preferred (this may not happen)
-        await controllerPreferred.computePreferred(notebookEditor!.notebook);
-        preferred = controllerPreferred.getPreferred(notebookEditor!.notebook);
-        if (!preferred) {
-            traceInfoIfCI(`Did not find a controller with document affinity`);
+        try {
+            await waitForCondition(
+                async () => {
+                    preferred = controllerPreferred.getPreferred(notebookEditor!.notebook);
+                    return preferred != undefined;
+                },
+                30_000,
+                `Did not find a controller with document affinity`
+            );
+        } catch {
+            // Do nothing for now. Just log it
+            traceInfoIfCI(`No preferred controller found during waitForKernelToGetAutoSelected`);
         }
         traceInfoIfCI(
             `Wait for kernel - got a preferred notebook controller: ${preferred?.connection.kind}:${preferred?.id}`

@@ -212,7 +212,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         );
     });
 
-    test.skip('Local Kernel state is not lost when connecting to remote', async function () {
+    test('Local Kernel state is not lost when connecting to remote', async function () {
         await controllerLoader.loaded;
 
         // After resetting connection to local only, verify all remote connections are no longer available.

@@ -266,7 +266,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         ]);
         await waitForTextOutput(cell2, 'Hello World', 0, false);
     });
-    test.skip('User kernelspec in notebook metadata', async function () {
+    test('User kernelspec in notebook metadata', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
@@ -293,7 +293,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         await waitForTextOutput(cell, venvKernelSearchString, 0, false);
     });
-    test.skip('Switch kernel to an interpreter that is registered as a kernel', async function () {
+    test('Switch kernel to an interpreter that is registered as a kernel', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
@@ -344,7 +344,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             'Kernels should not be the same'
         );
     });
-    test.skip('Switch kernel to an interpreter that is not registered as a kernel', async function () {
+    test('Switch kernel to an interpreter that is not registered as a kernel', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }

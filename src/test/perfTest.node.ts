@@ -34,7 +34,7 @@ class TestRunner {
         await new Promise<void>((resolve, reject) => {
             const env: Record<string, string> = {
                 TEST_FILES_SUFFIX: testFile,
-                VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'stable',
+                VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders',
                 VSC_JUPYTER_PERF_TEST: '1',
                 CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience'),
                 VSC_JUPYTER_WARMUP_RUN: warmupRun ? '1' : '0',

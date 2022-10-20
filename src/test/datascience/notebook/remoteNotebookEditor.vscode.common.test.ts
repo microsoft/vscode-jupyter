@@ -123,7 +123,7 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
         const newList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
         assert.notDeepEqual(previousList, newList, 'MRU not updated');
     });
-    test.skip('Use same kernel when re-opening notebook', async function () {
+    test('Use same kernel when re-opening notebook', async function () {
         await reopeningNotebookUsesSameRemoteKernel(ipynbFile, serviceContainer);
     });
 
