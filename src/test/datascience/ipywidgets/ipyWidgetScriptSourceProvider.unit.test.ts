@@ -33,6 +33,7 @@ import { IPyWidgetScriptManagerFactory } from '../../../notebooks/controllers/ip
 import { NbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/nbExtensionsPathProvider.node';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { noop } from '../../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 
@@ -61,6 +62,17 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         const stateFactory = mock(PersistentStateFactory);
         userSelectedOkOrDoNotShowAgainInPrompt = mock<PersistentState<boolean>>();
         kernel = mock<IKernel>();
+        const onStarted = new EventEmitter<void>();
+        const onReStarted = new EventEmitter<void>();
+        disposables.push(onStarted);
+        disposables.push(onReStarted);
+        when(kernel.onStarted).thenReturn(onStarted.event);
+        when(kernel.onRestarted).thenReturn(onReStarted.event);
+        when(kernel.kernelSocket).thenReturn({
+            subscribe: () => ({
+                dispose: () => noop()
+            })
+        } as any);
         when(stateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(
             instance(userSelectedOkOrDoNotShowAgainInPrompt)
         );
@@ -73,7 +85,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         sinon.restore();
         disposeAllDisposables(disposables);
     });
-    function createScritpSourceProvider() {
+    function createScripSourceProvider() {
         const httpClient = mock(HttpClient);
         const resourceConverter = mock<ILocalResourceUriConverter>();
         const fs = mock(FileSystem);
@@ -121,7 +133,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                         kind: 'startUsingRemoteKernelSpec'
                     });
                 }
-                createScritpSourceProvider();
+                createScripSourceProvider();
             });
             test('Attempt to get widget source from CDN', async () => {
                 settings.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
