@@ -944,7 +944,7 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         // Get our list of recent server connections and display that as well
         const savedURIList = await this.serverUriStorage.getSavedUriList();
         savedURIList.forEach((uriItem) => {
-            if (uriItem.uri) {
+            if (uriItem.uri && uriItem.isValidated) {
                 const uriDate = new Date(uriItem.time);
                 const isSelected = currentRemoteUri?.uri === uriItem.uri;
                 items.push({

@@ -280,6 +280,10 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                         targetController.id
                     } for document ${getDisplayPath(document.uri)}`
                 );
+                await this.preferredControllers
+                    .get(document)
+                    ?.controller.updateNotebookAffinity(document, NotebookControllerAffinity.Default);
+
                 await targetController.controller.updateNotebookAffinity(
                     document,
                     NotebookControllerAffinity.Preferred

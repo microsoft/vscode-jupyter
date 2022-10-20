@@ -66,7 +66,7 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         this.statusBarItem.show();
         const uri = await this.serverUriStorage.getRemoteUri();
         const label =
-            !uri || !uri.isValidated
+            !uri || !uri.isValidated || uri.uri === Settings.JupyterServerLocalLaunch
                 ? DataScience.jupyterNativeNotebookUriStatusLabelForLocal()
                 : DataScience.jupyterNativeNotebookUriStatusLabelForRemote();
         const tooltipSuffix = uri?.uri === Settings.JupyterServerLocalLaunch ? '' : ` (${uri})`;
