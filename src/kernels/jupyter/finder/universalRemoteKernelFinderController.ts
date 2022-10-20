@@ -65,6 +65,10 @@ export class UniversalRemoteKernelFinderController implements IExtensionSingleAc
     }
 
     createRemoteKernelFinder(serverUri: IJupyterServerUriEntry) {
+        if (!serverUri.isValidated) {
+            return;
+        }
+
         if (!this.serverFinderMapping.has(serverUri.serverId)) {
             const finder = new UniversalRemoteKernelFinder(
                 this.jupyterSessionManagerFactory,
