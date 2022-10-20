@@ -62,7 +62,7 @@ import {
     IsWebExtension
 } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
-import { IKernelProvider, INotebookProvider } from '../../../kernels/types';
+import { IKernelProvider, INotebookProvider, IThirdPartyKernelProvider } from '../../../kernels/types';
 import { noop } from '../../core';
 import { closeActiveWindows, isInsiders } from '../../initialize';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -375,6 +375,16 @@ async function shutdownRemoteKernels() {
         await sessionManager?.dispose().catch(noop);
     }
 }
+export const MockNotebookDocuments: NotebookDocument[] = [];
+async function shutdownKernels() {
+    const api = await initialize();
+    const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+    await Promise.all(kernelProvider.kernels.map((k) => k.dispose().catch(noop)));
+    const thirdPartyKernelProvider = api.serviceContainer.get<IThirdPartyKernelProvider>(IThirdPartyKernelProvider);
+    await Promise.all(thirdPartyKernelProvider.kernels.map((k) => k.dispose().catch(noop)));
+    await Promise.all(MockNotebookDocuments.map((nb) => kernelProvider.get(nb)?.dispose().catch(noop)));
+    MockNotebookDocuments.length = 0;
+}
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
     if (!IS_SMOKE_TEST()) {
         // When running smoke tests, we won't have access to these.
@@ -389,6 +399,7 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     await shutdownAllNotebooks();
     await ensureNewNotebooksHavePythonCells();
     await shutdownRemoteKernels(); // Shutdown remote kernels, else the number of live kernels keeps growing.
+    await shutdownKernels();
     try {
         await commands.executeCommand('python.clearWorkspaceInterpreter');
     } catch (ex) {

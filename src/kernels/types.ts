@@ -12,7 +12,6 @@ import type {
     Event,
     NotebookCell,
     NotebookCellExecution,
-    NotebookController,
     NotebookDocument,
     Uri
 } from 'vscode';
@@ -220,7 +219,7 @@ export interface IThirdPartyKernel extends IBaseKernel {
  */
 export type KernelOptions = {
     metadata: KernelConnectionMetadata;
-    controller: NotebookController;
+    controller: IKernelController;
     /**
      * When creating a kernel for an Interactive window, pass the Uri of the Python file here (to set the working directory, file & the like)
      * In the case of Notebooks, just pass the uri of the notebook.
