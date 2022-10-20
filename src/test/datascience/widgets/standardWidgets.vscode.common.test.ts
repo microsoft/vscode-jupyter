@@ -47,7 +47,7 @@ export async function initializeNotebookForWidgetTest(
                   disposables
               )
             : options.notebookFile;
-    const {editor} = await openNotebook(nbUri);
+    const { editor } = await openNotebook(nbUri);
     await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
     // Widgets get rendered only when the output is in view. If we have a very large notebook
     // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
