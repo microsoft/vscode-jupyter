@@ -76,7 +76,7 @@ suite('DataScience - VariableView', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test for basic variable view functionality with one document
-    test('Can show VariableView (webview-test) and do not have any additional variables', async function () {
+    test.skip('Can show VariableView (webview-test) and do not have any additional variables', async function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 

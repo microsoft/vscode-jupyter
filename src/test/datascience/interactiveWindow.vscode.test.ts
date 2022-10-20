@@ -150,7 +150,7 @@ suite(`Interactive window Execution`, async function () {
         await waitForTextOutput(cells[0], 'first');
     });
 
-    test('Switching active interpreter on a python file changes kernel in use', async function () {
+    test.skip('Switching active interpreter on a python file changes kernel in use', async function () {
         // Virtual environments are not available in conda
         if (IS_CONDA_TEST() || IS_REMOTE_NATIVE_TEST()) {
             this.skip();

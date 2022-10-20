@@ -116,7 +116,7 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Check diagnostics with and without an import', async () => {
+    test.skip('Check diagnostics with and without an import', async () => {
         // Make sure .venvkernel is selected
         await waitForKernelToChange({ interpreterPath: venvKernelPythonPath });
         let cell = await insertCodeCell('import pandas as pd');

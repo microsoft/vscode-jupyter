@@ -55,7 +55,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(closeNotebooksAndCleanUpAfterTests);
-    test('Verify output & metadata when re-opening (slow)', async () => {
+    test.skip('Verify output & metadata when re-opening (slow)', async () => {
         const { notebook, editor } = await openNotebook(testEmptyIPynb);
 
         await insertCodeCell('print(1)', { index: 0 });
