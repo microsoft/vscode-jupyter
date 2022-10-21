@@ -10,7 +10,7 @@ import { IApplicationShell } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
-import { IKernel, IKernelFinder, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
+import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common.node';
 import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { initialize } from '../../initialize.node';
@@ -23,11 +23,10 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForQueuedForExecution,
     clickOKForRestartPrompt,
-    defaultNotebookTestTimeout
+    getActiveInterpreterKernelConnection,
+    getDefaultPythonRemoteKernelConnectionForActiveInterpreter
 } from './helper.node';
 import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../kernels/execution/helpers';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { TestNotebookDocument, createKernelController } from './executionHelper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
@@ -56,22 +55,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         oldAskForRestart = dsSettings.askForKernelRestart;
         notebook = new TestNotebookDocument();
         const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        const kernelFiner = api.serviceContainer.get<IKernelFinder>(IKernelFinder);
-        const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreter = await interpreterService.getActiveInterpreter();
-        if (!interpreter) {
-            assert.fail('Active Interpreter is undefined');
-        }
-        const metadata = await waitForCondition(
-            () =>
-                kernelFiner.kernels.find(
-                    (item) =>
-                        item.kind === 'startUsingPythonInterpreter' &&
-                        areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
-                ),
-            defaultNotebookTestTimeout,
-            `Kernel Connection pointing to active interpreter not found`
-        );
+        const metadata = IS_REMOTE_NATIVE_TEST()
+            ? await getDefaultPythonRemoteKernelConnectionForActiveInterpreter()
+            : await getActiveInterpreterKernelConnection();
 
         const controller = createKernelController();
         kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });

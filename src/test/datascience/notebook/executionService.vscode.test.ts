@@ -43,7 +43,9 @@ import {
     waitForQueuedForExecution,
     waitForExecutionInProgress,
     waitForQueuedForExecutionOrExecuting,
-    assertVSCCellIsNotRunning
+    assertVSCCellIsNotRunning,
+    getActiveInterpreterKernelConnection,
+    getDefaultPythonRemoteKernelConnectionForActiveInterpreter
 } from './helper.node';
 import { isWeb, swallowExceptions } from '../../../platform/common/utils/misc';
 import { ProductNames } from '../../../kernels/installer/productNames';
@@ -56,14 +58,7 @@ import {
     hasErrorOutput,
     translateCellErrorOutput
 } from '../../../kernels/execution/helpers';
-import {
-    IKernel,
-    IKernelFinder,
-    IKernelProvider,
-    INotebookKernelExecution,
-    NotebookCellRunState
-} from '../../../kernels/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IKernel, IKernelProvider, INotebookKernelExecution, NotebookCellRunState } from '../../../kernels/types';
 import { createKernelController, TestNotebookDocument } from './executionHelper';
 import { noop } from '../../core';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
@@ -103,22 +98,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             sinon.restore();
             notebook = new TestNotebookDocument(templateNbPath);
             const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-            const kernelFiner = api.serviceContainer.get<IKernelFinder>(IKernelFinder);
-            const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-            const interpreter = await interpreterService.getActiveInterpreter();
-            if (!interpreter) {
-                assert.fail('Active Interpreter is undefined');
-            }
-            const metadata = await waitForCondition(
-                () =>
-                    kernelFiner.kernels.find(
-                        (item) =>
-                            item.kind === 'startUsingPythonInterpreter' &&
-                            areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
-                    ),
-                defaultNotebookTestTimeout,
-                `Kernel Connection pointing to active interpreter not found`
-            );
+            const metadata = IS_REMOTE_NATIVE_TEST()
+                ? await getDefaultPythonRemoteKernelConnectionForActiveInterpreter()
+                : await getActiveInterpreterKernelConnection();
 
             const controller = createKernelController();
             kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
