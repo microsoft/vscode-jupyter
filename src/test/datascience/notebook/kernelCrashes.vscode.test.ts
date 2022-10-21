@@ -38,8 +38,7 @@ import {
     defaultNotebookTestTimeout,
     waitForExecutionCompletedWithoutChangesToExecutionCount,
     getCellOutputs,
-    getActiveInterpreterKernelConnection,
-    getDefaultPythonRemoteKernelConnectionForActiveInterpreter
+    getDefaultKernelConnection
 } from './helper.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import dedent from 'dedent';
@@ -116,9 +115,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             const extensionChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
             const uriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
             const browser = api.serviceContainer.get<IBrowserService>(IBrowserService);
-            kernelConnectionMetadata = IS_REMOTE_NATIVE_TEST()
-                ? await getDefaultPythonRemoteKernelConnectionForActiveInterpreter()
-                : await getActiveInterpreterKernelConnection();
+            kernelConnectionMetadata = await getDefaultKernelConnection();
             const createNbController = sinon.stub(vscodeNotebook, 'createNotebookController');
             disposables.push(new Disposable(() => createNbController.restore()));
             createNbController.callsFake((id, _view, _label, handler) => {

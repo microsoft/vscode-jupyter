@@ -597,7 +597,7 @@ async function waitForActiveNotebookEditor(notebookEditor?: NotebookEditor): Pro
     return notebookEditor;
 }
 
-export async function getActiveInterpreterKernelConnection() {
+async function getActiveInterpreterKernelConnection() {
     const { interpreterService, kernelFinder } = await getServices();
     const interpreter = await interpreterService.getActiveInterpreter();
     if (!interpreter) {
@@ -614,7 +614,7 @@ export async function getActiveInterpreterKernelConnection() {
         `Kernel Connection pointing to active interpreter not found`
     );
 }
-export async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
+async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
     const { interpreterService, kernelFinder } = await getServices();
     const interpreter = await interpreterService.getActiveInterpreter();
     if (!interpreter) {
@@ -632,6 +632,11 @@ export async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter
         defaultNotebookTestTimeout,
         `Kernel Connection pointing to active interpreter not found`
     );
+}
+export async function getDefaultKernelConnection() {
+    return IS_REMOTE_NATIVE_TEST()
+        ? getDefaultPythonRemoteKernelConnectionForActiveInterpreter()
+        : getActiveInterpreterKernelConnection();
 }
 export function selectDefaultController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
     return IS_REMOTE_NATIVE_TEST()

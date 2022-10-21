@@ -23,8 +23,7 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForQueuedForExecution,
     clickOKForRestartPrompt,
-    getActiveInterpreterKernelConnection,
-    getDefaultPythonRemoteKernelConnectionForActiveInterpreter
+    getDefaultKernelConnection
 } from './helper.node';
 import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../kernels/execution/helpers';
 import { TestNotebookDocument, createKernelController } from './executionHelper';
@@ -55,9 +54,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         oldAskForRestart = dsSettings.askForKernelRestart;
         notebook = new TestNotebookDocument();
         const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        const metadata = IS_REMOTE_NATIVE_TEST()
-            ? await getDefaultPythonRemoteKernelConnectionForActiveInterpreter()
-            : await getActiveInterpreterKernelConnection();
+        const metadata = await getDefaultKernelConnection();
 
         const controller = createKernelController();
         kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });

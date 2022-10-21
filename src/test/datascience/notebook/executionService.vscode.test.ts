@@ -44,8 +44,7 @@ import {
     waitForExecutionInProgress,
     waitForQueuedForExecutionOrExecuting,
     assertVSCCellIsNotRunning,
-    getActiveInterpreterKernelConnection,
-    getDefaultPythonRemoteKernelConnectionForActiveInterpreter
+    getDefaultKernelConnection
 } from './helper.node';
 import { isWeb, swallowExceptions } from '../../../platform/common/utils/misc';
 import { ProductNames } from '../../../kernels/installer/productNames';
@@ -98,9 +97,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             sinon.restore();
             notebook = new TestNotebookDocument(templateNbPath);
             const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-            const metadata = IS_REMOTE_NATIVE_TEST()
-                ? await getDefaultPythonRemoteKernelConnectionForActiveInterpreter()
-                : await getActiveInterpreterKernelConnection();
+            const metadata = await getDefaultKernelConnection();
 
             const controller = createKernelController();
             kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
