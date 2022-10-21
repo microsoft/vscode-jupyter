@@ -113,6 +113,7 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { KernelAPI } from '@jupyterlab/services';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
+import { isWeb } from '../../../platform/common/utils/misc';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -645,12 +646,12 @@ async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
     );
 }
 export async function getDefaultKernelConnection() {
-    return IS_REMOTE_NATIVE_TEST()
+    return IS_REMOTE_NATIVE_TEST() || isWeb()
         ? getDefaultPythonRemoteKernelConnectionForActiveInterpreter()
         : getActiveInterpreterKernelConnection();
 }
 export function selectDefaultController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
-    return IS_REMOTE_NATIVE_TEST()
+    return IS_REMOTE_NATIVE_TEST() || isWeb()
         ? selectPythonRemoteKernelConnectionForActiveInterpreter(notebookEditor, timeout)
         : selectActiveInterpreterController(notebookEditor, timeout);
 }
