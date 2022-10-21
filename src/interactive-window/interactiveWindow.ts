@@ -190,7 +190,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             }
         }, this.internalDisposables);
         workspace.onDidCloseNotebookDocument((notebookDocument) => {
-            if (notebookDocument === this.notebookDocument) {
+            if (notebookDocument.uri.toString() === this.notebookUri.toString()) {
                 this.closedEvent.fire();
             }
         }, this.internalDisposables);
@@ -205,10 +205,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async ensureInitialized() {
-        const visibleEditor = window.visibleNotebookEditors.find(
-            (editor) => editor.notebook.uri.toString() === this.notebookUri.toString()
-        );
-        if (!this._notebookEditor || !visibleEditor) {
+        if (!this._notebookEditor) {
             let currentTab: InteractiveTab | undefined;
             window.tabGroups.all.find((group) => {
                 group.tabs.find((tab) => {
