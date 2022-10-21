@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { isPythonNotebook } from '../../kernels/helpers';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { IServerConnectionType } from '../../kernels/jupyter/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -35,6 +36,8 @@ export class ControllerDefaultService implements IControllerDefaultService {
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
         @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
+        @inject(PreferredRemoteKernelIdProvider)
+        private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider,
         @inject(IsWebExtension) private readonly isWeb: boolean
     ) {}
     public async computeDefaultController(
@@ -73,6 +76,24 @@ export class ControllerDefaultService implements IControllerDefaultService {
         const kernelName = metadata ? metadata.kernelspec?.name : undefined;
         // Get all remote kernels
         await this.loader.loaded;
+        const preferredRemoteKernelId =
+            notebook && this.preferredRemoteFinder
+                ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(notebook.uri)
+                : undefined;
+
+        if (preferredRemoteKernelId) {
+            const liveKernelMatch = this.registration.registered.find(
+                (item) =>
+                    item.connection.kind === 'connectToLiveRemoteKernel' &&
+                    preferredRemoteKernelId &&
+                    item.connection.kernelModel.id === preferredRemoteKernelId
+            );
+
+            if (liveKernelMatch) {
+                return liveKernelMatch;
+            }
+        }
+
         const controllers = this.registration.registered.filter((item) => {
             // Sort out interactive or non-interactive controllers
             if (

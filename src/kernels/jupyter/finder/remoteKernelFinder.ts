@@ -155,6 +155,12 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
             return;
         }
 
+        const uri = await this.serverUriStorage.getRemoteUri();
+        if (!uri || !uri.isValidated) {
+            await this.writeToCache([]);
+            return;
+        }
+
         const kernelsFromCache = await this.getFromCache();
 
         let kernels: RemoteKernelConnectionMetadata[] = [];

@@ -698,12 +698,42 @@ export class IEventNamePropertyMapping {
     };
     /**
      * How long on average we spent parsing code lens. Sent on shutdown.
+     * We should be able to deprecate in favor of DocumentWithCodeCells, but we should compare the numbers first.
      **/
     [Telemetry.CodeLensAverageAcquisitionTime]: TelemetryEventInfo<DurationMeasurement> = {
         owner: 'amunger',
         feature: ['InteractiveWindow'],
         source: 'User Action',
         measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Info about code lenses, count and average time to parse the document.
+     **/
+    [Telemetry.DocumentWithCodeCells]: TelemetryEventInfo<{
+        /**
+         * Average time taken to aquire code lenses for a document without using the cache
+         **/
+        codeLensUpdateTime: number;
+        /**
+         * Maximum number of code lenses returned for the document
+         **/
+        maxCellCount: number;
+    }> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        measures: {
+            codeLensUpdateTime: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            },
+            maxCellCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                isMeasurement: true
+            }
+        }
     };
     /**
      * Sent when we have failed to connect to the local Jupyter server we started.
@@ -1953,10 +1983,17 @@ export class IEventNamePropertyMapping {
          */
         hashedName: string;
         /**
-         * Name of the widget module, sent only for cases where `source` is `cdn` or when module is found on cdn.
-         * As that is the onl time we can safely send the name (if its on public CDN then its public information).
+         * Name of the widget module
+         * Sent only for cases where `source` is `cdn` or when module is found on cdn.
+         * As that is the only time we can safely send the name (if its on public CDN then its public information).
          */
         moduleName?: string;
+        /**
+         * Name of the widget model that's loaded.
+         * Sent only for cases where `source` is `cdn` or when module is found on cdn.
+         * As that is the only time we can safely send the name (if its on public CDN then its public information).
+         */
+        modelName?: string;
         /**
          * Version of the Module used, sent only for cases where `source` is `cdn` or when module is found on cdn.
          */
@@ -1988,6 +2025,10 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             moduleName: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            modelName: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },
