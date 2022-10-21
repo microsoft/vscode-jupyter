@@ -1374,7 +1374,7 @@ export async function hijackPrompt(
             }
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        throw new Error('Messages cannot be displayed here' + msg);
+        return (appShell[promptType] as any).wrappedMethod.apply(appShell, arguments);
     } as any);
     const disposable = { dispose: () => stub.restore() };
     if (disposables) {
