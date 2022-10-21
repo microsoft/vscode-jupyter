@@ -42,6 +42,7 @@ import { buildSourceMap } from '../helper';
 import { DebugCellController } from './debugCellController';
 import { IWDebugger } from './debugger';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
+import { RestartNotSupportedController } from './restartNotSupportedController';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -176,7 +177,7 @@ export class InteractiveWindowDebuggingManager
 
         const cell = notebook.cellAt(config.__cellIndex);
         const controller = new DebugCellController(adapter, cell, kernel!);
-        adapter.setDebuggingDelegates([controller]);
+        adapter.setDebuggingDelegates([controller, new RestartNotSupportedController(cell, this.serviceContainer)]);
         controller.ready
             .then(() => dbgr.resolve())
             .catch((ex) => console.error('Failed waiting for controller to be ready', ex));
