@@ -152,8 +152,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
                 const preferredController = await controllerPreferred.computePreferred(notebook);
                 if (
                     preferredController.preferredConnection?.kind === 'startUsingLocalKernelSpec' &&
-                    (preferredController.preferredConnection.kernelSpec.language === 'csharp' ||
-                        preferredController.preferredConnection.kernelSpec.language === 'net-csharp')
+                    preferredController.preferredConnection.kernelSpec.language === 'C#'
                 ) {
                     return preferredController.preferredConnection;
                 }
@@ -220,8 +219,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
                 const preferredController = await controllerPreferred.computePreferred(notebook);
                 if (
                     preferredController.preferredConnection?.kind === 'startUsingLocalKernelSpec' &&
-                    (preferredController.preferredConnection.kernelSpec.language === 'csharp' ||
-                        preferredController.preferredConnection.kernelSpec.language === 'net-csharp')
+                    preferredController.preferredConnection.kernelSpec.language === 'C#'
                 ) {
                     return preferredController.preferredConnection;
                 }

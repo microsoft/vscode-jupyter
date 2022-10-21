@@ -893,7 +893,7 @@ export async function prewarmNotebooks() {
         }
         const notebookEditor = await createNewNotebook();
         await insertCodeCell('print("Hello World1")', { index: 0 });
-        await selectActiveInterpreterController(notebookEditor, defaultNotebookTestTimeout);
+        await selectDefaultController(notebookEditor, defaultNotebookTestTimeout);
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0)!;
         traceInfoIfCI(`Running all cells in prewarm notebooks`);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
