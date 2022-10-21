@@ -32,7 +32,7 @@ import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 import { JupyterNotebookView } from '../platform/common/constants';
 import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './jupyter/types';
 
-suite.only('Kernel ReConnect Progress Message', () => {
+suite('Kernel ReConnect Progress Message', () => {
     const disposables: IDisposable[] = [];
     let monitor: KernelAutoReconnectMonitor;
     let appShell: IApplicationShell;
