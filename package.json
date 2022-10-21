@@ -1920,6 +1920,12 @@
                     "description": "%jupyter.configuration.jupyter.interactiveWindowMode.description%",
                     "default": "multiple"
                 },
+                "jupyter.pythonCellFolding": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%jupyter.configuration.jupyter.pythonCellFolding.description%",
+                    "scope": "resource"
+                },
                 "jupyter.interactiveWindowViewColumn": {
                     "type": "string",
                     "enum": [

@@ -14,20 +14,24 @@ import {
 } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { InteractiveInputScheme, NotebookCellScheme, PYTHON_FILE_ANY_SCHEME } from '../../platform/common/constants';
-import { IExtensionContext } from '../../platform/common/types';
+import { IConfigurationService, IExtensionContext } from '../../platform/common/types';
 import { IDataScienceCodeLensProvider } from './types';
 
 @injectable()
 export class PythonCellFoldingProvider implements IExtensionSyncActivationService, FoldingRangeProvider {
     constructor(
         @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
-        @inject(IExtensionContext) private extensionContext: IExtensionContext
+        @inject(IExtensionContext) private extensionContext: IExtensionContext,
+        @inject(IConfigurationService) private configurationService: IConfigurationService
     ) {}
 
     public activate() {
-        this.extensionContext.subscriptions.push(
-            languages.registerFoldingRangeProvider([PYTHON_FILE_ANY_SCHEME], this)
-        );
+        const enabled = this.configurationService.getSettings().pythonCellFolding;
+        if (enabled) {
+            this.extensionContext.subscriptions.push(
+                languages.registerFoldingRangeProvider([PYTHON_FILE_ANY_SCHEME], this)
+            );
+        }
     }
 
     provideFoldingRanges(
