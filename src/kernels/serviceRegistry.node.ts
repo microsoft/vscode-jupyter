@@ -40,7 +40,6 @@ import { Activation } from './activation.node';
 import { PortAttributesProviders } from './raw/port/portAttributeProvider.node';
 import { ServerPreload } from './jupyter/launcher/serverPreload.node';
 import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
-import { KernelAutoReConnectFailedMonitor } from './kernelAutoReConnectFailedMonitor';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { PythonKernelInterruptDaemon } from './raw/finder/pythonKernelInterruptDaemon.node';
 import { LocalKernelFinder } from './raw/finder/localKernelFinder.node';
@@ -98,10 +97,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        KernelAutoReConnectFailedMonitor
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelAutoReconnectMonitor
