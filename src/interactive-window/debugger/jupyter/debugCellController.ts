@@ -46,7 +46,7 @@ export class DebugCellController implements IDebuggingDelegate {
     }
 
     private debugCellDumped?: Promise<void>;
-    public async willSendRequest(request: DebugProtocol.Request): Promise<boolean> {
+    public async willSendRequest(request: DebugProtocol.Request): Promise<undefined | DebugProtocol.Response> {
         const metadata = getInteractiveCellMetadata(this.debugCell);
         if (request.command === 'setBreakpoints' && metadata && metadata.generatedCode && !this.cellDumpInvoked) {
             if (!this.debugCellDumped) {
@@ -62,6 +62,6 @@ export class DebugCellController implements IDebuggingDelegate {
             this._ready.resolve();
         }
 
-        return false;
+        return undefined;
     }
 }

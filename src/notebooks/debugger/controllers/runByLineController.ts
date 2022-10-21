@@ -74,13 +74,13 @@ export class RunByLineController implements IDebuggingDelegate {
         return false;
     }
 
-    public async willSendRequest(request: DebugProtocol.Request): Promise<boolean> {
+    public async willSendRequest(request: DebugProtocol.Request): Promise<undefined> {
         traceInfoIfCI(`willSendRequest: ${request.command}`);
         if (request.command === 'configurationDone') {
             await this.initializeExecute();
         }
 
-        return false;
+        return undefined;
     }
 
     private async handleStoppedEvent(threadId: number): Promise<boolean> {

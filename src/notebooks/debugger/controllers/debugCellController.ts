@@ -44,7 +44,7 @@ export class DebugCellController implements IDebuggingDelegate {
         return false;
     }
 
-    public async willSendRequest(request: DebugProtocol.Request): Promise<boolean> {
+    public async willSendRequest(request: DebugProtocol.Request): Promise<undefined> {
         if (request.command === 'configurationDone') {
             await cellDebugSetup(this.kernel, this.debugAdapter);
 
@@ -56,6 +56,6 @@ export class DebugCellController implements IDebuggingDelegate {
                 .then(noop, noop);
         }
 
-        return false;
+        return undefined;
     }
 }

@@ -30,6 +30,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['workbench.action.showCommands']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];
+    ['workbench.action.debug.restart']: [];
     ['workbench.action.debug.stop']: [];
     ['workbench.action.reloadWindow']: [];
     ['workbench.action.closeActiveEditor']: [];

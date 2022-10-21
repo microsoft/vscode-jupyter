@@ -1445,7 +1445,8 @@ export async function waitForDebugEvent<T>(
     return asPromise(
         debugAdapter.onDidSendMessage,
         (message) => (message as DebugProtocol.Event).event === eventType,
-        timeout
+        timeout,
+        `waitForDebugEvent: ${eventType}`
     ) as Promise<T>;
 }
 
@@ -1456,14 +1457,17 @@ export async function waitForStoppedEvent(debugAdapter: IKernelDebugAdapter): Pr
 
 export async function getDebugSessionAndAdapter(
     debuggingManager: IDebuggingManager,
-    doc: NotebookDocument
+    doc: NotebookDocument,
+    prevSessionId?: string
 ): Promise<{ session: DebugSession; debugAdapter: IKernelDebugAdapter }> {
     await waitForCondition(
-        async () => !!debuggingManager.getDebugSession(doc),
+        async () =>
+            !!debuggingManager.getDebugSession(doc) &&
+            (!prevSessionId || prevSessionId !== debuggingManager.getDebugSession(doc)?.id),
         defaultNotebookTestTimeout,
         'DebugSession should start'
     );
-    const session = await debuggingManager.getDebugSession(doc)!;
+    const session = debuggingManager.getDebugSession(doc)!;
 
     const debugAdapter = debuggingManager.getDebugAdapter(doc)!;
     assert.isOk<IKernelDebugAdapter | undefined>(debugAdapter, 'DebugAdapter not started');

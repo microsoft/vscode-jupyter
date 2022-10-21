@@ -3,8 +3,8 @@
 
 import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { noop } from '../../../platform/common/utils/misc';
 import { IServiceContainer } from '../../../platform/ioc/types';
+import { traceError, traceVerbose } from '../../../platform/logging';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { DebuggingTelemetry } from '../constants';
 import { IDebuggingDelegate, IKernelDebugAdapter, INotebookDebuggingManager, KernelDebugMode } from '../debuggingTypes';
@@ -25,24 +25,46 @@ export class RestartController implements IDebuggingDelegate {
         this.debuggingManager = this.serviceContainer.get<INotebookDebuggingManager>(INotebookDebuggingManager);
     }
 
-    public async willSendRequest(request: DebugProtocol.Request): Promise<boolean> {
+    private trace(tag: string, msg: string) {
+        traceVerbose(`[Debug-Restart] ${tag}: ${msg}`);
+    }
+
+    private error(tag: string, msg: string) {
+        traceError(`[Debug-Restart] ${tag}: ${msg}`);
+    }
+
+    public async willSendRequest(request: DebugProtocol.Request): Promise<undefined | DebugProtocol.Response> {
         if (request.command === 'restart') {
-            await this.debugAdapter.disconnect();
-            this.doRestart().then(noop, noop);
-            return true;
+            // We have to implement restart manually because the previous launch config includes the cell index, but the cell index may have changed.
+            this.trace('restart', 'Handling restart request');
+            setTimeout(() => {
+                // The restart response has to be sent _before_ the debug session is disconnected - otherwise the pending restart request will be canceled,
+                // and considered to have failed. eg a call to executeCommand('workbench.action.debug.restart') would fail.
+                this.debugAdapter
+                    .disconnect()
+                    .then(() => {
+                        this.trace('restart', 'doRestart');
+                        return this.debuggingManager.tryToStartDebugging(this.mode, this.debugCell);
+                    })
+                    .catch((err) => {
+                        this.error('restart', `Error restarting: ${err}`);
+                    });
+            }, 0);
+            return {
+                command: request.command,
+                request_seq: request.seq,
+                seq: request.seq,
+                success: true,
+                type: 'response'
+            };
         }
 
-        return false;
+        return undefined;
     }
 
     public async willSendResponse(response: DebugProtocol.Response): Promise<void> {
         if (response.command === 'initialize' && response.body) {
             (response as DebugProtocol.InitializeResponse).body!.supportsRestartRequest = true;
         }
-    }
-
-    private async doRestart() {
-        // We have to implement restart manually because the previous launch config includes the cell index, but the cell index may have changed.
-        return this.debuggingManager.tryToStartDebugging(this.mode, this.debugCell);
     }
 }

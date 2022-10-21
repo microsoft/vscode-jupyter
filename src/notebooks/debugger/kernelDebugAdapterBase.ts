@@ -199,7 +199,10 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
 
             if (message.type === 'request') {
                 for (const d of this.delegates ?? []) {
-                    if (await d?.willSendRequest?.(message as DebugProtocol.Request)) {
+                    const response = await d?.willSendRequest?.(message as DebugProtocol.Request);
+                    if (response) {
+                        this.trace('response', JSON.stringify(response));
+                        this.sendMessage.fire(response);
                         return;
                     }
                 }

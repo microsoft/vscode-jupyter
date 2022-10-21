@@ -222,6 +222,28 @@ suite('VSCode Notebook - Run By Line', function () {
         assert.equal(stack2.stackFrames[0].line, 4, 'Stopped at the wrong line');
     });
 
+    test('Restart while debugging', async function () {
+        const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
+        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
+
+        await commandManager.executeCommand(Commands.RunByLine, cell);
+        const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
+        await waitForStoppedEvent(debugAdapter!); // First line
+        await commandManager.executeCommand('workbench.action.debug.restart');
+        const { debugAdapter: debugAdapter2, session: session2 } = await getDebugSessionAndAdapter(
+            debuggingManager,
+            doc,
+            session.id
+        );
+        const stoppedEvent = await waitForStoppedEvent(debugAdapter2!); // First line
+        const stack: DebugProtocol.StackTraceResponse['body'] = await session2!.customRequest('stackTrace', {
+            threadId: stoppedEvent.body.threadId
+        });
+        assert.isTrue(stack.stackFrames.length > 0, 'has frames');
+        assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
+        assert.equal(stack.stackFrames[0].line, 1, 'Stopped at the wrong line');
+    });
+
     test.skip('Does not stop in other cell', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
         const cell0 = await insertCodeCell('def foo():\n    print(1)');

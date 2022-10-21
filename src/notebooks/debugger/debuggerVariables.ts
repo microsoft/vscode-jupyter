@@ -434,7 +434,7 @@ export class DebuggerVariables
         const threadId = stoppedMessage.body.threadId;
 
         if (doc) {
-            const session = await this.debuggingManager.getDebugSession(doc);
+            const session = this.debuggingManager.getDebugSession(doc);
             if (session) {
                 // Call stack trace
                 const stResponse: DebugProtocol.StackTraceResponse['body'] = await session.customRequest('stackTrace', {

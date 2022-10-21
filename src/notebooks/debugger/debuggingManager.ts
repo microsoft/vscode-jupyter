@@ -29,20 +29,20 @@ import { IConfigurationService } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { traceInfo } from '../../platform/logging';
 import { ResourceSet } from '../../platform/vscode-path/map';
 import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IControllerLoader, IControllerSelection } from '../controllers/types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from './constants';
 import { DebugCellController } from './controllers/debugCellController';
+import { RestartController } from './controllers/restartController';
+import { RunByLineController } from './controllers/runByLineController';
 import { Debugger } from './debugger';
 import { DebuggingManagerBase } from './debuggingManagerBase';
-import { IDebuggingManager, INotebookDebugConfig, KernelDebugMode } from './debuggingTypes';
+import { INotebookDebugConfig, INotebookDebuggingManager, KernelDebugMode } from './debuggingTypes';
 import { assertIsDebugConfig, IpykernelCheckResult } from './helper';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
-import { RunByLineController } from './controllers/runByLineController';
-import { RestartController } from './controllers/restartController';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -50,7 +50,7 @@ import { RestartController } from './controllers/restartController';
 @injectable()
 export class DebuggingManager
     extends DebuggingManagerBase
-    implements IExtensionSingleActivationService, IDebuggingManager
+    implements IExtensionSingleActivationService, INotebookDebuggingManager
 {
     private runByLineCells: ContextKey<Uri[]>;
     private runByLineDocuments: ContextKey<Uri[]>;
@@ -125,7 +125,7 @@ export class DebuggingManager
     }
 
     public async tryToStartDebugging(mode: KernelDebugMode, cell: NotebookCell) {
-        traceInfoIfCI(`Starting debugging with mode ${mode}`);
+        traceInfo(`Starting debugging with mode ${mode}`);
 
         const ipykernelResult = await this.checkIpykernelAndPrompt(cell);
         if (ipykernelResult === IpykernelCheckResult.Ok) {

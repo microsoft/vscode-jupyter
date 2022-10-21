@@ -96,7 +96,7 @@ export interface IDebuggingDelegate {
     /**
      * Called for every request sent from the client to the debug adapter. Returns true to signal that the request was handled by the delegate.
      */
-    willSendRequest?(request: DebugProtocol.Request): Promise<boolean>;
+    willSendRequest?(request: DebugProtocol.Request): undefined | Promise<DebugProtocol.Response | undefined>;
 
     /**
      * Called for every response returned from the debug adapter to the client.
