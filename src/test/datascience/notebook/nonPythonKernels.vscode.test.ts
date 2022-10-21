@@ -152,7 +152,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
                 const preferredController = await controllerPreferred.computePreferred(notebook);
                 if (
                     preferredController.preferredConnection?.kind === 'startUsingLocalKernelSpec' &&
-                    preferredController.preferredConnection.kernelSpec.language === 'csharp'
+                    (preferredController.preferredConnection.kernelSpec.language === 'csharp' ||
+                        preferredController.preferredConnection.kernelSpec.language === 'net-csharp')
                 ) {
                     return preferredController.preferredConnection;
                 }
@@ -165,9 +166,9 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
             }, current controllers include ${controllerRegistration.all
                 .map(
                     (item) =>
-                        `${item.kind}:${item.id}${
+                        `${item.kind}:${item.id}(${
                             item.kind === 'startUsingLocalKernelSpec' ? item.kernelSpec.language : ''
-                        }`
+                        })`
                 )
                 .join(',')}`,
             500
@@ -219,7 +220,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
                 const preferredController = await controllerPreferred.computePreferred(notebook);
                 if (
                     preferredController.preferredConnection?.kind === 'startUsingLocalKernelSpec' &&
-                    preferredController.preferredConnection.kernelSpec.language === 'csharp'
+                    (preferredController.preferredConnection.kernelSpec.language === 'csharp' ||
+                        preferredController.preferredConnection.kernelSpec.language === 'net-csharp')
                 ) {
                     return preferredController.preferredConnection;
                 }
