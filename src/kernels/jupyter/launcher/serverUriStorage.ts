@@ -283,6 +283,12 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
             return;
         }
     }
+    public async getUriForServer(id: string): Promise<IJupyterServerUriEntry | undefined> {
+        const savedList = await this.getSavedUriList();
+        const uriItem = savedList.find((item) => item.serverId === id);
+
+        return uriItem;
+    }
     public async setUriToLocal(): Promise<void> {
         traceInfoIfCI(`setUriToLocal`);
         await this.setUri(Settings.JupyterServerLocalLaunch, undefined);

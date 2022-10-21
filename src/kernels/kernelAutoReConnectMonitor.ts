@@ -15,7 +15,9 @@ import { Telemetry } from '../telemetry';
 import { endCellAndDisplayErrorsInCell } from './execution/helpers';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
-import { IKernel, IKernelProvider, isLocalConnection } from './types';
+import { IKernel, IKernelProvider, isLocalConnection, RemoteKernelConnectionMetadata } from './types';
+import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './jupyter/types';
+import { extractJupyterServerHandleAndId } from './jupyter/jupyterUtils';
 
 /**
  * In the case of Jupyter kernels, when a kernel dies Jupyter will automatically restart that kernel.
@@ -32,7 +34,10 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IKernelProvider) private kernelProvider: IKernelProvider
+        @inject(IKernelProvider) private kernelProvider: IKernelProvider,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IJupyterUriProviderRegistration)
+        private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration
     ) {}
     public activate(): void {
         this.kernelProvider.onDidStartKernel(this.onDidStartKernel, this, this.disposableRegistry);
@@ -123,6 +128,17 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         const disposable = new Disposable(() => deferred.resolve());
         this.kernelReconnectProgress.set(kernel, disposable);
 
+        if (
+            kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
+            kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
+        ) {
+            const handled = await this.handleRemoteServerReinitiate(kernel, kernel.kernelConnectionMetadata);
+
+            if (handled) {
+                return;
+            }
+        }
+
         const message = DataScience.automaticallyReconnectingToAKernelProgressMessage().format(
             getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
         );
@@ -139,6 +155,19 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             return;
         }
         sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.KernelCrash);
+
+        // If this is a connection from a uri provider (such as a remote server), then we cannot restart the kernel.
+        // Let's request the uri provider to resolve the uri and then reconnect
+        if (
+            kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
+            kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
+        ) {
+            const handled = await this.handleRemoteServerReinitiate(kernel, kernel.kernelConnectionMetadata);
+
+            if (handled) {
+                return;
+            }
+        }
 
         const message = isLocalConnection(kernel.kernelConnectionMetadata)
             ? DataScience.kernelDisconnected().format(
@@ -160,6 +189,40 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         } finally {
             // Given the fact that we know the kernel connection is dead, dispose the kernel to clean everything.
             await kernel.dispose();
+        }
+    }
+    private async handleRemoteServerReinitiate(
+        kernel: IKernel,
+        metadata: RemoteKernelConnectionMetadata
+    ): Promise<boolean> {
+        const uriItem = await this.serverUriStorage.getUriForServer(metadata.serverId);
+
+        if (!uriItem) {
+            return false;
+        }
+
+        const idAndHandle = extractJupyterServerHandleAndId(uriItem.uri);
+
+        if (!idAndHandle) {
+            return false;
+        }
+
+        const provider = await this.jupyterUriProviderRegistration.getProvider(idAndHandle.id);
+        if (!provider || !provider.getHandles) {
+            return false;
+        }
+
+        try {
+            const handles = await provider.getHandles();
+
+            if (!handles.includes(idAndHandle.handle)) {
+                await this.serverUriStorage.removeUri(uriItem.uri);
+                this.kernelReconnectProgress.get(kernel)?.dispose();
+                this.kernelReconnectProgress.delete(kernel);
+            }
+            return true;
+        } catch (_ex) {
+            return false;
         }
     }
 }

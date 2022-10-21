@@ -24,12 +24,15 @@ import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { CellExecutionCreator, NotebookCellExecutionWrapper } from './execution/cellExecutionCreator';
 import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 import { JupyterNotebookView } from '../platform/common/constants';
+import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './jupyter/types';
 
 suite('Kernel ReConnect Progress Message', () => {
     const disposables: IDisposable[] = [];
     let monitor: KernelAutoReconnectMonitor;
     let appShell: IApplicationShell;
     let kernelProvider: IKernelProvider;
+    let jupyterServerUriStorage: IJupyterServerUriStorage;
+    let jupyterUriProviderRegistration: IJupyterUriProviderRegistration;
     let onDidStartKernel: EventEmitter<IKernel>;
     let onDidDisposeKernel: EventEmitter<IKernel>;
     let onDidRestartKernel: EventEmitter<IKernel>;
@@ -47,9 +50,18 @@ suite('Kernel ReConnect Progress Message', () => {
         when(kernelProvider.onDidDisposeKernel).thenReturn(onDidDisposeKernel.event);
         when(kernelProvider.onDidRestartKernel).thenReturn(onDidRestartKernel.event);
         clock = fakeTimers.install();
+        jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
+        when(jupyterServerUriStorage.getSavedUriList()).thenResolve([]);
+        jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
 
         disposables.push(new Disposable(() => clock.uninstall()));
-        monitor = new KernelAutoReconnectMonitor(instance(appShell), disposables, instance(kernelProvider));
+        monitor = new KernelAutoReconnectMonitor(
+            instance(appShell),
+            disposables,
+            instance(kernelProvider),
+            instance(jupyterServerUriStorage),
+            instance(jupyterUriProviderRegistration)
+        );
         monitor.activate();
     });
     teardown(() => disposeAllDisposables(disposables));
@@ -117,6 +129,8 @@ suite('Kernel ReConnect Failed Monitor', () => {
     let monitor: KernelAutoReconnectMonitor;
     let appShell: IApplicationShell;
     let kernelProvider: IKernelProvider;
+    let jupyterServerUriStorage: IJupyterServerUriStorage;
+    let jupyterUriProviderRegistration: IJupyterUriProviderRegistration;
     let onDidStartKernel: EventEmitter<IKernel>;
     let onDidDisposeKernel: EventEmitter<IKernel>;
     let onDidRestartKernel: EventEmitter<IKernel>;
@@ -135,7 +149,16 @@ suite('Kernel ReConnect Failed Monitor', () => {
         when(kernelProvider.onDidStartKernel).thenReturn(onDidStartKernel.event);
         when(kernelProvider.onDidDisposeKernel).thenReturn(onDidDisposeKernel.event);
         when(kernelProvider.onDidRestartKernel).thenReturn(onDidRestartKernel.event);
-        monitor = new KernelAutoReconnectMonitor(instance(appShell), disposables, instance(kernelProvider));
+        jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
+        when(jupyterServerUriStorage.getSavedUriList()).thenResolve([]);
+        jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
+        monitor = new KernelAutoReconnectMonitor(
+            instance(appShell),
+            disposables,
+            instance(kernelProvider),
+            instance(jupyterServerUriStorage),
+            instance(jupyterUriProviderRegistration)
+        );
         clock = fakeTimers.install();
 
         cellExecution = mock<NotebookCellExecutionWrapper>();
@@ -274,6 +297,39 @@ suite('Kernel ReConnect Failed Monitor', () => {
         await clock.runAllAsync();
 
         verify(appShell.showErrorMessage(anything())).once();
+        verify(cellExecution.appendOutput(anything())).never();
+    });
+
+    test('Handle contributed server disconnect (server contributed by uri provider)', async () => {
+        const kernel = createKernel();
+        const server = {
+            uri: 'https://remote?id=remoteUriProvider&uriHandle=1',
+            serverId: '1234',
+            time: 1234
+        };
+        when(jupyterServerUriStorage.getSavedUriList()).thenResolve([server]);
+        when(jupyterServerUriStorage.getUriForServer(anything())).thenResolve(server);
+        when(jupyterUriProviderRegistration.getProvider(anything())).thenResolve({
+            id: 'remoteUriProvider',
+            getServerUri: (_handle) =>
+                Promise.resolve({
+                    baseUrl: '<baseUrl>',
+                    token: '<token>',
+                    authorizationHeader: {},
+                    displayName: 'Remote Uri Provider server 1'
+                }),
+            getHandles: () => Promise.resolve(['1'])
+        });
+
+        onDidStartKernel.fire(instance(kernel.kernel));
+
+        // Send the kernel into connecting state & then disconnected.
+        kernel.kernelConnectionStatusSignal.emit('connecting');
+        kernel.kernelConnectionStatusSignal.emit('disconnected');
+        await clock.runAllAsync();
+
+        // the server is gone, the kernel is disposed so we don't show the error message
+        verify(appShell.showErrorMessage(anything())).never();
         verify(cellExecution.appendOutput(anything())).never();
     });
 });

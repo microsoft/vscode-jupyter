@@ -5,6 +5,7 @@ import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, NotebookController, NotebookDocument, Uri } from 'vscode';
 import { CellOutputDisplayIdTracker } from '../../kernels/execution/cellDisplayIdTracker';
+import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { KernelProvider, ThirdPartyKernelProvider } from '../../kernels/kernelProvider.node';
 import {
     IThirdPartyKernelProvider,
@@ -38,6 +39,7 @@ suite('KernelProvider Node', () => {
     let outputTracker: CellOutputDisplayIdTracker;
     let vscNotebook: IVSCodeNotebook;
     let statusProvider: IStatusProvider;
+    let jupyterServerUriStorage: IJupyterServerUriStorage;
     let context: IExtensionContext;
     let onDidCloseNotebookDocument: EventEmitter<NotebookDocument>;
     const sampleUri1 = Uri.file('sample1.ipynb');
@@ -71,6 +73,7 @@ suite('KernelProvider Node', () => {
         outputTracker = mock<CellOutputDisplayIdTracker>();
         vscNotebook = mock<IVSCodeNotebook>();
         statusProvider = mock<IStatusProvider>();
+        jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
         context = mock<IExtensionContext>();
         const configSettings = mock<IWatchableJupyterSettings>();
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
@@ -91,6 +94,7 @@ suite('KernelProvider Node', () => {
             instance(vscNotebook),
             instance(statusProvider),
             instance(context),
+            instance(jupyterServerUriStorage),
             [],
             []
         );
