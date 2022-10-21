@@ -25,7 +25,7 @@ import {
     createEmptyPythonNotebook,
     defaultNotebookTestTimeout,
     prewarmNotebooks,
-    selectActiveInterpreterController
+    selectDefaultController
 } from '../notebook/helper';
 import {
     assertOutputContainsHtml,
@@ -71,7 +71,7 @@ import { initializeWidgetComms, Utils } from './commUtils';
             await prewarmNotebooks();
             sinon.restore();
             editor = (await createEmptyPythonNotebook(disposables, undefined, true)).editor;
-            await selectActiveInterpreterController(editor);
+            await selectDefaultController(editor);
             // Widgets get rendered only when the output is in view. If we have a very large notebook
             // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
             // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.

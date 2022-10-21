@@ -32,7 +32,7 @@ import {
     defaultNotebookTestTimeout,
     prewarmNotebooks,
     runCell,
-    selectActiveInterpreterController,
+    selectDefaultController,
     waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully,
     waitForTextOutput
@@ -127,7 +127,7 @@ suite('Standard IPyWidget Tests', function () {
         traceInfo('Suite Setup Standard IPyWidget Tests, Step 5');
         sinon.restore();
         editor = (await createEmptyPythonNotebook(disposables, undefined, true)).editor;
-        await selectActiveInterpreterController(editor);
+        await selectDefaultController(editor);
         // Widgets get rendered only when the output is in view. If we have a very large notebook
         // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
         // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.

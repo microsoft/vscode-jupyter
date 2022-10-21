@@ -633,10 +633,12 @@ export async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter
         `Kernel Connection pointing to active interpreter not found`
     );
 }
-export async function selectActiveInterpreterController(
-    notebookEditor: NotebookEditor,
-    timeout = defaultNotebookTestTimeout
-) {
+export function selectDefaultController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
+    return IS_REMOTE_NATIVE_TEST()
+        ? selectPythonRemoteKernelConnectionForActiveInterpreter(notebookEditor, timeout)
+        : selectActiveInterpreterController(notebookEditor, timeout);
+}
+async function selectActiveInterpreterController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
     const { controllerLoader, controllerRegistration, interpreterService, controllerSelection } = await getServices();
 
     // Get the list of NotebookControllers for this document
@@ -655,6 +657,35 @@ export async function selectActiveInterpreterController(
             ),
         timeout,
         `No matching controller found for interpreter ${interpreter?.id}:${getDisplayPath(interpreter?.uri)}`
+    );
+    if (!controller) {
+        throw new Error('No interpreter controller');
+    }
+    await commands.executeCommand('notebook.selectKernel', {
+        id: controller.id,
+        extension: JVSC_EXTENSION_ID
+    });
+    await waitForCondition(
+        () => controllerSelection.getSelected(notebookEditor.notebook) === controller,
+        timeout,
+        `Controller ${controller.id} not selected`
+    );
+}
+async function selectPythonRemoteKernelConnectionForActiveInterpreter(
+    notebookEditor: NotebookEditor,
+    timeout = defaultNotebookTestTimeout
+) {
+    const { controllerRegistration, controllerSelection } = await getServices();
+    const metadata = await getDefaultPythonRemoteKernelConnectionForActiveInterpreter();
+
+    // Find the kernel id that matches the name we want
+    const controller = await waitForCondition(
+        () =>
+            controllerRegistration.registered.find(
+                (k) => k.connection.kind === 'startUsingRemoteKernelSpec' && k.connection.id === metadata.id
+            ),
+        timeout,
+        `No matching controller found for interpreter ${metadata?.kind}:${metadata.id}`
     );
     if (!controller) {
         throw new Error('No interpreter controller');
@@ -845,11 +876,7 @@ export async function prewarmNotebooks() {
         }
         const notebookEditor = await createNewNotebook();
         await insertCodeCell('print("Hello World1")', { index: 0 });
-        if (IS_REMOTE_NATIVE_TEST()) {
-            await waitForKernelToGetAutoSelected(notebookEditor, PYTHON_LANGUAGE);
-        } else {
-            await selectActiveInterpreterController(notebookEditor, defaultNotebookTestTimeout);
-        }
+        await selectActiveInterpreterController(notebookEditor, defaultNotebookTestTimeout);
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0)!;
         traceInfoIfCI(`Running all cells in prewarm notebooks`);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
