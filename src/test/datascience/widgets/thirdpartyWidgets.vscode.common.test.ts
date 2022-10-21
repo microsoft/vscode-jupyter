@@ -48,7 +48,7 @@ import { initializeWidgetComms, Utils } from './commUtils';
         this.timeout(120_000);
         const widgetScriptSourcesValue: WidgetCDNs[] = useCDN ? ['jsdelivr.com', 'unpkg.com'] : [];
         // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
-        this.retries(1);
+        this.retries(2);
         let editor: NotebookEditor;
         let comms: Utils;
 
