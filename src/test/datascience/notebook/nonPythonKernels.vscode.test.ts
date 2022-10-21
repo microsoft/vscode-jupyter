@@ -116,7 +116,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
             defaultNotebookTestTimeout,
             `Preferred controller not found for Notebook, currently preferred ${
                 controllerPreferred.getPreferred(notebook)?.connection.kind
-            }:${controllerPreferred.getPreferred(notebook)?.connection.id}`
+            }:${controllerPreferred.getPreferred(notebook)?.connection.id}`,
+            500
         );
     });
     test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
@@ -134,7 +135,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
             defaultNotebookTestTimeout,
             `Preferred controller not found for Notebook, currently preferred ${
                 controllerPreferred.getPreferred(notebook)?.connection.kind
-            }:${controllerPreferred.getPreferred(notebook)?.connection.id}`
+            }:${controllerPreferred.getPreferred(notebook)?.connection.id}`,
+            500
         );
     });
     test('Automatically pick csharp kernel when opening a csharp notebook', async function () {
@@ -167,7 +169,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
                             item.kind === 'startUsingLocalKernelSpec' ? item.kernelSpec.language : ''
                         }`
                 )
-                .join(',')}`
+                .join(',')}`,
+            500
         );
     });
     test('Bogus test', noop);
@@ -186,7 +189,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
             defaultNotebookTestTimeout,
             `Preferred controller not found for Notebook, currently preferred ${
                 controllerPreferred.getPreferred(notebook)?.connection.kind
-            }:${controllerPreferred.getPreferred(notebook)?.connection.id}`
+            }:${controllerPreferred.getPreferred(notebook)?.connection.id}`,
+            500
         );
         const cell = await notebook.appendCodeCell('123456', 'julia');
         const kernel = kernelProvider.getOrCreate(notebook, {
@@ -223,7 +227,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
             defaultNotebookTestTimeout,
             `Preferred controller not found for Notebook, currently preferred ${
                 controllerPreferred.getPreferred(notebook)?.connection.kind
-            }:${controllerPreferred.getPreferred(notebook)?.connection.id}`
+            }:${controllerPreferred.getPreferred(notebook)?.connection.id}`,
+            500
         );
         const kernel = kernelProvider.getOrCreate(notebook, {
             controller: createKernelController(),
