@@ -77,7 +77,6 @@ import { initializeWidgetComms, Utils } from './commUtils';
             // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.
             await commands.executeCommand('workbench.action.closePanel');
             await commands.executeCommand('workbench.action.maximizeEditor');
-            await commands.executeCommand('notebook.cell.collapseAllCellInputs');
             comms = await initializeWidgetComms(disposables);
 
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);

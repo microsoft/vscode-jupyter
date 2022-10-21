@@ -65,6 +65,7 @@ export async function initializeNotebookForWidgetTest(
     const nbEdit = NotebookEdit.replaceCells(new NotebookRange(0, editor.notebook.cellCount), newCells);
     edit.set(editor.notebook.uri, [nbEdit]);
     await workspace.applyEdit(edit);
+    await commands.executeCommand('notebook.cell.collapseAllCellInputs');
 }
 export async function executeCellAndWaitForOutput(cell: NotebookCell, comms: Utils) {
     await Promise.all([
