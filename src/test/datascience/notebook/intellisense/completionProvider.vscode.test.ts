@@ -229,7 +229,7 @@ import { Settings } from '../../../../platform/common/constants';
                 const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions('var_name = df.', '.', fileName, 'Age', 'S', 'Sex');
             });
-            test.skip('Dataframe assignment column completions', async () => {
+            test('Dataframe assignment column completions', async () => {
                 const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions(fileName.substring(0, 1), fileName);
             });
