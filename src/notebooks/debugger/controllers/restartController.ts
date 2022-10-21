@@ -5,8 +5,6 @@ import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { traceError, traceVerbose } from '../../../platform/logging';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { DebuggingTelemetry } from '../constants';
 import { IDebuggingDelegate, IKernelDebugAdapter, INotebookDebuggingManager, KernelDebugMode } from '../debuggingTypes';
 
 /**
@@ -21,7 +19,6 @@ export class RestartController implements IDebuggingDelegate {
         public readonly debugCell: NotebookCell,
         private readonly serviceContainer: IServiceContainer
     ) {
-        sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunByLine);
         this.debuggingManager = this.serviceContainer.get<INotebookDebuggingManager>(INotebookDebuggingManager);
     }
 
@@ -31,6 +28,12 @@ export class RestartController implements IDebuggingDelegate {
 
     private error(tag: string, msg: string) {
         traceError(`[Debug-Restart] ${tag}: ${msg}`);
+    }
+
+    public async willSendResponse(response: DebugProtocol.Response): Promise<void> {
+        if (response.command === 'initialize' && response.body) {
+            (response as DebugProtocol.InitializeResponse).body!.supportsRestartRequest = true;
+        }
     }
 
     public async willSendRequest(request: DebugProtocol.Request): Promise<undefined | DebugProtocol.Response> {
@@ -60,11 +63,5 @@ export class RestartController implements IDebuggingDelegate {
         }
 
         return undefined;
-    }
-
-    public async willSendResponse(response: DebugProtocol.Response): Promise<void> {
-        if (response.command === 'initialize' && response.body) {
-            (response as DebugProtocol.InitializeResponse).body!.supportsRestartRequest = true;
-        }
     }
 }
