@@ -466,7 +466,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await changeShowOnlyOneTypeOfKernel(true);
         await serverUriStorage.setUriToLocal();
         await controllerLoader.loaded;
-        const notebook = await createEmptyPythonNotebook(disposables);
+        const { notebook } = await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         let locals = controllerRegistration.registered.filter((c) => isLocalConnection(c.connection));
@@ -677,7 +677,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         }
         await changeShowOnlyOneTypeOfKernel(true);
         await controllerLoader.loaded;
-        const notebook = await createEmptyPythonNotebook(disposables);
+        const { notebook } = await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         let remotes = controllerRegistration.registered.filter((c) => isRemoteConnection(c.connection));

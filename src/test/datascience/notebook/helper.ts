@@ -332,7 +332,7 @@ export async function createEmptyPythonNotebook(
     await deleteAllCellsAndWait();
     const notebook = vscodeNotebook.activeNotebookEditor!.notebook;
     traceVerbose(`Empty notebook created ${getDisplayPath(notebook.uri)}`);
-    return notebook;
+    return { notebook, editor: vscodeNotebook.activeNotebookEditor! };
 }
 
 async function shutdownAllNotebooks() {
