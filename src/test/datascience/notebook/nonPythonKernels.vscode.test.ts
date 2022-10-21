@@ -89,7 +89,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
     // https://github.com/microsoft/vscode-jupyter/issues/10900
-    test.skip('Automatically pick java kernel when opening a Java Notebook', async function () {
+    test('Automatically pick java kernel when opening a Java Notebook', async function () {
         if (!testJavaKernels) {
             return this.skip();
         }
@@ -112,7 +112,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
             }:${controllerPreferred.getPreferred(notebook)?.connection.id}`
         );
     });
-    test.skip('Automatically pick julia kernel when opening a Julia Notebook', async () => {
+    test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
         const notebook = await TestNotebookDocument.openFile(testJuliaNb);
         await waitForCondition(
             async () => {
@@ -130,7 +130,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
             }:${controllerPreferred.getPreferred(notebook)?.connection.id}`
         );
     });
-    test.skip('Automatically pick csharp kernel when opening a csharp notebook', async function () {
+    test('Automatically pick csharp kernel when opening a csharp notebook', async function () {
         // C# Kernels can only be installed when you have Jupyter
         // On CI we install Jupyter only when testing with Python extension.
         if (!pythonChecker.isPythonExtensionInstalled) {
