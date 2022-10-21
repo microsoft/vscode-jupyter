@@ -26,6 +26,7 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IControllerLoader, IControllerPreferredService } from '../../../notebooks/controllers/types';
 import { createKernelController, TestNotebookDocument } from './executionHelper';
 import { IKernelProvider } from '../../../kernels/types';
+import { noop } from '../../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', async function () {
@@ -154,6 +155,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
             }:${controllerPreferred.getPreferred(notebook)?.connection.id}`
         );
     });
+    test('Bogus test', noop);
     test('Can run a Julia notebook', async function () {
         const notebook = await TestNotebookDocument.openFile(testJuliaNb);
         const metadata = await waitForCondition(
