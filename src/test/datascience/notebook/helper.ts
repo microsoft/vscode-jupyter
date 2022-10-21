@@ -618,17 +618,28 @@ async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
     const { interpreterService, kernelFinder } = await getServices();
     const interpreter = await interpreterService.getActiveInterpreter();
     if (!interpreter) {
-        assert.fail('Active Interpreter is undefined');
+        traceWarning('Active Interpreter is undefined');
     }
     return waitForCondition(
         () =>
-            kernelFinder.kernels.find(
-                (item) =>
+            kernelFinder.kernels.find((item) => {
+                if (
+                    interpreter &&
                     item.kind === 'startUsingRemoteKernelSpec' &&
                     item.kernelSpec.language === PYTHON_LANGUAGE &&
                     item.interpreter &&
                     areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
-            ) as RemoteKernelSpecConnectionMetadata,
+                ) {
+                    return true;
+                } else if (
+                    !interpreter &&
+                    item.kind === 'startUsingRemoteKernelSpec' &&
+                    item.kernelSpec.language === PYTHON_LANGUAGE
+                ) {
+                    return true;
+                }
+                return false;
+            }) as RemoteKernelSpecConnectionMetadata,
         defaultNotebookTestTimeout,
         `Kernel Connection pointing to active interpreter not found`
     );
@@ -690,7 +701,7 @@ async function selectPythonRemoteKernelConnectionForActiveInterpreter(
                 (k) => k.connection.kind === 'startUsingRemoteKernelSpec' && k.connection.id === metadata.id
             ),
         timeout,
-        `No matching controller found for interpreter ${metadata?.kind}:${metadata.id}`
+        `No matching controller found for metadata ${metadata?.kind}:${metadata.id}`
     );
     if (!controller) {
         throw new Error('No interpreter controller');
