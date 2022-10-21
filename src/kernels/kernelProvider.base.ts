@@ -17,6 +17,7 @@ import {
     IThirdPartyKernelProvider,
     ThirdPartyKernelOptions
 } from './types';
+import { IJupyterServerUriEntry } from './jupyter/types';
 
 /**
  * Provides kernels to the system. Generally backed by a URI or a notebook object.
@@ -136,6 +137,23 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
                 .catch(noop);
         }
         this.kernelsByNotebook.delete(notebook);
+    }
+
+    protected handleUriRemoval(uris: IJupyterServerUriEntry[]) {
+        this.notebook.notebookDocuments.forEach((document) => {
+            const kernel = this.kernelsByNotebook.get(document);
+            if (kernel) {
+                const metadata = kernel.options.metadata;
+
+                if (metadata.kind === 'connectToLiveRemoteKernel' || metadata.kind === 'startUsingRemoteKernelSpec') {
+                    const matchingRemovedUri = uris.find((uri) => uri.serverId === metadata.serverId);
+                    if (matchingRemovedUri) {
+                        // it should be removed
+                        this.kernelsByNotebook.delete(document);
+                    }
+                }
+            }
+        });
     }
 }
 

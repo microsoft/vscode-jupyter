@@ -229,6 +229,7 @@ export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegist
 export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
     getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
+    getProvider(id: string): Promise<IJupyterUriProvider | undefined>;
     registerProvider(picker: IJupyterUriProvider): void;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
@@ -270,6 +271,7 @@ export interface IJupyterServerUriStorage {
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
     getRemoteUri(): Promise<IJupyterServerUriEntry | undefined>;
+    getUriForServer(id: string): Promise<IJupyterServerUriEntry | undefined>;
     setUriToLocal(): Promise<void>;
     setUriToRemote(uri: string, displayName: string): Promise<void>;
     setUriToNone(): Promise<void>;

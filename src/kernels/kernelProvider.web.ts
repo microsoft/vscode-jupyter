@@ -25,6 +25,7 @@ import {
     KernelOptions,
     ThirdPartyKernelOptions
 } from './types';
+import { IJupyterServerUriStorage } from './jupyter/types';
 
 /**
  * Web version of a kernel provider. Needed in order to create the web version of a kernel.
@@ -41,10 +42,12 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IJupyterServerUriStorage) jupyterServerUriStorage: IJupyterServerUriStorage,
         @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
         @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
     ) {
         super(asyncDisposables, disposables, notebook);
+        disposables.push(jupyterServerUriStorage.onDidRemoveUris(this.handleUriRemoval.bind(this)));
     }
 
     public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel {
