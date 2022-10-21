@@ -95,7 +95,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return this._submitters;
     }
     public get notebookDocument(): NotebookDocument {
-        return this.notebookEditor.notebook;
+        return this.notebookEditor?.notebook;
     }
     public get kernelConnectionMetadata(): KernelConnectionMetadata | undefined {
         return this.currentKernelInfo.metadata;
@@ -202,6 +202,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.listenForControllerSelection();
 
         this.cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
+        if (this.notebookDocument) {
+            this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
+        }
     }
 
     public async ensureInitialized() {
