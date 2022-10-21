@@ -62,7 +62,14 @@ import {
     IsWebExtension
 } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
-import { IKernelProvider, INotebookProvider, IThirdPartyKernelProvider } from '../../../kernels/types';
+import {
+    IKernelFinder,
+    IKernelProvider,
+    INotebookProvider,
+    IThirdPartyKernelProvider,
+    PythonKernelConnectionMetadata,
+    RemoteKernelSpecConnectionMetadata
+} from '../../../kernels/types';
 import { noop } from '../../core';
 import { closeActiveWindows, isInsiders } from '../../initialize';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -125,6 +132,7 @@ export async function getServices() {
         controllerPreferred: api.serviceContainer.get<IControllerPreferredService>(IControllerPreferredService),
         isWebExtension: api.serviceContainer.get<boolean>(IsWebExtension),
         interpreterService: api.serviceContainer.get<IInterpreterService>(IInterpreterService),
+        kernelFinder: api.serviceContainer.get<IKernelFinder>(IKernelFinder),
         serviceContainer: api.serviceContainer
     };
 }
@@ -589,6 +597,42 @@ async function waitForActiveNotebookEditor(notebookEditor?: NotebookEditor): Pro
     return notebookEditor;
 }
 
+export async function getActiveInterpreterKernelConnection() {
+    const { interpreterService, kernelFinder } = await getServices();
+    const interpreter = await interpreterService.getActiveInterpreter();
+    if (!interpreter) {
+        assert.fail('Active Interpreter is undefined');
+    }
+    return waitForCondition(
+        () =>
+            kernelFinder.kernels.find(
+                (item) =>
+                    item.kind === 'startUsingPythonInterpreter' &&
+                    areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
+            ) as PythonKernelConnectionMetadata,
+        defaultNotebookTestTimeout,
+        `Kernel Connection pointing to active interpreter not found`
+    );
+}
+export async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
+    const { interpreterService, kernelFinder } = await getServices();
+    const interpreter = await interpreterService.getActiveInterpreter();
+    if (!interpreter) {
+        assert.fail('Active Interpreter is undefined');
+    }
+    return waitForCondition(
+        () =>
+            kernelFinder.kernels.find(
+                (item) =>
+                    item.kind === 'startUsingRemoteKernelSpec' &&
+                    item.kernelSpec.language === PYTHON_LANGUAGE &&
+                    item.interpreter &&
+                    areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
+            ) as RemoteKernelSpecConnectionMetadata,
+        defaultNotebookTestTimeout,
+        `Kernel Connection pointing to active interpreter not found`
+    );
+}
 export async function selectActiveInterpreterController(
     notebookEditor: NotebookEditor,
     timeout = defaultNotebookTestTimeout
@@ -1286,7 +1330,7 @@ export async function hijackPrompt(
             }
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (appShell[promptType] as any).wrappedMethod.apply(appShell, arguments);
+        throw new Error('Messages cannot be displayed here' + msg);
     } as any);
     const disposable = { dispose: () => stub.restore() };
     if (disposables) {
