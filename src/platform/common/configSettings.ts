@@ -93,6 +93,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public jupyterCommandLineArguments: string[] = [];
     public widgetScriptSources: WidgetCDNs[] = [];
     public interactiveWindowMode: InteractiveWindowMode = 'multiple';
+    public pythonCellFolding: boolean = true;
     public interactiveWindowViewColumn: InteractiveWindowViewColumn = 'secondGroup';
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
