@@ -23,7 +23,11 @@ import {
     defaultNotebookTestTimeout
 } from './helper.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { IControllerLoader, IControllerPreferredService } from '../../../notebooks/controllers/types';
+import {
+    IControllerLoader,
+    IControllerPreferredService,
+    IControllerRegistration
+} from '../../../notebooks/controllers/types';
 import { createKernelController, TestNotebookDocument } from './executionHelper';
 import { IKernelProvider } from '../../../kernels/types';
 import { noop } from '../../core';
@@ -48,6 +52,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
     let controllerPreferred: IControllerPreferredService;
     let kernelProvider: IKernelProvider;
     let pythonChecker: IPythonExtensionChecker;
+    let controllerRegistration: IControllerRegistration;
     // eslint-disable-next-line local-rules/dont-use-process
     const testJavaKernels = (process.env.VSC_JUPYTER_CI_RUN_JAVA_NB_TEST || '').toLowerCase() === 'true';
     this.timeout(120_000); // Julia and C# kernels can be slow
@@ -62,6 +67,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
         sinon.restore();
         verifyPromptWasNotDisplayed();
         controllerPreferred = api.serviceContainer.get<IControllerPreferredService>(IControllerPreferredService);
+        controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         const controllerLoader = api.serviceContainer.get<IControllerLoader>(IControllerLoader);
@@ -152,7 +158,16 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
             defaultNotebookTestTimeout,
             `Preferred controller not found for Notebook, currently preferred ${
                 controllerPreferred.getPreferred(notebook)?.connection.kind
-            }:${controllerPreferred.getPreferred(notebook)?.connection.id}`
+            }:${
+                controllerPreferred.getPreferred(notebook)?.connection.id
+            }, current controllers include ${controllerRegistration.all
+                .map(
+                    (item) =>
+                        `${item.kind}:${item.id}${
+                            item.kind === 'startUsingLocalKernelSpec' ? item.kernelSpec.language : ''
+                        }`
+                )
+                .join(',')}`
         );
     });
     test('Bogus test', noop);
