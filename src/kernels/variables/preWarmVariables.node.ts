@@ -6,11 +6,9 @@
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/types';
-import { IWorkspaceService } from '../../platform/common/application/types';
 import { CondaService } from '../../platform/common/process/condaService.node';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { ICustomEnvironmentVariablesProvider } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService.node';
 import { IRawNotebookSupportedService } from '../raw/types';
@@ -27,9 +25,6 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
-        @inject(ICustomEnvironmentVariablesProvider)
-        private readonly envVarsProvider: ICustomEnvironmentVariablesProvider,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(CondaService) private readonly condaService: CondaService
     ) {}
     public async activate(): Promise<void> {
@@ -44,16 +39,6 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
             this.apiProvider.onDidActivatePythonExtension(this.preWarmInterpreterVariables, this, this.disposables);
         }
         if (this.extensionChecker.isPythonExtensionInstalled) {
-            // Don't try to pre-warm variables if user has too many workspace folders opened.
-            const workspaceFolderCount = this.workspace.workspaceFolders?.length ?? 0;
-            if (workspaceFolderCount <= 5) {
-                this.envVarsProvider.getEnvironmentVariables(undefined, 'RunNonPythonCode').ignoreErrors();
-                this.envVarsProvider.getEnvironmentVariables(undefined, 'RunPythonCode').ignoreErrors();
-                (this.workspace.workspaceFolders || []).forEach((folder) => {
-                    this.envVarsProvider.getEnvironmentVariables(folder.uri, 'RunNonPythonCode').ignoreErrors();
-                    this.envVarsProvider.getEnvironmentVariables(folder.uri, 'RunPythonCode').ignoreErrors();
-                });
-            }
             this.condaService.getCondaFile().ignoreErrors();
             this.condaService.getCondaVersion().ignoreErrors();
         }
