@@ -124,15 +124,26 @@ export class InteractiveWindowProvider
                 return;
             }
 
+            const tab = interactiveWindowMapping.get(iw.uriString);
+
+            if (!tab) {
+                return;
+            }
+
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 iw.owner !== undefined ? Uri.from(iw.owner) : undefined,
                 iw.mode,
                 undefined,
-                interactiveWindowMapping.get(iw.uriString)!,
+                tab,
                 Uri.parse(iw.inputBoxUriString)
             );
             this._windows.push(result);
+
+            const handler = result.closed(this.onInteractiveWindowClosed.bind(this, result));
+            this.disposables.push(result);
+            this.disposables.push(handler);
+            this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
         });
 
         this._updateWindowCache();
@@ -157,15 +168,9 @@ export class InteractiveWindowProvider
         if (!result) {
             // No match. Create a new item.
             result = await this.create(resource, mode, connection);
-            // ensure events are wired up and kernel is started.
-            result.initialize();
-        } else {
-            const preferredController = connection
-                ? this.controllerRegistration.get(connection, InteractiveWindowView)
-                : await this.controllerDefaultService.computeDefaultController(resource, InteractiveWindowView);
-
-            await result.restore(preferredController);
         }
+
+        await result.ensureInitialized();
 
         return result;
     }

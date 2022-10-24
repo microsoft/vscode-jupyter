@@ -95,7 +95,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return this._submitters;
     }
     public get notebookDocument(): NotebookDocument {
-        return this.notebookEditor.notebook;
+        return this.notebookEditor?.notebook;
     }
     public get kernelConnectionMetadata(): KernelConnectionMetadata | undefined {
         return this.currentKernelInfo.metadata;
@@ -116,16 +116,12 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         controller?: NotebookController;
         metadata?: KernelConnectionMetadata;
     } = {};
-
-    private _notebookEditor!: NotebookEditor;
+    private _notebookEditor: NotebookEditor;
     public get notebookEditor(): NotebookEditor {
         return this._notebookEditor;
     }
 
-    private _notebookUri: Uri;
-    public get notebookUri(): Uri {
-        return this._notebookUri;
-    }
+    public readonly notebookUri: Uri;
 
     private readonly documentManager: IDocumentManager;
     private readonly fs: IFileSystem;
@@ -146,8 +142,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly serviceContainer: IServiceContainer,
         private _owner: Resource,
         public mode: InteractiveWindowMode,
-        private preferredController: IVSCodeNotebookController | undefined,
-        private readonly notebookEditorOrTab: NotebookEditor | InteractiveTab,
+        preferredController: IVSCodeNotebookController | undefined,
+        notebookEditorOrTab: NotebookEditor | InteractiveTab,
         public readonly inputUri: Uri
     ) {
         this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
@@ -168,72 +164,78 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         );
         this.isWebExtension = this.serviceContainer.get<boolean>(IsWebExtension);
         this.controllerRegistration = this.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-        this._notebookUri = isInteractiveInputTab(notebookEditorOrTab)
+        this.notebookUri = isInteractiveInputTab(notebookEditorOrTab)
             ? notebookEditorOrTab.input.uri
             : notebookEditorOrTab.notebook.uri;
+
         if (!isInteractiveInputTab(notebookEditorOrTab)) {
             this._notebookEditor = notebookEditorOrTab;
+        }
+
+        if (preferredController) {
+            this.currentKernelInfo = {
+                controller: preferredController.controller,
+                metadata: preferredController.connection
+            };
         }
 
         // Set our owner and first submitter
         if (this._owner) {
             this._submitters.push(this._owner);
         }
-    }
 
-    public initialize() {
-        if (this.initialized) {
-            return;
-        }
-        this.initialized = true;
         window.onDidChangeActiveNotebookEditor((e) => {
             if (e === this.notebookEditor) {
                 this._onDidChangeViewState.fire();
             }
         }, this.internalDisposables);
         workspace.onDidCloseNotebookDocument((notebookDocument) => {
-            if (notebookDocument === this.notebookDocument) {
+            if (notebookDocument.uri.toString() === this.notebookUri.toString()) {
                 this.closedEvent.fire();
             }
         }, this.internalDisposables);
 
-        this.cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
         if (window.activeNotebookEditor === this.notebookEditor) {
             this._onDidChangeViewState.fire();
         }
 
         this.listenForControllerSelection();
-        if (this.preferredController) {
-            // Also start connecting to our kernel but don't wait for it to finish
-            this.startKernel(this.preferredController.controller, this.preferredController.connection).ignoreErrors();
+
+        this.cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
+        if (this.notebookDocument) {
+            this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
+        }
+    }
+
+    public async ensureInitialized() {
+        if (!this._notebookEditor) {
+            let currentTab: InteractiveTab | undefined;
+            window.tabGroups.all.find((group) => {
+                group.tabs.find((tab) => {
+                    if (isInteractiveInputTab(tab) && tab.input.uri.toString() == this.notebookUri.toString()) {
+                        currentTab = tab;
+                    }
+                });
+            });
+
+            const document = await workspace.openNotebookDocument(this.notebookUri);
+            this._notebookEditor = await window.showNotebookDocument(document, {
+                preserveFocus: true,
+                viewColumn: currentTab?.group.viewColumn
+            });
+
+            this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
+        }
+
+        if (this.currentKernelInfo) {
+            this.startKernel().ignoreErrors();
         } else {
-            traceWarning('No preferred controller found for Interactive Window');
+            traceWarning('No controller selected for Interactive Window');
             if (this.isWebExtension) {
                 this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
             }
         }
-
-        // Create the code generator right away to start watching the notebook
-        this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
-    }
-
-    public async restore(preferredController: IVSCodeNotebookController | undefined) {
-        if (preferredController) {
-            this.preferredController = preferredController;
-        }
-        if (!this.notebookEditor) {
-            if (isInteractiveInputTab(this.notebookEditorOrTab)) {
-                const document = await workspace.openNotebookDocument(this.notebookEditorOrTab.input.uri);
-                const editor = await window.showNotebookDocument(document, {
-                    viewColumn: this.notebookEditorOrTab.group.viewColumn
-                });
-                this._notebookEditor = editor;
-            } else {
-                this._notebookEditor = this.notebookEditorOrTab;
-            }
-        }
-
-        this.initialize();
+        this.initialized = true;
     }
 
     /**
@@ -248,20 +250,21 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    private async startKernel(
-        controller: NotebookController | undefined = this.currentKernelInfo.controller,
-        metadata: KernelConnectionMetadata | undefined = this.currentKernelInfo.metadata
-    ): Promise<IKernel> {
+    private async startKernel(): Promise<IKernel> {
+        if (this.currentKernelInfo.kernel) {
+            return this.currentKernelInfo.kernel.promise;
+        }
+
+        const controller = this.currentKernelInfo.controller;
+        const metadata = this.currentKernelInfo.metadata;
         if (!controller || !metadata) {
             // This cannot happen, but we need to make typescript happy.
             throw new Error('Controller not selected');
         }
-        if (this.currentKernelInfo.kernel) {
-            return this.currentKernelInfo.kernel.promise;
-        }
+
         const kernelPromise = createDeferred<IKernel>();
         kernelPromise.promise.catch(noop);
-        this.currentKernelInfo = { controller, metadata, kernel: kernelPromise };
+        this.currentKernelInfo.kernel = kernelPromise;
 
         const sysInfoCell = this.insertSysInfoMessage(metadata, SysInfoReason.Start);
         try {
@@ -454,14 +457,21 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // Ensure we hear about any controller changes so we can update our cached promises
         this.notebookControllerSelection.onControllerSelected(
             (e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) => {
-                if (e.notebook !== this.notebookEditor.notebook) {
+                if (e.notebook.uri.toString() !== this.notebookUri.toString()) {
                     return;
                 }
 
                 // Clear cached kernel when the selected controller for this document changes
                 if (e.controller.id !== this.currentKernelInfo.controller?.id) {
                     this.disconnectKernel();
-                    this.startKernel(e.controller.controller, e.controller.connection).ignoreErrors();
+                    this.currentKernelInfo = {
+                        controller: e.controller.controller,
+                        metadata: e.controller.connection
+                    };
+                    // don't start the kernel if the IW has only been restored from a previous session
+                    if (this.initialized) {
+                        this.startKernel().ignoreErrors();
+                    }
                 }
             },
             this,
