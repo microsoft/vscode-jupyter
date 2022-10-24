@@ -421,7 +421,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 return areInterpreterPathsSame(venvNoRegPath, sysExecutable);
             },
             defaultNotebookTestTimeout,
-            () => `Interpreter path ${venvNoRegPath} not found din output ${output}`
+            () => `Interpreter path ${venvNoRegPath} not found in output ${output}`
         );
     });
 
