@@ -3,7 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import * as path from '../../vscode-path/path';
-import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, RelativePattern, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, RelativePattern, Uri } from 'vscode';
 import { TraceOptions } from '../../logging/types';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry.node';
 import { IWorkspaceService } from '../application/types';
@@ -11,7 +11,6 @@ import { IDisposableRegistry, Resource } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 import { traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose } from '../../logging';
-import { SystemVariables } from './systemVariables.node';
 import { disposeAllDisposables } from '../helpers';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 
@@ -28,6 +27,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
     private fileWatchers = new Set<string>();
     private disposables: Disposable[] = [];
     private changeEventEmitter = new EventEmitter<Uri | undefined>();
+    private pythonEnvVarChangeEventHooked?: boolean;
     constructor(
         @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
@@ -37,7 +37,6 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         @inject('number') @optional() private cacheDuration: number = CACHE_DURATION
     ) {
         disposableRegistry.push(this);
-        this.workspaceService.onDidChangeConfiguration(this.configurationChanged, this, this.disposables);
     }
 
     public dispose() {
@@ -80,6 +79,14 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         if (purpose === 'RunPythonCode' && this.extensionChecker.isPythonExtensionInstalled) {
             const api = await this.pythonApi.getNewApi();
             if (api) {
+                if (!this.pythonEnvVarChangeEventHooked) {
+                    this.pythonEnvVarChangeEventHooked = true;
+                    api.environments.onDidEnvironmentVariablesChange(
+                        (e) => this.changeEventEmitter.fire(e.resource?.uri),
+                        this,
+                        this.disposables
+                    );
+                }
                 return api.environments.getEnvironmentVariables(workspaceFolderUri);
             }
         }
@@ -100,20 +107,12 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
 
         this.trackedWorkspaceFolders.add(workspaceFolderUri.fsPath || '');
 
-        const envFile = this.getEnvFile(workspaceFolderUri, purpose);
+        const envFile = this.getEnvFile(workspaceFolderUri);
         this.createFileWatcher(envFile, workspaceFolderUri);
 
         const promise = this.envVarsService.parseFile(envFile, process.env);
         promise.then((result) => (cacheStoreIndexedByWorkspaceFolder.data = result)).ignoreErrors();
         return promise;
-    }
-    public configurationChanged(e: ConfigurationChangeEvent) {
-        this.trackedWorkspaceFolders.forEach((item) => {
-            const uri = item && item.length > 0 ? Uri.file(item) : undefined;
-            if (e.affectsConfiguration('python.envFile', uri)) {
-                this.onEnvironmentFileChanged(uri);
-            }
-        });
     }
     public createFileWatcher(envFile: string, workspaceFolderUri?: Uri) {
         const key = this.getCacheKeyForMergedVars(workspaceFolderUri);
@@ -132,21 +131,8 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
             traceError('Failed to create file watcher for environment file');
         }
     }
-    private getEnvFile(workspaceFolderUri: Uri, purpose: 'RunPythonCode' | 'RunNonPythonCode') {
-        if (purpose === 'RunPythonCode') {
-            return this.getPythonEnvFile(workspaceFolderUri) || path.join(workspaceFolderUri.fsPath, '.env');
-        } else {
-            return path.join(workspaceFolderUri.fsPath, '.env');
-        }
-    }
-    private getPythonEnvFile(resource?: Uri): string | undefined {
-        if (!this.extensionChecker.isPythonExtensionInstalled) {
-            return;
-        }
-        const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
-        const sysVars = new SystemVariables(resource, workspaceFolderUri, this.workspaceService);
-        const pythonEnvSetting = this.workspaceService.getConfiguration('python', resource).get<string>('envFile');
-        return pythonEnvSetting ? sysVars.resolve(pythonEnvSetting) : undefined;
+    private getEnvFile(workspaceFolderUri: Uri) {
+        return path.join(workspaceFolderUri.fsPath, '.env');
     }
     private async _getEnvironmentVariables(
         resource: Resource,

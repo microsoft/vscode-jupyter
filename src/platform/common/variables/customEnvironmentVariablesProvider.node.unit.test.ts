@@ -4,25 +4,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 import { assert } from 'chai';
-import { ConfigurationChangeEvent, EventEmitter, FileSystemWatcher, Uri, WorkspaceConfiguration } from 'vscode';
-import { IWorkspaceService } from '../../../../../platform/common/application/types';
-import { disposeAllDisposables } from '../../../../../platform/common/helpers';
-import { IDisposable, IExtensionContext, IHttpClient } from '../../../../../platform/common/types';
-import { CustomEnvironmentVariablesProvider } from '../../../../../platform/common/variables/customEnvironmentVariablesProvider.node';
-import { IEnvironmentVariablesService } from '../../../../../platform/common/variables/types';
+import { EventEmitter, FileSystemWatcher, Uri, WorkspaceConfiguration } from 'vscode';
+import { IWorkspaceService } from '../application/types';
+import { disposeAllDisposables } from '../helpers';
+import { IDisposable, IExtensionContext, IHttpClient } from '../types';
+import { CustomEnvironmentVariablesProvider } from './customEnvironmentVariablesProvider.node';
+import { IEnvironmentVariablesService } from './types';
 import * as fs from 'fs-extra';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../../constants.node';
 import dedent from 'dedent';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../../../../../platform/api/types';
-import { captureScreenShot, createEventHandler } from '../../../../common';
-import { traceInfo } from '../../../../../platform/logging';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
+import { traceInfo } from '../../logging';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { clearCache } from '../../../../../platform/common/utils/cacheUtils';
-import { EnvironmentVariablesService } from '../../../../../platform/common/variables/environment.node';
-import { FileSystem } from '../../../../../platform/common/platform/fileSystem.node';
+import { clearCache } from '../utils/cacheUtils';
+import { EnvironmentVariablesService } from './environment.node';
+import { FileSystem } from '../platform/fileSystem.node';
 import * as sinon from 'sinon';
-import { ProposedExtensionAPI } from '../../../../../platform/api/pythonApiTypes';
-// import * as path from '../../../../../platform/vscode-path/path';
+import { ProposedExtensionAPI } from '../../api/pythonApiTypes';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../test/constants.node';
+import { createEventHandler } from '../../../test/common';
 
 suite('Custom Environment Variables Provider', () => {
     let customEnvVarsProvider: CustomEnvironmentVariablesProvider;
@@ -34,7 +33,6 @@ suite('Custom Environment Variables Provider', () => {
     let pythonApi: ProposedExtensionAPI;
     const envFile = Uri.joinPath(Uri.file(EXTENSION_ROOT_DIR_FOR_TESTS), 'src', 'test', 'datascience', '.env');
     let contentsOfOldEnvFile: string;
-    let onDidChangeConfiguration: EventEmitter<ConfigurationChangeEvent>;
     let customPythonEnvFile = Uri.joinPath(
         Uri.file(EXTENSION_ROOT_DIR_FOR_TESTS),
         'src',
@@ -59,8 +57,6 @@ suite('Custom Environment Variables Provider', () => {
         (instance(pythonApi) as any).then = undefined;
         when(pythonApiProvider.getNewApi()).thenResolve(instance(pythonApi));
         contentsOfOldEnvFile = fs.readFileSync(envFile.fsPath).toString();
-        onDidChangeConfiguration = new EventEmitter<ConfigurationChangeEvent>();
-        disposables.push(onDidChangeConfiguration);
         workspace = mock<IWorkspaceService>();
         onFSEvent = new EventEmitter<Uri>();
         disposables.push(onFSEvent);
@@ -69,7 +65,6 @@ suite('Custom Environment Variables Provider', () => {
         when(fsWatcher.onDidChange).thenReturn(onFSEvent.event);
         when(fsWatcher.onDidCreate).thenReturn(onFSEvent.event);
         when(fsWatcher.onDidDelete).thenReturn(onFSEvent.event);
-        when(workspace.onDidChangeConfiguration).thenReturn(onDidChangeConfiguration.event);
         when(workspace.workspaceFolders).thenReturn([workspaceFolder]);
         when(workspace.getWorkspaceFolder(anything())).thenCall(() => workspaceFolder);
         when(workspace.getConfiguration(anything(), anything())).thenCall(() => {
@@ -84,10 +79,6 @@ suite('Custom Environment Variables Provider', () => {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this);
-        }
-
         disposeAllDisposables(disposables);
         if (fs.existsSync(customPythonEnvFile.fsPath)) {
             fs.unlinkSync(customPythonEnvFile.fsPath);
