@@ -41,10 +41,10 @@ export class PickDocumentKernelSourceCommand implements IExtensionSingleActivati
         this.updateVisibility();
     }
 
-    private async pickDocumentKernelSource(_notebook?: NotebookDocument) {
-        // We want to get the context here from the command, but that needs a fix on the core side: https://github.com/microsoft/vscode/issues/161445
-        if (window.activeNotebookEditor && this.configService.getSettings().kernelPickerType === 'Insiders') {
-            await this.kernelSourceSelector.selectKernelSource(window.activeNotebookEditor.notebook);
+    private async pickDocumentKernelSource(notebook?: NotebookDocument) {
+        const targetNotebook = notebook || window.activeNotebookEditor?.notebook;
+        if (targetNotebook && this.configService.getSettings().kernelPickerType === 'Insiders') {
+            await this.kernelSourceSelector.selectKernelSource(targetNotebook);
         }
     }
 
