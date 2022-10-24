@@ -80,8 +80,6 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         if (purpose === 'RunPythonCode' && this.extensionChecker.isPythonExtensionInstalled) {
             const api = await this.pythonApi.getNewApi();
             if (api) {
-                console.error('Api', api);
-                console.error('Api', api.environments);
                 return api.environments.getEnvironmentVariables(workspaceFolderUri);
             }
         }
