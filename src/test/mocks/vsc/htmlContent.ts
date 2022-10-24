@@ -9,9 +9,12 @@ import { vscMockArrays } from './arrays';
 /* eslint-disable  */
 
 export namespace vscMockHtmlContent {
+    export interface ITrustedMarkdownOptions {
+        readonly enabledCommands: readonly string[];
+    }
     export interface IMarkdownString {
         value: string;
-        isTrusted?: boolean;
+        isTrusted?: boolean | ITrustedMarkdownOptions;
     }
 
     export class MarkdownString implements IMarkdownString {
@@ -60,8 +63,19 @@ export namespace vscMockHtmlContent {
             return (
                 typeof (<IMarkdownString>thing).value === 'string' &&
                 (typeof (<IMarkdownString>thing).isTrusted === 'boolean' ||
-                    (<IMarkdownString>thing).isTrusted === void 0)
+                    (<IMarkdownString>thing).isTrusted === void 0 ||
+                    (typeof (<IMarkdownString>thing).isTrusted === 'object' &&
+                        isMarkdownTrustOptions((<IMarkdownString>thing).isTrusted)))
             );
+        }
+        return false;
+    }
+
+    export function isMarkdownTrustOptions(thing: any): thing is ITrustedMarkdownOptions {
+        if (thing && typeof thing === 'object') {
+            if (Array.isArray((<ITrustedMarkdownOptions>thing).enabledCommands)) {
+                return true;
+            }
         }
         return false;
     }
