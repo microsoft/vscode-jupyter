@@ -8,10 +8,9 @@ import { isPythonNotebook } from '../../kernels/helpers';
 import { IKernelFinder, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
-import { ContextKey } from '../../platform/common/contextKey';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
@@ -29,20 +28,14 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     private refreshedEmitter = new vscode.EventEmitter<void>();
     // Promise to resolve when we have loaded our controllers
     private controllersPromise: Promise<void>;
-    private controllersLoadedContext: ContextKey;
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
-    ) {
-        // This context key is set to true when controllers have completed their intitial load or are done loading after a refresh
-        // It's set to false on activation and when a refresh is requested.
-        this.controllersLoadedContext = new ContextKey('jupyter.controllersLoaded', this.commandManager);
-    }
+        @inject(IControllerRegistration) private readonly registration: IControllerRegistration
+    ) {}
 
     public activate(): void {
         // Make sure to reload whenever we do something that changes state
@@ -55,8 +48,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         this.registration.onCreated(() => this.refreshedEmitter.fire(), this, this.disposables);
 
         this.loadControllers();
-
-        this.controllersLoadedContext.set(false).then(noop, noop);
     }
     private loadControllers() {
         this.loadControllersImpl();
@@ -117,7 +108,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         });
 
         // Set that we have loaded controllers
-        this.controllersLoadedContext.set(true).ignoreErrors();
         this.controllersPromise = this.controllersPromise || Promise.resolve();
     }
     private createNotebookControllers(
