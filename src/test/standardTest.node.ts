@@ -69,7 +69,7 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
     }
     console.info(`Installing Python Extension ${pythonVSIX} to ${extensionsDir}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
-    spawnSync(cliPath, ['--install-extension', pythonVSIX, '--extensions-dir', extensionsDir], {
+    spawnSync(cliPath, ['--install-extension', pythonVSIX, '--pre-release', '--extensions-dir', extensionsDir], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
