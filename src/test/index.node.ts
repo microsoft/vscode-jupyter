@@ -64,8 +64,8 @@ process.on('unhandledRejection', (ex: any, _a) => {
 
     if (
         msg.includes('Error: custom request failed') ||
-        msg.includes('ms-python.python') ||
-        msg.includes('ms-python.isort')
+        msg.includes('ms-python.python') || // We don't care about unhanded promise rejections from the Python extension.
+        msg.includes('ms-python.isort') // We don't care about unhanded promise rejections from the Python related extensions.
     ) {
         // Some error from VS Code, we can ignore this.
         return;
