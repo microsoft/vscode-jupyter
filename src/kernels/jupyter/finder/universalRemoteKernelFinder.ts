@@ -11,12 +11,11 @@ import {
     INotebookProvider,
     INotebookProviderConnection,
     isRemoteConnection,
-    KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
-import { IDisposable, IExtensions, Resource } from '../../../platform/common/types';
+import { IDisposable, IExtensions } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import {
@@ -27,7 +26,7 @@ import {
     IJupyterServerUriEntry
 } from '../types';
 import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
-import { traceError, traceWarning, traceInfoIfCI } from '../../../platform/logging';
+import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { computeServerId } from '../jupyterUtils';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -62,17 +61,10 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
     private _onDidChangeKernels = new EventEmitter<void>();
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
 
-    private _initializeResolve: () => void;
-    private _initializedPromise: Promise<void>;
-
     private readonly disposables: IDisposable[] = [];
 
     // Track our delay timer for when we update on kernel dispose
     private kernelDisposeDelayTimer: NodeJS.Timeout | number | undefined;
-
-    get initialized(): Promise<void> {
-        return this._initializedPromise;
-    }
 
     private wasPythonInstalledWhenFetchingKernels = false;
 
@@ -97,10 +89,6 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         this.displayName = localize.DataScience.universalRemoteKernelFinderDisplayName().format(
             serverUri.displayName || serverUri.uri
         );
-
-        this._initializedPromise = new Promise<void>((resolve) => {
-            this._initializeResolve = resolve;
-        });
 
         // When we register, add a disposable to clean ourselves up from the main kernel finder list
         // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
@@ -182,17 +170,22 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         // If we finish the cache first, and we don't have any items, in the cache, then load without cache.
         if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
             kernels = kernelsFromCache;
+            // kick off a cache update request
+            this.updateCache().then(noop, noop);
         } else {
-            const kernelsWithoutCachePromise = (async () => {
-                const connInfo = await this.getRemoteConnectionInfo();
-                return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
-            })();
+            try {
+                const kernelsWithoutCachePromise = (async () => {
+                    const connInfo = await this.getRemoteConnectionInfo();
+                    return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
+                })();
 
-            kernels = await kernelsWithoutCachePromise;
+                kernels = await kernelsWithoutCachePromise;
+            } catch (ex) {
+                traceError('UniversalRemoteKernelFinder: Failed to get kernels without cache', ex);
+            }
         }
 
         await this.writeToCache(kernels);
-        this._initializeResolve();
     }
 
     private async updateCache() {
@@ -223,15 +216,13 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         }
 
         await this.writeToCache(kernels);
-
-        this._onDidChangeKernels.fire();
     }
 
     /**
      *
      * Remote kernel finder is resource agnostic.
      */
-    listContributedKernels(_resource: Resource): KernelConnectionMetadata[] {
+    public get kernels(): RemoteKernelConnectionMetadata[] {
         return this.cache;
     }
 
@@ -249,41 +240,53 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
     }
 
     private async getFromCache(cancelToken?: CancellationToken): Promise<RemoteKernelConnectionMetadata[]> {
-        let results: RemoteKernelConnectionMetadata[] = this.cache;
-        const key = this.getCacheKey();
+        try {
+            traceVerbose('UniversalRemoteKernelFinder: get from cache');
 
-        // If not in memory, check memento
-        if (!results || results.length === 0) {
-            // Check memento too
-            const values = this.globalState.get<{
-                kernels: RemoteKernelConnectionMetadata[];
-                extensionVersion: string;
-            }>(key, { kernels: [], extensionVersion: '' });
+            let results: RemoteKernelConnectionMetadata[] = this.cache;
+            const key = this.getCacheKey();
 
-            if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
-                results = values.kernels.map(deserializeKernelConnection) as RemoteKernelConnectionMetadata[];
-                this.cache = results;
-            }
-        }
+            // If not in memory, check memento
+            if (!results || results.length === 0) {
+                // Check memento too
+                const values = this.globalState.get<{
+                    kernels: RemoteKernelConnectionMetadata[];
+                    extensionVersion: string;
+                }>(key, { kernels: [], extensionVersion: '' });
 
-        // Validate
-        const validValues: RemoteKernelConnectionMetadata[] = [];
-        const promise = Promise.all(
-            results.map(async (item) => {
-                if (await this.isValidCachedKernel(item)) {
-                    validValues.push(item);
+                if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
+                    results = values.kernels.map(deserializeKernelConnection) as RemoteKernelConnectionMetadata[];
+                    this.cache = results;
                 }
-            })
-        );
-        if (cancelToken) {
-            await Promise.race([
-                promise,
-                createPromiseFromCancellation({ token: cancelToken, cancelAction: 'resolve', defaultValue: undefined })
-            ]);
-        } else {
-            await promise;
+            }
+
+            // Validate
+            const validValues: RemoteKernelConnectionMetadata[] = [];
+            const promise = Promise.all(
+                results.map(async (item) => {
+                    if (await this.isValidCachedKernel(item)) {
+                        validValues.push(item);
+                    }
+                })
+            );
+            if (cancelToken) {
+                await Promise.race([
+                    promise,
+                    createPromiseFromCancellation({
+                        token: cancelToken,
+                        cancelAction: 'resolve',
+                        defaultValue: undefined
+                    })
+                ]);
+            } else {
+                await promise;
+            }
+            return validValues;
+        } catch (ex) {
+            traceError('UniversalRemoteKernelFinder: Failed to get from cache', ex);
         }
-        return validValues;
+
+        return [];
     }
 
     // Talk to the remote server to determine sessions
@@ -392,13 +395,23 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
     }
 
     private async writeToCache(values: RemoteKernelConnectionMetadata[]) {
-        const key = this.getCacheKey();
-        this.cache = values;
-        const serialized = values.map(serializeKernelConnection);
-        await Promise.all([
-            removeOldCachedItems(this.globalState),
-            this.globalState.update(key, { kernels: serialized, extensionVersion: this.env.extensionVersion })
-        ]);
+        try {
+            traceVerbose(
+                `UniversalRemoteKernelFinder: Writing ${values.length} remote kernel connection metadata to cache`
+            );
+
+            const key = this.getCacheKey();
+            this.cache = values;
+            const serialized = values.map(serializeKernelConnection);
+            await Promise.all([
+                removeOldCachedItems(this.globalState),
+                this.globalState.update(key, { kernels: serialized, extensionVersion: this.env.extensionVersion })
+            ]);
+
+            this._onDidChangeKernels.fire();
+        } catch (ex) {
+            traceError('UniversalRemoteKernelFinder: Failed to write to cache', ex);
+        }
     }
 
     private async isValidCachedKernel(kernel: RemoteKernelConnectionMetadata): Promise<boolean> {

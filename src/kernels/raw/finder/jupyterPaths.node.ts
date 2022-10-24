@@ -293,12 +293,17 @@ export class JupyterPaths {
      * https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
      */
     @traceDecoratorVerbose('Get KernelSpec root path')
-    public async getKernelSpecRootPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
+    public async getKernelSpecRootPaths(cancelToken: CancellationToken): Promise<Uri[]> {
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
         const paths = new ResourceSet(await this.getJupyterPathKernelPaths(cancelToken));
-
+        if (cancelToken.isCancellationRequested) {
+            return [];
+        }
         if (this.platformService.isWindows) {
             const winPath = await this.getKernelSpecRootPath();
+            if (cancelToken.isCancellationRequested) {
+                return [];
+            }
             if (winPath) {
                 paths.add(winPath);
             }

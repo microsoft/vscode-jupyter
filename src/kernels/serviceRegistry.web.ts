@@ -21,7 +21,6 @@ import { KernelVariables } from './variables/kernelVariables';
 import { JupyterVariables } from './variables/jupyterVariables';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
-import { KernelAutoReConnectFailedMonitor } from './kernelAutoReConnectFailedMonitor';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { DebugStartupCodeProvider } from './debuggerStartupCodeProvider';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.web';
@@ -56,10 +55,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        KernelAutoReConnectFailedMonitor
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelAutoReconnectMonitor

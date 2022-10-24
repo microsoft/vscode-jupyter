@@ -13,7 +13,6 @@ import {
     INotebookProvider,
     INotebookProviderConnection,
     isRemoteConnection,
-    KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
@@ -23,8 +22,7 @@ import {
     IDisposableRegistry,
     IExtensions,
     IMemento,
-    IsWebExtension,
-    Resource
+    IsWebExtension
 } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
@@ -73,13 +71,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     private _onDidChangeKernels = new EventEmitter<void>();
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
 
-    private _initializeResolve: () => void;
-    private _initializedPromise: Promise<void>;
-
-    get initialized(): Promise<void> {
-        return this._initializedPromise;
-    }
-
     private wasPythonInstalledWhenFetchingKernels = false;
 
     constructor(
@@ -99,10 +90,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IsWebExtension) private isWebExtension: boolean
     ) {
-        this._initializedPromise = new Promise<void>((resolve) => {
-            this._initializeResolve = resolve;
-        });
-
         kernelFinder.registerKernelFinder(this);
     }
 
@@ -165,7 +152,12 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
 
         if (this.serverConnectionType.isLocalLaunch) {
             await this.writeToCache([]);
-            this._initializeResolve();
+            return;
+        }
+
+        const uri = await this.serverUriStorage.getRemoteUri();
+        if (!uri || !uri.isValidated) {
+            await this.writeToCache([]);
             return;
         }
 
@@ -176,6 +168,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         // If we finish the cache first, and we don't have any items, in the cache, then load without cache.
         if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
             kernels = kernelsFromCache;
+            // kick off a cache update request
+            this.updateCache().then(noop, noop);
         } else {
             try {
                 const kernelsWithoutCachePromise = (async () => {
@@ -192,7 +186,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
         await this.writeToCache(kernels);
 
         traceVerbose('RemoteKernelFinder: load cache finished');
-        this._initializeResolve();
     }
 
     private async updateCache() {
@@ -231,7 +224,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
      *
      * Remote kernel finder is resource agnostic.
      */
-    listContributedKernels(_resource: Resource): KernelConnectionMetadata[] {
+    public get kernels(): RemoteKernelConnectionMetadata[] {
         return this.cache;
     }
 
@@ -240,7 +233,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IExtensionSingle
     ): Promise<INotebookProviderConnection | undefined> {
         const ui = new DisplayOptions(false);
         const uri = await this.serverUriStorage.getRemoteUri();
-        if (!uri) {
+        if (!uri || !uri.isValidated) {
             return;
         }
         return this.notebookProvider.connect({

@@ -105,6 +105,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { KernelAPI } from '@jupyterlab/services';
+import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -251,7 +252,8 @@ export async function createTemporaryNotebook(
     disposables: IDisposable[],
     kernelSpec: nbformat.IKernelspecMetadata = { display_name: 'Python 3', name: 'python3' },
     rootFolder?: Uri,
-    prefix?: string
+    prefix?: string,
+    language?: string
 ): Promise<Uri> {
     cells =
         cells.length == 0
@@ -274,6 +276,11 @@ export async function createTemporaryNotebook(
         nbformat: 4,
         nbformat_minor: 2
     };
+    if (language) {
+        data.metadata.language_info = {
+            name: language
+        };
+    }
     return createTemporaryNotebookFromNotebook(data, disposables, rootFolder, prefix);
 }
 
@@ -295,7 +302,14 @@ export async function createEmptyPythonNotebook(
     const serverConnectionType = serviceContainer.get<IServerConnectionType>(IServerConnectionType);
     // Don't use same file (due to dirty handling, we might save in dirty.)
     // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-    const nbFile = await createTemporaryNotebook([], disposables, undefined, rootFolder, 'emptyPython');
+    const nbFile = await createTemporaryNotebook(
+        [],
+        disposables,
+        undefined,
+        rootFolder,
+        'emptyPython',
+        PYTHON_LANGUAGE
+    );
     // Open a python notebook and use this for all tests in this test suite.
     await openAndShowNotebook(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
@@ -341,7 +355,7 @@ async function shutdownRemoteKernels() {
     try {
         const connection = await notebookProvider.connect({
             resource: undefined,
-            ui: new DisplayOptions(false),
+            ui: new DisplayOptions(true),
             localJupyter: false,
             token: cancelToken.token,
             serverId: serverUriStorage.currentServerId!
@@ -413,8 +427,8 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
 let waitForKernelPendingPromise: Promise<void> | undefined;
 
 export async function waitForKernelToChange(
-    criteria:
-        | { labelOrId: string; isInteractiveController?: boolean }
+    searchCriteria:
+        | (() => Promise<{ labelOrId: string; isInteractiveController?: boolean }>)
         | { interpreterPath: Uri; isInteractiveController?: boolean },
     notebookEditor?: NotebookEditor,
     timeout = defaultNotebookTestTimeout,
@@ -424,78 +438,74 @@ export async function waitForKernelToChange(
     if (waitForKernelPendingPromise != undefined) {
         await waitForKernelPendingPromise;
     }
-    waitForKernelPendingPromise = waitForKernelToChangeImpl(criteria, notebookEditor, timeout, skipAutoSelection);
+    waitForKernelPendingPromise = waitForKernelToChangeImpl(searchCriteria, notebookEditor, timeout, skipAutoSelection);
     return waitForKernelPendingPromise;
 }
 
 async function waitForKernelToChangeImpl(
-    criteria:
-        | { labelOrId: string; isInteractiveController?: boolean }
+    searchCriteria:
+        | (() => Promise<{ labelOrId: string; isInteractiveController?: boolean }>)
         | { interpreterPath: Uri; isInteractiveController?: boolean },
     notebookEditor?: NotebookEditor,
     timeout = defaultNotebookTestTimeout,
     skipAutoSelection?: boolean
 ) {
-    const { vscodeNotebook, controllerLoader, controllerRegistration, controllerSelection } = await getServices();
+    const { controllerLoader, controllerRegistration, controllerSelection } = await getServices();
 
     // Wait for the active editor to come up
-    notebookEditor = await waitForActiveNotebookEditor(notebookEditor);
+    const editor = await waitForActiveNotebookEditor(notebookEditor);
 
     // Get the list of NotebookControllers for this document
-    await controllerLoader.loadControllers();
-    const notebookControllers = controllerRegistration.registered;
+    await controllerLoader.loaded;
 
     // Find the kernel id that matches the name we want
     let controller: IVSCodeNotebookController | undefined;
-    let labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
-    if (labelOrId) {
-        controller = notebookControllers
-            ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
-            ?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId));
-        if (!controller) {
-            // Try includes instead
-            controller = notebookControllers?.find(
-                (k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId)
-            );
+    const isRightKernel = async () => {
+        const criteria = typeof searchCriteria === 'function' ? await searchCriteria() : searchCriteria;
+        let labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
+        if (labelOrId) {
+            controller = controllerRegistration.registered
+                .filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
+                .find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId));
+            if (!controller) {
+                // Try includes instead
+                controller = controllerRegistration.registered.find(
+                    (k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId)
+                );
+            }
         }
-    }
-    const interpreterPath = 'interpreterPath' in criteria ? criteria.interpreterPath : undefined;
-    if (interpreterPath && !controller) {
-        controller = notebookControllers
-            ?.filter((k) => k.connection.interpreter)
-            ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
-            .find((k) =>
+        const interpreterPath = 'interpreterPath' in criteria ? criteria.interpreterPath : undefined;
+        if (interpreterPath && !controller) {
+            controller = controllerRegistration.registered
+                .filter((k) => k.connection.interpreter)
+                .filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
+                .find((k) =>
+                    // eslint-disable-next-line local-rules/dont-use-fspath
+                    k.connection.interpreter!.uri.fsPath.toLowerCase().includes(interpreterPath.fsPath.toLowerCase())
+                );
+            if (controller) {
                 // eslint-disable-next-line local-rules/dont-use-fspath
-                k.connection.interpreter!.uri.fsPath.toLowerCase().includes(interpreterPath.fsPath.toLowerCase())
-            );
-        if (controller) {
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            traceVerbose(`Did match a controller that matches the interpreter ${interpreterPath.fsPath}`);
-        } else {
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            traceWarning(`Did not find a controller that matches the interpreter ${interpreterPath.fsPath}`);
+                traceVerbose(`Did match a controller that matches the interpreter ${interpreterPath.fsPath}`);
+            } else {
+                // eslint-disable-next-line local-rules/dont-use-fspath
+                traceWarning(`Did not find a controller that matches the interpreter ${interpreterPath.fsPath}`);
+            }
         }
-    }
-    traceInfo(
-        `Switching to kernel id ${controller?.id}, current controllers ${controllerRegistration.all
-            .map(
-                (c) =>
-                    `${c.kind} with id ${c.id} and ${
-                        'interpreter' in c
-                            ? // eslint-disable-next-line local-rules/dont-use-fspath
-                              `has interpreter with details = ${c.interpreter?.id}:${c.interpreter?.uri.fsPath}`
-                            : 'does not have an interpreter'
-                    } `
-            )
-            .join(', ')}`
-    );
-    const isRightKernel = () => {
-        const doc = vscodeNotebook.activeNotebookEditor?.notebook;
-        if (!doc) {
-            return false;
-        }
+        traceInfo(
+            `Switching to kernel id ${controller?.id}, current controllers ${controllerRegistration.all
+                .map(
+                    (c) =>
+                        `${c.kind} with id ${c.id} and ${
+                            'interpreter' in c
+                                ? // eslint-disable-next-line local-rules/dont-use-fspath
+                                  `has interpreter with details = ${c.interpreter?.id}:${c.interpreter?.uri.fsPath}`
+                                : 'does not have an interpreter'
+                        } `
+                )
+                .join(', ')}`
+        );
 
-        const selectedController = controllerSelection.getSelected(doc);
+        const selectedController = controllerSelection.getSelected(editor.notebook);
         if (!selectedController) {
             return false;
         }
@@ -506,14 +516,19 @@ async function waitForKernelToChangeImpl(
         traceInfo(`Active kernel is id:label = ${selectedController.id}:${selectedController.label}`);
         return false;
     };
-    if (!isRightKernel()) {
+    if (!(await isRightKernel())) {
         let tryCount = 0;
+        let lastCriteria: string;
         await waitForCondition(
             async () => {
                 // Double check not the right kernel (don't select again if already found to be correct)
-                if (!isRightKernel() && !skipAutoSelection) {
+                if (!(await isRightKernel()) && !skipAutoSelection) {
+                    const criteria = typeof searchCriteria === 'function' ? await searchCriteria() : searchCriteria;
+                    lastCriteria = JSON.stringify(lastCriteria);
                     traceInfoIfCI(
-                        `Notebook select.kernel command switching to kernel id ${controller?.connection.kind}${controller?.id}: Try ${tryCount}`
+                        `Notebook select.kernel command switching to kernel id ${controller?.connection.kind}${
+                            controller?.id
+                        }: Try ${tryCount} for ${JSON.stringify(criteria)}`
                     );
                     // Send a select kernel on the active notebook editor. Keep sending it if it fails.
                     await commands.executeCommand('notebook.selectKernel', {
@@ -527,10 +542,10 @@ async function waitForKernelToChangeImpl(
                 }
 
                 // Check if it's the right one or not.
-                return isRightKernel();
+                return await isRightKernel();
             },
             timeout,
-            `Kernel with criteria ${JSON.stringify(criteria)} not selected`
+            () => `Kernel with criteria ${lastCriteria} not selected`
         );
         // Make sure the kernel is actually in use before returning (switching is async)
         await sleep(500);
@@ -566,6 +581,52 @@ export async function waitForKernelToGetAutoSelected(
     timeout = 100_000,
     skipAutoSelection: boolean = false
 ) {
+    const { controllerRegistration } = await getServices();
+    let lastLoadedControllerCount = controllerRegistration.all.length;
+    let lastError: Error | undefined;
+    await waitForCondition(
+        async () => {
+            // Wait for controllers to get loaded.
+            // Now that we're lazy loading the controllers, we need to wait for the controllers to get loaded.
+            await waitForCondition(
+                async () => controllerRegistration.all.length > lastLoadedControllerCount,
+                1000,
+                () =>
+                    `No new controllers loaded, currently loaded ${controllerRegistration.all
+                        .map((item) => `${item.kind}:${item.id}`)
+                        .join(',')}`,
+                100,
+                false
+            ).catch(noop);
+            lastLoadedControllerCount = controllerRegistration.all.length;
+
+            // Try the test.
+            try {
+                await waitForKernelToGetAutoSelectedImpl(
+                    notebookEditor,
+                    expectedLanguage,
+                    preferRemoteKernelSpec,
+                    timeout,
+                    skipAutoSelection
+                );
+                return true;
+            } catch (ex) {
+                lastError = ex;
+                return false;
+            }
+        },
+        timeout,
+        () => `Kernel not selected, last error ${lastError}`,
+        100
+    );
+}
+export async function waitForKernelToGetAutoSelectedImpl(
+    notebookEditor?: NotebookEditor,
+    expectedLanguage?: string,
+    preferRemoteKernelSpec: boolean = false,
+    timeout = 100_000,
+    skipAutoSelection: boolean = false
+) {
     traceInfoIfCI('Wait for kernel to get auto selected');
     const {
         controllerLoader,
@@ -581,7 +642,7 @@ export async function waitForKernelToGetAutoSelected(
     notebookEditor = await waitForActiveNotebookEditor(notebookEditor);
 
     // Get the list of NotebookControllers for this document
-    await controllerLoader.loadControllers();
+    await controllerLoader.loaded;
     traceInfoIfCI(`Wait for kernel - got notebook controllers`);
     const notebookControllers = controllerRegistration.registered;
 
@@ -590,87 +651,86 @@ export async function waitForKernelToGetAutoSelected(
         return;
     }
 
-    // We don't have one, try to find the preferred one
-    let preferred: IVSCodeNotebookController | undefined;
+    const searchCriteria = async () => {
+        // We don't have one, try to find the preferred one
+        let preferred: IVSCodeNotebookController | undefined;
 
-    // Wait for one of them to have affinity as the preferred (this may not happen)
-    try {
-        await waitForCondition(
-            async () => {
-                preferred = controllerPreferred.getPreferred(notebookEditor!.notebook);
-                return preferred != undefined;
-            },
-            30_000,
-            `Did not find a controller with document affinity`
-        );
-    } catch {
-        // Do nothing for now. Just log it
-        traceInfoIfCI(`No preferred controller found during waitForKernelToGetAutoSelected`);
-    }
-    traceInfoIfCI(
-        `Wait for kernel - got a preferred notebook controller: ${preferred?.connection.kind}:${preferred?.id}`
-    );
-
-    // Find one that matches the expected language or the preferred
-    const expectedLower = expectedLanguage?.toLowerCase();
-    const language = expectedLower || 'python';
-    const preferredKind = useRemoteKernelSpec ? 'startUsingRemoteKernelSpec' : preferred?.connection.kind;
-    let match: IVSCodeNotebookController | undefined;
-    if (preferred) {
-        if (
-            preferred.connection.kind !== 'connectToLiveRemoteKernel' &&
-            (!expectedLanguage || preferred.connection.kernelSpec?.language?.toLowerCase() === expectedLower) &&
-            preferredKind === preferred.connection.kind
-        ) {
-            match = preferred;
-        } else if (preferred.connection.kind === 'connectToLiveRemoteKernel') {
-            match = preferred;
+        // Wait for one of them to have affinity as the preferred (this may not happen)
+        await controllerPreferred.computePreferred(notebookEditor!.notebook);
+        preferred = controllerPreferred.getPreferred(notebookEditor!.notebook);
+        if (!preferred) {
+            traceInfoIfCI(`Did not find a controller with document affinity`);
         }
-    }
-    if (!match) {
-        traceInfoIfCI(`Manually pick a preferred kernel from all kernel specs`);
-        const matches = notebookControllers.filter(
-            (d) =>
-                d.connection.kind != 'connectToLiveRemoteKernel' &&
-                language === d.connection.kernelSpec?.language?.toLowerCase() &&
-                (!useRemoteKernelSpec || d.connection.kind.includes('Remote'))
-        );
-
-        const activeInterpreter = await interpreterService.getActiveInterpreter(notebookEditor.notebook.uri);
-        traceInfoIfCI(`Attempt to find a kernel that matches the active interpreter ${activeInterpreter?.uri.path}`);
         traceInfoIfCI(
-            `Matches: ${matches.map((m) => m.connection.kind + ', ' + m.connection.interpreter?.uri.path).join('\n ')}`
+            `Wait for kernel - got a preferred notebook controller: ${preferred?.connection.kind}:${preferred?.id}`
         );
 
-        match =
-            matches.find(
+        // Find one that matches the expected language or the preferred
+        const expectedLower = expectedLanguage?.toLowerCase();
+        const language = expectedLower || 'python';
+        const preferredKind = useRemoteKernelSpec ? 'startUsingRemoteKernelSpec' : preferred?.connection.kind;
+        let match: IVSCodeNotebookController | undefined;
+        if (preferred) {
+            if (
+                preferred.connection.kind !== 'connectToLiveRemoteKernel' &&
+                (!expectedLanguage || preferred.connection.kernelSpec?.language?.toLowerCase() === expectedLower) &&
+                preferredKind === preferred.connection.kind
+            ) {
+                match = preferred;
+            } else if (preferred.connection.kind === 'connectToLiveRemoteKernel') {
+                match = preferred;
+            }
+        }
+        if (!match) {
+            traceInfoIfCI(`Manually pick a preferred kernel from all kernel specs`);
+            const matches = notebookControllers.filter(
                 (d) =>
-                    d.connection.kind === 'startUsingPythonInterpreter' &&
-                    d.connection.interpreter &&
-                    activeInterpreter &&
-                    Uri.from(d.connection.interpreter.uri).toString() === Uri.from(activeInterpreter.uri).toString()
-            ) ?? matches[0];
-    }
+                    d.connection.kind != 'connectToLiveRemoteKernel' &&
+                    language === d.connection.kernelSpec?.language?.toLowerCase() &&
+                    (!useRemoteKernelSpec || d.connection.kind.includes('Remote'))
+            );
 
-    if (!match) {
-        traceInfoIfCI(
-            `Houston, we have a problem, no match. Expected language ${expectedLanguage}. Expected kind ${preferredKind}.`
-        );
-        assert.fail(
-            `No notebook controller found for ${expectedLanguage} when useRemote is ${useRemoteKernelSpec} and preferred kind is ${preferredKind}. NotebookControllers : ${JSON.stringify(
-                notebookControllers.map((c) => c.connection)
+            const activeInterpreter = await interpreterService.getActiveInterpreter(notebookEditor!.notebook.uri);
+            traceInfoIfCI(
+                `Attempt to find a kernel that matches the active interpreter ${activeInterpreter?.uri.path}`
+            );
+            traceInfoIfCI(
+                `Matches: ${matches
+                    .map((m) => m.connection.kind + ', ' + m.connection.interpreter?.uri.path)
+                    .join('\n ')}`
+            );
+
+            match =
+                matches.find(
+                    (d) =>
+                        d.connection.kind === 'startUsingPythonInterpreter' &&
+                        d.connection.interpreter &&
+                        activeInterpreter &&
+                        areInterpreterPathsSame(d.connection.interpreter.uri, activeInterpreter.uri)
+                ) ?? matches[0];
+        }
+
+        if (!match) {
+            traceInfoIfCI(
+                `Houston, we have a problem, no match. Expected language ${expectedLanguage}. Expected kind ${preferredKind}.`
+            );
+            assert.fail(
+                `No notebook controller found for ${expectedLanguage} when useRemote is ${useRemoteKernelSpec} and preferred kind is ${preferredKind}. NotebookControllers : ${JSON.stringify(
+                    notebookControllers.map((c) => c.connection)
+                )}`
+            );
+        }
+
+        const criteria = { labelOrId: match!.id };
+        traceInfo(
+            `Preferred kernel for selection is ${match.connection.kind}:${match?.id}, criteria = ${JSON.stringify(
+                criteria
             )}`
         );
-    }
-
-    const criteria = { labelOrId: match!.id };
-    traceInfo(
-        `Preferred kernel for selection is ${match.connection.kind}:${match?.id}, criteria = ${JSON.stringify(
-            criteria
-        )}`
-    );
-    assert.ok(match, 'No kernel to auto select');
-    return waitForKernelToChange(criteria, notebookEditor, timeout, skipAutoSelection);
+        assert.ok(match, 'No kernel to auto select');
+        return { labelOrId: match!.id };
+    };
+    return waitForKernelToChange(searchCriteria, notebookEditor!, timeout, skipAutoSelection);
 }
 
 const prewarmNotebooksDone = { done: false };
@@ -710,8 +770,11 @@ export async function createNewNotebook() {
     data.metadata = {
         custom: {
             cells: [],
-            metadata: {
-                orig_nbformat: defaultNotebookFormat.major
+            metadata: <nbformat.INotebookMetadata>{
+                orig_nbformat: defaultNotebookFormat.major,
+                language_info: {
+                    name: language
+                }
             },
             nbformat: defaultNotebookFormat.major,
             nbformat_minor: defaultNotebookFormat.minor
@@ -1382,7 +1445,8 @@ export async function waitForDebugEvent<T>(
     return asPromise(
         debugAdapter.onDidSendMessage,
         (message) => (message as DebugProtocol.Event).event === eventType,
-        timeout
+        timeout,
+        `waitForDebugEvent: ${eventType}`
     ) as Promise<T>;
 }
 
@@ -1393,14 +1457,17 @@ export async function waitForStoppedEvent(debugAdapter: IKernelDebugAdapter): Pr
 
 export async function getDebugSessionAndAdapter(
     debuggingManager: IDebuggingManager,
-    doc: NotebookDocument
+    doc: NotebookDocument,
+    prevSessionId?: string
 ): Promise<{ session: DebugSession; debugAdapter: IKernelDebugAdapter }> {
     await waitForCondition(
-        async () => !!debuggingManager.getDebugSession(doc),
+        async () =>
+            !!debuggingManager.getDebugSession(doc) &&
+            (!prevSessionId || prevSessionId !== debuggingManager.getDebugSession(doc)?.id),
         defaultNotebookTestTimeout,
         'DebugSession should start'
     );
-    const session = await debuggingManager.getDebugSession(doc)!;
+    const session = debuggingManager.getDebugSession(doc)!;
 
     const debugAdapter = debuggingManager.getDebugAdapter(doc)!;
     assert.isOk<IKernelDebugAdapter | undefined>(debugAdapter, 'DebugAdapter not started');

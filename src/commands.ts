@@ -30,6 +30,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['workbench.action.showCommands']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];
+    ['workbench.action.debug.restart']: [];
     ['workbench.action.debug.stop']: [];
     ['workbench.action.reloadWindow']: [];
     ['workbench.action.closeActiveEditor']: [];
@@ -193,11 +194,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
         NotebookDocument | undefined
     ];
     [DSCommands.SelectNativeJupyterUriFromToolBar]: [];
-    [DSCommands.DebugNotebook]: [];
     [DSCommands.RunByLine]: [NotebookCell];
     [DSCommands.RunAndDebugCell]: [NotebookCell];
     [DSCommands.RunByLineNext]: [NotebookCell];
-    [DSCommands.RunByLineStop]: [];
+    [DSCommands.RunByLineStop]: [NotebookCell];
     [DSCommands.ReplayPylanceLog]: [Uri];
     [DSCommands.ReplayPylanceLogStep]: [];
     [DSCommands.InstallPythonExtensionViaKernelPicker]: [];
@@ -205,4 +205,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.SwitchToLocalKernels]: [];
     [DSCommands.SwitchToRemoteKernels]: [];
     [DSCommands.SwitchToAnotherRemoteKernels]: [];
+    [DSCommands.PickDocumentKernelSource]: [NotebookDocument | undefined];
 }

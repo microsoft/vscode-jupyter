@@ -5,7 +5,7 @@ import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernel } from '../../../kernels/types';
 import { DebuggingTelemetry } from '../../../notebooks/debugger/constants';
-import { isJustMyCodeNotification } from '../../../notebooks/debugger/debugCellControllers';
+import { isJustMyCodeNotification } from '../../../notebooks/debugger/controllers/debugCellController';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../../../notebooks/debugger/debuggingTypes';
 import { cellDebugSetup } from '../../../notebooks/debugger/helper';
 import { createDeferred } from '../../../platform/common/utils/async';
@@ -18,8 +18,9 @@ import { getInteractiveCellMetadata } from '../../helpers';
  * Dumping a cell is how the IPython kernel determines the file path of a cell
  */
 export class DebugCellController implements IDebuggingDelegate {
-    private readonly _ready = createDeferred<void>();
+    private _ready = createDeferred();
     public readonly ready = this._ready.promise;
+
     private cellDumpInvoked?: boolean;
     constructor(
         private readonly debugAdapter: IKernelDebugAdapter,
@@ -45,7 +46,7 @@ export class DebugCellController implements IDebuggingDelegate {
     }
 
     private debugCellDumped?: Promise<void>;
-    public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
+    public async willSendRequest(request: DebugProtocol.Request): Promise<undefined | DebugProtocol.Response> {
         const metadata = getInteractiveCellMetadata(this.debugCell);
         if (request.command === 'setBreakpoints' && metadata && metadata.generatedCode && !this.cellDumpInvoked) {
             if (!this.debugCellDumped) {
@@ -60,5 +61,7 @@ export class DebugCellController implements IDebuggingDelegate {
             await this.debugCellDumped;
             this._ready.resolve();
         }
+
+        return undefined;
     }
 }

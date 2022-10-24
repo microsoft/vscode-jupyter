@@ -289,13 +289,6 @@
                 "enablement": "jupyter.development && notebookType == jupyter-notebook && isWorkspaceTrusted && jupyter.replayLogLoaded && !jupyter.webExtension"
             },
             {
-                "command": "jupyter.debugNotebook",
-                "title": "%jupyter.command.jupyter.debug.title%",
-                "icon": "$(bug)",
-                "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && resource not in jupyter.notebookeditor.runByLineDocuments"
-            },
-            {
                 "command": "jupyter.filterKernels",
                 "title": "%jupyter.command.jupyter.filterKernels.title%",
                 "category": "Jupyter",
@@ -835,6 +828,10 @@
             {
                 "command": "jupyter.switchToAnotherRemoteKernels",
                 "title": "%DataScience.switchToAnotherRemoteKernelsTitle%"
+            },
+            {
+                "command": "jupyter.pickDocumentKernelSource",
+                "title": "%DataScience.pickDocumentKernelSourceTitle%"
             }
         ],
         "menus": {
@@ -997,6 +994,10 @@
                 {
                     "command": "jupyter.switchToAnotherRemoteKernels",
                     "when": "jupyter.showingRemoteKernels"
+                },
+                {
+                    "command": "jupyter.pickDocumentKernelSource",
+                    "when": "jupyter.pickDocumentKernelSourceContext"
                 }
             ],
             "interactive/toolbar": [
@@ -1090,11 +1091,6 @@
                     "command": "jupyter.replayPylanceLog",
                     "title": "%jupyter.commandPalette.jupyter.replayPylanceLog.title%",
                     "when": "jupyter.development && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.debugNotebook",
-                    "title": "%jupyter.command.jupyter.debug.title%",
-                    "when": "false"
                 },
                 {
                     "command": "jupyter.interactive.copyCell",
@@ -1491,6 +1487,10 @@
                 {
                     "command": "jupyter.interactive.clearAllCells",
                     "when": "activeEditor == 'workbench.editor.interactive' && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.pickDocumentKernelSource",
+                    "when": "false"
                 }
             ],
             "debug/variables/context": [
@@ -1908,6 +1908,12 @@
                     "description": "%jupyter.configuration.jupyter.interactiveWindowMode.description%",
                     "default": "multiple"
                 },
+                "jupyter.pythonCellFolding": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%jupyter.configuration.jupyter.pythonCellFolding.description%",
+                    "scope": "resource"
+                },
                 "jupyter.interactiveWindowViewColumn": {
                     "type": "string",
                     "enum": [
@@ -2087,7 +2093,6 @@
     },
     "enabledApiProposals": [
         "notebookControllerKind",
-        "notebookDebugOptions",
         "notebookDeprecated",
         "notebookMessaging",
         "notebookMime",
@@ -2095,7 +2100,8 @@
         "portsAttributes",
         "quickPickSortByLabel",
         "notebookKernelSource",
-        "interactiveWindow"
+        "interactiveWindow",
+        "notebookControllerAffinityHidden"
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
@@ -2207,7 +2213,6 @@
         "redux": "^4.0.4",
         "redux-logger": "^3.0.6",
         "reflect-metadata": "^0.1.12",
-        "requirejs": "^2.3.6",
         "rxjs": "^6.5.4",
         "rxjs-compat": "^6.5.4",
         "safe-buffer": "^5.2.1",
@@ -2315,7 +2320,7 @@
         "@typescript-eslint/eslint-plugin": "^5.13.0",
         "@typescript-eslint/eslint-plugin-tslint": "^5.13.0",
         "@typescript-eslint/parser": "^5.13.0",
-        "@vscode/test-electron": "^2.1.5",
+        "@vscode/test-electron": "^2.2.0",
         "@vscode/test-web": "^0.0.29",
         "acorn": "^6.4.1",
         "babel-polyfill": "^6.26.0",

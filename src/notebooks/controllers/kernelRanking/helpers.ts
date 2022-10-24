@@ -4,12 +4,14 @@
 'use strict';
 
 import * as nbformat from '@jupyterlab/nbformat';
+import { CancellationToken } from 'vscode';
 import {
     createInterpreterKernelSpec,
     getKernelId,
     getKernelRegistrationInfo,
     isDefaultKernelSpec,
     isDefaultPythonKernelSpecName,
+    isPythonKernelConnection,
     isPythonNotebook
 } from '../../../kernels/helpers';
 import { IJupyterKernelSpec, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
@@ -89,12 +91,15 @@ export async function rankKernels(
     resource: Resource,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     preferredInterpreter: PythonEnvironment | undefined,
-    preferredRemoteKernelId: string | undefined
+    preferredRemoteKernelId: string | undefined,
+    cancelToken?: CancellationToken
 ): Promise<KernelConnectionMetadata[] | undefined> {
     traceInfo(
         `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
             notebookMetadata || {}
-        )} & preferred interpreter ${getDisplayPath(preferredInterpreter?.uri)}`
+        )} & preferred interpreter ${
+            preferredInterpreter?.uri ? getDisplayPath(preferredInterpreter?.uri) : '<undefined>'
+        }`
     );
 
     if (kernels.length === 0) {
@@ -104,6 +109,9 @@ export async function rankKernels(
     // First calculate what the kernel spec would be for our active interpreter
     let preferredInterpreterKernelSpec =
         preferredInterpreter && (await findKernelSpecMatchingInterpreter(preferredInterpreter, kernels));
+    if (cancelToken?.isCancellationRequested) {
+        return;
+    }
     if (preferredInterpreter && !preferredInterpreterKernelSpec) {
         const spec = await createInterpreterKernelSpec(preferredInterpreter);
         preferredInterpreterKernelSpec = <PythonKernelConnectionMetadata>{
@@ -125,9 +133,15 @@ export async function rankKernels(
         notebookMetadata?.language_info?.name.toLowerCase() ||
         (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language?.toLowerCase();
     let possibleNbMetadataLanguage = actualNbMetadataLanguage;
-
     // If the notebook has a language set, remove anything not that language as we don't want to rank those items
     kernels = kernels.filter((kernel) => {
+        if (
+            possibleNbMetadataLanguage &&
+            possibleNbMetadataLanguage === PYTHON_LANGUAGE &&
+            isPythonKernelConnection(kernel)
+        ) {
+            return true;
+        }
         if (
             possibleNbMetadataLanguage &&
             possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&
@@ -154,6 +168,9 @@ export async function rankKernels(
                 : (
                       (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
                   )?.toLowerCase();
+    }
+    if (cancelToken?.isCancellationRequested) {
+        return;
     }
 
     const interpreterHashes = new Map<KernelConnectionMetadata, string | undefined>();

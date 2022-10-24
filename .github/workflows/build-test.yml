@@ -46,8 +46,6 @@ env:
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install pre-release in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
-  VSIX_NAME_PYTHON: 'ms-python-insiders.vsix'
-  VSC_JUPYTER_PYTHON_EXTENSION_VERSION: 'stable'
   VSC_JUPYTER_LOG_KERNEL_OUTPUT: true
   DOTNET_VERSION: 6.0.x
 
@@ -335,8 +333,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
 
       - name: Use Python ${{matrix.pythonVersion}}
         uses: actions/setup-python@v4

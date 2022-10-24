@@ -13,7 +13,11 @@ import {
 } from '../../platform/common/types';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { IKernelDependencyService } from '../types';
-import { IJupyterInterpreterDependencyManager, IJupyterServerUriStorage } from '../jupyter/types';
+import {
+    IJupyterInterpreterDependencyManager,
+    IJupyterServerUriStorage,
+    IJupyterUriProviderRegistration
+} from '../jupyter/types';
 import * as path from '../../platform/vscode-path/resources';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { JupyterKernelStartFailureOverrideReservedName } from '../../platform/interpreter/constants';
@@ -40,6 +44,7 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IsWebExtension) isWebExtension: boolean,
         @inject(IExtensions) extensions: IExtensions,
+        @inject(IJupyterUriProviderRegistration) jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
         @inject(IReservedPythonNamedProvider) private readonly reservedPythonNames: IReservedPythonNamedProvider
     ) {
         super(
@@ -50,6 +55,7 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
             kernelDependency,
             workspaceService,
             serverUriStorage,
+            jupyterUriProviderRegistration,
             commandManager,
             isWebExtension,
             extensions

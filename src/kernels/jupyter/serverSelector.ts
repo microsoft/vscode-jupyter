@@ -25,7 +25,8 @@ import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage,
-    JupyterServerUriHandle
+    JupyterServerUriHandle,
+    IJupyterServerUriEntry
 } from './types';
 import { IDataScienceErrorHandler } from '../errors/types';
 import {
@@ -361,7 +362,7 @@ class JupyterServerSelector_Experimental implements IJupyterServerSelector {
         }
     }
 
-    private async getUriPickList(currentRemoteUri?: string): Promise<ISelectUriQuickPickItem[]> {
+    private async getUriPickList(currentRemoteUri?: IJupyterServerUriEntry): Promise<ISelectUriQuickPickItem[]> {
         // Ask our providers to stick on items
         let providerItems: ISelectUriQuickPickItem[] = [];
         const providers = await this.extraUriProviders.getProviders();
@@ -382,9 +383,9 @@ class JupyterServerSelector_Experimental implements IJupyterServerSelector {
         // Get our list of recent server connections and display that as well
         const savedURIList = await this.serverUriStorage.getSavedUriList();
         savedURIList.forEach((uriItem) => {
-            if (uriItem.uri) {
+            if (uriItem.uri && uriItem.isValidated) {
                 const uriDate = new Date(uriItem.time);
-                const isSelected = currentRemoteUri === uriItem.uri;
+                const isSelected = currentRemoteUri?.uri === uriItem.uri;
                 items.push({
                     label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
@@ -619,7 +620,10 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         }
     };
 
-    private async getUriPickList(allowLocal: boolean, currentRemoteUri?: string): Promise<ISelectUriQuickPickItem[]> {
+    private async getUriPickList(
+        allowLocal: boolean,
+        currentRemoteUri?: IJupyterServerUriEntry
+    ): Promise<ISelectUriQuickPickItem[]> {
         // Ask our providers to stick on items
         let providerItems: ISelectUriQuickPickItem[] = [];
         const providers = await this.extraUriProviders.getProviders();
@@ -653,9 +657,9 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         // Get our list of recent server connections and display that as well
         const savedURIList = await this.serverUriStorage.getSavedUriList();
         savedURIList.forEach((uriItem) => {
-            if (uriItem.uri) {
+            if (uriItem.uri && uriItem.isValidated) {
                 const uriDate = new Date(uriItem.time);
-                const isSelected = currentRemoteUri === uriItem.uri;
+                const isSelected = currentRemoteUri?.uri === uriItem.uri;
                 items.push({
                     label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
@@ -848,14 +852,13 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         });
 
         // Offer the user a change to pick a display name for the server
-        // Prepopulate the value with the uri as the default suggestiong
+        // Leaving it blank will use the URI as the display name
         const newDisplayName = await this.applicationShell.showInputBox({
-            title: DataScience.jupyterRenameServer(),
-            value: uri
+            title: DataScience.jupyterRenameServer()
         });
 
         if (uri) {
-            await this.setJupyterURIToRemote(uri, true, newDisplayName);
+            await this.setJupyterURIToRemote(uri, true, newDisplayName || uri);
         }
     }
 
@@ -904,7 +907,10 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         }
     };
 
-    private async getUriPickList(allowLocal: boolean, currentRemoteUri?: string): Promise<ISelectUriQuickPickItem[]> {
+    private async getUriPickList(
+        allowLocal: boolean,
+        currentRemoteUri?: IJupyterServerUriEntry
+    ): Promise<ISelectUriQuickPickItem[]> {
         // Ask our providers to stick on items
         let providerItems: ISelectUriQuickPickItem[] = [];
         const providers = await this.extraUriProviders.getProviders();
@@ -938,9 +944,9 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         // Get our list of recent server connections and display that as well
         const savedURIList = await this.serverUriStorage.getSavedUriList();
         savedURIList.forEach((uriItem) => {
-            if (uriItem.uri) {
+            if (uriItem.uri && uriItem.isValidated) {
                 const uriDate = new Date(uriItem.time);
-                const isSelected = currentRemoteUri === uriItem.uri;
+                const isSelected = currentRemoteUri?.uri === uriItem.uri;
                 items.push({
                     label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),

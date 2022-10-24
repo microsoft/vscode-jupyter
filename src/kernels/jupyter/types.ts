@@ -25,7 +25,6 @@ import {
     KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
     IKernelConnectionSession,
-    INotebookProviderConnection,
     RemoteKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
@@ -230,6 +229,7 @@ export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegist
 export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
     getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
+    getProvider(id: string): Promise<IJupyterUriProvider | undefined>;
     registerProvider(picker: IJupyterUriProvider): void;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
@@ -254,6 +254,10 @@ export interface IJupyterServerUriEntry {
      * An optional display name to show for this server as opposed to just the Uri
      */
     displayName?: string;
+    /**
+     * Whether the server is validated by its provider or not
+     */
+    isValidated?: boolean;
 }
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
@@ -266,7 +270,8 @@ export interface IJupyterServerUriStorage {
     getSavedUriList(): Promise<IJupyterServerUriEntry[]>;
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
-    getRemoteUri(): Promise<string | undefined>;
+    getRemoteUri(): Promise<IJupyterServerUriEntry | undefined>;
+    getUriForServer(id: string): Promise<IJupyterServerUriEntry | undefined>;
     setUriToLocal(): Promise<void>;
     setUriToRemote(uri: string, displayName: string): Promise<void>;
     setUriToNone(): Promise<void>;
@@ -360,8 +365,4 @@ export interface IServerConnectionType {
     onDidChange: Event<void>;
 }
 
-export interface IRemoteKernelFinder extends IContributedKernelFinder {
-    listKernelsFromConnection(
-        connInfo: INotebookProviderConnection | undefined
-    ): Promise<RemoteKernelConnectionMetadata[]>;
-}
+export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {}

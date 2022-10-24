@@ -99,7 +99,7 @@ export class PythonKernelInterruptDaemon {
             return interpreter;
         }
 
-        const interpreters = await this.interpreters.getInterpreters();
+        const interpreters = this.interpreters.resolvedEnvironments;
         if (interpreters.length === 0) {
             return interpreter;
         }

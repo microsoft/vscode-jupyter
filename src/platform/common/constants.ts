@@ -276,7 +276,6 @@ export namespace Commands {
     export const InteractiveCopyCell = 'jupyter.interactive.copyCell';
     export const InteractiveExportAsNotebook = 'jupyter.interactive.exportasnotebook';
     export const InteractiveExportAs = 'jupyter.interactive.exportas';
-    export const DebugNotebook = 'jupyter.debugNotebook';
     export const RunByLine = 'jupyter.runByLine';
     export const RunAndDebugCell = 'jupyter.runAndDebugCell';
     export const RunByLineNext = 'jupyter.runByLineNext';
@@ -288,6 +287,7 @@ export namespace Commands {
     export const SwitchToLocalKernels = 'jupyter.switchToLocalKernels';
     export const SwitchToRemoteKernels = 'jupyter.switchToRemoteKernels';
     export const SwitchToAnotherRemoteKernels = 'jupyter.switchToAnotherRemoteKernels';
+    export const PickDocumentKernelSource = 'jupyter.pickDocumentKernelSource';
 }
 
 export namespace CodeLensCommands {
@@ -440,6 +440,7 @@ export enum Telemetry {
     OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
     DebugCurrentCell = 'DATASCIENCE.DEBUG_CURRENT_CELL',
     CodeLensAverageAcquisitionTime = 'DS_INTERNAL.CODE_LENS_ACQ_TIME',
+    DocumentWithCodeCells = 'DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS',
     /**
      * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
      */
@@ -478,7 +479,6 @@ export enum Telemetry {
     PreferredKernel = 'DS_INTERNAL.PREFERRED_KERNEL',
     RankKernelsPerf = 'DS_INTERNAL.RANK_KERNELS_PERF',
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
-    InterpreterListingPerf = 'DS_INTERNAL.INTERPRETER_LISTING_PERF',
     ActiveInterpreterListingPerf = 'DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF',
     PythonModuleInstall = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',
     PythonNotInstalled = 'DS_INTERNAL.PYTHON_NOT_INSTALLED',

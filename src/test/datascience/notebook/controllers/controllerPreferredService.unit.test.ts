@@ -18,6 +18,7 @@ import {
     IControllerDefaultService,
     IControllerLoader,
     IControllerRegistration,
+    IControllerSelection,
     IKernelRankingHelper,
     IVSCodeNotebookController
 } from '../../../../notebooks/controllers/types';
@@ -52,9 +53,11 @@ suite('Preferred Controller', () => {
         disposables.push(onDidOpenNotebookDocument);
         const onDidCloseNotebookDocument = new EventEmitter<NotebookDocument>();
         disposables.push(onDidCloseNotebookDocument);
+        const selection = mock<IControllerSelection>();
         when(vscNotebook.onDidOpenNotebookDocument).thenReturn(onDidOpenNotebookDocument.event);
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(vscNotebook.notebookDocuments).thenReturn([]);
+        when(selection.getSelected(anything())).thenReturn(undefined);
         preferredControllerService = new ControllerPreferredService(
             instance(controllerRegistrations),
             instance(controllerLoader),
@@ -64,7 +67,8 @@ suite('Preferred Controller', () => {
             disposables,
             instance(extensionChecker),
             instance(serverConnectionType),
-            instance(kernelRankHelper)
+            instance(kernelRankHelper),
+            instance(selection)
         );
     });
     teardown(() => {
@@ -110,10 +114,11 @@ suite('Preferred Controller', () => {
         when(document.notebookType).thenReturn(notebookType);
         when(document.metadata).thenReturn({ custom: { metadata } });
         when(serverConnectionType.isLocalLaunch).thenReturn(true);
-        when(kernelRankHelper.rankKernels(anything(), anything(), anything(), anything(), anything())).thenResolve(
-            kernels
-        );
+        when(
+            kernelRankHelper.rankKernels(anything(), anything(), anything(), anything(), anything(), anything())
+        ).thenResolve(kernels);
         when(kernelRankHelper.isExactMatch(anything(), anything(), anything())).thenResolve(false);
+        when(controllerRegistrations.all).thenReturn(kernels);
         const controllers = kernels.map((kernel) => {
             const controller = mock<IVSCodeNotebookController>();
             when(controller.id).thenReturn(kernel.id);

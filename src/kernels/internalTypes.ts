@@ -4,7 +4,6 @@
 'use strict';
 
 import { Event } from 'vscode';
-import { Resource } from '../platform/common/types';
 import { KernelConnectionMetadata } from './types';
 
 export enum ContributedKernelFinderKind {
@@ -12,11 +11,10 @@ export enum ContributedKernelFinderKind {
     Local = 'local'
 }
 
-export interface IContributedKernelFinder extends IContributedKernelFinderInfo {
+export interface IContributedKernelFinder<T extends KernelConnectionMetadata> extends IContributedKernelFinderInfo {
     kind: ContributedKernelFinderKind;
-    initialized: Promise<void>;
     onDidChangeKernels: Event<void>;
-    listContributedKernels(resource: Resource): KernelConnectionMetadata[];
+    kernels: T[];
 }
 
 export interface IContributedKernelFinderInfo {

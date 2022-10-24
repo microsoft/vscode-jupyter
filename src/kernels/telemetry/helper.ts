@@ -25,9 +25,6 @@ export type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
     startFailed: boolean;
     kernelDied: boolean;
-    kernelSpecCount: number; // Total number of kernel specs in list of kernels.
-    kernelInterpreterCount: number; // Total number of interpreters in list of kernels
-    kernelLiveCount: number; // Total number of live kernels in list of kernels.
     /**
      * When we start local Python kernels, this property indicates whether the interpreter matches the kernel. If not this means we've started the wrong interpreter or the mapping is wrong.
      */

@@ -1083,6 +1083,17 @@
      ]
    }
  */
+//Telemetry.DocumentWithCodeCells
+/* __GDPR__
+   "DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS" : {
+     "codeLensUpdateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Average time taken to aquire code lenses for a document without using the cache","owner":"amunger","isMeasurement":true},
+     "maxCellCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Maximum number of code lenses returned for the document","owner":"amunger","isMeasurement":true},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.FailedToUpdateKernelSpec
 /* __GDPR__
    "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC" : {
@@ -1128,16 +1139,6 @@
 /* __GDPR__
    "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF" : {
      "isResultNull": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Result is null if user signalled cancellation or if we timed out","owner":"IanMatthewHuff"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.InterpreterListingPerf
-/* __GDPR__
-   "DS_INTERNAL.INTERPRETER_LISTING_PERF" : {
-     "firstTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether this is the first time in the session. (fetching kernels first time in the session is slower, later its cached). This is a generic property supported for all telemetry (sent by decorators).","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1266,7 +1267,8 @@
      "cdnSearched": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether we searched CDN or not.","owner":"donjayamanne"},
      "hashedName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Hash of the widget module. If the widget is found on a CDN, then the unhashed name is sent in `moduleName`.","owner":"donjayamanne"},
      "source": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Where did we find the hashed name (CDN or user environment or remote jupyter).","owner":"donjayamanne"},
-     "moduleName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the widget module, sent only for cases where `source` is `cdn` or when module is found on cdn. As that is the onl time we can safely send the name (if its on public CDN then its public information).","owner":"donjayamanne"},
+     "moduleName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the widget module Sent only for cases where `source` is `cdn` or when module is found on cdn. As that is the only time we can safely send the name (if its on public CDN then its public information).","owner":"donjayamanne"},
+     "modelName": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the widget model that's loaded. Sent only for cases where `source` is `cdn` or when module is found on cdn. As that is the only time we can safely send the name (if its on public CDN then its public information).","owner":"donjayamanne"},
      "moduleVersion": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Version of the Module used, sent only for cases where `source` is `cdn` or when module is found on cdn.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
@@ -1324,7 +1326,6 @@
 //Telemetry.KernelCount
 /* __GDPR__
    "DS_INTERNAL.KERNEL_COUNT" : {
-     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "kernelSpecCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of kernel specs in the kernel list.","owner":"donjayamanne","isMeasurement":true},
      "kernelInterpreterCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of interpreters in the kernel list.","owner":"donjayamanne","isMeasurement":true},
      "kernelLiveCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Total number of live kernels in the kernel list.","owner":"donjayamanne","isMeasurement":true},

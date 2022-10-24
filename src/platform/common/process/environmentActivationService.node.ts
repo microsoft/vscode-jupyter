@@ -143,19 +143,39 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this.getActivatedEnvironmentVariablesFromPython(resource, interpreter)
         );
 
-        await Promise.race([envVariablesOurSelves.promise, envVariablesFromPython.promise]);
         envVariablesFromPython.promise
-            .then(() =>
+            .then((env) =>
                 traceVerbose(
-                    `Got env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`
+                    `Got env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms with ${
+                        Object.keys(env || {}).length
+                    } variables`
                 )
             )
-            .catch(noop);
+            .catch((ex) =>
+                traceError(
+                    `Failed to get env vars with python ${getDisplayPath(interpreter?.uri)} in ${
+                        stopWatch.elapsedTime
+                    }ms`,
+                    ex
+                )
+            );
         envVariablesOurSelves.promise
-            .then(() =>
-                traceVerbose(`Got env vars ourselves ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`)
+            .then((env) =>
+                traceVerbose(
+                    `Got env vars ourselves ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms with ${
+                        Object.keys(env || {}).length
+                    } variables`
+                )
             )
-            .catch(noop);
+            .catch((ex) =>
+                traceError(
+                    `Failed to get env vars with ourselves ${getDisplayPath(interpreter?.uri)} in ${
+                        stopWatch.elapsedTime
+                    }ms`,
+                    ex
+                )
+            );
+        await Promise.race([envVariablesOurSelves.promise, envVariablesFromPython.promise]);
         // If this is a conda environment and we get empty env variables from the Python extension,
         // Then try our approach.
         // This could happen when Python extension fails to get the activated env variables.

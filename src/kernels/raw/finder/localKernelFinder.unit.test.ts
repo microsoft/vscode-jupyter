@@ -33,7 +33,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvi
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
-import { EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationTokenSource, EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable, IExtensionContext, IExtensions } from '../../../platform/common/types';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -52,20 +52,21 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../../kernels/kernelFinder';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernelFinder';
-import { IRemoteKernelFinder, IServerConnectionType } from '../../../kernels/jupyter/types';
-import { uriEquals } from '../helpers';
+import { IServerConnectionType } from '../../../kernels/jupyter/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
-import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
-import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { CondaService } from '../../../platform/common/process/condaService.node';
 import { noop } from '../../../platform/common/utils/misc';
+import { uriEquals } from '../../../test/datascience/helpers';
+import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
+import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
+import { createEventHandler, TestEventHandler } from '../../../test/common';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let localKernelFinder: LocalKernelFinder;
-        let remoteKernelFinder: IRemoteKernelFinder;
+        let remoteKernelFinder: RemoteKernelFinder;
         let kernelFinder: KernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
@@ -78,7 +79,11 @@ import { noop } from '../../../platform/common/utils/misc';
         let preferredRemote: PreferredRemoteKernelIdProvider;
         let pythonExecService: IPythonExecutionService;
         let kernelRankHelper: IKernelRankingHelper;
-
+        let cancelToken: CancellationTokenSource;
+        let onDidChangeInterpreters: EventEmitter<void>;
+        let onDidChangeInterpreter: EventEmitter<void>;
+        let changeEventFired: TestEventHandler<void>;
+        let localPythonAndRelatedKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -97,25 +102,23 @@ import { noop } from '../../../platform/common/utils/misc';
              */
             globalKernelSpecs?: KernelSpec.ISpecModel[];
         };
-        async function initialize(
-            testData: TestData,
-            activeInterpreter?: PythonEnvironment,
-            doNotAddActiveInterpreterIntoListOfInterpreters?: boolean
-        ) {
+        async function initialize(testData: TestData, activeInterpreter?: PythonEnvironment) {
+            disposables.push(cancelToken);
+            cancelToken = new CancellationTokenSource();
             const getRealPathStub = sinon.stub(fsExtra, 'realpath');
             getRealPathStub.returnsArg(0);
             const getOSTypeStub = sinon.stub(platform, 'getOSType');
             getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
             interpreterService = mock(InterpreterService);
             remoteKernelFinder = mock(RemoteKernelFinder);
-
+            onDidChangeInterpreter = new EventEmitter<void>();
+            onDidChangeInterpreters = new EventEmitter<void>();
+            disposables.push(onDidChangeInterpreter);
+            disposables.push(onDidChangeInterpreters);
             when(remoteKernelFinder.listKernelsFromConnection(anything())).thenResolve([]);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
                 testData.interpreters = testData.interpreters || [];
-                if (!doNotAddActiveInterpreterIntoListOfInterpreters) {
-                    // testData.interpreters.push(activeInterpreter);
-                }
             }
             const distinctInterpreters = new Set<PythonEnvironment>();
             (testData.interpreters || []).forEach((item) =>
@@ -126,7 +129,9 @@ import { noop } from '../../../platform/common/utils/misc';
                 distinctInterpreters.add(activeInterpreter);
             }
             testData.interpreters = Array.from(distinctInterpreters);
-            when(interpreterService.getInterpreters()).thenResolve(Array.from(distinctInterpreters));
+            when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
+            when(interpreterService.onDidChangeInterpreters).thenReturn(onDidChangeInterpreters.event);
+            when(interpreterService.resolvedEnvironments).thenReturn(Array.from(distinctInterpreters));
             when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
             when(interpreterService.getInterpreterDetails(anything())).thenResolve();
             platformService = mock(PlatformService);
@@ -234,7 +239,8 @@ import { noop } from '../../../platform/common/utils/misc';
                 instance(workspaceService),
                 jupyterPaths,
                 instance(extensionChecker),
-                instance(memento)
+                instance(memento),
+                disposables
             );
             when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2', anything())).thenReturn([]);
             when(memento.get('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenReturn([]);
@@ -251,32 +257,32 @@ import { noop } from '../../../platform/common/utils/misc';
             kernelFinder = new KernelFinder([]);
 
             const condaService = mock<CondaService>();
-
+            localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+                instance(interpreterService),
+                instance(fs),
+                instance(workspaceService),
+                jupyterPaths,
+                instance(extensionChecker),
+                nonPythonKernelSpecFinder,
+                instance(memento),
+                disposables
+            );
             localKernelFinder = new LocalKernelFinder(
                 nonPythonKernelSpecFinder,
-                new LocalPythonAndRelatedNonPythonKernelSpecFinder(
-                    instance(interpreterService),
-                    instance(fs),
-                    instance(workspaceService),
-                    jupyterPaths,
-                    instance(extensionChecker),
-                    nonPythonKernelSpecFinder,
-                    instance(memento)
-                ),
-                instance(memento),
-                instance(fs),
-                instance(env),
+                localPythonAndRelatedKernelFinder,
                 kernelFinder,
                 [],
                 instance(extensionChecker),
                 instance(interpreterService),
                 instance(condaService),
-                instance(extensions),
-                instance(workspaceService)
+                instance(extensions)
             );
-            localKernelFinder.activate().then(noop, noop);
+            changeEventFired = createEventHandler(localKernelFinder, 'onDidChangeKernels', disposables);
+            localKernelFinder.activate();
+            nonPythonKernelSpecFinder.activate();
+            localPythonAndRelatedKernelFinder.activate();
 
-            kernelRankHelper = new KernelRankingHelper(kernelFinder, instance(preferredRemote));
+            kernelRankHelper = new KernelRankingHelper(instance(preferredRemote));
         }
         teardown(() => {
             disposeAllDisposables(disposables);
@@ -562,16 +568,16 @@ import { noop } from '../../../platform/common/utils/misc';
                 duplicates.add(item);
                 return true;
             });
-            const expectedKernelSpecs: KernelConnectionMetadata[] = [];
+            const expectedKernelSpecs: LocalKernelConnectionMetadata[] = [];
             await Promise.all(
                 expectedGlobalKernelSpecs.map(async (kernelSpec) => {
                     const kernelspecFile = path.join(globalSpecPath!.fsPath, kernelSpec.name, 'kernel.json');
                     const interpreter = expectedInterpreters.find(
                         (item) => kernelSpec.language === PYTHON_LANGUAGE && item.uri.fsPath === kernelSpec.argv[0]
                     );
-                    const spec = await loadKernelSpec(Uri.file(kernelspecFile), instance(fs));
+                    const spec = await loadKernelSpec(Uri.file(kernelspecFile), instance(fs), cancelToken.token);
                     if (spec) {
-                        expectedKernelSpecs.push(<KernelConnectionMetadata>{
+                        expectedKernelSpecs.push(<LocalKernelConnectionMetadata>{
                             id: getKernelId(spec!, interpreter),
                             kernelSpec: spec,
                             interpreter,
@@ -590,9 +596,14 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernelspec.name,
                         'kernel.json'
                     );
-                    const spec = await loadKernelSpec(Uri.file(kernelSpecFile), instance(fs), interpreter);
+                    const spec = await loadKernelSpec(
+                        Uri.file(kernelSpecFile),
+                        instance(fs),
+                        cancelToken.token,
+                        interpreter
+                    );
                     if (spec) {
-                        expectedKernelSpecs.push(<KernelConnectionMetadata>{
+                        expectedKernelSpecs.push(<LocalKernelConnectionMetadata>{
                             id: getKernelId(spec!, interpreter),
                             kernelSpec: spec,
                             interpreter: spec.language === PYTHON_LANGUAGE ? interpreter : undefined,
@@ -607,7 +618,7 @@ import { noop } from '../../../platform/common/utils/misc';
             await Promise.all(
                 expectedInterpreters.map(async (interpreter) => {
                     const spec = await createInterpreterKernelSpec(interpreter, tempDirForKernelSpecs);
-                    expectedKernelSpecs.push(<KernelConnectionMetadata>{
+                    expectedKernelSpecs.push(<LocalKernelConnectionMetadata>{
                         id: getKernelId(spec!, interpreter),
                         kernelSpec: spec,
                         interpreter,
@@ -674,7 +685,9 @@ import { noop } from '../../../platform/common/utils/misc';
          * Gets the list of kernels from the kernel provider and compares them against what's expected.
          */
         async function verifyKernels(expectations: ExpectedKernels) {
-            const actualKernels = await localKernelFinder.listKernels(undefined);
+            const cancellation = new CancellationTokenSource();
+            disposables.push(cancellation);
+            const actualKernels = localKernelFinder.kernels;
             const expectedKernels = await generateExpectedKernels(
                 expectations.expectedGlobalKernelSpecs || [],
                 expectations.expectedInterpreterKernelSpecFiles || [],
@@ -765,16 +778,30 @@ import { noop } from '../../../platform/common/utils/misc';
             });
             assert.deepEqual(actualKernel, expectedKernel, 'Incorrect kernels');
         }
-        test('Discover global kernelspecs (without Python)', async () => {
+        test('Discover global kernelspecs (without Python ext)', async () => {
             const testData: TestData = {
                 globalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec],
                 interpreters: []
             };
             await initialize(testData);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
+            await changeEventFired.assertFiredAtLeast(1, 100).catch(noop);
 
             await verifyKernels({
                 expectedGlobalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec]
+            });
+        });
+        test('Discover global kernelspecs (without Python)', async () => {
+            const testData: TestData = {
+                globalKernelSpecs: [juliaKernelSpec, javaKernelSpec],
+                interpreters: []
+            };
+            await initialize(testData);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
+            await changeEventFired.assertFiredAtLeast(1, 100).catch(noop);
+
+            await verifyKernels({
+                expectedGlobalKernelSpecs: [juliaKernelSpec, javaKernelSpec]
             });
         });
         test('Discover global custom Python kernelspecs (without Python)', async () => {
@@ -784,7 +811,7 @@ import { noop } from '../../../platform/common/utils/misc';
             };
             await initialize(testData);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
-
+            await changeEventFired.assertFiredAtLeast(1, 100).catch(noop);
             await verifyKernels({
                 expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpec],
                 expectedInterpreters: []
@@ -821,7 +848,7 @@ import { noop } from '../../../platform/common/utils/misc';
                 }
             });
         }
-        test('Verify Global KernelSpecs', async () => {
+        test('Verify Global KernelSpecs (without Python)', async () => {
             const testData: TestData = {
                 globalKernelSpecs: [
                     juliaKernelSpec,
@@ -831,22 +858,48 @@ import { noop } from '../../../platform/common/utils/misc';
                 ]
             };
             await initialize(testData);
-            const kernels = await localKernelFinder.listKernels(undefined);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
+            const cancelToken = new CancellationTokenSource();
+            disposables.push(cancelToken);
+            await changeEventFired.assertFired(1000);
+
             verifyGlobalKernelSpec(
-                kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
+                localKernelFinder.kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
                 juliaKernelSpec
             );
             verifyGlobalKernelSpec(
-                kernels.find((item) => item.kernelSpec.display_name === javaKernelSpec.display_name),
+                localKernelFinder.kernels.find((item) => item.kernelSpec.display_name === javaKernelSpec.display_name),
                 javaKernelSpec
             );
             verifyGlobalKernelSpec(
-                kernels.find((item) => item.kernelSpec.display_name === defaultPython3Kernel.display_name),
+                localKernelFinder.kernels.find(
+                    (item) => item.kernelSpec.display_name === defaultPython3Kernel.display_name
+                ),
                 defaultPython3Kernel
             );
             verifyGlobalKernelSpec(
-                kernels.find((item) => item.kernelSpec.display_name === fullyQualifiedPythonKernelSpec.display_name),
+                localKernelFinder.kernels.find(
+                    (item) => item.kernelSpec.display_name === fullyQualifiedPythonKernelSpec.display_name
+                ),
                 fullyQualifiedPythonKernelSpec
+            );
+        });
+        test('Verify Global KernelSpecs (non-python)', async () => {
+            const testData: TestData = {
+                globalKernelSpecs: [juliaKernelSpec, javaKernelSpec]
+            };
+            await initialize(testData);
+            const cancelToken = new CancellationTokenSource();
+            disposables.push(cancelToken);
+            await changeEventFired.assertFired(1000);
+
+            verifyGlobalKernelSpec(
+                localKernelFinder.kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
+                juliaKernelSpec
+            );
+            verifyGlobalKernelSpec(
+                localKernelFinder.kernels.find((item) => item.kernelSpec.display_name === javaKernelSpec.display_name),
+                javaKernelSpec
             );
         });
         test('Kernelspecs registered by older versions of extensions `should not` be displayed & must be deleted', async () => {
@@ -861,7 +914,11 @@ import { noop } from '../../../platform/common/utils/misc';
                 ]
             };
             await initialize(testData);
-            const kernels = await localKernelFinder.listKernels(undefined);
+            const cancelToken = new CancellationTokenSource();
+            disposables.push(cancelToken);
+            await changeEventFired.assertFired(1000);
+
+            const kernels = localKernelFinder.kernels;
             assert.isUndefined(
                 kernels.find(
                     (item) =>
@@ -913,6 +970,33 @@ import { noop } from '../../../platform/common/utils/misc';
             suite(
                 activePythonEnv ? `With active Python (${activePythonEnv.displayName})` : 'without active Python',
                 () => {
+                    /**
+                     * As we're using a push model, we need to wait for the events to get triggered.
+                     * How many events do we need to wait for is not deterministic (well for tests it is, but its too complex).
+                     * Hence for the purpose of the test (to make it easier to write them), if
+                     * the test assertion fails, then wait for another change event and then try the assertion again.
+                     *
+                     * This is possible in scenarios where we get a change event from local kernel spec finder,
+                     * but the change event for python kernelspec finder has not been triggered, hence we might have to wait for 2.
+                     */
+                    async function verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry(
+                        expectations: ExpectedKernels,
+                        moreLogging?: boolean
+                    ) {
+                        await changeEventFired.assertFiredAtLeast(1, 1000);
+                        try {
+                            await verifyKernels(expectations);
+                        } catch {
+                            if (moreLogging) {
+                                console.error(`Change event fired ${changeEventFired.count} times`);
+                            }
+                            await changeEventFired.assertFiredAtLeast(2, 2000).catch(noop);
+                            if (moreLogging) {
+                                console.error(`Change event fired.2, ${changeEventFired.count} times`);
+                            }
+                            await verifyKernels(expectations);
+                        }
+                    }
                     test('Discover global custom Python kernelspecs', async () => {
                         const testData: TestData = {
                             globalKernelSpecs: [fullyQualifiedPythonKernelSpec],
@@ -921,7 +1005,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        await verifyKernels({
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry({
                             expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpec],
                             expectedInterpreters: [python38VenvEnv].concat(activePythonEnv ? [activePythonEnv] : [])
                         });
@@ -938,7 +1022,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        await verifyKernels({
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry({
                             expectedInterpreterKernelSpecFiles: [
                                 {
                                     interpreter: python38VenvEnv,
@@ -956,7 +1040,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        await verifyKernels({
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry({
                             expectedGlobalKernelSpecs: [fullyQualifiedPythonKernelSpecForGlobalPython36],
                             expectedInterpreters: [python36Global].concat(activePythonEnv ? [activePythonEnv] : [])
                         });
@@ -978,7 +1062,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        await verifyKernels({
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry({
                             expectedInterpreterKernelSpecFiles: [
                                 {
                                     interpreter: python38VenvEnv,
@@ -1002,14 +1086,17 @@ import { noop } from '../../../platform/common/utils/misc';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        await verifyKernels({
-                            expectedGlobalKernelSpecs: [
-                                juliaKernelSpec,
-                                javaKernelSpec,
-                                fullyQualifiedPythonKernelSpec
-                            ],
-                            expectedInterpreters: [python38VenvEnv].concat(activePythonEnv ? [activePythonEnv] : [])
-                        });
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry(
+                            {
+                                expectedGlobalKernelSpecs: [
+                                    juliaKernelSpec,
+                                    javaKernelSpec,
+                                    fullyQualifiedPythonKernelSpec
+                                ],
+                                expectedInterpreters: [python38VenvEnv].concat(activePythonEnv ? [activePythonEnv] : [])
+                            },
+                            true
+                        );
                     });
                     test('Discover multiple global kernelspecs and a custom Python kernelspecs with env vars', async () => {
                         const testData: TestData = {
@@ -1024,7 +1111,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        await verifyKernels({
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry({
                             expectedGlobalKernelSpecs: [
                                 juliaKernelSpec,
                                 javaKernelSpec,
@@ -1048,7 +1135,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         await initialize(testData, undefined);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
 
-                        await verifyKernels({
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry({
                             expectedGlobalKernelSpecs: [
                                 juliaKernelSpec,
                                 javaKernelSpec,
@@ -1061,9 +1148,10 @@ import { noop } from '../../../platform/common/utils/misc';
 
                         // Nothing should be started using the Python interpreter.
                         // Why? Because we don't have the Python extension.
-                        const actualKernels = await localKernelFinder.listKernels(undefined);
+                        const cancelToken = new CancellationTokenSource();
+                        disposables.push(cancelToken);
                         assert.isUndefined(
-                            actualKernels.find((kernel) => kernel.kind === 'startUsingPythonInterpreter')
+                            localKernelFinder.kernels.find((kernel) => kernel.kind === 'startUsingPythonInterpreter')
                         );
                     });
                     test('Default Python kernlespecs should be ignored', async () => {
@@ -1077,14 +1165,13 @@ import { noop } from '../../../platform/common/utils/misc';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-
                         const expectedKernels: ExpectedKernels = {
                             expectedInterpreters: [python39PyEnv_HelloWorld].concat(
                                 activePythonEnv ? [activePythonEnv] : []
                             )
                         };
 
-                        await verifyKernels(expectedKernels);
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry(expectedKernels);
                     });
                     test('Custom Python Kernels with custom env variables are listed', async () => {
                         const testData: TestData = {
@@ -1103,7 +1190,6 @@ import { noop } from '../../../platform/common/utils/misc';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-
                         const expectedKernels: ExpectedKernels = {
                             expectedGlobalKernelSpecs: [juliaKernelSpec],
                             expectedInterpreterKernelSpecFiles: [
@@ -1125,7 +1211,7 @@ import { noop } from '../../../platform/common/utils/misc';
                             )
                         };
 
-                        await verifyKernels(expectedKernels);
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry(expectedKernels);
                     });
                     test('Multiple global & custom Python Kernels', async () => {
                         const testData: TestData = {
@@ -1182,9 +1268,9 @@ import { noop } from '../../../platform/common/utils/misc';
                             ].concat(activePythonEnv ? [activePythonEnv] : [])
                         };
 
-                        await verifyKernels(expectedKernels);
+                        await verifyKernelsAndIfFailedThenWaitForAnotherChangeEventAndRetry(expectedKernels);
                     });
-                    async function testMatchingNotebookMetadata(activeInterpreterIsInListOfInterpreters = true) {
+                    async function testMatchingNotebookMetadata() {
                         const testData: TestData = {
                             globalKernelSpecs: [juliaKernelSpec, rKernelSpec, rV1KernelSpec, python2spec],
                             interpreters: [
@@ -1237,33 +1323,29 @@ import { noop } from '../../../platform/common/utils/misc';
                                 }
                             ]
                         };
-                        if (!activeInterpreterIsInListOfInterpreters && activePythonEnv && testData.interpreters) {
-                            // We need to test a scenario where active interpreter is not in the list of all interpreters.
-                            // Hence remove that.
-                            testData.interpreters = testData.interpreters.filter((item) => {
-                                if ('interpreter' in item) {
-                                    return item.interpreter !== activePythonEnv;
-                                }
-                                return item !== activePythonEnv;
-                            });
-                        }
-                        await initialize(testData, activePythonEnv, !activeInterpreterIsInListOfInterpreters);
+                        await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
                         const nbUri = Uri.file('test.ipynb');
                         let kernel: KernelConnectionMetadata | undefined;
-
+                        await changeEventFired.assertFiredAtLeast(2, 1000).catch(noop);
                         // Try an empty python Notebook without any kernelspec in metadata.
-                        kernel = takeTopRankKernel(
-                            await kernelRankHelper.rankKernels(
-                                nbUri,
-                                {
-                                    language_info: { name: PYTHON_LANGUAGE },
-                                    orig_nbformat: 4
-                                },
-                                activePythonEnv
-                            )
-                        ) as LocalKernelConnectionMetadata;
-                        assert.equal(kernel?.kernelSpec?.language, 'python');
+                        const rankedKernels = await kernelRankHelper.rankKernels(
+                            nbUri,
+                            localKernelFinder.kernels,
+                            {
+                                language_info: { name: PYTHON_LANGUAGE },
+                                orig_nbformat: 4
+                            },
+                            activePythonEnv
+                        );
+                        kernel = takeTopRankKernel(rankedKernels) as LocalKernelConnectionMetadata;
+                        assert.equal(
+                            kernel?.kernelSpec?.language,
+                            'python',
+                            `Python != ${kernel?.kernelSpec?.language}, ranked kernels include ${JSON.stringify(
+                                rankedKernels
+                            )}\n and all kernels ${JSON.stringify(localKernelFinder.kernels)}`
+                        );
                         assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
                         assert.notStrictEqual(
                             getKernelRegistrationInfo(kernel!.kernelSpec),
@@ -1277,6 +1359,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: '',
@@ -1302,6 +1385,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: 'Python',
@@ -1327,6 +1411,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: 'Python 3',
@@ -1352,6 +1437,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: 'Python 3 (IPyKernel)',
@@ -1377,6 +1463,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: 'Python 2 on Disk',
@@ -1404,6 +1491,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     language_info: { name: 'julia' },
                                     orig_nbformat: 4
@@ -1417,6 +1505,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: juliaKernelSpec.display_name,
@@ -1433,6 +1522,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: rV1KernelSpec.display_name,
@@ -1450,6 +1540,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: '',
@@ -1467,6 +1558,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: rV1KernelSpec.display_name,
@@ -1484,6 +1576,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: 'Some unknown name for Python 2',
@@ -1501,6 +1594,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: python2Global.displayName || '',
@@ -1518,6 +1612,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: '',
@@ -1535,6 +1630,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: condaEnv1.displayName || '',
@@ -1552,6 +1648,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: condaEnv1.displayName || '',
@@ -1569,6 +1666,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: 'Will never match',
@@ -1589,6 +1687,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     kernelspec: {
                                         display_name: 'Junk Display Name',
@@ -1607,6 +1706,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
+                                localKernelFinder.kernels,
                                 {
                                     language_info: { name: 'someunknownlanguage' },
                                     orig_nbformat: 4
@@ -1616,9 +1716,7 @@ import { noop } from '../../../platform/common/utils/misc';
                         );
                         assert.isUndefined(kernel, 'Should not return a kernel');
                     }
-                    test('Can match based on notebook metadata', async () => testMatchingNotebookMetadata(true));
-                    test('Can match based on notebook metadata, even when active interpreter is not in list of all interpreter', async () =>
-                        testMatchingNotebookMetadata(false));
+                    test('Can match based on notebook metadata', async () => testMatchingNotebookMetadata());
                     test('Return active interpreter for interactive window', async function () {
                         if (!activePythonEnv) {
                             return this.skip();
@@ -1648,10 +1746,12 @@ import { noop } from '../../../platform/common/utils/misc';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        await changeEventFired.assertFiredAtLeast(2, 100).catch(noop);
 
                         const kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 Uri.file('wow.py'),
+                                localKernelFinder.kernels,
                                 {
                                     language_info: { name: PYTHON_LANGUAGE },
                                     orig_nbformat: 4
@@ -1697,9 +1797,15 @@ import { noop } from '../../../platform/common/utils/misc';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        await changeEventFired.assertFiredAtLeast(2, 100).catch(noop);
 
                         const kernel = takeTopRankKernel(
-                            await kernelRankHelper.rankKernels(Uri.file('wow.py'), undefined, activePythonEnv)
+                            await kernelRankHelper.rankKernels(
+                                Uri.file('wow.py'),
+                                localKernelFinder.kernels,
+                                undefined,
+                                activePythonEnv
+                            )
                         ) as LocalKernelConnectionMetadata;
                         assert.strictEqual(
                             kernel?.kernelSpec?.language,
@@ -1739,10 +1845,12 @@ import { noop } from '../../../platform/common/utils/misc';
                         };
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        await changeEventFired.assertFiredAtLeast(2, 100).catch(noop);
 
                         const kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 Uri.file('wow.py'),
+                                localKernelFinder.kernels,
                                 {
                                     language_info: {
                                         name: PYTHON_LANGUAGE
@@ -1781,7 +1889,6 @@ import { noop } from '../../../platform/common/utils/misc';
 
             // Set up the preferred remote id
             when(preferredRemote.getPreferredRemoteKernelId(anything())).thenResolve(activeID);
-
             const isExactMatch = await kernelRankHelper.isExactMatch(nbUri, liveSpec, {
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
@@ -1806,6 +1913,7 @@ import { noop } from '../../../platform/common/utils/misc';
         test('isExactMatch interpreter hash matches default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
+
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
@@ -1833,6 +1941,7 @@ import { noop } from '../../../platform/common/utils/misc';
         test('isExactMatch vscode interpreter hash matches default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
+
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
@@ -1862,6 +1971,7 @@ import { noop } from '../../../platform/common/utils/misc';
         test('isExactMatch interpreter hash matches non-default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
+
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
@@ -1889,6 +1999,7 @@ import { noop } from '../../../platform/common/utils/misc';
         test('isExactMatch vscode interpreter hash matches non-default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
+
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
@@ -1918,6 +2029,7 @@ import { noop } from '../../../platform/common/utils/misc';
         test('isExactMatch non-default name matches w/o interpreter', async () => {
             const testData: TestData = {};
             await initialize(testData);
+
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
@@ -1943,6 +2055,7 @@ import { noop } from '../../../platform/common/utils/misc';
         test('isExactMatch default name does not match w/o interpreter', async () => {
             const testData: TestData = {};
             await initialize(testData);
+
             const nbUri = Uri.file('test.ipynb');
 
             const isExactMatch = await kernelRankHelper.isExactMatch(

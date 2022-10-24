@@ -412,11 +412,16 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             .reverse()
             .find((cell) => cell.kind == NotebookCellKind.Code)!;
         await waitForExecutionCompletedSuccessfully(lastCodeCell);
-        const sysExecutable = Uri.file(getCellOutputs(lastCodeCell).trim());
 
-        assert.ok(
-            areInterpreterPathsSame(venvNoRegPath, sysExecutable),
-            `Python paths do not match ${venvNoRegPath}, ${sysExecutable}.`
+        let output: string = '';
+        await waitForCondition(
+            () => {
+                output = getCellOutputs(lastCodeCell).trim();
+                const sysExecutable = Uri.file(getCellOutputs(lastCodeCell).trim());
+                return areInterpreterPathsSame(venvNoRegPath, sysExecutable);
+            },
+            defaultNotebookTestTimeout,
+            () => `Interpreter path ${venvNoRegPath} not found in output ${output}`
         );
     });
 

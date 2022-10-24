@@ -140,7 +140,9 @@ export class KernelEnvironmentVariablesService {
             traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter?.uri)}`);
             mergedVars.PYTHONNOUSERSITE = 'True';
         }
-
+        if (isPythonKernel) {
+            mergedVars.PYDEVD_IPYTHON_COMPATIBLE_DEBUGGING = '1';
+        }
         return mergedVars;
     }
 }

@@ -683,7 +683,8 @@ Used to detect the popularity of a mime type, that would help determine which mi
 E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
 or prioritize rendering of widgets when opening an existing notebook or the like.","Telemetry.CellOutputMimeType","donjayamanne","N/A","","","when","Whether the package was detected in an existing file (upon open, upon save, upon close) or when it was being used during execution.","","'onExecution' 
 'onOpenCloseOrSave' ",false
-"DS_INTERNAL.CODE_LENS_ACQ_TIME","How long on average we spent parsing code lens. Sent on shutdown.","Telemetry.CodeLensAverageAcquisitionTime","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
+"DS_INTERNAL.CODE_LENS_ACQ_TIME","How long on average we spent parsing code lens. Sent on shutdown.
+We should be able to deprecate in favor of DocumentWithCodeCells, but we should compare the numbers first.","Telemetry.CodeLensAverageAcquisitionTime","amunger","InteractiveWindow","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.COMMAND_EXECUTED","A command that the extension contributes is executed.","Telemetry.CommandExecuted","amunger","N/A","","","command","Name of the command executed.","string","",false
 "DS_INTERNAL.CONNECTFAILEDJUPYTER","Sent when we have failed to connect to the local Jupyter server we started.","Telemetry.ConnectFailedJupyter","donjayamanne","N/A","KernelStartup","","failed","Whether there was a failure.
@@ -717,6 +718,8 @@ Common to most of the events.","string","",true
 Common to most of the events.","string","",true
 "DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST","Connecting to an existing Jupyter server, but connecting to localhost.","Telemetry.ConnectRemoteJupyterViaLocalHost","donjayamanne","N/A","KernelStartup","","","","","",""
 "DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER","Jupyter server's certificate is not from a trusted authority.","Telemetry.ConnectRemoteSelfCertFailedJupyter","donjayamanne","N/A","KernelStartup","","","","","",""
+"DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS","Info about code lenses, count and average time to parse the document.","Telemetry.DocumentWithCodeCells","amunger","InteractiveWindow","","","codeLensUpdateTime","Average time taken to aquire code lenses for a document without using the cache","number","",false
+"DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS","Info about code lenses, count and average time to parse the document.","Telemetry.DocumentWithCodeCells","amunger","InteractiveWindow","","","maxCellCount","Maximum number of code lenses returned for the document","number","",false
 "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC","Sent when we fail to update the kernel spec json file.","Telemetry.FailedToUpdateKernelSpec","donjayamanne","N/A","KernelStartup","","failed","Whether there was a failure.
 Common to most of the events.","true","",false
 "DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC","Sent when we fail to update the kernel spec json file.","Telemetry.FailedToUpdateKernelSpec","donjayamanne","N/A","KernelStartup","","failureCategory","A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
@@ -766,10 +769,6 @@ If `jupyter`, then env variables were fetched from Jupyter extension.","","'pyth
 "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","InteractiveWindow","IntelliSense","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF","How long it took to return our hover tooltips for a .py file.","Telemetry.InteractiveFileTooltipsPerf","IanMatthewHuff","InteractiveWindow","IntelliSense","","isResultNull","Result is null if user signalled cancellation or if we timed out","boolean","",false
-"DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","duration","Total time taken to list interpreters.","number","",false
-"DS_INTERNAL.INTERPRETER_LISTING_PERF","Time taken to list the Python interpreters.","Telemetry.InterpreterListingPerf","donjayamanne","N/A","","","firstTime","Whether this is the first time in the session.
-(fetching kernels first time in the session is slower, later its cached).
-This is a generic property supported for all telemetry (sent by decorators).","boolean","",true
 "DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS","Total time taken to discover all IPyWidgets.
 This is how long it takes to discover all widgets on disc (from python environment).","Telemetry.DiscoverIPyWidgetNamesPerf","donjayamanne","Notebook, InteractiveWindow","Widgets","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
@@ -823,8 +822,14 @@ Useful in prioritizing which widgets to work on if things fail to work.","Teleme
 If the widget is found on a CDN, then the unhashed name is sent in `moduleName`.","string","",false
 "DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.
 Helps determine which widgets are used the most, and which are not.
-Useful in prioritizing which widgets to work on if things fail to work.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","moduleName","Name of the widget module, sent only for cases where `source` is `cdn` or when module is found on cdn.
-As that is the onl time we can safely send the name (if its on public CDN then its public information).","string","",true
+Useful in prioritizing which widgets to work on if things fail to work.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","modelName","Name of the widget model that's loaded.
+Sent only for cases where `source` is `cdn` or when module is found on cdn.
+As that is the only time we can safely send the name (if its on public CDN then its public information).","string","",true
+"DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.
+Helps determine which widgets are used the most, and which are not.
+Useful in prioritizing which widgets to work on if things fail to work.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","moduleName","Name of the widget module
+Sent only for cases where `source` is `cdn` or when module is found on cdn.
+As that is the only time we can safely send the name (if its on public CDN then its public information).","string","",true
 "DS_INTERNAL.IPYWIDGET_USED_BY_USER","Telemetry event sent with name of a Widget that is used.
 Helps determine which widgets are used the most, and which are not.
 Useful in prioritizing which widgets to work on if things fail to work.","Telemetry.HashedIPyWidgetNameUsed","donjayamanne","Notebook, InteractiveWindow","Widgets","","moduleVersion","Version of the Module used, sent only for cases where `source` is `cdn` or when module is found on cdn.","string","",true
@@ -841,16 +846,11 @@ Useful in prioritizing which widgets to work on if things fail to work.","Teleme
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.JUPYTERSTARTUPCOST","Time taken to start the Jupyter server.","Telemetry.StartJupyter","donjayamanne","N/A","","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","duration","Duration of a measure in milliseconds.
-Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelInterpreterCount","Total number of interpreters in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelLiveCount","Total number of live kernels in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","kernelSpecCount","Total number of kernel specs in the kernel list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","localKernelSpecCount","Total number of local kernel specs in the list.","number","",false
 "DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","remoteKernelSpecCount","Total number of remote kernel specs in the list.","number","",false
-"DS_INTERNAL.KERNEL_COUNT","Telemetry sent with the total number of different types of kernels in the kernel picker.","Telemetry.KernelCount","donjayamanne","KernelPicker","","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.
-Common to most of the events.","","'notebook' 
-'interactive' ",true
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","duration","Duration of a measure in milliseconds.
 Common measurement used across a number of events.","number","",false
 "DS_INTERNAL.KERNEL_LAUNCHER_PERF","Total time taken to Launch a raw kernel.","Telemetry.KernelLauncherPerf","donjayamanne","N/A","KernelStartup","","resourceType","Used to determine whether this event is related to a Notebooks or Interactive window.

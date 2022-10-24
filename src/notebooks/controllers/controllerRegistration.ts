@@ -29,7 +29,12 @@ import { traceError, traceVerbose } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
-import { IControllerRegistration, InteractiveControllerIdSuffix, IVSCodeNotebookController } from './types';
+import {
+    IControllerRegistration,
+    InteractiveControllerIdSuffix,
+    IVSCodeNotebookController,
+    IVSCodeNotebookControllerUpdateEvent
+} from './types';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 
 /**
@@ -43,11 +48,15 @@ export class ControllerRegistration implements IControllerRegistration {
     }
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private creationEmitter = new EventEmitter<IVSCodeNotebookController>();
+    private changeEmitter = new EventEmitter<IVSCodeNotebookControllerUpdateEvent>();
     private registeredMetadatas = new Map<string, KernelConnectionMetadata>();
     private inKernelExperiment = false;
 
     public get onCreated(): Event<IVSCodeNotebookController> {
         return this.creationEmitter.event;
+    }
+    public get onChanged(): Event<IVSCodeNotebookControllerUpdateEvent> {
+        return this.changeEmitter.event;
     }
     public get registered(): IVSCodeNotebookController[] {
         return [...this.registeredControllers.values()];
@@ -83,6 +92,15 @@ export class ControllerRegistration implements IControllerRegistration {
         this.workspace.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.disposables);
         this.inKernelExperiment = this.configuration.getSettings().kernelPickerType === 'OnlyOneTypeOfKernel';
     }
+    batchAdd(metadatas: KernelConnectionMetadata[], types: ('jupyter-notebook' | 'interactive')[]) {
+        const added: IVSCodeNotebookController[] = [];
+        metadatas.forEach((metadata) => {
+            added.push(...this.add(metadata, types));
+        });
+
+        this.changeEmitter.fire({ added, removed: [] });
+        return added;
+    }
     add(
         metadata: KernelConnectionMetadata,
         types: ('jupyter-notebook' | 'interactive')[]
@@ -95,7 +113,7 @@ export class ControllerRegistration implements IControllerRegistration {
                     const id = this.getControllerId(metadata, t);
 
                     // Update our list kernel connections.
-                    this.registeredMetadatas.set(id, metadata);
+                    this.registeredMetadatas.set(metadata.id, metadata);
 
                     // Return the id and the metadata for use below
                     return [id, t];

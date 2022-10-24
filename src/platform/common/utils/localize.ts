@@ -643,7 +643,8 @@ export namespace DataScience {
             'DataScience.jupyterSelectUserAndPasswordTitle',
             'Enter your user name and password to connect to Jupyter Hub'
         );
-    export const jupyterRenameServer = () => localize('DataScience.jupyterRenameServer', 'Change Server Display Name');
+    export const jupyterRenameServer = () =>
+        localize('DataScience.jupyterRenameServer', 'Change Server Display Name (Leave Blank To Use URI)');
     export const jupyterSelectUserPrompt = () =>
         localize('DataScience.jupyterSelectUserPrompt', 'Enter your user name');
     export const jupyterSelectPasswordPrompt = () =>
@@ -1241,6 +1242,8 @@ export namespace DataScience {
     export const noNotebookToDebug = () =>
         localize('DataScience.noNotebookToDebug', 'No active notebook document to debug.');
     export const cantStartDebugging = () => localize('DataScience.cantStartDebugging', "Can't start debugging.");
+    export const restartNotSupported = () =>
+        localize('DataScience.restartNotSupported', 'Restarting is not supported in the interactive window.');
     export const importingIpynb = () => localize('DataScience.importingIpynb', 'Importing notebook file');
     export const exportingToFormat = () => localize('DataScience.exportingToFormat', 'Exporting to {0}');
     export const kernelCategoryForJupyterSession = () =>
@@ -1419,6 +1422,10 @@ export namespace DataScience {
         localize('DataScience.universalRemoteKernelFinderDisplayName', 'Remote - {0}');
     export const remoteKernelFinderDisplayName = () =>
         localize('DataScience.remoteKernelFinderDisplayName', 'Current Remote');
+    export const kernelPickerSelectSourceTitle = () =>
+        localize('DataScience.kernelPickerSelectSourceTitle', 'Select Kernel Source');
+    export const kernelPickerSelectKernelTitle = () =>
+        localize('DataScience.kernelPickerSelectKernelTitle', 'Select Kernel');
 }
 
 export namespace Deprecated {
