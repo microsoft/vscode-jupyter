@@ -62,7 +62,11 @@ process.on('unhandledRejection', (ex: any, _a) => {
     // eslint-disable-next-line no-console
     const msg = `Unhandled Promise Rejection with the message ${message.join(', ')}`;
 
-    if (msg.includes('Error: custom request failed')) {
+    if (
+        msg.includes('Error: custom request failed') ||
+        msg.includes('ms-python.python') ||
+        msg.includes('ms-python.isort')
+    ) {
         // Some error from VS Code, we can ignore this.
         return;
     }
