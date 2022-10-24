@@ -24,7 +24,6 @@ module.exports = {
         'src/test/mocks/autoSelector.ts',
         'src/test/mocks/vsc/strings.ts',
         'src/test/mocks/vsc/charCode.ts',
-        'src/test/mocks/vsc/htmlContent.ts',
         'src/test/mocks/vsc/position.ts',
         'src/test/mocks/vsc/range.ts',
         'src/test/mocks/vsc/arrays.ts',
