@@ -34,6 +34,7 @@ import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironmen
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { sendTelemetryEvent } from '../telemetry';
+import { IPlatformService } from '../platform/common/platform/types';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -367,7 +368,8 @@ export function getRemoteKernelSessionInformation(
 
 export function getKernelConnectionPath(
     kernelConnection: KernelConnectionMetadata | undefined,
-    workspaceService: IWorkspaceService
+    workspaceService: IWorkspaceService,
+    platform: IPlatformService
 ) {
     if (kernelConnection?.kind === 'connectToLiveRemoteKernel') {
         return undefined;
@@ -376,7 +378,7 @@ export function getKernelConnectionPath(
     // If we have just one workspace folder opened, then ensure to use relative paths
     // where possible (e.g. for virtual environments).
     const folders = workspaceService.workspaceFolders ? workspaceService.workspaceFolders : [];
-    return kernelPath ? getDisplayPath(kernelPath, folders) : '';
+    return kernelPath ? getDisplayPath(kernelPath, folders, platform.homeDir) : '';
 }
 
 export function getInterpreterFromKernelConnectionMetadata(
