@@ -159,7 +159,7 @@ export class DebuggingManager
             type: pythonKernelDebugAdapter,
             name: path.basename(doc.uri.toString()),
             request: 'attach',
-            justMyCode: settings.debugJustMyCode,
+            justMyCode: mode === KernelDebugMode.Cell ? settings.debugJustMyCode : true,
             // add a property to the config to know if the session is runByLine
             __mode: mode,
             __cellIndex: cell.index,
