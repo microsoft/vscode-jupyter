@@ -589,9 +589,12 @@ export class InterpreterService implements IInterpreterService {
         );
         return allInterpreters;
     }
+    /**
+     * Python extension API returns all envs from all known workspace folders, including those that do not
+     * belong to the currently opened workspace folders.
+     * This will is used to determine whether an env belongs to the currently opened workspace folders.
+     */
     private isValidWorkSpaceRelatedEnvironment(env: PythonEnvironmentV2 | ResolvedEnvironment) {
-        // If this environment belongs to a different workspace folder, then ignore this.
-        // Python API returns envs from all workspace folders, not just the active ones in VS Code.
         const envWorkspaceFolder = env?.environment?.workspaceFolder;
         if (envWorkspaceFolder) {
             if (!this.workspace.workspaceFolders) {
