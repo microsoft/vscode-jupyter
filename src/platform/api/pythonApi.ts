@@ -487,6 +487,18 @@ export class InterpreterService implements IInterpreterService {
             return undefined;
         }
     }
+    /**
+     * The Python Extension triggers changes to the Python environments.
+     * However internally we need to track changes to the environments as we wrap the Python extension API and the Python extension API only returns partial information.
+     * Some times what happens is
+     * - When we call get active interpreter we get some information from Python extension
+     * - We then come into this method and see the information has changed and we internally trigger a change event so other parts are aware of this
+     * - Next we call the Python extension API again, and the information is different yet again
+     * - We then trigger another change event
+     * - This goes on and on, basically the Python extension API returns different information for the same env.
+     *
+     * The argument `triggerChangeEvent` is more of a fail safe to ensure we don't end up in such infinite loops.
+     */
     private trackResolvedEnvironment(env: ResolvedEnvironment | undefined, triggerChangeEvent: boolean) {
         if (env) {
             const resolved = pythonEnvToJupyterEnv(env);
