@@ -11,7 +11,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import {
     getDisplayNameOrNameOfKernelConnection,
-    getKernelConnectionPath,
+    getKernelConnectionDisplayPath,
     getRemoteKernelSessionInformation
 } from '../../../kernels/helpers';
 import { isRemoteConnection, KernelConnectionMetadata } from '../../../kernels/types';
@@ -79,7 +79,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                         return <QuickPickType>{
                             label: getKernelLabel(item),
                             picked: !this.kernelFilter.isKernelHidden(item),
-                            description: getKernelConnectionPath(item, this.workspace, this.platform),
+                            description: getKernelConnectionDisplayPath(item, this.workspace, this.platform),
                             detail:
                                 item.kind === 'connectToLiveRemoteKernel'
                                     ? getRemoteKernelSessionInformation(item)

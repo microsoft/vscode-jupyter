@@ -79,7 +79,8 @@ export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironme
     return {
         id: env.id,
         sysPrefix: env.executable.sysPrefix || '',
-        envPath: Uri.file(env.path),
+        envPath: env.environment?.folderUri,
+        displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
         uri: env.executable.uri!,
         displayName: env.environment?.name || '',
@@ -526,19 +527,22 @@ export class InterpreterService implements IInterpreterService {
         }
 
         const allInterpreters: PythonEnvironment[] = [];
+        const stopWatch = new StopWatch();
         await this.getApi().then(async (api) => {
             if (!api || cancelToken.isCancellationRequested) {
                 return [];
             }
             try {
+                const apiResolveTime = stopWatch.elapsedTime;
                 await api.environments.refreshEnvironments();
                 if (cancelToken.isCancellationRequested) {
                     return;
                 }
+                const totalTime = stopWatch.elapsedTime;
                 traceVerbose(
-                    `Full interpreter list after refreshing is length: ${
-                        api.environments.known.length
-                    }, ${api.environments.known
+                    `Full interpreter list after refreshing (total ${totalTime}ms, resolve ${apiResolveTime}ms, refresh ${
+                        totalTime - apiResolveTime
+                    }ms) is length: ${api.environments.known.length}, ${api.environments.known
                         .map(
                             (item) =>
                                 `${item.id}:${item.environment?.name}:${item.tools.join(',')}:${getDisplayPath(
@@ -645,6 +649,7 @@ export class InterpreterService implements IInterpreterService {
                     this.eventHandlerAdded = true;
                     api.environments.onDidChangeActiveEnvironmentPath(
                         () => {
+                            traceVerbose(`Detected change in Active Python environment via Python API`);
                             this.interpreterListCachePromise = undefined;
                             this.workspaceCachedActiveInterpreter.clear();
                             this.didChangeInterpreter.fire();
@@ -654,6 +659,7 @@ export class InterpreterService implements IInterpreterService {
                     );
                     api.environments.onDidChangeEnvironments(
                         () => {
+                            traceVerbose(`Detected change in Python environments via Python API`);
                             this.interpreterListCachePromise = undefined;
                             this.refreshInterpreters().ignoreErrors();
                             this.populateCachedListOfInterpreters();
