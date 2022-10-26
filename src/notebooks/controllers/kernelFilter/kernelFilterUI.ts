@@ -19,6 +19,7 @@ import { KernelFilterService } from './kernelFilterService';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../platform/common/constants';
 import { IControllerLoader, IControllerRegistration } from '../types';
+import { IPlatformService } from '../../../platform/common/platform/types';
 
 function getKernelLabel(metadata: KernelConnectionMetadata): string {
     if (isRemoteConnection(metadata)) {
@@ -40,7 +41,8 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDisposableRegistry) disposales: IDisposableRegistry,
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IPlatformService) private readonly platform: IPlatformService
     ) {
         disposales.push(this);
     }
@@ -77,7 +79,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                         return <QuickPickType>{
                             label: getKernelLabel(item),
                             picked: !this.kernelFilter.isKernelHidden(item),
-                            description: getKernelConnectionPath(item, this.workspace),
+                            description: getKernelConnectionPath(item, this.workspace, this.platform),
                             detail:
                                 item.kind === 'connectToLiveRemoteKernel'
                                     ? getRemoteKernelSessionInformation(item)
