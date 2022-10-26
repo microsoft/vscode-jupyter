@@ -526,19 +526,22 @@ export class InterpreterService implements IInterpreterService {
         }
 
         const allInterpreters: PythonEnvironment[] = [];
+        const stopWatch = new StopWatch();
         await this.getApi().then(async (api) => {
             if (!api || cancelToken.isCancellationRequested) {
                 return [];
             }
             try {
+                const apiResolveTime = stopWatch.elapsedTime;
                 await api.environments.refreshEnvironments();
                 if (cancelToken.isCancellationRequested) {
                     return;
                 }
+                const totalTime = stopWatch.elapsedTime;
                 traceVerbose(
-                    `Full interpreter list after refreshing is length: ${
-                        api.environments.known.length
-                    }, ${api.environments.known
+                    `Full interpreter list after refreshing (total ${totalTime}ms, resolve ${apiResolveTime}ms, refresh ${
+                        totalTime - apiResolveTime
+                    }ms) is length: ${api.environments.known.length}, ${api.environments.known
                         .map(
                             (item) =>
                                 `${item.id}:${item.environment?.name}:${item.tools.join(',')}:${getDisplayPath(
