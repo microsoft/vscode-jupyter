@@ -613,6 +613,7 @@ export class InterpreterService implements IInterpreterService {
                     this.eventHandlerAdded = true;
                     api.environments.onDidChangeActiveEnvironmentPath(
                         () => {
+                            traceVerbose(`Detected change in Active Python environment via Python API`);
                             this.interpreterListCachePromise = undefined;
                             this.workspaceCachedActiveInterpreter.clear();
                             this.didChangeInterpreter.fire();
@@ -622,6 +623,7 @@ export class InterpreterService implements IInterpreterService {
                     );
                     api.environments.onDidChangeEnvironments(
                         () => {
+                            traceVerbose(`Detected change in Python environments via Python API`);
                             this.interpreterListCachePromise = undefined;
                             this.refreshInterpreters().ignoreErrors();
                             this.populateCachedListOfInterpreters();
