@@ -491,11 +491,6 @@ Expand each section to see more information about that event.
     Error information from the debugger output channel while running initialization code.  
     ```
 
-    - Properties:  
-        - `ename`: `string`  
-        The error name of the failure.  
-        - `evalue`: `string`  
-        The error value of the failure.  
 
 
 * DATASCIENCE.JUPYTER_KERNEL_API_ACCESS  (Telemetry.JupyterKernelApiAccess)  
@@ -1033,11 +1028,6 @@ Expand each section to see more information about that event.
     The Python code that we ran to fetch variables had a failure.  
     ```
 
-    - Properties:  
-        - `ename`: `string`  
-        The error name of the failure.  
-        - `evalue`: `string`  
-        The error value of the failure  
 
 
 * DATASCIENCE.RECOMMENT_EXTENSION  (Telemetry.RecommendExtension)  

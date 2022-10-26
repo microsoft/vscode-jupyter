@@ -683,10 +683,7 @@ function handleExecuteSilentErrors(
 
             // Send telemetry if requested, no traceback for PII
             if (errorOptions.telemetryName) {
-                sendTelemetryEvent(errorOptions.telemetryName, undefined, {
-                    ename: errorOutput.ename,
-                    evalue: errorOutput.evalue
-                });
+                sendTelemetryEvent(errorOptions.telemetryName);
             }
         });
 }
