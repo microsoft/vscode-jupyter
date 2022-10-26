@@ -78,11 +78,11 @@ export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironme
     }
     return {
         id: env.id,
-        sysPrefix: env.executable.sysPrefix,
+        sysPrefix: env.executable.sysPrefix || '',
         envPath: env.environment?.folderUri,
-        envName: env.environment?.name,
+        envName: env.environment?.name || '',
         uri: env.executable.uri!,
-        displayName: env.environment?.name,
+        displayName: env.environment?.name || '',
         envType,
         version: env.version
             ? {
@@ -363,7 +363,7 @@ export class InterpreterService implements IInterpreterService {
     public get environments(): readonly PythonEnvironmentV2[] {
         this.getApi().catch(noop);
         this.hookupOnDidChangeInterpreterEvent();
-        return this.api?.environments?.known || [];
+        return (this.api?.environments?.known || []).filter((item) => this.isValidWorkSpaceRelatedEnvironment(item));
     }
     private getInterpretersCancellation?: CancellationTokenSource;
     private getInterpreters(): Promise<PythonEnvironment[]> {
@@ -551,19 +551,31 @@ export class InterpreterService implements IInterpreterService {
                         .join(', ')}`
                 );
                 await Promise.all(
-                    api.environments.known.map(async (item) => {
-                        try {
-                            const env = await api.environments.resolveEnvironment(item.id);
-                            const resolved = this.trackResolvedEnvironment(env);
-                            if (resolved) {
-                                allInterpreters.push(resolved);
-                            } else {
-                                traceError(`Failed to get env details from Python API for ${item.id} without an error`);
+                    api.environments.known
+                        .filter((item) => this.isValidWorkSpaceRelatedEnvironment(item))
+                        .map(async (item) => {
+                            try {
+                                const env = await api.environments.resolveEnvironment(item.id);
+                                const resolved = this.trackResolvedEnvironment(env);
+                                traceVerbose(
+                                    `Python environment ${env?.id} from Python Extension API is ${JSON.stringify(
+                                        env
+                                    )} and translated is ${JSON.stringify(resolved)}`
+                                );
+                                if (!this.isValidWorkSpaceRelatedEnvironment(item)) {
+                                    return;
+                                }
+                                if (resolved) {
+                                    allInterpreters.push(resolved);
+                                } else {
+                                    traceError(
+                                        `Failed to get env details from Python API for ${item.id} without an error`
+                                    );
+                                }
+                            } catch (ex) {
+                                traceError(`Failed to get env details from Python API for ${item.id}`, ex);
                             }
-                        } catch (ex) {
-                            traceError(`Failed to get env details from Python API for ${item.id}`, ex);
-                        }
-                    })
+                        })
                 );
             } catch (ex) {
                 traceError(`Failed to refresh list of interpreters and get their details`, ex);
@@ -580,7 +592,27 @@ export class InterpreterService implements IInterpreterService {
         );
         return allInterpreters;
     }
-
+    /**
+     * Python extension API returns all envs from all known workspace folders, including those that do not
+     * belong to the currently opened workspace folders.
+     * This will is used to determine whether an env belongs to the currently opened workspace folders.
+     */
+    private isValidWorkSpaceRelatedEnvironment(env: PythonEnvironmentV2 | ResolvedEnvironment) {
+        const envWorkspaceFolder = env?.environment?.workspaceFolder;
+        if (envWorkspaceFolder) {
+            if (!this.workspace.workspaceFolders) {
+                traceVerbose(`Exclude env ${env.id} as it belongs to a workspace folder`);
+                return false;
+            }
+            if (
+                !this.workspace.workspaceFolders.some((item) => item.uri.toString() === envWorkspaceFolder.toString())
+            ) {
+                traceVerbose(`Exclude env ${env.id} as it belongs to a different workspace folder`);
+                return false;
+            }
+        }
+        return true;
+    }
     private builtListOfInterpretersAtLeastOnce?: boolean;
     private buildListOfInterpretersForFirstTime() {
         if (this.builtListOfInterpretersAtLeastOnce) {
