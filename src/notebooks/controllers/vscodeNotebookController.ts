@@ -57,7 +57,7 @@ import { Telemetry } from '../../telemetry';
 import { WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../messageTypes';
 import {
-    getKernelConnectionPath,
+    getKernelConnectionDisplayPath,
     getRemoteKernelSessionInformation,
     getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection,
@@ -190,7 +190,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 
         // Fill in extended info for our controller
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
-        this.controller.description = getKernelConnectionPath(kernelConnection, this.workspace, this.platform);
+        this.controller.description = getKernelConnectionDisplayPath(kernelConnection, this.workspace, this.platform);
         this.controller.detail =
             kernelConnection.kind === 'connectToLiveRemoteKernel'
                 ? getRemoteKernelSessionInformation(kernelConnection)

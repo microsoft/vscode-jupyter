@@ -57,4 +57,9 @@ export type PythonEnvironment = InterpreterInformation & {
      * Directory of the Python environment.
      */
     envPath?: Uri;
+    /**
+     * This contains the path to the environment.
+     * Used for display purposes only (in kernel picker or other places).
+     */
+    displayPath?: Uri;
 };
