@@ -152,8 +152,7 @@ Command is `Jupyter: Import Jupyter Notebook`
 Basically user is exporting some jupyter notebook into a Python file.","Telemetry.ImportNotebook","IanMatthewHuff","Import-Export","","","scope","The command can be called as a command, in which a file then needs to be selected, or with a file
 as the context already, in which case the import command doesn't ask for selection.","","'command' 
 'file' ",false
-"DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","Error information from the debugger output channel while running initialization code.","Telemetry.InteractiveWindowDebugSetupCodeFailure","roblourens","InteractiveWindow, Debugger","","","ename","The error name of the failure.","string","",false
-"DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","Error information from the debugger output channel while running initialization code.","Telemetry.InteractiveWindowDebugSetupCodeFailure","roblourens","InteractiveWindow, Debugger","","","evalue","The error value of the failure.","string","",false
+"DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE","Error information from the debugger output channel while running initialization code.","Telemetry.InteractiveWindowDebugSetupCodeFailure","roblourens","InteractiveWindow, Debugger","","","","","","",""
 "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","Telemetry sent when an extension attempts to use our 3rd party API.","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","allowed","Whether or not the extension was able to use the API.","","'yes' 
 'no' ",false
 "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS","Telemetry sent when an extension attempts to use our 3rd party API.","Telemetry.JupyterKernelApiAccess","donjayamanne","N/A","","","extensionId","Extension Id that's attempting to use the API.","string","",false
@@ -481,8 +480,7 @@ Common to most of the events.","string","",true
 "DATASCIENCE.NOTEBOOK_START","Send when a kernel starts.","Telemetry.NotebookStart","donjayamanne","Notebook, InteractiveWindow","KernelStartup","","userExecutedCell","Whether the user executed a cell.
 Common to most of the events.","boolean","",true
 "DATASCIENCE.OPEN_PLOT_VIEWER","A new instance of the plot viewer was opened.","Telemetry.OpenPlotViewer","IanMatthewHuff","PlotViewer","","","","","","",""
-"DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE","The Python code that we ran to fetch variables had a failure.","Telemetry.PythonVariableFetchingCodeFailure","IanMatthewHuff","VariableViewer","","","ename","The error name of the failure.","string","",false
-"DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE","The Python code that we ran to fetch variables had a failure.","Telemetry.PythonVariableFetchingCodeFailure","IanMatthewHuff","VariableViewer","","","evalue","The error value of the failure","string","",false
+"DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE","The Python code that we ran to fetch variables had a failure.","Telemetry.PythonVariableFetchingCodeFailure","IanMatthewHuff","VariableViewer","","","","","","",""
 "DATASCIENCE.RECOMMENT_EXTENSION","Telemetry sent when we recommend installing an extension.","Telemetry.RecommendExtension","IanMatthewHuff","N/A","","","action","`displayed` - If prompt was displayed
 `dismissed` - If prompt was displayed & dismissed by the user
 `ok` - If prompt was displayed & ok clicked by the user
