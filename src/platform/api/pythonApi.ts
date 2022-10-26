@@ -418,7 +418,7 @@ export class InterpreterService implements IInterpreterService {
             }
             const envPath = api.environments.getActiveEnvironmentPath(resource);
             const env = await api.environments.resolveEnvironment(envPath);
-            return this.trackResolvedEnvironment(env);
+            return this.trackResolvedEnvironment(env, false);
         });
 
         // If there was a problem in getting the details, remove the cached info.
@@ -467,11 +467,11 @@ export class InterpreterService implements IInterpreterService {
                     });
                     if (matchedPythonEnv) {
                         const env = await api.environments.resolveEnvironment(matchedPythonEnv.id);
-                        return this.trackResolvedEnvironment(env);
+                        return this.trackResolvedEnvironment(env, false);
                     }
                 } else {
                     const env = await api.environments.resolveEnvironment(pythonPathOrPythonId);
-                    return this.trackResolvedEnvironment(env);
+                    return this.trackResolvedEnvironment(env, false);
                 }
             });
         } catch (ex) {
@@ -487,19 +487,29 @@ export class InterpreterService implements IInterpreterService {
             return undefined;
         }
     }
-    private trackResolvedEnvironment(env?: ResolvedEnvironment) {
+    /**
+     * The Python Extension triggers changes to the Python environments.
+     * However internally we need to track changes to the environments as we wrap the Python extension API and the Python extension API only returns partial information.
+     * Some times what happens is
+     * - When we call get active interpreter we get some information from Python extension
+     * - We then come into this method and see the information has changed and we internally trigger a change event so other parts are aware of this
+     * - Next we call the Python extension API again, and the information is different yet again
+     * - We then trigger another change event
+     * - This goes on and on, basically the Python extension API returns different information for the same env.
+     *
+     * The argument `triggerChangeEvent` is more of a fail safe to ensure we don't end up in such infinite loops.
+     */
+    private trackResolvedEnvironment(env: ResolvedEnvironment | undefined, triggerChangeEvent: boolean) {
         if (env) {
             const resolved = pythonEnvToJupyterEnv(env);
-            let changed = false;
             if (
                 !this._interpreters.get(env.id) ||
                 !areObjectsWithUrisTheSame(resolved, this._interpreters.get(env.id)?.resolved)
             ) {
-                changed = true;
                 this._interpreters.set(env.id, { resolved });
-            }
-            if (changed) {
-                this.didChangeInterpreters.fire();
+                if (triggerChangeEvent) {
+                    this.didChangeInterpreters.fire();
+                }
             }
             return resolved;
         }
@@ -557,7 +567,7 @@ export class InterpreterService implements IInterpreterService {
                         .map(async (item) => {
                             try {
                                 const env = await api.environments.resolveEnvironment(item.id);
-                                const resolved = this.trackResolvedEnvironment(env);
+                                const resolved = this.trackResolvedEnvironment(env, true);
                                 traceVerbose(
                                     `Python environment ${env?.id} from Python Extension API is ${JSON.stringify(
                                         env
