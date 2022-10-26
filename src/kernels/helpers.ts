@@ -261,13 +261,13 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
             }
         }
         case 'startUsingPythonInterpreter':
+            const pythonVersion = (
+                getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+            ).trim();
             if (
                 kernelConnection.interpreter.envType &&
                 kernelConnection.interpreter.envType !== EnvironmentType.Unknown
             ) {
-                const pythonVersion = `Python ${
-                    getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
-                }`.trim();
                 // If user has created a custom kernelspec, then use that.
                 if (
                     kernelConnection.kernelSpec.display_name &&
@@ -276,9 +276,15 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                 ) {
                     return kernelConnection.kernelSpec.display_name;
                 }
-                const pythonDisplayName = pythonVersion.trim();
+                const pythonDisplayName = pythonVersion.trim() ? `Python ${pythonVersion}` : 'Python';
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 return envName ? `${envName} (${pythonDisplayName})` : pythonDisplayName;
+            } else if (!oldDisplayName.includes(pythonVersion)) {
+                if (oldDisplayName === `Python ${pythonVersion.substring(0, 1)}`) {
+                    return `Python ${pythonVersion}`;
+                } else {
+                    return `${oldDisplayName} (Python ${pythonVersion})`;
+                }
             }
     }
     return oldDisplayName;

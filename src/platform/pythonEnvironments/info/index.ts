@@ -53,5 +53,8 @@ export type PythonEnvironment = InterpreterInformation & {
     displayName?: string;
     envType?: EnvironmentType;
     envName?: string;
+    /**
+     * Directory of the Python environment.
+     */
     envPath?: Uri;
 };

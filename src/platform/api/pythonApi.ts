@@ -79,7 +79,7 @@ export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironme
     return {
         id: env.id,
         sysPrefix: env.executable.sysPrefix,
-        envPath: Uri.file(env.path),
+        envPath: env.environment?.folderUri,
         envName: env.environment?.name,
         uri: env.executable.uri!,
         displayName: env.environment?.name,
