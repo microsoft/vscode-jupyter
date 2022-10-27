@@ -24,7 +24,7 @@ import {
 } from '../../../../notebooks/controllers/types';
 import { IPythonExtensionChecker } from '../../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
-import { JupyterNotebookView, InteractiveWindowView } from '../../../../platform/common/constants';
+import { JupyterNotebookView, InteractiveWindowView, PYTHON_LANGUAGE } from '../../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
 import { IDisposable } from '../../../../platform/common/types';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
@@ -151,6 +151,46 @@ suite('Preferred Controller', () => {
         assert.isOk(preferredConnection);
         assert.equal(preferredConnection, juliaKernel);
         assert.equal(controller?.connection, juliaKernel);
+    });
+    test('No matching python Kernel when there are no python kernels', async () => {
+        const kernels = [juliaKernel];
+        const metadata: Partial<INotebookMetadata> = {
+            kernelspec: {
+                display_name: '',
+                name: PYTHON_LANGUAGE
+            },
+            language_info: {
+                name: PYTHON_LANGUAGE
+            }
+        };
+        const { document } = setupData(metadata, kernels);
+
+        const { preferredConnection, controller } = await preferredControllerService.computePreferred(
+            instance(document)
+        );
+
+        assert.isUndefined(preferredConnection);
+        assert.isUndefined(controller);
+    });
+    test('No matching Julia Kernel when there are no Julia kernels', async () => {
+        const kernels = [pythonKernel];
+        const metadata: Partial<INotebookMetadata> = {
+            kernelspec: {
+                display_name: '',
+                name: 'julia'
+            },
+            language_info: {
+                name: 'julia'
+            }
+        };
+        const { document } = setupData(metadata, kernels);
+
+        const { preferredConnection, controller } = await preferredControllerService.computePreferred(
+            instance(document)
+        );
+
+        assert.isUndefined(preferredConnection);
+        assert.isUndefined(controller);
     });
     test('Does not find a matching Kernel', async () => {
         const kernels = [pythonKernel, juliaKernel];
