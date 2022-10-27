@@ -227,6 +227,20 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     traceInfoIfCI(
                         `PreferredConnection not found for NotebookDocument: ${getDisplayPath(document.uri)}`
                     );
+                    if (!preferredConnection && this.preferredControllers.get(document)) {
+                        // Possible previously we had just 1 controller and that was setup as the preferred
+                        // & now that we have more controllers, we know more about what needs to be matched
+                        // & since we no longer have a preferred, we should probably unset the previous preferred
+                        traceVerbose(
+                            `Resetting the previous preferred controller ${
+                                this.preferredControllers.get(document)?.id
+                            } to default affinity for document ${getDisplayPath(document.uri)}`
+                        );
+                        await this.preferredControllers
+                            .get(document)
+                            ?.controller.updateNotebookAffinity(document, NotebookControllerAffinity.Default);
+                    }
+
                     return {};
                 }
 
