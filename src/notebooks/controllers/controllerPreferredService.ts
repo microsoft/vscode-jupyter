@@ -305,6 +305,18 @@ export class ControllerPreferredService implements IControllerPreferredService, 
 
                 // Save in our map so we can find it in test code.
                 this.preferredControllers.set(document, targetController);
+            } else if (!preferredConnection && this.preferredControllers.get(document)) {
+                // Possible previously we had just 1 controller and that was setup as the preferred
+                // & now that we have more controllers, we know more about what needs to be matched
+                // & since we no longer have a preferred, we should probably unset the previous preferred
+                traceVerbose(
+                    `Resetting the previous preferred controller ${
+                        this.preferredControllers.get(document)?.id
+                    } to default affinity for document ${getDisplayPath(document.uri)}`
+                );
+                await this.preferredControllers
+                    .get(document)
+                    ?.controller.updateNotebookAffinity(document, NotebookControllerAffinity.Default);
             }
             traceInfoIfCI(
                 `TargetController found ID: ${preferredConnection?.id} type ${
@@ -397,9 +409,18 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 languageInNotebookMetadata &&
                 languageInNotebookMetadata !== PYTHON_LANGUAGE &&
                 getKernelConnectionLanguage(potentialMatch) === languageInNotebookMetadata;
+            const isPythonLanguageMatch =
+                languageInNotebookMetadata &&
+                languageInNotebookMetadata === PYTHON_LANGUAGE &&
+                getKernelConnectionLanguage(potentialMatch) === languageInNotebookMetadata;
 
             // Match on our possible reasons
-            if (onlyConnection || topMatchIsPreferredInterpreter || isExactMatch || isNonPythonLanguageMatch) {
+            if (
+                (onlyConnection && isPythonLanguageMatch) || // If we have only one Python controller and we have a Python nb opened, then use this as preferred
+                topMatchIsPreferredInterpreter ||
+                isExactMatch ||
+                isNonPythonLanguageMatch
+            ) {
                 traceInfo(
                     `Preferred kernel ${potentialMatch.id} is exact match or top match for non python kernels, (${onlyConnection}, ${topMatchIsPreferredInterpreter}, ${isExactMatch}, ${isNonPythonLanguageMatch})`
                 );
