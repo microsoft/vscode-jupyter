@@ -82,7 +82,7 @@ export interface IDebuggingManager {
 
 export const INotebookDebuggingManager = Symbol('INotebookDebuggingManager');
 export interface INotebookDebuggingManager extends IDebuggingManager {
-    tryToStartDebugging(mode: KernelDebugMode, cell: NotebookCell): Promise<void>;
+    tryToStartDebugging(mode: KernelDebugMode, cell: NotebookCell, skipIpykernelCheck?: boolean): Promise<void>;
     runByLineNext(cell: NotebookCell): void;
     runByLineStop(cell: NotebookCell): void;
 }

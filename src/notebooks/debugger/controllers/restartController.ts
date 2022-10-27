@@ -47,7 +47,7 @@ export class RestartController implements IDebuggingDelegate {
                     .disconnect()
                     .then(() => {
                         this.trace('restart', 'doRestart');
-                        return this.debuggingManager.tryToStartDebugging(this.mode, this.debugCell);
+                        return this.debuggingManager.tryToStartDebugging(this.mode, this.debugCell, true);
                     })
                     .catch((err) => {
                         this.error('restart', `Error restarting: ${err}`);
