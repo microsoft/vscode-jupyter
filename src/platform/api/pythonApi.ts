@@ -608,21 +608,33 @@ export class InterpreterService implements IInterpreterService {
      * belong to the currently opened workspace folders.
      * This will is used to determine whether an env belongs to the currently opened workspace folders.
      */
-    private isValidWorkSpaceRelatedEnvironment(env: PythonEnvironmentV2 | ResolvedEnvironment) {
-        const envWorkspaceFolder = env?.environment?.workspaceFolder;
-        if (envWorkspaceFolder) {
-            if (!this.workspace.workspaceFolders) {
-                traceVerbose(`Exclude env ${env.id} as it belongs to a workspace folder`);
-                return false;
-            }
-            if (
-                !this.workspace.workspaceFolders.some((item) => item.uri.toString() === envWorkspaceFolder.toString())
-            ) {
-                traceVerbose(`Exclude env ${env.id} as it belongs to a different workspace folder`);
-                return false;
-            }
-        }
+    private isValidWorkSpaceRelatedEnvironment(_env: PythonEnvironmentV2 | ResolvedEnvironment) {
+        // Disabled this code due to upstream bugs.
+        // https://github.com/microsoft/vscode-python/issues/20105
+        // https://github.com/microsoft/vscode-python/issues/20104
         return true;
+        // const envWorkspaceFolder = env?.environment?.workspaceFolder;
+        // if (envWorkspaceFolder) {
+        //     if (!this.workspace.workspaceFolders) {
+        //         traceVerbose(`Exclude env ${env.id} as it belongs to a workspace folder`);
+        //         return false;
+        //     }
+        //     if (
+        //         !this.workspace.workspaceFolders.some(
+        //             (item) =>
+        //                 item.uri.toString() === envWorkspaceFolder.toString() ||
+        //                 item.uri.path === envWorkspaceFolder.path
+        //         )
+        //     ) {
+        //         traceVerbose(
+        //             `Exclude env ${
+        //                 env.id
+        //             } as it belongs to a different workspace folder ${envWorkspaceFolder.toString()}`
+        //         );
+        //         return false;
+        //     }
+        // }
+        // return true;
     }
     private builtListOfInterpretersAtLeastOnce?: boolean;
     private buildListOfInterpretersForFirstTime() {
