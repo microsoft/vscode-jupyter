@@ -124,14 +124,19 @@ export class DebuggingManager
         this.debugDocuments.set(Array.from(debugDocumentUris.values())).ignoreErrors();
     }
 
-    public async tryToStartDebugging(mode: KernelDebugMode, cell: NotebookCell) {
+    public async tryToStartDebugging(mode: KernelDebugMode, cell: NotebookCell, skipIpykernelCheck = false) {
         traceInfo(`Starting debugging with mode ${mode}`);
 
-        const ipykernelResult = await this.checkIpykernelAndPrompt(cell);
-        if (ipykernelResult === IpykernelCheckResult.Ok) {
-            if (mode === KernelDebugMode.RunByLine || mode === KernelDebugMode.Cell) {
-                await this.startDebuggingCell(mode, cell!);
+        if (!skipIpykernelCheck) {
+            const ipykernelResult = await this.checkIpykernelAndPrompt(cell);
+            if (ipykernelResult !== IpykernelCheckResult.Ok) {
+                traceInfo(`Ipykernel check failed: ${IpykernelCheckResult[ipykernelResult]}`);
+                return;
             }
+        }
+
+        if (mode === KernelDebugMode.RunByLine || mode === KernelDebugMode.Cell) {
+            await this.startDebuggingCell(mode, cell!);
         }
     }
 
