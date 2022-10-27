@@ -57,7 +57,7 @@ export class LocalKnownPathKernelSpecFinder
     }
     activate(): void {
         const cancellation = new CancellationTokenSource();
-        this.listKernelsFirstTimeFromMementoCache(LocalKernelSpecsCacheKey)
+        this.listKernelsFirstTimeFromMemento(LocalKernelSpecsCacheKey)
             .then((kernels) => {
                 if (this._cachedKernels.length === 0 && kernels.length) {
                     this._cachedKernels = kernels;

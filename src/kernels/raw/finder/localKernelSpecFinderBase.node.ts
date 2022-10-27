@@ -133,7 +133,7 @@ export abstract class LocalKernelSpecFinderBase<
         // ! as the has and set above verify that we have a return here
         return this.kernelSpecCache.get(cacheKey)!.promise;
     }
-    protected async listKernelsFirstTimeFromMementoCache(cacheKey: string): Promise<T[]> {
+    protected async listKernelsFirstTimeFromMemento(cacheKey: string): Promise<T[]> {
         // Check memento too
         const cache = this.globalState.get<{ kernels: T[]; extensionVersion: string }>(cacheKey, {
             kernels: [],

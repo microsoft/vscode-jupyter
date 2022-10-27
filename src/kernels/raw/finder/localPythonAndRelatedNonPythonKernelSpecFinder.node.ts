@@ -88,7 +88,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         interpreterService.onDidChangeInterpreter(() => this.refresh().catch(noop), this, this.disposables);
     }
     public activate() {
-        this.listKernelsFirstTimeFromMementoCache(LocalPythonKernelsCacheKey)
+        this.listKernelsFirstTimeFromMemento(LocalPythonKernelsCacheKey)
             .then((kernels) => {
                 if (this._cachedKernels.length === 0 && kernels.length) {
                     this._cachedKernels = kernels;
