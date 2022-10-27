@@ -10,7 +10,7 @@ import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../../
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IWorkspaceService } from '../../../platform/common/application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
@@ -18,6 +18,8 @@ import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { sendKernelSpecTelemetry } from './helper';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+
+const LocalKernelSpecsCacheKey = 'LOCAL_KERNEL_SPECS_CACHE_KEY_V_2022_10';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
@@ -43,9 +45,10 @@ export class LocalKnownPathKernelSpecFinder
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(IMemento) @named(GLOBAL_MEMENTO) memento: Memento,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IApplicationEnvironment) env: IApplicationEnvironment
     ) {
-        super(fs, workspaceService, extensionChecker, memento, disposables);
+        super(fs, workspaceService, extensionChecker, memento, disposables, env);
         if (this.oldKernelSpecsFolder) {
             traceInfo(
                 `Old kernelSpecs (created by Jupyter Extension) stored in directory ${this.oldKernelSpecsFolder}`
@@ -54,6 +57,14 @@ export class LocalKnownPathKernelSpecFinder
     }
     activate(): void {
         const cancellation = new CancellationTokenSource();
+        this.listKernelsFirstTimeFromMementoCache(LocalKernelSpecsCacheKey)
+            .then((kernels) => {
+                if (this._cachedKernels.length === 0 && kernels.length) {
+                    this._cachedKernels = kernels;
+                    this._onDidChangeKernels.fire();
+                }
+            })
+            .ignoreErrors();
         this.listKernelSpecs(cancellation.token)
             .then(noop, noop)
             .finally(() => cancellation.dispose());
@@ -96,6 +107,7 @@ export class LocalKnownPathKernelSpecFinder
                 JSON.stringify(oldKernels) !== JSON.stringify(mappedKernelSpecs)
             ) {
                 this._onDidChangeKernels.fire();
+                this.writeToMementoCache(this._cachedKernels, LocalKernelSpecsCacheKey).ignoreErrors();
             }
             this._onDidChangeKernels.fire();
             return mappedKernelSpecs;

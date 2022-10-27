@@ -7,7 +7,7 @@ import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IWorkspaceService } from '../../../platform/common/application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceVerbose, traceError, traceDecoratorError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -15,14 +15,21 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable, IDisposableRegistry, ReadWrite } from '../../../platform/common/types';
 import { isUri, noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers';
+import {
+    deserializeKernelConnection,
+    getInterpreterKernelSpecName,
+    getKernelRegistrationInfo,
+    serializeKernelConnection
+} from '../../../kernels/helpers';
 import {
     IJupyterKernelSpec,
+    LocalKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
+import { removeOldCachedItems } from '../../common/commonFinder';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
@@ -66,7 +73,8 @@ export abstract class LocalKernelSpecFinderBase<
         protected readonly workspaceService: IWorkspaceService,
         protected readonly extensionChecker: IPythonExtensionChecker,
         protected readonly globalState: Memento,
-        disposables: IDisposableRegistry
+        disposables: IDisposableRegistry,
+        private readonly env: IApplicationEnvironment
     ) {
         disposables.push(this);
     }
@@ -125,7 +133,64 @@ export abstract class LocalKernelSpecFinderBase<
         // ! as the has and set above verify that we have a return here
         return this.kernelSpecCache.get(cacheKey)!.promise;
     }
+    protected async listKernelsFirstTimeFromMementoCache(cacheKey: string): Promise<T[]> {
+        // Check memento too
+        const cache = this.globalState.get<{ kernels: T[]; extensionVersion: string }>(cacheKey, {
+            kernels: [],
+            extensionVersion: ''
+        });
 
+        let kernels: T[] = [];
+        /**
+         * The cached list of raw kernels is pointing to kernelSpec.json files in the extensions directory.
+         * Assume you have version 1 of extension installed.
+         * Now you update to version 2, at this point the cache still points to version 1 and the kernelSpec.json files are in the directory version 1.
+         * Those files in directory for version 1 could get deleted by VS Code at any point in time, as thats an old version of the extension and user has now installed version 2.
+         * Hence its wrong and buggy to use those files.
+         * To ensure we don't run into weird issues with the use of cached kernelSpec.json files, we ensure the cache is tied to each version of the extension.
+         */
+        if (cache && Array.isArray(cache.kernels) && cache.extensionVersion === this.env.extensionVersion) {
+            kernels = cache.kernels.map(deserializeKernelConnection) as T[];
+        }
+
+        // Validate
+        const validValues: T[] = [];
+        await Promise.all(
+            kernels.map(async (item) => {
+                if (await this.isValidCachedKernel(item)) {
+                    validValues.push(item);
+                }
+            })
+        );
+        return validValues;
+    }
+
+    protected async writeToMementoCache(values: T[], cacheKey: string) {
+        const serialized = values.map(serializeKernelConnection);
+        await Promise.all([
+            removeOldCachedItems(this.globalState),
+            this.globalState.update(cacheKey, {
+                kernels: serialized,
+                extensionVersion: this.env.extensionVersion
+            })
+        ]);
+    }
+    protected async isValidCachedKernel(kernel: LocalKernelConnectionMetadata): Promise<boolean> {
+        switch (kernel.kind) {
+            case 'startUsingPythonInterpreter':
+                // Interpreters have to still exist
+                return this.fs.exists(kernel.interpreter.uri);
+
+            case 'startUsingLocalKernelSpec':
+                // Spec files have to still exist and interpreters have to exist
+                const promiseSpec = kernel.kernelSpec.specFile
+                    ? this.fs.exists(Uri.file(kernel.kernelSpec.specFile))
+                    : Promise.resolve(true);
+                return promiseSpec.then((r) => {
+                    return r && kernel.interpreter ? this.fs.exists(kernel.interpreter.uri) : Promise.resolve(true);
+                });
+        }
+    }
     /**
      * Load the IJupyterKernelSpec for a given spec path, check the ones that we have already loaded first
      */
