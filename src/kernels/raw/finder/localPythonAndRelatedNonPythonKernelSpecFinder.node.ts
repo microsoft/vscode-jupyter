@@ -23,7 +23,7 @@ import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IWorkspaceService } from '../../../platform/common/application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
@@ -38,6 +38,7 @@ import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 
+const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2022_10';
 /**
  * Returns all Python kernels and any related kernels registered in the python environment.
  * If Python extension is not installed, this will return all Python kernels registered globally.
@@ -64,9 +65,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         @inject(LocalKnownPathKernelSpecFinder)
         private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IApplicationEnvironment) env: IApplicationEnvironment
     ) {
-        super(fs, workspaceService, extensionChecker, globalState, disposables);
+        super(fs, workspaceService, extensionChecker, globalState, disposables, env);
         interpreterService.onDidChangeInterpreters(() => this.refresh().catch(noop), this, this.disposables);
         this.kernelSpecsFromKnownLocations.onDidChangeKernels(
             () => {
@@ -86,6 +88,14 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         interpreterService.onDidChangeInterpreter(() => this.refresh().catch(noop), this, this.disposables);
     }
     public activate() {
+        this.listKernelsFirstTimeFromMemento(LocalPythonKernelsCacheKey)
+            .then((kernels) => {
+                if (this._cachedKernels.length === 0 && kernels.length) {
+                    this._cachedKernels = kernels;
+                    this._onDidChangeKernels.fire();
+                }
+            })
+            .ignoreErrors();
         this.refresh().ignoreErrors();
     }
     public get kernels(): LocalKernelConnectionMetadata[] {
@@ -108,13 +118,12 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
             JSON.stringify(this._cachedKernels) !== JSON.stringify(previousListOfKernels)
         ) {
             this._onDidChangeKernels.fire();
+            this.writeToMementoCache(this._cachedKernels, LocalPythonKernelsCacheKey).ignoreErrors();
         }
     }
 
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
-    private async listKernelsImplementation(
-        cancelToken: CancellationToken
-    ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+    private async listKernelsImplementation(cancelToken: CancellationToken): Promise<LocalKernelConnectionMetadata[]> {
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? this.interpreterService.resolvedEnvironments
             : [];
