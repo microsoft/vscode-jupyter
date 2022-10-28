@@ -12,7 +12,6 @@ import {
     window
 } from 'vscode';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
-import { isPythonKernelConnection } from '../../../kernels/helpers';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
@@ -22,11 +21,12 @@ import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/ty
 import { sleep } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getLanguageOfNotebookDocument } from '../../languages/helpers';
-import { IControllerLoader, IControllerRegistration } from '../types';
+import { IControllerLoader } from '../types';
 
 // This service owns the commands that show up in the kernel picker to allow for either installing
 // the Python Extension or installing Python
@@ -36,7 +36,6 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
     private showInstallPythonContext: ContextKey;
     // WeakSet of executing cells, so they get cleaned up on document close without worrying
     private executingCells: WeakSet<NotebookCell> = new WeakSet<NotebookCell>();
-    private foundPythonConnections: boolean = false;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
@@ -45,9 +44,9 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IsWebExtension) private readonly isWeb: boolean,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
         // Context keys to control when these commands are shown
         this.showInstallPythonExtensionContext = new ContextKey(
@@ -76,11 +75,10 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
             )
         );
 
-        // We need to know when controllers have been updated so that we can update our context keys
-        this.disposables.push(this.controllerLoader.refreshed(this.onNotebookControllersLoaded, this));
-
         // Also track active notebook editor change
         this.disposables.push(window.onDidChangeActiveNotebookEditor(this.onDidChangeActiveNotebookEditor, this));
+
+        this.disposables.push(this.interpreterService.onDidChangeInterpreters(this.onInterpretersChanged, this));
     }
 
     // Track if there are any cells currently executing or pending
@@ -109,7 +107,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
                     return;
                 }
 
-                if (!this.foundPythonConnections) {
+                if (this.interpreterService.environments.length === 0) {
                     // Extension is installed, but we didn't find any python connections
                     // recommend installing python in this case
                     await this.showInstallPythonExtensionContext.set(false);
@@ -124,11 +122,8 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         await this.showInstallPythonContext.set(false);
     }
 
-    // Check if we actually found python connections after loading controllers
-    private async onNotebookControllersLoaded() {
-        this.foundPythonConnections = this.controllerRegistration.all.some((item) => isPythonKernelConnection(item));
-
-        // If we just finished loading, make sure to check the active document
+    // When interpreters change, recalculate our commands as python might have been added or removed
+    private async onInterpretersChanged() {
         await this.onDidChangeActiveNotebookEditor(window.activeNotebookEditor);
     }
 

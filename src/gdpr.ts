@@ -358,8 +358,6 @@
 //Telemetry.InteractiveWindowDebugSetupCodeFailure
 /* __GDPR__
    "DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE" : {
-     "ename": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"The error name of the failure.","owner":"roblourens"},
-     "evalue": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"The error value of the failure.","owner":"roblourens"},
      "${include}": [
        "${F1}"
 
@@ -556,8 +554,6 @@
 //Telemetry.PythonVariableFetchingCodeFailure
 /* __GDPR__
    "DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE" : {
-     "ename": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"The error name of the failure.","owner":"IanMatthewHuff"},
-     "evalue": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"The error value of the failure","owner":"IanMatthewHuff"},
      "${include}": [
        "${F1}"
 

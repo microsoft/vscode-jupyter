@@ -3,14 +3,14 @@
 
 import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernel } from '../../kernels/types';
-import { ICommandManager } from '../../platform/common/application/types';
-import { noop } from '../../platform/common/utils/misc';
-import { traceVerbose } from '../../platform/logging';
-import { sendTelemetryEvent } from '../../telemetry';
-import { DebuggingTelemetry } from './constants';
-import { IDebuggingDelegate, IKernelDebugAdapter } from './debuggingTypes';
-import { cellDebugSetup } from './helper';
+import { IKernel } from '../../../kernels/types';
+import { ICommandManager } from '../../../platform/common/application/types';
+import { noop } from '../../../platform/common/utils/misc';
+import { traceVerbose } from '../../../platform/logging';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { DebuggingTelemetry } from '../constants';
+import { IDebuggingDelegate, IKernelDebugAdapter } from '../debuggingTypes';
+import { cellDebugSetup } from '../helper';
 
 export function isJustMyCodeNotification(msg: string): boolean {
     return msg.includes('Frame skipped from debugging during step-in');
@@ -44,16 +44,18 @@ export class DebugCellController implements IDebuggingDelegate {
         return false;
     }
 
-    public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
+    public async willSendRequest(request: DebugProtocol.Request): Promise<undefined> {
         if (request.command === 'configurationDone') {
             await cellDebugSetup(this.kernel, this.debugAdapter);
 
             this.commandManager
                 .executeCommand('notebook.cell.execute', {
                     ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
-                    document: this.debugCell.document.uri
+                    document: this.debugCell.notebook.uri
                 })
                 .then(noop, noop);
         }
+
+        return undefined;
     }
 }

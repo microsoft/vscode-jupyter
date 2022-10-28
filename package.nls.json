@@ -345,6 +345,9 @@
         "message": "Behavior of the Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
         "comment": ["{Locked='perFile'}", "{Locked=\"'single'\"}", "{Locked=\"'multiple'\"}"]
     },
+    "jupyter.configuration.jupyter.pythonCellFolding.description": {
+        "message": "Enable folding regions for code cells in Python files. This setting requires a reload of VS Code."
+    },
     "jupyter.configuration.jupyter.interactiveWindowViewColumn.description": {
         "message": "Where to open an Interactive Window that is not associated with a python file. 'beside' will open the interactive window to the right of the active editor. 'active' will open the interactive window in place of the active editor. 'secondGroup' will open the interactive window in the second editor group.",
         "comment": ["{Locked='beside'}", "{Locked=\"'active'\"}", "{Locked=\"'secondGroup'\"}"]
@@ -358,7 +361,7 @@
         "message": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
         "comment": ["{Locked='%load_ext autoreload\\n%autoreload 2'}"]
     },
-    "jupyter.configuration.jupyter.debugJustMyCode.description": "When debugging, debug just my code.",
+    "jupyter.configuration.jupyter.debugJustMyCode.description": "When debugging, only step through user-written code. Disable this to allow stepping into library code.",
     "jupyter.configuration.jupyter.showOutlineButtonInNotebookToolbar.description": "Show the Outline button in the Jupyter notebook toolbar.",
     "jupyter.configuration.jupyter.newCellOnRunLast.description": "Append a new empty cell to an interactive window file on running the currently last cell.",
     "jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.description": "Characters which trigger auto completion on a python jupyter kernel.",

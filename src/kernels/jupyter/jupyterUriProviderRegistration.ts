@@ -46,6 +46,12 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         return Promise.all([...this.providers.values()]);
     }
 
+    public async getProvider(id: string): Promise<IJupyterUriProvider | undefined> {
+        await this.checkOtherExtensions();
+
+        return this.providers.get(id);
+    }
+
     public async registerProvider(provider: IJupyterUriProvider) {
         if (!this.providers.has(provider.id)) {
             this.providers.set(provider.id, this.createProvider(provider));

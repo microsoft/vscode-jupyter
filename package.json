@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.72.0"
+        "vscode": "^1.73.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -287,13 +287,6 @@
                 "category": "Jupyter (Dev)",
                 "icon": "$(debug-start)",
                 "enablement": "jupyter.development && notebookType == jupyter-notebook && isWorkspaceTrusted && jupyter.replayLogLoaded && !jupyter.webExtension"
-            },
-            {
-                "command": "jupyter.debugNotebook",
-                "title": "%jupyter.command.jupyter.debug.title%",
-                "icon": "$(bug)",
-                "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && resource not in jupyter.notebookeditor.runByLineDocuments"
             },
             {
                 "command": "jupyter.filterKernels",
@@ -984,11 +977,11 @@
             "notebook/kernelSource": [
                 {
                     "command": "jupyter.installPythonExtensionViaKernelPicker",
-                    "when": "jupyter.showInstallPythonExtensionCommand && jupyter.controllersLoaded"
+                    "when": "jupyter.showInstallPythonExtensionCommand"
                 },
                 {
                     "command": "jupyter.installPythonViaKernelPicker",
-                    "when": "jupyter.showInstallPythonCommand && jupyter.controllersLoaded"
+                    "when": "jupyter.showInstallPythonCommand"
                 },
                 {
                     "command": "jupyter.switchToLocalKernels",
@@ -1098,11 +1091,6 @@
                     "command": "jupyter.replayPylanceLog",
                     "title": "%jupyter.commandPalette.jupyter.replayPylanceLog.title%",
                     "when": "jupyter.development && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.debugNotebook",
-                    "title": "%jupyter.command.jupyter.debug.title%",
-                    "when": "false"
                 },
                 {
                     "command": "jupyter.interactive.copyCell",
@@ -1919,6 +1907,12 @@
                     "scope": "resource",
                     "description": "%jupyter.configuration.jupyter.interactiveWindowMode.description%",
                     "default": "multiple"
+                },
+                "jupyter.pythonCellFolding": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%jupyter.configuration.jupyter.pythonCellFolding.description%",
+                    "scope": "resource"
                 },
                 "jupyter.interactiveWindowViewColumn": {
                     "type": "string",

@@ -1,5 +1,49 @@
 # Changelog
 
+## 2022.9.120 (11 October 2022)
+### Enhancements
+1. Display an error message (with instructions to resolve the issue) in the cell output when attempting to run a cell against a kernel from an untrusted location.
+   ([#11622](https://github.com/Microsoft/vscode-jupyter/issues/11622))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+## 2022.9.110 (11 October 2022)
+### Fixes
+1. Fixed vulnerability described in [CVE-2022-41083](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2022-41083)
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+
 ## 2022.9.110 (11 October 2022)
 ### Fixes
 1. Fixed vulnerability described in [CVE-2022-41083](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2022-41083)

@@ -1242,6 +1242,8 @@ export namespace DataScience {
     export const noNotebookToDebug = () =>
         localize('DataScience.noNotebookToDebug', 'No active notebook document to debug.');
     export const cantStartDebugging = () => localize('DataScience.cantStartDebugging', "Can't start debugging.");
+    export const restartNotSupported = () =>
+        localize('DataScience.restartNotSupported', 'Restarting is not supported in the interactive window.');
     export const importingIpynb = () => localize('DataScience.importingIpynb', 'Importing notebook file');
     export const exportingToFormat = () => localize('DataScience.exportingToFormat', 'Exporting to {0}');
     export const kernelCategoryForJupyterSession = () =>

@@ -261,6 +261,29 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
 
         return idAndHandle ? `${idAndHandle.id}:${idAndHandle.handle}` : undefined;
     }
+    private async handleJupyterServerProviderConnectionError(uri: string) {
+        const idAndHandle = extractJupyterServerHandleAndId(uri);
+
+        if (!idAndHandle) {
+            return false;
+        }
+
+        const provider = await this.jupyterUriProviderRegistration.getProvider(idAndHandle.id);
+        if (!provider || !provider.getHandles) {
+            return false;
+        }
+
+        try {
+            const handles = await provider.getHandles();
+
+            if (!handles.includes(idAndHandle.handle)) {
+                await this.serverUriStorage.removeUri(uri);
+            }
+            return true;
+        } catch (_ex) {
+            return false;
+        }
+    }
     public async handleKernelError(
         err: Error,
         errorContext: KernelAction,
@@ -323,7 +346,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     ? err.originalError.message || ''
                     : err.originalError?.message || err.message;
             const serverId = err instanceof RemoteJupyterServerConnectionError ? err.serverId : err.serverId;
-            const displayName = savedList.find((item) => item.serverId === serverId)?.displayName;
+            const server = savedList.find((item) => item.serverId === serverId);
+            const displayName = server?.displayName;
             const baseUrl = err instanceof RemoteJupyterServerConnectionError ? err.baseUrl : '';
             const idAndHandle =
                 err instanceof RemoteJupyterServerUriProviderError ? `${err.providerId}:${err.handle}` : '';
@@ -334,6 +358,10 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     ? this.extensions.getExtension(err.extensionId)?.packageJSON.displayName || err.extensionId
                     : '';
             const options = actionSource === 'jupyterExtension' ? [DataScience.selectDifferentKernel()] : [];
+            if (server && (await this.handleJupyterServerProviderConnectionError(server.uri))) {
+                return KernelInterpreterDependencyResponse.selectDifferentKernel;
+            }
+
             const selection = await this.applicationShell.showErrorMessage(
                 err instanceof InvalidRemoteJupyterServerUriHandleError
                     ? DataScience.remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid().format(extensionName)

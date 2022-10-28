@@ -1,10 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernelDebugAdapter, IKernelDebugAdapterConfig, KernelDebugMode } from './debuggingTypes';
-import { IKernel } from '../../kernels/types';
 import { IDebugEventMsg } from '@jupyterlab/services/lib/kernel/messages';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { IKernel } from '../../kernels/types';
+import {
+    IInteractiveWindowDebugConfig,
+    IKernelDebugAdapter,
+    INotebookDebugConfig,
+    KernelDebugMode
+} from './debuggingTypes';
 
 export enum IpykernelCheckResult {
     Unknown,
@@ -29,15 +34,23 @@ builtins.print(ipykernel.__version__)`;
     return IpykernelCheckResult.Unknown;
 }
 
-export function assertIsDebugConfig(thing: unknown): asserts thing is IKernelDebugAdapterConfig {
-    const config = thing as IKernelDebugAdapterConfig;
+export function assertIsDebugConfig(thing: unknown): asserts thing is INotebookDebugConfig {
+    const config = thing as INotebookDebugConfig;
     if (
+        typeof config.__notebookUri === 'undefined' ||
         typeof config.__mode === 'undefined' ||
         ((config.__mode === KernelDebugMode.Cell ||
             config.__mode === KernelDebugMode.InteractiveWindow ||
             config.__mode === KernelDebugMode.RunByLine) &&
             typeof config.__cellIndex === 'undefined')
     ) {
+        throw new Error('Invalid launch configuration');
+    }
+}
+
+export function assertIsInteractiveWindowDebugConfig(thing: unknown): asserts thing is IInteractiveWindowDebugConfig {
+    assertIsDebugConfig(thing);
+    if (thing.__mode !== KernelDebugMode.InteractiveWindow) {
         throw new Error('Invalid launch configuration');
     }
 }

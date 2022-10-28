@@ -18,6 +18,7 @@ import {
 } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
+import { IPlatformService } from '../../platform/common/platform/types';
 import {
     IDisposableRegistry,
     IConfigurationService,
@@ -83,7 +84,8 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IPlatformService) private readonly platform: IPlatformService
     ) {
         this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverConnectionType.onDidChange(this.onDidChangeFilter, this, this.disposables);
@@ -155,7 +157,8 @@ export class ControllerRegistration implements IControllerRegistration {
                         this.browser,
                         this.extensionChecker,
                         this.serviceContainer,
-                        this.serverUriStorage
+                        this.serverUriStorage,
+                        this.platform
                     );
                     controller.onDidDispose(
                         () => {

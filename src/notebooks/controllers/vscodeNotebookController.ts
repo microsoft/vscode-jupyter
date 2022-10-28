@@ -57,7 +57,7 @@ import { Telemetry } from '../../telemetry';
 import { WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../messageTypes';
 import {
-    getKernelConnectionPath,
+    getKernelConnectionDisplayPath,
     getRemoteKernelSessionInformation,
     getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection,
@@ -90,6 +90,7 @@ import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
+import { IPlatformService } from '../../platform/common/platform/types';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -166,7 +167,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
-        private readonly serverUriStorage: IJupyterServerUriStorage
+        private readonly serverUriStorage: IJupyterServerUriStorage,
+        private readonly platform: IPlatformService
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -188,7 +190,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 
         // Fill in extended info for our controller
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
-        this.controller.description = getKernelConnectionPath(kernelConnection, this.workspace);
+        this.controller.description = getKernelConnectionDisplayPath(kernelConnection, this.workspace, this.platform);
         this.controller.detail =
             kernelConnection.kind === 'connectToLiveRemoteKernel'
                 ? getRemoteKernelSessionInformation(kernelConnection)

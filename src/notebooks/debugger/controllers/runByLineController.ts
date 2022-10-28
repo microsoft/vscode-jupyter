@@ -3,22 +3,22 @@
 
 import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernel } from '../../kernels/types';
-import { ICommandManager } from '../../platform/common/application/types';
-import { Commands } from '../../platform/common/constants';
-import { IConfigurationService } from '../../platform/common/types';
-import { parseForComments } from '../../platform/common/utils';
-import { noop } from '../../platform/common/utils/misc';
-import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
-import * as path from '../../platform/vscode-path/path';
-import { sendTelemetryEvent } from '../../telemetry';
-import { DebuggingTelemetry } from './constants';
-import { isJustMyCodeNotification } from './debugCellControllers';
-import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from './debuggingTypes';
-import { cellDebugSetup } from './helper';
+import { IKernel } from '../../../kernels/types';
+import { ICommandManager } from '../../../platform/common/application/types';
+import { Commands } from '../../../platform/common/constants';
+import { IConfigurationService } from '../../../platform/common/types';
+import { parseForComments } from '../../../platform/common/utils';
+import { noop } from '../../../platform/common/utils/misc';
+import { traceInfoIfCI, traceVerbose } from '../../../platform/logging';
+import * as path from '../../../platform/vscode-path/path';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { DebuggingTelemetry } from '../constants';
+import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../debuggingTypes';
+import { cellDebugSetup } from '../helper';
+import { isJustMyCodeNotification } from './debugCellController';
 
 /**
- * Listens to event when doing run by line and controls the behavior of the debugger (like auto stepping on moving out of a cell)
+ * Implements the business logic of RBL (like auto stepping on moving out of a cell)
  */
 export class RunByLineController implements IDebuggingDelegate {
     private lastPausedThreadId: number | undefined;
@@ -74,11 +74,13 @@ export class RunByLineController implements IDebuggingDelegate {
         return false;
     }
 
-    public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
+    public async willSendRequest(request: DebugProtocol.Request): Promise<undefined> {
         traceInfoIfCI(`willSendRequest: ${request.command}`);
         if (request.command === 'configurationDone') {
             await this.initializeExecute();
         }
+
+        return undefined;
     }
 
     private async handleStoppedEvent(threadId: number): Promise<boolean> {
@@ -150,7 +152,7 @@ export class RunByLineController implements IDebuggingDelegate {
         this.commandManager
             .executeCommand('notebook.cell.execute', {
                 ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
-                document: this.debugCell.document.uri
+                document: this.debugCell.notebook.uri
             })
             .then(noop, noop);
     }

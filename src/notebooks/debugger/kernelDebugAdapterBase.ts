@@ -36,7 +36,7 @@ import {
     IDebuggingDelegate,
     IDebugInfoResponse,
     IKernelDebugAdapter,
-    IKernelDebugAdapterConfig,
+    INotebookDebugConfig,
     KernelDebugMode
 } from './debuggingTypes';
 import {
@@ -60,9 +60,9 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     protected readonly fileToCell = new Map<string, Uri>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private readonly endSession = new EventEmitter<DebugSession>();
-    private readonly configuration: IKernelDebugAdapterConfig;
+    private readonly configuration: INotebookDebugConfig;
     protected readonly disposables: IDisposable[] = [];
-    private delegate: IDebuggingDelegate | undefined;
+    private delegates: IDebuggingDelegate[] | undefined;
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCell: NotebookCell | undefined;
@@ -148,8 +148,8 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         );
     }
 
-    public setDebuggingDelegate(delegate: IDebuggingDelegate) {
-        this.delegate = delegate;
+    public setDebuggingDelegates(delegates: IDebuggingDelegate[]) {
+        this.delegates = delegates;
     }
 
     private trace(tag: string, msg: string) {
@@ -160,11 +160,19 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         traceInfoIfCI(`Debug IO Pub message: ${JSON.stringify(msg)}`);
         if (isDebugEventMsg(msg)) {
             this.trace('event', JSON.stringify(msg));
-            if (!this.delegate?.willSendEvent || !(await this.delegate.willSendEvent(msg.content))) {
-                this.sendMessage.fire(msg.content);
+            for (const d of this.delegates ?? []) {
+                if (await d?.willSendEvent?.(msg.content)) {
+                    return;
+                }
             }
+
+            this.sendMessage.fire(msg.content);
         }
     }
+
+    /**
+     * Handle a message from the client to the debug adapter.
+     */
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
         try {
             traceInfoIfCI(`KernelDebugAdapter::handleMessage ${JSON.stringify(message, undefined, ' ')}`);
@@ -190,7 +198,14 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             }
 
             if (message.type === 'request') {
-                await this.delegate?.willSendRequest?.(message as DebugProtocol.Request);
+                for (const d of this.delegates ?? []) {
+                    const response = await d?.willSendRequest?.(message as DebugProtocol.Request);
+                    if (response) {
+                        this.trace('response', JSON.stringify(response));
+                        this.sendMessage.fire(response);
+                        return;
+                    }
+                }
             }
 
             return this.sendRequestToJupyterSession(message);
@@ -199,7 +214,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         }
     }
 
-    public getConfiguration(): IKernelDebugAdapterConfig {
+    public getConfiguration(): INotebookDebugConfig {
         return this.configuration;
     }
 
@@ -212,7 +227,12 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             this.disconnected = true;
             if (this.debugService.activeDebugSession === this.session) {
                 try {
-                    await this.session.customRequest('disconnect', { restart: false });
+                    await Promise.all([
+                        this.deleteDumpedFiles().catch((ex) =>
+                            traceWarning('Error deleting temporary debug files.', ex)
+                        ),
+                        this.session.customRequest('disconnect', { restart: false })
+                    ]);
                 } catch (e) {
                     traceError(`Failed to disconnect debug session`, e);
                 }
@@ -223,7 +243,6 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     }
 
     dispose() {
-        this.deleteDumpedFiles().catch((ex) => traceWarning('Error deleting temporary debug files.', ex));
         this.disposables.forEach((d) => d.dispose());
     }
 
@@ -300,9 +319,13 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 true
             );
 
-            control.onReply = (msg) => {
-                const message = msg.content as DebugProtocol.ProtocolMessage;
+            control.onReply = async (msg) => {
+                const message = msg.content as DebugProtocol.Response;
                 getMessageSourceAndHookIt(message, this.translateDebuggerFileToRealFile.bind(this));
+
+                for (const d of this.delegates ?? []) {
+                    await d?.willSendResponse?.(message);
+                }
 
                 this.trace('response', JSON.stringify(message));
                 this.sendMessage.fire(message);
@@ -343,7 +366,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     ): void;
 
     protected abstract getDumpFilesForDeletion(): string[];
-    private async deleteDumpedFiles() {
+    private async deleteDumpedFiles(): Promise<void> {
         const fileValues = this.getDumpFilesForDeletion();
         // Need to have our Jupyter Session and some dumpCell files to delete
         if (this.jupyterSession && fileValues.length) {
@@ -365,7 +388,7 @@ for file in _VSCODE_fileList:
         pass
 del _VSCODE_fileList`;
 
-            return executeSilently(this.jupyterSession, deleteFilesCode, {
+            await executeSilently(this.jupyterSession, deleteFilesCode, {
                 traceErrors: true,
                 traceErrorsMessage: 'Error deleting temporary debugging files'
             });
