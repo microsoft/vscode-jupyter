@@ -379,19 +379,14 @@ export class InterpreterService implements IInterpreterService {
         }
         return this.interpreterListCachePromise;
     }
-    private refreshedInterpretersOnce?: boolean;
 
     public async refreshInterpreters(forceRefresh: boolean = false) {
-        if (this.refreshedInterpretersOnce && !forceRefresh) {
-            return;
-        }
         const api = await this.getApi();
         if (!api) {
             return;
         }
         try {
             await api.environments.refreshEnvironments({ forceRefresh });
-            this.refreshedInterpretersOnce = true;
             this.interpreterListCachePromise = undefined;
             this.didChangeInterpreters.fire();
             traceVerbose(`Refreshed Environments`);

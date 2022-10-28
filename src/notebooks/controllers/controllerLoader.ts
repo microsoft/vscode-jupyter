@@ -82,7 +82,8 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         }
     }
 
-    private loadControllersImpl() {
+    private async loadControllersImpl() {
+        await this.interpreters.refreshInterpreters();
         const connections = this.kernelFinder.kernels;
         traceVerbose(`Found ${connections.length} cached controllers`);
         this.createNotebookControllers(connections);

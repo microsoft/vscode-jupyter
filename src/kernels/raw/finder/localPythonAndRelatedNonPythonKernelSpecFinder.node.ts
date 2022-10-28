@@ -124,8 +124,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
 
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
     private async listKernelsImplementation(cancelToken: CancellationToken): Promise<LocalKernelConnectionMetadata[]> {
-        // Wait for all interpreters to be discovered.
-        await this.interpreterService.refreshInterpreters();
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? this.interpreterService.resolvedEnvironments
             : [];
