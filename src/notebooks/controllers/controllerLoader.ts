@@ -50,7 +50,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         this.loadControllers();
     }
     private loadControllers() {
-        this.loadControllersImpl();
+        this.loadControllersImpl().ignoreErrors();
         sendKernelListTelemetry(this.registration.registered.map((v) => v.connection));
 
         traceInfoIfCI(`Providing notebook controllers with length ${this.registration.registered.length}.`);
@@ -82,7 +82,8 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         }
     }
 
-    private loadControllersImpl() {
+    private async loadControllersImpl() {
+        await this.interpreters.waitForAllInterpretersToLoad();
         const connections = this.kernelFinder.kernels;
         traceVerbose(`Found ${connections.length} cached controllers`);
         this.createNotebookControllers(connections);

@@ -379,7 +379,22 @@ export class InterpreterService implements IInterpreterService {
         }
         return this.interpreterListCachePromise;
     }
-
+    private _waitForAllInterpretersToLoad?: Promise<void>;
+    public async waitForAllInterpretersToLoad(): Promise<void> {
+        if (!this._waitForAllInterpretersToLoad) {
+            const lazyLoadControllers = this.workspace
+                .getConfiguration('jupyter', undefined)
+                .get<boolean>('lazyLoadControllers', false);
+            if (lazyLoadControllers) {
+                return;
+            }
+            this._waitForAllInterpretersToLoad = (async () => {
+                await this.refreshInterpreters();
+                await this.getInterpreters();
+            })();
+        }
+        return this._waitForAllInterpretersToLoad;
+    }
     public async refreshInterpreters(forceRefresh: boolean = false) {
         const api = await this.getApi();
         if (!api) {
