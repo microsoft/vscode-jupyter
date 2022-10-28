@@ -82,12 +82,12 @@ export class InteractiveWindowDebuggingManager
         return KernelDebugMode.InteractiveWindow;
     }
 
-    public async start(editor: NotebookEditor, cell: NotebookCell) {
+    public async start(notebook: NotebookDocument, cell: NotebookCell) {
         traceInfoIfCI(`Starting debugging IW`);
 
         const ipykernelResult = await this.checkIpykernelAndPrompt(cell);
         if (ipykernelResult === IpykernelCheckResult.Ok) {
-            await this.startDebuggingCell(editor.notebook, cell);
+            await this.startDebuggingCell(notebook, cell);
         }
     }
 
