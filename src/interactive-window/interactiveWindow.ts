@@ -214,20 +214,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     public async ensureInitialized() {
         if (!this._notebookEditor) {
-            let currentTab: InteractiveTab | undefined;
-            window.tabGroups.all.find((group) => {
-                group.tabs.find((tab) => {
-                    if (isInteractiveInputTab(tab) && tab.input.uri.toString() == this.notebookUri.toString()) {
-                        currentTab = tab;
-                    }
-                });
-            });
-
-            const document = await workspace.openNotebookDocument(this.notebookUri);
-            this._notebookEditor = await window.showNotebookDocument(document, {
-                preserveFocus: true,
-                viewColumn: currentTab?.group.viewColumn
-            });
+            this._notebookEditor = await this.showInteractiveEditor();
 
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
         }
@@ -502,14 +489,24 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         );
     }
 
-    public async show(preserveFocus = true): Promise<void> {
-        await this.commandManager.executeCommand(
-            'interactive.open',
-            { preserveFocus },
-            this.notebookUri,
-            undefined,
-            undefined
-        );
+    /**
+     * Open the the editor for the interactive window, re-using the tab if it already exists.
+     */
+    public async showInteractiveEditor(): Promise<NotebookEditor> {
+        let currentTab: InteractiveTab | undefined;
+        window.tabGroups.all.find((group) => {
+            group.tabs.find((tab) => {
+                if (isInteractiveInputTab(tab) && tab.input.uri.toString() == this.notebookUri.toString()) {
+                    currentTab = tab;
+                }
+            });
+        });
+
+        const document = await workspace.openNotebookDocument(this.notebookUri);
+        return await window.showNotebookDocument(document, {
+            preserveFocus: true,
+            viewColumn: currentTab?.group.viewColumn
+        });
     }
 
     public dispose() {
@@ -766,14 +763,14 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async scrollToCell(id: string): Promise<void> {
-        await this.show();
+        const editor = await this.showInteractiveEditor();
         const matchingCell = this.notebookDocument
             .getCells()
             .find((cell) => getInteractiveCellMetadata(cell)?.id === id);
         if (matchingCell) {
             const notebookRange = new NotebookRange(matchingCell.index, matchingCell.index + 1);
-            this.notebookEditor.revealRange(notebookRange, NotebookEditorRevealType.Default);
-            this.notebookEditor.selection = notebookRange;
+            editor.revealRange(notebookRange, NotebookEditorRevealType.Default);
+            editor.selection = notebookRange;
         }
     }
 
@@ -861,7 +858,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             edit.set(notebookDocument.uri, [nbEdit]);
         });
         const newCellIndex = notebookDocument.cellCount - 1;
-        this.notebookEditor.selection = new NotebookRange(newCellIndex, newCellIndex + 1);
         return notebookDocument.cellAt(newCellIndex);
     }
     private async generateCodeAndAddMetadata(cell: NotebookCell, isDebug: boolean, kernel: IKernel) {
