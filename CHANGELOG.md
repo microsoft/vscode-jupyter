@@ -1,5 +1,65 @@
 # Changelog
 
+## 2022.10.110 (2 November 2022)
+
+### Enhancements
+
+1. If a display name is specified for a remote jupyte server display that name instead of (Remote) in the kernel picker.
+   ([#11381](https://github.com/Microsoft/vscode-jupyter/issues/11381))
+1. Display an error message (with instructions to resolve the issue) in the cell output when attempting to run a cell against a kernel from an untrusted location.
+   ([#11622](https://github.com/Microsoft/vscode-jupyter/issues/11622))
+1. Make insiders kernel picker now a two step selection process that picks a source and a controller.
+   ([#11642](https://github.com/Microsoft/vscode-jupyter/issues/11642))
+1. Update kernel source command to use newly available NotebookDocument context from kernel picker command source.
+   ([#11759](https://github.com/Microsoft/vscode-jupyter/issues/11759))
+
+### Fixes
+
+1. Outputs containing Plotly plots generated with the `notebook` renderer are now displayed even after re-opening this notebook in a new install of VS Code.
+   ([#6404](https://github.com/Microsoft/vscode-jupyter/issues/6404))
+1. Restore the command to import a notebook from the explorer context menu.
+   ([#9252](https://github.com/Microsoft/vscode-jupyter/issues/9252))
+1. Optimize the way stream outputs are handled, to support large output streams without crashing VS Code.
+   ([#11031](https://github.com/Microsoft/vscode-jupyter/issues/11031))
+1. Fully remove message asking users to try out pre-release Jupyter if they are on Insiders.
+   ([#11477](https://github.com/Microsoft/vscode-jupyter/issues/11477))
+1. Ensure kernel messages are handled by a cell even after cell execution completes.
+   ([#11526](https://github.com/Microsoft/vscode-jupyter/issues/11526))
+1. A restored Interactive Window will be re-used for code cells from the same python file.
+   ([#11574](https://github.com/Microsoft/vscode-jupyter/issues/11574))
+1. In the insiders kernel picker, don't prepopulate the server display name field with the URI.
+   ([#11643](https://github.com/Microsoft/vscode-jupyter/issues/11643))
+1. Update the "Install Python" kernel command to use the python api directly and remove controller loaded context.
+   ([#11647](https://github.com/Microsoft/vscode-jupyter/issues/11647))
+
+### Code Health
+
+1. Adopt the new Python Extension API used to enumerate Python environments, resulting in improvements such as faster listing of Kernels in the Kernel Picker.
+   ([#7583](https://github.com/Microsoft/vscode-jupyter/issues/7583))
+1. Reduce the amount of work done for each code lens creation to help performance.
+   ([#11433](https://github.com/Microsoft/vscode-jupyter/issues/11433))
+1. Ship renderer preload scripts in the [Notebook Renderer Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter-renderers).
+   ([#11671](https://github.com/Microsoft/vscode-jupyter/issues/11671))
+1. Initialize the environment variable `PYDEVD_IPYTHON_COMPATIBLE_DEBUGGING` at the point of spawning the Python kernel.
+   ([#11682](https://github.com/Microsoft/vscode-jupyter/issues/11682))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 ## 2022.9.120 (11 October 2022)
 ### Enhancements
 1. Display an error message (with instructions to resolve the issue) in the cell output when attempting to run a cell against a kernel from an untrusted location.
