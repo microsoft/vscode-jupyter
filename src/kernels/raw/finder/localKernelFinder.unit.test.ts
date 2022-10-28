@@ -240,7 +240,8 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                 jupyterPaths,
                 instance(extensionChecker),
                 instance(memento),
-                disposables
+                disposables,
+                instance(env)
             );
             when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2', anything())).thenReturn([]);
             when(memento.get('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenReturn([]);
@@ -265,7 +266,8 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                 instance(extensionChecker),
                 nonPythonKernelSpecFinder,
                 instance(memento),
-                disposables
+                disposables,
+                instance(env)
             );
             localKernelFinder = new LocalKernelFinder(
                 nonPythonKernelSpecFinder,
