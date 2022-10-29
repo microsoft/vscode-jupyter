@@ -73,6 +73,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
 
         if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
+            await this.interpreters.waitForAllInterpretersToLoad();
             createActiveInterpreterController(
                 JupyterNotebookView,
                 document.uri,

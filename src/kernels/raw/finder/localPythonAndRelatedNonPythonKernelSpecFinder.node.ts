@@ -70,22 +70,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
     ) {
         super(fs, workspaceService, extensionChecker, globalState, disposables, env);
         interpreterService.onDidChangeInterpreters(() => this.refresh().catch(noop), this, this.disposables);
-        this.kernelSpecsFromKnownLocations.onDidChangeKernels(
-            () => {
-                // Only refresh if we know there are new global Python kernels that we haven't already seen before.
-                const lastKnownPythonKernels = this.lastKnownGlobalPythonKernelSpecs;
-                const newPythonKernels = this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs();
-                if (
-                    lastKnownPythonKernels.length !== newPythonKernels.length ||
-                    !areObjectsWithUrisTheSame(lastKnownPythonKernels, newPythonKernels)
-                ) {
-                    this.refresh().catch(noop);
-                }
-            },
-            this,
-            this.disposables
-        );
-        interpreterService.onDidChangeInterpreter(() => this.refresh().catch(noop), this, this.disposables);
     }
     public activate() {
         this.listKernelsFirstTimeFromMemento(LocalPythonKernelsCacheKey)
@@ -95,8 +79,31 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                     this._onDidChangeKernels.fire();
                 }
             })
-            .ignoreErrors();
-        this.refresh().ignoreErrors();
+            .finally(async () => {
+                await this.interpreterService.waitForAllInterpretersToLoad();
+
+                this.refresh().ignoreErrors();
+                this.kernelSpecsFromKnownLocations.onDidChangeKernels(
+                    () => {
+                        // Only refresh if we know there are new global Python kernels that we haven't already seen before.
+                        const lastKnownPythonKernels = this.lastKnownGlobalPythonKernelSpecs;
+                        const newPythonKernels = this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs();
+                        if (
+                            lastKnownPythonKernels.length !== newPythonKernels.length ||
+                            !areObjectsWithUrisTheSame(lastKnownPythonKernels, newPythonKernels)
+                        ) {
+                            this.refresh().catch(noop);
+                        }
+                    },
+                    this,
+                    this.disposables
+                );
+                this.interpreterService.onDidChangeInterpreter(
+                    () => this.refresh().catch(noop),
+                    this,
+                    this.disposables
+                );
+            });
     }
     public get kernels(): LocalKernelConnectionMetadata[] {
         return this._cachedKernels;
