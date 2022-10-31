@@ -80,8 +80,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                 }
             })
             .finally(async () => {
-                await this.interpreterService.waitForAllInterpretersToLoad();
-
                 this.refresh().ignoreErrors();
                 this.kernelSpecsFromKnownLocations.onDidChangeKernels(
                     () => {
@@ -114,6 +112,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
     private refreshCancellation?: CancellationTokenSource;
     private lastKnownGlobalPythonKernelSpecs: LocalKernelSpecConnectionMetadata[] = [];
     private async refresh() {
+        // Don't refresh until we've actually waited for interpreters to load
+        await this.interpreterService.waitForAllInterpretersToLoad();
         const previousListOfKernels = this._cachedKernels;
         this.refreshCancellation?.cancel();
         const cancelToken = (this.refreshCancellation = new CancellationTokenSource());
