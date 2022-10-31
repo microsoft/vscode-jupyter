@@ -50,7 +50,7 @@ export function deserializePythonEnvironment(
         return result;
     }
 }
-export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironment {
+export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironment | undefined {
     const envTools = env.tools as KnownEnvironmentTools[];
     // Map the Python env tool to a Jupyter environment type.
     const orderOrEnvs: [pythonEnvTool: KnownEnvironmentTools, JupyterEnv: EnvironmentType][] = [
@@ -76,13 +76,17 @@ export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironme
             envType = EnvironmentType.VirtualEnv;
         }
     }
+    if (!env.executable.uri) {
+        return;
+    }
+
     return {
         id: env.id,
         sysPrefix: env.executable.sysPrefix || '',
         envPath: env.environment?.folderUri,
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
-        uri: env.executable.uri!,
+        uri: env.executable.uri,
         displayName: env.environment?.name || '',
         envType,
         version: env.version
@@ -531,6 +535,10 @@ export class InterpreterService implements IInterpreterService {
     private trackResolvedEnvironment(env: ResolvedEnvironment | undefined, triggerChangeEvent: boolean) {
         if (env) {
             const resolved = pythonEnvToJupyterEnv(env);
+            if (!resolved) {
+                return;
+            }
+
             if (
                 !this._interpreters.get(env.id) ||
                 !areObjectsWithUrisTheSame(resolved, this._interpreters.get(env.id)?.resolved)
