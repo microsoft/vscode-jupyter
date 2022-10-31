@@ -390,7 +390,21 @@ export class InterpreterService implements IInterpreterService {
             }
             this._waitForAllInterpretersToLoad = (async () => {
                 await this.refreshInterpreters();
-                await this.getInterpreters();
+
+                // Don't allow for our call of getInterpretersImpl to be cancelled
+                // getInterpreters returns a promise that can get cancelled by itself
+                // so you can't use that to await here
+                const source = new CancellationTokenSource();
+                const interpreters = await this.getInterpretersImpl(source.token);
+
+                // After getting interpreters, resolve them all
+                if (interpreters) {
+                    await Promise.all(
+                        interpreters.map((interpreter) => {
+                            return this.api?.environments.resolveEnvironment(interpreter.id);
+                        })
+                    );
+                }
             })();
         }
         return this._waitForAllInterpretersToLoad;
