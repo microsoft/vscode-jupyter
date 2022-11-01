@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
@@ -11,6 +11,7 @@ import { IStatusProvider } from '../platform/progress/types';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
 
+@injectable()
 export class KernelStatusProvider implements IExtensionSyncActivationService {
     private readonly disposables: IDisposable[] = [];
     private readonly restartStatus = new WeakMap<IKernel, IDisposable>();
