@@ -31,7 +31,6 @@ import { selectKernel } from './kernelSelector';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { noop } from '../../platform/common/utils/misc';
-import { IStatusProvider } from '../../platform/progress/types';
 import { IRawNotebookProvider } from '../../kernels/raw/types';
 import { IControllerSelection, IVSCodeNotebookController } from './types';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
@@ -72,8 +71,6 @@ export class KernelConnector {
     ): Promise<boolean> {
         const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-        // Status provider may not be available in web situation
-        const statusProvider = serviceContainer.tryGet<IStatusProvider>(IStatusProvider);
 
         const selection = await appShell.showErrorMessage(
             DataScience.cannotRunCellKernelIsDead().format(
@@ -86,14 +83,8 @@ export class KernelConnector {
         let restartedKernel = false;
         switch (selection) {
             case DataScience.restartKernel(): {
-                // Set our status
-                const status = statusProvider?.set(DataScience.restartingKernelStatus());
-                try {
-                    await kernel.restart();
-                    restartedKernel = true;
-                } finally {
-                    status?.dispose();
-                }
+                await kernel.restart();
+                restartedKernel = true;
                 break;
             }
             case DataScience.showJupyterLogs(): {

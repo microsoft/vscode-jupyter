@@ -12,8 +12,6 @@ import { IExtensionSyncActivationService } from './activation/types';
 import { IConfigurationService, IDataScienceCommandListener } from './common/types';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { ProgressReporter } from './progress/progressReporter';
-import { StatusProvider } from './progress/statusProvider';
-import { IStatusProvider } from './progress/types';
 import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
 import {
@@ -52,7 +50,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     // Root platform types
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
 
-    serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
