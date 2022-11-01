@@ -11,10 +11,8 @@ import {
     IDisposableRegistry,
     IExtensionContext
 } from '../platform/common/types';
-import { IStatusProvider } from '../platform/progress/types';
 import { BaseCoreKernelProvider, BaseThirdPartyKernelProvider } from './kernelProvider.base';
 import { InteractiveWindowView } from '../platform/common/constants';
-import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { sendTelemetryForPythonKernelExecutable } from './helpers.node';
 import { Kernel, ThirdPartyKernel } from './kernel';
 import {
@@ -27,6 +25,7 @@ import {
     ThirdPartyKernelOptions
 } from './types';
 import { IJupyterServerUriStorage } from './jupyter/types';
+import { createKernelSettings } from './kernelSettings';
 
 /**
  * Node version of a kernel provider. Needed in order to create the node version of a kernel.
@@ -39,9 +38,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IJupyterServerUriStorage) jupyterServerUriStorage: IJupyterServerUriStorage,
         @multiInject(ITracebackFormatter)
@@ -61,21 +58,15 @@ export class KernelProvider extends BaseCoreKernelProvider {
 
         const uri = notebook.uri;
         const resourceUri = notebook.notebookType === InteractiveWindowView ? options.resourceUri : uri;
-        const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;
-        const interruptTimeout = this.configService.getSettings(resourceUri).jupyterInterruptTimeout;
         const kernel: IKernel = new Kernel(
             uri,
             resourceUri,
             notebook,
             options.metadata,
             this.notebookProvider,
-            waitForIdleTimeout,
-            interruptTimeout,
+            createKernelSettings(this.configService, resourceUri),
             this.appShell,
             options.controller,
-            this.configService,
-            this.outputTracker,
-            this.statusProvider,
             this.context,
             this.formatters,
             this.startupCodeProviders,
@@ -115,7 +106,6 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
     ) {
         super(asyncDisposables, disposables, notebook);
@@ -130,18 +120,13 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         this.disposeOldKernel(uri);
 
         const resourceUri = uri;
-        const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;
-        const interruptTimeout = this.configService.getSettings(resourceUri).jupyterInterruptTimeout;
         const kernel: IThirdPartyKernel = new ThirdPartyKernel(
             uri,
             resourceUri,
             options.metadata,
             this.notebookProvider,
-            waitForIdleTimeout,
-            interruptTimeout,
             this.appShell,
-            this.configService,
-            this.statusProvider,
+            createKernelSettings(this.configService, resourceUri),
             this.startupCodeProviders
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);

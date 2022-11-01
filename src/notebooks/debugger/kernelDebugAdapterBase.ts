@@ -23,7 +23,7 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { executeSilently } from '../../kernels/helpers';
-import { IKernel, IKernelConnectionSession } from '../../kernels/types';
+import { IKernel, IKernelConnectionSession, KernelHooks } from '../../kernels/types';
 import { IDebugService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IDisposable } from '../../platform/common/types';
@@ -67,7 +67,11 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCell: NotebookCell | undefined;
     private disconnected: boolean = false;
-    private kernelEventHook = (_event: 'willRestart' | 'willInterrupt') => this.disconnect();
+    private kernelEventHook = async (e: KernelHooks) => {
+        if (e === 'willRestart' || e === 'willInterrupt') {
+            await this.disconnect();
+        }
+    };
     constructor(
         protected session: DebugSession,
         protected notebookDocument: NotebookDocument,
