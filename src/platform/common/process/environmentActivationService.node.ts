@@ -192,22 +192,24 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             await envVariablesOurSelves.promise;
         }
 
-        // If we got this using our way, and we have env variables use it.
-        if (envVariablesOurSelves.resolved) {
-            if (envVariablesOurSelves.value) {
+        // Give preference to environment variables from Python extension.
+        if (envVariablesFromPython.resolved) {
+            if (envVariablesFromPython.value) {
                 traceInfo(
-                    `Got env vars ourselves faster ${getDisplayPath(interpreter?.uri)} with env var count ${
-                        Object.keys(envVariablesOurSelves.value).length
+                    `Got env vars from Python Ext ${
+                        envVariablesOurSelves.resolved && envVariablesOurSelves.value
+                            ? ' as quickly as Jupyter code'
+                            : 'faster'
+                    } ${getDisplayPath(interpreter?.uri)} with env var count ${
+                        Object.keys(envVariablesFromPython.value).length
                     } in ${stopWatch.elapsedTime}ms`
                 );
-                return envVariablesOurSelves.value;
+                return envVariablesFromPython.value;
             } else {
-                traceVerbose(`Got env vars ourselves faster, but empty ${getDisplayPath(interpreter?.uri)}`);
+                traceVerbose(`Got env vars from Python faster, but empty ${getDisplayPath(interpreter?.uri)}`);
             }
-        } else {
-            traceVerbose(`Got env vars with python ext faster ${getDisplayPath(interpreter?.uri)}`);
         }
-        return envVariablesFromPython.promise;
+        return envVariablesOurSelves.promise;
     }
     @traceDecoratorVerbose(
         'Getting activated env variables from Python',

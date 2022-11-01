@@ -3009,56 +3009,18 @@ export class IEventNamePropertyMapping {
     /**
      * The Python code that we ran to fetch variables had a failure.
      */
-    [Telemetry.PythonVariableFetchingCodeFailure]: TelemetryEventInfo<{
-        /**
-         * The error name of the failure.
-         */
-        ename: string;
-        /**
-         * The error value of the failure
-         */
-        evalue: string;
-    }> = {
+    [Telemetry.PythonVariableFetchingCodeFailure]: TelemetryEventInfo<never | undefined> = {
         owner: 'IanMatthewHuff',
         feature: ['VariableViewer'],
-        source: 'N/A',
-        properties: {
-            ename: {
-                classification: 'PublicNonPersonalData',
-                purpose: 'PerformanceAndHealth'
-            },
-            evalue: {
-                classification: 'PublicNonPersonalData',
-                purpose: 'PerformanceAndHealth'
-            }
-        }
+        source: 'N/A'
     };
     /**
      * Error information from the debugger output channel while running initialization code.
      */
-    [Telemetry.InteractiveWindowDebugSetupCodeFailure]: TelemetryEventInfo<{
-        /**
-         * The error name of the failure.
-         */
-        ename: string;
-        /**
-         * The error value of the failure.
-         */
-        evalue: string;
-    }> = {
+    [Telemetry.InteractiveWindowDebugSetupCodeFailure]: TelemetryEventInfo<never | undefined> = {
         owner: 'roblourens',
         feature: ['InteractiveWindow', 'Debugger'],
-        source: 'N/A',
-        properties: {
-            ename: {
-                classification: 'CallstackOrException',
-                purpose: 'PerformanceAndHealth'
-            },
-            evalue: {
-                classification: 'CallstackOrException',
-                purpose: 'PerformanceAndHealth'
-            }
-        }
+        source: 'N/A'
     };
     /**
      * Sent when Kernel crashes.
