@@ -78,6 +78,7 @@ import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
 import { KernelController } from '../kernels/kernelController';
+import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
@@ -360,13 +361,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private getSysInfoMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
-        const kernelName = kernelMetadata.interpreter?.displayName;
+        const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
         return reason === SysInfoReason.Restart
-            ? kernelName
-                ? DataScience.restartingKernelCustomHeader().format(kernelName)
+            ? displayName
+                ? DataScience.restartingKernelCustomHeader().format(displayName)
                 : DataScience.restartingKernelHeader()
-            : kernelName
-            ? DataScience.startingNewKernelCustomHeader().format(kernelName)
+            : displayName
+            ? DataScience.startingNewKernelCustomHeader().format(displayName)
             : DataScience.startingNewKernelHeader();
     }
 
