@@ -77,6 +77,7 @@ export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironme
         }
     }
     if (!env.executable.uri) {
+        console.error(`Python environment ${env.id} excluded as Uri is undefined`);
         return;
     }
 

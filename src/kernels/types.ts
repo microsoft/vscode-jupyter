@@ -11,6 +11,7 @@ import type {
     Disposable,
     Event,
     NotebookCell,
+    NotebookCellExecution,
     NotebookController,
     NotebookDocument,
     Uri
@@ -192,7 +193,7 @@ export interface IKernel extends IBaseKernel {
     /**
      * Controller associated with this kernel
      */
-    readonly controller: NotebookController;
+    readonly controller: IKernelController;
     readonly creator: 'jupyterExtension';
     /**
      * @param cell Cell to execute
@@ -665,3 +666,8 @@ export interface IKernelSettings {
     interruptTimeout: number;
     runStartupCommands: string | string[];
 }
+
+export type IKernelController = {
+    id: string;
+    createNotebookCellExecution(cell: NotebookCell): NotebookCellExecution;
+};

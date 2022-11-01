@@ -77,6 +77,7 @@ import { updateNotebookMetadata } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
+import { KernelController } from '../kernels/kernelController';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
@@ -277,7 +278,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                     return;
                 }
                 // Id may be different if the user switched controllers
-                this.currentKernelInfo.controller = k.controller;
+                this.currentKernelInfo.controller = this.controllerRegistration.registered.find(
+                    (item) => item.id === k.controller.id
+                )!.controller;
                 this.currentKernelInfo.metadata = k.kernelConnectionMetadata;
                 !!this.pendingCellAdd && this.setPendingCellAdd(this.pendingCellAdd);
                 this.updateSysInfoMessage(
@@ -297,7 +300,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 'jupyterExtension',
                 onStartKernel
             );
-            this.currentKernelInfo.controller = kernel.controller;
+            this.currentKernelInfo.controller = this.controllerRegistration.registered.find(
+                (item) => item.id === kernel.controller.id
+            )!.controller;
             this.currentKernelInfo.metadata = kernel.kernelConnectionMetadata;
 
             const kernelEventHookForRestart = async (ev: KernelHooks) => {
@@ -510,7 +515,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             edit.set(this.notebookDocument.uri, [nbEdit]);
             await workspace.applyEdit(edit);
         } else {
-            const execution = CellExecutionCreator.getOrCreate(notebookCell, controller.controller);
+            const execution = CellExecutionCreator.getOrCreate(
+                notebookCell,
+                new KernelController(controller.controller)
+            );
             if (!execution.started) {
                 execution.start(notebookCell.executionSummary?.timing?.startTime);
             }

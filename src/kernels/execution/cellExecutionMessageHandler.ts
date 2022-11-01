@@ -13,7 +13,6 @@ import {
     NotebookCellExecutionSummary,
     NotebookDocument,
     workspace,
-    NotebookController,
     WorkspaceEdit,
     NotebookCellData,
     Range,
@@ -40,7 +39,7 @@ import {
 } from './helpers';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
-import { ITracebackFormatter } from '../../kernels/types';
+import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import isObject = require('lodash/isObject');
 import { Identifiers, WIDGET_MIMETYPE } from '../../platform/common/constants';
@@ -173,7 +172,7 @@ export class CellExecutionMessageHandler implements IDisposable {
     constructor(
         public readonly cell: NotebookCell,
         private readonly applicationService: IApplicationShell,
-        private readonly controller: NotebookController,
+        private readonly controller: IKernelController,
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[],
         private readonly kernel: Kernel.IKernelConnection,

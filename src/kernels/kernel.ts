@@ -11,7 +11,6 @@ import {
     Event,
     EventEmitter,
     NotebookCell,
-    NotebookController,
     ColorThemeKind,
     Disposable,
     Uri,
@@ -51,7 +50,8 @@ import {
     IBaseKernel,
     KernelActionSource,
     KernelHooks,
-    IKernelSettings
+    IKernelSettings,
+    IKernelController
 } from './types';
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
@@ -684,7 +684,11 @@ export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> {
             startupCodeProviders,
             '3rdPartyExtension'
         );
-        this.kernelExecution = new ThirdPartyKernelExecution(this, this.kernelSettings.interruptTimeout);
+        this.kernelExecution = new ThirdPartyKernelExecution(
+            resourceUri,
+            kernelConnectionMetadata,
+            this.kernelSettings.interruptTimeout
+        );
         this.disposables.push(this.kernelExecution);
     }
 }
@@ -713,7 +717,7 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         notebookProvider: INotebookProvider,
         kernelSettings: IKernelSettings,
         appShell: IApplicationShell,
-        public readonly controller: NotebookController,
+        public readonly controller: IKernelController,
         context: IExtensionContext,
         formatters: ITracebackFormatter[],
         startupCodeProviders: IStartupCodeProvider[],
@@ -731,7 +735,10 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         );
 
         this.kernelExecution = new KernelExecution(
-            this,
+            controller,
+            resourceUri,
+            kernelConnectionMetadata,
+            notebook,
             appShell,
             this.kernelSettings.interruptTimeout,
             context,
