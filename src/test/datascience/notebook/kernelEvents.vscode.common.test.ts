@@ -29,7 +29,7 @@ import {
 import { createEventHandler } from '../../common';
 import { IKernelProvider } from '../../../kernels/types';
 
-suite('Kernel Event', function () {
+suite('Kernel Event @kernelCore', function () {
     // https://github.com/microsoft/vscode-jupyter/issues/11314
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];

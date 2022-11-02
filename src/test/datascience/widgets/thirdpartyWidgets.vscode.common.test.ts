@@ -39,7 +39,7 @@ import { initializeWidgetComms, Utils } from './commUtils';
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-    suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'}`, function () {
+    suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'} @widgets`, function () {
         let api: IExtensionTestApi;
         const disposables: IDisposable[] = [];
         let vscodeNotebook: IVSCodeNotebook;

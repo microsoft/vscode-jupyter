@@ -34,7 +34,7 @@ import { ITestWebviewHost } from './testInterfaces';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
 import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
 
-suite('VSCode Notebook - Run By Line', function () {
+suite('VSCode Notebook - Run By Line @debugger', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;

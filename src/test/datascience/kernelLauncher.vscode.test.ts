@@ -5,11 +5,8 @@
 
 import { assert, use } from 'chai';
 
-import { KernelMessage } from '@jupyterlab/services';
-import uuid from 'uuid/v4';
 import { createDeferred } from '../../platform/common/utils/async';
-import { createEventHandler, PYTHON_PATH, sleep, waitForCondition } from '../common.node';
-import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
+import { createEventHandler, PYTHON_PATH, waitForCondition } from '../common.node';
 
 // Chai as promised is not part of this file
 import chaiAsPromised from 'chai-as-promised';
@@ -20,14 +17,13 @@ import { PortAttributesProviders } from '../../kernels/raw/port/portAttributePro
 import { IDisposable } from '../../platform/common/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';
-import { createRawKernel } from '../../kernels/raw/session/rawKernel.node';
 import { IKernelConnection, IKernelLauncher } from '../../kernels/raw/types';
 import { IJupyterKernelSpec } from '../../kernels/types';
 use(chaiAsPromised);
 
 const test_Timeout = 30_000;
 
-suite('DataScience - Kernel Launcher', () => {
+suite('DataScience - Kernel Launcher @kernelCore', () => {
     let kernelLauncher: IKernelLauncher;
     let token: CancellationTokenSource;
     const kernelSpec = {
@@ -93,40 +89,6 @@ suite('DataScience - Kernel Launcher', () => {
         await deferred.promise;
     }).timeout(test_Timeout);
 
-    test('Launch with environment', async function () {
-        const spec: IJupyterKernelSpec = {
-            name: 'foo',
-            language: 'python',
-            executable: 'python',
-            display_name: 'foo',
-            argv: [PYTHON_PATH, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
-            env: {
-                TEST_VAR: '1'
-            }
-        };
-
-        const kernel = await kernelLauncher.launch(
-            { kernelSpec: spec, kind: 'startUsingLocalKernelSpec', id: '1' },
-            30_000,
-            undefined,
-            process.cwd(),
-            token.token
-        );
-
-        assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
-
-        // Send a request to print out the env vars
-        const rawKernel = createRawKernel(kernel, uuid());
-
-        const result = await requestExecute(rawKernel, 'import os\nprint(os.getenv("TEST_VAR"))');
-        assert.ok(result, 'No result returned');
-        // Should have a stream output message
-        const output = result.find((r) => r.header.msg_type === 'stream') as KernelMessage.IStreamMsg;
-        assert.ok(output, 'no stream output');
-        assert.equal(output.content.text, '1\n', 'Wrong content found on message');
-
-        await kernel.dispose();
-    }).timeout(test_Timeout);
     test('Ensure ports are not forwarded to end user', async function () {
         const spec: IJupyterKernelSpec = {
             name: 'foo',
@@ -189,26 +151,4 @@ suite('DataScience - Kernel Launcher', () => {
             assert.isUndefined(portsAttribute);
         });
     }).timeout(test_Timeout);
-
-    test('Bind with ZMQ', async function () {
-        const kernel = await kernelLauncher.launch(
-            { kernelSpec, kind: 'startUsingLocalKernelSpec', id: '1' },
-            -1,
-            undefined,
-            process.cwd(),
-            token.token
-        );
-
-        try {
-            const zmq = await import('zeromq');
-            const sock = new zmq.Pull();
-
-            sock.connect(`tcp://${kernel.connection!.ip}:${kernel.connection!.stdin_port}`);
-            sock.receive().ignoreErrors(); // This will never return unless the kenrel process sends something. Just used for testing the API is available
-            await sleep(50);
-            sock.close();
-        } finally {
-            await kernel.dispose();
-        }
-    });
 });

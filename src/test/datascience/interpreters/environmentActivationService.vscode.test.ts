@@ -29,7 +29,7 @@ import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { ProposedExtensionAPI } from '../../../platform/api/pythonApiTypes';
 import { defaultNotebookTestTimeout } from '../notebook/helper';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
+suite('DataScience - VSCode Notebook - (Conda Execution) (slow) @python @mandatory', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let envActivationService: EnvironmentActivationService;

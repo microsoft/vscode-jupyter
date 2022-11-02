@@ -106,7 +106,7 @@ suite('DataScience - Memory Test', function () {
     suiteTeardown(async () => {
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
-    test('Track memory usage of standard test', async () => {
+    test('Track memory usage of standard test @mandatory', async () => {
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);

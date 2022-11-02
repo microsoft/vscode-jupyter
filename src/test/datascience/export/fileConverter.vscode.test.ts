@@ -18,7 +18,7 @@ import { FileConverter } from '../../../notebooks/export/fileConverter.node';
 import { INbConvertExport, IExport, IExportDialog, ExportFormat } from '../../../notebooks/export/types';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 
-suite('DataScience - File Converter', () => {
+suite('DataScience - File Converter @export', () => {
     let fileConverter: FileConverter;
     let exportPython: INbConvertExport;
     let exportHtml: INbConvertExport;

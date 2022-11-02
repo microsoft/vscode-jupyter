@@ -27,7 +27,7 @@ import { JupyterNotebookView } from '../../../platform/common/constants';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function () {
+suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow) @kernelPicker', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let controllerRegistration: IControllerRegistration;
