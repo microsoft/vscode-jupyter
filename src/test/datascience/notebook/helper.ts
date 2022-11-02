@@ -1232,14 +1232,14 @@ export async function waitForTextOutput(
         () =>
             `After ${timeout}ms output, does not contain provided text '${text}' for Cell ${
                 cell.index + 1
-            } in output index ${index}, it is ${cell.outputs
+            } in output index ${index}, the outputs are: \n${cell.outputs
                 .map(
                     (output, index) =>
-                        `Output for Index "${index}" with total outputs ${output.items.length} is "${output.items
-                            .map(getOutputText)
-                            .join('\n')}"`
+                        `${index}. Output for Index "${index}" with total outputs ${
+                            output.items.length
+                        } is "${output.items.map(getOutputText).join('\n')}"`
                 )
-                .join('\n')}`
+                .join(',\n')}`
     );
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
