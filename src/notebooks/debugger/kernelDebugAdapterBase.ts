@@ -23,7 +23,7 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { executeSilently } from '../../kernels/helpers';
-import { IKernel, IKernelConnectionSession, KernelHooks } from '../../kernels/types';
+import { IKernel, IKernelConnectionSession } from '../../kernels/types';
 import { IDebugService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IDisposable } from '../../platform/common/types';
