@@ -659,7 +659,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             )
         ]);
     });
-    test.skip('Stderr & stdout outputs should go into separate outputs', async function () {
+    test('Stderr & stdout outputs should go into separate outputs', async function () {
         const cell = await notebook.appendCodeCell(
             dedent`
             import sys
@@ -719,12 +719,32 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                 text: 'c'
             }
         ];
-        for (let index = 0; index < 4; index++) {
-            const expected = expectedOutput[index];
-            const output = cell.outputs[index];
-            assert.deepEqual(output.metadata, expected.metadata, `Metadata is incorrect for cell ${index}`);
-            assert.deepEqual(getTextOutputValue(output), expected.text, `Text is incorrect for cell ${index}`);
-        }
+
+        let lastError = 'Incorrect output';
+        await waitForCondition(
+            () => {
+                try {
+                    for (let index = 0; index < 4; index++) {
+                        const expected = expectedOutput[index];
+                        const output = cell.outputs[index];
+                        assert.deepEqual(output.metadata, expected.metadata, `Metadata is incorrect for cell ${index}`);
+                        assert.deepEqual(
+                            getTextOutputValue(output),
+                            expected.text,
+                            `Text is incorrect for cell ${index}`
+                        );
+                    }
+                    return true;
+                } catch (ex) {
+                    lastError = ex;
+                    return false;
+                }
+            },
+            defaultNotebookTestTimeout,
+            () => lastError,
+            100,
+            true
+        );
     });
 
     test('Execute all cells and run after error', async () => {
