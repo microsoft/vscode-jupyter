@@ -681,8 +681,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo('2. Start execution for test of Stderr & stdout outputs');
         await Promise.all([
             kernelExecution.executeCell(cell),
-            waitForTextOutput(cell, '12', 0, false),
-            waitForTextOutput(cell, 'ab', 1, false),
+            waitForTextOutput(cell, '1', 0, false),
+            waitForTextOutput(cell, 'a', 1, false),
             waitForTextOutput(cell, '3', 2, false),
             waitForTextOutput(cell, 'c', 3, false)
         ]);
