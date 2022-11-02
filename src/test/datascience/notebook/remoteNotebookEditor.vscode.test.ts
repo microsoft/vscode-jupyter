@@ -228,7 +228,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
 
         const activeInterpreter = await interpreterService.getActiveInterpreter();
         traceInfoIfCI(`active interpreter ${activeInterpreter?.uri.path}`);
-        const notebook = await createEmptyPythonNotebook(disposables);
+        const { notebook } = await createEmptyPythonNotebook(disposables);
         const controllerManager = svcContainer.get<IControllerSelection>(IControllerSelection);
         const preferredController = controllerManager.getSelected(notebook);
         traceInfoIfCI(`preferred controller ${preferredController?.connection.id}`);

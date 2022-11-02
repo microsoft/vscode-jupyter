@@ -22,7 +22,7 @@ import { disposeAllDisposables } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { Resource, IDisposable, IDisplayOptions } from '../platform/common/types';
-import { sleep } from '../platform/common/utils/async';
+import { createDeferred, sleep, waitForPromise } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
@@ -40,7 +40,6 @@ import {
     IKernelConnectionSession,
     INotebookProvider,
     InterruptResult,
-    isLocalConnection,
     IStartupCodeProvider,
     KernelConnectionMetadata,
     KernelSocketInformation,
@@ -55,12 +54,12 @@ import { Cancellation, isCancellationError } from '../platform/common/cancellati
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from './displayOptions';
 import { SilentExecutionErrorOptions } from './helpers';
-import { BaseKernelExecution, KernelExecution, ThirdPartyKernelExecution } from './execution/kernelExecution';
 
+type Hook = (...args: unknown[]) => Promise<void>;
 /**
  * Represents an active kernel process running on the jupyter (or local) machine.
  */
-abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implements IBaseKernel {
+abstract class BaseKernel implements IBaseKernel {
     protected readonly disposables: IDisposable[] = [];
     get onStatusChanged(): Event<KernelMessage.Status> {
         return this._onStatusChanged.event;
@@ -121,11 +120,15 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     private readonly _onDisposed = new EventEmitter<void>();
     private _jupyterSessionPromise?: Promise<IKernelConnectionSession>;
     private readonly hookedSessionForEvents = new WeakSet<IKernelConnectionSession>();
-    private eventHooks: ((ev: KernelHooks) => Promise<void>)[] = [];
+    private hooks = new Map<KernelHooks, Set<Hook>>();
     private startCancellation = new CancellationTokenSource();
     private startupUI = new DisplayOptions(true);
-    protected kernelExecution: TKernelExecution;
     private disposingPromise?: Promise<void>;
+    private _interruptPromise?: Promise<InterruptResult>;
+    private _restartPromise?: Promise<void>;
+    public get restarting() {
+        return this._restartPromise || Promise.resolve();
+    }
     constructor(
         public readonly uri: Uri,
         public readonly resourceUri: Resource,
@@ -155,31 +158,67 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         }, this.disposables);
     }
 
-    public addEventHook(hook: (event: KernelHooks) => Promise<void>): void {
-        this.eventHooks.push(hook);
+    public addHook(
+        event: KernelHooks,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        cb: (...args: any[]) => Promise<void>,
+        thisArgs?: unknown,
+        disposables?: IDisposable[]
+    ): IDisposable {
+        const eventHook = this.hooks.get(event) || new Set<(...args: unknown[]) => Promise<void>>();
+        this.hooks.set(event, eventHook);
+        cb = thisArgs ? cb.bind(thisArgs) : cb;
+        eventHook.add(cb);
+        const disposable = {
+            dispose: () => {
+                eventHook.delete(cb);
+            }
+        };
+        if (disposables) {
+            disposables.push(disposable);
+        }
+        return disposable;
     }
-
-    public removeEventHook(hook: (event: KernelHooks) => Promise<void>): void {
-        this.eventHooks = this.eventHooks.filter((h) => h !== hook);
-    }
-
     public async start(options?: IDisplayOptions): Promise<IKernelConnectionSession> {
         return this.startJupyterSession(options);
     }
+    /**
+     * Interrupts the execution of cells.
+     * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
+     */
     public async interrupt(): Promise<void> {
-        await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
+        const pendingExecutions = Promise.all(
+            Array.from(this.hooks.get('willInterrupt') || new Set<Hook>()).map((h) => h())
+        );
         traceInfo(`Interrupt requested ${getDisplayPath(this.resourceUri || this.uri)}`);
         this.startCancellation.cancel();
-        const interruptResultPromise = this.kernelExecution.interrupt(this._jupyterSessionPromise);
-        interruptResultPromise
-            .finally(() => {
-                this.eventHooks.map((h) => h('interruptCompleted').ignoreErrors());
-            })
-            .catch(noop);
+        let result: InterruptResult;
+        try {
+            const session = this._jupyterSessionPromise
+                ? await this._jupyterSessionPromise.catch(() => undefined)
+                : undefined;
+            traceInfo('Interrupt kernel execution');
 
-        let result: InterruptResult | undefined;
+            if (!session) {
+                traceInfo('No kernel session to interrupt');
+                this._interruptPromise = undefined;
+                result = InterruptResult.Success;
+            } else {
+                // Interrupt the active execution
+                result = this._interruptPromise
+                    ? await this._interruptPromise
+                    : await (this._interruptPromise = this.interruptExecution(session, pendingExecutions));
+
+                // Done interrupting, clear interrupt promise
+                this._interruptPromise = undefined;
+            }
+        } finally {
+            Promise.all(
+                Array.from(this.hooks.get('interruptCompleted') || new Set<Hook>()).map((h) => h())
+            ).ignoreErrors();
+        }
+
         traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.uri)} in notebookEditor.`);
-        result = await interruptResultPromise;
         if (result === InterruptResult.TimedOut) {
             const message = DataScience.restartKernelAfterInterruptMessage();
             const yes = DataScience.restartKernelMessageYes();
@@ -204,7 +243,11 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         this.startCancellation.cancel();
         const disposeImpl = async () => {
             const promises: Promise<void>[] = [];
-            promises.push(this.kernelExecution.cancel());
+            promises.push(
+                Promise.all(Array.from(this.hooks.get('willCancel') || new Set<Hook>()).map((h) => h()))
+                    .then(noop)
+                    .catch(noop)
+            );
             this._session = this._session
                 ? this._session
                 : this._jupyterSessionPromise
@@ -218,7 +261,6 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             this._disposed = true;
             this._onDisposed.fire();
             this._onStatusChanged.fire('dead');
-            this.kernelExecution.dispose();
             try {
                 await Promise.all(promises);
             } finally {
@@ -231,15 +273,15 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     public async restart(): Promise<void> {
         try {
             const resourceType = getResourceType(this.resourceUri);
-            await Promise.all(this.eventHooks.map((h) => h('willRestart')));
+            await Promise.all(
+                Array.from(this.hooks.get('willRestart') || new Set<Hook>()).map((h) => h(this._jupyterSessionPromise))
+            );
             traceInfo(`Restart requested ${this.uri}`);
             this.startCancellation.cancel();
             const stopWatch = new StopWatch();
             try {
                 // If the session died, then start a new session.
-                await (this._jupyterSessionPromise
-                    ? this.kernelExecution.restart(this._jupyterSessionPromise)
-                    : this.start(new DisplayOptions(false)));
+                await (this._jupyterSessionPromise ? this.restartImpl() : this.start(new DisplayOptions(false)));
                 sendKernelTelemetryEvent(
                     this.resourceUri,
                     Telemetry.NotebookRestart,
@@ -276,8 +318,36 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
             traceError(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;
         } finally {
-            this.eventHooks.map((h) => h('restartCompleted').ignoreErrors());
+            Promise.all(
+                Array.from(this.hooks.get('restartCompleted') || new Set<Hook>()).map((h) => h())
+            ).ignoreErrors();
         }
+    }
+    /**
+     * Restarts the kernel
+     * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
+     */
+    private async restartImpl() {
+        const session = this._jupyterSessionPromise
+            ? await this._jupyterSessionPromise.catch(() => undefined)
+            : undefined;
+
+        if (!session) {
+            traceInfo('No kernel session to interrupt');
+            this._restartPromise = undefined;
+            return;
+        }
+
+        // Restart the active execution
+        if (!this._restartPromise) {
+            // Just use the internal session. Pending cells should have been canceled by the caller
+            this._restartPromise = session.restart();
+            this._restartPromise
+                // Done restarting, clear restart promise
+                .finally(() => (this._restartPromise = undefined))
+                .catch(noop);
+        }
+        await this._restartPromise;
     }
     protected async startJupyterSession(
         options: IDisplayOptions = new DisplayOptions(false)
@@ -344,6 +414,84 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
         }
         this._jupyterSessionPromise.finally(() => this.sendKernelStartedTelemetry()).catch(noop);
         return this._jupyterSessionPromise;
+    }
+
+    private async interruptExecution(
+        session: IKernelConnectionSession,
+        pendingExecutions: Promise<unknown>
+    ): Promise<InterruptResult> {
+        const restarted = createDeferred<boolean>();
+        const stopWatch = new StopWatch();
+        // Listen to status change events so we can tell if we're restarting
+        const restartHandler = (e: KernelMessage.Status) => {
+            if (e === 'restarting' || e === 'autorestarting') {
+                // We restarted the kernel.
+                traceWarning('Kernel restarting during interrupt');
+
+                // Indicate we restarted the race below
+                restarted.resolve(true);
+            }
+        };
+        const restartHandlerToken = session.onSessionStatusChanged(restartHandler);
+
+        // Start our interrupt. If it fails, indicate a restart
+        session.interrupt().catch((exc) => {
+            traceWarning(`Error during interrupt: ${exc}`);
+            restarted.resolve(true);
+        });
+
+        const promise = (async () => {
+            try {
+                // Wait for all of the pending cells to finish or the timeout to fire
+                const result = await waitForPromise(
+                    Promise.race([pendingExecutions, restarted.promise]),
+                    this.kernelSettings.interruptTimeout
+                );
+
+                // See if we restarted or not
+                if (restarted.completed) {
+                    return InterruptResult.Restarted;
+                }
+
+                if (result === null) {
+                    // We timed out. You might think we should stop our pending list, but that's not
+                    // up to us. The cells are still executing. The user has to request a restart or try again
+                    return InterruptResult.TimedOut;
+                }
+
+                // Indicate the interrupt worked.
+                return InterruptResult.Success;
+            } catch (exc) {
+                // Something failed. See if we restarted or not.
+                if (restarted.completed) {
+                    return InterruptResult.Restarted;
+                }
+
+                // Otherwise a real error occurred.
+                sendKernelTelemetryEvent(
+                    this.resourceUri,
+                    Telemetry.NotebookInterrupt,
+                    { duration: stopWatch.elapsedTime },
+                    undefined,
+                    exc
+                );
+                throw exc;
+            } finally {
+                restartHandlerToken.dispose();
+            }
+        })();
+
+        return promise.then((result) => {
+            sendKernelTelemetryEvent(
+                this.resourceUri,
+                Telemetry.NotebookInterrupt,
+                { duration: stopWatch.elapsedTime },
+                {
+                    result
+                }
+            );
+            return result;
+        });
     }
 
     private async createJupyterSession(): Promise<IKernelConnectionSession> {
@@ -465,6 +613,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     }
 
     protected async initializeAfterStart(session: IKernelConnectionSession | undefined) {
+        await Promise.all(Array.from(this.hooks.get('didStart') || new Set<Hook>()).map((h) => h()));
         traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.uri)}`);
         if (!session) {
             traceVerbose('Not running kernel initialization');
@@ -664,7 +813,7 @@ abstract class BaseKernel<TKernelExecution extends BaseKernelExecution> implemen
     }
 }
 
-export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> implements IThirdPartyKernel {
+export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
     public override get creator(): '3rdPartyExtension' {
         return '3rdPartyExtension';
     }
@@ -675,8 +824,7 @@ export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> impl
         notebookProvider: INotebookProvider,
         appShell: IApplicationShell,
         kernelSettings: IKernelSettings,
-        startupCodeProviders: IStartupCodeProvider[],
-        kernelExecution: ThirdPartyKernelExecution
+        startupCodeProviders: IStartupCodeProvider[]
     ) {
         super(
             uri,
@@ -688,15 +836,13 @@ export class ThirdPartyKernel extends BaseKernel<ThirdPartyKernelExecution> impl
             startupCodeProviders,
             '3rdPartyExtension'
         );
-        this.kernelExecution = kernelExecution;
-        this.disposables.push(this.kernelExecution);
     }
 }
 
 /**
  * Represents an active kernel process running on the jupyter (or local) machine.
  */
-export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
+export class Kernel extends BaseKernel implements IKernel {
     public override get creator(): 'jupyterExtension' {
         return 'jupyterExtension';
     }
@@ -709,9 +855,7 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
         kernelSettings: IKernelSettings,
         appShell: IApplicationShell,
         public readonly controller: IKernelController,
-        startupCodeProviders: IStartupCodeProvider[],
-        private readonly sendTelemetryForPythonKernelExecutable: () => Promise<void>,
-        kernelExecution: KernelExecution
+        startupCodeProviders: IStartupCodeProvider[]
     ) {
         super(
             notebook.uri,
@@ -723,34 +867,6 @@ export class Kernel extends BaseKernel<KernelExecution> implements IKernel {
             startupCodeProviders,
             'jupyterExtension'
         );
-
-        this.kernelExecution = kernelExecution;
-    }
-    protected override async initializeAfterStart(session: IKernelConnectionSession | undefined) {
-        if (session && isPythonKernelConnection(this.kernelConnectionMetadata)) {
-            // Request completions to warm up the completion engine.
-            this.requestEmptyCompletions(session);
-
-            if (isLocalConnection(this.kernelConnectionMetadata)) {
-                await this.sendTelemetryForPythonKernelExecutable();
-            }
-        }
-        return super.initializeAfterStart(session);
-    }
-
-    /**
-     * Do not wait for completions,
-     * If the completions request crashes then we don't get a response for this request,
-     * Hence we end up waiting indefinitely.
-     * https://github.com/microsoft/vscode-jupyter/issues/9014
-     */
-    private requestEmptyCompletions(session: IKernelConnectionSession) {
-        session
-            ?.requestComplete({
-                code: '__file__.',
-                cursor_pos: 9
-            })
-            .ignoreErrors();
     }
 }
 

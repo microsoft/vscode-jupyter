@@ -26,6 +26,7 @@ import { DebugStartupCodeProvider } from './debuggerStartupCodeProvider';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.web';
 import { ITrustedKernelPaths } from './raw/finder/types';
 import { KernelStatusProvider } from './kernelStatusProvider';
+import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarmer';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -60,6 +61,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelAutoReconnectMonitor
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelCompletionsPreWarmer
     );
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<ITrustedKernelPaths>(ITrustedKernelPaths, TrustedKernelPaths);

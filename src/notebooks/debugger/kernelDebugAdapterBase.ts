@@ -67,11 +67,6 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCell: NotebookCell | undefined;
     private disconnected: boolean = false;
-    private kernelEventHook = async (e: KernelHooks) => {
-        if (e === 'willRestart' || e === 'willInterrupt') {
-            await this.disconnect();
-        }
-    };
     constructor(
         protected session: DebugSession,
         protected notebookDocument: NotebookDocument,
@@ -98,7 +93,8 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         );
 
         if (this.kernel) {
-            this.kernel.addEventHook(this.kernelEventHook);
+            this.kernel.addHook('willRestart', () => this.disconnect(), this, this.disposables);
+            this.kernel.addHook('willInterrupt', () => this.disconnect(), this, this.disposables);
             this.disposables.push(
                 this.kernel.onDisposed(() => {
                     if (!this.disconnected) {
@@ -242,7 +238,6 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 }
             }
             this.endSession.fire(this.session);
-            this.kernel?.removeEventHook(this.kernelEventHook);
         }
     }
 

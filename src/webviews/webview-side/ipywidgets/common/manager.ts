@@ -100,20 +100,25 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         data: nbformat.IMimeBundle & { model_id: string; version_major: number },
         ele: HTMLElement
     ): Promise<Widget | undefined> {
+        console.error('Step1');
+        console.error('Manager', this.manager);
         if (!data) {
             throw new Error(
                 "application/vnd.jupyter.widget-view+json not in msg.content.data, as msg.content.data is 'undefined'."
             );
         }
+        console.error('Step2');
         if (!this.manager) {
             throw new Error('DS IPyWidgetManager not initialized.');
         }
 
+        console.error('Step3');
         if (!data || data.version_major !== 2) {
             console.warn('Widget data not available to render an ipywidget');
             return undefined;
         }
 
+        console.error('Step4');
         const modelId = data.model_id as string;
         // Check if we have processed the data for this model.
         // If not wait.

@@ -44,6 +44,7 @@ type Message =
           title: string;
           titlePath: string[];
           fullTitle: string;
+          time: number;
       }
     | {
           event: typeof constants.EVENT_SUITE_END;
@@ -51,6 +52,7 @@ type Message =
           slow: number;
           titlePath: string[];
           fullTitle: string;
+          time: number;
       }
     | {
           event: typeof constants.EVENT_TEST_FAIL;
@@ -223,7 +225,8 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
                 event: constants.EVENT_SUITE_BEGIN,
                 title: suite.title,
                 titlePath: suite.titlePath(),
-                fullTitle: suite.fullTitle()
+                fullTitle: suite.fullTitle(),
+                time: Date.now()
             });
         })
         .on(constants.EVENT_SUITE_END, (suite: mochaTypes.Suite) => {
@@ -233,7 +236,8 @@ function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaType
                 title: suite.title,
                 titlePath: suite.titlePath(),
                 slow: suite.slow(),
-                fullTitle: suite.fullTitle()
+                fullTitle: suite.fullTitle(),
+                time: Date.now()
             });
         })
         .on(constants.EVENT_TEST_FAIL, (test: mochaTypes.Test, err: any) => {
