@@ -443,7 +443,11 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         await this.serverUriStorage.setUriToLocal();
     }
 
-    public async setJupyterURIToRemote(userURI: string, ignoreValidation?: boolean): Promise<void> {
+    public async setJupyterURIToRemote(
+        userURI: string,
+        ignoreValidation?: boolean,
+        displayName?: string
+    ): Promise<void> {
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
             if (!ignoreValidation) {
@@ -471,6 +475,7 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         }
 
         const connection = await this.jupyterConnection.createConnectionInfo({ uri: userURI });
+        displayName && (connection.displayName = displayName);
         await this.serverUriStorage.setUriToRemote(userURI, connection.displayName);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
@@ -521,7 +526,7 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         if (item.label === this.localLabel) {
             await this.setJupyterURIToLocal();
         } else if (!item.newChoice && !item.provider) {
-            await this.setJupyterURIToRemote(!isNil(item.url) ? item.url : item.label);
+            await this.setJupyterURIToRemote(!isNil(item.url) ? item.url : item.label, false, item.label);
         } else if (!item.provider) {
             return this.selectRemoteURI.bind(this);
         } else {
@@ -570,8 +575,14 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
             prompt: ''
         });
 
+        // Offer the user a chance to pick a display name for the server
+        // Leaving it blank will use the URI as the display name
+        const newDisplayName = await this.applicationShell.showInputBox({
+            title: DataScience.jupyterRenameServer()
+        });
+
         if (uri) {
-            await this.setJupyterURIToRemote(uri, true);
+            await this.setJupyterURIToRemote(uri, true, newDisplayName || uri);
         }
     }
 
@@ -663,6 +674,9 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
                 items.push({
                     label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
+                    // If our display name is not the same as the URI, render the uri as description
+                    description:
+                        !isNil(uriItem.displayName) && uriItem.displayName !== uriItem.uri ? uriItem.uri : undefined,
                     newChoice: false,
                     url: uriItem.uri,
                     buttons: isSelected
