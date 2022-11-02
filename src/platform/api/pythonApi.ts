@@ -467,19 +467,27 @@ export class InterpreterService implements IInterpreterService {
                 if (!api) {
                     return;
                 }
-                if (isUri(pythonPathOrPythonId)) {
+                const uri = isUri(pythonPathOrPythonId) ? pythonPathOrPythonId : undefined;
+                // eslint-disable-next-line local-rules/dont-use-fspath
+                const pythonEnvId = isUri(pythonPathOrPythonId) ? pythonPathOrPythonId.fsPath : pythonPathOrPythonId;
+                if (uri) {
                     // Find the Env with the same Uri.
                     const matchedPythonEnv = api.environments.known.find((item) => {
-                        return areInterpreterPathsSame(item.executable.uri, pythonPathOrPythonId);
+                        return areInterpreterPathsSame(item.executable.uri, uri);
                     });
                     if (matchedPythonEnv) {
                         const env = await api.environments.resolveEnvironment(matchedPythonEnv.id);
                         return this.trackResolvedEnvironment(env, false);
                     }
-                } else {
-                    const env = await api.environments.resolveEnvironment(pythonPathOrPythonId);
-                    return this.trackResolvedEnvironment(env, false);
+                    traceWarning(
+                        `No interpreter with path ${getDisplayPath(
+                            uri
+                        )} found in Python API, will convert Uri path to string as Id ${pythonEnvId}`
+                    );
                 }
+
+                const env = await api.environments.resolveEnvironment(pythonEnvId);
+                return this.trackResolvedEnvironment(env, false);
             });
         } catch (ex) {
             traceWarning(
