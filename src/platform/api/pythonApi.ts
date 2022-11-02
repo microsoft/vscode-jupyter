@@ -424,7 +424,7 @@ export class InterpreterService implements IInterpreterService {
             const envPath = api.environments.getActiveEnvironmentPath(resource);
             traceInfoIfCI(`Active Environment Path for ${getDisplayPath(resource)} is ${JSON.stringify(envPath)}`);
             const env = await api.environments.resolveEnvironment(envPath);
-            traceInfoIfCI(`Resolved Active Environment for ${getDisplayPath(resource)} is ${JSON.stringify(envPath)}`);
+            traceInfoIfCI(`Resolved Active Environment for ${getDisplayPath(resource)} is ${JSON.stringify(env)}`);
             return this.trackResolvedEnvironment(env, false);
         });
 
