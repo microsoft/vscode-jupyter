@@ -278,6 +278,7 @@ abstract class BaseKernel implements IBaseKernel {
             );
             traceInfo(`Restart requested ${this.uri}`);
             this.startCancellation.cancel();
+            this.startCancellation = new CancellationTokenSource();
             const stopWatch = new StopWatch();
             try {
                 // If the session died, then start a new session.
