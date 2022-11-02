@@ -169,7 +169,7 @@ export interface IBaseKernel extends IAsyncDisposable {
      * This flag will tell us whether a real kernel was or is active.
      */
     readonly startedAtLeastOnce?: boolean;
-    start(options?: IDisplayOptions): Promise<void>;
+    start(options?: IDisplayOptions): Promise<IKernelConnectionSession>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     addEventHook(hook: (event: KernelHooks) => Promise<void>): void;
@@ -180,21 +180,24 @@ export interface IBaseKernel extends IAsyncDisposable {
  * Kernels created by this extension.
  */
 export interface IKernel extends IBaseKernel {
-    /**
-     * Total execution count on this kernel
-     */
-    readonly executionCount: number;
     readonly notebook: NotebookDocument;
-    readonly onPreExecute: Event<NotebookCell>;
-    /**
-     * Cells that are still being executed (or pending).
-     */
-    readonly pendingCells: readonly NotebookCell[];
     /**
      * Controller associated with this kernel
      */
     readonly controller: IKernelController;
     readonly creator: 'jupyterExtension';
+}
+
+export interface INotebookKernelExecution {
+    /**
+     * Total execution count on this kernel
+     */
+    readonly executionCount: number;
+    readonly onPreExecute: Event<NotebookCell>;
+    /**
+     * Cells that are still being executed (or pending).
+     */
+    readonly pendingCells: readonly NotebookCell[];
     /**
      * @param cell Cell to execute
      * @param codeOverride Override the code to execute
@@ -205,7 +208,6 @@ export interface IKernel extends IBaseKernel {
      */
     executeHidden(code: string): Promise<nbformat.IOutput[]>;
 }
-
 /**
  * Kernels created by third party extensions.
  */
@@ -264,6 +266,7 @@ export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
     getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
+    getKernelExecution(kernel: IKernel): INotebookKernelExecution;
 }
 
 /**

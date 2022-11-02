@@ -72,11 +72,13 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
     }
     private onDidStartKernel(kernel: IKernel) {
         if (!this.kernelsStartedSuccessfully.has(kernel)) {
-            kernel.onPreExecute(
-                (cell) => this.lastExecutedCellPerKernel.set(kernel, cell),
-                this,
-                this.disposableRegistry
-            );
+            this.kernelProvider
+                .getKernelExecution(kernel)
+                .onPreExecute(
+                    (cell) => this.lastExecutedCellPerKernel.set(kernel, cell),
+                    this,
+                    this.disposableRegistry
+                );
 
             if (!kernel.session?.kernel) {
                 return;

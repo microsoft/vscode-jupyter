@@ -3,7 +3,7 @@
 
 import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernel } from '../../../kernels/types';
+import { INotebookKernelExecution } from '../../../kernels/types';
 import { ICommandManager } from '../../../platform/common/application/types';
 import { Commands } from '../../../platform/common/constants';
 import { IConfigurationService } from '../../../platform/common/types';
@@ -27,7 +27,7 @@ export class RunByLineController implements IDebuggingDelegate {
         private readonly debugAdapter: IKernelDebugAdapter,
         public readonly debugCell: NotebookCell,
         private readonly commandManager: ICommandManager,
-        private readonly kernel: IKernel,
+        private readonly execution: INotebookKernelExecution,
         private readonly settings: IConfigurationService
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunByLine);
@@ -46,7 +46,7 @@ export class RunByLineController implements IDebuggingDelegate {
     public stop(): void {
         traceInfoIfCI(`RunbylineController::stop()`);
         // When debugpy gets stuck, running a cell fixes it and allows us to start another debugging session
-        this.kernel.executeHidden('pass').then(noop, noop);
+        this.execution.executeHidden('pass').then(noop, noop);
         this.debugAdapter.disconnect().then(noop, noop);
     }
 
@@ -110,7 +110,7 @@ export class RunByLineController implements IDebuggingDelegate {
     }
 
     private async initializeExecute() {
-        await cellDebugSetup(this.kernel, this.debugAdapter);
+        await cellDebugSetup(this.execution, this.debugAdapter);
 
         // This will save the code lines of the cell in lineList (so ignore comments and emtpy lines)
         // Its done to set the Run by Line breakpoint on the first code line

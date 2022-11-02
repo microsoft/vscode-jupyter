@@ -25,6 +25,8 @@ import {
 } from './types';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { createKernelSettings } from './kernelSettings';
+import { NotebookKernelExecution } from './kernelExecution';
+import { KernelExecution, ThirdPartyKernelExecution } from './execution/kernelExecution';
 
 /**
  * Web version of a kernel provider. Needed in order to create the web version of a kernel.
@@ -48,27 +50,35 @@ export class KernelProvider extends BaseCoreKernelProvider {
     }
 
     public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel {
-        const uri = notebook.uri;
         const existingKernelInfo = this.getInternal(notebook);
         if (existingKernelInfo && existingKernelInfo.options.metadata.id === options.metadata.id) {
             return existingKernelInfo.kernel;
         }
         this.disposeOldKernel(notebook);
 
-        const resourceUri = notebook?.notebookType === InteractiveWindowView ? options.resourceUri : uri;
+        const resourceUri = notebook?.notebookType === InteractiveWindowView ? options.resourceUri : notebook.uri;
+        const settings = createKernelSettings(this.configService, resourceUri);
+        const kernelExecution = new KernelExecution(
+            options.controller,
+            resourceUri,
+            options.metadata,
+            notebook,
+            this.appShell,
+            settings.interruptTimeout,
+            this.context,
+            this.formatters
+        );
         const kernel = new Kernel(
-            uri,
             resourceUri,
             notebook,
             options.metadata,
             this.notebookProvider,
-            createKernelSettings(this.configService, resourceUri),
+            settings,
             this.appShell,
             options.controller,
-            this.context,
-            this.formatters,
             this.startupCodeProviders,
-            () => Promise.resolve()
+            () => Promise.resolve(),
+            kernelExecution
         ) as IKernel;
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
@@ -78,10 +88,11 @@ export class KernelProvider extends BaseCoreKernelProvider {
             this,
             this.disposables
         );
+        this.executions.set(kernel, new NotebookKernelExecution(kernel, kernelExecution));
         this.asyncDisposables.push(kernel);
         this.storeKernel(notebook, options, kernel);
 
-        this.deleteMappingIfKernelIsDisposed(uri, kernel);
+        this.deleteMappingIfKernelIsDisposed(kernel);
         return kernel;
     }
 }
@@ -108,14 +119,17 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         this.disposeOldKernel(uri);
 
         const resourceUri = uri;
+        const settings = createKernelSettings(this.configService, resourceUri);
+        const kernelExecution = new ThirdPartyKernelExecution(resourceUri, options.metadata, settings.interruptTimeout);
         const kernel = new ThirdPartyKernel(
             uri,
             resourceUri,
             options.metadata,
             this.notebookProvider,
             this.appShell,
-            createKernelSettings(this.configService, resourceUri),
-            this.startupCodeProviders
+            settings,
+            this.startupCodeProviders,
+            kernelExecution
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

@@ -43,7 +43,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
     private _doneDebugging = new EventEmitter<void>();
 
     public constructor(
-        private kernelProvider: IKernelProvider,
+        protected readonly kernelProvider: IKernelProvider,
         private readonly notebookControllerLoader: IControllerLoader,
         private readonly notebookControllerSelection: IControllerSelection,
         protected readonly commandManager: ICommandManager,
@@ -209,8 +209,8 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
                     resourceUri: doc.uri
                 });
             }
-
-            const result = await isUsingIpykernel6OrLater(kernel);
+            const execution = this.kernelProvider.getKernelExecution(kernel);
+            const result = await isUsingIpykernel6OrLater(execution);
             sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
                 status: result === IpykernelCheckResult.Ok ? 'installed' : 'notInstalled'
             });
