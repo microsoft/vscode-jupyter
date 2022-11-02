@@ -138,7 +138,7 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
                     : kernelSpecs.find(
                           (item) =>
                               item.kind === 'startUsingPythonInterpreter' &&
-                              item.interpreter.uri.toString() === activeInterpreter.uri.toString()
+                              areInterpreterPathsSame(item.interpreter.uri, activeInterpreter.uri)
                       );
             },
             defaultNotebookTestTimeout,
