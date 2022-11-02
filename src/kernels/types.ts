@@ -12,13 +12,12 @@ import type {
     Event,
     NotebookCell,
     NotebookCellExecution,
-    NotebookController,
     NotebookDocument,
     Uri
 } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { IAsyncDisposable, IDisplayOptions, Resource } from '../platform/common/types';
+import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../platform/common/types';
 import { IBackupFile, IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { IContributedKernelFinderInfo } from './internalTypes';
@@ -125,7 +124,13 @@ export function isRemoteConnection(
     return !isLocalConnection(kernelConnection);
 }
 
-export type KernelHooks = 'willRestart' | 'willInterrupt' | 'restartCompleted' | 'interruptCompleted';
+export type KernelHooks =
+    | 'willRestart'
+    | 'willInterrupt'
+    | 'restartCompleted'
+    | 'interruptCompleted'
+    | 'didStart'
+    | 'willCancel';
 export interface IBaseKernel extends IAsyncDisposable {
     readonly uri: Uri;
     /**
@@ -144,6 +149,7 @@ export interface IBaseKernel extends IAsyncDisposable {
     readonly onDisposed: Event<void>;
     readonly onStarted: Event<void>;
     readonly onRestarted: Event<void>;
+    readonly restarting: Promise<void>;
     readonly status: KernelMessage.Status;
     readonly disposed: boolean;
     readonly disposing: boolean;
@@ -172,8 +178,18 @@ export interface IBaseKernel extends IAsyncDisposable {
     start(options?: IDisplayOptions): Promise<IKernelConnectionSession>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
-    addEventHook(hook: (event: KernelHooks) => Promise<void>): void;
-    removeEventHook(hook: (event: KernelHooks) => Promise<void>): void;
+    addHook(
+        event: 'willRestart',
+        hook: (sessionPromise?: Promise<IKernelConnectionSession>) => Promise<void>,
+        thisArgs?: unknown,
+        disposables?: IDisposable[]
+    ): IDisposable;
+    addHook(
+        event: 'willInterrupt' | 'restartCompleted' | 'interruptCompleted' | 'didStart' | 'willCancel',
+        hook: () => Promise<void>,
+        thisArgs?: unknown,
+        disposables?: IDisposable[]
+    ): IDisposable;
 }
 
 /**
@@ -220,7 +236,7 @@ export interface IThirdPartyKernel extends IBaseKernel {
  */
 export type KernelOptions = {
     metadata: KernelConnectionMetadata;
-    controller: NotebookController;
+    controller: IKernelController;
     /**
      * When creating a kernel for an Interactive window, pass the Uri of the Python file here (to set the working directory, file & the like)
      * In the case of Notebooks, just pass the uri of the notebook.

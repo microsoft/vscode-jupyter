@@ -37,7 +37,6 @@ import {
     isLocalConnection,
     KernelAction,
     KernelConnectionMetadata,
-    KernelHooks,
     NotebookCellRunState
 } from '../kernels/types';
 import { chainable } from '../platform/common/utils/decorators';
@@ -309,16 +308,15 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             )!.controller;
             this.currentKernelInfo.metadata = kernel.kernelConnectionMetadata;
 
-            const kernelEventHookForRestart = async (ev: KernelHooks) => {
-                if (ev === 'willRestart' && this.notebookDocument && this.currentKernelInfo.metadata) {
+            const kernelEventHookForRestart = async () => {
+                if (this.notebookDocument && this.currentKernelInfo.metadata) {
                     this._insertSysInfoPromise = undefined;
                     // If we're about to restart, insert a 'restarting' message as it happens
                     this.insertSysInfoMessage(this.currentKernelInfo.metadata, SysInfoReason.Restart).then(noop, noop);
                 }
             };
             // Hook pre interrupt so we can stick in a message
-            kernel.addEventHook(kernelEventHookForRestart);
-            this.kernelDisposables.push(new Disposable(() => kernel.removeEventHook(kernelEventHookForRestart)));
+            this.kernelDisposables.push(kernel.addHook('willRestart', kernelEventHookForRestart));
 
             // When restart finishes, rerun our initialization code
             kernel.onRestarted(

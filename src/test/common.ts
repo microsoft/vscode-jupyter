@@ -11,6 +11,7 @@ import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 import { computeHash } from '../platform/msrCrypto/hash';
 import { disposeAllDisposables } from '../platform/common/helpers';
+import { isPromise } from '../platform/common/utils/async';
 
 export interface IExtensionTestApi extends IExtensionApi {
     serviceContainer: IServiceContainer;
@@ -43,15 +44,15 @@ export function clearPendingTimers() {
  * @param {string} errorMessage
  * @returns {Promise<void>}
  */
-export async function waitForCondition(
-    condition: () => Promise<boolean> | boolean,
+export async function waitForCondition<T>(
+    condition: () => Promise<T> | T,
     timeoutMs: number,
     errorMessage: string | (() => string),
     intervalTimeoutMs: number = 10,
     throwOnError: boolean = false,
     cancelToken?: { isCancellationRequested: boolean; onCancellationRequested: Function }
-): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
+): Promise<NonNullable<T>> {
+    return new Promise<NonNullable<T>>(async (resolve, reject) => {
         const disposables: IDisposable[] = [];
         const timeout = setTimeout(() => {
             clearTimeout(timeout);
@@ -72,10 +73,10 @@ export async function waitForCondition(
                 reject(new Error('Cancelled Wait Condition via cancellation token'));
                 return;
             }
-            let success = false;
+            let success: T | undefined = undefined;
             try {
                 const promise = condition();
-                success = typeof promise === 'boolean' ? promise : await promise;
+                success = isPromise(promise) ? await promise : promise;
             } catch (exc) {
                 if (throwOnError) {
                     clearTimeout(timer);
@@ -92,7 +93,7 @@ export async function waitForCondition(
                 clearTimeout(timer);
                 clearTimeout(timeout);
                 disposeAllDisposables(disposables);
-                resolve();
+                resolve(success as NonNullable<T>);
             }
         };
         timer = setTimeout(timerFunc, intervalTimeoutMs);

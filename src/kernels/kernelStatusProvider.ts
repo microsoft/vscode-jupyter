@@ -37,38 +37,47 @@ export class KernelStatusProvider implements IExtensionSyncActivationService {
     }
     private onDidCreateKernel(kernel: IKernel) {
         // Restart status.
-        kernel.addEventHook(async (e) => {
-            switch (e) {
-                case 'willRestart': {
-                    this.restartProgress.get(kernel)?.dispose();
-                    const progress = KernelProgressReporter.createProgressReporter(
-                        kernel.resourceUri,
-                        DataScience.restartingKernelStatus().format(
-                            `: ${getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)}`
-                        )
-                    );
-                    this.restartProgress.set(kernel, progress);
-                    break;
-                }
-                case 'restartCompleted': {
-                    this.restartProgress.get(kernel)?.dispose();
-                    this.interruptProgress.get(kernel)?.dispose();
-                    break;
-                }
-                case 'willInterrupt': {
-                    this.interruptProgress.get(kernel)?.dispose();
-                    const progress = KernelProgressReporter.createProgressReporter(
-                        kernel.resourceUri,
-                        DataScience.interruptKernelStatus()
-                    );
-                    this.interruptProgress.set(kernel, progress);
-                    break;
-                }
-                case 'interruptCompleted': {
-                    this.interruptProgress.get(kernel)?.dispose();
-                    break;
-                }
-            }
-        });
+        kernel.addHook(
+            'willRestart',
+            async () => {
+                this.restartProgress.get(kernel)?.dispose();
+                const progress = KernelProgressReporter.createProgressReporter(
+                    kernel.resourceUri,
+                    DataScience.restartingKernelStatus().format(
+                        `: ${getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)}`
+                    )
+                );
+                this.restartProgress.set(kernel, progress);
+            },
+            this,
+            this.disposables
+        );
+        kernel.addHook(
+            'restartCompleted',
+            async () => {
+                this.restartProgress.get(kernel)?.dispose();
+                this.interruptProgress.get(kernel)?.dispose();
+            },
+            this,
+            this.disposables
+        );
+        kernel.addHook(
+            'willInterrupt',
+            async () => {
+                const progress = KernelProgressReporter.createProgressReporter(
+                    kernel.resourceUri,
+                    DataScience.interruptKernelStatus()
+                );
+                this.interruptProgress.set(kernel, progress);
+            },
+            this,
+            this.disposables
+        );
+        kernel.addHook(
+            'interruptCompleted',
+            async () => this.interruptProgress.get(kernel)?.dispose(),
+            this,
+            this.disposables
+        );
     }
 }

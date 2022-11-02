@@ -82,7 +82,7 @@ suite('Kernel Event', function () {
         const kernelRestarted = createEventHandler(kernelProvider, 'onDidRestartKernel', disposables);
         const kernelStatusChanged = createEventHandler(kernelProvider, 'onKernelStatusChanged', disposables);
 
-        const nb = await createEmptyPythonNotebook(disposables);
+        const { notebook: nb } = await createEmptyPythonNotebook(disposables);
         await waitForCondition(async () => !!kernelProvider.get(nb), 5_000, 'Kernel not created');
         const kernel = kernelProvider.get(nb)!;
         const execution = kernelProvider.getKernelExecution(kernel);
@@ -119,7 +119,7 @@ suite('Kernel Event', function () {
         assert.isTrue(kernelDisposed.fired, 'IKernelProvider.onDidDisposeKernel not fired');
     });
     test('Kernel.IKernelConnection Events', async () => {
-        const nb = await createEmptyPythonNotebook(disposables);
+        const { notebook: nb } = await createEmptyPythonNotebook(disposables);
         await waitForCondition(async () => !!kernelProvider.get(nb), 5_000, 'Kernel not created');
         const kernel = kernelProvider.get(nb)!;
         const execution = kernelProvider.getKernelExecution(kernel);

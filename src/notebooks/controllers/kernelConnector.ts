@@ -12,9 +12,10 @@ import {
     KernelInterpreterDependencyResponse,
     KernelAction,
     KernelActionSource,
-    IThirdPartyKernelProvider
+    IThirdPartyKernelProvider,
+    IKernelController
 } from '../../kernels/types';
-import { Memento, NotebookDocument, NotebookController, Uri } from 'vscode';
+import { Memento, NotebookDocument, Uri } from 'vscode';
 import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
 import { traceVerbose, traceWarning } from '../../platform/logging';
 import { Resource, IMemento, GLOBAL_MEMENTO, IDisplayOptions, IDisposable } from '../../platform/common/types';
@@ -46,7 +47,7 @@ export class KernelConnector {
     private static async switchController(
         resource: Resource,
         serviceContainer: IServiceContainer
-    ): Promise<{ controller: NotebookController; metadata: KernelConnectionMetadata } | undefined> {
+    ): Promise<{ controller: IKernelController; metadata: KernelConnectionMetadata } | undefined> {
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
         const notebookEditorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         const editor = notebookEditorProvider.findNotebookEditor(resource);
@@ -100,7 +101,7 @@ export class KernelConnector {
         errorContext: KernelAction,
         resource: Resource,
         kernel: IBaseKernel,
-        controller: NotebookController | undefined,
+        controller: IKernelController | undefined,
         metadata: KernelConnectionMetadata,
         actionSource: KernelActionSource
     ) {
@@ -485,7 +486,7 @@ export class KernelConnector {
     public static async connectToNotebookKernel(
         metadata: KernelConnectionMetadata,
         serviceContainer: IServiceContainer,
-        notebookResource: { resource: Resource; notebook: NotebookDocument; controller: NotebookController },
+        notebookResource: { resource: Resource; notebook: NotebookDocument; controller: IKernelController },
         options: IDisplayOptions,
         disposables: IDisposable[],
         actionSource: KernelActionSource = 'jupyterExtension',
@@ -526,5 +527,5 @@ export class KernelConnector {
 }
 
 type NotebookResource =
-    | { resource: Resource; notebook: NotebookDocument; controller: NotebookController }
+    | { resource: Resource; notebook: NotebookDocument; controller: IKernelController }
     | { resource: Uri };
