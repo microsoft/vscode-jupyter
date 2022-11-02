@@ -88,7 +88,7 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
         assert.isAtLeast(specs.length, 1);
     });
 
-    test('Access Kernels', async () => {
+    test.skip('Access Kernels', async () => {
         const kernelService = await api.getKernelService();
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
 
