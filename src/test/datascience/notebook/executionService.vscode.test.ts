@@ -681,6 +681,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo('2. Start execution for test of Stderr & stdout outputs');
         await Promise.all([
             kernelExecution.executeCell(cell),
+            waitForTextOutput(cell, '12', 0, false),
+            waitForTextOutput(cell, 'ab', 1, false),
             waitForTextOutput(cell, '3', 2, false),
             waitForTextOutput(cell, 'c', 3, false)
         ]);
@@ -693,58 +695,16 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // c
         assert.equal(cell.outputs.length, 4, 'Incorrect number of output');
         // All output items should be of type stream
-        const expectedOutput = [
-            {
-                metadata: {
-                    outputType: 'stream'
-                },
-                text: '12'
-            },
-            {
-                metadata: {
-                    outputType: 'stream'
-                },
-                text: 'ab'
-            },
-            {
-                metadata: {
-                    outputType: 'stream'
-                },
-                text: '3'
-            },
-            {
-                metadata: {
-                    outputType: 'stream'
-                },
-                text: 'c'
-            }
-        ];
+        const expectedMetadata = { outputType: 'stream' };
+        assert.deepEqual(cell.outputs[0].metadata, expectedMetadata, `Metadata is incorrect for cell 0`);
+        assert.deepEqual(cell.outputs[1].metadata, expectedMetadata, `Metadata is incorrect for cell 1`);
+        assert.deepEqual(cell.outputs[2].metadata, expectedMetadata, `Metadata is incorrect for cell 2`);
+        assert.deepEqual(cell.outputs[3].metadata, expectedMetadata, `Metadata is incorrect for cell 3`);
 
-        let lastError = 'Incorrect output';
-        await waitForCondition(
-            () => {
-                try {
-                    for (let index = 0; index < 4; index++) {
-                        const expected = expectedOutput[index];
-                        const output = cell.outputs[index];
-                        assert.deepEqual(output.metadata, expected.metadata, `Metadata is incorrect for cell ${index}`);
-                        assert.deepEqual(
-                            getTextOutputValue(output),
-                            expected.text,
-                            `Text is incorrect for cell ${index}`
-                        );
-                    }
-                    return true;
-                } catch (ex) {
-                    lastError = ex;
-                    return false;
-                }
-            },
-            defaultNotebookTestTimeout,
-            () => lastError,
-            100,
-            true
-        );
+        assert.include(getTextOutputValue(cell.outputs[0]), '12', `Text is incorrect for cell 0`);
+        assert.include(getTextOutputValue(cell.outputs[1]), 'ab', `Text is incorrect for cell 1`);
+        assert.include(getTextOutputValue(cell.outputs[2]), '3', `Text is incorrect for cell 2`);
+        assert.include(getTextOutputValue(cell.outputs[3]), 'c', `Text is incorrect for cell 3`);
     });
 
     test('Execute all cells and run after error', async () => {
