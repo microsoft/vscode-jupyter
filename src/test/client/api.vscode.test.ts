@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -14,15 +14,16 @@ import { initialize } from '../initialize.node';
 import * as sinon from 'sinon';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, waitForCondition } from '../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
-import { Disposable, Uri, workspace } from 'vscode';
+import { Disposable, workspace } from 'vscode';
 import { executeSilently } from '../../kernels/helpers';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { createKernelController, TestNotebookDocument } from '../datascience/notebook/executionHelper';
 import { IKernel, INotebookKernelExecution, IKernelProvider, IKernelFinder } from '../../kernels/types';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
+import { KernelConnectionMetadata } from '../../standalone/api/extension';
 
-suite('3rd Party Kernel Service API', function () {
+suite('3rd Party Kernel Service API @kernelCore', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
@@ -122,15 +123,14 @@ suite('3rd Party Kernel Service API', function () {
         const interpreterService = await api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
         const activeInterpreter = await interpreterService.getActiveInterpreter();
-
-        const kernelSpecs = await kernelService!.getKernelSpecifications();
-        traceInfoIfCI(
-            `Found kernel specs ${kernelSpecs.length}: ${kernelSpecs
-                .map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri.path}`)
-                .join('\n')}`
-        );
+        if (!activeInterpreter) {
+            throw new Error('Active Interpreter is undefined');
+        }
+        assert.isOk(activeInterpreter);
+        let kernelSpecs: KernelConnectionMetadata[] = [];
         const pythonKernel = await waitForCondition(
-            () => {
+            async () => {
+                kernelSpecs = await kernelService!.getKernelSpecifications();
                 return IS_REMOTE_NATIVE_TEST()
                     ? kernelSpecs.find(
                           (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === 'python'
@@ -138,12 +138,14 @@ suite('3rd Party Kernel Service API', function () {
                     : kernelSpecs.find(
                           (item) =>
                               item.kind === 'startUsingPythonInterpreter' &&
-                              activeInterpreter &&
-                              Uri.from(item.interpreter.uri).toString() === Uri.from(activeInterpreter.uri).toString()
+                              item.interpreter.uri.toString() === activeInterpreter.uri.toString()
                       );
             },
             defaultNotebookTestTimeout,
-            'Python Kernel not found'
+            () =>
+                `Python Kernel not found, active interpreter is ${activeInterpreter.uri.toString()}, found kernel specs ${
+                    kernelSpecs.length
+                }: ${kernelSpecs.map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri.path}`).join('\n')}`
         );
         assert.isOk(pythonKernel, 'Python Kernel Spec not found');
 
