@@ -552,8 +552,21 @@ jobs:
 
       - name: Create temp folder for user data dir
         run: |
+          echo "VSC_JUPYTER_USER_DATA_DIR=$env:USERPROFILE\AppData\Local\Temp" >> $Env:GITHUB_ENV
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+
+      - name: Print temp folder for user data dir
+        run: |
+          echo ${{env.VSC_JUPYTER_USER_DATA_DIR}} is user data dir
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+
+      - name: Create temp folder for user data dir
+        run: |
           echo "VSC_JUPYTER_USER_DATA_DIR=$(mktemp -d)" >> $GITHUB_ENV
           echo ${{env.VSC_JUPYTER_USER_DATA_DIR}} is user data dir
+        if: matrix.os != 'windows-latest'
 
       # Set the correct xvfb commands to run vscode tests
       # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
