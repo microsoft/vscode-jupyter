@@ -280,14 +280,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jupyter: [raw, local]
-        python: [nonConda, conda]
-        pythonVersion: ['3.9', '3.10']
+        jupyter: [raw]
+        python: [python]  # valid values include python,conda,noPython
+        pythonVersion: ['3.10']
         webOrDesktop: ['']
         # Whether we're using stable (<empty>) or pre-release versions of Python packages.
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
         packageVersion: ['']
+        tags: ['^[^@]+$|@mandatory']
+        # tags: ['^[^@]+$|@mandatory', '@kernelCore', '@widgets', '@iw', '@webview|@export|@lsp|@variableViewer', '@debugger', '@kernelPicker|@python|@jupyter', '@kernelInstall']
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
@@ -295,38 +297,85 @@ jobs:
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
         include:
-          - jupyter: remote # We don't care how remote is started (we only want to test connecting to it)
-            python: nonConda
-            pythonVersion: '3.9'
-            webOrDesktop: 'desktop'
-            os: ubuntu-latest
-          - jupyter: remote
-            python: nonConda
-            pythonVersion: '3.9'
-            webOrDesktop: 'web'
-            os: ubuntu-latest
+        #   - jupyter: local
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     webOrDesktop: 'desktop'
+        #     os: ubuntu-latest
+        #     tags: '@kernelInstall'
+        #   - jupyter: local
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     webOrDesktop: 'desktop'
+        #     os: ubuntu-latest
+        #     tags: '@kernelCore'
+        #   - jupyter: remote
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     webOrDesktop: 'desktop'
+        #     os: ubuntu-latest
+        #     tags: '^[^@]+$|@mandatory'
+        #   - jupyter: remote
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     webOrDesktop: 'web'
+        #     os: ubuntu-latest
+        #     tags: '@webview|@export|@lsp|@variableViewer'
+        #   - jupyter: remote
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     webOrDesktop: 'web'
+        #     os: ubuntu-latest
+        #     tags: '^[^@]+$|@mandatory'
           - jupyter: raw
-            python: noPython
-            os: ubuntu-latest
-          - jupyter: raw
-            python: nonConda
+            python: python
             pythonVersion: '3.10'
             os: windows-latest
-          - jupyter: local
-            python: nonConda
-            pythonVersion: '3.9'
-            packageVersion: 'prerelease'
-            os: ubuntu-latest
-          - jupyter: raw
-            python: nonConda
-            pythonVersion: '3.9'
-            packageVersion: 'prerelease'
-            os: ubuntu-latest
-        exclude:
-          - python: conda # Conda does't seem to support 3.10 yet.
-            pythonVersion: '3.10'
+            tags: '^[^@]+$|@mandatory'
+        #   - jupyter: remote
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     webOrDesktop: 'desktop'
+        #     os: ubuntu-latest
+        #     tags: '@kernelPicker'
+        #   - jupyter: remote
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     webOrDesktop: 'desktop'
+        #     os: ubuntu-latest
+        #     tags: '@widgets'
+        #   - jupyter: remote
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     webOrDesktop: 'desktop'
+        #     os: ubuntu-latest
+        #     tags: '@kernelCore'
+        #   - jupyter: raw
+        #     python: noPython
+        #     os: ubuntu-latest
+        #     tags: '@nonPython'
+        #   - jupyter: raw
+        #     python: python
+        #     pythonVersion: '3.11'
+        #     os: windows-latest
+        #     tags: '^[^@]+$|@mandatory|@kernelCore|@python'
+        #   - jupyter: raw
+        #     python: conda
+        #     pythonVersion: '3.10'
+        #     os: ubuntu-latest
+        #     tags: '^[^@]+$|@mandatory|@python'
+        #   - jupyter: raw
+        #     python: python
+        #     pythonVersion: '3.10'
+        #     packageVersion: 'prerelease'
+        #     os: ubuntu-latest
+        #     tags: '^[^@]+$|@mandatory|@kernelCore|@python'
+
+        # exclude:
+        #   - python: conda # Conda does't seem to support 3.10 yet.
+        #     pythonVersion: '3.10'
         #   - pythonVersion: '3.9'
-        #     python: nonConda
+        #     python: python
         #     jupyter: raw
         #     os: windows-latest
     steps:
@@ -589,6 +638,7 @@ jobs:
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_ubuntu
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop != 'web'
 
@@ -609,6 +659,7 @@ jobs:
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_web
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web'
 
@@ -625,6 +676,7 @@ jobs:
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_PYTHON_LOG_FILE: ${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/python.log
+        #   VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
           TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test*'
         id: test_notebook_vscode_windows
         if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.webOrDesktop != 'web'
@@ -637,6 +689,7 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebookWithoutPythonExt_vscode
         if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
 
