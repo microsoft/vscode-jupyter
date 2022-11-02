@@ -21,7 +21,7 @@ import {
 } from '../helper.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode semantic token tests', function () {
+suite('DataScience - VSCode semantic token tests @lsp', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;

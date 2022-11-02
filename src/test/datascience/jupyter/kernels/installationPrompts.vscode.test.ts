@@ -70,7 +70,7 @@ import { BaseKernelError } from '../../../../kernels/errors/types';
 import { IControllerRegistration, IControllerSelection } from '../../../../notebooks/controllers/types';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
-suite('DataScience Install IPyKernel (slow) (install)', function () {
+suite('DataScience Install IPyKernel (slow) (install) @kernelInstall', function () {
     const disposables: IDisposable[] = [];
     let nbFile: Uri;
     const templateIPynbFile = Uri.file(

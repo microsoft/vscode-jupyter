@@ -288,8 +288,7 @@ jobs:
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
         packageVersion: ['']
-        tags: ['^[^@]+$|@mandatory']
-        # tags: ['^[^@]+$|@mandatory', '@kernelCore', '@widgets', '@iw', '@webview|@export|@lsp|@variableViewer', '@debugger', '@kernelPicker|@python|@jupyter', '@kernelInstall']
+        tags: ['^[^@]+$|@mandatory', '@kernelCore', '@widgets', '@iw', '@webview|@export|@lsp|@variableViewer', '@debugger', '@kernelPicker|@python|@jupyter', '@kernelInstall']
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
@@ -297,79 +296,74 @@ jobs:
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
         include:
-        #   - jupyter: local
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     webOrDesktop: 'desktop'
-        #     os: ubuntu-latest
-        #     tags: '@kernelInstall'
-        #   - jupyter: local
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     webOrDesktop: 'desktop'
-        #     os: ubuntu-latest
-        #     tags: '@kernelCore'
-        #   - jupyter: remote
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     webOrDesktop: 'desktop'
-        #     os: ubuntu-latest
-        #     tags: '^[^@]+$|@mandatory'
-        #   - jupyter: remote
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     webOrDesktop: 'web'
-        #     os: ubuntu-latest
-        #     tags: '@webview|@export|@lsp|@variableViewer'
-        #   - jupyter: remote
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     webOrDesktop: 'web'
-        #     os: ubuntu-latest
-        #     tags: '^[^@]+$|@mandatory'
+          - jupyter: local
+            python: python
+            pythonVersion: '3.10'
+            webOrDesktop: 'desktop'
+            os: ubuntu-latest
+            tags: '@kernelInstall'
+          - jupyter: local
+            python: python
+            pythonVersion: '3.10'
+            webOrDesktop: 'desktop'
+            os: ubuntu-latest
+            tags: '@kernelCore'
+          - jupyter: remote
+            python: python
+            pythonVersion: '3.10'
+            webOrDesktop: 'desktop'
+            os: ubuntu-latest
+            tags: '^[^@]+$|@mandatory'
+          - jupyter: remote
+            python: python
+            pythonVersion: '3.10'
+            webOrDesktop: 'web'
+            os: ubuntu-latest
+            tags: '@webview|@export|@lsp|@variableViewer'
+          - jupyter: remote
+            python: python
+            pythonVersion: '3.10'
+            webOrDesktop: 'web'
+            os: ubuntu-latest
+            tags: '^[^@]+$|@mandatory'
           - jupyter: raw
             python: python
             pythonVersion: '3.10'
             os: windows-latest
             tags: '^[^@]+$|@mandatory'
-        #   - jupyter: remote
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     webOrDesktop: 'desktop'
-        #     os: ubuntu-latest
-        #     tags: '@kernelPicker'
-        #   - jupyter: remote
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     webOrDesktop: 'desktop'
-        #     os: ubuntu-latest
-        #     tags: '@widgets'
-        #   - jupyter: remote
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     webOrDesktop: 'desktop'
-        #     os: ubuntu-latest
-        #     tags: '@kernelCore'
-        #   - jupyter: raw
-        #     python: noPython
-        #     os: ubuntu-latest
-        #     tags: '@nonPython'
-        #   - jupyter: raw
-        #     python: python
-        #     pythonVersion: '3.11'
-        #     os: windows-latest
-        #     tags: '^[^@]+$|@mandatory|@kernelCore|@python'
-        #   - jupyter: raw
-        #     python: conda
-        #     pythonVersion: '3.10'
-        #     os: ubuntu-latest
-        #     tags: '^[^@]+$|@mandatory|@python'
-        #   - jupyter: raw
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     packageVersion: 'prerelease'
-        #     os: ubuntu-latest
-        #     tags: '^[^@]+$|@mandatory|@kernelCore|@python'
+          - jupyter: remote
+            python: python
+            pythonVersion: '3.10'
+            webOrDesktop: 'desktop'
+            os: ubuntu-latest
+            tags: '@kernelPicker'
+          - jupyter: remote
+            python: python
+            pythonVersion: '3.10'
+            webOrDesktop: 'desktop'
+            os: ubuntu-latest
+            tags: '@widgets'
+          - jupyter: remote
+            python: python
+            pythonVersion: '3.10'
+            webOrDesktop: 'desktop'
+            os: ubuntu-latest
+            tags: '@kernelCore'
+          - jupyter: raw
+            python: noPython
+            os: ubuntu-latest
+            tags: '@nonPython'
+          - jupyter: raw
+            python: conda
+            pythonVersion: '3.10'
+            os: ubuntu-latest
+            tags: '^[^@]+$|@mandatory|@python'
+          - jupyter: raw
+            python: python
+            pythonVersion: '3.10'
+            packageVersion: 'prerelease'
+            os: ubuntu-latest
+            tags: '^[^@]+$|@mandatory|@kernelCore|@python'
 
         # exclude:
         #   - python: conda # Conda does't seem to support 3.10 yet.
@@ -676,7 +670,6 @@ jobs:
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_PYTHON_LOG_FILE: ${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/python.log
-        #   VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
           TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test*'
         id: test_notebook_vscode_windows
         if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.webOrDesktop != 'web'

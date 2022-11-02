@@ -55,7 +55,7 @@ import { IControllerSelection } from '../../notebooks/controllers/types';
 import { format } from 'util';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
 
-suite(`Interactive window execution`, async function () {
+suite(`Interactive window execution @iw`, async function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -82,7 +82,7 @@ suite(`Interactive window execution`, async function () {
         await settings.update('interactiveWindowMode', 'multiple');
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    test('Execute cell from Python file', async () => {
+    test('Execute cell from Python file @mandatory', async () => {
         const source = 'print(42)';
         const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, source, disposables);
         const notebookDocument = vscode.workspace.notebookDocuments.find(

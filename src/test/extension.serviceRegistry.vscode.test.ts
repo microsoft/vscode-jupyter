@@ -146,7 +146,7 @@ suite('DataScience - Verify serviceRegistry is correct', function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    test('Verify all classes with inject on them are in the container', async () => {
+    test('Verify all classes with inject on them are in the container @mandatory', async () => {
         assert.ok(
             api.serviceContainer,
             `Service container not created. Extension should fail to activate. See inversify output`
