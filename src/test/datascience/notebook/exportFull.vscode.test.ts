@@ -41,7 +41,7 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
+suite('DataScience - VSCode Notebook - (Export) (slow) @export', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let proc: ProcessService;

@@ -20,7 +20,7 @@ import { Settings } from '../../../../platform/common/constants';
 import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Intellisense Notebook Diagnostics', function () {
+suite('DataScience - VSCode Intellisense Notebook Diagnostics @lsp', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;

@@ -43,7 +43,7 @@ import { isWeb } from '../../../platform/common/utils/misc';
 import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
-suite('DataScience - VSCode Notebook - Kernel Selection', function () {
+suite('DataScience - VSCode Notebook - Kernel Selection @kernelPicker', function () {
     const disposables: IDisposable[] = [];
     const templateIPynbFile = Uri.file(
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/notebook/nbWithKernel.ipynb')

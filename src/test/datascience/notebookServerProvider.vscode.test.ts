@@ -21,7 +21,7 @@ import { NotebookServerProvider } from '../../kernels/jupyter/launcher/notebookS
 import { IJupyterExecution, IJupyterServerProvider } from '../../kernels/jupyter/types';
 import { DisplayOptions } from '../../kernels/displayOptions';
 
-suite('Jupyter CLI Tests', async () => {
+suite('Jupyter CLI Tests @jupyter', async () => {
     let jupyterServerProvider: NotebookServerProvider;
     let pythonExecFactory: IPythonExecutionFactory;
     let settings: JupyterSettings;

@@ -45,7 +45,7 @@ import { Settings } from '../../../../platform/common/constants';
     suite(
         `DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter) (slow) ${
             useJedi ? 'withJedi' : 'withoutJedi'
-        }`,
+        } @lsp`,
         function () {
             let api: IExtensionTestApi;
             const disposables: IDisposable[] = [];
