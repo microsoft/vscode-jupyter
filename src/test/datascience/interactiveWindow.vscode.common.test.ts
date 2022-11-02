@@ -454,6 +454,11 @@ ${actualCode}
 
         // Wait for output to appear
         await waitForTextOutput(notebookDocument!.cellAt(1), '1\n2');
+        await waitForCondition(
+            () => getTextOutputValue(notebookDocument!.cellAt(1).outputs[0]).includes('1\n2'),
+            defaultNotebookTestTimeout,
+            () => `Output not found in "${getTextOutputValue(notebookDocument!.cellAt(1).outputs[0])}"`
+        );
     });
 
     test('Error stack traces have correct line hrefs with mix of cell sources', async function () {
