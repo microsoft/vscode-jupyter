@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as sinon from 'sinon';
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { IDisposable } from '../platform/common/types';
@@ -102,12 +103,14 @@ suite('Kernel ReConnect Progress Message', () => {
         when(kernel.onRestarted).thenReturn(onRestarted.event);
         when(kernel.dispose()).thenResolve();
         let onWillRestart: (e: 'willRestart') => Promise<void> = () => Promise.resolve();
-        when(kernel.addHook('willRestart', anything())).thenCall((_, cb) => {
-            onWillRestart = cb;
+        instance(kernel).addHook = (hook, cb: any) => {
+            if (hook === 'willRestart') {
+                onWillRestart = cb;
+            }
             return {
                 dispose: noop
             };
-        });
+        };
         return { kernel, onRestarted, kernelConnectionStatusSignal, onWillRestart: () => onWillRestart('willRestart') };
     }
     test('Display message when kernel is re-connecting', async () => {
