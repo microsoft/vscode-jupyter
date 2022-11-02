@@ -129,16 +129,22 @@ suite('3rd Party Kernel Service API', function () {
                 .map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri.path}`)
                 .join('\n')}`
         );
-        const pythonKernel = IS_REMOTE_NATIVE_TEST()
-            ? kernelSpecs.find(
-                  (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === 'python'
-              )
-            : kernelSpecs.find(
-                  (item) =>
-                      item.kind === 'startUsingPythonInterpreter' &&
-                      activeInterpreter &&
-                      Uri.from(item.interpreter.uri).toString() === Uri.from(activeInterpreter.uri).toString()
-              );
+        const pythonKernel = await waitForCondition(
+            () => {
+                return IS_REMOTE_NATIVE_TEST()
+                    ? kernelSpecs.find(
+                          (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === 'python'
+                      )
+                    : kernelSpecs.find(
+                          (item) =>
+                              item.kind === 'startUsingPythonInterpreter' &&
+                              activeInterpreter &&
+                              Uri.from(item.interpreter.uri).toString() === Uri.from(activeInterpreter.uri).toString()
+                      );
+            },
+            defaultNotebookTestTimeout,
+            'Python Kernel not found'
+        );
         assert.isOk(pythonKernel, 'Python Kernel Spec not found');
 
         // Don't use same file (due to dirty handling, we might save in dirty.)
