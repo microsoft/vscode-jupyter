@@ -123,7 +123,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
     test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
         const notebook = await TestNotebookDocument.openFile(testJuliaNb);
         await waitForCondition(
-            () => {
+            async () => {
                 const preferredController = await controllerPreferred.computePreferred(notebook);
                 if (
                     preferredController.preferredConnection?.kind === 'startUsingLocalKernelSpec' &&
