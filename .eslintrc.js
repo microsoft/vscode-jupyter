@@ -319,7 +319,7 @@ module.exports = {
                         message: 'Importing non-telemetry modules into telemetry files is not allowed.'
                     },
                     {
-                        target: './src/platform/**/*.ts',
+                        target: './src/platform/**/*[!.unit].ts',
                         from: './src/**[!platform]**/**/*.ts',
                         message: 'Importing non-platform modules into platform files is not allowed.'
                     }
