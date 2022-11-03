@@ -596,7 +596,7 @@ async function getActiveInterpreterKernelConnection() {
     const interpreter = await waitForCondition(
         () => interpreterService.getActiveInterpreter(),
         defaultNotebookTestTimeout,
-        'Active Interpreter is undefined'
+        'Active Interpreter is undefined.2'
     );
     return waitForCondition(
         () =>
@@ -611,11 +611,13 @@ async function getActiveInterpreterKernelConnection() {
 }
 async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
     const { interpreterService, kernelFinder } = await getServices();
-    const interpreter = await waitForCondition(
-        () => interpreterService.getActiveInterpreter(),
-        defaultNotebookTestTimeout,
-        'Active Interpreter is undefined'
-    );
+    const interpreter = isWeb()
+        ? undefined
+        : await waitForCondition(
+              () => interpreterService.getActiveInterpreter(),
+              defaultNotebookTestTimeout,
+              'Active Interpreter is undefined.3'
+          );
     return waitForCondition(
         () =>
             kernelFinder.kernels.find((item) => {
