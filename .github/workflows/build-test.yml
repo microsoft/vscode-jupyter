@@ -346,13 +346,6 @@ jobs:
             os: ubuntu-latest
             tags: '@kernelPicker|@kernelCore'
 
-        # exclude:
-        #   - python: conda # Conda does't seem to support 3.10 yet.
-        #     pythonVersion: '3.10'
-        #   - pythonVersion: '3.9'
-        #     python: python
-        #     jupyterConnection: raw
-        #     os: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
