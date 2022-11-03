@@ -15,7 +15,7 @@ import { RawSocket } from './rawSocket.node';
 import { IKernelSocket } from '../../types';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
 import { Signal } from '@lumino/signaling';
-import { IIOPubMessage, IMessage, IOPubMessageType, MessageType } from '@jupyterlab/services/lib/kernel/messages';
+import type { IIOPubMessage, IMessage, IOPubMessageType, MessageType } from '@jupyterlab/services/lib/kernel/messages';
 
 /*
 RawKernel class represents the mapping from the JupyterLab services IKernel interface

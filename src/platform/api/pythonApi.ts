@@ -177,13 +177,13 @@ export class PythonApiProvider implements IPythonApiProvider {
         if (this.initialized) {
             return;
         }
-        this.initialized = true;
         const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
         if (!pythonExtension) {
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         } else {
             await this.registerHooks();
         }
+        this.initialized = true;
     }
     private async registerHooks() {
         if (this.hooksRegistered) {
@@ -193,16 +193,23 @@ export class PythonApiProvider implements IPythonApiProvider {
         if (!pythonExtension) {
             return;
         }
-        this.hooksRegistered = true;
+        let activated = false;
         if (!pythonExtension.isActive) {
             try {
                 await pythonExtension.activate();
-                this.didActivatePython.fire();
+                activated = true;
             } catch (ex) {
                 traceError(`Failed activating the python extension: `, ex);
                 this.api.reject(ex);
                 return;
             }
+        }
+        if (this.hooksRegistered) {
+            return;
+        }
+        this.hooksRegistered = true;
+        if (activated) {
+            this.didActivatePython.fire();
         }
         pythonExtension.exports.jupyter.registerHooks();
         this._pythonExtensionHooked.resolve();
