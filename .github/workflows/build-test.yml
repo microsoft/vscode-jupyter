@@ -295,6 +295,11 @@ jobs:
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
         include:
+        # Temporary hack to bypass mandatory CI job (this will be an empty job)
+          - jupyterConnection: local
+            python: nonConda
+            pythonVersion: '3.10'
+            os: ubuntu-latest
         # Mandatory tests
           - jupyterConnection: remote
             python: python
@@ -609,11 +614,11 @@ jobs:
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_ubuntu
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web' && matrix.python != 'nonConda'
 
       - name: Build web bundle for testing
         run: npm run compile-web-test
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web' && matrix.python != 'nonConda'
         env:
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
@@ -632,7 +637,7 @@ jobs:
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_web
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web' && matrix.python != 'nonConda'
 
       - name: Run Native Notebook with VSCode & Jupyter (windows)
         run: |
@@ -649,7 +654,7 @@ jobs:
           VSC_PYTHON_LOG_FILE: ${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/python.log
           TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test*'
         id: test_notebook_vscode_windows
-        if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.jupyterConnection != 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.jupyterConnection != 'web' && matrix.python != 'nonConda'
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
@@ -661,7 +666,7 @@ jobs:
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebookWithoutPythonExt_vscode
-        if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
+        if: matrix.python == 'noPython' && matrix.os != 'windows-latest' && matrix.python != 'nonConda'
 
       - name: Create coverage folder (if not created)
         run: npm run createNycFolder
@@ -669,7 +674,7 @@ jobs:
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v3
-        if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
+        if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release') && matrix.python != 'nonConda'"
         with:
           name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
           path: .nyc_output
@@ -677,19 +682,19 @@ jobs:
 
       - name: Upload VS code logs
         uses: actions/upload-artifact@v3
-        if: failure()
+        if: failure() && matrix.python != 'nonConda'
         with:
           name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
       - name: Log test results
-        if: always()
+        if: always() && matrix.python != 'nonConda'
         run: npm run printTestResults
 
       - name: Upload test result, screenshots files
         uses: actions/upload-artifact@v3
-        if: always()
+        if: always() && matrix.python != 'nonConda'
         with:
           name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}
           path: './logs/*'
@@ -789,7 +794,7 @@ jobs:
     name: Performance tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyter' && github.event_name != 'pull_request'"
+    if: github.repository == 'microsoft/vscode-jupyter' && github.event_name != 'pull_request'
     needs: [build-vsix]
     env:
       VSIX_NAME: 'ms-toolsai-jupyter-insiders.vsix'
