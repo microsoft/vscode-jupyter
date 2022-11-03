@@ -85,7 +85,7 @@ import {
     endCellAndDisplayErrorsInCell,
     updateNotebookMetadata
 } from '../../kernels/execution/helpers';
-import { KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../kernels/telemetry/helper';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
