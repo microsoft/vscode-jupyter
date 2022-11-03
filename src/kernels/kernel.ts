@@ -191,7 +191,6 @@ abstract class BaseKernel implements IBaseKernel {
             Array.from(this.hooks.get('willInterrupt') || new Set<Hook>()).map((h) => h())
         );
         traceInfo(`Interrupt requested ${getDisplayPath(this.resourceUri || this.uri)}`);
-        this.startCancellation.cancel();
         let result: InterruptResult;
         try {
             const session = this._jupyterSessionPromise
@@ -277,12 +276,20 @@ abstract class BaseKernel implements IBaseKernel {
                 Array.from(this.hooks.get('willRestart') || new Set<Hook>()).map((h) => h(this._jupyterSessionPromise))
             );
             traceInfo(`Restart requested ${this.uri}`);
-            this.startCancellation.cancel();
-            this.startCancellation = new CancellationTokenSource();
+            this.startCancellation.cancel(); // Cancel any pending starts.
             const stopWatch = new StopWatch();
             try {
-                // If the session died, then start a new session.
-                await (this._jupyterSessionPromise ? this.restartImpl() : this.start(new DisplayOptions(false)));
+                // Try to restart the current session if possible.
+                const result = await this.restartCurrentSession();
+                if (result === 'currentSessionRestarted') {
+                    // This happens when we've been unable to stop the pending start.
+                    // Of the session has already been started.
+                    this.startCancellation = new CancellationTokenSource();
+                } else {
+                    // If the session died, then start a new session.
+                    // Or possible the previously pending start was cancelled above.
+                    await this.start(new DisplayOptions(false));
+                }
                 sendKernelTelemetryEvent(
                     this.resourceUri,
                     Telemetry.NotebookRestart,
@@ -328,7 +335,7 @@ abstract class BaseKernel implements IBaseKernel {
      * Restarts the kernel
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
-    private async restartImpl() {
+    private async restartCurrentSession(): Promise<'currentSessionRestarted' | 'noSessionToRestart'> {
         const session = this._jupyterSessionPromise
             ? await this._jupyterSessionPromise.catch(() => undefined)
             : undefined;
@@ -336,7 +343,7 @@ abstract class BaseKernel implements IBaseKernel {
         if (!session) {
             traceInfo('No kernel session to interrupt');
             this._restartPromise = undefined;
-            return;
+            return 'noSessionToRestart';
         }
 
         // Restart the active execution
@@ -349,6 +356,7 @@ abstract class BaseKernel implements IBaseKernel {
                 .catch(noop);
         }
         await this._restartPromise;
+        return 'currentSessionRestarted';
     }
     protected async startJupyterSession(
         options: IDisplayOptions = new DisplayOptions(false)
