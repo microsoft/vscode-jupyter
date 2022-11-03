@@ -73,7 +73,7 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
 
     createRemoteKernelFinder(serverUri: IJupyterServerUriEntry) {
         if (!serverUri.isValidated) {
-            // TODO@rebornix, what if it's now validated?
+            // when server uri is validated, an `onDidAddUri` event will be fired.
             return;
         }
 
