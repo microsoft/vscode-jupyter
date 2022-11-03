@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 import * as path from '../../../platform/vscode-path/path';
 import { DebugAdapterTracker, DebugSession, NotebookDocument, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';

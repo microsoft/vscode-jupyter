@@ -13,7 +13,7 @@ import {
     NotebookCellExecutionState
 } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-import { KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import fastDeepEqual = require('fast-deep-equal');

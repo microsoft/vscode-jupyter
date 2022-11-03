@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 import {
     debug,
     DebugAdapter,

@@ -3,7 +3,7 @@
 
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ICell } from '../../platform/common/types';
 import { concatMultilineString } from '../../platform/common/utils';
