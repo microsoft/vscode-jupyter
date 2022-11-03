@@ -36,10 +36,11 @@ import {
 } from './standardWidgets.vscode.common.test';
 import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
 import { initializeWidgetComms, Utils } from './commUtils';
+import { isWeb } from '../../../platform/common/utils/misc';
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-    suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'}`, function () {
+    suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'} @widgets`, function () {
         let api: IExtensionTestApi;
         const disposables: IDisposable[] = [];
         let vscodeNotebook: IVSCodeNotebook;
@@ -53,6 +54,9 @@ import { initializeWidgetComms, Utils } from './commUtils';
         let comms: Utils;
 
         suiteSetup(async function () {
+            if (isWeb()) {
+                return this.skip();
+            }
             traceInfo('Suite Setup VS Code Notebook - Execution');
             this.timeout(120_000);
             api = await initialize();

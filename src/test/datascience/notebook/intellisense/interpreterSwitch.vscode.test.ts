@@ -31,7 +31,7 @@ import { Settings } from '../../../../platform/common/constants';
 import { getOSType, OSType } from '../../../../platform/common/utils/platform';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - Intellisense Switch interpreters in a notebook', function () {
+suite('Intellisense Switch interpreters in a notebook @lsp', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.

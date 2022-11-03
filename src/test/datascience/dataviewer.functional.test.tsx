@@ -50,7 +50,7 @@ suite('Dummy1a', () => {
 // }
 
 // // import { asyncDump } from '../common/asyncDump';
-// suite('DataScience DataViewer tests', () => {
+// suite('DataViewer tests', () => {
 //     const disposables: Disposable[] = [];
 //     let dataViewerFactory: IDataViewerFactory;
 //     let jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory;

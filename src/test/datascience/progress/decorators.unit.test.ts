@@ -10,7 +10,7 @@ import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { IProgressReporter, ReportableAction } from '../../../platform/progress/types';
 import { noop } from '../../core';
 
-suite('DataScience - Progress Reporter Decorator', () => {
+suite('Progress Reporter Decorator', () => {
     let reporter: IProgressReporter;
 
     class SomeClassThatDoesSomething {

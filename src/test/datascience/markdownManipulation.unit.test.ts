@@ -7,7 +7,7 @@ export const __ = '';
 // import { fixMarkdown } from '../../webviews/webview-side/interactive-common/markdownManipulation';
 
 // /* eslint-disable  */
-// suite('DataScience - Markdown Manipulation', () => {
+// suite('Markdown Manipulation', () => {
 //     const markdown1 = `\\begin{align}
 // \\nabla \\cdot \\vec{\\mathbf{E}} & = 4 \\pi \\rho \\\\
 // \\nabla \\times \\vec{\\mathbf{E}}\\, +\\, \\frac1c\\, \\frac{\\partial\\vec{\\mathbf{B}}}{\\partial t} & = \\vec{\\mathbf{0}} \\\\

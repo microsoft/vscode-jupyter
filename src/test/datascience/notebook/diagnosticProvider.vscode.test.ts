@@ -17,7 +17,7 @@ import { IExtensionSyncActivationService } from '../../../platform/activation/ty
 import { NotebookCellBangInstallDiagnosticsProvider } from '../../../standalone/intellisense/diagnosticsProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
+suite('VSCode Notebook -', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;

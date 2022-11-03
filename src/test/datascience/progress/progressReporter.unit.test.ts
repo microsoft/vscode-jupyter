@@ -18,7 +18,7 @@ type Task<R> = (
 ) => Promise<R>;
 
 // eslint-disable-next-line
-suite('DataScience - Progress Reporter', () => {
+suite('Progress Reporter', () => {
     let reporter: ProgressReporter;
     let vscodeProgressReporter: VSCProgress<{ message?: string | undefined; increment?: number | undefined }>;
     let appShell: IApplicationShell;

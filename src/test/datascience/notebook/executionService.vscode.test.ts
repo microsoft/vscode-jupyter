@@ -66,7 +66,7 @@ import { getOSType, OSType } from '../../../platform/common/utils/platform';
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
+suite('Kernel Execution @kernelCore', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     const templateNbPath = Uri.file(
@@ -118,7 +118,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Execute cell using VSCode Kernel', async () => {
+    test('Execute cell using VSCode Kernel @mandatory', async () => {
         const cell = await notebook.appendCodeCell('print("123412341234")');
         await kernelExecution.executeCell(cell);
 

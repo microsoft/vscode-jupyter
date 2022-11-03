@@ -18,7 +18,7 @@ suite('Dummy4', () => {
 // // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 
 // /* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
-// suite('DataScience Interactive Window output tests', () => {
+// suite('Interactive Window output tests', () => {
 //     const disposables: Disposable[] = [];
 //     let ioc: DataScienceIocContainer;
 //     let snapshot: any;

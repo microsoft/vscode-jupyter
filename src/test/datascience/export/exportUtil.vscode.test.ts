@@ -14,7 +14,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { closeActiveWindows, initialize } from '../../initialize.node';
 import { createTemporaryNotebookFromFile } from '../notebook/helper.node';
 
-suite('DataScience - Export Util', () => {
+suite('Export Util @export', () => {
     let api: IExtensionTestApi;
     let testPdfIpynb: Uri;
     const testDisposables: IDisposable[] = [];

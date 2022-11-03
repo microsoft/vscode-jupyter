@@ -14,7 +14,7 @@ import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interp
 import { Uri } from 'vscode';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 
-suite('DataScience - Jupyter Interpreter Picker', () => {
+suite('Jupyter Interpreter Picker', () => {
     let picker: JupyterInterpreterSelector;
     let interpreterSelector: IInterpreterSelector;
     let appShell: IApplicationShell;
