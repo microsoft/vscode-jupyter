@@ -132,28 +132,29 @@ async function addCell(cells, output, failed, executionCount) {
         text: consoleOutputs
     };
     // Look for a screenshot file with the above prefix & attach that to the cell outputs.
-    const screenshots = glob
-        .sync(`${fileNamePrefix}*-screenshot.png`, { cwd: logsDir })
-        .map((file) => {
-            console.info(
-                `Found screenshot file ${file}, ${path.join(logsDir, file)}, Exists = ${fs.existsSync(
-                    path.join(logsDir, file)
-                )}`
-            );
-            try {
-                const contents = Buffer.from(fs.readFileSync(path.join(logsDir, file))).toString('base64');
-                return {
-                    data: {
-                        'image/png': contents
-                    },
-                    metadata: {},
-                    output_type: 'display_data'
-                };
-            } catch (ex) {
-                console.error(`Failed to read screenshot file ${file}`, ex);
-            }
-        })
-        .filter((item) => !!item);
+    const screenshots = (
+        await Promise.all(
+            glob.sync(`${fileNamePrefix}*-screenshot.png`, { cwd: logsDir }).map((file) => {
+                file = path.join(logsDir, file);
+                console.info(`Found screenshot file ${file}, Exists = ${fs.existsSync(file)}`);
+                let stage = 'readFile';
+                try {
+                    const blob = fs.readFileSync(file);
+                    stage = 'base64';
+                    const contents = Buffer.from(blob).toString('base64');
+                    return {
+                        data: {
+                            'image/png': contents
+                        },
+                        metadata: {},
+                        output_type: 'display_data'
+                    };
+                } catch (ex) {
+                    console.error(`Failed to read screenshot file ${file} at stage ${stage}`, ex);
+                }
+            })
+        )
+    ).filter((item) => !!item);
     // Add a markdown cell so we can see this in the outline.
     cells.push({
         cell_type: 'markdown',

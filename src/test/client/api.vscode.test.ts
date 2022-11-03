@@ -54,7 +54,7 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const interpreter = await interpreterService.getActiveInterpreter();
         if (!interpreter) {
-            assert.fail('Active Interpreter is undefined');
+            assert.fail('Active Interpreter is undefined.0');
         }
         const metadata = await waitForCondition(
             () =>
@@ -128,7 +128,7 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
         const activeInterpreter = await interpreterService.getActiveInterpreter();
         if (!activeInterpreter) {
-            throw new Error('Active Interpreter is undefined');
+            throw new Error('Active Interpreter is undefined.1');
         }
         assert.isOk(activeInterpreter);
         let kernelSpecs: KernelConnectionMetadata[] = [];
