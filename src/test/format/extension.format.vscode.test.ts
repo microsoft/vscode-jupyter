@@ -21,7 +21,7 @@
 // import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize, initializeTest } from '../initialize';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-// suite('Formatting - Notebooks (slow)', () => {
+// suite('Formatting - Notebooks', () => {
 //     let api: IExtensionTestApi;
 //     suiteSetup(async function () {
 //         api = await initialize();

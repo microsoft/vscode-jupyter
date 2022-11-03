@@ -22,7 +22,7 @@ import { Uri } from 'vscode';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 
-suite('DataScience - Jupyter Interpreter Configuration', () => {
+suite('Jupyter Interpreter Configuration', () => {
     let configuration: JupyterInterpreterDependencyService;
     let appShell: IApplicationShell;
     let installer: IInstaller;

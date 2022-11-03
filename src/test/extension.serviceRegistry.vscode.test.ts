@@ -130,7 +130,7 @@ async function getSourceFiles() {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - Verify serviceRegistry is correct', function () {
+suite('Verify serviceRegistry is correct', function () {
     let api: IExtensionTestApi;
     setup(async function () {
         try {

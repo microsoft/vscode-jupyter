@@ -34,7 +34,7 @@ import { TestNotebookDocument, createKernelController } from './executionHelper'
  * We will not use actual kernels, just ensure the appropriate methods are invoked on the appropriate classes.
  * This is done by stubbing out some methods.
  */
-suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow) @kernelCore', function () {
+suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
     this.timeout(60_000);
 
     let api: IExtensionTestApi;

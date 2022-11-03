@@ -39,7 +39,7 @@ import {
 } from '../../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - Remote Execution @kernelCore', function () {
+suite('Remote Execution @kernelCore', function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];

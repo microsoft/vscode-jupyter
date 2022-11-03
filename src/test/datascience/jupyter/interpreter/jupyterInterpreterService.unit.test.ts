@@ -22,7 +22,7 @@ import { DataScience } from '../../../../platform/common/utils/localize';
 
 /* eslint-disable  */
 
-suite('DataScience - Jupyter Interpreter Service', () => {
+suite('Jupyter Interpreter Service', () => {
     let jupyterInterpreterService: JupyterInterpreterService;
     let interpreterSelector: JupyterInterpreterSelector;
     let interpreterConfiguration: JupyterInterpreterDependencyService;

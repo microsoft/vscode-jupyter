@@ -36,7 +36,7 @@ import { runCellAndVerifyUpdateOfPreferredRemoteKernelId } from './remoteNoteboo
 import { IControllerLoader, IControllerRegistration, IControllerSelection } from '../../../notebooks/controllers/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
-suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
+suite('Remote Kernel Execution', function () {
     let controllerLoader: IControllerLoader;
     let controllerRegistration: IControllerRegistration;
     let jupyterServerSelector: JupyterServerSelector;

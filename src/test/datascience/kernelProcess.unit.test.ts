@@ -412,7 +412,7 @@ suite('kernel Process', () => {
     });
 });
 
-suite('DataScience - Kernel Process', () => {
+suite('Kernel Process', () => {
     let processService: IProcessService;
     let pythonExecFactory: IPythonExecutionFactory;
     const disposables: IDisposable[] = [];

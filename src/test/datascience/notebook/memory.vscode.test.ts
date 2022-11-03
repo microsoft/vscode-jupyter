@@ -32,7 +32,7 @@ require('expose-gc');
 const LAST_SIZE_MEASURED = 18616320;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - Memory Test', function () {
+suite('Memory Test', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;

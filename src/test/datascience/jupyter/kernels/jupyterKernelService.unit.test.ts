@@ -28,7 +28,7 @@ import { EnvironmentVariablesService } from '../../../../platform/common/variabl
 import { isWeb } from '../../../../platform/common/utils/misc';
 
 // eslint-disable-next-line
-suite('DataScience - JupyterKernelService', () => {
+suite('JupyterKernelService', () => {
     let kernelService: JupyterKernelService;
     let kernelDependencyService: IKernelDependencyService;
     let appEnv: IEnvironmentActivationService;

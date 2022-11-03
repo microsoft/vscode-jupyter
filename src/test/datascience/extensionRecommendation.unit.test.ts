@@ -17,7 +17,7 @@ import { JupyterNotebookView } from '../../platform/common/constants';
 import { IControllerSelection } from '../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-suite('DataScience Extension Recommendation', () => {
+suite('Extension Recommendation', () => {
     ['kernelspec', 'language_info'].forEach((whereIsLanguageDefined) => {
         ['csharp', 'fsharp', 'powershell'].forEach((languageToBeTested) => {
             suite(`Notebook language '${languageToBeTested}' defined in ${whereIsLanguageDefined}`, () => {
