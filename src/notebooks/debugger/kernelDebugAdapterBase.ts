@@ -94,7 +94,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
 
         if (this.kernel) {
             this.kernel.addHook('willRestart', () => this.disconnect(), this, this.disposables);
-            this.kernel.addHook('willInterrupt', () => this.disconnect(), this, this.disposables);
+            this.kernel.addHook('interruptCompleted', () => this.disconnect(), this, this.disposables);
             this.disposables.push(
                 this.kernel.onDisposed(() => {
                     if (!this.disconnected) {
