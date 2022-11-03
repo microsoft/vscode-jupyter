@@ -23,7 +23,7 @@ const logsDir = path.join(ExtensionRootDir, 'logs');
 
 async function captureScreenShot(name, res) {
     const screenshot = require('screenshot-desktop');
-    fs.ensureDirSync(path.join(logsDir, name));
+    fs.ensureDirSync(logsDir);
     const filename = path.join(logsDir, name);
     try {
         await screenshot({ filename });
