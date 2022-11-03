@@ -21,7 +21,7 @@ suite('Dummy10', () => {
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 // // import { asyncDump } from '../common/asyncDump';
-// suite('DataScience PlotViewer tests', () => {
+// suite('PlotViewer tests', () => {
 //     const disposables: Disposable[] = [];
 //     let plotViewerProvider: IPlotViewerProvider;
 //     let ioc: DataScienceIocContainer;

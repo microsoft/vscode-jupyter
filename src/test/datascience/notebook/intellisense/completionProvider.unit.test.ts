@@ -12,7 +12,7 @@ import {
 } from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { MockDocument } from '../../mockDocument';
 
-suite('DataScience - Jupyter Completion Unit Tests', () => {
+suite('Jupyter Completion Unit Tests', () => {
     let mockDocument: MockDocument;
     setup(() => {
         mockDocument = new MockDocument('print(1)\n', 'test.ipynb', () => Promise.resolve(false));

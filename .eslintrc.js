@@ -270,7 +270,7 @@ module.exports = {
                         message: 'Importing node modules into non node files is not allowed.'
                     },
                     {
-                        target: './src/**[!test]**/**/*[!.web].ts',
+                        target: './src/**[!test]**/**/*[!.web|.unit].ts',
                         from: './src/**/*.web.ts',
                         message: 'Importing web modules into non web files is not allowed.'
                     },

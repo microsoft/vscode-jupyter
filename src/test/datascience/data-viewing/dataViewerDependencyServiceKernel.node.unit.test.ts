@@ -20,7 +20,7 @@ import { ProductInstaller } from '../../../kernels/installer/productInstaller.no
 import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory.node';
 import { pandasMinimumVersionSupportedByVariableViewer } from '../../../webviews/extension-side/dataviewer/constants';
 
-suite('DataScience - DataViewerDependencyService (IKernel, Node)', () => {
+suite('DataViewerDependencyService (IKernel, Node)', () => {
     let dependencyService: DataViewerDependencyService;
     let appShell: IApplicationShell;
     let pythonExecFactory: IPythonExecutionFactory;
