@@ -66,9 +66,9 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
     private wasPythonInstalledWhenFetchingKernels = false;
 
     constructor(
-        readonly id: string /**`${this.kind}-${serverUri.serverId}`  */,
-        readonly displayName: string /** localize.DataScience.universalRemoteKernelFinderDisplayName().format( serverUri.displayName || serverUri.uri )   */,
-        readonly cacheKey: string /** `${RemoteKernelSpecsCacheKey}-${this.serverUri.serverId}` */,
+        readonly id: string,
+        readonly displayName: string,
+        readonly cacheKey: string,
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         private interpreterService: IInterpreterService,
         private extensionChecker: IPythonExtensionChecker,
@@ -236,7 +236,7 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
             traceVerbose('UniversalRemoteKernelFinder: get from cache');
 
             let results: RemoteKernelConnectionMetadata[] = this.cache;
-            const key = this.getCacheKey();
+            const key = this.cacheKey;
 
             // If not in memory, check memento
             if (!results || results.length === 0) {
@@ -381,17 +381,13 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         }
     }
 
-    private getCacheKey() {
-        return this.cacheKey;
-    }
-
     private async writeToCache(values: RemoteKernelConnectionMetadata[]) {
         try {
             traceVerbose(
                 `UniversalRemoteKernelFinder: Writing ${values.length} remote kernel connection metadata to cache`
             );
 
-            const key = this.getCacheKey();
+            const key = this.cacheKey;
             this.cache = values;
             const serialized = values.map(serializeKernelConnection);
             await Promise.all([
