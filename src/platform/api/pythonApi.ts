@@ -391,7 +391,36 @@ export class InterpreterService implements IInterpreterService {
         }
         return this.interpreterListCachePromise;
     }
+    private _waitForAllInterpretersToLoad?: Promise<void>;
+    public async waitForAllInterpretersToLoad(): Promise<void> {
+        if (!this._waitForAllInterpretersToLoad) {
+            const lazyLoadControllers = this.workspace
+                .getConfiguration('jupyter', undefined)
+                .get<boolean>('lazyLoadControllers', false);
+            if (lazyLoadControllers) {
+                return;
+            }
+            this._waitForAllInterpretersToLoad = (async () => {
+                await this.refreshInterpreters();
 
+                // Don't allow for our call of getInterpretersImpl to be cancelled
+                // getInterpreters returns a promise that can get cancelled by itself
+                // so you can't use that to await here
+                const source = new CancellationTokenSource();
+                const interpreters = await this.getInterpretersImpl(source.token);
+
+                // After getting interpreters, resolve them all
+                if (interpreters) {
+                    await Promise.all(
+                        interpreters.map((interpreter) => {
+                            return this.api?.environments.resolveEnvironment(interpreter.id);
+                        })
+                    );
+                }
+            })();
+        }
+        return this._waitForAllInterpretersToLoad;
+    }
     public async refreshInterpreters(forceRefresh: boolean = false) {
         const api = await this.getApi();
         if (!api) {

@@ -70,22 +70,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
     ) {
         super(fs, workspaceService, extensionChecker, globalState, disposables, env);
         interpreterService.onDidChangeInterpreters(() => this.refresh().catch(noop), this, this.disposables);
-        this.kernelSpecsFromKnownLocations.onDidChangeKernels(
-            () => {
-                // Only refresh if we know there are new global Python kernels that we haven't already seen before.
-                const lastKnownPythonKernels = this.lastKnownGlobalPythonKernelSpecs;
-                const newPythonKernels = this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs();
-                if (
-                    lastKnownPythonKernels.length !== newPythonKernels.length ||
-                    !areObjectsWithUrisTheSame(lastKnownPythonKernels, newPythonKernels)
-                ) {
-                    this.refresh().catch(noop);
-                }
-            },
-            this,
-            this.disposables
-        );
-        interpreterService.onDidChangeInterpreter(() => this.refresh().catch(noop), this, this.disposables);
     }
     public activate() {
         this.listKernelsFirstTimeFromMemento(LocalPythonKernelsCacheKey)
@@ -95,8 +79,37 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                     this._onDidChangeKernels.fire();
                 }
             })
-            .ignoreErrors();
-        this.refresh().ignoreErrors();
+            .finally(async () => {
+                this.refresh().ignoreErrors();
+                this.kernelSpecsFromKnownLocations.onDidChangeKernels(
+                    () => {
+                        // Only refresh if we know there are new global Python kernels that we haven't already seen before.
+                        const lastKnownPythonKernels = this.lastKnownGlobalPythonKernelSpecs;
+                        const newPythonKernels = this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs();
+                        if (
+                            lastKnownPythonKernels.length !== newPythonKernels.length ||
+                            !areObjectsWithUrisTheSame(lastKnownPythonKernels, newPythonKernels)
+                        ) {
+                            this.refresh().catch(noop);
+                        }
+                    },
+                    this,
+                    this.disposables
+                );
+                this.interpreterService.onDidChangeInterpreter(
+                    () => this.refresh().catch(noop),
+                    this,
+                    this.disposables
+                );
+                this.listKernelsFirstTimeFromMemento(LocalPythonKernelsCacheKey)
+                    .then((kernels) => {
+                        if (this._cachedKernels.length === 0 && kernels.length) {
+                            this._cachedKernels = kernels;
+                            this._onDidChangeKernels.fire();
+                        }
+                    })
+                    .ignoreErrors();
+            });
     }
     public get kernels(): LocalKernelConnectionMetadata[] {
         return this._cachedKernels;
@@ -107,6 +120,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
     private refreshCancellation?: CancellationTokenSource;
     private lastKnownGlobalPythonKernelSpecs: LocalKernelSpecConnectionMetadata[] = [];
     private async refresh() {
+        // Don't refresh until we've actually waited for interpreters to load
+        await this.interpreterService.waitForAllInterpretersToLoad();
         const previousListOfKernels = this._cachedKernels;
         this.refreshCancellation?.cancel();
         const cancelToken = (this.refreshCancellation = new CancellationTokenSource());
