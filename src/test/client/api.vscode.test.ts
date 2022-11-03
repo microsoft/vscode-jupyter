@@ -22,6 +22,7 @@ import { createKernelController, TestNotebookDocument } from '../datascience/not
 import { IKernel, INotebookKernelExecution, IKernelProvider, IKernelFinder } from '../../kernels/types';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
 import { KernelConnectionMetadata } from '../../standalone/api/extension';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 suite('3rd Party Kernel Service API @kernelCore', function () {
     let api: IExtensionTestApi;
@@ -63,7 +64,10 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
                         areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
                 ),
             defaultNotebookTestTimeout,
-            `Kernel Connection pointing to active interpreter not found`
+            () =>
+                `Kernel Connection pointing to active interpreter not found, active kernels include ${kernelFiner.kernels
+                    .map((item) => `${item.kind}, id=${item.id}, interpreter ${getDisplayPath(item.interpreter?.uri)}`)
+                    .join(', ')}`
         );
 
         const controller = createKernelController();
