@@ -298,7 +298,7 @@ class JupyterKernelService implements IExportedKernelService {
             // We recast to KernelConnectionMetadata as this has already define its properties as readonly.
 
             const translatedConnection = Object.freeze(
-                JSON.parse(JSON.stringify(connection))
+                JSON.parse(JSON.stringify(connection.toJSON()))
             ) as KernelConnectionMetadata;
             this.translatedConnections.set(connection, translatedConnection);
         }

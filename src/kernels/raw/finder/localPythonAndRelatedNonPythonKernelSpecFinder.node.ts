@@ -164,8 +164,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
             // If there are any kernels that we registered (then don't return them).
             // Those were registered by us to start kernels from Jupyter extension (not stuff that user created).
             // We should only return global kernels the user created themselves, others will appear when searching for interprters.
-            .filter((item) => (includeKernelsRegisteredByUs ? true : !getKernelRegistrationInfo(item.kernelSpec)))
-            .map((item) => <LocalKernelSpecConnectionMetadata>item);
+            .filter((item) => (includeKernelsRegisteredByUs ? true : !getKernelRegistrationInfo(item.kernelSpec)));
         return pythonKernelSpecs;
     }
     private listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs() {

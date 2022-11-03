@@ -15,13 +15,9 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable, IDisposableRegistry, ReadWrite } from '../../../platform/common/types';
 import { isUri, noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers';
 import {
-    deserializeKernelConnection,
-    getInterpreterKernelSpecName,
-    getKernelRegistrationInfo,
-    serializeKernelConnection
-} from '../../../kernels/helpers';
-import {
+    BaseKernelConnectionMetadata,
     IJupyterKernelSpec,
     LocalKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
@@ -150,7 +146,7 @@ export abstract class LocalKernelSpecFinderBase<
          * To ensure we don't run into weird issues with the use of cached kernelSpec.json files, we ensure the cache is tied to each version of the extension.
          */
         if (cache && Array.isArray(cache.kernels) && cache.extensionVersion === this.env.extensionVersion) {
-            kernels = cache.kernels.map(deserializeKernelConnection) as T[];
+            kernels = cache.kernels.map((item) => BaseKernelConnectionMetadata.fromJSON(item)) as T[];
         }
 
         // Validate
@@ -166,7 +162,7 @@ export abstract class LocalKernelSpecFinderBase<
     }
 
     protected async writeToMementoCache(values: T[], cacheKey: string) {
-        const serialized = values.map(serializeKernelConnection);
+        const serialized = values.map((item) => item.toJSON());
         await Promise.all([
             removeOldCachedItems(this.globalState),
             this.globalState.update(cacheKey, {

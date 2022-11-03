@@ -17,10 +17,11 @@ import type {
 } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../platform/common/types';
+import { IAsyncDisposable, IDisplayOptions, IDisposable, ReadWrite, Resource } from '../platform/common/types';
 import { IBackupFile, IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { IContributedKernelFinderInfo } from './internalTypes';
+import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -31,6 +32,38 @@ export enum NotebookCellRunState {
     Idle = 'Idle',
     Success = 'Success',
     Error = 'Error'
+}
+
+export abstract class BaseKernelConnectionMetadata {
+    public static fromJSON(
+        json:
+            | Record<string, unknown>
+            | ReadWrite<LocalKernelSpecConnectionMetadata>
+            | ReadWrite<LiveRemoteKernelConnectionMetadata>
+            | ReadWrite<RemoteKernelSpecConnectionMetadata>
+            | ReadWrite<PythonKernelConnectionMetadata>
+    ) {
+        if (json.interpreter) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            json.interpreter = deserializePythonEnvironment(json.interpreter as any, '')!;
+        }
+        switch (json.kind) {
+            case 'startUsingLocalKernelSpec':
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                return LocalKernelSpecConnectionMetadata.create(json as LocalKernelSpecConnectionMetadata);
+            case 'connectToLiveRemoteKernel':
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                return LiveRemoteKernelConnectionMetadata.create(json as LiveRemoteKernelConnectionMetadata);
+            case 'startUsingRemoteKernelSpec':
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                return RemoteKernelSpecConnectionMetadata.create(json as RemoteKernelSpecConnectionMetadata);
+            case 'startUsingPythonInterpreter':
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                return PythonKernelConnectionMetadata.create(json as PythonKernelConnectionMetadata);
+            default:
+                throw new Error(`Invalid object to be deserialized into a connection, kind = ${json.kind}`);
+        }
+    }
 }
 /**
  * Connection metadata for Live Kernels.
@@ -75,17 +108,24 @@ export class LiveRemoteKernelConnectionMetadata {
     }) {
         return new LiveRemoteKernelConnectionMetadata(options);
     }
-    /**
-     * Prevent anyone from creating JSON objects that map to this type.
-     */
-    public dummy() {
-        //
+    public toJSON() {
+        return {
+            id: this.id,
+            kind: this.kind,
+            baseUrl: this.baseUrl,
+            serverId: this.serverId,
+            interpreter: serializePythonEnvironment(this.interpreter),
+            kernelModel: this.kernelModel
+        };
+    }
+    public static fromJSON(json: Record<string, unknown> | LiveRemoteKernelConnectionMetadata) {
+        return BaseKernelConnectionMetadata.fromJSON(json) as LiveRemoteKernelConnectionMetadata;
     }
 }
 /**
  * Connection metadata for Kernels started using kernelspec (JSON).
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
- * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
+ * If the executable is not defined in kernelSpec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
 export class LocalKernelSpecConnectionMetadata {
     public readonly kernelModel?: undefined;
@@ -119,11 +159,16 @@ export class LocalKernelSpecConnectionMetadata {
     }) {
         return new LocalKernelSpecConnectionMetadata(options);
     }
-    /**
-     * Prevent anyone from creating JSON objects that map to this type.
-     */
-    public dummy() {
-        //
+    public toJSON() {
+        return {
+            id: this.id,
+            kernelSpec: this.kernelSpec,
+            interpreter: serializePythonEnvironment(this.interpreter),
+            kind: this.kind
+        };
+    }
+    public static fromJSON(options: Record<string, unknown> | LocalKernelSpecConnectionMetadata) {
+        return BaseKernelConnectionMetadata.fromJSON(options) as LocalKernelSpecConnectionMetadata;
     }
 }
 
@@ -162,11 +207,18 @@ export class RemoteKernelSpecConnectionMetadata {
     }) {
         return new RemoteKernelSpecConnectionMetadata(options);
     }
-    /**
-     * Prevent anyone from creating JSON objects that map to this type.
-     */
-    public dummy() {
-        //
+    public toJSON() {
+        return {
+            id: this.id,
+            kernelSpec: this.kernelSpec,
+            interpreter: serializePythonEnvironment(this.interpreter),
+            baseUrl: this.baseUrl,
+            serverId: this.serverId,
+            kind: this.kind
+        };
+    }
+    public static fromJSON(options: Record<string, unknown> | RemoteKernelSpecConnectionMetadata) {
+        return BaseKernelConnectionMetadata.fromJSON(options) as RemoteKernelSpecConnectionMetadata;
     }
 }
 /**
@@ -188,11 +240,16 @@ export class PythonKernelConnectionMetadata {
     public static create(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment; id: string }) {
         return new PythonKernelConnectionMetadata(options);
     }
-    /**
-     * Prevent anyone from creating JSON objects that map to this type.
-     */
-    public dummy() {
-        //
+    public toJSON() {
+        return {
+            id: this.id,
+            kernelSpec: this.kernelSpec,
+            interpreter: serializePythonEnvironment(this.interpreter),
+            kind: this.kind
+        };
+    }
+    public static fromJSON(options: Record<string, unknown> | PythonKernelConnectionMetadata) {
+        return BaseKernelConnectionMetadata.fromJSON(options) as PythonKernelConnectionMetadata;
     }
 }
 /**
