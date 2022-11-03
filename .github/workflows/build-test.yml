@@ -159,7 +159,7 @@ jobs:
         run: npm run prePublishNonBundle
 
       - name: Cache the out/ directory
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
