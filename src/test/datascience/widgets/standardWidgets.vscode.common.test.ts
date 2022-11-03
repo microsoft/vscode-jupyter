@@ -159,7 +159,7 @@ suite('Standard IPyWidget Tests @widgets', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Slider Widget @mandatory', async function () {
+    test('Slider Widget', async function () {
         await initializeNotebookForWidgetTest(disposables, { templateFile: 'slider_widgets.ipynb' }, editor);
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
