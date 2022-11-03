@@ -86,7 +86,7 @@ suite('DataScience - VSCode semantic token tests', function () {
         assert.equal(tokens.data[0], 1, 'Tokens not correctly offset');
     });
 
-    test('Edit cells in a notebook', async function () {
+    test.skip('Edit cells in a notebook', async function () {
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1');
         await insertCodeCell('\ndef test():\n  print("test")\ntest()');
         const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
@@ -122,7 +122,7 @@ suite('DataScience - VSCode semantic token tests', function () {
         assert.deepStrictEqual(actualTokens, expectedTokens, 'Tokens not correct after edit');
     });
 
-    test('Special token check', async function () {
+    test.skip('Special token check', async function () {
         await insertCodeCell(
             'import sqllite3 as sql\n\nconn = sql.connect("test.db")\ncur = conn.cursor()\n# BLAH BLAH'
         );
