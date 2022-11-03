@@ -624,7 +624,9 @@ export class InterpreterService implements IInterpreterService {
                                 const env = await api.environments.resolveEnvironment(item.id);
                                 const resolved = this.trackResolvedEnvironment(env, true);
                                 traceVerbose(
-                                    `Python environment ${env?.id} from Python Extension API is ${JSON.stringify(
+                                    `Python environment for ${item.id} is ${
+                                        env?.id
+                                    } from Python Extension API is ${JSON.stringify(
                                         env
                                     )} and translated is ${JSON.stringify(resolved)}`
                                 );

@@ -295,16 +295,7 @@ jobs:
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
         include:
-          - jupyterConnection: local
-            python: python
-            pythonVersion: '3.10'
-            os: ubuntu-latest
-            tags: '@kernelInstall'
-          - jupyterConnection: local
-            python: python
-            pythonVersion: '3.10'
-            os: ubuntu-latest
-            tags: '@kernelCore'
+        # Mandatory tests
           - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
@@ -314,42 +305,46 @@ jobs:
             python: python
             pythonVersion: '3.10'
             os: ubuntu-latest
-            tags: '^[^@]+$|@mandatory|@webview|@export|@lsp|@variableViewer'
+            tags: '^[^@]+$|@mandatory'
           - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
             os: windows-latest
             tags: '^[^@]+$|@mandatory'
-          - jupyterConnection: remote
-            python: python
-            pythonVersion: '3.10'
-            os: ubuntu-latest
-            tags: '@kernelPicker'
-          - jupyterConnection: remote
-            python: python
-            pythonVersion: '3.10'
-            os: ubuntu-latest
-            tags: '@widgets'
-          - jupyterConnection: remote
-            python: python
-            pythonVersion: '3.10'
-            os: ubuntu-latest
-            tags: '@kernelCore'
-          - jupyterConnection: raw
-            python: noPython
-            os: ubuntu-latest
-            tags: '@nonPython'
+        # Conda
           - jupyterConnection: raw
             python: conda
             pythonVersion: '3.10'
             os: ubuntu-latest
             tags: '^[^@]+$|@mandatory|@python'
+        # Pre-Release Versions
           - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
             packageVersion: 'prerelease'
             os: ubuntu-latest
-            tags: '^[^@]+$|@mandatory|@kernelCore|@python'
+            tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
+        # Without Python
+          - jupyterConnection: raw
+            python: noPython
+            os: ubuntu-latest
+            tags: '@nonPython'
+        # Misc
+          - jupyterConnection: local
+            python: python
+            pythonVersion: '3.10'
+            os: ubuntu-latest
+            tags: '@kernelCore|@kernelInstall'
+          - jupyterConnection: local
+            python: python
+            pythonVersion: '3.10'
+            os: ubuntu-latest
+            tags: '@kernelCore'
+          - jupyterConnection: remote
+            python: python
+            pythonVersion: '3.10'
+            os: ubuntu-latest
+            tags: '@kernelPicker|@kernelCore'
 
         # exclude:
         #   - python: conda # Conda does't seem to support 3.10 yet.
