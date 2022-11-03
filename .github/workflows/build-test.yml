@@ -280,10 +280,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jupyter: [raw]
+        jupyterConnection: [raw] # valid values include raw = uzing zqm, local = using local jupyter, remote = using remote jupyter, web = using remote jupyter in web mode
         python: [python]  # valid values include python,conda,noPython
         pythonVersion: ['3.10']
-        webOrDesktop: ['']
         # Whether we're using stable (<empty>) or pre-release versions of Python packages.
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
@@ -296,63 +295,56 @@ jobs:
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
         include:
-          - jupyter: local
+          - jupyterConnection: local
             python: python
             pythonVersion: '3.10'
-            webOrDesktop: 'desktop'
             os: ubuntu-latest
             tags: '@kernelInstall'
-          - jupyter: local
+          - jupyterConnection: local
             python: python
             pythonVersion: '3.10'
-            webOrDesktop: 'desktop'
             os: ubuntu-latest
             tags: '@kernelCore'
-          - jupyter: remote
+          - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
-            webOrDesktop: 'desktop'
             os: ubuntu-latest
             tags: '^[^@]+$|@mandatory'
-          - jupyter: remote
+          - jupyterConnection: web
             python: python
             pythonVersion: '3.10'
-            webOrDesktop: 'web'
             os: ubuntu-latest
             tags: '^[^@]+$|@mandatory|@webview|@export|@lsp|@variableViewer'
-          - jupyter: raw
+          - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
             os: windows-latest
             tags: '^[^@]+$|@mandatory'
-          - jupyter: remote
+          - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
-            webOrDesktop: 'desktop'
             os: ubuntu-latest
             tags: '@kernelPicker'
-          - jupyter: remote
+          - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
-            webOrDesktop: 'desktop'
             os: ubuntu-latest
             tags: '@widgets'
-          - jupyter: remote
+          - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
-            webOrDesktop: 'desktop'
             os: ubuntu-latest
             tags: '@kernelCore'
-          - jupyter: raw
+          - jupyterConnection: raw
             python: noPython
             os: ubuntu-latest
             tags: '@nonPython'
-          - jupyter: raw
+          - jupyterConnection: raw
             python: conda
             pythonVersion: '3.10'
             os: ubuntu-latest
             tags: '^[^@]+$|@mandatory|@python'
-          - jupyter: raw
+          - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
             packageVersion: 'prerelease'
@@ -364,7 +356,7 @@ jobs:
         #     pythonVersion: '3.10'
         #   - pythonVersion: '3.9'
         #     python: python
-        #     jupyter: raw
+        #     jupyterConnection: raw
         #     os: windows-latest
     steps:
       - name: Checkout
@@ -585,7 +577,7 @@ jobs:
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyter != 'remote'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote'
 
       - name: Create temp folder for user data dir
         run: |
@@ -621,18 +613,18 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_ubuntu
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop != 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web'
 
       - name: Build web bundle for testing
         run: npm run compile-web-test
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (web)
         uses: GabrielBB/xvfb-action@v1.4
@@ -642,14 +634,14 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'web' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection != 'web' }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_web
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (windows)
         run: |
@@ -658,15 +650,15 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_PYTHON_LOG_FILE: ${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/python.log
           TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test*'
         id: test_notebook_vscode_windows
-        if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.webOrDesktop != 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.jupyterConnection != 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
@@ -696,7 +688,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: VSCodeLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
@@ -708,7 +700,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: TestLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}
           path: './logs/*'
           retention-days: 60
 
@@ -785,7 +777,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: TestLogs-Smoke-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          name: TestLogs-Smoke-${{matrix.python}}-${{matrix.os}}
           path: './logs/*'
           retention-days: 60
 
@@ -871,7 +863,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: TestLogs-Perf-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          name: TestLogs-Perf-${{matrix.python}}-${{matrix.os}}
           path: './logs/*'
           retention-days: 60
 
