@@ -136,11 +136,8 @@ async function addCell(cells, output, failed, executionCount) {
         await Promise.all(
             glob.sync(`${fileNamePrefix}*-screenshot.png`, { cwd: logsDir }).map((file) => {
                 file = path.join(logsDir, file);
-                console.info(`Found screenshot file ${file}, Exists = ${fs.existsSync(file)}`);
-                let stage = 'readFile';
                 try {
                     const blob = fs.readFileSync(file);
-                    stage = 'base64';
                     const contents = Buffer.from(blob).toString('base64');
                     return {
                         data: {
