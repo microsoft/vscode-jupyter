@@ -614,6 +614,8 @@ jobs:
       - name: Build web bundle for testing
         run: npm run compile-web-test
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
+        env:
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
       - name: Run Native Notebook with VSCode & Jupyter (web)
         uses: GabrielBB/xvfb-action@v1.4
