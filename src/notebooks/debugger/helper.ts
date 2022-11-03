@@ -3,7 +3,7 @@
 
 import { IDebugEventMsg } from '@jupyterlab/services/lib/kernel/messages';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernel } from '../../kernels/types';
+import { INotebookKernelExecution } from '../../kernels/types';
 import {
     IInteractiveWindowDebugConfig,
     IKernelDebugAdapter,
@@ -19,11 +19,11 @@ export enum IpykernelCheckResult {
     ControllerNotSelected
 }
 
-export async function isUsingIpykernel6OrLater(kernel: IKernel): Promise<IpykernelCheckResult> {
+export async function isUsingIpykernel6OrLater(execution: INotebookKernelExecution): Promise<IpykernelCheckResult> {
     const code = `import builtins
 import ipykernel
 builtins.print(ipykernel.__version__)`;
-    const output = await kernel.executeHidden(code);
+    const output = await execution.executeHidden(code);
 
     if (output[0].text) {
         const version = output[0].text.toString().split('.');
@@ -165,11 +165,14 @@ export function shortNameMatchesLongName(shortNamePath: string, longNamePath: st
     return r.test(longNamePath);
 }
 
-export async function cellDebugSetup(kernel: IKernel, debugAdapter: IKernelDebugAdapter): Promise<void> {
+export async function cellDebugSetup(
+    execution: INotebookKernelExecution,
+    debugAdapter: IKernelDebugAdapter
+): Promise<void> {
     // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
     // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
     const code = 'import debugpy\ndebugpy.debug_this_thread()';
-    await kernel.executeHidden(code);
+    await execution.executeHidden(code);
 
     await debugAdapter.dumpAllCells();
 }

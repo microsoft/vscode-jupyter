@@ -11,13 +11,13 @@ import type {
     Disposable,
     Event,
     NotebookCell,
-    NotebookController,
+    NotebookCellExecution,
     NotebookDocument,
     Uri
 } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { IAsyncDisposable, IDisplayOptions, Resource } from '../platform/common/types';
+import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../platform/common/types';
 import { IBackupFile, IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { IContributedKernelFinderInfo } from './internalTypes';
@@ -124,6 +124,13 @@ export function isRemoteConnection(
     return !isLocalConnection(kernelConnection);
 }
 
+export type KernelHooks =
+    | 'willRestart'
+    | 'willInterrupt'
+    | 'restartCompleted'
+    | 'interruptCompleted'
+    | 'didStart'
+    | 'willCancel';
 export interface IBaseKernel extends IAsyncDisposable {
     readonly uri: Uri;
     /**
@@ -142,6 +149,7 @@ export interface IBaseKernel extends IAsyncDisposable {
     readonly onDisposed: Event<void>;
     readonly onStarted: Event<void>;
     readonly onRestarted: Event<void>;
+    readonly restarting: Promise<void>;
     readonly status: KernelMessage.Status;
     readonly disposed: boolean;
     readonly disposing: boolean;
@@ -167,32 +175,45 @@ export interface IBaseKernel extends IAsyncDisposable {
      * This flag will tell us whether a real kernel was or is active.
      */
     readonly startedAtLeastOnce?: boolean;
-    start(options?: IDisplayOptions): Promise<void>;
+    start(options?: IDisplayOptions): Promise<IKernelConnectionSession>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
-    addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
-    removeEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
+    addHook(
+        event: 'willRestart',
+        hook: (sessionPromise?: Promise<IKernelConnectionSession>) => Promise<void>,
+        thisArgs?: unknown,
+        disposables?: IDisposable[]
+    ): IDisposable;
+    addHook(
+        event: 'willInterrupt' | 'restartCompleted' | 'interruptCompleted' | 'didStart' | 'willCancel',
+        hook: () => Promise<void>,
+        thisArgs?: unknown,
+        disposables?: IDisposable[]
+    ): IDisposable;
 }
 
 /**
  * Kernels created by this extension.
  */
 export interface IKernel extends IBaseKernel {
+    readonly notebook: NotebookDocument;
+    /**
+     * Controller associated with this kernel
+     */
+    readonly controller: IKernelController;
+    readonly creator: 'jupyterExtension';
+}
+
+export interface INotebookKernelExecution {
     /**
      * Total execution count on this kernel
      */
     readonly executionCount: number;
-    readonly notebook: NotebookDocument;
     readonly onPreExecute: Event<NotebookCell>;
     /**
      * Cells that are still being executed (or pending).
      */
     readonly pendingCells: readonly NotebookCell[];
-    /**
-     * Controller associated with this kernel
-     */
-    readonly controller: NotebookController;
-    readonly creator: 'jupyterExtension';
     /**
      * @param cell Cell to execute
      * @param codeOverride Override the code to execute
@@ -203,7 +224,6 @@ export interface IKernel extends IBaseKernel {
      */
     executeHidden(code: string): Promise<nbformat.IOutput[]>;
 }
-
 /**
  * Kernels created by third party extensions.
  */
@@ -216,7 +236,7 @@ export interface IThirdPartyKernel extends IBaseKernel {
  */
 export type KernelOptions = {
     metadata: KernelConnectionMetadata;
-    controller: NotebookController;
+    controller: IKernelController;
     /**
      * When creating a kernel for an Interactive window, pass the Uri of the Python file here (to set the working directory, file & the like)
      * In the case of Notebooks, just pass the uri of the notebook.
@@ -262,6 +282,7 @@ export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
     getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
+    getKernelExecution(kernel: IKernel): INotebookKernelExecution;
 }
 
 /**
@@ -654,3 +675,18 @@ export interface IStartupCodeProvider {
     priority: StartupCodePriority;
     getCode(kernel: IBaseKernel): Promise<string[]>;
 }
+
+export interface IKernelSettings {
+    enableExtendedKernelCompletions: boolean;
+    themeMatplotlibPlots: boolean;
+    ignoreVscodeTheme: boolean;
+    generateSVGPlots: boolean;
+    launchTimeout: number;
+    interruptTimeout: number;
+    runStartupCommands: string | string[];
+}
+
+export type IKernelController = {
+    id: string;
+    createNotebookCellExecution(cell: NotebookCell): NotebookCellExecution;
+};

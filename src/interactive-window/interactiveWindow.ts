@@ -33,6 +33,7 @@ import { IConfigurationService, InteractiveWindowMode, IsWebExtension, Resource 
 import { noop } from '../platform/common/utils/misc';
 import {
     IKernel,
+    IKernelProvider,
     isLocalConnection,
     KernelAction,
     KernelConnectionMetadata,
@@ -76,6 +77,8 @@ import { updateNotebookMetadata } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
+import { KernelController } from '../kernels/kernelController';
+import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
@@ -138,6 +141,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private readonly isWebExtension: boolean;
     private readonly commandManager: ICommandManager;
     private readonly controllerRegistration: IControllerRegistration;
+    private readonly kernelProvider: IKernelProvider;
     constructor(
         private readonly serviceContainer: IServiceContainer,
         private _owner: Resource,
@@ -159,6 +163,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
         this.codeGeneratorFactory = this.serviceContainer.get<ICodeGeneratorFactory>(ICodeGeneratorFactory);
         this.storageFactory = this.serviceContainer.get<IGeneratedCodeStorageFactory>(IGeneratedCodeStorageFactory);
+        this.kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
         this.debuggingManager = this.serviceContainer.get<IInteractiveWindowDebuggingManager>(
             IInteractiveWindowDebuggingManager
         );
@@ -276,7 +281,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                     return;
                 }
                 // Id may be different if the user switched controllers
-                this.currentKernelInfo.controller = k.controller;
+                this.currentKernelInfo.controller = this.controllerRegistration.registered.find(
+                    (item) => item.id === k.controller.id
+                )!.controller;
                 this.currentKernelInfo.metadata = k.kernelConnectionMetadata;
                 !!this.pendingCellAdd && this.setPendingCellAdd(this.pendingCellAdd);
                 this.updateSysInfoMessage(
@@ -296,19 +303,20 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 'jupyterExtension',
                 onStartKernel
             );
-            this.currentKernelInfo.controller = kernel.controller;
+            this.currentKernelInfo.controller = this.controllerRegistration.registered.find(
+                (item) => item.id === kernel.controller.id
+            )!.controller;
             this.currentKernelInfo.metadata = kernel.kernelConnectionMetadata;
 
-            const kernelEventHookForRestart = async (ev: 'willRestart' | 'willInterrupt') => {
-                if (ev === 'willRestart' && this.notebookDocument && this.currentKernelInfo.metadata) {
+            const kernelEventHookForRestart = async () => {
+                if (this.notebookDocument && this.currentKernelInfo.metadata) {
                     this._insertSysInfoPromise = undefined;
                     // If we're about to restart, insert a 'restarting' message as it happens
                     this.insertSysInfoMessage(this.currentKernelInfo.metadata, SysInfoReason.Restart).then(noop, noop);
                 }
             };
             // Hook pre interrupt so we can stick in a message
-            kernel.addEventHook(kernelEventHookForRestart);
-            this.kernelDisposables.push(new Disposable(() => kernel.removeEventHook(kernelEventHookForRestart)));
+            this.kernelDisposables.push(kernel.addHook('willRestart', kernelEventHookForRestart));
 
             // When restart finishes, rerun our initialization code
             kernel.onRestarted(
@@ -354,13 +362,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private getSysInfoMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
-        const kernelName = kernelMetadata.interpreter?.displayName;
+        const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
         return reason === SysInfoReason.Restart
-            ? kernelName
-                ? DataScience.restartingKernelCustomHeader().format(kernelName)
+            ? displayName
+                ? DataScience.restartingKernelCustomHeader().format(displayName)
                 : DataScience.restartingKernelHeader()
-            : kernelName
-            ? DataScience.startingNewKernelCustomHeader().format(kernelName)
+            : displayName
+            ? DataScience.startingNewKernelCustomHeader().format(displayName)
             : DataScience.startingNewKernelHeader();
     }
 
@@ -509,7 +517,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             edit.set(this.notebookDocument.uri, [nbEdit]);
             await workspace.applyEdit(edit);
         } else {
-            const execution = CellExecutionCreator.getOrCreate(notebookCell, controller.controller);
+            const execution = CellExecutionCreator.getOrCreate(
+                notebookCell,
+                new KernelController(controller.controller)
+            );
             if (!execution.started) {
                 execution.start(notebookCell.executionSummary?.timing?.startTime);
             }
@@ -674,8 +685,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             }
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             const iwCellMetadata = getInteractiveCellMetadata(cell);
+            const execution = this.kernelProvider.getKernelExecution(kernel!);
             success =
-                (await kernel!.executeCell(cell, iwCellMetadata?.generatedCode?.code)) !== NotebookCellRunState.Error;
+                (await execution.executeCell(cell, iwCellMetadata?.generatedCode?.code)) !== NotebookCellRunState.Error;
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell.finished');
         } finally {
             await detachKernel();
@@ -755,15 +767,16 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private async setFileInKernel(file: Uri, kernel: IKernel): Promise<void> {
         // If in perFile mode, set only once
         const path = getFilePath(file);
+        const execution = this.kernelProvider.getKernelExecution(kernel!);
         if (this.mode === 'perFile' && !this.fileInKernel) {
             traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             this.fileInKernel = file;
-            await kernel.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
+            await execution.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
         } else if ((!this.fileInKernel || !this.fs.arePathsSame(this.fileInKernel, file)) && this.mode !== 'perFile') {
             traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
-            await kernel.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
+            await execution.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
         } else {
             traceInfoIfCI(
                 `Not Initializing __file__ in setFileInKernel with ${path} for mode ${this.mode} currently ${this.fileInKernel}`

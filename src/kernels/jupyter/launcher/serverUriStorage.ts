@@ -96,13 +96,11 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         const serverId = await computeServerId(uri);
 
         // Check if we have already found a display name for this server
-        if (this.configService.getSettings().kernelPickerType === 'Insiders') {
-            const existingEntry = uriList.find((entry) => {
-                return entry.serverId === serverId;
-            });
-            if (existingEntry && existingEntry.displayName) {
-                displayName = existingEntry.displayName;
-            }
+        const existingEntry = uriList.find((entry) => {
+            return entry.serverId === serverId;
+        });
+        if (existingEntry && existingEntry.displayName) {
+            displayName = existingEntry.displayName;
         }
 
         // Remove this uri if already found (going to add again with a new time)

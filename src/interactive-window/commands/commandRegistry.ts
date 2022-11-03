@@ -58,13 +58,14 @@ import { INotebookEditorProvider } from '../../notebooks/types';
 import { INotebookExporter, IJupyterExecution } from '../../kernels/jupyter/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IControllerPreferredService } from '../../notebooks/controllers/types';
-import { IStatusProvider } from '../../platform/progress/types';
+import { StatusProvider } from './statusProvider';
 
 /**
  * Class that registers command handlers for interactive window commands.
  */
 @injectable()
 export class CommandRegistry implements IDisposable, IExtensionSingleActivationService {
+    private readonly statusProvider: StatusProvider;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookExporter) @optional() private jupyterExporter: INotebookExporter | undefined,
@@ -90,9 +91,9 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         @inject(IExportDialog) private exportDialog: IExportDialog,
         @inject(IClipboard) private clipboard: IClipboard,
         @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook,
-        @inject(IControllerPreferredService) private controllerPreferredService: IControllerPreferredService,
-        @inject(IStatusProvider) private statusProvider: IStatusProvider
+        @inject(IControllerPreferredService) private controllerPreferredService: IControllerPreferredService
     ) {
+        this.statusProvider = new StatusProvider(applicationShell);
         if (!this.workspace.isTrusted) {
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }

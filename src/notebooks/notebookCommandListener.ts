@@ -232,7 +232,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         }
         const promise = (async () => {
             // Get currently executing cell and controller
-            const currentCell = kernel.pendingCells[0];
+            const currentCell = this.kernelProvider.getKernelExecution(kernel).pendingCells[0];
             const controller = this.notebookControllerSelection.getSelected(notebook);
             try {
                 if (!controller) {

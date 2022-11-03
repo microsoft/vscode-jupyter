@@ -82,11 +82,12 @@ suite('Kernel Event', function () {
         const kernelRestarted = createEventHandler(kernelProvider, 'onDidRestartKernel', disposables);
         const kernelStatusChanged = createEventHandler(kernelProvider, 'onKernelStatusChanged', disposables);
 
-        const nb = await createEmptyPythonNotebook(disposables);
+        const { notebook: nb } = await createEmptyPythonNotebook(disposables);
         await waitForCondition(async () => !!kernelProvider.get(nb), 5_000, 'Kernel not created');
         const kernel = kernelProvider.get(nb)!;
+        const execution = kernelProvider.getKernelExecution(kernel);
         const startedEvent = createEventHandler(kernel, 'onStarted', disposables);
-        const onPreExecuteEvent = createEventHandler(kernel, 'onPreExecute', disposables);
+        const onPreExecuteEvent = createEventHandler(execution, 'onPreExecute', disposables);
         const onStatusChangeEvent = createEventHandler(kernel, 'onStatusChanged', disposables);
         const onDisposed = createEventHandler(kernel, 'onDisposed', disposables);
         const restartEvent = createEventHandler(kernel, 'onRestarted', disposables);
@@ -118,10 +119,11 @@ suite('Kernel Event', function () {
         assert.isTrue(kernelDisposed.fired, 'IKernelProvider.onDidDisposeKernel not fired');
     });
     test('Kernel.IKernelConnection Events', async () => {
-        const nb = await createEmptyPythonNotebook(disposables);
+        const { notebook: nb } = await createEmptyPythonNotebook(disposables);
         await waitForCondition(async () => !!kernelProvider.get(nb), 5_000, 'Kernel not created');
         const kernel = kernelProvider.get(nb)!;
-        const onPreExecuteEvent = createEventHandler(kernel, 'onPreExecute', disposables);
+        const execution = kernelProvider.getKernelExecution(kernel);
+        const onPreExecuteEvent = createEventHandler(execution, 'onPreExecute', disposables);
 
         const cell = await insertCodeCell('print("cell1")', { index: 0 });
         await Promise.all([runCell(cell), waitForTextOutput(cell, 'cell1')]);

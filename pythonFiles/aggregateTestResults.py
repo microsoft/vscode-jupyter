@@ -1,9 +1,10 @@
 # %%
-import sys
-import requests
-import json
-import zipfile
 import io
+import json
+import sys
+import zipfile
+
+import requests
 
 authtoken = sys.argv[1]
 print("Using authtoken with prefix: " + authtoken[:4])
@@ -131,6 +132,8 @@ def flattenTestResultsToFile(runResults, filename):
                             "runUrl": scenario["runUrl"],
                             "status": testResult["state"],
                         }
+                        if "duration" in testResult:
+                            singleResult["duration"] = testResult["duration"]
                         outfile.write(json.dumps(singleResult))
                         delimiter = ",\n"
 
@@ -138,8 +141,7 @@ def flattenTestResultsToFile(runResults, filename):
 
 
 # %%
-from datetime import date, datetime
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 
 inputDate = ""
 if len(sys.argv) > 2:

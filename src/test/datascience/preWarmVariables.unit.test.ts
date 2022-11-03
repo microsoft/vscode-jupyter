@@ -8,10 +8,8 @@ import { EventEmitter, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { PythonExtensionChecker } from '../../platform/api/pythonApi';
 import { IPythonApiProvider } from '../../platform/api/types';
-import { IWorkspaceService } from '../../platform/common/application/types';
 import { CondaService } from '../../platform/common/process/condaService.node';
 import { createDeferred } from '../../platform/common/utils/async';
-import { ICustomEnvironmentVariablesProvider } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
@@ -44,10 +42,6 @@ suite('DataScience - PreWarm Env Vars', () => {
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
         when(extensionChecker.isPythonExtensionActive).thenReturn(true);
         zmqSupported = mock<IRawNotebookSupportedService>();
-        const envVarsProvider = mock<ICustomEnvironmentVariablesProvider>();
-        when(envVarsProvider.getEnvironmentVariables(anything(), anything())).thenResolve();
-        const workspace = mock<IWorkspaceService>();
-        when(workspace.workspaceFolders).thenReturn();
         when(zmqSupported.isSupported).thenReturn(false);
         activationService = new PreWarmActivatedJupyterEnvironmentVariables(
             instance(envActivationService),
@@ -56,8 +50,6 @@ suite('DataScience - PreWarm Env Vars', () => {
             instance(extensionChecker),
             instance(apiProvider),
             instance(zmqSupported),
-            instance(envVarsProvider),
-            instance(workspace),
             instance(mock(CondaService))
         );
     });

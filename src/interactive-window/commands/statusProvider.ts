@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 
-import { IApplicationShell } from '../common/application/types';
-import { createDeferred, Deferred } from '../common/utils/async';
-import { noop } from '../common/utils/misc';
-import { IStatusProvider } from './types';
+import { IApplicationShell } from '../../platform/common/application/types';
+import { createDeferred, Deferred } from '../../platform/common/utils/async';
+import { noop } from '../../platform/common/utils/misc';
 
 class StatusItem implements Disposable {
     private deferred: Deferred<void>;
@@ -55,12 +54,12 @@ class StatusItem implements Disposable {
  * Turns a withProgress callback into a promise.
  */
 @injectable()
-export class StatusProvider implements IStatusProvider {
+export class StatusProvider {
     private statusCount: number = 0;
 
-    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell) {}
+    constructor(private applicationShell: IApplicationShell) {}
 
-    public set(message: string, timeout?: number, cancel?: () => void): Disposable {
+    private set(message: string, timeout?: number, cancel?: () => void): Disposable {
         // Start our progress
         this.incrementCount();
 

@@ -439,7 +439,7 @@ ${actualCode}
     test('Run current file in interactive window (without cells)', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
-            'a=1\nprint(a)\nb=2\nprint(b)\n',
+            'a=1\nprint(a)',
             disposables
         );
 
@@ -453,7 +453,7 @@ ${actualCode}
         assert.equal(notebookDocument?.cellCount, 2, `Running a file should use one cell`);
 
         // Wait for output to appear
-        await waitForTextOutput(notebookDocument!.cellAt(1), '1\n2');
+        await waitForTextOutput(notebookDocument!.cellAt(1), '1', 0, false);
     });
 
     test('Error stack traces have correct line hrefs with mix of cell sources', async function () {

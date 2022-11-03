@@ -18,7 +18,7 @@ import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
 import { createDeferred } from '../common/utils/async';
-import { traceDecoratorVerbose, traceError, traceInfo, traceVerbose, traceWarning } from '../logging';
+import { traceDecoratorVerbose, traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -50,7 +50,7 @@ export function deserializePythonEnvironment(
         return result;
     }
 }
-export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironment {
+export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironment | undefined {
     const envTools = env.tools as KnownEnvironmentTools[];
     // Map the Python env tool to a Jupyter environment type.
     const orderOrEnvs: [pythonEnvTool: KnownEnvironmentTools, JupyterEnv: EnvironmentType][] = [
@@ -76,13 +76,18 @@ export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironme
             envType = EnvironmentType.VirtualEnv;
         }
     }
+    if (!env.executable.uri) {
+        console.error(`Python environment ${env.id} excluded as Uri is undefined`);
+        return;
+    }
+
     return {
         id: env.id,
         sysPrefix: env.executable.sysPrefix || '',
         envPath: env.environment?.folderUri,
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
-        uri: env.executable.uri!,
+        uri: env.executable.uri,
         displayName: env.environment?.name || '',
         envType,
         version: env.version
@@ -417,7 +422,9 @@ export class InterpreterService implements IInterpreterService {
                 return;
             }
             const envPath = api.environments.getActiveEnvironmentPath(resource);
+            traceInfoIfCI(`Active Environment Path for ${getDisplayPath(resource)} is ${JSON.stringify(envPath)}`);
             const env = await api.environments.resolveEnvironment(envPath);
+            traceInfoIfCI(`Resolved Active Environment for ${getDisplayPath(resource)} is ${JSON.stringify(env)}`);
             return this.trackResolvedEnvironment(env, false);
         });
 
@@ -502,6 +509,10 @@ export class InterpreterService implements IInterpreterService {
     private trackResolvedEnvironment(env: ResolvedEnvironment | undefined, triggerChangeEvent: boolean) {
         if (env) {
             const resolved = pythonEnvToJupyterEnv(env);
+            if (!resolved) {
+                return;
+            }
+
             if (
                 !this._interpreters.get(env.id) ||
                 !areObjectsWithUrisTheSame(resolved, this._interpreters.get(env.id)?.resolved)

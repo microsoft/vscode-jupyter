@@ -10,8 +10,7 @@ import {
     NotebookCell,
     NotebookCellData,
     NotebookCellKind,
-    NotebookCellExecutionState,
-    NotebookController
+    NotebookCellExecutionState
 } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { KernelMessage } from '@jupyterlab/services';
@@ -27,7 +26,7 @@ import { getInterpreterHash } from '../../platform/pythonEnvironments/info/inter
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { CellExecutionCreator } from './cellExecutionCreator';
-import { KernelConnectionMetadata } from '../types';
+import { IKernelController, KernelConnectionMetadata } from '../types';
 import {
     isPythonKernelConnection,
     getInterpreterFromKernelConnectionMetadata,
@@ -631,7 +630,7 @@ export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutp
 }
 
 export function getTextOutputValue(output: NotebookCellOutput): string {
-    const item = output?.items?.find(
+    const items = output?.items?.filter(
         (opit) =>
             opit.mime === CellOutputMimeTypes.stdout ||
             opit.mime === CellOutputMimeTypes.stderr ||
@@ -639,11 +638,7 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
             opit.mime === 'text/markdown'
     );
 
-    if (item) {
-        const value = convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array);
-        return Array.isArray(value) ? value.join('') : value;
-    }
-    return '';
+    return items.map((item) => convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array)).join('');
 }
 export function getTextOutputValues(cell: NotebookCell): string {
     return cell.outputs.map(getTextOutputValue).join('');
@@ -845,7 +840,7 @@ export async function updateNotebookMetadata(
 
 export async function endCellAndDisplayErrorsInCell(
     cell: NotebookCell,
-    controller: NotebookController,
+    controller: IKernelController,
     errorMessage: string,
     isCancelled: boolean
 ) {
