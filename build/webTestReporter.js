@@ -133,15 +133,23 @@ async function addCell(cells, output, failed, executionCount) {
     };
     // Look for a screenshot file with the above prefix & attach that to the cell outputs.
     const screenshots = glob.sync(`${fileNamePrefix}*-screenshot.png`, { cwd: logsDir }).map((file) => {
-        console.info(`Found screenshot file ${file}`);
-        const contents = Buffer.from(fs.readFileSync(path.join(logsDir, file))).toString('base64');
-        return {
-            data: {
-                'image/png': contents
-            },
-            metadata: {},
-            output_type: 'display_data'
-        };
+        console.info(
+            `Found screenshot file ${file}, ${path.join(logsDir, file)}, Exists = ${fs.existsSync(
+                path.join(logsDir, file)
+            )}`
+        );
+        try {
+            const contents = Buffer.from(fs.readFileSync(path.join(logsDir, file))).toString('base64');
+            return {
+                data: {
+                    'image/png': contents
+                },
+                metadata: {},
+                output_type: 'display_data'
+            };
+        } catch (ex) {
+            console.error(`Failed to read screenshot file ${file}`, ex);
+        }
     });
     // Add a markdown cell so we can see this in the outline.
     cells.push({
