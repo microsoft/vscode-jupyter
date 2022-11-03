@@ -3,11 +3,11 @@
 
 'use strict';
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage, IServerConnectionType } from '../../kernels/jupyter/types';
-import { IKernelProvider, isLocalConnection, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
@@ -44,14 +44,10 @@ import { VSCodeNotebookController } from './vscodeNotebookController';
  */
 @injectable()
 export class ControllerRegistration implements IControllerRegistration {
-    private get isLocalLaunch(): boolean {
-        return this.serverConnectionType.isLocalLaunch;
-    }
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private creationEmitter = new EventEmitter<IVSCodeNotebookController>();
     private changeEmitter = new EventEmitter<IVSCodeNotebookControllerUpdateEvent>();
     private registeredMetadatas = new Map<string, KernelConnectionMetadata>();
-    private inKernelExperiment = false;
 
     public get onCreated(): Event<IVSCodeNotebookController> {
         return this.creationEmitter.event;
@@ -91,8 +87,6 @@ export class ControllerRegistration implements IControllerRegistration {
         this.serverConnectionType.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
-        this.workspace.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.disposables);
-        this.inKernelExperiment = this.configuration.getSettings().kernelPickerType === 'OnlyOneTypeOfKernel';
     }
     batchAdd(metadatas: KernelConnectionMetadata[], types: ('jupyter-notebook' | 'interactive')[]) {
         const added: IVSCodeNotebookController[] = [];
@@ -211,13 +205,10 @@ export class ControllerRegistration implements IControllerRegistration {
 
     private isFiltered(metadata: KernelConnectionMetadata): boolean {
         const userFiltered = this.kernelFilter.isKernelHidden(metadata);
-        const connectionTypeFiltered = isLocalConnection(metadata) !== this.isLocalLaunch;
         const urlFiltered = isRemoteConnection(metadata) && this.serverUriStorage.currentServerId !== metadata.serverId;
 
-        if (this.inKernelExperiment) {
-            return userFiltered || connectionTypeFiltered || urlFiltered;
-        } else if (this.configuration.getSettings().kernelPickerType === 'Insiders') {
-            // In the 'Insiders' experiment remove the connectionType and url filters as we want to register everything.
+        if (this.configuration.getSettings().kernelPickerType === 'Insiders') {
+            // In the 'Insiders' experiment remove the url filters as we want to register everything.
             return userFiltered;
         }
 
@@ -264,13 +255,6 @@ export class ControllerRegistration implements IControllerRegistration {
 
         // Update list of controllers
         this.onDidChangeFilter();
-    }
-
-    private onDidChangeConfiguration(e: ConfigurationChangeEvent) {
-        if (e.affectsConfiguration('jupyter.showOnlyOneTypeOfKernel')) {
-            this.inKernelExperiment = this.workspace.getConfiguration('jupyter')?.get('showOnlyOneTypeOfKernel', false);
-            this.onDidChangeFilter();
-        }
     }
 
     private onDidChangeFilter() {
