@@ -34,6 +34,7 @@ import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 /** Strategy design */
 interface IRemoteKernelFinderRegistrationStrategy {
     activate(): Promise<void>;
+    dispose(): void;
 }
 
 class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
@@ -111,6 +112,10 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
             serverFinder && serverFinder.dispose();
             this.serverFinderMapping.delete(uri.serverId);
         });
+    }
+
+    dispose() {
+        this.serverFinderMapping.forEach((finder) => finder.dispose());
     }
 }
 
@@ -190,6 +195,10 @@ class SingleServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
 
         finder.activate().then(noop, noop);
     }
+
+    dispose() {
+        this._activeServerFinder?.finder.dispose();
+    }
 }
 
 // This class creates RemoteKernelFinders for all registered Jupyter Server URIs
@@ -199,52 +208,58 @@ export class UniversalRemoteKernelFinderController implements IExtensionSingleAc
 
     constructor(
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
-        @inject(IJupyterSessionManagerFactory) jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        @inject(IInterpreterService) interpreterService: IInterpreterService,
-        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
-        @inject(IApplicationEnvironment) env: IApplicationEnvironment,
+        @inject(IJupyterSessionManagerFactory)
+        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
+        @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IJupyterRemoteCachedKernelValidator)
-        cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
-        @inject(IKernelFinder) kernelFinder: KernelFinder,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IKernelProvider) kernelProvider: IKernelProvider,
-        @inject(IExtensions) extensions: IExtensions,
-        @inject(IsWebExtension) isWebExtension: boolean
+        private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
+        @inject(IKernelFinder) private readonly kernelFinder: KernelFinder,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {
+        this._strategy = this.getStrategy();
+        this.disposables.push(this._strategy);
+    }
+
+    private getStrategy(): IRemoteKernelFinderRegistrationStrategy {
         if (this.configurationService.getSettings().kernelPickerType === 'Insiders') {
-            this._strategy = new MultiServerStrategy(
-                jupyterSessionManagerFactory,
-                interpreterService,
-                extensionChecker,
-                notebookProvider,
-                serverUriStorage,
-                globalState,
-                env,
-                cachedRemoteKernelValidator,
-                kernelFinder,
-                disposables,
-                kernelProvider,
-                extensions,
-                isWebExtension
+            return new MultiServerStrategy(
+                this.jupyterSessionManagerFactory,
+                this.interpreterService,
+                this.extensionChecker,
+                this.notebookProvider,
+                this.serverUriStorage,
+                this.globalState,
+                this.env,
+                this.cachedRemoteKernelValidator,
+                this.kernelFinder,
+                this.disposables,
+                this.kernelProvider,
+                this.extensions,
+                this.isWebExtension
             );
         } else {
-            this._strategy = new SingleServerStrategy(
-                jupyterSessionManagerFactory,
-                interpreterService,
-                extensionChecker,
-                notebookProvider,
-                serverUriStorage,
-                globalState,
-                env,
-                cachedRemoteKernelValidator,
-                kernelFinder,
-                disposables,
-                kernelProvider,
-                extensions,
-                isWebExtension
+            return new SingleServerStrategy(
+                this.jupyterSessionManagerFactory,
+                this.interpreterService,
+                this.extensionChecker,
+                this.notebookProvider,
+                this.serverUriStorage,
+                this.globalState,
+                this.env,
+                this.cachedRemoteKernelValidator,
+                this.kernelFinder,
+                this.disposables,
+                this.kernelProvider,
+                this.extensions,
+                this.isWebExtension
             );
         }
     }
