@@ -71,7 +71,7 @@ function initializeMockTextEditor(
     return mockTextEditor;
 }
 
-suite('DataScience Code Watcher Unit Tests', () => {
+suite('Code Watcher Unit Tests', () => {
     let codeWatcher: CodeWatcher;
     let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
     let activeInteractiveWindow: TypeMoq.IMock<IInteractiveWindow>;

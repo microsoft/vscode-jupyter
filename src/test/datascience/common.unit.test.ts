@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { formatStreamText } from '../../platform/common/utils';
 
-suite('DataScience Common Tests', () => {
+suite('Common Tests', () => {
     test('formatting stream text', async () => {
         assert.equal(formatStreamText('\rExecute\rExecute 1'), 'Execute 1');
         assert.equal(formatStreamText('\rExecute\r\nExecute 2'), 'Execute\nExecute 2');

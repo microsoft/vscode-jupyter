@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import { warnAboutWidgetVersionsThatAreNotSupported } from '../../../webviews/webview-side/ipywidgets/common/incompatibleWidgetHandler';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('DataScience - Incompatible Widgets', () => {
+suite('Incompatible Widgets', () => {
     suite('Using qgrid widget with CDN turned on', () => {
         async function testLoadingQgrid(versionToLoad: string, warningExpectedToBeDisplayed: boolean) {
             let warningDisplayed = false;

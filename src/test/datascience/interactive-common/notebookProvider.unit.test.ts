@@ -17,7 +17,7 @@ function Uri(filename: string): vscode.Uri {
 }
 
 /* eslint-disable  */
-suite('DataScience - NotebookProvider', () => {
+suite('NotebookProvider', () => {
     let notebookProvider: NotebookProvider;
     let jupyterNotebookProvider: IJupyterNotebookProvider;
     let rawNotebookProvider: IRawNotebookProvider;

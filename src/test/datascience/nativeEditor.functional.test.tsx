@@ -94,7 +94,7 @@ suite('Dummy8', () => {
 // function waitForMessage(ioc: DataScienceIocContainer, message: string, options?: WaitForMessageOptions): Promise<void> {
 //     return ioc.getNativeWebPanel(undefined).waitForMessage(message, options);
 // }
-// suite('DataScience Native Editor', () => {
+// suite('Native Editor', () => {
 //     const originalPlatform = window.navigator.platform;
 //     Object.defineProperty(
 //         window.navigator,

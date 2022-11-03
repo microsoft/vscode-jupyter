@@ -21,7 +21,7 @@ import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pyth
 import { Settings } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Intellisense Notebook Hover @lsp', function () {
+suite('VSCode Intellisense Notebook Hover @lsp', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;

@@ -24,7 +24,7 @@ suite('Dummy13', () => {
 // import { requestExecute, requestInspect } from './rawKernelTestHelpers';
 
 // /* eslint-disable @typescript-eslint/no-explicit-any, no-multi-str, , no-console, max-classes-per-file, comma-dangle */
-// suite('DataScience raw kernel tests', () => {
+// suite('raw kernel tests', () => {
 //     let ioc: DataScienceIocContainer;
 //     let rawKernel: RawKernel;
 //     const connectionInfo = {

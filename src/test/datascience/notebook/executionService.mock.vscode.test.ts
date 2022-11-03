@@ -42,7 +42,7 @@
 // const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 // /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-// suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
+// suite('VSCode Notebook -', function () {
 //     let api: IExtensionTestApi;
 //     const disposables: IDisposable[] = [];
 //     let vscodeNotebook: IVSCodeNotebook;

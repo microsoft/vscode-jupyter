@@ -43,7 +43,7 @@ import { Settings } from '../../../../platform/common/constants';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 [true, false].forEach((useJedi) => {
     suite(
-        `DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter) (slow) ${
+        `DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter) ${
             useJedi ? 'withJedi' : 'withoutJedi'
         } @lsp`,
         function () {

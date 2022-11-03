@@ -37,7 +37,7 @@ suite('Dummy8', () => {
 // }
 // const allowList: Button[] = []; // List of buttons to be enabled while a notebook is untrusted
 
-// suite('DataScience Native Toolbar', () => {
+// suite('Native Toolbar', () => {
 //     const noopAny: any = noop;
 //     let props: INativeEditorToolbarProps;
 //     let wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;

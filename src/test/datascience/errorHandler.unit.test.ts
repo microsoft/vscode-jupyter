@@ -40,7 +40,7 @@ import { RemoteJupyterServerUriProviderError } from '../../kernels/errors/remote
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { DataScienceErrorHandlerNode } from '../../kernels/errors/kernelErrorHandler.node';
 
-suite('DataScience Error Handler Unit Tests', () => {
+suite('Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
     let dataScienceErrorHandler: DataScienceErrorHandler;
     let dependencyManager: IJupyterInterpreterDependencyManager;

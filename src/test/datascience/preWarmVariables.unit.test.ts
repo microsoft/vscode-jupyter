@@ -17,7 +17,7 @@ import { PreWarmActivatedJupyterEnvironmentVariables } from '../../kernels/varia
 import { sleep } from '../core';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 
-suite('DataScience - PreWarm Env Vars', () => {
+suite('PreWarm Env Vars', () => {
     let activationService: IExtensionSingleActivationService;
     let envActivationService: IEnvironmentActivationService;
     let jupyterInterpreter: JupyterInterpreterService;

@@ -12,7 +12,7 @@
 // import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../platform/datascience/types';
 // import { MockMemento } from '../mocks/mementos';
 
-// suite('DataScience - View tracker', () => {
+// suite('View tracker', () => {
 //     let editorProvider: INotebookEditorProvider;
 //     let editor1: INotebookEditor;
 //     let editor2: INotebookEditor;
