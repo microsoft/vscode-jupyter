@@ -106,6 +106,9 @@ const config = {
                 typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
                     ? process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION
                     : 'true'
+            ),
+            VSC_JUPYTER_CI_TEST_GREP: JSON.stringify(
+                typeof process.env.VSC_JUPYTER_CI_TEST_GREP === 'string' ? process.env.VSC_JUPYTER_CI_TEST_GREP : 'true'
             )
         }),
         new CleanTerminalPlugin(),
