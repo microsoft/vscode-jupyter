@@ -108,7 +108,7 @@ const config = {
                     : 'true'
             ),
             VSC_JUPYTER_CI_TEST_GREP: JSON.stringify(
-                typeof process.env.VSC_JUPYTER_CI_TEST_GREP === 'string' ? process.env.VSC_JUPYTER_CI_TEST_GREP : 'true'
+                typeof process.env.VSC_JUPYTER_CI_TEST_GREP === 'string' ? process.env.VSC_JUPYTER_CI_TEST_GREP : ''
             )
         }),
         new CleanTerminalPlugin(),
