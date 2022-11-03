@@ -16,7 +16,7 @@ import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
 import { captureScreenShot, IExtensionTestApi, initialize, waitForCondition } from '../../common';
 import { openNotebook } from '../helpers';
 import { JupyterServer } from '../jupyterServer.node';
-import { changeShowOnlyOneTypeOfKernel, closeNotebooksAndCleanUpAfterTests, hijackPrompt } from './helper';
+import { closeNotebooksAndCleanUpAfterTests, hijackPrompt } from './helper';
 import {
     createEmptyPythonNotebook,
     createTemporaryNotebook,
@@ -100,7 +100,6 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        await changeShowOnlyOneTypeOfKernel(false);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
@@ -163,33 +162,6 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         );
     });
 
-    test.skip('Local and Remote kernels are not listed', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/11324
-        await changeShowOnlyOneTypeOfKernel(true);
-        await controllerLoader.loaded;
-        const controllers = controllerRegistration.registered;
-        assert.ok(
-            controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
-            'Should have at least one remote kernelspec'
-        );
-
-        await waitForCondition(
-            async () => {
-                return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
-            },
-            defaultNotebookTestTimeout,
-            () => `Should have at least one remote kernelspec`
-        );
-
-        assert.notOk(
-            controllers.some(
-                (item) =>
-                    item.connection.kind === 'startUsingLocalKernelSpec' ||
-                    item.connection.kind === 'startUsingPythonInterpreter'
-            ),
-            'Should have no local kernels'
-        );
-    });
     test('Remote kernels are removed when switching to local', async function () {
         await controllerLoader.loaded;
         assert.ok(async () => {
