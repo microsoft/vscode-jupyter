@@ -35,9 +35,6 @@ export class PlatformService implements IPlatformService {
     public get pathVariableName() {
         return this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
     }
-    public get virtualEnvBinName() {
-        return this.isWindows ? 'Scripts' : 'bin';
-    }
     public async getVersion(): Promise<SemVer> {
         if (this.version) {
             return this.version;
@@ -70,13 +67,5 @@ export class PlatformService implements IPlatformService {
     }
     public get isLinux(): boolean {
         return this.osType === OSType.Linux;
-    }
-    public get osRelease(): string {
-        return os.release();
-    }
-    public get is64bit(): boolean {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const arch = require('arch');
-        return arch() === 'x64';
     }
 }
