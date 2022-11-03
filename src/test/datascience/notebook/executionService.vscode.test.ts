@@ -163,7 +163,16 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Leading whitespace not suppressed', async () => {
         const cell = await notebook.appendCodeCell('print("\tho")\nprint("\tho")\nprint("\tho")\n');
-        await Promise.all([kernelExecution.executeCell(cell), waitForTextOutput(cell, '\tho\n\tho\n\tho\n', 0, true)]);
+        await kernelExecution.executeCell(cell);
+        await waitForCondition(
+            () => {
+                const output = getCellOutputs(cell);
+                const lines = output.splitLines({ trim: false, removeEmptyEntries: true });
+                return lines.length === 3 && lines[0] === '\tho' && lines[1] === '\tho' && lines[2] === '\tho';
+            },
+            defaultNotebookTestTimeout,
+            () => `Cell output not as expected, it is ${getCellOutputs(cell)}`
+        );
     });
     test('Verify loading of env variables form .env file', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
