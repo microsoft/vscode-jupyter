@@ -319,13 +319,7 @@ jobs:
             pythonVersion: '3.10'
             webOrDesktop: 'web'
             os: ubuntu-latest
-            tags: '@webview|@export|@lsp|@variableViewer'
-          - jupyter: remote
-            python: python
-            pythonVersion: '3.10'
-            webOrDesktop: 'web'
-            os: ubuntu-latest
-            tags: '^[^@]+$|@mandatory'
+            tags: '^[^@]+$|@mandatory|@webview|@export|@lsp|@variableViewer'
           - jupyter: raw
             python: python
             pythonVersion: '3.10'

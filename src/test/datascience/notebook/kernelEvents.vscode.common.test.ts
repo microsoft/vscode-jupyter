@@ -28,6 +28,7 @@ import {
 } from './helper';
 import { createEventHandler } from '../../common';
 import { IKernelProvider } from '../../../kernels/types';
+import { isWeb } from '../../../platform/common/utils/misc';
 
 suite('Kernel Event @kernelCore', function () {
     // https://github.com/microsoft/vscode-jupyter/issues/11314
@@ -38,6 +39,9 @@ suite('Kernel Event @kernelCore', function () {
     let previousDisableJupyterAutoStartValue: boolean;
     this.timeout(120_000);
     suiteSetup(async function () {
+        if (isWeb()) {
+            return this.skip();
+        }
         traceInfo(`Suite Setup ${this.currentTest?.title}`);
         this.timeout(120_000);
         try {
