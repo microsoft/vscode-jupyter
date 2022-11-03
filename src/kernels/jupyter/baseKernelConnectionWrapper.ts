@@ -30,8 +30,8 @@ import type {
     IMessage,
     MessageType
 } from '@jupyterlab/services/lib/kernel/messages';
-import { ISpecModel } from '@jupyterlab/services/lib/kernelspec/restapi';
-import { JSONObject } from '@lumino/coreutils';
+import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/restapi';
+import type { JSONObject } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
 import { Disposable } from 'vscode';
 import { IDisposable } from '../../platform/common/types';

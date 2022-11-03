@@ -39,7 +39,6 @@ import {
     QuickInputButton,
     QuickPickItemButtonEvent,
     EventEmitter,
-    ConfigurationTarget,
     NotebookEditor,
     debug,
     NotebookData
@@ -54,13 +53,7 @@ import {
 } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
-import {
-    GLOBAL_MEMENTO,
-    IConfigurationService,
-    IDisposable,
-    IMemento,
-    IsWebExtension
-} from '../../../platform/common/types';
+import { GLOBAL_MEMENTO, IDisposable, IMemento, IsWebExtension } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import {
     IKernelFinder,
@@ -600,10 +593,11 @@ async function waitForActiveNotebookEditor(notebookEditor?: NotebookEditor): Pro
 
 async function getActiveInterpreterKernelConnection() {
     const { interpreterService, kernelFinder } = await getServices();
-    const interpreter = await interpreterService.getActiveInterpreter();
-    if (!interpreter) {
-        assert.fail('Active Interpreter is undefined');
-    }
+    const interpreter = await waitForCondition(
+        () => interpreterService.getActiveInterpreter(),
+        defaultNotebookTestTimeout,
+        'Active Interpreter is undefined.2'
+    );
     return waitForCondition(
         () =>
             kernelFinder.kernels.find(
@@ -617,10 +611,13 @@ async function getActiveInterpreterKernelConnection() {
 }
 async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
     const { interpreterService, kernelFinder } = await getServices();
-    const interpreter = await interpreterService.getActiveInterpreter();
-    if (!interpreter) {
-        traceWarning('Active Interpreter is undefined');
-    }
+    const interpreter = isWeb()
+        ? undefined
+        : await waitForCondition(
+              () => interpreterService.getActiveInterpreter(),
+              defaultNotebookTestTimeout,
+              'Active Interpreter is undefined.3'
+          );
     return waitForCondition(
         () =>
             kernelFinder.kernels.find((item) => {
@@ -1396,16 +1393,6 @@ export async function hijackPrompt(
         },
         clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.result)
     };
-}
-
-export async function changeShowOnlyOneTypeOfKernel(setting: boolean) {
-    const targetValue = setting ? 'OnlyOneTypeOfKernel' : 'Stable';
-    const api = await initialize();
-    const config = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-    const settings = config.getSettings();
-    if (settings.kernelPickerType !== targetValue) {
-        await config.updateSetting('experimental.kernelPickerType', targetValue, undefined, ConfigurationTarget.Global);
-    }
 }
 
 export async function hijackSavePrompt(

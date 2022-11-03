@@ -14,7 +14,7 @@ import {
 } from '../../../notebooks/controllers/ipywidgets/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('DataScience - ipywidget - Local Widget Script Source', () => {
+suite('ipywidget - Local Widget Script Source', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let resourceConverter: ILocalResourceUriConverter;
     let kernel: IKernel;

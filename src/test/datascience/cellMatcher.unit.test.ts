@@ -7,7 +7,7 @@ import { CellMatcher } from '../../interactive-window/editor-integration/cellMat
 import { IJupyterSettings } from '../../platform/common/types';
 import { defaultDataScienceSettings } from './helpers.node';
 
-suite('DataScience CellMatcher', () => {
+suite('CellMatcher', () => {
     const settings: IJupyterSettings = defaultDataScienceSettings();
     const defaultMatcher = new CellMatcher(settings);
 

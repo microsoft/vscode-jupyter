@@ -13,7 +13,7 @@ import {
     NotebookCellExecutionState
 } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-import { KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import fastDeepEqual = require('fast-deep-equal');
@@ -630,13 +630,14 @@ export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutp
 }
 
 export function getTextOutputValue(output: NotebookCellOutput): string {
-    const items = output?.items?.filter(
-        (opit) =>
-            opit.mime === CellOutputMimeTypes.stdout ||
-            opit.mime === CellOutputMimeTypes.stderr ||
-            opit.mime === 'text/plain' ||
-            opit.mime === 'text/markdown'
-    );
+    const items =
+        output?.items?.filter(
+            (opit) =>
+                opit.mime === CellOutputMimeTypes.stdout ||
+                opit.mime === CellOutputMimeTypes.stderr ||
+                opit.mime === 'text/plain' ||
+                opit.mime === 'text/markdown'
+        ) || [];
 
     return items.map((item) => convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array)).join('');
 }

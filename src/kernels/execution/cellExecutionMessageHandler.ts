@@ -5,7 +5,7 @@
 
 import fastDeepEqual from 'fast-deep-equal';
 import type * as nbformat from '@jupyterlab/nbformat';
-import * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
+import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
 import {
     NotebookCell,
     NotebookCellExecution,
@@ -24,7 +24,7 @@ import {
     NotebookCellOutputItem
 } from 'vscode';
 
-import { Kernel } from '@jupyterlab/services';
+import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';

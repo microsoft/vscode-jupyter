@@ -20,7 +20,7 @@ import { DataViewerDependencyService } from '../../../webviews/extension-side/da
 import { Uri } from 'vscode';
 import { pandasMinimumVersionSupportedByVariableViewer } from '../../../webviews/extension-side/dataviewer/constants';
 
-suite('DataScience - DataViewerDependencyService (PythonEnvironment, Node)', () => {
+suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
     let dependencyService: DataViewerDependencyService;
     let appShell: IApplicationShell;
     let pythonExecFactory: IPythonExecutionFactory;

@@ -10,7 +10,6 @@ import { Identifiers } from '../platform/common/constants';
 import { IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { InstallPythonControllerCommands } from './controllers/commands/installPythonControllerCommands';
-import { ServerConnectionControllerCommands } from './controllers/commands/serverConnectionControllerCommands';
 import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
 import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI';
 import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
@@ -103,10 +102,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         InstallPythonControllerCommands
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        ServerConnectionControllerCommands
     );
 
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);

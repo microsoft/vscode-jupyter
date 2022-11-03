@@ -177,13 +177,13 @@ export class PythonApiProvider implements IPythonApiProvider {
         if (this.initialized) {
             return;
         }
-        this.initialized = true;
         const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
         if (!pythonExtension) {
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         } else {
             await this.registerHooks();
         }
+        this.initialized = true;
     }
     private async registerHooks() {
         if (this.hooksRegistered) {
@@ -193,16 +193,23 @@ export class PythonApiProvider implements IPythonApiProvider {
         if (!pythonExtension) {
             return;
         }
-        this.hooksRegistered = true;
+        let activated = false;
         if (!pythonExtension.isActive) {
             try {
                 await pythonExtension.activate();
-                this.didActivatePython.fire();
+                activated = true;
             } catch (ex) {
                 traceError(`Failed activating the python extension: `, ex);
                 this.api.reject(ex);
                 return;
             }
+        }
+        if (this.hooksRegistered) {
+            return;
+        }
+        this.hooksRegistered = true;
+        if (activated) {
+            this.didActivatePython.fire();
         }
         pythonExtension.exports.jupyter.registerHooks();
         this._pythonExtensionHooked.resolve();
@@ -384,7 +391,36 @@ export class InterpreterService implements IInterpreterService {
         }
         return this.interpreterListCachePromise;
     }
+    private _waitForAllInterpretersToLoad?: Promise<void>;
+    public async waitForAllInterpretersToLoad(): Promise<void> {
+        if (!this._waitForAllInterpretersToLoad) {
+            const lazyLoadControllers = this.workspace
+                .getConfiguration('jupyter', undefined)
+                .get<boolean>('lazyLoadControllers', false);
+            if (lazyLoadControllers) {
+                return;
+            }
+            this._waitForAllInterpretersToLoad = (async () => {
+                await this.refreshInterpreters();
 
+                // Don't allow for our call of getInterpretersImpl to be cancelled
+                // getInterpreters returns a promise that can get cancelled by itself
+                // so you can't use that to await here
+                const source = new CancellationTokenSource();
+                const interpreters = await this.getInterpretersImpl(source.token);
+
+                // After getting interpreters, resolve them all
+                if (interpreters) {
+                    await Promise.all(
+                        interpreters.map((interpreter) => {
+                            return this.api?.environments.resolveEnvironment(interpreter.id);
+                        })
+                    );
+                }
+            })();
+        }
+        return this._waitForAllInterpretersToLoad;
+    }
     public async refreshInterpreters(forceRefresh: boolean = false) {
         const api = await this.getApi();
         if (!api) {
@@ -467,19 +503,27 @@ export class InterpreterService implements IInterpreterService {
                 if (!api) {
                     return;
                 }
-                if (isUri(pythonPathOrPythonId)) {
+                const uri = isUri(pythonPathOrPythonId) ? pythonPathOrPythonId : undefined;
+                // eslint-disable-next-line local-rules/dont-use-fspath
+                const pythonEnvId = isUri(pythonPathOrPythonId) ? pythonPathOrPythonId.fsPath : pythonPathOrPythonId;
+                if (uri) {
                     // Find the Env with the same Uri.
                     const matchedPythonEnv = api.environments.known.find((item) => {
-                        return areInterpreterPathsSame(item.executable.uri, pythonPathOrPythonId);
+                        return areInterpreterPathsSame(item.executable.uri, uri);
                     });
                     if (matchedPythonEnv) {
                         const env = await api.environments.resolveEnvironment(matchedPythonEnv.id);
                         return this.trackResolvedEnvironment(env, false);
                     }
-                } else {
-                    const env = await api.environments.resolveEnvironment(pythonPathOrPythonId);
-                    return this.trackResolvedEnvironment(env, false);
+                    traceWarning(
+                        `No interpreter with path ${getDisplayPath(
+                            uri
+                        )} found in Python API, will convert Uri path to string as Id ${pythonEnvId}`
+                    );
                 }
+
+                const env = await api.environments.resolveEnvironment(pythonEnvId);
+                return this.trackResolvedEnvironment(env, false);
             });
         } catch (ex) {
             traceWarning(
@@ -580,7 +624,9 @@ export class InterpreterService implements IInterpreterService {
                                 const env = await api.environments.resolveEnvironment(item.id);
                                 const resolved = this.trackResolvedEnvironment(env, true);
                                 traceVerbose(
-                                    `Python environment ${env?.id} from Python Extension API is ${JSON.stringify(
+                                    `Python environment for ${item.id} is ${
+                                        env?.id
+                                    } from Python Extension API is ${JSON.stringify(
                                         env
                                     )} and translated is ${JSON.stringify(resolved)}`
                                 );

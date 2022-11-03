@@ -12,7 +12,7 @@ import { IExtensionTestApi } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { closeActiveWindows, initialize } from '../../initialize.node';
 
-suite('DataScience - Export HTML', function () {
+suite('Export HTML @export', function () {
     let api: IExtensionTestApi;
     this.timeout(20_000);
     suiteSetup(async function () {

@@ -12,6 +12,7 @@ export interface IInterpreterService {
      */
     readonly resolvedEnvironments: PythonEnvironment[];
     readonly environments: readonly PythonEnvironmentV2[];
+    waitForAllInterpretersToLoad(): Promise<void>;
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreters: Event<void>;
     refreshInterpreters(forceRefresh?: boolean): Promise<void>;
