@@ -2386,4 +2386,36 @@ export namespace vscMockExtHostedTypes {
             this.color = color;
         }
     }
+    // https://github.com/microsoft/vscode/issues/115616 @alexr00
+
+    export enum PortAutoForwardAction {
+        Notify = 1,
+        OpenBrowser = 2,
+        OpenPreview = 3,
+        Silent = 4,
+        Ignore = 5,
+        OpenBrowserOnce = 6
+    }
+
+    export class PortAttributes {
+        /**
+         * The port number associated with this this set of attributes.
+         */
+        port: number;
+
+        /**
+         * The action to be taken when this port is detected for auto forwarding.
+         */
+        autoForwardAction: PortAutoForwardAction;
+
+        /**
+         * Creates a new PortAttributes object
+         * @param port the port number
+         * @param autoForwardAction the action to take when this port is detected
+         */
+        constructor(port: number, autoForwardAction: PortAutoForwardAction) {
+            this.port = port;
+            this.autoForwardAction = autoForwardAction;
+        }
+    }
 }
