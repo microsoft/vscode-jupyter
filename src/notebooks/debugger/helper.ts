@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IDebugEventMsg } from '@jupyterlab/services/lib/kernel/messages';
+import type { IDebugEventMsg } from '@jupyterlab/services/lib/kernel/messages';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { INotebookKernelExecution } from '../../kernels/types';
 import {
