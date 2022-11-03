@@ -10,7 +10,6 @@ import { EventEmitter, NotebookControllerAffinity, NotebookDocument, Uri } from 
 import { IServerConnectionType } from '../../../../kernels/jupyter/types';
 import {
     KernelConnectionMetadata,
-    LocalKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../../kernels/types';
@@ -76,7 +75,7 @@ suite('Preferred Controller', () => {
         disposeAllDisposables(disposables);
     });
 
-    const pythonKernel: PythonKernelConnectionMetadata = {
+    const pythonKernel = PythonKernelConnectionMetadata.create({
         id: 'python',
         interpreter: {
             sysPrefix: '/usr/local/bin/python',
@@ -90,10 +89,9 @@ suite('Preferred Controller', () => {
             executable: '/usr/local/bin/python',
             language: 'python',
             name: 'python3'
-        },
-        kind: 'startUsingPythonInterpreter'
-    };
-    const pythonKernelSpec: LocalKernelSpecConnectionMetadata = {
+        }
+    });
+    const pythonKernelSpec = LocalKernelSpecConnectionMetadata.create({
         id: 'pythonKernelSpec',
         interpreter: {
             sysPrefix: '/usr/local/bin/python',
@@ -107,10 +105,9 @@ suite('Preferred Controller', () => {
             executable: '/usr/local/bin/python',
             language: 'python',
             name: 'python3'
-        },
-        kind: 'startUsingLocalKernelSpec'
-    };
-    const juliaKernel: LocalKernelConnectionMetadata = {
+        }
+    });
+    const juliaKernel = LocalKernelSpecConnectionMetadata.create({
         id: 'julia',
         kernelSpec: {
             argv: ['julia'],
@@ -118,9 +115,8 @@ suite('Preferred Controller', () => {
             executable: '/usr/local/bin/julia',
             name: 'julia',
             language: 'julia'
-        },
-        kind: 'startUsingLocalKernelSpec'
-    };
+        }
+    });
     function createDocument(
         metadata: Partial<INotebookMetadata>,
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView = JupyterNotebookView

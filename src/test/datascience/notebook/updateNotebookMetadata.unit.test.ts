@@ -5,7 +5,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import { Uri } from 'vscode';
 import { updateNotebookMetadata } from '../../../kernels/execution/helpers';
-import { IJupyterKernelSpec, KernelConnectionMetadata } from '../../../kernels/types';
+import { IJupyterKernelSpec, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
 // Function return type
@@ -50,12 +50,11 @@ suite('UpdateNotebookMetadata', () => {
     });
     test('UpdateNotebookMetadata Update Language', async () => {
         const notebookMetadata = { orig_nbformat: 4, language_info: { name: 'JUNK' } };
-        const kernelConnection: KernelConnectionMetadata = {
-            kind: 'startUsingPythonInterpreter',
+        const kernelConnection = PythonKernelConnectionMetadata.create({
             id: 'python36',
             interpreter: python36Global,
             kernelSpec: pythonDefaultKernelSpec
-        };
+        });
         const value = await updateNotebookMetadata(notebookMetadata, kernelConnection);
 
         // Verify lang info added
@@ -69,12 +68,11 @@ suite('UpdateNotebookMetadata', () => {
 
     test('UpdateNotebookMetadata Update Python Version', async () => {
         const notebookMetadata = { orig_nbformat: 4, language_info: { name: 'python', version: '3.6.0' } };
-        const kernelConnection: KernelConnectionMetadata = {
-            kind: 'startUsingPythonInterpreter',
+        const kernelConnection = PythonKernelConnectionMetadata.create({
             id: 'python36',
             interpreter: python37Global,
             kernelSpec: pythonDefaultKernelSpec
-        };
+        });
         const value = await updateNotebookMetadata(notebookMetadata, kernelConnection);
 
         // Verify version updated 3.6 => 3.7
@@ -92,12 +90,11 @@ suite('UpdateNotebookMetadata', () => {
             kernelspec: { display_name: 'JUNK DISPLAYNAME', language: 'python', name: 'JUNK' },
             language_info: { name: 'python', version: '3.6.0' }
         };
-        const kernelConnection: KernelConnectionMetadata = {
-            kind: 'startUsingPythonInterpreter',
+        const kernelConnection = PythonKernelConnectionMetadata.create({
             id: 'python36',
             interpreter: python36Global,
             kernelSpec: pythonDefaultKernelSpec
-        };
+        });
         const value = await updateNotebookMetadata(notebookMetadata, kernelConnection);
 
         // Verify kernel_spec name updated JUNK => python3
@@ -122,12 +119,11 @@ suite('UpdateNotebookMetadata', () => {
         const vscSpec = { ...pythonDefaultKernelSpec };
         vscSpec.isRegisteredByVSC = 'registeredByNewVersionOfExt';
 
-        const kernelConnection: KernelConnectionMetadata = {
-            kind: 'startUsingPythonInterpreter',
+        const kernelConnection = PythonKernelConnectionMetadata.create({
             id: 'python36',
             interpreter: python36Global,
             kernelSpec: vscSpec
-        };
+        });
         const value = await updateNotebookMetadata(notebookMetadata, kernelConnection);
 
         // Verify display_name updated due to interpreter hash change
@@ -157,12 +153,11 @@ suite('UpdateNotebookMetadata', () => {
         const vscSpec = { ...pythonDefaultKernelSpec };
         vscSpec.isRegisteredByVSC = 'registeredByNewVersionOfExt';
 
-        const kernelConnection: KernelConnectionMetadata = {
-            kind: 'startUsingPythonInterpreter',
+        const kernelConnection = PythonKernelConnectionMetadata.create({
             id: 'python36',
             interpreter: python36Global,
             kernelSpec: vscSpec
-        };
+        });
         const value = await updateNotebookMetadata(notebookMetadata, kernelConnection);
 
         // Verify display_name updated due to interpreter hash change
@@ -191,12 +186,11 @@ suite('UpdateNotebookMetadata', () => {
             language_info: { name: 'python', version: '3.6.0' }
         };
 
-        const kernelConnection: KernelConnectionMetadata = {
-            kind: 'startUsingPythonInterpreter',
+        const kernelConnection = PythonKernelConnectionMetadata.create({
             id: 'python36',
             interpreter: python36Global,
             kernelSpec: pythonDefaultKernelSpec
-        };
+        });
         const value = await updateNotebookMetadata(notebookMetadata, kernelConnection);
 
         // Verify display_name updated due to interpreter hash change
@@ -236,12 +230,11 @@ suite('UpdateNotebookMetadata', () => {
             language_info: { name: 'python', version: '3.6.0' }
         };
 
-        const kernelConnection: KernelConnectionMetadata = {
-            kind: 'startUsingPythonInterpreter',
+        const kernelConnection = PythonKernelConnectionMetadata.create({
             id: 'python36',
             interpreter: python36Global,
             kernelSpec: pythonDefaultKernelSpec
-        };
+        });
         const value = await updateNotebookMetadata(notebookMetadata, kernelConnection);
 
         // Verify display_name updated due to interpreter hash change

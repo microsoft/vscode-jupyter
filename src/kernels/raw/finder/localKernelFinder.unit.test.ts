@@ -40,7 +40,8 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import {
     KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata,
-    LocalKernelConnectionMetadata
+    LocalKernelConnectionMetadata,
+    LocalKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
@@ -1881,13 +1882,12 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             const activeID = 'activeid';
 
             // Live kernel spec
-            const liveSpec: LiveRemoteKernelConnectionMetadata = {
+            const liveSpec = LiveRemoteKernelConnectionMetadata.create({
                 kernelModel: { id: activeID } as any,
-                kind: 'connectToLiveRemoteKernel',
                 baseUrl: '',
                 id: activeID,
                 serverId: ''
-            };
+            });
 
             // Set up the preferred remote id
             when(preferredRemote.getPreferredRemoteKernelId(anything())).thenResolve(activeID);
@@ -1904,7 +1904,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
-                { kind: 'startUsingLocalKernelSpec', id: 'hi', kernelSpec: {} as any },
+                LocalKernelSpecConnectionMetadata.create({ id: 'hi', kernelSpec: {} as any }),
                 {
                     language_info: { name: PYTHON_LANGUAGE },
                     orig_nbformat: 4
@@ -1920,8 +1920,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
-                {
-                    kind: 'startUsingLocalKernelSpec',
+                LocalKernelSpecConnectionMetadata.create({
                     id: '',
                     kernelSpec: {
                         argv: [],
@@ -1930,7 +1929,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         executable: 'path'
                     },
                     interpreter: { uri: Uri.file('a') } as any
-                },
+                }),
                 {
                     language_info: { name: PYTHON_LANGUAGE },
                     orig_nbformat: 4,
@@ -1948,8 +1947,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
-                {
-                    kind: 'startUsingLocalKernelSpec',
+                LocalKernelSpecConnectionMetadata.create({
                     id: '',
                     kernelSpec: {
                         argv: [],
@@ -1958,7 +1956,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         executable: 'path'
                     },
                     interpreter: { uri: Uri.file('a') } as any
-                },
+                }),
                 {
                     language_info: { name: PYTHON_LANGUAGE },
                     orig_nbformat: 4,
@@ -1978,8 +1976,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
-                {
-                    kind: 'startUsingLocalKernelSpec',
+                LocalKernelSpecConnectionMetadata.create({
                     id: '',
                     kernelSpec: {
                         argv: [],
@@ -1988,7 +1985,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         executable: 'path'
                     },
                     interpreter: { uri: Uri.file('a') } as any
-                },
+                }),
                 {
                     language_info: { name: PYTHON_LANGUAGE },
                     orig_nbformat: 4,
@@ -2006,8 +2003,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
-                {
-                    kind: 'startUsingLocalKernelSpec',
+                LocalKernelSpecConnectionMetadata.create({
                     id: '',
                     kernelSpec: {
                         argv: [],
@@ -2016,7 +2012,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         executable: 'path'
                     },
                     interpreter: { uri: Uri.file('a') } as any
-                },
+                }),
                 {
                     language_info: { name: PYTHON_LANGUAGE },
                     orig_nbformat: 4,
@@ -2036,8 +2032,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
-                {
-                    kind: 'startUsingLocalKernelSpec',
+                LocalKernelSpecConnectionMetadata.create({
                     id: '',
                     kernelSpec: {
                         argv: [],
@@ -2045,7 +2040,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         name: 'namea',
                         executable: 'path'
                     }
-                },
+                }),
                 {
                     language_info: { name: PYTHON_LANGUAGE },
                     orig_nbformat: 4,
@@ -2062,8 +2057,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 
             const isExactMatch = await kernelRankHelper.isExactMatch(
                 nbUri,
-                {
-                    kind: 'startUsingLocalKernelSpec',
+                LocalKernelSpecConnectionMetadata.create({
                     id: '',
                     kernelSpec: {
                         argv: [],
@@ -2071,7 +2065,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         name: 'python3', // default name here
                         executable: 'path'
                     }
-                },
+                }),
                 {
                     language_info: { name: PYTHON_LANGUAGE },
                     orig_nbformat: 4,

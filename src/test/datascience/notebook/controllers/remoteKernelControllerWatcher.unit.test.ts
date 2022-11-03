@@ -13,7 +13,13 @@ import {
     IJupyterUriProviderRegistration,
     JupyterServerUriHandle
 } from '../../../../kernels/jupyter/types';
-import { IJupyterKernelSpec, LiveKernelModel } from '../../../../kernels/types';
+import {
+    IJupyterKernelSpec,
+    LiveKernelModel,
+    LiveRemoteKernelConnectionMetadata,
+    LocalKernelSpecConnectionMetadata,
+    RemoteKernelSpecConnectionMetadata
+} from '../../../../kernels/types';
 import { RemoteKernelControllerWatcher } from '../../../../notebooks/controllers/remoteKernelControllerWatcher';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../../../notebooks/controllers/types';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
@@ -81,29 +87,32 @@ suite('RemoteKernelControllerWatcher', () => {
 
         const localKernel = mock<IVSCodeNotebookController>();
         when(localKernel.dispose()).thenReturn();
-        when(localKernel.connection).thenReturn({
-            id: 'local1',
-            kind: 'startUsingLocalKernelSpec',
-            kernelSpec: mock<IJupyterKernelSpec>()
-        });
+        when(localKernel.connection).thenReturn(
+            LocalKernelSpecConnectionMetadata.create({
+                id: 'local1',
+                kernelSpec: mock<IJupyterKernelSpec>()
+            })
+        );
         const remoteKernelSpec = mock<IVSCodeNotebookController>();
         when(remoteKernelSpec.dispose()).thenReturn();
-        when(remoteKernelSpec.connection).thenReturn({
-            id: 'remote1',
-            kind: 'startUsingRemoteKernelSpec',
-            baseUrl: remoteUriForProvider1,
-            kernelSpec: mock<IJupyterKernelSpec>(),
-            serverId
-        });
+        when(remoteKernelSpec.connection).thenReturn(
+            RemoteKernelSpecConnectionMetadata.create({
+                id: 'remote1',
+                baseUrl: remoteUriForProvider1,
+                kernelSpec: mock<IJupyterKernelSpec>(),
+                serverId
+            })
+        );
         const remoteLiveKernel = mock<IVSCodeNotebookController>();
         when(remoteLiveKernel.dispose()).thenReturn();
-        when(remoteLiveKernel.connection).thenReturn({
-            id: 'live1',
-            kind: 'connectToLiveRemoteKernel',
-            baseUrl: remoteUriForProvider1,
-            kernelModel: mock<LiveKernelModel>(),
-            serverId
-        });
+        when(remoteLiveKernel.connection).thenReturn(
+            LiveRemoteKernelConnectionMetadata.create({
+                id: 'live1',
+                baseUrl: remoteUriForProvider1,
+                kernelModel: mock<LiveKernelModel>(),
+                serverId
+            })
+        );
         when(controllers.registered).thenReturn([
             instance(localKernel),
             instance(remoteKernelSpec),

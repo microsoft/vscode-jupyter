@@ -23,12 +23,11 @@ export async function createActiveInterpreterController(
         // Ensure that the controller corresponding to the active interpreter
         // has been successfully created
         const spec = await createInterpreterKernelSpec(pythonInterpreter);
-        const metadata: PythonKernelConnectionMetadata = {
-            kind: 'startUsingPythonInterpreter',
+        const metadata = PythonKernelConnectionMetadata.create({
             kernelSpec: spec,
             interpreter: pythonInterpreter,
             id: getKernelId(spec, pythonInterpreter)
-        };
+        });
         return registration.add(metadata, [viewType])[0]; // Should only create one because only one view type
     }
 }

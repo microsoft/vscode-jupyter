@@ -272,12 +272,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                         );
                         return;
                     }
-                    const kernelSpec: LocalKernelSpecConnectionMetadata = {
-                        kind: 'startUsingLocalKernelSpec',
+                    const kernelSpec = LocalKernelSpecConnectionMetadata.create({
                         kernelSpec: item.kernelSpec,
                         interpreter: matchingInterpreter,
                         id: getKernelId(item.kernelSpec, matchingInterpreter)
-                    };
+                    });
                     distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
                 })
         );
@@ -314,12 +313,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                     // this to start the kernel.
                     const matchingInterpreter = await this.findMatchingInterpreter(k, interpreters);
                     if (matchingInterpreter) {
-                        const result: PythonKernelConnectionMetadata = {
-                            kind: 'startUsingPythonInterpreter',
+                        const result = PythonKernelConnectionMetadata.create({
                             kernelSpec: k,
                             interpreter: matchingInterpreter,
                             id: getKernelId(k, matchingInterpreter)
-                        };
+                        });
 
                         // Hide the interpreters from list of kernels unless the user created this kernelspec.
                         // Users can create their own kernels with custom environment variables, in such cases, we should list that
@@ -392,12 +390,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                                 );
                             }
                         }
-                        const result: LocalKernelSpecConnectionMetadata = {
-                            kind: 'startUsingLocalKernelSpec',
+                        const result = LocalKernelSpecConnectionMetadata.create({
                             kernelSpec: k,
                             interpreter,
                             id: getKernelId(k, interpreter)
-                        };
+                        });
                         return result;
                     }
                 })
@@ -421,12 +418,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
             filteredInterpreters.map(async (i) => {
                 // Update spec to have a default spec file
                 const spec = await createInterpreterKernelSpec(i, tempDirForKernelSpecs);
-                const result: PythonKernelConnectionMetadata = {
-                    kind: 'startUsingPythonInterpreter',
+                const result = PythonKernelConnectionMetadata.create({
                     kernelSpec: spec,
                     interpreter: i,
                     id: getKernelId(spec, i)
-                };
+                });
                 return result;
             })
         );

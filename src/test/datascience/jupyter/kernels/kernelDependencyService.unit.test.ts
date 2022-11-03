@@ -45,12 +45,11 @@ suite('Kernel Dependency Service', () => {
     });
     let metadata: PythonKernelConnectionMetadata;
     suiteSetup(async () => {
-        metadata = {
+        metadata = PythonKernelConnectionMetadata.create({
             interpreter,
-            kind: 'startUsingPythonInterpreter',
             kernelSpec: await createInterpreterKernelSpec(interpreter, Uri.file('')),
             id: '1'
-        };
+        });
     });
     setup(() => {
         appShell = mock<IApplicationShell>();
