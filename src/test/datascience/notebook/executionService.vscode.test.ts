@@ -163,6 +163,7 @@ suite('@kernelCore', function () {
     });
     test('Leading whitespace not suppressed', async () => {
         const cell = await notebook.appendCodeCell('print("\tho")\nprint("\tho")\nprint("\tho")\n');
+        await kernelExecution.executeCell(cell);
         await waitForCondition(
             () => {
                 const output = getCellOutputs(cell);
