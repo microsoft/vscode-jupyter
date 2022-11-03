@@ -2,42 +2,42 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import {
     closeNotebooksAndCleanUpAfterTests,
-    createEmptyPythonNotebook,
-    createTemporaryNotebook,
-    insertCodeCell,
-    prewarmNotebooks,
-    runCell,
+    defaultNotebookTestTimeout,
     startJupyterServer,
     waitForTextOutput
 } from '../datascience/notebook/helper.node';
 import { initialize } from '../initialize.node';
 import * as sinon from 'sinon';
-import { captureScreenShot, createEventHandler, IExtensionTestApi } from '../common.node';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { captureScreenShot, createEventHandler, IExtensionTestApi, waitForCondition } from '../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
-import { Uri, workspace } from 'vscode';
+import { Disposable, workspace } from 'vscode';
 import { executeSilently } from '../../kernels/helpers';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { createKernelController, TestNotebookDocument } from '../datascience/notebook/executionHelper';
+import { IKernel, INotebookKernelExecution, IKernelProvider, IKernelFinder } from '../../kernels/types';
+import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
+import { KernelConnectionMetadata } from '../../standalone/api/extension';
 
-suite('3rd Party Kernel Service API', function () {
+suite('3rd Party Kernel Service API @kernelCore', function () {
     let api: IExtensionTestApi;
-    let vscodeNotebook: IVSCodeNotebook;
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
+    let notebook: TestNotebookDocument;
+    let kernel: IKernel;
+    let kernelExecution: INotebookKernelExecution;
     suiteSetup(async function () {
         traceInfo('Suite Setup 3rd Party Kernel Service API');
         this.timeout(120_000);
         try {
             api = await initialize();
             await startJupyterServer();
-            await prewarmNotebooks();
             sinon.restore();
-            vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+            notebook = new TestNotebookDocument();
             traceInfo('Suite Setup (completed)');
         } catch (e) {
             traceInfo('Suite Setup (failed) - 3rd Party Kernel Service API');
@@ -47,22 +47,34 @@ suite('3rd Party Kernel Service API', function () {
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
-        try {
-            traceInfo(`Start Test ${this.currentTest?.title}`);
-            sinon.restore();
-            await startJupyterServer();
-            traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
-        } catch (e) {
-            await captureScreenShot(this);
-            throw e;
+        notebook.cells.length = 0;
+        const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+        const kernelFiner = api.serviceContainer.get<IKernelFinder>(IKernelFinder);
+        const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const interpreter = await interpreterService.getActiveInterpreter();
+        if (!interpreter) {
+            assert.fail('Active Interpreter is undefined');
         }
+        const metadata = await waitForCondition(
+            () =>
+                kernelFiner.kernels.find(
+                    (item) =>
+                        item.kind === 'startUsingPythonInterpreter' &&
+                        areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
+                ),
+            defaultNotebookTestTimeout,
+            `Kernel Connection pointing to active interpreter not found`
+        );
+
+        const controller = createKernelController();
+        kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
+        // await kernel.start();
+        kernelExecution = kernelProvider.getKernelExecution(kernel);
+        sinon.restore();
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
-        if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this);
-        }
-        // Added temporarily to identify why tests are failing.
+        sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
@@ -80,28 +92,30 @@ suite('3rd Party Kernel Service API', function () {
         const kernelService = await api.getKernelService();
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
 
-        await createEmptyPythonNotebook(disposables);
-        await insertCodeCell('print("123412341234")', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
-        await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
+        const notebooks = sinon.stub(workspace, 'notebookDocuments');
+        disposables.push(new Disposable(() => notebooks.restore()));
+        notebooks.get(() => [notebook]);
 
-        await onDidChangeKernels.assertFiredExactly(1);
+        const cell = await notebook.appendCodeCell('print("123412341234")');
+        await Promise.all([kernelExecution.executeCell(cell), waitForTextOutput(cell, '123412341234')]);
+
+        await onDidChangeKernels.assertFiredExactly(1, 10_000);
 
         const kernels = kernelService?.getActiveKernels();
         assert.isAtLeast(kernels!.length, 1);
         assert.strictEqual(
             kernels![0].uri!.toString(),
-            vscodeNotebook.activeNotebookEditor?.notebook.uri.toString(),
+            notebook.uri.toString(),
             'Kernel notebook is not the active notebook'
         );
 
         assert.isObject(kernels![0].metadata, 'Kernel Connection is undefined');
-        const kernel = kernelService?.getKernel(vscodeNotebook.activeNotebookEditor!.notebook!.uri);
+        const kernel = kernelService?.getKernel(notebook!.uri);
         assert.strictEqual(kernels![0].metadata, kernel!.metadata, 'Kernel Connection not same for the document');
 
         await closeNotebooksAndCleanUpAfterTests(disposables);
 
-        await onDidChangeKernels.assertFiredExactly(2);
+        await onDidChangeKernels.assertFiredExactly(2, 10_000);
     });
 
     test('Start Kernel', async function () {
@@ -109,30 +123,35 @@ suite('3rd Party Kernel Service API', function () {
         const interpreterService = await api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
         const activeInterpreter = await interpreterService.getActiveInterpreter();
-
-        const kernelSpecs = await kernelService!.getKernelSpecifications();
-        traceInfoIfCI(
-            `Found kernel specs ${kernelSpecs.length}: ${kernelSpecs
-                .map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri.path}`)
-                .join('\n')}`
+        if (!activeInterpreter) {
+            throw new Error('Active Interpreter is undefined');
+        }
+        assert.isOk(activeInterpreter);
+        let kernelSpecs: KernelConnectionMetadata[] = [];
+        const pythonKernel = await waitForCondition(
+            async () => {
+                kernelSpecs = await kernelService!.getKernelSpecifications();
+                return IS_REMOTE_NATIVE_TEST()
+                    ? kernelSpecs.find(
+                          (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === 'python'
+                      )
+                    : kernelSpecs.find(
+                          (item) =>
+                              item.kind === 'startUsingPythonInterpreter' &&
+                              areInterpreterPathsSame(item.interpreter.uri, activeInterpreter.uri)
+                      );
+            },
+            defaultNotebookTestTimeout,
+            () =>
+                `Python Kernel not found, active interpreter is ${activeInterpreter.uri.toString()}, found kernel specs ${
+                    kernelSpecs.length
+                }: ${kernelSpecs.map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri.path}`).join('\n')}`
         );
-        const pythonKernel = IS_REMOTE_NATIVE_TEST()
-            ? kernelSpecs.find(
-                  (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === 'python'
-              )
-            : kernelSpecs.find(
-                  (item) =>
-                      item.kind === 'startUsingPythonInterpreter' &&
-                      activeInterpreter &&
-                      Uri.from(item.interpreter.uri).toString() === Uri.from(activeInterpreter.uri).toString()
-              );
         assert.isOk(pythonKernel, 'Python Kernel Spec not found');
 
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        const nbFile = await createTemporaryNotebook([], disposables);
-        const nb = await workspace.openNotebookDocument(nbFile);
-        const kernelInfo = await kernelService?.startKernel(pythonKernel!, nb.uri!);
+        const kernelInfo = await kernelService?.startKernel(pythonKernel!, notebook.uri!);
 
         assert.isOk(kernelInfo!.connection, 'Kernel Connection is undefined');
         assert.isOk(kernelInfo!.kernelSocket, 'Kernel Socket is undefined');
@@ -143,12 +162,12 @@ suite('3rd Party Kernel Service API', function () {
         assert.isAtLeast(kernels!.length, 1);
         assert.strictEqual(
             kernels![0].uri!.toString(),
-            nb.uri.toString(),
+            notebook.uri.toString(),
             'Kernel notebook is not the active notebook'
         );
 
         assert.strictEqual(kernels![0].metadata.id, pythonKernel?.id, 'Kernel Connection is not the same');
-        const kernel = kernelService?.getKernel(nb.uri);
+        const kernel = kernelService?.getKernel(notebook.uri);
         assert.strictEqual(kernels![0].metadata.id, kernel!.metadata.id, 'Kernel Connection not same for the document');
 
         // Verify we can run some code against this kernel.

@@ -160,7 +160,7 @@ export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
 
 export type InteractiveWindowViewColumn = 'beside' | 'active' | 'secondGroup';
 
-export type KernelPickerType = 'Stable' | 'OnlyOneTypeOfKernel' | 'Insiders';
+export type KernelPickerType = 'Stable' | 'Insiders';
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 

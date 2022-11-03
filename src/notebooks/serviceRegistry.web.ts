@@ -9,7 +9,6 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { Identifiers } from '../platform/common/constants';
 import { IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { ServerConnectionControllerCommands } from './controllers/commands/serverConnectionControllerCommands';
 import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
 import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI';
 import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
@@ -124,10 +123,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPython, ExportFormat.python);
     serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        ServerConnectionControllerCommands
-    );
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     if (configuration.getSettings().kernelPickerType === 'Insiders') {

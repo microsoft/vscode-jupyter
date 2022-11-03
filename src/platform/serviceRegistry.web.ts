@@ -20,8 +20,6 @@ import { registerTypes as registerCommonTypes } from './common/serviceRegistry.w
 import { IConfigurationService, IDataScienceCommandListener } from './common/types';
 import { IServiceManager } from './ioc/types';
 import { ProgressReporter } from './progress/progressReporter';
-import { StatusProvider } from './progress/statusProvider';
-import { IStatusProvider } from './progress/types';
 import { WorkspaceService } from './common/application/workspace.web';
 import { IExtensionSyncActivationService } from './activation/types';
 import { OutputCommandListener } from './logging/outputCommandListener';
@@ -42,7 +40,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
-    serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, OutputCommandListener);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
 

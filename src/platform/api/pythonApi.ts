@@ -18,7 +18,7 @@ import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
 import { createDeferred } from '../common/utils/async';
-import { traceDecoratorVerbose, traceError, traceInfo, traceVerbose, traceWarning } from '../logging';
+import { traceDecoratorVerbose, traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -77,6 +77,7 @@ export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironme
         }
     }
     if (!env.executable.uri) {
+        console.error(`Python environment ${env.id} excluded as Uri is undefined`);
         return;
     }
 
@@ -176,13 +177,13 @@ export class PythonApiProvider implements IPythonApiProvider {
         if (this.initialized) {
             return;
         }
-        this.initialized = true;
         const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
         if (!pythonExtension) {
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         } else {
             await this.registerHooks();
         }
+        this.initialized = true;
     }
     private async registerHooks() {
         if (this.hooksRegistered) {
@@ -192,16 +193,23 @@ export class PythonApiProvider implements IPythonApiProvider {
         if (!pythonExtension) {
             return;
         }
-        this.hooksRegistered = true;
+        let activated = false;
         if (!pythonExtension.isActive) {
             try {
                 await pythonExtension.activate();
-                this.didActivatePython.fire();
+                activated = true;
             } catch (ex) {
                 traceError(`Failed activating the python extension: `, ex);
                 this.api.reject(ex);
                 return;
             }
+        }
+        if (this.hooksRegistered) {
+            return;
+        }
+        this.hooksRegistered = true;
+        if (activated) {
+            this.didActivatePython.fire();
         }
         pythonExtension.exports.jupyter.registerHooks();
         this._pythonExtensionHooked.resolve();
@@ -450,7 +458,9 @@ export class InterpreterService implements IInterpreterService {
                 return;
             }
             const envPath = api.environments.getActiveEnvironmentPath(resource);
+            traceInfoIfCI(`Active Environment Path for ${getDisplayPath(resource)} is ${JSON.stringify(envPath)}`);
             const env = await api.environments.resolveEnvironment(envPath);
+            traceInfoIfCI(`Resolved Active Environment for ${getDisplayPath(resource)} is ${JSON.stringify(env)}`);
             return this.trackResolvedEnvironment(env, false);
         });
 

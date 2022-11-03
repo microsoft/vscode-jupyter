@@ -8,9 +8,9 @@ import {
     NotebookCell,
     NotebookCellExecution,
     NotebookCellOutput,
-    NotebookCellOutputItem,
-    NotebookController
+    NotebookCellOutputItem
 } from 'vscode';
+import { IKernelController } from '../types';
 
 /**
  * Wrapper class around NotebookCellExecution that allows us to
@@ -81,7 +81,7 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
  */
 export class CellExecutionCreator {
     private static _map = new Map<string, NotebookCellExecutionWrapper>();
-    static getOrCreate(cell: NotebookCell, controller: NotebookController) {
+    static getOrCreate(cell: NotebookCell, controller: IKernelController) {
         let cellExecution: NotebookCellExecutionWrapper | undefined;
         const key = cell.document.uri.toString();
         cellExecution = this.get(cell);
@@ -110,7 +110,7 @@ export class CellExecutionCreator {
         return CellExecutionCreator._map.get(key);
     }
 
-    private static create(key: string, cell: NotebookCell, controller: NotebookController) {
+    private static create(key: string, cell: NotebookCell, controller: IKernelController) {
         const result = new NotebookCellExecutionWrapper(
             controller.createNotebookCellExecution(cell),
             controller.id,

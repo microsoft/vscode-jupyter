@@ -19,11 +19,12 @@ const webTestSummaryJsonFile = path.join(__dirname, '..', 'logs', 'testresults.j
 const webTestSummaryNb = path.join(__dirname, '..', 'logs', 'testresults.ipynb');
 const failedWebTestSummaryNb = path.join(__dirname, '..', 'logs', 'failedtestresults.ipynb');
 const progress = [];
+const logsDir = path.join(ExtensionRootDir, 'logs');
 
 async function captureScreenShot(name, res) {
     const screenshot = require('screenshot-desktop');
-    fs.ensureDirSync(path.join(ExtensionRootDir, 'logs', name));
-    const filename = path.join(ExtensionRootDir, 'logs', name);
+    fs.ensureDirSync(path.join(logsDir, name));
+    const filename = path.join(logsDir, name);
     try {
         await screenshot({ filename });
         console.info(`Screenshot captured into ${filename}`);
@@ -131,9 +132,9 @@ async function addCell(cells, output, failed, executionCount) {
         text: consoleOutputs
     };
     // Look for a screenshot file with the above prefix & attach that to the cell outputs.
-    const screenshots = glob.sync(`${fileNamePrefix}*-screenshot.png`, { cwd: ExtensionRootDir }).map((file) => {
+    const screenshots = glob.sync(`${fileNamePrefix}*-screenshot.png`, { cwd: logsDir }).map((file) => {
         console.info(`Found screenshot file ${file}`);
-        const contents = Buffer.from(fs.readFileSync(path.join(ExtensionRootDir, file))).toString('base64');
+        const contents = Buffer.from(fs.readFileSync(path.join(logsDir, file))).toString('base64');
         return {
             data: {
                 'image/png': contents

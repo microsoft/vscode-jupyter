@@ -5,7 +5,7 @@
 
 import fastDeepEqual from 'fast-deep-equal';
 import type * as nbformat from '@jupyterlab/nbformat';
-import * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
+import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
 import {
     NotebookCell,
     NotebookCellExecution,
@@ -13,7 +13,6 @@ import {
     NotebookCellExecutionSummary,
     NotebookDocument,
     workspace,
-    NotebookController,
     WorkspaceEdit,
     NotebookCellData,
     Range,
@@ -25,12 +24,11 @@ import {
     NotebookCellOutputItem
 } from 'vscode';
 
-import { Kernel } from '@jupyterlab/services';
-import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
+import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceError, traceWarning } from '../../platform/logging';
+import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { concatMultilineString, formatStreamText, isJupyterNotebook } from '../../platform/common/utils';
 import {
@@ -41,11 +39,12 @@ import {
 } from './helpers';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
-import { ITracebackFormatter } from '../../kernels/types';
+import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import isObject = require('lodash/isObject');
 import { Identifiers, WIDGET_MIMETYPE } from '../../platform/common/constants';
 import { Lazy } from '../../platform/common/utils/lazy';
+import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -114,6 +113,7 @@ export class CellExecutionMessageHandler implements IDisposable {
     private temporaryExecution?: NotebookCellExecution;
     private previousResultsToRestore?: NotebookCellExecutionSummary;
     private cellHasErrorsInOutput?: boolean;
+    private disposed?: boolean;
 
     public get hasErrorOutput() {
         return this.cellHasErrorsInOutput === true;
@@ -173,8 +173,7 @@ export class CellExecutionMessageHandler implements IDisposable {
     constructor(
         public readonly cell: NotebookCell,
         private readonly applicationService: IApplicationShell,
-        private readonly controller: NotebookController,
-        private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
+        private readonly controller: IKernelController,
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[],
         private readonly kernel: Kernel.IKernelConnection,
@@ -235,7 +234,11 @@ export class CellExecutionMessageHandler implements IDisposable {
      * Or when execution has been cancelled.
      */
     public dispose() {
-        traceCellMessage(this.cell, 'Execution disposed');
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
+        traceCellMessage(this.cell, 'Execution Message Handler disposed');
         disposeAllDisposables(this.disposables);
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
@@ -507,7 +510,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.clearOutputIfNecessary(this.execution);
         // Keep track of the display_id against the output item, we might need this to update this later.
         if (displayId) {
-            this.outputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput);
+            CellOutputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput);
         }
 
         // Append to the data (we would push here but VS code requires a recreation of the array)
@@ -900,9 +903,11 @@ export class CellExecutionMessageHandler implements IDisposable {
 
     private handleError(msg: KernelMessage.IErrorMsg) {
         let traceback = msg.content.traceback;
+        traceInfoIfCI(`Traceback for error ${traceback}`);
         this.formatters.forEach((formatter) => {
             traceback = formatter.format(this.cell, traceback);
         });
+        traceInfoIfCI(`Traceback for error after formatting ${traceback}`);
         const output: nbformat.IError = {
             output_type: 'error',
             ename: msg.content.ename,
@@ -936,7 +941,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (!displayId) {
             return;
         }
-        const outputToBeUpdated = this.outputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
+        const outputToBeUpdated = CellOutputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
         if (!outputToBeUpdated) {
             return;
         }

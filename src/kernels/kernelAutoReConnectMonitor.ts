@@ -72,11 +72,13 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
     }
     private onDidStartKernel(kernel: IKernel) {
         if (!this.kernelsStartedSuccessfully.has(kernel)) {
-            kernel.onPreExecute(
-                (cell) => this.lastExecutedCellPerKernel.set(kernel, cell),
-                this,
-                this.disposableRegistry
-            );
+            this.kernelProvider
+                .getKernelExecution(kernel)
+                .onPreExecute(
+                    (cell) => this.lastExecutedCellPerKernel.set(kernel, cell),
+                    this,
+                    this.disposableRegistry
+                );
 
             if (!kernel.session?.kernel) {
                 return;
@@ -84,13 +86,16 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             this.kernelsStartedSuccessfully.add(kernel);
             this.kernelConnectionToKernelMapping.set(kernel.session.kernel, kernel);
             kernel.session?.kernel?.connectionStatusChanged.connect(this.onKernelStatusChanged, this);
-            kernel.addEventHook(async (e) => {
-                if (e === 'willRestart') {
+            kernel.addHook(
+                'willRestart',
+                async () => {
                     this.kernelReconnectProgress.get(kernel)?.dispose();
                     this.kernelReconnectProgress.delete(kernel);
                     this.kernelsRestarting.add(kernel);
-                }
-            });
+                },
+                this,
+                this.disposableRegistry
+            );
             kernel.onRestarted(() => this.kernelsRestarting.delete(kernel), this, this.disposableRegistry);
         }
     }

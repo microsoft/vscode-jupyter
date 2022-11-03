@@ -101,6 +101,14 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                     this,
                     this.disposables
                 );
+                this.listKernelsFirstTimeFromMemento(LocalPythonKernelsCacheKey)
+                    .then((kernels) => {
+                        if (this._cachedKernels.length === 0 && kernels.length) {
+                            this._cachedKernels = kernels;
+                            this._onDidChangeKernels.fire();
+                        }
+                    })
+                    .ignoreErrors();
             });
     }
     public get kernels(): LocalKernelConnectionMetadata[] {
