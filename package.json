@@ -818,18 +818,6 @@
                 "title": "%DataScience.installPythonTitle%"
             },
             {
-                "command": "jupyter.switchToLocalKernels",
-                "title": "%DataScience.switchToLocalKernelsTitle%"
-            },
-            {
-                "command": "jupyter.switchToRemoteKernels",
-                "title": "%DataScience.switchToRemoteKernelsTitle%"
-            },
-            {
-                "command": "jupyter.switchToAnotherRemoteKernels",
-                "title": "%DataScience.switchToAnotherRemoteKernelsTitle%"
-            },
-            {
                 "command": "jupyter.pickDocumentKernelSource",
                 "title": "%DataScience.pickDocumentKernelSourceTitle%"
             }
@@ -984,18 +972,6 @@
                     "when": "jupyter.showInstallPythonCommand"
                 },
                 {
-                    "command": "jupyter.switchToLocalKernels",
-                    "when": "jupyter.showingRemoteNotWeb"
-                },
-                {
-                    "command": "jupyter.switchToRemoteKernels",
-                    "when": "jupyter.showingLocalOrWebEmpty"
-                },
-                {
-                    "command": "jupyter.switchToAnotherRemoteKernels",
-                    "when": "jupyter.showingRemoteKernels"
-                },
-                {
                     "command": "jupyter.pickDocumentKernelSource",
                     "when": "jupyter.pickDocumentKernelSourceContext"
                 }
@@ -1073,18 +1049,6 @@
                 },
                 {
                     "command": "jupyter.installPythonViaKernelPicker",
-                    "when": "false"
-                },
-                {
-                    "command": "jupyter.switchToLocalKernels",
-                    "when": "false"
-                },
-                {
-                    "command": "jupyter.switchToRemoteKernels",
-                    "when": "false"
-                },
-                {
-                    "command": "jupyter.switchToAnotherRemoteKernels",
                     "when": "false"
                 },
                 {
@@ -1994,6 +1958,7 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.markdownDescription%",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.deprecationMessage%",
                     "scope": "application",
                     "tags": [
                         "experimental"
@@ -2003,14 +1968,12 @@
                     "type": "string",
                     "enum": [
                         "Stable",
-                        "OnlyOneTypeOfKernel",
                         "Insiders"
                     ],
                     "scope": "resource",
                     "description": "%jupyter.configuration.jupyter.experimental.kernelPickerType.description%",
                     "enumDescriptions": [
                         "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.stable%",
-                        "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.onlyonetypeofkernel%",
                         "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.insiders%"
                     ],
                     "default": "Stable"
