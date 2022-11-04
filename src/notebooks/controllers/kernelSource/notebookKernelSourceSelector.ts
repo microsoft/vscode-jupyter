@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument, QuickPickItem, QuickPickItemKind } from 'vscode';
+import { Disposable, NotebookDocument, QuickPickItem, QuickPickItemKind } from 'vscode';
 import { IContributedKernelFinder } from '../../../kernels/internalTypes';
 import {
     computeServerId,
@@ -95,6 +95,8 @@ type MultiStepResult = { source?: IContributedKernelFinder; controller?: IVSCode
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
 export class NotebookKernelSourceSelector implements INotebookKernelSourceSelector {
+    private internalDisposables: Disposable[] = [];
+
     constructor(
         @inject(INotebookKernelSourceTracker) private readonly kernelSourceTracker: INotebookKernelSourceTracker,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
@@ -177,7 +179,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                         return this.getMatchingControllers(selectedSource.kernelFinderInfo, notebookType);
                     });
                 case KernelSourceQuickPickType.LocalServer:
-                    return this.getLocalServers.bind(this, notebookType);
+                    return this.getUserProvidedJupyterServers.bind(this, notebookType);
                 case KernelSourceQuickPickType.ServerUriProvider:
                     return this.getRemoteServersFromProvider.bind(this, selectedSource.provider, notebookType);
                 default:
@@ -186,7 +188,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         }
     }
 
-    private async getLocalServers(
+    private async getUserProvidedJupyterServers(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
         multiStep: IMultiStepInput<MultiStepResult>,
         state: MultiStepResult
@@ -467,13 +469,14 @@ function waitForNotebookControllersCreationForServer(
     }
 
     return new Promise<void>((resolve) => {
-        controllerRegistration.onChanged((e) => {
+        const eventListener = controllerRegistration.onChanged((e) => {
             for (let controller of e.added) {
                 if (
                     controller.connection.kind === 'connectToLiveRemoteKernel' ||
                     controller.connection.kind === 'startUsingRemoteKernelSpec'
                 ) {
                     if (controller.connection.serverId === serverId) {
+                        eventListener.dispose();
                         resolve();
                     }
                 }
