@@ -262,6 +262,8 @@ export interface IJupyterServerUriEntry {
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
+    isLocalLaunch: boolean;
+    onDidChangeConnectionType: Event<void>;
     readonly currentServerId: string | undefined;
     readonly onDidChangeUri: Event<void>;
     readonly onDidRemoveUris: Event<IJupyterServerUriEntry[]>;

@@ -56,6 +56,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     public get onDidChange(): Event<void> {
         return this._onDidChangeUri.event;
     }
+    public get onDidChangeConnectionType(): Event<void> {
+        return this._onDidChangeUri.event;
+    }
     public get isLocalLaunch(): boolean {
         return this._localOnly;
     }

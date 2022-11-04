@@ -21,7 +21,6 @@ import { NotebookProvider } from './launcher/notebookProvider';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
-import { RemoteKernelFinder } from './finder/remoteKernelFinder';
 import { JupyterServerSelector } from './serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.web';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.web';
@@ -43,16 +42,10 @@ import {
     IServerConnectionType
 } from './types';
 import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker';
-import { IConfigurationService } from '../../platform/common/types';
 import { UniversalRemoteKernelFinderController } from './finder/universalRemoteKernelFinderController';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
-
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        RemoteKernelFinder
-    );
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution);
     serviceManager.add<INotebookServerFactory>(INotebookServerFactory, HostJupyterServerFactory);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
@@ -94,16 +87,8 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IExtensionSyncActivationService,
         CellOutputMimeTypeTracker
     );
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-    if (configuration.getSettings().kernelPickerType === 'Insiders') {
-        serviceManager.addSingleton<IExtensionSingleActivationService>(
-            IExtensionSingleActivationService,
-            UniversalRemoteKernelFinderController
-        );
-    } else {
-        serviceManager.addSingleton<IExtensionSingleActivationService>(
-            IExtensionSingleActivationService,
-            RemoteKernelFinder
-        );
-    }
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        UniversalRemoteKernelFinderController
+    );
 }

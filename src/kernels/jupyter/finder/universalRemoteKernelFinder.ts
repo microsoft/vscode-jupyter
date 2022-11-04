@@ -32,13 +32,12 @@ import { computeServerId } from '../jupyterUtils';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { DisplayOptions } from '../../displayOptions';
-import * as localize from '../../../platform/common/utils/localize';
 import { isArray } from '../../../platform/common/utils/sysTypes';
 import { deserializeKernelConnection } from '../../helpers';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
-import { RemoteKernelSpecsCacheKey, removeOldCachedItems } from '../../common/commonFinder';
+import { removeOldCachedItems } from '../../common/commonFinder';
 import { ContributedKernelFinderKind, IContributedKernelFinderInfo } from '../../internalTypes';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 
@@ -53,8 +52,6 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
      */
     private readonly kernelIdsToHide = new Set<string>();
     kind = ContributedKernelFinderKind.Remote;
-    id: string;
-    displayName: string;
     private _cacheUpdateCancelTokenSource: CancellationTokenSource | undefined;
     private cache: RemoteKernelConnectionMetadata[] = [];
 
@@ -69,6 +66,9 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
     private wasPythonInstalledWhenFetchingKernels = false;
 
     constructor(
+        readonly id: string,
+        readonly displayName: string,
+        readonly cacheKey: string,
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         private interpreterService: IInterpreterService,
         private extensionChecker: IPythonExtensionChecker,
@@ -82,14 +82,6 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         private isWebExtension: boolean,
         private readonly serverUri: IJupyterServerUriEntry
     ) {
-        // Register with remote-serverId as our ID
-        this.id = `${this.kind}-${serverUri.serverId}`;
-
-        // Create a reasonable display name for this kernel finder
-        this.displayName = localize.DataScience.universalRemoteKernelFinderDisplayName().format(
-            serverUri.displayName || serverUri.uri
-        );
-
         // When we register, add a disposable to clean ourselves up from the main kernel finder list
         // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
         this.disposables.push(kernelFinder.registerKernelFinder(this));
@@ -160,7 +152,7 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         this.wasPythonInstalledWhenFetchingKernels = this.extensionChecker.isPythonExtensionInstalled;
     }
 
-    private async loadCache() {
+    public async loadCache() {
         traceInfoIfCI(`Remote Kernel Finder load cache Server: ${this.id}`);
 
         const kernelsFromCache = await this.getFromCache();
@@ -244,7 +236,7 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
             traceVerbose('UniversalRemoteKernelFinder: get from cache');
 
             let results: RemoteKernelConnectionMetadata[] = this.cache;
-            const key = this.getCacheKey();
+            const key = this.cacheKey;
 
             // If not in memory, check memento
             if (!results || results.length === 0) {
@@ -389,18 +381,13 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
         }
     }
 
-    private getCacheKey() {
-        // For Universal finders key each one per serverId
-        return `${RemoteKernelSpecsCacheKey}-${this.serverUri.serverId}`;
-    }
-
     private async writeToCache(values: RemoteKernelConnectionMetadata[]) {
         try {
             traceVerbose(
                 `UniversalRemoteKernelFinder: Writing ${values.length} remote kernel connection metadata to cache`
             );
 
-            const key = this.getCacheKey();
+            const key = this.cacheKey;
             this.cache = values;
             const serialized = values.map(serializeKernelConnection);
             await Promise.all([

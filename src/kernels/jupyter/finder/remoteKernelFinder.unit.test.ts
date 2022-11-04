@@ -23,7 +23,6 @@ import {
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterSessionManager } from '../session/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../session/jupyterSessionManagerFactory';
-import { RemoteKernelFinder } from './remoteKernelFinder';
 import { ILocalKernelFinder } from '../../raw/types';
 import { ActiveKernelIdList, PreferredRemoteKernelIdProvider } from '../preferredRemoteKernelIdProvider';
 import {
@@ -46,11 +45,12 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
 import { IExtensions } from '../../../platform/common/types';
 import { takeTopRankKernel } from '../../raw/finder/localKernelFinder.unit.test';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
+import { UniversalRemoteKernelFinder } from './universalRemoteKernelFinder';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
     let preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider;
-    let remoteKernelFinder: RemoteKernelFinder;
+    let remoteKernelFinder: UniversalRemoteKernelFinder;
     let localKernelFinder: ILocalKernelFinder;
     let kernelFinder: KernelFinder;
     let kernelRankHelper: IKernelRankingHelper;
@@ -175,21 +175,22 @@ suite(`Remote Kernel Finder`, () => {
         disposables.push(kernelsChanged);
         kernelRankHelper = new KernelRankingHelper(preferredRemoteKernelIdProvider);
 
-        remoteKernelFinder = new RemoteKernelFinder(
+        remoteKernelFinder = new UniversalRemoteKernelFinder(
+            'currentremote',
+            'Local Kernels',
+            RemoteKernelSpecsCacheKey,
             instance(jupyterSessionManagerFactory),
             instance(interpreterService),
             instance(extensionChecker),
             instance(notebookProvider),
-            instance(serverUriStorage),
-            instance(connectionType),
             instance(memento),
             instance(env),
             instance(cachedRemoteKernelValidator),
             kernelFinder,
-            [],
             instance(kernelProvider),
             instance(extensions),
-            false
+            false,
+            serverEntry
         );
         remoteKernelFinder.activate().then(noop, noop);
     });

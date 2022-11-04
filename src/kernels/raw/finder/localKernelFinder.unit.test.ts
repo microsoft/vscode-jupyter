@@ -51,7 +51,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../../kernels/kernelFinder';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
-import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernelFinder';
+import { UniversalRemoteKernelFinder } from '../../../kernels/jupyter/finder/universalRemoteKernelFinder';
 import { IServerConnectionType } from '../../../kernels/jupyter/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
@@ -66,7 +66,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let localKernelFinder: LocalKernelFinder;
-        let remoteKernelFinder: RemoteKernelFinder;
+        let remoteKernelFinder: UniversalRemoteKernelFinder;
         let kernelFinder: KernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
@@ -110,7 +110,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             const getOSTypeStub = sinon.stub(platform, 'getOSType');
             getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
             interpreterService = mock(InterpreterService);
-            remoteKernelFinder = mock(RemoteKernelFinder);
+            remoteKernelFinder = mock(UniversalRemoteKernelFinder);
             onDidChangeInterpreter = new EventEmitter<void>();
             onDidChangeInterpreters = new EventEmitter<void>();
             disposables.push(onDidChangeInterpreter);
