@@ -19,8 +19,7 @@ import {
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
-    IJupyterUriProviderRegistration,
-    IServerConnectionType
+    IJupyterUriProviderRegistration
 } from './types';
 
 /**
@@ -37,13 +36,12 @@ export class JupyterConnection implements IExtensionSyncActivationService {
         private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IDisposableRegistry)
         private readonly disposables: IDisposableRegistry,
-        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         disposables.push(this);
     }
     public activate() {
-        this.serverConnectionType.onDidChange(
+        this.serverUriStorage.onDidChangeConnectionType(
             () =>
                 // When server URI changes, clear our pending URI timeouts
                 this.clearTimeouts(),

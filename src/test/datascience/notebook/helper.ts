@@ -98,8 +98,7 @@ import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
 import {
     IJupyterServerUriStorage,
     IJupyterSessionManager,
-    IJupyterSessionManagerFactory,
-    IServerConnectionType
+    IJupyterSessionManagerFactory
 } from '../../../kernels/jupyter/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -301,7 +300,7 @@ export async function createEmptyPythonNotebook(
     traceInfoIfCI('Creating an empty notebook');
     const { serviceContainer } = await getServices();
     const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    const serverConnectionType = serviceContainer.get<IServerConnectionType>(IServerConnectionType);
+    const serverUriStorage = serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
     // Don't use same file (due to dirty handling, we might save in dirty.)
     // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
     const nbFile = await createTemporaryNotebook(
@@ -319,7 +318,7 @@ export async function createEmptyPythonNotebook(
         await waitForKernelToGetAutoSelected(
             vscodeNotebook.activeNotebookEditor!,
             PYTHON_LANGUAGE,
-            !serverConnectionType.isLocalLaunch
+            !serverUriStorage.isLocalLaunch
         );
         await verifySelectedControllerIsRemoteForRemoteTests();
     }

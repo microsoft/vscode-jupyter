@@ -53,7 +53,7 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../../kernels/kernelFinder';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { UniversalRemoteKernelFinder } from '../../../kernels/jupyter/finder/universalRemoteKernelFinder';
-import { IServerConnectionType } from '../../../kernels/jupyter/types';
+import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
@@ -249,11 +249,11 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             when(memento.update('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenResolve();
 
             preferredRemote = mock(PreferredRemoteKernelIdProvider);
-            const connectionType = mock<IServerConnectionType>();
-            when(connectionType.isLocalLaunch).thenReturn(true);
+            const uriStorage = mock<IJupyterServerUriStorage>();
+            when(uriStorage.isLocalLaunch).thenReturn(true);
             const onDidChangeEvent = new EventEmitter<void>();
             disposables.push(onDidChangeEvent);
-            when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
+            when(uriStorage.onDidChangeConnectionType).thenReturn(onDidChangeEvent.event);
 
             const extensions = mock<IExtensions>();
             kernelFinder = new KernelFinder([]);
