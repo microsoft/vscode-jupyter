@@ -20,8 +20,8 @@ import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, ReadWrite, Resource } from '../platform/common/types';
 import { IBackupFile, IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
-import { IContributedKernelFinderInfo } from './internalTypes';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
+import { IContributedKernelFinder } from './internalTypes';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -798,11 +798,11 @@ export interface IKernelFinder {
     /*
      * For a given kernel connection metadata return what kernel finder found it
      */
-    getFinderForConnection(kernelMetadata: KernelConnectionMetadata): IContributedKernelFinderInfo | undefined;
+    getFinderForConnection(kernelMetadata: KernelConnectionMetadata): IContributedKernelFinder | undefined;
     /*
      * Return basic info on all currently registered kernel finders
      */
-    registered: IContributedKernelFinderInfo[];
+    registered: IContributedKernelFinder[];
 }
 
 export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';
