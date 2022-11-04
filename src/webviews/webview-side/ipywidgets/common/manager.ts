@@ -3,8 +3,6 @@
 
 'use strict';
 
-import '@jupyter-widgets/controls/css/labvariables.css';
-
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { Widget } from '@lumino/widgets';
