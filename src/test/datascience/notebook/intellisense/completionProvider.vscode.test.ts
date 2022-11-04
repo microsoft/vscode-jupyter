@@ -72,7 +72,6 @@ import { Settings } from '../../../../platform/common/constants';
                     return this.skip();
                 }
                 await startJupyterServer();
-                await prewarmNotebooks();
                 sinon.restore();
                 vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
                 completionProvider =
