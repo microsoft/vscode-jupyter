@@ -7,6 +7,8 @@ const fs = require('fs-extra');
 const { nodeModulesToExternalize } = require('./common');
 const constants = require('../constants');
 const cssModulesPlugin = require('esbuild-css-modules-plugin');
+const resolve = require('esbuild-plugin-resolve');
+const { polyfillNode } = require('esbuild-plugin-polyfill-node');
 
 function fixFaultyFile() {
     const faultyFile = 'node_modules/react-virtualized/dist/es/WindowScroller/utils/onScroll.js';
@@ -19,7 +21,11 @@ function fixFaultyFile() {
 }
 async function bundle() {
     fixFaultyFile();
-    await Promise.all(nodeModulesToExternalize.map(bundleNodeModule).concat(webFiles.map(bundleWebModule)));
+    await Promise.all([
+        ...nodeModulesToExternalize.map(bundleNodeModule),
+        ...webFiles.map(bundleWebModule),
+        ...[bundleWebExtension()]
+    ]);
     console.info('Successfully built.');
 }
 
@@ -36,13 +42,6 @@ async function bundleNodeModule(nodeModule) {
         platform: 'node'
     });
 }
-
-const devEntry = {
-    extension: './src/extension.web.ts'
-};
-const testEntry = {
-    extension: './src/test/web/index.ts' // source of the web extension test runner
-};
 
 const webFiles = [
     {
@@ -108,37 +107,81 @@ async function bundleWebModule({ source, target }) {
         }
     });
 }
-// async function bundleWebExtension() {
-//     const entry = path.resolve(path.join(__dirname, '..', '..', source));
-//     const outfile = path.resolve(path.join(__dirname, '..', '..', target));
-//     await fs.ensureDir(path.dirname(outfile));
-//     const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.web.json');
-//     await require('esbuild').build({
-//         entryPoints: [entry],
-//         bundle: true,
-//         tsconfig:
-//         sourcemap: true,
-//         outfile,
-//         format: 'esm',
-//         plugins: [
-//             lessLoader()
-//             // cssModulesPlugin({
-//             //     inject: true,
-//             //     v2: true
-//             // })
-//         ],
-//         loader: {
-//             '.png': 'dataurl',
-//             '.gif': 'dataurl',
-//             '.svg': 'text',
-//             '.woff': 'dataurl',
-//             '.woff2': 'dataurl',
-//             '.eot': 'dataurl',
-//             '.ttf': 'dataurl',
-//             '.svg': 'dataurl'
-//         }
-//     });
-// }
 
-exports.bundle = bundle;
-// bundle().catch((ex) => console.error(ex));
+const devEntry = './src/extension.web.ts';
+const testEntry = './src/test/web/index.ts'; // source of the web extension test runner
+async function bundleWebExtension() {
+    const mainEntry = process.env.VSC_TEST_BUNDLE === 'true' ? testEntry : devEntry;
+    const entry = path.resolve(path.join(__dirname, '..', '..', mainEntry));
+    const outfile = path.resolve(path.join(__dirname, '..', '..', 'out', 'index.web.bundle.js'));
+    await fs.ensureDir(path.dirname(outfile));
+    const tsconfig = path.join(constants.ExtensionRootDir, 'tsconfig.extension.web.json');
+    const envVariables = {
+        // Definitions...
+        BROWSER: JSON.stringify(true),
+        process: JSON.stringify({
+            platform: 'web'
+        }),
+        IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: JSON.stringify(
+            typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
+                ? process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION
+                : 'true'
+        ),
+        VSC_JUPYTER_CI_TEST_GREP: JSON.stringify(
+            typeof process.env.VSC_JUPYTER_CI_TEST_GREP === 'string' ? process.env.VSC_JUPYTER_CI_TEST_GREP : ''
+        )
+    };
+    console.error(envVariables);
+    await require('esbuild').build({
+        entryPoints: [entry],
+        bundle: true,
+        tsconfig,
+        sourcemap: true,
+        outfile,
+        define: envVariables,
+        external: ['vscode', 'commonjs', 'electron'],
+        format: 'esm',
+        plugins: [
+            lessLoader(),
+            resolve({
+                crypto: require.resolve(path.join(constants.ExtensionRootDir, 'src/platform/msrCrypto/msrCrypto.js')),
+                fs: path.join(__dirname, 'fs-empty.js'),
+                inherits: require.resolve('inherits')
+            }),
+            polyfillNode({
+                // Options (optional)
+                globals: {
+                    buffer: true
+                    // process: true,
+                },
+                polyfills: {
+                    assert: true,
+                    buffer: true,
+                    fs: false,
+                    path: true,
+                    os: true,
+                    stream: true
+                }
+            })
+
+            // cssModulesPlugin({
+            //     inject: true,
+            //     v2: true
+            // })
+        ],
+        loader: {
+            '.png': 'dataurl',
+            '.gif': 'dataurl',
+            '.svg': 'text',
+            '.woff': 'dataurl',
+            '.woff2': 'dataurl',
+            '.eot': 'dataurl',
+            '.ttf': 'dataurl',
+            '.svg': 'dataurl'
+        }
+    });
+}
+
+// exports.bundle = bundle;
+bundle().catch((ex) => console.error(ex));
+// bundleWebExtension().catch((ex) => console.error(ex));
