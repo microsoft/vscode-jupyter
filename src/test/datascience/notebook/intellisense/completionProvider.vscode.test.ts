@@ -33,7 +33,6 @@ import {
     insertCodeCell,
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
-    prewarmNotebooks,
     createEmptyPythonNotebook,
     getCellOutputs,
     waitForCompletions
