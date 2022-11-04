@@ -70,7 +70,7 @@ export function setTestExecution(enabled: boolean) {
 let _isUnitTestExecution = false;
 /**
  * Whether we're running unit tests (*.unit.test.ts).
- * These tests have a speacial meaning, they run fast.
+ * These tests have a special meaning, they run fast.
  * @export
  * @returns {boolean}
  */
