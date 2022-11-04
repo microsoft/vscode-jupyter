@@ -182,6 +182,6 @@ async function bundleWebExtension() {
     });
 }
 
-// exports.bundle = bundle;
-bundle().catch((ex) => console.error(ex));
+exports.bundle = bundle;
+// bundle().catch((ex) => console.error(ex));
 // bundleWebExtension().catch((ex) => console.error(ex));
