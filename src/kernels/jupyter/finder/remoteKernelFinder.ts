@@ -46,7 +46,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 const REMOTE_KERNEL_REFRESH_INTERVAL = 2_000;
 
 // This class watches a single jupyter server URI and returns kernels from it
-export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContributedKernelFinderInfo, IDisposable {
+export class RemoteKernelFinder implements IRemoteKernelFinder, IContributedKernelFinderInfo, IDisposable {
     /**
      * List of ids of kernels that should be hidden from the kernel picker.
      */

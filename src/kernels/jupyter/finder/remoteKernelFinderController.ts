@@ -26,7 +26,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
-import { UniversalRemoteKernelFinder } from './universalRemoteKernelFinder';
+import { RemoteKernelFinder } from './remoteKernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import * as localize from '../../../platform/common/utils/localize';
 import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
@@ -38,10 +38,7 @@ interface IRemoteKernelFinderRegistrationStrategy {
 }
 
 class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
-    private serverFinderMapping: Map<string, UniversalRemoteKernelFinder> = new Map<
-        string,
-        UniversalRemoteKernelFinder
-    >();
+    private serverFinderMapping: Map<string, RemoteKernelFinder> = new Map<string, RemoteKernelFinder>();
 
     constructor(
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
@@ -78,7 +75,7 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
         }
 
         if (!this.serverFinderMapping.has(serverUri.serverId)) {
-            const finder = new UniversalRemoteKernelFinder(
+            const finder = new RemoteKernelFinder(
                 `${ContributedKernelFinderKind.Remote}-${serverUri.serverId}`,
                 localize.DataScience.universalRemoteKernelFinderDisplayName().format(
                     serverUri.displayName || serverUri.uri
@@ -120,7 +117,7 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
 }
 
 class SingleServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
-    private _activeServerFinder: { entry: IJupyterServerUriEntry; finder: UniversalRemoteKernelFinder } | undefined;
+    private _activeServerFinder: { entry: IJupyterServerUriEntry; finder: RemoteKernelFinder } | undefined;
     constructor(
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         private interpreterService: IInterpreterService,
@@ -170,7 +167,7 @@ class SingleServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
         }
 
         this._activeServerFinder?.finder.dispose();
-        const finder = new UniversalRemoteKernelFinder(
+        const finder = new RemoteKernelFinder(
             'currentremote',
             localize.DataScience.remoteKernelFinderDisplayName(),
             RemoteKernelSpecsCacheKey,
@@ -203,7 +200,7 @@ class SingleServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
 
 // This class creates RemoteKernelFinders for all registered Jupyter Server URIs
 @injectable()
-export class UniversalRemoteKernelFinderController implements IExtensionSingleActivationService {
+export class RemoteKernelFinderController implements IExtensionSingleActivationService {
     private _strategy: IRemoteKernelFinderRegistrationStrategy;
 
     constructor(
