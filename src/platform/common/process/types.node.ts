@@ -13,7 +13,7 @@ import { EnvironmentVariables } from '../variables/types';
 
 export const IBufferDecoder = Symbol('IBufferDecoder');
 export interface IBufferDecoder {
-    decode(buffers: Buffer[], encoding: string): string;
+    decode(buffers: Buffer[]): string;
 }
 
 export type Output<T extends string | Buffer> = {
