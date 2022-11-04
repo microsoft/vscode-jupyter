@@ -112,22 +112,6 @@ const config = {
     ], // Don't bundle these
     plugins: [
         ...common.getDefaultPlugins('extension'),
-        new copyWebpackPlugin({
-            patterns: [
-                {
-                    from: './node_modules/pdfkit/js/pdfkit.standalone.js',
-                    to: './node_modules/pdfkit/js/pdfkit.standalone.js'
-                }
-            ]
-        }),
-        new copyWebpackPlugin({
-            patterns: [
-                {
-                    from: './node_modules/jquery/dist/jquery.min.js',
-                    to: './node_modules/jquery/dist/jquery.min.js'
-                }
-            ]
-        }),
         // ZMQ requires prebuilds to be in our node_modules directory. So recreate the ZMQ structure.
         // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
         // so at runtime we pick up the original structure.

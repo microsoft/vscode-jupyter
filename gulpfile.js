@@ -23,6 +23,7 @@ const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS ==
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 const { dumpTestSummary } = require('./build/webTestReporter');
 const { Validator } = require('jsonschema');
+const { bundle } = require('./build/webpack/bundleDependencies');
 
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
@@ -203,7 +204,8 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
 }
 
 gulp.task('webpack-dependencies', async () => {
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
+    await bundle();
+    // await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
 });
 
 gulp.task('webpack-renderers', async () => {

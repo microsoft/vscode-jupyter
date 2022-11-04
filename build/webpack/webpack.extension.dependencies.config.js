@@ -23,18 +23,10 @@ const config = {
     module: {
         rules: [
             {
-                // JupyterServices imports node-fetch.
-                test: /@jupyterlab[\\\/]services[\\\/].*js$/,
-                use: [
-                    {
-                        loader: path.join(__dirname, 'loaders', 'fixNodeFetch.js')
-                    }
-                ]
-            },
-            {
                 enforce: 'post',
                 test: /unicode-properties[\/\\]index.js$/,
                 use: [
+                    { loader: 'esbuild-loader' },
                     {
                         loader: 'transform-loader',
                         options: {
@@ -47,6 +39,7 @@ const config = {
                 enforce: 'post',
                 test: /fontkit[\/\\]index.js$/,
                 use: [
+                    { loader: 'esbuild-loader' },
                     {
                         loader: 'transform-loader',
                         options: {
@@ -59,6 +52,7 @@ const config = {
                 enforce: 'post',
                 test: /linebreak[\/\\]src[\/\\]linebreaker.js/,
                 use: [
+                    { loader: 'esbuild-loader' },
                     {
                         loader: 'transform-loader',
                         options: {
