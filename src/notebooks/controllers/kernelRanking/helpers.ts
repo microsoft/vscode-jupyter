@@ -114,12 +114,11 @@ export async function rankKernels(
     }
     if (preferredInterpreter && !preferredInterpreterKernelSpec) {
         const spec = await createInterpreterKernelSpec(preferredInterpreter);
-        preferredInterpreterKernelSpec = <PythonKernelConnectionMetadata>{
-            kind: 'startUsingPythonInterpreter',
+        preferredInterpreterKernelSpec = PythonKernelConnectionMetadata.create({
             kernelSpec: spec,
             interpreter: preferredInterpreter,
             id: getKernelId(spec, preferredInterpreter)
-        };
+        });
         // Active interpreter isn't in the list of kernels,
         // Either because we're using a cached list or Python API isn't returning active interpreter
         // along with list of all interpreters.

@@ -14,40 +14,36 @@ import {
     IJupyterKernelSpec,
     IKernel,
     LiveKernelModel,
+    LiveRemoteKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata,
-    RemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 
 [false, true].forEach((isWeb) => {
-    const localNonPythonKernelSpec: LocalKernelSpecConnectionMetadata = {
+    const localNonPythonKernelSpec = LocalKernelSpecConnectionMetadata.create({
+        id: '',
+        kernelSpec: mock<IJupyterKernelSpec>()
+    });
+    const localPythonKernelSpec = PythonKernelConnectionMetadata.create({
         id: '',
         kernelSpec: mock<IJupyterKernelSpec>(),
-        kind: 'startUsingLocalKernelSpec'
-    };
-    const localPythonKernelSpec: PythonKernelConnectionMetadata = {
-        id: '',
-        kernelSpec: mock<IJupyterKernelSpec>(),
-        kind: 'startUsingPythonInterpreter',
         interpreter: {
             sysPrefix: __dirname
         } as any
-    };
-    const remoteKernelSpec: RemoteKernelSpecConnectionMetadata = {
+    });
+    const remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: '',
         serverId: '',
         baseUrl: 'http://bogus.com',
-        kernelSpec: instance(mock<IJupyterKernelSpec>()),
-        kind: 'startUsingRemoteKernelSpec'
-    };
-    const remoteLiveKernel: RemoteKernelConnectionMetadata = {
+        kernelSpec: instance(mock<IJupyterKernelSpec>())
+    });
+    const remoteLiveKernel = LiveRemoteKernelConnectionMetadata.create({
         id: '',
         serverId: '',
         baseUrl: 'http://bogus.com',
-        kernelModel: instance(mock<LiveKernelModel>()),
-        kind: 'connectToLiveRemoteKernel'
-    };
+        kernelModel: instance(mock<LiveKernelModel>())
+    });
     suite(`NBExtension Path Provider for ${isWeb ? 'Web' : 'Node'}`, () => {
         let provider: INbExtensionsPathProvider;
         let kernel: IKernel;

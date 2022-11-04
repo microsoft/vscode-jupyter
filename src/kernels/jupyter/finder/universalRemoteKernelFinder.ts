@@ -4,8 +4,9 @@
 'use strict';
 
 import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Memento, Uri } from 'vscode';
-import { getKernelId, getLanguageInKernelSpec, serializeKernelConnection } from '../../helpers';
+import { getKernelId, getLanguageInKernelSpec } from '../../helpers';
 import {
+    BaseKernelConnectionMetadata,
     IJupyterKernelSpec,
     IKernelProvider,
     INotebookProvider,
@@ -33,7 +34,6 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { DisplayOptions } from '../../displayOptions';
 import { isArray } from '../../../platform/common/utils/sysTypes';
-import { deserializeKernelConnection } from '../../helpers';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
@@ -247,7 +247,9 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
                 }>(key, { kernels: [], extensionVersion: '' });
 
                 if (values && isArray(values.kernels) && values.extensionVersion === this.env.extensionVersion) {
-                    results = values.kernels.map(deserializeKernelConnection) as RemoteKernelConnectionMetadata[];
+                    results = values.kernels.map((item) =>
+                        BaseKernelConnectionMetadata.fromJSON(item)
+                    ) as RemoteKernelConnectionMetadata[];
                     this.cache = results;
                 }
             }
@@ -305,14 +307,13 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
                 const mappedSpecs = await Promise.all(
                     specs.map(async (s) => {
                         await sendKernelSpecTelemetry(s, 'remote');
-                        const kernel: RemoteKernelSpecConnectionMetadata = {
-                            kind: 'startUsingRemoteKernelSpec',
+                        const kernel = RemoteKernelSpecConnectionMetadata.create({
                             interpreter: await this.getInterpreter(s, connInfo.baseUrl),
                             kernelSpec: s,
                             id: getKernelId(s, undefined, serverId),
                             baseUrl: connInfo.baseUrl,
                             serverId: serverId
-                        };
+                        });
                         return kernel;
                     })
                 );
@@ -329,8 +330,7 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
                     const matchingSpec: Partial<IJupyterKernelSpec> =
                         specs.find((spec) => spec.name === s.kernel?.name) || {};
 
-                    const kernel: LiveRemoteKernelConnectionMetadata = {
-                        kind: 'connectToLiveRemoteKernel',
+                    const kernel = LiveRemoteKernelConnectionMetadata.create({
                         kernelModel: {
                             ...s.kernel,
                             ...matchingSpec,
@@ -343,7 +343,7 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
                         baseUrl: connInfo.baseUrl,
                         id: s.kernel?.id || '',
                         serverId
-                    };
+                    });
                     return kernel;
                 });
 
@@ -389,7 +389,7 @@ export class UniversalRemoteKernelFinder implements IRemoteKernelFinder, IContri
 
             const key = this.cacheKey;
             this.cache = values;
-            const serialized = values.map(serializeKernelConnection);
+            const serialized = values.map((item) => item.toJSON());
             await Promise.all([
                 removeOldCachedItems(this.globalState),
                 this.globalState.update(key, { kernels: serialized, extensionVersion: this.env.extensionVersion })

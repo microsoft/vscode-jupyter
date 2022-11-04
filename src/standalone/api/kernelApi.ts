@@ -8,7 +8,8 @@ import {
     IKernelProvider,
     KernelConnectionMetadata as IKernelKernelConnectionMetadata,
     IThirdPartyKernelProvider,
-    IBaseKernel
+    IBaseKernel,
+    BaseKernelConnectionMetadata
 } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceVerbose, traceInfoIfCI } from '../../platform/logging';
@@ -298,7 +299,7 @@ class JupyterKernelService implements IExportedKernelService {
             // We recast to KernelConnectionMetadata as this has already define its properties as readonly.
 
             const translatedConnection = Object.freeze(
-                JSON.parse(JSON.stringify(connection))
+                BaseKernelConnectionMetadata.fromJSON(connection.toJSON())
             ) as KernelConnectionMetadata;
             this.translatedConnections.set(connection, translatedConnection);
         }

@@ -84,14 +84,12 @@ export class LocalKnownPathKernelSpecFinder
             // First find the on disk kernel specs and interpreters
             const kernelSpecs = await this.findKernelSpecs(cancelToken);
 
-            const mappedKernelSpecs = kernelSpecs.map(
-                (k) =>
-                    <LocalKernelSpecConnectionMetadata>{
-                        kind: 'startUsingLocalKernelSpec',
-                        kernelSpec: k,
-                        interpreter: undefined,
-                        id: getKernelId(k)
-                    }
+            const mappedKernelSpecs = kernelSpecs.map((k) =>
+                LocalKernelSpecConnectionMetadata.create({
+                    kernelSpec: k,
+                    interpreter: undefined,
+                    id: getKernelId(k)
+                })
             );
             if (cancelToken.isCancellationRequested) {
                 return [];

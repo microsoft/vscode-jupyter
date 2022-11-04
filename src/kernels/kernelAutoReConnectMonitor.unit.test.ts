@@ -12,7 +12,7 @@ import {
     IKernelConnectionSession,
     IKernelProvider,
     INotebookKernelExecution,
-    RemoteKernelConnectionMetadata
+    RemoteKernelSpecConnectionMetadata
 } from './types';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import {
@@ -87,13 +87,12 @@ suite('Kernel ReConnect Progress Message', () => {
         const kernelConnectionStatusSignal = new Signal<Kernel.IKernelConnection, Kernel.ConnectionStatus>(
             instance(kernelConnection)
         );
-        const connectionMetadata: RemoteKernelConnectionMetadata = {
+        const connectionMetadata = RemoteKernelSpecConnectionMetadata.create({
             baseUrl: '<baseUrl>',
             id: '1234',
             kernelSpec: { name: 'python', display_name: 'Python', argv: [], executable: '' },
-            kind: 'startUsingRemoteKernelSpec',
             serverId: '1234'
-        };
+        });
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
         when(kernel.session).thenReturn(instance(session));
         when(kernel.resourceUri).thenReturn(Uri.file('test.ipynb'));
@@ -207,13 +206,12 @@ suite('Kernel ReConnect Failed Monitor', () => {
         const kernelConnectionStatusSignal = new Signal<Kernel.IKernelConnection, Kernel.ConnectionStatus>(
             instance(kernelConnection)
         );
-        const connectionMetadata: RemoteKernelConnectionMetadata = {
+        const connectionMetadata = RemoteKernelSpecConnectionMetadata.create({
             baseUrl: '<baseUrl>',
             id: '1234',
             kernelSpec: { name: 'python', display_name: 'Python', argv: [], executable: '' },
-            kind: 'startUsingRemoteKernelSpec',
             serverId: '1234'
-        };
+        });
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
         when(kernel.disposed).thenReturn(false);
         when(kernel.disposing).thenReturn(false);

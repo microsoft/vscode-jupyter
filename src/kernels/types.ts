@@ -17,10 +17,11 @@ import type {
 } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../platform/common/types';
+import { IAsyncDisposable, IDisplayOptions, IDisposable, ReadWrite, Resource } from '../platform/common/types';
 import { IBackupFile, IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { IContributedKernelFinderInfo } from './internalTypes';
+import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -32,64 +33,225 @@ export enum NotebookCellRunState {
     Success = 'Success',
     Error = 'Error'
 }
+
+export abstract class BaseKernelConnectionMetadata {
+    public static fromJSON(
+        json:
+            | Record<string, unknown>
+            | ReadWrite<LocalKernelSpecConnectionMetadata>
+            | ReadWrite<LiveRemoteKernelConnectionMetadata>
+            | ReadWrite<RemoteKernelSpecConnectionMetadata>
+            | ReadWrite<PythonKernelConnectionMetadata>
+    ) {
+        if (json.interpreter) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            json.interpreter = deserializePythonEnvironment(json.interpreter as any, '')!;
+        }
+        switch (json.kind) {
+            case 'startUsingLocalKernelSpec':
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                return LocalKernelSpecConnectionMetadata.create(json as LocalKernelSpecConnectionMetadata);
+            case 'connectToLiveRemoteKernel':
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                return LiveRemoteKernelConnectionMetadata.create(json as LiveRemoteKernelConnectionMetadata);
+            case 'startUsingRemoteKernelSpec':
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                return RemoteKernelSpecConnectionMetadata.create(json as RemoteKernelSpecConnectionMetadata);
+            case 'startUsingPythonInterpreter':
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                return PythonKernelConnectionMetadata.create(json as PythonKernelConnectionMetadata);
+            default:
+                throw new Error(`Invalid object to be deserialized into a connection, kind = ${json.kind}`);
+        }
+    }
+}
 /**
  * Connection metadata for Live Kernels.
  * With this we are able connect to an existing kernel (instead of starting a new session).
  */
-export type LiveRemoteKernelConnectionMetadata = Readonly<{
-    kernelModel: LiveKernelModel;
+export class LiveRemoteKernelConnectionMetadata {
+    public readonly kind = 'connectToLiveRemoteKernel';
+    public readonly kernelModel: LiveKernelModel;
     /**
      * Python interpreter will be used for intellisense & the like.
      */
-    interpreter?: PythonEnvironment;
-    baseUrl: string;
-    kind: 'connectToLiveRemoteKernel';
-    serverId: string;
-    id: string;
-}>;
+    public readonly baseUrl: string;
+    public readonly serverId: string;
+    public readonly id: string;
+    public readonly interpreter?: PythonEnvironment;
+
+    private constructor(options: {
+        kernelModel: LiveKernelModel;
+        /**
+         * Python interpreter will be used for intellisense & the like.
+         */
+        interpreter?: PythonEnvironment;
+        baseUrl: string;
+        serverId: string;
+        id: string;
+    }) {
+        this.kernelModel = options.kernelModel;
+        this.interpreter = options.interpreter;
+        this.baseUrl = options.baseUrl;
+        this.id = options.id;
+        this.serverId = options.serverId;
+    }
+    public static create(options: {
+        kernelModel: LiveKernelModel;
+        /**
+         * Python interpreter will be used for intellisense & the like.
+         */
+        interpreter?: PythonEnvironment;
+        baseUrl: string;
+        serverId: string;
+        id: string;
+    }) {
+        return new LiveRemoteKernelConnectionMetadata(options);
+    }
+    public toJSON() {
+        return {
+            id: this.id,
+            kind: this.kind,
+            baseUrl: this.baseUrl,
+            serverId: this.serverId,
+            interpreter: serializePythonEnvironment(this.interpreter),
+            kernelModel: this.kernelModel
+        };
+    }
+    public static fromJSON(json: Record<string, unknown> | LiveRemoteKernelConnectionMetadata) {
+        return BaseKernelConnectionMetadata.fromJSON(json) as LiveRemoteKernelConnectionMetadata;
+    }
+}
 /**
  * Connection metadata for Kernels started using kernelspec (JSON).
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
- * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
+ * If the executable is not defined in kernelSpec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
-export type LocalKernelSpecConnectionMetadata = Readonly<{
-    kernelModel?: undefined;
-    kernelSpec: IJupyterKernelSpec;
-    /**
-     * Indicates the interpreter that may be used to start the kernel.
-     * If possible to start a kernel without this Python interpreter, then this Python interpreter will be used for intellisense & the like.
-     * This interpreter could also be the interpreter associated with the kernel spec that we are supposed to start.
-     */
-    interpreter?: PythonEnvironment;
-    kind: 'startUsingLocalKernelSpec';
-    id: string;
-}>;
+export class LocalKernelSpecConnectionMetadata {
+    public readonly kernelModel?: undefined;
+    public readonly kind = 'startUsingLocalKernelSpec';
+    public readonly id: string;
+    public readonly kernelSpec: Readonly<IJupyterKernelSpec>;
+    public readonly interpreter?: Readonly<PythonEnvironment>;
+    private constructor(options: {
+        kernelSpec: IJupyterKernelSpec;
+        /**
+         * Indicates the interpreter that may be used to start the kernel.
+         * If possible to start a kernel without this Python interpreter, then this Python interpreter will be used for intellisense & the like.
+         * This interpreter could also be the interpreter associated with the kernel spec that we are supposed to start.
+         */
+        interpreter?: PythonEnvironment;
+        id: string;
+    }) {
+        this.kernelSpec = options.kernelSpec;
+        this.interpreter = options.interpreter;
+        this.id = options.id;
+    }
+    public static create(options: {
+        kernelSpec: IJupyterKernelSpec;
+        /**
+         * Indicates the interpreter that may be used to start the kernel.
+         * If possible to start a kernel without this Python interpreter, then this Python interpreter will be used for intellisense & the like.
+         * This interpreter could also be the interpreter associated with the kernel spec that we are supposed to start.
+         */
+        interpreter?: PythonEnvironment;
+        id: string;
+    }) {
+        return new LocalKernelSpecConnectionMetadata(options);
+    }
+    public toJSON() {
+        return {
+            id: this.id,
+            kernelSpec: this.kernelSpec,
+            interpreter: serializePythonEnvironment(this.interpreter),
+            kind: this.kind
+        };
+    }
+    public static fromJSON(options: Record<string, unknown> | LocalKernelSpecConnectionMetadata) {
+        return BaseKernelConnectionMetadata.fromJSON(options) as LocalKernelSpecConnectionMetadata;
+    }
+}
+
 /**
  * Connection metadata for Remote Kernels started using kernelspec (JSON).
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
  * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
-export type RemoteKernelSpecConnectionMetadata = Readonly<{
-    kernelModel?: undefined;
-    interpreter?: PythonEnvironment; // Can be set if URL is localhost
-    kernelSpec: IJupyterKernelSpec;
-    kind: 'startUsingRemoteKernelSpec';
-    baseUrl: string;
-    serverId: string;
-    id: string;
-}>;
+export class RemoteKernelSpecConnectionMetadata {
+    public readonly kernelModel?: undefined;
+    public readonly kind = 'startUsingRemoteKernelSpec';
+    public readonly id: string;
+    public readonly kernelSpec: IJupyterKernelSpec;
+    public readonly baseUrl: string;
+    public readonly serverId: string;
+    public readonly interpreter?: PythonEnvironment; // Can be set if URL is localhost
+    private constructor(options: {
+        interpreter?: PythonEnvironment; // Can be set if URL is localhost
+        kernelSpec: IJupyterKernelSpec;
+        baseUrl: string;
+        serverId: string;
+        id: string;
+    }) {
+        this.interpreter = options.interpreter;
+        this.kernelSpec = options.kernelSpec;
+        this.baseUrl = options.baseUrl;
+        this.id = options.id;
+        this.serverId = options.serverId;
+    }
+    public static create(options: {
+        interpreter?: PythonEnvironment; // Can be set if URL is localhost
+        kernelSpec: IJupyterKernelSpec;
+        baseUrl: string;
+        serverId: string;
+        id: string;
+    }) {
+        return new RemoteKernelSpecConnectionMetadata(options);
+    }
+    public toJSON() {
+        return {
+            id: this.id,
+            kernelSpec: this.kernelSpec,
+            interpreter: serializePythonEnvironment(this.interpreter),
+            baseUrl: this.baseUrl,
+            serverId: this.serverId,
+            kind: this.kind
+        };
+    }
+    public static fromJSON(options: Record<string, unknown> | RemoteKernelSpecConnectionMetadata) {
+        return BaseKernelConnectionMetadata.fromJSON(options) as RemoteKernelSpecConnectionMetadata;
+    }
+}
 /**
  * Connection metadata for Kernels started using Python interpreter.
  * These are not necessarily raw (it could be plain old Jupyter Kernels, where we register Python interpreter as a kernel).
  * We can have KernelSpec information here as well, however that is totally optional.
  * We will always start this kernel using old Jupyter style (provided we first register this interpreter as a kernel) or raw.
  */
-export type PythonKernelConnectionMetadata = Readonly<{
-    kernelSpec: IJupyterKernelSpec;
-    interpreter: PythonEnvironment;
-    kind: 'startUsingPythonInterpreter';
-    id: string;
-}>;
+export class PythonKernelConnectionMetadata {
+    public readonly kind = 'startUsingPythonInterpreter';
+    public readonly kernelSpec: IJupyterKernelSpec;
+    public readonly interpreter: PythonEnvironment;
+    public readonly id: string;
+    private constructor(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment; id: string }) {
+        this.kernelSpec = options.kernelSpec;
+        this.interpreter = options.interpreter;
+        this.id = options.id;
+    }
+    public static create(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment; id: string }) {
+        return new PythonKernelConnectionMetadata(options);
+    }
+    public toJSON() {
+        return {
+            id: this.id,
+            kernelSpec: this.kernelSpec,
+            interpreter: serializePythonEnvironment(this.interpreter),
+            kind: this.kind
+        };
+    }
+    public static fromJSON(options: Record<string, unknown> | PythonKernelConnectionMetadata) {
+        return BaseKernelConnectionMetadata.fromJSON(options) as PythonKernelConnectionMetadata;
+    }
+}
 /**
  * Readonly to ensure these are immutable, if we need to make changes then create a new one.
  * This ensure we don't update is somewhere unnecessarily (such updates would be unexpected).

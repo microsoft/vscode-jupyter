@@ -11,7 +11,7 @@ import { IDisposable, IExtensions } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
 import { Common } from '../../platform/common/utils/localize';
 import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
-import { IJupyterKernelSpec } from '../../kernels/types';
+import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../kernels/types';
 import { ExtensionRecommendationService } from '../../standalone/recommendation/extensionRecommendation.node';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { IControllerSelection } from '../../notebooks/controllers/types';
@@ -93,7 +93,9 @@ suite('Extension Recommendation', () => {
                     const kernelSpec: IJupyterKernelSpec = {
                         language
                     } as any;
-                    when(controller.connection).thenReturn({ kind: 'startUsingLocalKernelSpec', kernelSpec, id: '' });
+                    when(controller.connection).thenReturn(
+                        LocalKernelSpecConnectionMetadata.create({ kernelSpec, id: '' })
+                    );
                     return instance(controller);
                 }
                 test('No recommendations for python Notebooks', async () => {

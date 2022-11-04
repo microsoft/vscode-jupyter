@@ -120,18 +120,21 @@ suite('ipywidget - Widget Script Source Provider', () => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
             setup(() => {
                 if (localLaunch) {
-                    when(kernel.kernelConnectionMetadata).thenReturn(<LocalKernelSpecConnectionMetadata>{
-                        id: '',
-                        kernelSpec: {},
-                        kind: 'startUsingLocalKernelSpec'
-                    });
+                    when(kernel.kernelConnectionMetadata).thenReturn(
+                        LocalKernelSpecConnectionMetadata.create({
+                            id: '',
+                            kernelSpec: {} as any
+                        })
+                    );
                 } else {
-                    when(kernel.kernelConnectionMetadata).thenReturn(<RemoteKernelSpecConnectionMetadata>{
-                        baseUrl: '',
-                        id: '',
-                        kernelSpec: {},
-                        kind: 'startUsingRemoteKernelSpec'
-                    });
+                    when(kernel.kernelConnectionMetadata).thenReturn(
+                        RemoteKernelSpecConnectionMetadata.create({
+                            baseUrl: '',
+                            id: '',
+                            serverId: '',
+                            kernelSpec: {} as any
+                        })
+                    );
                 }
                 createScripSourceProvider();
             });

@@ -18,7 +18,8 @@ import {
     IJupyterKernelSpec,
     IKernelProvider,
     KernelConnectionMetadata,
-    LiveRemoteKernelConnectionMetadata
+    LiveRemoteKernelConnectionMetadata,
+    RemoteKernelSpecConnectionMetadata
 } from '../../types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterSessionManager } from '../session/jupyterSessionManager';
@@ -306,7 +307,7 @@ suite(`Remote Kernel Finder`, () => {
         verify(memento.update(ActiveKernelIdList, anything())).once();
     });
     test('Do not return cached remote kernelspecs or live kernels', async () => {
-        const liveRemoteKernel: LiveRemoteKernelConnectionMetadata = {
+        const liveRemoteKernel = LiveRemoteKernelConnectionMetadata.create({
             baseUrl: 'baseUrl1',
             id: '1',
             kernelModel: {
@@ -324,24 +325,22 @@ suite(`Remote Kernel Finder`, () => {
                 name: '',
                 numberOfConnections: 0
             },
-            kind: 'connectToLiveRemoteKernel',
             serverId: 'serverId1'
-        };
-        const cachedKernels: KernelConnectionMetadata[] = [
-            {
+        });
+        const cachedKernels = [
+            RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'baseUrl1',
-                id: '1',
+                id: '2',
                 kernelSpec: {
                     argv: [],
                     display_name: '',
                     name: '',
                     executable: ''
                 },
-                kind: 'startUsingRemoteKernelSpec',
                 serverId: 'serverId1'
-            },
-            liveRemoteKernel
-        ];
+            }).toJSON(),
+            liveRemoteKernel.toJSON()
+        ] as KernelConnectionMetadata[];
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
         when(
             memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
@@ -358,7 +357,7 @@ suite(`Remote Kernel Finder`, () => {
         assert.lengthOf(kernelFinder.kernels, 0);
     });
     test('Return cached remote live kernel if used', async () => {
-        const liveRemoteKernel: LiveRemoteKernelConnectionMetadata = {
+        const liveRemoteKernel = LiveRemoteKernelConnectionMetadata.create({
             baseUrl: 'baseUrl1',
             id: '1',
             kernelModel: {
@@ -376,26 +375,23 @@ suite(`Remote Kernel Finder`, () => {
                 name: '',
                 numberOfConnections: 0
             },
-            kind: 'connectToLiveRemoteKernel',
             serverId: 'serverId1'
-        };
-        const cachedKernels: KernelConnectionMetadata[] = [
-            {
+        });
+        const cachedKernels = [
+            RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'baseUrl1',
-                id: '1',
+                id: '2',
                 kernelSpec: {
                     argv: [],
                     display_name: '',
                     name: '',
                     executable: ''
                 },
-                kind: 'startUsingRemoteKernelSpec',
                 serverId: 'serverId1'
-            },
-            liveRemoteKernel
-        ];
-        when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
-        when(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).thenResolve(true);
+            }).toJSON(),
+            liveRemoteKernel.toJSON()
+        ] as KernelConnectionMetadata[];
+        when(cachedRemoteKernelValidator.isValid(anything())).thenCall(async (k) => liveRemoteKernel.id === k.id);
         when(
             memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
                 RemoteKernelSpecsCacheKey,

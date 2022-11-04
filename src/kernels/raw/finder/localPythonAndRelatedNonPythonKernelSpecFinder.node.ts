@@ -164,8 +164,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
             // If there are any kernels that we registered (then don't return them).
             // Those were registered by us to start kernels from Jupyter extension (not stuff that user created).
             // We should only return global kernels the user created themselves, others will appear when searching for interprters.
-            .filter((item) => (includeKernelsRegisteredByUs ? true : !getKernelRegistrationInfo(item.kernelSpec)))
-            .map((item) => <LocalKernelSpecConnectionMetadata>item);
+            .filter((item) => (includeKernelsRegisteredByUs ? true : !getKernelRegistrationInfo(item.kernelSpec)));
         return pythonKernelSpecs;
     }
     private listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs() {
@@ -272,12 +271,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                         );
                         return;
                     }
-                    const kernelSpec: LocalKernelSpecConnectionMetadata = {
-                        kind: 'startUsingLocalKernelSpec',
+                    const kernelSpec = LocalKernelSpecConnectionMetadata.create({
                         kernelSpec: item.kernelSpec,
                         interpreter: matchingInterpreter,
                         id: getKernelId(item.kernelSpec, matchingInterpreter)
-                    };
+                    });
                     distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
                 })
         );
@@ -314,12 +312,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                     // this to start the kernel.
                     const matchingInterpreter = await this.findMatchingInterpreter(k, interpreters);
                     if (matchingInterpreter) {
-                        const result: PythonKernelConnectionMetadata = {
-                            kind: 'startUsingPythonInterpreter',
+                        const result = PythonKernelConnectionMetadata.create({
                             kernelSpec: k,
                             interpreter: matchingInterpreter,
                             id: getKernelId(k, matchingInterpreter)
-                        };
+                        });
 
                         // Hide the interpreters from list of kernels unless the user created this kernelspec.
                         // Users can create their own kernels with custom environment variables, in such cases, we should list that
@@ -392,12 +389,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                                 );
                             }
                         }
-                        const result: LocalKernelSpecConnectionMetadata = {
-                            kind: 'startUsingLocalKernelSpec',
+                        const result = LocalKernelSpecConnectionMetadata.create({
                             kernelSpec: k,
                             interpreter,
                             id: getKernelId(k, interpreter)
-                        };
+                        });
                         return result;
                     }
                 })
@@ -421,12 +417,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
             filteredInterpreters.map(async (i) => {
                 // Update spec to have a default spec file
                 const spec = await createInterpreterKernelSpec(i, tempDirForKernelSpecs);
-                const result: PythonKernelConnectionMetadata = {
-                    kind: 'startUsingPythonInterpreter',
+                const result = PythonKernelConnectionMetadata.create({
                     kernelSpec: spec,
                     interpreter: i,
                     id: getKernelId(spec, i)
-                };
+                });
                 return result;
             })
         );

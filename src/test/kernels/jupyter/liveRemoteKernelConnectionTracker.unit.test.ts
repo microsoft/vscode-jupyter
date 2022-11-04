@@ -28,10 +28,9 @@ suite('Live kernel Connection Tracker', async () => {
     const disposables: IDisposable[] = [];
     const server2Uri = 'http://one:1234/hello?token=1234';
     const server2Id = await computeServerId(server2Uri);
-    const remoteLiveKernel1: LiveRemoteKernelConnectionMetadata = {
+    const remoteLiveKernel1 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'baseUrl',
         id: 'connectionId',
-        kind: 'connectToLiveRemoteKernel',
         serverId: 'server1',
         kernelModel: {
             lastActivityTime: new Date(),
@@ -49,11 +48,10 @@ suite('Live kernel Connection Tracker', async () => {
             name: '',
             numberOfConnections: 0
         }
-    };
-    const remoteLiveKernel2: LiveRemoteKernelConnectionMetadata = {
+    });
+    const remoteLiveKernel2 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'http://one:1234/',
         id: 'connectionId2',
-        kind: 'connectToLiveRemoteKernel',
         serverId: server2Id,
         kernelModel: {
             id: 'modelId2',
@@ -71,11 +69,10 @@ suite('Live kernel Connection Tracker', async () => {
             name: '',
             numberOfConnections: 0
         }
-    };
-    const remoteLiveKernel3: LiveRemoteKernelConnectionMetadata = {
+    });
+    const remoteLiveKernel3 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'http://one:1234/',
         id: 'connectionId3',
-        kind: 'connectToLiveRemoteKernel',
         serverId: server2Id,
         kernelModel: {
             lastActivityTime: new Date(),
@@ -93,7 +90,7 @@ suite('Live kernel Connection Tracker', async () => {
             name: '',
             numberOfConnections: 0
         }
-    };
+    });
     setup(() => {
         serverUriStorage = mock<IJupyterServerUriStorage>();
         memento = mock<Memento>();

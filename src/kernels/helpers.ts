@@ -31,7 +31,7 @@ import { DataScience } from '../platform/common/utils/localize';
 import { getNormalizedInterpreterPath, getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../platform/telemetry/helpers';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
+import { deserializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { sendTelemetryEvent } from '../telemetry';
 import { IPlatformService } from '../platform/common/platform/types';
@@ -711,25 +711,4 @@ function handleExecuteSilentErrors(
                 sendTelemetryEvent(errorOptions.telemetryName);
             }
         });
-}
-
-export function serializeKernelConnection(kernelConnection: KernelConnectionMetadata) {
-    if (kernelConnection.interpreter) {
-        return {
-            ...kernelConnection,
-            interpreter: serializePythonEnvironment(kernelConnection.interpreter)!
-        };
-    }
-    return kernelConnection;
-}
-
-export function deserializeKernelConnection(kernelConnection: any): KernelConnectionMetadata {
-    if (kernelConnection.interpreter) {
-        return {
-            ...kernelConnection,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            interpreter: deserializePythonEnvironment(kernelConnection.interpreter as any, '')!
-        };
-    }
-    return kernelConnection;
 }

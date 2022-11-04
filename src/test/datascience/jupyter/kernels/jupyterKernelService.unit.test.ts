@@ -8,7 +8,12 @@ import { anything, instance, mock, when, verify, capture } from 'ts-mockito';
 import { FileSystem } from '../../../../platform/common/platform/fileSystem.node';
 import { IFileSystemNode } from '../../../../platform/common/platform/types.node';
 import { KernelDependencyService } from '../../../../kernels/kernelDependencyService.node';
-import { IKernelDependencyService, LocalKernelConnectionMetadata } from '../../../../kernels/types';
+import {
+    IKernelDependencyService,
+    LocalKernelConnectionMetadata,
+    LocalKernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../../../../kernels/types';
 import { EnvironmentType } from '../../../../platform/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
 import * as path from '../../../../platform/vscode-path/path';
@@ -43,8 +48,7 @@ suite('JupyterKernelService', () => {
     // Set of kernels. Generated this by running the localKernelFinder unit test and stringifying
     // the results returned.
     const kernels: LocalKernelConnectionMetadata[] = [
-        {
-            kind: 'startUsingPythonInterpreter',
+        PythonKernelConnectionMetadata.create({
             kernelSpec: {
                 specFile: 'python\\share\\jupyter\\kernels\\interpreter.json',
                 interpreterPath: '/usr/bin/python3',
@@ -62,9 +66,8 @@ suite('JupyterKernelService', () => {
                 version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '0'
-        },
-        {
-            kind: 'startUsingPythonInterpreter',
+        }),
+        PythonKernelConnectionMetadata.create({
             kernelSpec: {
                 specFile: 'conda\\share\\jupyter\\kernels\\interpreter.json',
                 interpreterPath: '/usr/bin/conda/python3',
@@ -82,9 +85,8 @@ suite('JupyterKernelService', () => {
                 envType: EnvironmentType.Conda
             },
             id: '1'
-        },
-        {
-            kind: 'startUsingPythonInterpreter',
+        }),
+        PythonKernelConnectionMetadata.create({
             kernelSpec: {
                 specFile: '\\usr\\share\\jupyter\\kernels\\python3.json',
                 name: 'python3',
@@ -109,9 +111,8 @@ suite('JupyterKernelService', () => {
                 version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '2'
-        },
-        {
-            kind: 'startUsingLocalKernelSpec',
+        }),
+        LocalKernelSpecConnectionMetadata.create({
             kernelSpec: {
                 specFile: '\\usr\\share\\jupyter\\kernels\\julia.json',
                 name: 'julia',
@@ -121,9 +122,8 @@ suite('JupyterKernelService', () => {
                 display_name: 'Julia on Disk'
             },
             id: '3'
-        },
-        {
-            kind: 'startUsingPythonInterpreter',
+        }),
+        PythonKernelConnectionMetadata.create({
             kernelSpec: {
                 specFile: '\\usr\\share\\jupyter\\kernels\\python2.json',
                 name: 'python2',
@@ -140,9 +140,8 @@ suite('JupyterKernelService', () => {
                 version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
             },
             id: '4'
-        },
-        {
-            kind: 'startUsingPythonInterpreter',
+        }),
+        PythonKernelConnectionMetadata.create({
             kernelSpec: {
                 specFile: '\\usr\\local\\share\\jupyter\\kernels\\python3.json',
                 name: 'python3',
@@ -167,9 +166,8 @@ suite('JupyterKernelService', () => {
                 version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '5'
-        },
-        {
-            kind: 'startUsingLocalKernelSpec',
+        }),
+        LocalKernelSpecConnectionMetadata.create({
             kernelSpec: {
                 specFile: '\\usr\\local\\share\\jupyter\\kernels\\julia.json',
                 name: 'julia',
@@ -179,9 +177,8 @@ suite('JupyterKernelService', () => {
                 display_name: 'Julia on Disk'
             },
             id: '6'
-        },
-        {
-            kind: 'startUsingPythonInterpreter',
+        }),
+        PythonKernelConnectionMetadata.create({
             kernelSpec: {
                 specFile: '\\usr\\local\\share\\jupyter\\kernels\\python2.json',
                 name: 'python2',
@@ -198,9 +195,8 @@ suite('JupyterKernelService', () => {
                 version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
             },
             id: '7'
-        },
-        {
-            kind: 'startUsingPythonInterpreter',
+        }),
+        PythonKernelConnectionMetadata.create({
             kernelSpec: {
                 specFile: 'C:\\Users\\Rich\\.local\\share\\jupyter\\kernels\\python3.json',
                 name: 'python3',
@@ -225,9 +221,8 @@ suite('JupyterKernelService', () => {
                 version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '8'
-        },
-        {
-            kind: 'startUsingLocalKernelSpec',
+        }),
+        LocalKernelSpecConnectionMetadata.create({
             kernelSpec: {
                 specFile: 'C:\\Users\\Rich\\.local\\share\\jupyter\\kernels\\julia.json',
                 name: 'julia',
@@ -237,9 +232,8 @@ suite('JupyterKernelService', () => {
                 display_name: 'Julia on Disk'
             },
             id: '9'
-        },
-        {
-            kind: 'startUsingPythonInterpreter',
+        }),
+        PythonKernelConnectionMetadata.create({
             kernelSpec: {
                 specFile: 'C:\\Users\\Rich\\.local\\share\\jupyter\\kernels\\python2.json',
                 name: 'python2',
@@ -256,9 +250,8 @@ suite('JupyterKernelService', () => {
                 version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
             },
             id: '10'
-        },
-        {
-            kind: 'startUsingPythonInterpreter',
+        }),
+        PythonKernelConnectionMetadata.create({
             kernelSpec: {
                 interpreterPath: '/usr/conda/envs/base/python',
                 name: 'e10e222d04b8ec3cc7034c3de1b1269b088e2bcd875030a8acab068e59af3990',
@@ -286,9 +279,8 @@ suite('JupyterKernelService', () => {
                 envType: EnvironmentType.Conda
             },
             id: '11'
-        },
-        {
-            kind: 'startUsingPythonInterpreter',
+        }),
+        PythonKernelConnectionMetadata.create({
             kernelSpec: {
                 specFile: '/usr/don/home/envs/sample/share../../kernels/sampleEnv/kernel.json',
                 name: 'sampleEnv',
@@ -316,9 +308,8 @@ suite('JupyterKernelService', () => {
                 version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '12'
-        },
-        {
-            kind: 'startUsingLocalKernelSpec',
+        }),
+        LocalKernelSpecConnectionMetadata.create({
             kernelSpec: {
                 specFile: '/usr/don/home/envs/sample/share../../kernels/sampleEnvJulia/kernel.json',
                 name: 'sampleEnvJulia',
@@ -346,9 +337,8 @@ suite('JupyterKernelService', () => {
                 version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '13'
-        },
-        {
-            kind: 'startUsingLocalKernelSpec',
+        }),
+        LocalKernelSpecConnectionMetadata.create({
             kernelSpec: {
                 specFile: '/usr/don/home/envs/sample/share../../kernels/sampleEnvJulia/kernel.json',
                 name: 'nameGeneratedByUsWhenRegisteringKernelSpecs',
@@ -376,7 +366,7 @@ suite('JupyterKernelService', () => {
                 version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
             },
             id: '14'
-        }
+        })
     ];
     suiteSetup(function () {
         if (isWeb()) {

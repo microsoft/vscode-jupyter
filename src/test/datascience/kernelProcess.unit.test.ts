@@ -501,7 +501,7 @@ suite('Kernel Process', () => {
         );
     }
     test('Launch from kernelspec (linux)', async function () {
-        const metadata: LocalKernelSpecConnectionMetadata = {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
             id: '1',
             kernelSpec: {
                 argv: [
@@ -521,9 +521,8 @@ suite('Kernel Process', () => {
                 display_name: '',
                 name: '',
                 executable: ''
-            },
-            kind: 'startUsingLocalKernelSpec'
-        };
+            }
+        });
         const kernelProcess = launchKernel(metadata, 'wow/connection_config.json');
         await kernelProcess.launch('', 10_000, token.token);
         const args = capture(processService.execObservable).first();
@@ -538,7 +537,7 @@ suite('Kernel Process', () => {
         await kernelProcess.dispose();
     });
     test('Launch from kernelspec (linux with space in file name)', async function () {
-        const metadata: LocalKernelSpecConnectionMetadata = {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
             id: '1',
             kernelSpec: {
                 argv: [
@@ -558,9 +557,8 @@ suite('Kernel Process', () => {
                 display_name: '',
                 name: '',
                 executable: ''
-            },
-            kind: 'startUsingLocalKernelSpec'
-        };
+            }
+        });
         const kernelProcess = launchKernel(metadata, 'wow/connection config.json');
         await kernelProcess.launch('', 10_000, token.token);
         const args = capture(processService.execObservable).first();
@@ -575,7 +573,7 @@ suite('Kernel Process', () => {
         await kernelProcess.dispose();
     });
     test('Launch from kernelspec (windows)', async function () {
-        const metadata: LocalKernelSpecConnectionMetadata = {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
             id: '1',
             kernelSpec: {
                 argv: [
@@ -593,9 +591,8 @@ suite('Kernel Process', () => {
                 display_name: '',
                 name: '',
                 executable: ''
-            },
-            kind: 'startUsingLocalKernelSpec'
-        };
+            }
+        });
         const kernelProcess = launchKernel(metadata, 'connection_config.json');
         await kernelProcess.launch('', 10_000, token.token);
         const args = capture(processService.execObservable).first();
@@ -610,7 +607,7 @@ suite('Kernel Process', () => {
         await kernelProcess.dispose();
     });
     test('Launch from kernelspec (windows with space in file name)', async function () {
-        const metadata: LocalKernelSpecConnectionMetadata = {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
             id: '1',
             kernelSpec: {
                 argv: [
@@ -628,9 +625,8 @@ suite('Kernel Process', () => {
                 display_name: '',
                 name: '',
                 executable: ''
-            },
-            kind: 'startUsingLocalKernelSpec'
-        };
+            }
+        });
         const kernelProcess = launchKernel(metadata, 'D:\\hello\\connection config.json');
         await kernelProcess.launch('', 10_000, token.token);
         const args = capture(processService.execObservable).first();

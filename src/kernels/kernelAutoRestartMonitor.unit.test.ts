@@ -6,7 +6,7 @@ import { instance, mock, verify, when } from 'ts-mockito';
 import { assert } from 'chai';
 import { EventEmitter } from 'vscode';
 import { KernelAutoRestartMonitor } from './kernelAutoRestartMonitor.node';
-import { IKernel, IKernelConnectionSession, IKernelProvider, KernelConnectionMetadata } from './types';
+import { IKernel, IKernelConnectionSession, IKernelProvider, LocalKernelSpecConnectionMetadata } from './types';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
@@ -19,16 +19,15 @@ suite('Jupyter Execution', async () => {
     let onDidReStartKernel = new EventEmitter<IKernel>();
     let onDidDisposeKernel = new EventEmitter<IKernel>();
     const disposables: IDisposable[] = [];
-    const connectionMetadata: KernelConnectionMetadata = {
+    const connectionMetadata = LocalKernelSpecConnectionMetadata.create({
         id: '123',
         kernelSpec: {
             argv: [],
             display_name: 'Hello',
             name: 'hello',
             executable: 'path'
-        },
-        kind: 'startUsingLocalKernelSpec'
-    };
+        }
+    });
     setup(() => {
         kernelProvider = mock<IKernelProvider>();
         when(kernelProvider.onDidRestartKernel).thenReturn(onDidReStartKernel.event);

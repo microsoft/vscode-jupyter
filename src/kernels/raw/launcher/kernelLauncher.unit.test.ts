@@ -73,8 +73,7 @@ suite('kernel Launcher', () => {
     });
     teardown(() => disposeAllDisposables(disposables));
     async function launchKernel() {
-        const kernelSpec: PythonKernelConnectionMetadata = {
-            kind: 'startUsingPythonInterpreter',
+        const kernelSpec = PythonKernelConnectionMetadata.create({
             id: '1',
             interpreter: {
                 id: '2',
@@ -87,7 +86,7 @@ suite('kernel Launcher', () => {
                 executable: 'python',
                 name: 'python3'
             }
-        };
+        });
         const cancellation = new CancellationTokenSource();
         const launchStub = sinon.stub(KernelProcess.prototype, 'launch');
         const exitedStub = sinon.stub(KernelProcess.prototype, 'exited');

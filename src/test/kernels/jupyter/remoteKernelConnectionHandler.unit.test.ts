@@ -17,7 +17,7 @@ import {
     KernelConnectionMetadata,
     KernelSocketInformation,
     LiveRemoteKernelConnectionMetadata,
-    LocalKernelConnectionMetadata,
+    LocalKernelSpecConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
@@ -40,10 +40,9 @@ suite('Remote kernel connection handler', async () => {
     let kernelProvider: IKernelProvider;
     const disposables: IDisposable[] = [];
     // const server2Uri = 'http://one:1234/hello?token=1234';
-    const remoteKernelSpec: RemoteKernelSpecConnectionMetadata = {
+    const remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         baseUrl: 'baseUrl',
         id: 'remoteKernelSpec1',
-        kind: 'startUsingRemoteKernelSpec',
         serverId: 'server1',
         kernelSpec: {
             argv: [],
@@ -51,21 +50,19 @@ suite('Remote kernel connection handler', async () => {
             name: '',
             executable: ''
         }
-    };
-    const localKernelSpec: LocalKernelConnectionMetadata = {
+    });
+    const localKernelSpec = LocalKernelSpecConnectionMetadata.create({
         id: 'localKernelSpec1',
         kernelSpec: {
             argv: [],
             display_name: '',
             name: '',
             executable: ''
-        },
-        kind: 'startUsingLocalKernelSpec'
-    };
-    const remoteLiveKernel1: LiveRemoteKernelConnectionMetadata = {
+        }
+    });
+    const remoteLiveKernel1 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'baseUrl',
         id: 'connectionId',
-        kind: 'connectToLiveRemoteKernel',
         serverId: 'server1',
         kernelModel: {
             lastActivityTime: new Date(),
@@ -83,7 +80,7 @@ suite('Remote kernel connection handler', async () => {
             name: '',
             numberOfConnections: 0
         }
-    };
+    });
     setup(() => {
         onDidStartKernel = new EventEmitter<IKernel>();
         kernelProvider = mock<IKernelProvider>();
