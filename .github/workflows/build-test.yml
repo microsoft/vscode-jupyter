@@ -295,11 +295,6 @@ jobs:
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
         include:
-        # Temporary hack to bypass mandatory CI job (this will be an empty job)
-          - jupyterConnection: local
-            python: nonConda
-            pythonVersion: '3.10'
-            os: ubuntu-latest
         # Mandatory tests
           - jupyterConnection: remote
             python: python
@@ -340,11 +335,6 @@ jobs:
             pythonVersion: '3.10'
             os: ubuntu-latest
             tags: '@kernelCore|@kernelInstall'
-          - jupyterConnection: local
-            python: python
-            pythonVersion: '3.10'
-            os: ubuntu-latest
-            tags: '@kernelCore'
           - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
