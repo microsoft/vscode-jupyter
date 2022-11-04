@@ -77,25 +77,14 @@ import { Settings } from '../../../../platform/common/constants';
                 vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
                 completionProvider =
                     api.serviceContainer.get<PythonKernelCompletionProvider>(PythonKernelCompletionProvider);
+                await createEmptyPythonNotebook(disposables, Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'))); // TODO, can't do this on web tests
+                setIntellisenseTimeout(30000);
                 traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
             });
             // Use same notebook without starting kernel in every single test (use one for whole suite).
-            setup(async function () {
-                traceInfo(`Start Test ${this.currentTest?.title}`);
-                sinon.restore();
-                await startJupyterServer();
-                await createEmptyPythonNotebook(disposables, Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'))); // TODO, can't do this on web tests
-                setIntellisenseTimeout(30000);
-                traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
-            });
-            teardown(async function () {
-                sinon.restore();
-                traceInfo(`Ended Test ${this.currentTest?.title}`);
-                setIntellisenseTimeout(Settings.IntellisenseTimeout);
-                await closeNotebooksAndCleanUpAfterTests(disposables);
-                traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
-            });
             suiteTeardown(async () => {
+                sinon.restore();
+                setIntellisenseTimeout(Settings.IntellisenseTimeout);
                 await workspace
                     .getConfiguration('jupyter', undefined)
                     .update(
