@@ -192,7 +192,15 @@ gulp.task('compile-viewers', async () => {
 gulp.task('compile-webextension', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js');
 });
-gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderers', 'compile-webextension'));
+gulp.task(
+    'compile-webviews',
+    gulp.parallel(
+        'compile-viewers',
+        ...[process.env.CI_JUPYTER_IGNORE_WEBVIEWS ? [] : ['compile-viewers']],
+        ...[process.env.CI_JUPYTER_IGNORE_RENDERERS ? [] : ['compile-renderers']],
+        ...[process.env.CI_JUPYTER_IGNORE_WEB_EXTENSION ? [] : ['compile-webextension']]
+    )
+);
 
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
@@ -359,7 +367,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
 
 gulp.task('prePublishBundle', gulp.series('webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
-gulp.task('prePublishNonBundle', gulp.parallel('compile', gulp.series('compile-webviews')));
+gulp.task('prePublishNonBundle', gulp.parallel('compile', 'compile-webviews'));
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
     env = env || {};
