@@ -3,7 +3,6 @@
 
 import { exec, execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
-import * as iconv from 'iconv-lite';
 import { Observable } from 'rxjs/Observable';
 import { CancellationError, Disposable } from 'vscode';
 import { ignoreLogging, traceDecoratorVerbose, traceInfoIfCI } from '../../logging';
@@ -25,9 +24,8 @@ import {
 } from './types.node';
 
 export class BufferDecoder implements IBufferDecoder {
-    public decode(buffers: Buffer[], encoding: string = DEFAULT_ENCODING): string {
-        encoding = iconv.encodingExists(encoding) ? encoding : DEFAULT_ENCODING;
-        return iconv.decode(Buffer.concat(buffers), encoding);
+    public decode(buffers: Buffer[]): string {
+        return Buffer.concat(buffers).toString(DEFAULT_ENCODING);
     }
 }
 
@@ -78,7 +76,6 @@ export class ProcessService extends EventEmitter implements IProcessService {
 
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         const spawnOptions = this.getDefaultOptions(options);
-        const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
         traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);
@@ -115,7 +112,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
             }
 
             const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-                const out = this.decoder.decode([data], encoding);
+                const out = this.decoder.decode([data]);
                 if (source === 'stderr' && options.throwOnStdErr) {
                     subscriber.error(new StdErrError(out));
                 } else {
@@ -153,7 +150,6 @@ export class ProcessService extends EventEmitter implements IProcessService {
     }
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         const spawnOptions = this.getDefaultOptions(options);
-        const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         const deferred = createDeferred<ExecutionResult<string>>();
         const disposable: IDisposable = {
@@ -192,11 +188,11 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 return;
             }
             const stderr: string | undefined =
-                stderrBuffers.length === 0 ? undefined : this.decoder.decode(stderrBuffers, encoding);
+                stderrBuffers.length === 0 ? undefined : this.decoder.decode(stderrBuffers);
             if (stderr && stderr.length > 0 && options.throwOnStdErr) {
                 deferred.reject(new StdErrError(stderr));
             } else {
-                const stdout = this.decoder.decode(stdoutBuffers, encoding);
+                const stdout = this.decoder.decode(stdoutBuffers);
                 deferred.resolve({ stdout, stderr });
             }
             disposables.forEach((d) => d.dispose());
