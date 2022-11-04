@@ -327,10 +327,10 @@ suite(`Remote Kernel Finder`, () => {
             },
             serverId: 'serverId1'
         });
-        const cachedKernels: KernelConnectionMetadata[] = [
+        const cachedKernels = [
             RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'baseUrl1',
-                id: '1',
+                id: '2',
                 kernelSpec: {
                     argv: [],
                     display_name: '',
@@ -338,9 +338,9 @@ suite(`Remote Kernel Finder`, () => {
                     executable: ''
                 },
                 serverId: 'serverId1'
-            }),
-            liveRemoteKernel
-        ];
+            }).toJSON(),
+            liveRemoteKernel.toJSON()
+        ] as KernelConnectionMetadata[];
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
         when(
             memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
@@ -377,10 +377,10 @@ suite(`Remote Kernel Finder`, () => {
             },
             serverId: 'serverId1'
         });
-        const cachedKernels: KernelConnectionMetadata[] = [
+        const cachedKernels = [
             RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'baseUrl1',
-                id: '1',
+                id: '2',
                 kernelSpec: {
                     argv: [],
                     display_name: '',
@@ -388,11 +388,10 @@ suite(`Remote Kernel Finder`, () => {
                     executable: ''
                 },
                 serverId: 'serverId1'
-            }),
-            liveRemoteKernel
-        ];
-        when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
-        when(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).thenResolve(true);
+            }).toJSON(),
+            liveRemoteKernel.toJSON()
+        ] as KernelConnectionMetadata[];
+        when(cachedRemoteKernelValidator.isValid(anything())).thenCall(async (k) => liveRemoteKernel.id === k.id);
         when(
             memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
                 RemoteKernelSpecsCacheKey,
