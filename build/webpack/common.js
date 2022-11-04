@@ -18,7 +18,7 @@ function getDefaultPlugins(name) {
                 reportFilename: `${name}.analyzer.html`,
                 generateStatsFile: true,
                 statsFilename: `${name}.stats.json`,
-                openAnalyzer: true // Open file manually if you want to see it :)
+                openAnalyzer: false // Open file manually if you want to see it :)
             })
         );
     }
