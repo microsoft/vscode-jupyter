@@ -6,15 +6,7 @@ const glob = require('glob');
 const path = require('path');
 const webpack_bundle_analyzer = require('webpack-bundle-analyzer');
 const constants = require('../constants');
-exports.nodeModulesToExternalize = [
-    '@jupyterlab/services',
-    'node-stream-zip',
-    'pdfkit/js/pdfkit.standalone',
-    'crypto-js',
-    'fontkit',
-    'png-js',
-    'zeromq'
-];
+exports.nodeModulesToExternalize = ['pdfkit/js/pdfkit.standalone', 'crypto-js', 'fontkit', 'png-js', 'zeromq'];
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {
     const plugins = [];
@@ -26,7 +18,7 @@ function getDefaultPlugins(name) {
                 reportFilename: `${name}.analyzer.html`,
                 generateStatsFile: true,
                 statsFilename: `${name}.stats.json`,
-                openAnalyzer: false // Open file manually if you want to see it :)
+                openAnalyzer: true // Open file manually if you want to see it :)
             })
         );
     }
