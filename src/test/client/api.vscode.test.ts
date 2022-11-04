@@ -149,7 +149,7 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
             () =>
                 `Python Kernel not found, active interpreter is ${activeInterpreter.uri.toString()}, found kernel specs ${
                     kernelSpecs.length
-                }: ${kernelSpecs.map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri.path}`).join('\n')}`
+                }: ${kernelSpecs.map((i) => `${i.id}, ${i.kind}, ${i.interpreter?.uri?.path}`).join('\n')}`
         );
         assert.isOk(pythonKernel, 'Python Kernel Spec not found');
 
