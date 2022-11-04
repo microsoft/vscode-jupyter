@@ -65,7 +65,8 @@ process.on('unhandledRejection', (ex: any, _a) => {
     if (
         msg.includes('Error: custom request failed') ||
         msg.includes('ms-python.python') || // We don't care about unhanded promise rejections from the Python extension.
-        msg.includes('ms-python.isort') // We don't care about unhanded promise rejections from the Python related extensions.
+        msg.includes('ms-python.isort') || // We don't care about unhanded promise rejections from the Python related extensions.
+        msg.includes('vscode-jupyter/vscode-jupyter/.vscode-test/') // We don't care about unhanded promise rejections from within VS Code
     ) {
         // Some error from VS Code, we can ignore this.
         return;
