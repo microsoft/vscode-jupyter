@@ -22,7 +22,7 @@ import { JupyterVariableDataProvider } from '../../../webviews/extension-side/da
 import { IDataViewer, IDataViewerDataProvider } from '../../../webviews/extension-side/dataviewer/types';
 import { MockMemento } from '../../mocks/mementos';
 
-suite('DataScience - DataViewer', () => {
+suite('DataViewer', () => {
     let dataViewer: IDataViewer;
     let webPanelProvider: IWebviewPanelProvider;
     let configService: IConfigurationService;

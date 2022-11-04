@@ -21,7 +21,7 @@ import { runNewPythonFile, waitForLastCellToComplete } from './helpers.node';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('Telemetry validation', function () {
+suite('Telemetry validation @iw', function () {
     const disposables: IDisposable[] = [];
     let eventsSent: Set<string> = new Set<string>();
     let originalTelemetryReporter: TelemetryReporter | undefined;

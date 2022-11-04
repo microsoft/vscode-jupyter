@@ -27,7 +27,7 @@ import { getResourceType } from '../../../../platform/common/utils';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // eslint-disable-next-line
-suite('DataScience - Kernel Dependency Service', () => {
+suite('Kernel Dependency Service', () => {
     let dependencyService: KernelDependencyService;
     let notebooks: IVSCodeNotebook;
     let appShell: IApplicationShell;

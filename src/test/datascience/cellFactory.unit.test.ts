@@ -8,7 +8,7 @@ import { generateCells } from '../../interactive-window/editor-integration/cellF
 import { removeLinesFromFrontAndBack, stripComments } from '../../platform/common/utils';
 
 /* eslint-disable  */
-suite('DataScience CellFactory', () => {
+suite('CellFactory', () => {
     test('parsing cells', () => {
         const uri = vscode.Uri.parse('file://foo.py');
         let cells = generateCells(undefined, '#%%\na=1\na', uri, true);

@@ -82,7 +82,7 @@ suite('Dummy6', () => {
 // const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
 
 // /* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
-// suite('DataScience Interactive Window output tests', () => {
+// suite('Interactive Window output tests', () => {
 //     const disposables: Disposable[] = [];
 //     let ioc: DataScienceIocContainer;
 //     const defaultCellMarker = '# %%';

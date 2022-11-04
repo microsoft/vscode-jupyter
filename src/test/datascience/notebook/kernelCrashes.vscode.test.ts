@@ -76,7 +76,7 @@ app.kernel.do_shutdown(True)
 `;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)', function () {
+suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;

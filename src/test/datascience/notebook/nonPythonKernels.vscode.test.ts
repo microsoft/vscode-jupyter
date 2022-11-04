@@ -33,7 +33,7 @@ import { IKernelProvider } from '../../../kernels/types';
 import { noop } from '../../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', async function () {
+suite('Non-Python Kernel @nonPython ', async function () {
     const juliaNb = Uri.file(
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleJulia.ipynb')
     );
@@ -60,8 +60,12 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', asyn
         this.timeout(120_000);
         api = await initialize();
         verifyPromptWasNotDisplayed();
-        // eslint-disable-next-line local-rules/dont-use-process
-        if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST || IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
+        if (
+            // eslint-disable-next-line local-rules/dont-use-process
+            !process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST ||
+            IS_REMOTE_NATIVE_TEST() ||
+            IS_NON_RAW_NATIVE_TEST()
+        ) {
             return this.skip();
         }
         sinon.restore();

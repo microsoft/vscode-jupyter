@@ -24,7 +24,7 @@ import { PythonExtensionRestartNotification } from '../../../standalone/notifica
 import { IKernelProvider } from '../../../kernels/types';
 import { noop } from '../../../platform/common/utils/misc';
 
-suite('Python Extension Restart Notification', () => {
+suite('Python Extension Restart Notification @kernelPicker', () => {
     let api: IExtensionTestApi;
     let extensionChecker: IPythonExtensionChecker;
     let vscodeNotebook: IVSCodeNotebook;

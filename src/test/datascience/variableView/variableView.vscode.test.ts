@@ -28,7 +28,7 @@ import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataView
 import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';
 import { IKernelProvider } from '../../../kernels/types';
 
-suite('DataScience - VariableView', function () {
+suite('VariableView @variableViewer', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;

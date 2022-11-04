@@ -20,7 +20,7 @@ import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { pruneCell } from '../../platform/common/utils';
 
 /* eslint-disable  */
-suite('DataScience Tests', () => {
+suite('Tests', () => {
     let dataScience: GlobalActivation;
     let cmdManager: CommandManager;
     let configService: IConfigurationService;

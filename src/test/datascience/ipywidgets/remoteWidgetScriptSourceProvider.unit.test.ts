@@ -13,7 +13,7 @@ import {
 import { RemoteWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/remoteWidgetScriptSourceProvider';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('DataScience - ipywidget - Remote Widget Script Source', () => {
+suite('ipywidget - Remote Widget Script Source', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let kernel: IKernel;
     let scriptManagerFactory: IIPyWidgetScriptManagerFactory;
