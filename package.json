@@ -2067,7 +2067,8 @@
         "notebookControllerAffinityHidden"
     ],
     "scripts": {
-        "esb":"esbuild ./node_modules/pdfkit/js/pdfkit.standalone.js --bundle --outfile=out/pdfkit.standalone.js --format=cjs --platform=node",
+        "esb": "esbuild ./src/webviews/webview-side/ipywidgets/kernel/index.ts --bundle --outfile=out/webviews/ipywidgetsKernel/ipywidgetsKernel.js --format=esm --platform=web",
+        "esbuild": "esbuild ./src/webviews/webview-side/ipywidgets/kernel/index.ts --bundle --outfile=out/webviews/ipywidgetsKernel/ipywidgetsKernel.js --format=esm",
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
         "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
         "prePublishBundleStable": "cross-env BUILD_WITH_VSCODE_NLS=true IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=false gulp prePublishBundle",
@@ -2305,7 +2306,9 @@
         "es-abstract": "^1.19.1",
         "es5-ext": "^0.10.53",
         "esbuild": "^0.15.13",
+        "esbuild-css-modules-plugin": "^2.6.2",
         "esbuild-loader": "^2.20.0",
+        "esbuild-plugin-less": "^1.1.9",
         "eslint": "^7.32.0",
         "eslint-config-airbnb": "^18.2.0",
         "eslint-config-prettier": "^6.15.0",

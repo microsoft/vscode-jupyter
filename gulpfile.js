@@ -180,27 +180,19 @@ gulp.task('installPythonLibs', async () => {
     }
 });
 
-gulp.task('compile-renderers', async () => {
-    console.log('Building renderers');
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js');
-});
-
 gulp.task('compile-viewers', async () => {
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
+    await bundle();
 });
 
 gulp.task('compile-webextension', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js');
 });
-gulp.task(
-    'compile-webviews',
-    gulp.parallel(
-        'compile-viewers',
-        ...[process.env.CI_JUPYTER_IGNORE_WEBVIEWS ? [] : ['compile-viewers']],
-        ...[process.env.CI_JUPYTER_IGNORE_RENDERERS ? [] : ['compile-renderers']],
-        ...[process.env.CI_JUPYTER_IGNORE_WEB_EXTENSION ? [] : ['compile-webextension']]
-    )
-);
+gulp.task('compile-webviews', async () => {
+    await bundle();
+    if (!process.env.CI_JUPYTER_IGNORE_WEB_EXTENSION || process.env.CI_JUPYTER_IGNORE_WEB_EXTENSION === 'false') {
+        await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js');
+    }
+});
 
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {

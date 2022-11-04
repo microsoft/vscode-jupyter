@@ -7,7 +7,6 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { Widget } from '@lumino/widgets';
 import fastDeepEqual from 'fast-deep-equal';
-import 'rxjs/add/operator/concatMap';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { logMessage, setLogger } from '../../react-common/logger';
