@@ -51,7 +51,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
      * List of ids of kernels that should be hidden from the kernel picker.
      */
     private readonly kernelIdsToHide = new Set<string>();
-    kind = ContributedKernelFinderKind.Remote;
+    kind: ContributedKernelFinderKind.Remote = ContributedKernelFinderKind.Remote;
     private _cacheUpdateCancelTokenSource: CancellationTokenSource | undefined;
     private cache: RemoteKernelConnectionMetadata[] = [];
 
@@ -80,7 +80,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         private readonly kernelProvider: IKernelProvider,
         private readonly extensions: IExtensions,
         private isWebExtension: boolean,
-        private readonly serverUri: IJupyterServerUriEntry
+        readonly serverUri: IJupyterServerUriEntry
     ) {
         // When we register, add a disposable to clean ourselves up from the main kernel finder list
         // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
