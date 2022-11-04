@@ -68,7 +68,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -159,7 +159,7 @@ jobs:
         run: npm run prePublishNonBundle
 
       - name: Cache the out/ directory
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
@@ -195,7 +195,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -399,7 +399,7 @@ jobs:
         if: matrix.python != 'conda' && matrix.python != 'noPython'
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -736,7 +736,7 @@ jobs:
         run: python -m pip install -U pip
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -822,7 +822,7 @@ jobs:
         run: python -m pip install -U pip
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -873,7 +873,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install Node
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
