@@ -12,14 +12,10 @@ export const IsWindows = Symbol('IS_WINDOWS');
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
     readonly osType: OSType;
-    osRelease: string;
-    readonly virtualEnvBinName: 'bin' | 'Scripts';
-
     // convenience methods
     readonly isWindows: boolean;
     readonly isMac: boolean;
     readonly isLinux: boolean;
-    readonly is64bit: boolean;
     readonly homeDir: vscode.Uri | undefined;
     readonly tempDir: vscode.Uri | undefined;
 }

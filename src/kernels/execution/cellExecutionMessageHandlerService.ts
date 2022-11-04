@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { NotebookCell, NotebookCellExecution, NotebookController, NotebookDocument, workspace } from 'vscode';
-import { ITracebackFormatter } from '../../kernels/types';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import { NotebookCell, NotebookCellExecution, NotebookDocument, workspace } from 'vscode';
+import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
-import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 
 /**
@@ -19,8 +18,7 @@ export class CellExecutionMessageHandlerService {
     private readonly messageHandlers = new WeakMap<NotebookCell, CellExecutionMessageHandler>();
     constructor(
         private readonly appShell: IApplicationShell,
-        private readonly controller: NotebookController,
-        private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
+        private readonly controller: IKernelController,
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[]
     ) {
@@ -60,7 +58,6 @@ export class CellExecutionMessageHandlerService {
             cell,
             this.appShell,
             this.controller,
-            this.outputDisplayIdTracker,
             this.context,
             this.formatters,
             options.kernel,

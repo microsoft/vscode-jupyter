@@ -17,7 +17,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internalbacklog\r\n$PYTHON_REPOS=repo:microsoft/vscode-python\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_REPOS $PYTHON_REPOS\r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
+    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internalbacklog\n$PYTHON_REPOS=repo:microsoft/vscode-python\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_REPOS $PYTHON_REPOS\n\n// project:microsoft/vscode-jupyter/3 == monthly-release\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\n"
   },
   {
     "kind": 1,
@@ -27,7 +27,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TEAM_AUTHOR_INCLUSION = author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:rebornix author:roblourens author:amunger\r\n$TEAM_AUTHOR_EXLUSION = -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens -author:amunger\r\n\r\n$TEAM_ASSIGNMENT = assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff assignee:amunger assignee:minsa110 assignee:ronglums"
+    "value": "$TEAM_AUTHOR_INCLUSION = author:DonJayamanne author:rchiodo author:greazer author:rebornix author:roblourens author:amunger\n$TEAM_AUTHOR_EXLUSION = -author:DonJayamanne -author:rchiodo -author:greazer -author:rebornix -author:roblourens -author:amunger\n\n$TEAM_ASSIGNMENT = assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:amunger assignee:minsa110 assignee:ronglums"
   },
   {
     "kind": 1,
@@ -37,7 +37,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$CURRENT_MILESTONE=milestone:\"January 2022\"\r\n$RECOVERY_MILESTONE=milestone:\"January 2022 Recovery\"\r\n$NEXT_MILESTONE=milestone:\"February 2022\""
+    "value": "$CURRENT_MILESTONE=milestone:\"January 2022\"\n$RECOVERY_MILESTONE=milestone:\"January 2022 Recovery\"\n$NEXT_MILESTONE=milestone:\"February 2022\""
   },
   {
     "kind": 1,

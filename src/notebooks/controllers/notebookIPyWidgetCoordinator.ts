@@ -13,6 +13,7 @@ import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IWebviewCommunication } from '../../platform/webviews/types';
 import { CommonMessageCoordinator } from './ipywidgets/message/commonMessageCoordinator';
+import { isJupyterNotebook } from '../../platform/common/utils';
 
 /**
  * Posts/Receives messages from the renderer in order to have kernel messages available in the webview
@@ -39,7 +40,7 @@ class NotebookCommunication implements IWebviewCommunication, IDisposable {
             (e) => {
                 // Handle messages from this only if its still the active controller.
                 if (e.editor === this.editor && this.controller?.id === controller.id) {
-                    // If the listeners haven't been hooked up, then dont fire the event (nothing listening).
+                    // If the listeners haven't been hooked up, then don't fire the event (nothing listening).
                     // Instead buffer the messages and fire the events later.
                     if (this.eventHandlerListening) {
                         this.sendPendingMessages();
@@ -131,9 +132,14 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         notebookComms.forEach((comm) => comm.changeController(e.controller));
 
         // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
-        this.notebook.notebookEditors.forEach((editor) => this.initializeNotebookCommunication(editor, e.controller));
+        this.notebook.notebookEditors
+            .filter((editor) => editor.notebook === e.notebook)
+            .forEach((editor) => this.initializeNotebookCommunication(editor, e.controller));
     }
     private initializeNotebookCommunication(editor: NotebookEditor, controller: IVSCodeNotebookController | undefined) {
+        if (!isJupyterNotebook(editor.notebook)) {
+            return;
+        }
         const notebook = editor.notebook;
         if (!controller) {
             traceVerbose(

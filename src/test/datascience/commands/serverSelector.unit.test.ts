@@ -11,7 +11,7 @@ import { JupyterServerSelectorCommand } from '../../../notebooks/serverSelectorC
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 
 /* eslint-disable  */
-suite('DataScience - Server Selector Command', () => {
+suite('Server Selector Command', () => {
     let serverSelectorCommand: JupyterServerSelectorCommand;
     let commandManager: ICommandManager;
     let serverSelector: JupyterServerSelector;

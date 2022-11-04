@@ -24,7 +24,7 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
 }
 
 /* eslint-disable  */
-suite('DataScience - NotebookServerProvider', () => {
+suite('NotebookServerProvider', () => {
     let serverProvider: NotebookServerProvider;
     let jupyterExecution: IJupyterExecution;
     let interpreterService: IInterpreterService;

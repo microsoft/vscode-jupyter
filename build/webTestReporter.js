@@ -19,11 +19,12 @@ const webTestSummaryJsonFile = path.join(__dirname, '..', 'logs', 'testresults.j
 const webTestSummaryNb = path.join(__dirname, '..', 'logs', 'testresults.ipynb');
 const failedWebTestSummaryNb = path.join(__dirname, '..', 'logs', 'failedtestresults.ipynb');
 const progress = [];
+const logsDir = path.join(ExtensionRootDir, 'logs');
 
 async function captureScreenShot(name, res) {
     const screenshot = require('screenshot-desktop');
-    fs.ensureDirSync(path.join(ExtensionRootDir, 'logs', name));
-    const filename = path.join(ExtensionRootDir, 'logs', name);
+    fs.ensureDirSync(logsDir);
+    const filename = path.join(logsDir, name);
     try {
         await screenshot({ filename });
         console.info(`Screenshot captured into ${filename}`);
@@ -131,17 +132,26 @@ async function addCell(cells, output, failed, executionCount) {
         text: consoleOutputs
     };
     // Look for a screenshot file with the above prefix & attach that to the cell outputs.
-    const screenshots = glob.sync(`${fileNamePrefix}*-screenshot.png`, { cwd: ExtensionRootDir }).map((file) => {
-        console.info(`Found screenshot file ${file}`);
-        const contents = Buffer.from(fs.readFileSync(path.join(ExtensionRootDir, file))).toString('base64');
-        return {
-            data: {
-                'image/png': contents
-            },
-            metadata: {},
-            output_type: 'display_data'
-        };
-    });
+    const screenshots = (
+        await Promise.all(
+            glob.sync(`${fileNamePrefix}*-screenshot.png`, { cwd: logsDir }).map((file) => {
+                file = path.join(logsDir, file);
+                try {
+                    const blob = fs.readFileSync(file);
+                    const contents = Buffer.from(blob).toString('base64');
+                    return {
+                        data: {
+                            'image/png': contents
+                        },
+                        metadata: {},
+                        output_type: 'display_data'
+                    };
+                } catch (ex) {
+                    console.error(`Failed to read screenshot file ${file} at stage ${stage}`, ex);
+                }
+            })
+        )
+    ).filter((item) => !!item);
     // Add a markdown cell so we can see this in the outline.
     cells.push({
         cell_type: 'markdown',

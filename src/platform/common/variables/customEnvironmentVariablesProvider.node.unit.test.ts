@@ -1,26 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 import { assert } from 'chai';
-import { ConfigurationChangeEvent, EventEmitter, FileSystemWatcher, Uri, WorkspaceConfiguration } from 'vscode';
-import { IWorkspaceService } from '../../../../../platform/common/application/types';
-import { disposeAllDisposables } from '../../../../../platform/common/helpers';
-import { IDisposable, IExtensionContext, IHttpClient } from '../../../../../platform/common/types';
-import { CustomEnvironmentVariablesProvider } from '../../../../../platform/common/variables/customEnvironmentVariablesProvider.node';
-import { IEnvironmentVariablesService } from '../../../../../platform/common/variables/types';
+import { EventEmitter, FileSystemWatcher, Uri, WorkspaceConfiguration } from 'vscode';
+import { IWorkspaceService } from '../application/types';
+import { disposeAllDisposables } from '../helpers';
+import { IDisposable, IExtensionContext, IHttpClient } from '../types';
+import { CustomEnvironmentVariablesProvider } from './customEnvironmentVariablesProvider.node';
+import { IEnvironmentVariablesService } from './types';
 import * as fs from 'fs-extra';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../../constants.node';
 import dedent from 'dedent';
-import { IPythonExtensionChecker } from '../../../../../platform/api/types';
-import { captureScreenShot, createEventHandler } from '../../../../common';
-import { traceInfo } from '../../../../../platform/logging';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
+import { traceInfo } from '../../logging';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { clearCache } from '../../../../../platform/common/utils/cacheUtils';
-import { EnvironmentVariablesService } from '../../../../../platform/common/variables/environment.node';
-import { FileSystem } from '../../../../../platform/common/platform/fileSystem.node';
+import { clearCache } from '../utils/cacheUtils';
+import { EnvironmentVariablesService } from './environment.node';
+import { FileSystem } from '../platform/fileSystem.node';
 import * as sinon from 'sinon';
-// import * as path from '../../../../../platform/vscode-path/path';
+import { ProposedExtensionAPI } from '../../api/pythonApiTypes';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../test/constants.node';
+import { createEventHandler } from '../../../test/common';
 
 suite('Custom Environment Variables Provider', () => {
     let customEnvVarsProvider: CustomEnvironmentVariablesProvider;
@@ -28,9 +29,10 @@ suite('Custom Environment Variables Provider', () => {
     const disposables: IDisposable[] = [];
     let workspace: IWorkspaceService;
     let pythonExtChecker: IPythonExtensionChecker;
+    let pythonApiProvider: IPythonApiProvider;
+    let pythonApi: ProposedExtensionAPI;
     const envFile = Uri.joinPath(Uri.file(EXTENSION_ROOT_DIR_FOR_TESTS), 'src', 'test', 'datascience', '.env');
     let contentsOfOldEnvFile: string;
-    let onDidChangeConfiguration: EventEmitter<ConfigurationChangeEvent>;
     let customPythonEnvFile = Uri.joinPath(
         Uri.file(EXTENSION_ROOT_DIR_FOR_TESTS),
         'src',
@@ -50,9 +52,11 @@ suite('Custom Environment Variables Provider', () => {
         );
         pythonExtChecker = mock<IPythonExtensionChecker>();
         when(pythonExtChecker.isPythonExtensionInstalled).thenReturn(true);
+        pythonApiProvider = mock<IPythonApiProvider>();
+        pythonApi = mock<ProposedExtensionAPI>();
+        (instance(pythonApi) as any).then = undefined;
+        when(pythonApiProvider.getNewApi()).thenResolve(instance(pythonApi));
         contentsOfOldEnvFile = fs.readFileSync(envFile.fsPath).toString();
-        onDidChangeConfiguration = new EventEmitter<ConfigurationChangeEvent>();
-        disposables.push(onDidChangeConfiguration);
         workspace = mock<IWorkspaceService>();
         onFSEvent = new EventEmitter<Uri>();
         disposables.push(onFSEvent);
@@ -61,7 +65,6 @@ suite('Custom Environment Variables Provider', () => {
         when(fsWatcher.onDidChange).thenReturn(onFSEvent.event);
         when(fsWatcher.onDidCreate).thenReturn(onFSEvent.event);
         when(fsWatcher.onDidDelete).thenReturn(onFSEvent.event);
-        when(workspace.onDidChangeConfiguration).thenReturn(onDidChangeConfiguration.event);
         when(workspace.workspaceFolders).thenReturn([workspaceFolder]);
         when(workspace.getWorkspaceFolder(anything())).thenCall(() => workspaceFolder);
         when(workspace.getConfiguration(anything(), anything())).thenCall(() => {
@@ -76,10 +79,6 @@ suite('Custom Environment Variables Provider', () => {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this);
-        }
-
         disposeAllDisposables(disposables);
         if (fs.existsSync(customPythonEnvFile.fsPath)) {
             fs.unlinkSync(customPythonEnvFile.fsPath);
@@ -95,6 +94,7 @@ suite('Custom Environment Variables Provider', () => {
             disposables,
             instance(workspace),
             pythonExtChecker,
+            instance(pythonApiProvider),
             cacheDuration
         );
     }
@@ -207,7 +207,12 @@ suite('Custom Environment Variables Provider', () => {
                     `;
         traceInfo('Write to python env file', customPythonEnvFile.fsPath);
         fs.writeFileSync(customPythonEnvFile.fsPath, pythonEnvVars);
-
+        const environments = mock<ProposedExtensionAPI['environments']>();
+        when(environments.getEnvironmentVariables(anything())).thenReturn({
+            VSCODE_JUPYTER_ENV_TEST_VAR1: 'PYTHON_FOO',
+            VSCODE_JUPYTER_ENV_TEST_VAR2: 'PYTHON_BAR'
+        });
+        when(pythonApi.environments).thenReturn(instance(environments));
         createProvider();
         const vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunNonPythonCode');
         const pythonVars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunPythonCode');
@@ -219,76 +224,6 @@ suite('Custom Environment Variables Provider', () => {
         assert.deepEqual(pythonVars, {
             VSCODE_JUPYTER_ENV_TEST_VAR1: 'PYTHON_FOO',
             VSCODE_JUPYTER_ENV_TEST_VAR2: 'PYTHON_BAR'
-        });
-    });
-    test('Detects changes to python.env file', async () => {
-        let envVars = dedent`
-                    VSCODE_JUPYTER_ENV_TEST_VAR1=FOO
-                    VSCODE_JUPYTER_ENV_TEST_VAR2=BAR
-                    `;
-        traceInfo('Write to env file', customPythonEnvFile.fsPath);
-        fs.writeFileSync(customPythonEnvFile.fsPath, envVars);
-
-        createProvider();
-        let vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunPythonCode');
-
-        assert.deepEqual(vars, {
-            VSCODE_JUPYTER_ENV_TEST_VAR1: 'FOO',
-            VSCODE_JUPYTER_ENV_TEST_VAR2: 'BAR'
-        });
-
-        // Change the .env file.
-        const changeDetected = createEventHandler(
-            customEnvVarsProvider,
-            'onDidEnvironmentVariablesChange',
-            disposables
-        );
-        envVars = dedent`
-        VSCODE_JUPYTER_ENV_TEST_VAR1=FOO2
-        VSCODE_JUPYTER_ENV_TEST_VAR2=BAR2
-        `;
-        traceInfo('Write to env file 2', customPythonEnvFile.fsPath);
-        fs.writeFileSync(customPythonEnvFile.fsPath, envVars);
-        onFSEvent.fire(customPythonEnvFile);
-
-        // Detect the change.
-        await changeDetected.assertFired(5_000);
-
-        // Ensure the new vars are different.
-        vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunPythonCode');
-        assert.deepEqual(vars, {
-            VSCODE_JUPYTER_ENV_TEST_VAR1: 'FOO2',
-            VSCODE_JUPYTER_ENV_TEST_VAR2: 'BAR2'
-        });
-    });
-    test('Detects creation of the python.env file', async () => {
-        createProvider();
-
-        let vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunPythonCode');
-        assert.isEmpty(vars || {});
-
-        // Create the .env file.
-        const changeDetected = createEventHandler(
-            customEnvVarsProvider,
-            'onDidEnvironmentVariablesChange',
-            disposables
-        );
-        const envVars = dedent`
-                    VSCODE_JUPYTER_ENV_TEST_VAR1=FOO2
-                    VSCODE_JUPYTER_ENV_TEST_VAR2=BAR2
-                    `;
-        traceInfo('Write to Python env file', customPythonEnvFile.fsPath);
-        fs.writeFileSync(customPythonEnvFile.fsPath, envVars);
-        onFSEvent.fire(customPythonEnvFile);
-
-        // Detect the change.
-        await changeDetected.assertFired(5_000);
-
-        // Ensure the new vars are different.
-        vars = await customEnvVarsProvider.getCustomEnvironmentVariables(undefined, 'RunPythonCode');
-        assert.deepEqual(vars, {
-            VSCODE_JUPYTER_ENV_TEST_VAR1: 'FOO2',
-            VSCODE_JUPYTER_ENV_TEST_VAR2: 'BAR2'
         });
     });
 });

@@ -39,7 +39,6 @@ import {
     QuickInputButton,
     QuickPickItemButtonEvent,
     EventEmitter,
-    ConfigurationTarget,
     NotebookEditor,
     debug,
     NotebookData
@@ -54,15 +53,16 @@ import {
 } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
-import {
-    GLOBAL_MEMENTO,
-    IConfigurationService,
-    IDisposable,
-    IMemento,
-    IsWebExtension
-} from '../../../platform/common/types';
+import { GLOBAL_MEMENTO, IDisposable, IMemento, IsWebExtension } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
-import { IKernelProvider, INotebookProvider } from '../../../kernels/types';
+import {
+    IKernelFinder,
+    IKernelProvider,
+    INotebookProvider,
+    IThirdPartyKernelProvider,
+    PythonKernelConnectionMetadata,
+    RemoteKernelSpecConnectionMetadata
+} from '../../../kernels/types';
 import { noop } from '../../core';
 import { closeActiveWindows, isInsiders } from '../../initialize';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -78,7 +78,7 @@ import {
     InteractiveControllerIdSuffix,
     IVSCodeNotebookController
 } from '../../../notebooks/controllers/types';
-import { IS_SMOKE_TEST } from '../../constants';
+import { IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import uuid from 'uuid/v4';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
@@ -106,6 +106,7 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { KernelAPI } from '@jupyterlab/services';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
+import { isWeb } from '../../../platform/common/utils/misc';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -125,6 +126,7 @@ export async function getServices() {
         controllerPreferred: api.serviceContainer.get<IControllerPreferredService>(IControllerPreferredService),
         isWebExtension: api.serviceContainer.get<boolean>(IsWebExtension),
         interpreterService: api.serviceContainer.get<IInterpreterService>(IInterpreterService),
+        kernelFinder: api.serviceContainer.get<IKernelFinder>(IKernelFinder),
         serviceContainer: api.serviceContainer
     };
 }
@@ -314,13 +316,17 @@ export async function createEmptyPythonNotebook(
     await openAndShowNotebook(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
     if (!dontWaitForKernel) {
-        await waitForKernelToGetAutoSelected(undefined, undefined, !serverConnectionType.isLocalLaunch);
+        await waitForKernelToGetAutoSelected(
+            vscodeNotebook.activeNotebookEditor!,
+            PYTHON_LANGUAGE,
+            !serverConnectionType.isLocalLaunch
+        );
         await verifySelectedControllerIsRemoteForRemoteTests();
     }
     await deleteAllCellsAndWait();
     const notebook = vscodeNotebook.activeNotebookEditor!.notebook;
     traceVerbose(`Empty notebook created ${getDisplayPath(notebook.uri)}`);
-    return notebook;
+    return { notebook, editor: vscodeNotebook.activeNotebookEditor! };
 }
 
 async function shutdownAllNotebooks() {
@@ -375,6 +381,16 @@ async function shutdownRemoteKernels() {
         await sessionManager?.dispose().catch(noop);
     }
 }
+export const MockNotebookDocuments: NotebookDocument[] = [];
+async function shutdownKernels() {
+    const api = await initialize();
+    const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+    await Promise.all(kernelProvider.kernels.map((k) => k.dispose().catch(noop)));
+    const thirdPartyKernelProvider = api.serviceContainer.get<IThirdPartyKernelProvider>(IThirdPartyKernelProvider);
+    await Promise.all(thirdPartyKernelProvider.kernels.map((k) => k.dispose().catch(noop)));
+    await Promise.all(MockNotebookDocuments.map((nb) => kernelProvider.get(nb)?.dispose().catch(noop)));
+    MockNotebookDocuments.length = 0;
+}
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
     if (!IS_SMOKE_TEST()) {
         // When running smoke tests, we won't have access to these.
@@ -389,6 +405,7 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     await shutdownAllNotebooks();
     await ensureNewNotebooksHavePythonCells();
     await shutdownRemoteKernels(); // Shutdown remote kernels, else the number of live kernels keeps growing.
+    await shutdownKernels();
     try {
         await commands.executeCommand('python.clearWorkspaceInterpreter');
     } catch (ex) {
@@ -574,9 +591,132 @@ async function waitForActiveNotebookEditor(notebookEditor?: NotebookEditor): Pro
     return notebookEditor;
 }
 
+async function getActiveInterpreterKernelConnection() {
+    const { interpreterService, kernelFinder } = await getServices();
+    const interpreter = await waitForCondition(
+        () => interpreterService.getActiveInterpreter(),
+        defaultNotebookTestTimeout,
+        'Active Interpreter is undefined.2'
+    );
+    return waitForCondition(
+        () =>
+            kernelFinder.kernels.find(
+                (item) =>
+                    item.kind === 'startUsingPythonInterpreter' &&
+                    areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
+            ) as PythonKernelConnectionMetadata,
+        defaultNotebookTestTimeout,
+        `Kernel Connection pointing to active interpreter not found`
+    );
+}
+async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
+    const { interpreterService, kernelFinder } = await getServices();
+    const interpreter = isWeb()
+        ? undefined
+        : await waitForCondition(
+              () => interpreterService.getActiveInterpreter(),
+              defaultNotebookTestTimeout,
+              'Active Interpreter is undefined.3'
+          );
+    return waitForCondition(
+        () =>
+            kernelFinder.kernels.find((item) => {
+                if (
+                    interpreter &&
+                    item.kind === 'startUsingRemoteKernelSpec' &&
+                    item.kernelSpec.language === PYTHON_LANGUAGE &&
+                    item.interpreter &&
+                    areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
+                ) {
+                    return true;
+                } else if (
+                    !interpreter &&
+                    item.kind === 'startUsingRemoteKernelSpec' &&
+                    item.kernelSpec.language === PYTHON_LANGUAGE
+                ) {
+                    return true;
+                }
+                return false;
+            }) as RemoteKernelSpecConnectionMetadata,
+        defaultNotebookTestTimeout,
+        `Kernel Connection pointing to active interpreter not found`
+    );
+}
+export async function getDefaultKernelConnection() {
+    return IS_REMOTE_NATIVE_TEST() || isWeb()
+        ? getDefaultPythonRemoteKernelConnectionForActiveInterpreter()
+        : getActiveInterpreterKernelConnection();
+}
+export function selectDefaultController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
+    return IS_REMOTE_NATIVE_TEST() || isWeb()
+        ? selectPythonRemoteKernelConnectionForActiveInterpreter(notebookEditor, timeout)
+        : selectActiveInterpreterController(notebookEditor, timeout);
+}
+async function selectActiveInterpreterController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
+    const { controllerLoader, controllerRegistration, interpreterService, controllerSelection } = await getServices();
+
+    // Get the list of NotebookControllers for this document
+    const [interpreter] = await Promise.all([
+        interpreterService.getActiveInterpreter(notebookEditor.notebook.uri),
+        controllerLoader.loaded
+    ]);
+
+    // Find the kernel id that matches the name we want
+    const controller = await waitForCondition(
+        () =>
+            controllerRegistration.registered.find(
+                (k) =>
+                    k.connection.kind === 'startUsingPythonInterpreter' &&
+                    areInterpreterPathsSame(k.connection.interpreter.uri, interpreter?.uri)
+            ),
+        timeout,
+        `No matching controller found for interpreter ${interpreter?.id}:${getDisplayPath(interpreter?.uri)}`
+    );
+    if (!controller) {
+        throw new Error('No interpreter controller');
+    }
+    await commands.executeCommand('notebook.selectKernel', {
+        id: controller.id,
+        extension: JVSC_EXTENSION_ID
+    });
+    await waitForCondition(
+        () => controllerSelection.getSelected(notebookEditor.notebook) === controller,
+        timeout,
+        `Controller ${controller.id} not selected`
+    );
+}
+async function selectPythonRemoteKernelConnectionForActiveInterpreter(
+    notebookEditor: NotebookEditor,
+    timeout = defaultNotebookTestTimeout
+) {
+    const { controllerRegistration, controllerSelection } = await getServices();
+    const metadata = await getDefaultPythonRemoteKernelConnectionForActiveInterpreter();
+
+    // Find the kernel id that matches the name we want
+    const controller = await waitForCondition(
+        () =>
+            controllerRegistration.registered.find(
+                (k) => k.connection.kind === 'startUsingRemoteKernelSpec' && k.connection.id === metadata.id
+            ),
+        timeout,
+        `No matching controller found for metadata ${metadata?.kind}:${metadata.id}`
+    );
+    if (!controller) {
+        throw new Error('No interpreter controller');
+    }
+    await commands.executeCommand('notebook.selectKernel', {
+        id: controller.id,
+        extension: JVSC_EXTENSION_ID
+    });
+    await waitForCondition(
+        () => controllerSelection.getSelected(notebookEditor.notebook) === controller,
+        timeout,
+        `Controller ${controller.id} not selected`
+    );
+}
 export async function waitForKernelToGetAutoSelected(
-    notebookEditor?: NotebookEditor,
-    expectedLanguage?: string,
+    notebookEditor: NotebookEditor,
+    expectedLanguage: string,
     preferRemoteKernelSpec: boolean = false,
     timeout = 100_000,
     skipAutoSelection: boolean = false
@@ -748,9 +888,9 @@ export async function prewarmNotebooks() {
         if (memento.get(LastSavedNotebookCellLanguage) !== PYTHON_LANGUAGE) {
             await memento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE);
         }
-        await createNewNotebook();
+        const notebookEditor = await createNewNotebook();
         await insertCodeCell('print("Hello World1")', { index: 0 });
-        await waitForKernelToGetAutoSelected();
+        await selectDefaultController(notebookEditor, defaultNotebookTestTimeout);
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0)!;
         traceInfoIfCI(`Running all cells in prewarm notebooks`);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
@@ -781,7 +921,7 @@ export async function createNewNotebook() {
         }
     };
     const doc = await workspace.openNotebookDocument(JupyterNotebookView, data);
-    await window.showNotebookDocument(doc);
+    return window.showNotebookDocument(doc);
 }
 
 function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
@@ -1089,14 +1229,14 @@ export async function waitForTextOutput(
         () =>
             `After ${timeout}ms output, does not contain provided text '${text}' for Cell ${
                 cell.index + 1
-            } in output index ${index}, it is ${cell.outputs
+            } in output index ${index}, the outputs are: \n${cell.outputs
                 .map(
                     (output, index) =>
-                        `Output for Index "${index}" with total outputs ${output.items.length} is "${output.items
-                            .map(getOutputText)
-                            .join('\n')}"`
+                        `${index}. Output for Index "${index}" with total outputs ${
+                            output.items.length
+                        } is "${output.items.map(getOutputText).join('\n')}"`
                 )
-                .join('\n')}`
+                .join(',\n')}`
     );
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
@@ -1135,11 +1275,11 @@ export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
 export async function saveActiveNotebook() {
     await commands.executeCommand('workbench.action.files.saveAll');
 }
-export async function runCell(cell: NotebookCell, waitForExecutionToComplete = false) {
+export async function runCell(cell: NotebookCell, waitForExecutionToComplete = false, language = PYTHON_LANGUAGE) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     const notebookEditor = vscodeNotebook.notebookEditors.find((e) => e.notebook === cell.notebook);
-    await waitForKernelToGetAutoSelected(notebookEditor, undefined, false, 60_000);
+    await waitForKernelToGetAutoSelected(notebookEditor!, language, false, 60_000);
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.notebook) {
         throw new Error('No notebook or document');
     }
@@ -1156,11 +1296,12 @@ export async function runCell(cell: NotebookCell, waitForExecutionToComplete = f
 }
 export async function runAllCellsInActiveNotebook(
     waitForExecutionToComplete = false,
-    activeEditor: NotebookEditor | undefined = undefined
+    activeEditor: NotebookEditor | undefined = undefined,
+    language: string = PYTHON_LANGUAGE
 ) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    await waitForKernelToGetAutoSelected(activeEditor, undefined, false, 60_000);
+    await waitForKernelToGetAutoSelected(activeEditor!, language, false, 60_000);
 
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.notebook) {
         throw new Error('No editor or document');
@@ -1252,16 +1393,6 @@ export async function hijackPrompt(
         },
         clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.result)
     };
-}
-
-export async function changeShowOnlyOneTypeOfKernel(setting: boolean) {
-    const targetValue = setting ? 'OnlyOneTypeOfKernel' : 'Stable';
-    const api = await initialize();
-    const config = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-    const settings = config.getSettings();
-    if (settings.kernelPickerType !== targetValue) {
-        await config.updateSetting('experimental.kernelPickerType', targetValue, undefined, ConfigurationTarget.Global);
-    }
 }
 
 export async function hijackSavePrompt(

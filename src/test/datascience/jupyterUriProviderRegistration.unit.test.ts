@@ -57,7 +57,7 @@ class MockProvider implements IJupyterUriProvider {
 }
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('DataScience URI Picker', () => {
+suite('URI Picker', () => {
     const disposables: IDisposable[] = [];
     teardown(() => {
         sinon.restore();

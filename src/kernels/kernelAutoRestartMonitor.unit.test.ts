@@ -2,18 +2,16 @@
 // Licensed under the MIT License.
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { instance, mock, verify, when } from 'ts-mockito';
+import { assert } from 'chai';
 import { EventEmitter } from 'vscode';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
-import { KernelAutoRestartMonitor } from '../../kernels/kernelAutoRestartMonitor.node';
-import { IKernel, IKernelConnectionSession, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
-import { IDisposable } from '../../platform/common/types';
-import { DataScience } from '../../platform/common/utils/localize';
-import { IStatusProvider } from '../../platform/progress/types';
+import { KernelAutoRestartMonitor } from './kernelAutoRestartMonitor.node';
+import { IKernel, IKernelConnectionSession, IKernelProvider, KernelConnectionMetadata } from './types';
+import { disposeAllDisposables } from '../platform/common/helpers';
+import { IDisposable } from '../platform/common/types';
+import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 
 suite('Jupyter Execution', async () => {
-    let statusProvider: IStatusProvider;
     let kernelProvider: IKernelProvider;
     let restartMonitor: KernelAutoRestartMonitor;
     let onKernelStatusChanged = new EventEmitter<{ status: KernelMessage.Status; kernel: IKernel }>();
@@ -32,13 +30,12 @@ suite('Jupyter Execution', async () => {
         kind: 'startUsingLocalKernelSpec'
     };
     setup(() => {
-        statusProvider = mock<IStatusProvider>();
         kernelProvider = mock<IKernelProvider>();
         when(kernelProvider.onDidRestartKernel).thenReturn(onDidReStartKernel.event);
         when(kernelProvider.onDidStartKernel).thenReturn(onDidStartKernel.event);
         when(kernelProvider.onDidDisposeKernel).thenReturn(onDidDisposeKernel.event);
         when(kernelProvider.onKernelStatusChanged).thenReturn(onKernelStatusChanged.event);
-        restartMonitor = new KernelAutoRestartMonitor(instance(statusProvider), disposables, instance(kernelProvider));
+        restartMonitor = new KernelAutoRestartMonitor(disposables, instance(kernelProvider));
     });
     teardown(() => {
         disposeAllDisposables(disposables);
@@ -61,26 +58,31 @@ suite('Jupyter Execution', async () => {
     function verifyProgressDisplay(sessionType: 'remoteJupyter' | 'localJupyter' | 'localRaw') {
         restartMonitor.activate();
 
-        const expectedMessage = DataScience.restartingKernelStatus().format(
-            getDisplayNameOrNameOfKernelConnection(connectionMetadata)
-        );
-
         const kernel = mock<IKernel>();
         const session = mock<IKernelConnectionSession>();
         const disposable = mock<IDisposable>();
         when(kernel.kernelConnectionMetadata).thenReturn(connectionMetadata);
         when(kernel.session).thenReturn(instance(session));
         when(session.kind).thenReturn(sessionType);
-        when(statusProvider.set(anything())).thenReturn(instance(disposable));
-
+        const oldCreateProgressReporter = KernelProgressReporter.createProgressReporter;
+        disposables.push({
+            dispose: () => {
+                KernelProgressReporter.createProgressReporter = oldCreateProgressReporter;
+            }
+        });
+        let createProgressReporterCalled = false;
+        KernelProgressReporter.createProgressReporter = () => {
+            createProgressReporterCalled = true;
+            return instance(disposable);
+        };
         onDidStartKernel.fire(instance(kernel));
         when(kernel.status).thenReturn('autorestarting');
         onKernelStatusChanged.fire({ kernel: instance(kernel), status: 'autorestarting' });
 
         if (sessionType === 'localRaw') {
-            verify(statusProvider.set(expectedMessage)).never();
+            assert.isFalse(createProgressReporterCalled);
         } else {
-            verify(statusProvider.set(expectedMessage)).once();
+            assert.isTrue(createProgressReporterCalled);
         }
         verify(disposable.dispose()).never();
 
@@ -93,7 +95,7 @@ suite('Jupyter Execution', async () => {
         if (sessionType === 'localRaw') {
             verify(disposable.dispose()).never();
         } else {
-            verify(disposable.dispose()).once();
+            verify(disposable.dispose()).atLeast(1);
         }
     }
 });

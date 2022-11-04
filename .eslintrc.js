@@ -270,7 +270,7 @@ module.exports = {
                         message: 'Importing node modules into non node files is not allowed.'
                     },
                     {
-                        target: './src/**[!test]**/**/*[!.web].ts',
+                        target: './src/**[!test]**/**/*[!.web|.unit].ts',
                         from: './src/**/*.web.ts',
                         message: 'Importing web modules into non web files is not allowed.'
                     },
@@ -319,7 +319,7 @@ module.exports = {
                         message: 'Importing non-telemetry modules into telemetry files is not allowed.'
                     },
                     {
-                        target: './src/platform/**/*.ts',
+                        target: './src/platform/**/*[!.unit].ts',
                         from: './src/**[!platform]**/**/*.ts',
                         message: 'Importing non-platform modules into platform files is not allowed.'
                     }

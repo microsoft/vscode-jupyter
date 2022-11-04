@@ -36,7 +36,9 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
     }
     private onDidStartKernel(kernel: IKernel) {
         this.kernelsStartedSuccessfully.add(kernel);
-        kernel.onPreExecute((cell) => this.lastExecutedCellPerKernel.set(kernel, cell), this, this.disposableRegistry);
+        this.kernelProvider
+            .getKernelExecution(kernel)
+            .onPreExecute((cell) => this.lastExecutedCellPerKernel.set(kernel, cell), this, this.disposableRegistry);
     }
 
     @swallowExceptions()

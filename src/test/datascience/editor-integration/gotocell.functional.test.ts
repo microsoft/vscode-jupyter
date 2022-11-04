@@ -35,7 +35,7 @@ suite('Dummy12', () => {
 // import { MockDocumentManager } from '../mockDocumentManager';
 
 // /* eslint-disable @typescript-eslint/no-explicit-any, no-multi-str, , no-console, max-classes-per-file, comma-dangle */
-// suite('DataScience gotocell tests', () => {
+// suite('gotocell tests', () => {
 //     const disposables: Disposable[] = [];
 //     let codeLensProvider: IDataScienceCodeLensProvider;
 //     let codeLensFactory: ICodeLensFactory;

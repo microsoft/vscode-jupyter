@@ -10,7 +10,7 @@ import { Experiments } from '../../platform/common/experiments/groups';
 import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
-import { IKernel, IKernelConnectionSession } from '../types';
+import { IKernel, IKernelConnectionSession, IKernelProvider } from '../types';
 import {
     IJupyterVariable,
     IJupyterVariables,
@@ -62,7 +62,8 @@ export class KernelVariables implements IJupyterVariables {
         @inject(IKernelVariableRequester)
         @named(Identifiers.PYTHON_VARIABLES_REQUESTER)
         pythonVariableRequester: IKernelVariableRequester,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
+        @inject(IKernelProvider) private kernelProvider: IKernelProvider
     ) {
         this.variableRequesters.set(PYTHON_LANGUAGE, pythonVariableRequester);
     }
@@ -175,14 +176,15 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
         let list = this.cachedVariables.get(kernel.uri.toString());
+        const execution = this.kernelProvider.getKernelExecution(kernel);
         if (
             !list ||
             list.currentExecutionCount !== request.executionCount ||
-            list.currentExecutionCount !== kernel.executionCount
+            list.currentExecutionCount !== execution.executionCount
         ) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
-                currentExecutionCount: kernel.executionCount,
+                currentExecutionCount: execution.executionCount,
                 variables: (await this.getVariableNamesAndTypesFromKernel(kernel)).map((v) => {
                     return {
                         name: v.name,
@@ -203,7 +205,7 @@ export class KernelVariables implements IJupyterVariables {
             : [];
 
         const result: IJupyterVariablesResponse = {
-            executionCount: kernel.executionCount,
+            executionCount: execution.executionCount,
             pageStartIndex: -1,
             pageResponse: [],
             totalCount: 0,
