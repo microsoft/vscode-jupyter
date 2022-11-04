@@ -41,7 +41,7 @@ import {
     IJupyterRemoteCachedKernelValidator
 } from './types';
 import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker';
-import { UniversalRemoteKernelFinderController } from './finder/universalRemoteKernelFinderController';
+import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
@@ -87,6 +87,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        UniversalRemoteKernelFinderController
+        RemoteKernelFinderController
     );
 }

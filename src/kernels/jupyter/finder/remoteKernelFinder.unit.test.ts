@@ -41,12 +41,12 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
 import { IExtensions } from '../../../platform/common/types';
 import { takeTopRankKernel } from '../../raw/finder/localKernelFinder.unit.test';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
-import { UniversalRemoteKernelFinder } from './universalRemoteKernelFinder';
+import { RemoteKernelFinder } from './remoteKernelFinder';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
     let preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider;
-    let remoteKernelFinder: UniversalRemoteKernelFinder;
+    let remoteKernelFinder: RemoteKernelFinder;
     let localKernelFinder: ILocalKernelFinder;
     let kernelFinder: KernelFinder;
     let kernelRankHelper: IKernelRankingHelper;
@@ -170,7 +170,7 @@ suite(`Remote Kernel Finder`, () => {
         disposables.push(kernelsChanged);
         kernelRankHelper = new KernelRankingHelper(preferredRemoteKernelIdProvider);
 
-        remoteKernelFinder = new UniversalRemoteKernelFinder(
+        remoteKernelFinder = new RemoteKernelFinder(
             'currentremote',
             'Local Kernels',
             RemoteKernelSpecsCacheKey,
