@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage, IServerConnectionType } from '../../kernels/jupyter/types';
+import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
@@ -79,12 +79,11 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IPlatformService) private readonly platform: IPlatformService
     ) {
         this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
-        this.serverConnectionType.onDidChange(this.onDidChangeFilter, this, this.disposables);
+        this.serverUriStorage.onDidChangeConnectionType(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
     }

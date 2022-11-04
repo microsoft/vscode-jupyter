@@ -19,12 +19,7 @@ import {
 } from '../../../platform/common/types';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import { computeServerId, extractJupyterServerHandleAndId } from '../jupyterUtils';
-import {
-    IJupyterServerUriEntry,
-    IJupyterServerUriStorage,
-    IJupyterUriProviderRegistration,
-    IServerConnectionType
-} from '../types';
+import { IJupyterServerUriEntry, IJupyterServerUriStorage, IJupyterUriProviderRegistration } from '../types';
 
 export const mementoKeyToIndicateIfConnectingToLocalKernelsOnly = 'connectToLocalKernelsOnly';
 export const currentServerHashKey = 'currentServerHash';
@@ -33,7 +28,7 @@ export const currentServerHashKey = 'currentServerHash';
  * Class for storing Jupyter Server URI values
  */
 @injectable()
-export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServerConnectionType {
+export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     private lastSavedList?: Promise<IJupyterServerUriEntry[]>;
     private currentUriPromise: Promise<IJupyterServerUriEntry | undefined> | undefined;
     private _currentServerId: string | undefined;
@@ -52,9 +47,6 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     }
     public get currentServerId(): string | undefined {
         return this._currentServerId;
-    }
-    public get onDidChange(): Event<void> {
-        return this._onDidChangeUri.event;
     }
     public get onDidChangeConnectionType(): Event<void> {
         return this._onDidChangeUri.event;

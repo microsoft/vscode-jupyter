@@ -14,7 +14,7 @@ import {
     workspace
 } from 'vscode';
 import { getKernelConnectionLanguage, getLanguageInNotebookMetadata, isPythonNotebook } from '../../kernels/helpers';
-import { IServerConnectionType } from '../../kernels/jupyter/types';
+import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
@@ -63,7 +63,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
     private preferredControllers = new WeakMap<NotebookDocument, IVSCodeNotebookController>();
     private preferredCancelTokens = new WeakMap<NotebookDocument, CancellationTokenSource>();
     private get isLocalLaunch(): boolean {
-        return this.serverConnectionType.isLocalLaunch;
+        return this.serverUriStorage.isLocalLaunch;
     }
     private disposables = new Set<IDisposable>();
     constructor(
@@ -74,7 +74,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper,
         @inject(IControllerSelection) private readonly selection: IControllerSelection
     ) {

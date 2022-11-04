@@ -38,8 +38,7 @@ import {
     IJupyterRequestCreator,
     INotebookServerFactory,
     ILiveRemoteKernelConnectionUsageTracker,
-    IJupyterRemoteCachedKernelValidator,
-    IServerConnectionType
+    IJupyterRemoteCachedKernelValidator
 } from './types';
 import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker';
 import { UniversalRemoteKernelFinderController } from './finder/universalRemoteKernelFinderController';
@@ -60,7 +59,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterUriProviderRegistration
     );
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
-    serviceManager.addBinding(IJupyterServerUriStorage, IServerConnectionType);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);

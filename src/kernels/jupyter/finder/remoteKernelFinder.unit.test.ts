@@ -26,12 +26,7 @@ import { JupyterSessionManager } from '../session/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../session/jupyterSessionManagerFactory';
 import { ILocalKernelFinder } from '../../raw/types';
 import { ActiveKernelIdList, PreferredRemoteKernelIdProvider } from '../preferredRemoteKernelIdProvider';
-import {
-    IJupyterKernel,
-    IJupyterRemoteCachedKernelValidator,
-    IJupyterSessionManager,
-    IServerConnectionType
-} from '../types';
+import { IJupyterKernel, IJupyterRemoteCachedKernelValidator, IJupyterSessionManager } from '../types';
 import { KernelFinder } from '../../kernelFinder';
 import { NotebookProvider } from '../launcher/notebookProvider';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
@@ -160,11 +155,10 @@ suite(`Remote Kernel Finder`, () => {
         };
         when(serverUriStorage.getUri()).thenResolve(serverEntry);
         when(serverUriStorage.getRemoteUri()).thenResolve(serverEntry);
-        const connectionType = mock<IServerConnectionType>();
-        when(connectionType.isLocalLaunch).thenReturn(false);
+        when(serverUriStorage.isLocalLaunch).thenReturn(false);
         const onDidChangeEvent = new EventEmitter<void>();
         disposables.push(onDidChangeEvent);
-        when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
+        when(serverUriStorage.onDidChangeConnectionType).thenReturn(onDidChangeEvent.event);
         cachedRemoteKernelValidator = mock<IJupyterRemoteCachedKernelValidator>();
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(true);
         const env = mock<IApplicationEnvironment>();
