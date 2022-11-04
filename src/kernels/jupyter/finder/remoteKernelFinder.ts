@@ -38,7 +38,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
 import { removeOldCachedItems } from '../../common/commonFinder';
-import { ContributedKernelFinderKind, IContributedKernelFinderInfo } from '../../internalTypes';
+import { ContributedKernelFinderKind } from '../../internalTypes';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 // Even after shutting down a kernel, the server API still returns the old information.
@@ -46,7 +46,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 const REMOTE_KERNEL_REFRESH_INTERVAL = 2_000;
 
 // This class watches a single jupyter server URI and returns kernels from it
-export class RemoteKernelFinder implements IRemoteKernelFinder, IContributedKernelFinderInfo, IDisposable {
+export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     /**
      * List of ids of kernels that should be hidden from the kernel picker.
      */

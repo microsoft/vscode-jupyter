@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument, QuickPickItem, QuickPickItemKind } from 'vscode';
-import { IContributedKernelFinderInfo } from '../../../kernels/internalTypes';
+import { IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { IKernelFinder } from '../../../kernels/types';
 import { ICommandManager } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
@@ -23,7 +23,7 @@ import {
 } from '../types';
 
 interface KernelFinderQuickPickItem extends QuickPickItem {
-    kernelFinderInfo: IContributedKernelFinderInfo;
+    kernelFinderInfo: IContributedKernelFinder;
 }
 
 interface ControllerQuickPickItem extends QuickPickItem {
@@ -31,7 +31,7 @@ interface ControllerQuickPickItem extends QuickPickItem {
 }
 
 // The return type of our multistep selection process
-type MultiStepResult = { source?: IContributedKernelFinderInfo; controller?: IVSCodeNotebookController };
+type MultiStepResult = { source?: IContributedKernelFinder; controller?: IVSCodeNotebookController };
 
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
@@ -137,7 +137,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
 
     // Get all registered controllers that match a specific finder
     private getMatchingControllers(
-        kernelSource: IContributedKernelFinderInfo,
+        kernelSource: IContributedKernelFinder,
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): IVSCodeNotebookController[] {
         return this.controllerRegistration.registered.filter((controller) => {
@@ -160,7 +160,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
     }
 
     // Convert a kernel finder info in a quick pick item
-    toQuickPickItem(kernelFinderInfo: IContributedKernelFinderInfo): KernelFinderQuickPickItem {
+    toQuickPickItem(kernelFinderInfo: IContributedKernelFinder): KernelFinderQuickPickItem {
         return { kernelFinderInfo, label: kernelFinderInfo.displayName };
     }
 }

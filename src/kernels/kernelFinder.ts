@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { traceInfoIfCI } from '../platform/logging';
-import { IContributedKernelFinder, IContributedKernelFinderInfo } from './internalTypes';
+import { IContributedKernelFinder } from './internalTypes';
 import { IKernelFinder, KernelConnectionMetadata } from './types';
 
 /**
@@ -14,9 +14,9 @@ import { IKernelFinder, KernelConnectionMetadata } from './types';
 @injectable()
 export class KernelFinder implements IKernelFinder {
     private _finders: IContributedKernelFinder<KernelConnectionMetadata>[] = [];
-    private connectionFinderMapping: Map<string, IContributedKernelFinderInfo> = new Map<
+    private connectionFinderMapping: Map<string, IContributedKernelFinder> = new Map<
         string,
-        IContributedKernelFinderInfo
+        IContributedKernelFinder
     >();
 
     private _onDidChangeKernels = new EventEmitter<void>();
@@ -74,12 +74,12 @@ export class KernelFinder implements IKernelFinder {
 
     // Check our mappings to see what connection supplies this metadata, since metadatas can be created outside of finders
     // allow for undefined as a return value
-    public getFinderForConnection(kernelMetadata: KernelConnectionMetadata): IContributedKernelFinderInfo | undefined {
+    public getFinderForConnection(kernelMetadata: KernelConnectionMetadata): IContributedKernelFinder | undefined {
         return this.connectionFinderMapping.get(kernelMetadata.id);
     }
 
     // Give the info for what kernel finders are currently registered
-    public get registered(): IContributedKernelFinderInfo[] {
-        return this._finders as IContributedKernelFinderInfo[];
+    public get registered(): IContributedKernelFinder[] {
+        return this._finders;
     }
 }

@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookControllerAffinity2, NotebookDocument, workspace } from 'vscode';
-import { IContributedKernelFinderInfo } from '../../../kernels/internalTypes';
+import { IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { IKernelFinder } from '../../../kernels/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IDisposableRegistry } from '../../../platform/common/types';
@@ -14,9 +14,9 @@ import { IControllerRegistration, INotebookKernelSourceTracker, IVSCodeNotebookC
 // Controls which kernel source is associated with each document, and controls hiding and showing kernel sources for them.
 @injectable()
 export class NotebookKernelSourceTracker implements INotebookKernelSourceTracker, IExtensionSyncActivationService {
-    private documentSourceMapping: Map<NotebookDocument, IContributedKernelFinderInfo | undefined> = new Map<
+    private documentSourceMapping: Map<NotebookDocument, IContributedKernelFinder | undefined> = new Map<
         NotebookDocument,
-        IContributedKernelFinderInfo | undefined
+        IContributedKernelFinder | undefined
     >();
 
     constructor(
@@ -34,10 +34,10 @@ export class NotebookKernelSourceTracker implements INotebookKernelSourceTracker
         workspace.notebookDocuments.forEach(this.onDidOpenNotebookDocument.bind(this));
     }
 
-    public getKernelSourceForNotebook(notebook: NotebookDocument): IContributedKernelFinderInfo | undefined {
+    public getKernelSourceForNotebook(notebook: NotebookDocument): IContributedKernelFinder | undefined {
         return this.documentSourceMapping.get(notebook);
     }
-    public setKernelSourceForNotebook(notebook: NotebookDocument, kernelSource: IContributedKernelFinderInfo): void {
+    public setKernelSourceForNotebook(notebook: NotebookDocument, kernelSource: IContributedKernelFinder): void {
         this.documentSourceMapping.set(notebook, kernelSource);
 
         // After setting the kernelsource we now need to change the affinity of the controllers to hide all controllers not from that finder
@@ -57,7 +57,7 @@ export class NotebookKernelSourceTracker implements INotebookKernelSourceTracker
         });
     }
 
-    private updateControllerAffinity(notebook: NotebookDocument, kernelSource: IContributedKernelFinderInfo) {
+    private updateControllerAffinity(notebook: NotebookDocument, kernelSource: IContributedKernelFinder) {
         // Find the controller associated with the given kernel source
         const nonAssociatedControllers = this.controllerRegistration.registered.filter(
             (controller) => !this.controllerMatchesKernelSource(controller, kernelSource)
@@ -80,7 +80,7 @@ export class NotebookKernelSourceTracker implements INotebookKernelSourceTracker
     // Matching function to filter if controllers match a specific source
     private controllerMatchesKernelSource(
         controller: IVSCodeNotebookController,
-        kernelSource: IContributedKernelFinderInfo
+        kernelSource: IContributedKernelFinder
     ): boolean {
         const controllerFinderInfo = this.kernelFinder.getFinderForConnection(controller.connection);
         if (controllerFinderInfo && controllerFinderInfo.id === kernelSource.id) {

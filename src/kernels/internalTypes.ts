@@ -11,13 +11,10 @@ export enum ContributedKernelFinderKind {
     Local = 'local'
 }
 
-export interface IContributedKernelFinder<T extends KernelConnectionMetadata> extends IContributedKernelFinderInfo {
+export interface IContributedKernelFinder<T extends KernelConnectionMetadata = KernelConnectionMetadata> {
+    id: string;
+    displayName: string;
     kind: ContributedKernelFinderKind;
     onDidChangeKernels: Event<void>;
     kernels: T[];
-}
-
-export interface IContributedKernelFinderInfo {
-    id: string;
-    displayName: string;
 }
