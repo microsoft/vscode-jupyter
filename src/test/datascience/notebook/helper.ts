@@ -606,7 +606,7 @@ async function getActiveInterpreterKernelConnection() {
                     areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
             ) as PythonKernelConnectionMetadata,
         defaultNotebookTestTimeout,
-        `Kernel Connection pointing to active interpreter not found`
+        `Kernel Connection pointing to active interpreter not found.1`
     );
 }
 async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
@@ -639,7 +639,7 @@ async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
                 return false;
             }) as RemoteKernelSpecConnectionMetadata,
         defaultNotebookTestTimeout,
-        `Kernel Connection pointing to active interpreter not found`
+        `Kernel Connection pointing to active interpreter not found.2`
     );
 }
 export async function getDefaultKernelConnection() {
