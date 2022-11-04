@@ -99,6 +99,9 @@ jobs:
         uses: ./.github/actions/build-vsix
         id: build-vsix
 
+      - name: Create coverage folder (if not created)
+        run: node ./build/webpack/bundleDependenciesScript.js
+
       - uses: actions/upload-artifact@v3
         with:
           name: 'ms-toolsai-jupyter-insiders.vsix'
