@@ -212,6 +212,8 @@ export async function run(): Promise<void> {
 
     // Setup test files that need to be run.
     testFiles.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
+    console.log(`Running tests with options ${JSON.stringify(options, undefined, 4)}`);
+    console.log(`Tests included ${testFiles.join(',')}`);
 
     // for performance tests, extension activation is part of the test run
     if (!IS_PERF_TEST()) {

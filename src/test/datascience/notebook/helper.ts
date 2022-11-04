@@ -593,10 +593,11 @@ async function waitForActiveNotebookEditor(notebookEditor?: NotebookEditor): Pro
 
 async function getActiveInterpreterKernelConnection() {
     const { interpreterService, kernelFinder } = await getServices();
-    const interpreter = await interpreterService.getActiveInterpreter();
-    if (!interpreter) {
-        assert.fail('Active Interpreter is undefined');
-    }
+    const interpreter = await waitForCondition(
+        () => interpreterService.getActiveInterpreter(),
+        defaultNotebookTestTimeout,
+        'Active Interpreter is undefined.2'
+    );
     return waitForCondition(
         () =>
             kernelFinder.kernels.find(
@@ -610,10 +611,13 @@ async function getActiveInterpreterKernelConnection() {
 }
 async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
     const { interpreterService, kernelFinder } = await getServices();
-    const interpreter = await interpreterService.getActiveInterpreter();
-    if (!interpreter) {
-        traceWarning('Active Interpreter is undefined');
-    }
+    const interpreter = isWeb()
+        ? undefined
+        : await waitForCondition(
+              () => interpreterService.getActiveInterpreter(),
+              defaultNotebookTestTimeout,
+              'Active Interpreter is undefined.3'
+          );
     return waitForCondition(
         () =>
             kernelFinder.kernels.find((item) => {

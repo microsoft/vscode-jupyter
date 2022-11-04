@@ -39,7 +39,7 @@ import { Signal } from '@lumino/signaling';
 import { JupyterInvalidKernelError } from '../../../kernels/errors/jupyterInvalidKernelError';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('DataScience - JupyterSession', () => {
+suite('JupyterSession', () => {
     type IKernelChangedArgs = IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>;
     let jupyterSession: JupyterSession;
     let connection: IJupyterConnection;

@@ -27,7 +27,7 @@ import {
     IIPyWidgetScriptManagerFactory
 } from '../../../notebooks/controllers/ipywidgets/types';
 
-suite('IPyWidget Script Manager', function () {
+suite('IPyWidget Script Manager @widgets', function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
