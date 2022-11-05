@@ -32,13 +32,8 @@ import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from
 import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from './constants';
-import {
-    IDebuggingDelegate,
-    IDebugInfoResponse,
-    IKernelDebugAdapter,
-    INotebookDebugConfig,
-    KernelDebugMode
-} from './debuggingTypes';
+import { ResetKernelController } from './controllers/resetKernelController';
+import { IDebuggingDelegate, IDebugInfoResponse, IKernelDebugAdapter, INotebookDebugConfig } from './debuggingTypes';
 import {
     assertIsDebugConfig,
     getMessageSourceAndHookIt,
@@ -62,7 +57,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     private readonly endSession = new EventEmitter<DebugSession>();
     private readonly configuration: INotebookDebugConfig;
     protected readonly disposables: IDisposable[] = [];
-    private delegates: IDebuggingDelegate[] | undefined;
+    private delegates: IDebuggingDelegate[] = [];
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCell: NotebookCell | undefined;
@@ -79,13 +74,9 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         const configuration = this.session.configuration;
         assertIsDebugConfig(configuration);
         this.configuration = configuration;
-        if (
-            configuration.__mode === KernelDebugMode.InteractiveWindow ||
-            configuration.__mode === KernelDebugMode.Cell ||
-            configuration.__mode === KernelDebugMode.RunByLine
-        ) {
-            this.debugCell = notebookDocument.cellAt(configuration.__cellIndex!);
-        }
+        this.debugCell = notebookDocument.cellAt(configuration.__cellIndex!);
+
+        this.addDebuggingDelegates([new ResetKernelController(this)]);
 
         this.jupyterSession.kernel?.iopubMessage.connect(this.onIOPubMessage, this);
         this.disposables.push(
@@ -148,8 +139,8 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         );
     }
 
-    public setDebuggingDelegates(delegates: IDebuggingDelegate[]) {
-        this.delegates = delegates;
+    public addDebuggingDelegates(delegates: IDebuggingDelegate[]) {
+        this.delegates.push(...delegates);
     }
 
     private trace(tag: string, msg: string) {
@@ -173,10 +164,15 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     /**
      * Handle a message from the client to the debug adapter.
      */
-    async handleMessage(message: DebugProtocol.ProtocolMessage) {
+    handleMessage(message: DebugProtocol.ProtocolMessage): void {
+        this.handleClientMessageAsync(message).ignoreErrors();
+    }
+
+    protected async handleClientMessageAsync(message: DebugProtocol.ProtocolMessage): Promise<void> {
         try {
             traceInfoIfCI(`KernelDebugAdapter::handleMessage ${JSON.stringify(message, undefined, ' ')}`);
-            // intercept 'setBreakpoints' request
+
+            // Necessary, since dumpCell usually runs before debugging starts?
             if (message.type === 'request' && (message as DebugProtocol.Request).command === 'setBreakpoints') {
                 const args = (message as DebugProtocol.Request).arguments;
                 if (args.source && args.source.path && args.source.path.indexOf('vscode-notebook-cell:') === 0) {
@@ -187,14 +183,6 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                         await this.dumpCell(cell.index);
                     }
                 }
-            }
-
-            // after attaching, send a 'debugInfo' request
-            // reset breakpoints and continue stopped threads if there are any
-            // we do this in case the kernel is stopped when we attach
-            // This might happen if VS Code or the extension host crashes
-            if (message.type === 'request' && (message as DebugProtocol.Request).command === 'attach') {
-                await this.debugInfo();
             }
 
             if (message.type === 'request') {
@@ -208,7 +196,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 }
             }
 
-            return this.sendRequestToJupyterSession(message);
+            await this.sendRequestToJupyterSession(message);
         } catch (e) {
             traceError(`KernelDebugAdapter::handleMessage failure: ${e}`);
         }
@@ -220,6 +208,21 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
 
     public stepIn(threadId: number): Thenable<DebugProtocol.StepInResponse['body']> {
         return this.session.customRequest('stepIn', { threadId });
+    }
+
+    public async debugInfo(): Promise<IDebugInfoResponse> {
+        return await this.session.customRequest('debugInfo');
+    }
+
+    public continueDirect(threadId: number): void {
+        this.jupyterSession.requestDebug({
+            seq: 0,
+            type: 'request',
+            command: 'continue',
+            arguments: {
+                threadId
+            }
+        });
     }
 
     public async disconnect() {
@@ -266,22 +269,6 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     }
     protected abstract dumpCell(index: number): Promise<void>;
 
-    private async debugInfo(): Promise<void> {
-        const response = await this.session.customRequest('debugInfo');
-
-        // If there's stopped threads at this point, continue them all
-        (response as IDebugInfoResponse).stoppedThreads.forEach((thread: number) => {
-            this.jupyterSession.requestDebug({
-                seq: 0,
-                type: 'request',
-                command: 'continue',
-                arguments: {
-                    threadId: thread
-                }
-            });
-        });
-    }
-
     private lookupCellByLongName(sourcePath: string) {
         if (!this.platformService.isWindows) {
             return undefined;
@@ -302,6 +289,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             traceInfo(`Skipping sending message ${message.type} because session is disposed`);
             return;
         }
+
         // map Source paths from VS Code to Ipykernel temp files
         getMessageSourceAndHookIt(message, this.translateRealFileToDebuggerFile.bind(this));
 

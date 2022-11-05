@@ -62,10 +62,18 @@ export interface IJupyterDebugService extends IDebugService {
 }
 
 export interface IKernelDebugAdapter extends DebugAdapter {
+    /* These methods make requests via roundtrip to the client */
     stepIn(threadId: number): Thenable<DebugProtocol.StepInResponse['body']>;
     stackTrace(args: DebugProtocol.StackTraceArguments): Thenable<DebugProtocol.StackTraceResponse['body']>;
     setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Thenable<DebugProtocol.SetBreakpointsResponse['body']>;
+    debugInfo(): Thenable<IDebugInfoResponse>;
     disconnect(): Promise<void>;
+
+    /**
+     * Makes a request directly to the Jupyter debug connection- no roundtrip but no response either
+     */
+    continueDirect(threadId: number): void;
+
     onDidEndSession: Event<DebugSession>;
     dumpAllCells(): Promise<void>;
     getConfiguration(): IBaseNotebookDebugConfig;
