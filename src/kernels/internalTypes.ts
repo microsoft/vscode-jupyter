@@ -8,7 +8,8 @@ import { KernelConnectionMetadata } from './types';
 
 export enum ContributedKernelFinderKind {
     Remote = 'remote',
-    Local = 'local'
+    LocalKernelSpec = 'localKernelSpec',
+    LocalPythonEnvironment = 'localPythonEnvironment'
 }
 
 export interface IContributedKernelFinder<T extends KernelConnectionMetadata = KernelConnectionMetadata> {

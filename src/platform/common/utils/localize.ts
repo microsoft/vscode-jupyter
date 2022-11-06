@@ -1372,7 +1372,6 @@ export namespace DataScience {
         localize('DataScience.webNotSupported', `Operation not supported in web version of Jupyter Extension.`);
     export const validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps = () =>
         localize('DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps', 'Has to be http(s)');
-    export const pickLocalKernelTitle = () => localize('DataScience.pickLocalKernelTitle', `Select a Local Kernel`);
     export const pickLocalKernelPlaceholder = () =>
         localize('DataScience.pickLocalKernelPlaceholder', `type to filter`);
     export const pickRemoteKernelTitle = () => localize('DataScience.pickRemoteKernelTitle', `Select a Remote Kernel`);
@@ -1416,8 +1415,14 @@ export namespace DataScience {
             { key: 'DataScience.failedToInstallPandas', comment: ['{Locked="Pandas"}'] },
             'Failed to install Pandas to use the Data Viewer.'
         );
-    export const localKernelFinderDisplayName = () =>
-        localize('DataScience.localKernelFinderDisplayName', 'Local Kernels');
+    export const localKernelSpecs = () => localize('DataScience.localKernelSpecs', 'Local Kernel specs');
+    export const pickLocalKernelSpecTitle = () =>
+        localize('DataScience.pickLocalKernelSpecTitle', `Select a Local Kernel spec`);
+
+    export const localPythonEnvironments = () =>
+        localize('DataScience.localPythonEnvironments', 'Local Python Environments');
+    export const pickLocalKernelPythonEnvTitle = () =>
+        localize('DataScience.pickLocalKernelPythonEnvTitle', `Select a Local Python Environment`);
     export const universalRemoteKernelFinderDisplayName = () =>
         localize('DataScience.universalRemoteKernelFinderDisplayName', 'Remote - {0}');
     export const remoteKernelFinderDisplayName = () =>

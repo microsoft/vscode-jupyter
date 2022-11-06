@@ -24,13 +24,11 @@ import {
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterSessionManager } from '../session/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../session/jupyterSessionManagerFactory';
-import { ILocalKernelFinder } from '../../raw/types';
 import { ActiveKernelIdList, PreferredRemoteKernelIdProvider } from '../preferredRemoteKernelIdProvider';
 import { IJupyterKernel, IJupyterRemoteCachedKernelValidator, IJupyterSessionManager } from '../types';
 import { KernelFinder } from '../../kernelFinder';
 import { NotebookProvider } from '../launcher/notebookProvider';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { LocalKernelFinder } from '../../raw/finder/localKernelFinder.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { JupyterServerUriStorage } from '../launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
@@ -39,15 +37,14 @@ import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { IExtensions } from '../../../platform/common/types';
-import { takeTopRankKernel } from '../../raw/finder/localKernelFinder.unit.test';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { RemoteKernelFinder } from './remoteKernelFinder';
+import { takeTopRankKernel } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper.unit.test';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
     let preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider;
     let remoteKernelFinder: RemoteKernelFinder;
-    let localKernelFinder: ILocalKernelFinder;
     let kernelFinder: KernelFinder;
     let kernelRankHelper: IKernelRankingHelper;
     let fs: IFileSystemNode;
@@ -137,8 +134,6 @@ suite(`Remote Kernel Finder`, () => {
         const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
         when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
         interpreterService = mock<IInterpreterService>();
-        localKernelFinder = mock(LocalKernelFinder);
-        when(localKernelFinder.kernels).thenReturn([]);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         const notebookProvider = mock(NotebookProvider);

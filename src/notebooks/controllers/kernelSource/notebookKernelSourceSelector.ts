@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CancellationTokenSource, NotebookDocument, QuickPickItem, QuickPickItemKind } from 'vscode';
-import { IContributedKernelFinder } from '../../../kernels/internalTypes';
+import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import {
     computeServerId,
     extractJupyterServerHandleAndId,
@@ -18,7 +18,11 @@ import {
     IJupyterUriProviderRegistration,
     IRemoteKernelFinder
 } from '../../../kernels/jupyter/types';
-import { IKernelFinder } from '../../../kernels/types';
+import {
+    IKernelFinder,
+    LocalKernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../../../kernels/types';
 import { ICommandManager } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { IDisposable } from '../../../platform/common/types';
@@ -37,7 +41,8 @@ import {
 } from '../types';
 
 enum KernelSourceQuickPickType {
-    LocalKernelSpecAndPythonEnv = 'localKernelSpecAndPythonEnv',
+    LocalKernelSpec = 'localKernelSpec',
+    LocalPythonEnv = 'localPythonEnv',
     LocalServer = 'localServer',
     ServerUriProvider = 'serverUriProvider'
 }
@@ -48,9 +53,14 @@ enum KernelFinderEntityQuickPickType {
     UriProviderQuickPick = 'uriProviderQuickPick'
 }
 
-interface LocalKernelSourceQuickPickItem extends QuickPickItem {
-    type: KernelSourceQuickPickType.LocalKernelSpecAndPythonEnv;
-    kernelFinderInfo: IContributedKernelFinder;
+interface LocalKernelSpecSourceQuickPickItem extends QuickPickItem {
+    type: KernelSourceQuickPickType.LocalKernelSpec;
+    kernelFinderInfo: IContributedKernelFinder<LocalKernelSpecConnectionMetadata>;
+}
+
+interface LocalPythonEnvSourceQuickPickItem extends QuickPickItem {
+    type: KernelSourceQuickPickType.LocalPythonEnv;
+    kernelFinderInfo: IContributedKernelFinder<PythonKernelConnectionMetadata>;
 }
 
 interface LocalJupyterServerSourceQuickPickItem extends QuickPickItem {
@@ -78,7 +88,8 @@ interface KernelProviderItemsQuickPickItem extends QuickPickItem {
 }
 
 type KernelSourceQuickPickItem =
-    | LocalKernelSourceQuickPickItem
+    | LocalKernelSpecSourceQuickPickItem
+    | LocalPythonEnvSourceQuickPickItem
     | KernelProviderInfoQuickPickItem
     | LocalJupyterServerSourceQuickPickItem;
 
@@ -149,14 +160,28 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         const items: KernelSourceQuickPickItem[] = [];
         const allKernelFinders = this.kernelFinder.registered;
 
-        const localKernelFinder = allKernelFinders.find((finder) => finder.id === 'local');
+        const localKernelFinder = allKernelFinders.find(
+            (finder) => finder.id === ContributedKernelFinderKind.LocalKernelSpec
+        );
         if (localKernelFinder) {
             // local kernel spec and python env finder
             items.push({
-                type: KernelSourceQuickPickType.LocalKernelSpecAndPythonEnv,
-                label: 'Local Kernels & Python Environments',
-                detail: DataScience.pickLocalKernelTitle(),
-                kernelFinderInfo: localKernelFinder
+                type: KernelSourceQuickPickType.LocalKernelSpec,
+                label: DataScience.localKernelSpecs(),
+                detail: DataScience.pickLocalKernelSpecTitle(),
+                kernelFinderInfo: localKernelFinder as IContributedKernelFinder<LocalKernelSpecConnectionMetadata>
+            });
+        }
+        const localPythonEnvKernelFinder = allKernelFinders.find(
+            (finder) => finder.id === ContributedKernelFinderKind.LocalPythonEnvironment
+        );
+        if (localPythonEnvKernelFinder) {
+            // local kernel spec and python env finder
+            items.push({
+                type: KernelSourceQuickPickType.LocalPythonEnv,
+                label: DataScience.localPythonEnvironments(),
+                detail: DataScience.pickLocalKernelPythonEnvTitle(),
+                kernelFinderInfo: localPythonEnvKernelFinder as IContributedKernelFinder<PythonKernelConnectionMetadata>
             });
         }
 
@@ -197,7 +222,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
 
         if (selectedSource) {
             switch (selectedSource.type) {
-                case KernelSourceQuickPickType.LocalKernelSpecAndPythonEnv:
+                case KernelSourceQuickPickType.LocalKernelSpec:
+                case KernelSourceQuickPickType.LocalPythonEnv:
                     state.source = selectedSource.kernelFinderInfo;
                     return this.getKernel.bind(
                         this,

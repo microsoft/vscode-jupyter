@@ -22,7 +22,7 @@ import {
     getKernelId,
     getKernelRegistrationInfo,
     getNameOfKernelConnection
-} from '../../../kernels/helpers';
+} from '../../helpers';
 import { PlatformService } from '../../../platform/common/platform/platformService.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
@@ -42,18 +42,16 @@ import {
     LocalKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
-} from '../../../kernels/types';
-import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
-import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
-import { loadKernelSpec } from '../../../kernels/raw/finder/localKernelSpecFinderBase.node';
-import { LocalKnownPathKernelSpecFinder } from '../../../kernels/raw/finder/localKnownPathKernelSpecFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
+} from '../../types';
+import { JupyterPaths } from './jupyterPaths.node';
+import { loadKernelSpec } from './localKernelSpecFinderBase.node';
+import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { KernelFinder } from '../../../kernels/kernelFinder';
-import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
-import { RemoteKernelFinder } from '../../jupyter/finder/remoteKernelFinder';
-import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
+import { KernelFinder } from '../../kernelFinder';
+import { PreferredRemoteKernelIdProvider } from '../../jupyter/preferredRemoteKernelIdProvider';
+import { IJupyterServerUriStorage } from '../../jupyter/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
@@ -63,11 +61,12 @@ import { uriEquals } from '../../../test/datascience/helpers';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
+import { ContributedLocalKernelSpecFinder } from './contributedLocalKernelSpecFinder.node';
+import { ContributedLocalPythonEnvFinder } from './contributedLocalPythonEnvFinder.node';
+import { takeTopRankKernel } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper.unit.test';
 
 [false, true].forEach((isWindows) => {
-    suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
-        let localKernelFinder: LocalKernelFinder;
-        let remoteKernelFinder: RemoteKernelFinder;
+    suite.only(`Contributed Local Kernel Spec Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let kernelFinder: KernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
@@ -111,12 +110,10 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             const getOSTypeStub = sinon.stub(platform, 'getOSType');
             getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
             interpreterService = mock(InterpreterService);
-            remoteKernelFinder = mock(RemoteKernelFinder);
             onDidChangeInterpreter = new EventEmitter<void>();
             onDidChangeInterpreters = new EventEmitter<void>();
             disposables.push(onDidChangeInterpreter);
             disposables.push(onDidChangeInterpreters);
-            when(remoteKernelFinder.listKernelsFromConnection(anything())).thenResolve([]);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
                 testData.interpreters = testData.interpreters || [];
@@ -270,7 +267,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                 disposables,
                 instance(env)
             );
-            localKernelFinder = new LocalKernelFinder(
+            const localKernelSpecFinder = new ContributedLocalKernelSpecFinder(
                 nonPythonKernelSpecFinder,
                 localPythonAndRelatedKernelFinder,
                 kernelFinder,
@@ -280,8 +277,18 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                 instance(condaService),
                 instance(extensions)
             );
-            changeEventFired = createEventHandler(localKernelFinder, 'onDidChangeKernels', disposables);
-            localKernelFinder.activate();
+            const pythonEnvKernelFinder = new ContributedLocalPythonEnvFinder(
+                localPythonAndRelatedKernelFinder,
+                kernelFinder,
+                [],
+                instance(extensionChecker),
+                instance(interpreterService),
+                instance(condaService),
+                instance(extensions)
+            );
+            changeEventFired = createEventHandler(kernelFinder, 'onDidChangeKernels', disposables);
+            localKernelSpecFinder.activate();
+            pythonEnvKernelFinder.activate();
             nonPythonKernelSpecFinder.activate();
             localPythonAndRelatedKernelFinder.activate();
 
@@ -696,7 +703,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
         async function verifyKernels(expectations: ExpectedKernels) {
             const cancellation = new CancellationTokenSource();
             disposables.push(cancellation);
-            const actualKernels = localKernelFinder.kernels;
+            const actualKernels = kernelFinder.kernels as LocalKernelConnectionMetadata[];
             const expectedKernels = await generateExpectedKernels(
                 expectations.expectedGlobalKernelSpecs || [],
                 expectations.expectedInterpreterKernelSpecFiles || [],
@@ -873,21 +880,25 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             await changeEventFired.assertFired(1000);
 
             verifyGlobalKernelSpec(
-                localKernelFinder.kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
+                (kernelFinder.kernels as LocalKernelConnectionMetadata[]).find(
+                    (item) => item.kernelSpec.display_name === juliaKernelSpec.display_name
+                ),
                 juliaKernelSpec
             );
             verifyGlobalKernelSpec(
-                localKernelFinder.kernels.find((item) => item.kernelSpec.display_name === javaKernelSpec.display_name),
+                (kernelFinder.kernels as LocalKernelConnectionMetadata[]).find(
+                    (item) => item.kernelSpec.display_name === javaKernelSpec.display_name
+                ),
                 javaKernelSpec
             );
             verifyGlobalKernelSpec(
-                localKernelFinder.kernels.find(
+                (kernelFinder.kernels as LocalKernelConnectionMetadata[]).find(
                     (item) => item.kernelSpec.display_name === defaultPython3Kernel.display_name
                 ),
                 defaultPython3Kernel
             );
             verifyGlobalKernelSpec(
-                localKernelFinder.kernels.find(
+                (kernelFinder.kernels as LocalKernelConnectionMetadata[]).find(
                     (item) => item.kernelSpec.display_name === fullyQualifiedPythonKernelSpec.display_name
                 ),
                 fullyQualifiedPythonKernelSpec
@@ -903,11 +914,15 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             await changeEventFired.assertFired(1000);
 
             verifyGlobalKernelSpec(
-                localKernelFinder.kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
+                (kernelFinder.kernels as LocalKernelConnectionMetadata[]).find(
+                    (item) => item.kernelSpec.display_name === juliaKernelSpec.display_name
+                ),
                 juliaKernelSpec
             );
             verifyGlobalKernelSpec(
-                localKernelFinder.kernels.find((item) => item.kernelSpec.display_name === javaKernelSpec.display_name),
+                (kernelFinder.kernels as LocalKernelConnectionMetadata[]).find(
+                    (item) => item.kernelSpec.display_name === javaKernelSpec.display_name
+                ),
                 javaKernelSpec
             );
         });
@@ -927,7 +942,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             disposables.push(cancelToken);
             await changeEventFired.assertFired(1000);
 
-            const kernels = localKernelFinder.kernels;
+            const kernels = kernelFinder.kernels as LocalKernelConnectionMetadata[];
             assert.isUndefined(
                 kernels.find(
                     (item) =>
@@ -977,7 +992,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
             condaEnv1
         ].forEach((activePythonEnv) => {
             suite(
-                activePythonEnv ? `With active Python (${activePythonEnv.displayName})` : 'without active Python',
+                activePythonEnv ? `With active Python (${activePythonEnv?.displayName})` : 'without active Python',
                 () => {
                     /**
                      * As we're using a push model, we need to wait for the events to get triggered.
@@ -1160,7 +1175,9 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         const cancelToken = new CancellationTokenSource();
                         disposables.push(cancelToken);
                         assert.isUndefined(
-                            localKernelFinder.kernels.find((kernel) => kernel.kind === 'startUsingPythonInterpreter')
+                            (kernelFinder.kernels as LocalKernelConnectionMetadata[]).find(
+                                (kernel) => kernel.kind === 'startUsingPythonInterpreter'
+                            )
                         );
                     });
                     test('Default Python kernlespecs should be ignored', async () => {
@@ -1340,7 +1357,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         // Try an empty python Notebook without any kernelspec in metadata.
                         const rankedKernels = await kernelRankHelper.rankKernels(
                             nbUri,
-                            localKernelFinder.kernels,
+                            kernelFinder.kernels as LocalKernelConnectionMetadata[],
                             {
                                 language_info: { name: PYTHON_LANGUAGE },
                                 orig_nbformat: 4
@@ -1353,7 +1370,9 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                             'python',
                             `Python != ${kernel?.kernelSpec?.language}, ranked kernels include ${JSON.stringify(
                                 rankedKernels
-                            )}\n and all kernels ${JSON.stringify(localKernelFinder.kernels)}`
+                            )}\n and all kernels ${JSON.stringify(
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[]
+                            )}`
                         );
                         assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
                         assert.notStrictEqual(
@@ -1368,7 +1387,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: '',
@@ -1394,7 +1413,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: 'Python',
@@ -1420,7 +1439,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: 'Python 3',
@@ -1446,7 +1465,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: 'Python 3 (IPyKernel)',
@@ -1472,7 +1491,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: 'Python 2 on Disk',
@@ -1500,7 +1519,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     language_info: { name: 'julia' },
                                     orig_nbformat: 4
@@ -1514,7 +1533,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: juliaKernelSpec.display_name,
@@ -1531,7 +1550,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: rV1KernelSpec.display_name,
@@ -1549,7 +1568,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: '',
@@ -1567,7 +1586,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: rV1KernelSpec.display_name,
@@ -1585,7 +1604,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: 'Some unknown name for Python 2',
@@ -1603,7 +1622,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: python2Global.displayName || '',
@@ -1621,7 +1640,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: '',
@@ -1639,7 +1658,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: condaEnv1.displayName || '',
@@ -1657,7 +1676,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: condaEnv1.displayName || '',
@@ -1675,7 +1694,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: 'Will never match',
@@ -1696,7 +1715,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     kernelspec: {
                                         display_name: 'Junk Display Name',
@@ -1715,7 +1734,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 nbUri,
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     language_info: { name: 'someunknownlanguage' },
                                     orig_nbformat: 4
@@ -1760,7 +1779,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         const kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 Uri.file('wow.py'),
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     language_info: { name: PYTHON_LANGUAGE },
                                     orig_nbformat: 4
@@ -1811,7 +1830,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         const kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 Uri.file('wow.py'),
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 undefined,
                                 activePythonEnv
                             )
@@ -1859,7 +1878,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
                         const kernel = takeTopRankKernel(
                             await kernelRankHelper.rankKernels(
                                 Uri.file('wow.py'),
-                                localKernelFinder.kernels,
+                                kernelFinder.kernels as LocalKernelConnectionMetadata[],
                                 {
                                     language_info: {
                                         name: PYTHON_LANGUAGE
@@ -2082,11 +2101,3 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
         });
     });
 });
-
-export function takeTopRankKernel(
-    rankedKernels: KernelConnectionMetadata[] | undefined
-): KernelConnectionMetadata | undefined {
-    if (rankedKernels && rankedKernels.length) {
-        return rankedKernels[rankedKernels.length - 1];
-    }
-}
