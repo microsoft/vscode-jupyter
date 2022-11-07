@@ -36,7 +36,7 @@ import {
 import {
     IControllerRegistration,
     INotebookKernelSourceSelector,
-    INotebookKernelSourceTracker,
+    IConnectionTracker,
     IVSCodeNotebookController
 } from '../types';
 
@@ -111,7 +111,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
     private localDisposables: IDisposable[] = [];
     private cancellationTokenSource: CancellationTokenSource | undefined;
     constructor(
-        @inject(INotebookKernelSourceTracker) private readonly kernelSourceTracker: INotebookKernelSourceTracker,
+        @inject(IConnectionTracker) private readonly connectionTracker: IConnectionTracker,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
@@ -522,7 +522,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
     // If we completed the multistep with results, apply those results
     private async applyResults(notebook: NotebookDocument, result: MultiStepResult) {
         // First apply the kernel filter to this document
-        result.source && this.kernelSourceTracker.setKernelSourceForNotebook(notebook, result.source);
+        result.controller && this.connectionTracker.trackSelection(notebook, result.controller.connection);
 
         // Then select the kernel that we wanted
         result.controller &&

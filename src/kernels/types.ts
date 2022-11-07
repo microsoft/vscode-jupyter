@@ -22,6 +22,9 @@ import { IBackupFile, IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { IContributedKernelFinder } from './internalTypes';
+import { isWeb } from '../platform/common/utils/misc';
+import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
+import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -34,7 +37,19 @@ export enum NotebookCellRunState {
     Error = 'Error'
 }
 
-export abstract class BaseKernelConnectionMetadata {
+async function getConnectionIdHash(connection: KernelConnectionMetadata) {
+    if (!isWeb() && connection.interpreter?.uri) {
+        // eslint-disable-next-line local-rules/dont-use-fspath
+        const interpreterPath = connection.interpreter.uri.fsPath;
+        // eslint-disable-next-line local-rules/dont-use-fspath
+        const normalizedPath = getNormalizedInterpreterPath(connection.interpreter.uri).fsPath;
+        // Connection ids can contain Python paths in them.
+        const normalizedId = connection.id.replace(interpreterPath, normalizedPath);
+        return getTelemetrySafeHashedString(normalizedId);
+    }
+    return getTelemetrySafeHashedString(connection.id);
+}
+export class BaseKernelConnectionMetadata {
     public static fromJSON(
         json:
             | Record<string, unknown>
@@ -108,6 +123,9 @@ export class LiveRemoteKernelConnectionMetadata {
     }) {
         return new LiveRemoteKernelConnectionMetadata(options);
     }
+    public getHashId() {
+        return getConnectionIdHash(this);
+    }
     public toJSON() {
         return {
             id: this.id,
@@ -159,6 +177,9 @@ export class LocalKernelSpecConnectionMetadata {
     }) {
         return new LocalKernelSpecConnectionMetadata(options);
     }
+    public getHashId() {
+        return getConnectionIdHash(this);
+    }
     public toJSON() {
         return {
             id: this.id,
@@ -207,6 +228,9 @@ export class RemoteKernelSpecConnectionMetadata {
     }) {
         return new RemoteKernelSpecConnectionMetadata(options);
     }
+    public getHashId() {
+        return getConnectionIdHash(this);
+    }
     public toJSON() {
         return {
             id: this.id,
@@ -239,6 +263,9 @@ export class PythonKernelConnectionMetadata {
     }
     public static create(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment; id: string }) {
         return new PythonKernelConnectionMetadata(options);
+    }
+    public getHashId() {
+        return getConnectionIdHash(this);
     }
     public toJSON() {
         return {
