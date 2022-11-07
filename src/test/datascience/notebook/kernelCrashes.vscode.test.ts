@@ -68,6 +68,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { instance, mock, when } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
+import { ConnectionDisplayDataProvider } from '../../../notebooks/controllers/connectionDisplayData';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -118,6 +119,12 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             const browser = api.serviceContainer.get<IBrowserService>(IBrowserService);
             const platform = api.serviceContainer.get<IPlatformService>(IPlatformService);
             kernelConnectionMetadata = await getDefaultKernelConnection();
+            const displayDataProvider = new ConnectionDisplayDataProvider(
+                instance(workspaceService),
+                instance(platform),
+                instance(uriStorage),
+                disposables
+            );
             const createNbController = sinon.stub(vscodeNotebook, 'createNotebookController');
             disposables.push(new Disposable(() => createNbController.restore()));
             createNbController.callsFake((id, _view, _label, handler) => {
@@ -151,7 +158,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 kernelConnectionMetadata,
                 kernelConnectionMetadata.id,
                 JupyterNotebookView,
-                'Python',
                 vscodeNotebook,
                 commandManager,
                 kernelProvider,
@@ -165,8 +171,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 browser,
                 extensionChecker,
                 api.serviceContainer,
-                uriStorage,
-                platform
+                displayDataProvider
             );
             disposables.push(interpreterController);
 
