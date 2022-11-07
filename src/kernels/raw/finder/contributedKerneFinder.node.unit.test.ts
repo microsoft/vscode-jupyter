@@ -66,7 +66,7 @@ import { ContributedLocalPythonEnvFinder } from './contributedLocalPythonEnvFind
 import { takeTopRankKernel } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper.unit.test';
 
 [false, true].forEach((isWindows) => {
-    suite.only(`Contributed Local Kernel Spec Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
+    suite(`Contributed Local Kernel Spec Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let kernelFinder: KernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
