@@ -33,7 +33,7 @@ export class ConnectionTracker implements IExtensionSyncActivationService, IConn
     }
 
     activate(): void {
-        if (this.kernelPickerType) {
+        if (this.kernelPickerType === 'Insiders') {
             workspace.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposableRegistry);
             this.controllerRegistration.onCreated(this.onCreatedController, this, this.disposableRegistry);
 
