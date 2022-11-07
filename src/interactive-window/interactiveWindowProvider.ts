@@ -48,6 +48,7 @@ import { getInteractiveWindowTitle } from './identity';
 import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import {
+    IConnectionTracker,
     IControllerDefaultService,
     IControllerRegistration,
     IVSCodeNotebookController
@@ -100,7 +101,8 @@ export class InteractiveWindowProvider
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IControllerDefaultService) private readonly controllerDefaultService: IControllerDefaultService,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
+        @inject(IConnectionTracker) private readonly connectionTracker: IConnectionTracker
     ) {
         asyncRegistry.push(this);
 
@@ -207,6 +209,9 @@ export class InteractiveWindowProvider
 
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
             const [inputUri, editor] = await this.createEditor(preferredController, resource, mode, commandManager);
+            if (preferredController) {
+                await this.connectionTracker.trackSelection(editor.notebook, preferredController.connection);
+            }
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 resource,
