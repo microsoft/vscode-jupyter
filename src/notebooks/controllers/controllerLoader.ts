@@ -11,7 +11,7 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
-import { IDisposableRegistry } from '../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -34,7 +34,8 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IControllerRegistration) private readonly registration: IControllerRegistration
+        @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
 
     public activate(): void {
@@ -72,13 +73,17 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         }
 
         if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
-            // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
-            createActiveInterpreterController(
-                JupyterNotebookView,
-                document.uri,
-                this.interpreters,
-                this.registration
-            ).catch(noop);
+            const useNewKernelPicker = this.configService.getSettings().kernelPickerType === 'Insiders';
+            // No need to always display active python env in VS Codes controller list.
+            if (!useNewKernelPicker) {
+                // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
+                createActiveInterpreterController(
+                    JupyterNotebookView,
+                    document.uri,
+                    this.interpreters,
+                    this.registration
+                ).catch(noop);
+            }
         }
     }
 
