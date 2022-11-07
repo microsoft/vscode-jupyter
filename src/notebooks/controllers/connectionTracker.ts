@@ -47,7 +47,7 @@ export class ConnectionTracker implements IExtensionSyncActivationService, IConn
         );
         if (controller) {
             // Ensure this controller is visible for this document.
-            controller.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity2.Default);
+            controller.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity2.Preferred);
         }
         await this.notebookConnectionMru.add(notebook, connection);
     }
@@ -93,17 +93,15 @@ export class ConnectionTracker implements IExtensionSyncActivationService, IConn
         if (!controller) {
             return;
         }
+        const [exactMatch, usedPreviously] = await Promise.all([
+            this.kernelRankingHelper.isExactMatch(notebook.uri, controller.connection, getNotebookMetadata(notebook)),
+            this.notebookConnectionMru.exists(notebook, controller.connection)
+        ]);
         const usedInThisSession = Array.from(
             this.documentSourceMapping.get(notebook) || new Set<KernelConnectionMetadata>()
         ).find((item) => item.id === connection.id);
-        const [exactMatch, usedPreviously] = await Promise.all([
-            this.kernelRankingHelper.isExactMatch(notebook.uri, controller.connection, getNotebookMetadata(notebook)),
-            usedInThisSession
-                ? Promise.resolve(usedInThisSession)
-                : this.notebookConnectionMru.exists(notebook, controller.connection)
-        ]);
 
-        if (!exactMatch && !usedPreviously) {
+        if (!exactMatch && !usedPreviously && !usedInThisSession) {
             controller.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity2.Hidden);
             return;
         }
