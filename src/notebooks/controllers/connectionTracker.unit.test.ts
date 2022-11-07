@@ -7,7 +7,6 @@ import { Disposable, EventEmitter, NotebookController, NotebookControllerAffinit
 import { LocalKernelSpecConnectionMetadata } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
-import { IServiceContainer } from '../../platform/ioc/types';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 import { ConnectionTracker } from './connectionTracker';
@@ -41,13 +40,12 @@ suite('Connection Tracker', () => {
         when(mockedVSCodeNamespaces.workspace.onDidOpenNotebookDocument).thenReturn(onDidOpenNotebookDocument.event);
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
         when(controllerRegistrations.onCreated).thenReturn(onCreated.event);
-        const svcContainer = mock<IServiceContainer>();
-        when(svcContainer.get<IKernelRankingHelper>(IKernelRankingHelper)).thenReturn(instance(rankingHelper));
-        when(svcContainer.get<IConnectionMru>(IConnectionMru)).thenReturn(instance(mru));
-        when(svcContainer.get<IControllerRegistration>(IControllerRegistration)).thenReturn(
-            instance(controllerRegistrations)
+        tracker = new ConnectionTracker(
+            disposables,
+            instance(controllerRegistrations),
+            instance(rankingHelper),
+            instance(mru)
         );
-        tracker = new ConnectionTracker(disposables, instance(svcContainer));
         tracker.activate();
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));

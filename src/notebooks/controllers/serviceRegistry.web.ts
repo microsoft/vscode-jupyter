@@ -45,10 +45,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
             INotebookKernelSourceSelector,
             NotebookKernelSourceSelector
         );
-        serviceManager.addSingleton<IConnectionTracker>(IConnectionTracker, ConnectionTracker);
-        serviceManager.addBinding(IConnectionTracker, IExtensionSyncActivationService);
-        serviceManager.addSingleton<IConnectionMru>(IConnectionMru, ConnectionMru);
     }
+    serviceManager.addSingleton<IConnectionTracker>(IConnectionTracker, ConnectionTracker);
+    serviceManager.addBinding(IConnectionTracker, IExtensionSyncActivationService);
+    serviceManager.addSingleton<IConnectionMru>(IConnectionMru, ConnectionMru);
 
     registerWidgetTypes(serviceManager, isDevMode);
 }
