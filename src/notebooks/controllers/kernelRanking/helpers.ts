@@ -18,7 +18,7 @@ import { IJupyterKernelSpec, KernelConnectionMetadata, PythonKernelConnectionMet
 import { isCI, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { Resource } from '../../../platform/common/types';
-import { getResourceType } from '../../../platform/common/utils';
+import { getResourceType, NotebookMetadata } from '../../../platform/common/utils';
 import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
@@ -69,23 +69,22 @@ export async function findKernelSpecMatchingInterpreter(
     return result.length ? result[0] : undefined;
 }
 
-function getInterpreterHashInMetadata(notebookMetadata: nbformat.INotebookMetadata | undefined): string | undefined {
+function getVSCodeInfoInInMetadata(
+    notebookMetadata: NotebookMetadata | undefined
+): NotebookMetadata['vscode'] | undefined {
     if (!notebookMetadata) {
         return;
     }
 
-    const metadataInterpreter: undefined | { hash?: string } =
-        'interpreter' in notebookMetadata // In the past we'd store interpreter.hash directly under metadata, but now we store it under metadata.vscode.
-            ? (notebookMetadata.interpreter as undefined | { hash?: string })
-            : 'vscode' in notebookMetadata &&
-              notebookMetadata.vscode &&
-              typeof notebookMetadata.vscode === 'object' &&
-              'interpreter' in notebookMetadata.vscode
-            ? (notebookMetadata.vscode.interpreter as undefined | { hash?: string })
-            : undefined;
-    return metadataInterpreter?.hash;
-}
+    const oldInterpreter = notebookMetadata.interpreter?.hash // In the past we'd store interpreter.hash directly under metadata, but now we store it under metadata.vscode.
+        ? notebookMetadata.interpreter
+        : undefined;
 
+    if (oldInterpreter) {
+        return { interpreter: oldInterpreter };
+    }
+    return notebookMetadata.vscode;
+}
 export async function rankKernels(
     kernels: KernelConnectionMetadata[],
     resource: Resource,
@@ -216,7 +215,7 @@ export async function isExactMatch(
     }
 
     if (
-        getInterpreterHashInMetadata(notebookMetadata) &&
+        getVSCodeInfoInInMetadata(notebookMetadata)?.interpreter &&
         (await interpreterMatchesThatInNotebookMetadata(
             kernelConnection,
             notebookMetadata,
@@ -933,13 +932,13 @@ function interpreterMatchesThatInNotebookMetadata(
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     interpreterHashForKernel: string | undefined
 ) {
-    const interpreterHashInMetadata = getInterpreterHashInMetadata(notebookMetadata);
+    const vscodeInfo = getVSCodeInfoInInMetadata(notebookMetadata);
     return (
-        interpreterHashInMetadata &&
+        vscodeInfo?.interpreter?.hash &&
         (kernelConnection.kind === 'startUsingLocalKernelSpec' ||
             kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
             kernelConnection.kind === 'startUsingPythonInterpreter') &&
         kernelConnection.interpreter &&
-        interpreterHashForKernel === interpreterHashInMetadata
+        interpreterHashForKernel === vscodeInfo.interpreter?.hash
     );
 }
