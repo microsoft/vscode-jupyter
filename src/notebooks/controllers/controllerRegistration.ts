@@ -4,7 +4,6 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
@@ -18,7 +17,6 @@ import {
 } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
-import { IPlatformService } from '../../platform/common/platform/types';
 import {
     IDisposableRegistry,
     IConfigurationService,
@@ -29,6 +27,7 @@ import { IServiceContainer } from '../../platform/ioc/types';
 import { traceError, traceVerbose } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
+import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import {
     IControllerRegistration,
@@ -80,7 +79,7 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IPlatformService) private readonly platform: IPlatformService
+        @inject(ConnectionDisplayDataProvider) private readonly displayDataProvider: ConnectionDisplayDataProvider
     ) {
         this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChangeConnectionType(this.onDidChangeFilter, this, this.disposables);
@@ -136,7 +135,6 @@ export class ControllerRegistration implements IControllerRegistration {
                         metadata,
                         id,
                         viewType,
-                        getDisplayNameOrNameOfKernelConnection(metadata),
                         this.notebook,
                         this.commandManager,
                         this.kernelProvider,
@@ -150,8 +148,7 @@ export class ControllerRegistration implements IControllerRegistration {
                         this.browser,
                         this.extensionChecker,
                         this.serviceContainer,
-                        this.serverUriStorage,
-                        this.platform
+                        this.displayDataProvider
                     );
                     controller.onDidDispose(
                         () => {

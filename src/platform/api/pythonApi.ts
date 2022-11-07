@@ -400,7 +400,7 @@ export class InterpreterService implements IInterpreterService {
             if (lazyLoadControllers) {
                 return;
             }
-            this._waitForAllInterpretersToLoad = (async () => {
+            const fn = async () => {
                 await this.refreshInterpreters();
 
                 // Don't allow for our call of getInterpretersImpl to be cancelled
@@ -417,7 +417,8 @@ export class InterpreterService implements IInterpreterService {
                         })
                     );
                 }
-            })();
+            };
+            this._waitForAllInterpretersToLoad = fn();
         }
         return this._waitForAllInterpretersToLoad;
     }
