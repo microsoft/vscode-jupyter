@@ -18,13 +18,15 @@ import {
     IControllerSelection,
     IKernelRankingHelper,
     INotebookKernelSourceSelector,
-    INotebookKernelSourceTracker
+    IConnectionTracker,
+    IConnectionMru
 } from './types';
 import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.web';
 import { KernelRankingHelper } from './kernelRanking/kernelRankingHelper';
 import { IConfigurationService } from '../../platform/common/types';
 import { NotebookKernelSourceSelector } from './kernelSource/notebookKernelSourceSelector';
-import { NotebookKernelSourceTracker } from './kernelSource/notebookKernelSourceTracker';
+import { ConnectionTracker } from './connectionTracker';
+import { ConnectionMru } from './connectionMru.web';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IKernelRankingHelper>(IKernelRankingHelper, KernelRankingHelper);
@@ -43,11 +45,9 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
             INotebookKernelSourceSelector,
             NotebookKernelSourceSelector
         );
-        serviceManager.addSingleton<INotebookKernelSourceTracker>(
-            INotebookKernelSourceTracker,
-            NotebookKernelSourceTracker
-        );
-        serviceManager.addBinding(INotebookKernelSourceTracker, IExtensionSyncActivationService);
+        serviceManager.addSingleton<IConnectionTracker>(IConnectionTracker, ConnectionTracker);
+        serviceManager.addBinding(IConnectionTracker, IExtensionSyncActivationService);
+        serviceManager.addSingleton<IConnectionMru>(IConnectionMru, ConnectionMru);
     }
 
     registerWidgetTypes(serviceManager, isDevMode);
