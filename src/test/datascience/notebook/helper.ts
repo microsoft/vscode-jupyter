@@ -638,7 +638,12 @@ async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
                 return false;
             }) as RemoteKernelSpecConnectionMetadata,
         defaultNotebookTestTimeout,
-        `Kernel Connection pointing to active interpreter not found.1`
+        () =>
+            `Kernel Connection pointing to active interpreter not found.1, active intepreter ${getDisplayPath(
+                interpreter?.uri
+            )} for kernels ${kernelFinder.kernels
+                .map((item) => `${item.id}=> ${item.kind} (${getDisplayPath(item.interpreter?.uri)})`)
+                .join(', ')}`
     );
 }
 export async function getDefaultKernelConnection() {

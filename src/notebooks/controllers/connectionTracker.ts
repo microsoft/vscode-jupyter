@@ -9,6 +9,7 @@ import { InteractiveWindowView, JupyterNotebookView } from '../../platform/commo
 import { IDisposableRegistry } from '../../platform/common/types';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
+import { IServiceContainer } from '../../platform/ioc/types';
 import {
     IControllerRegistration,
     IKernelRankingHelper,
@@ -20,12 +21,19 @@ import {
 @injectable()
 export class ConnectionTracker implements IExtensionSyncActivationService, IConnectionTracker {
     private documentSourceMapping = new WeakMap<NotebookDocument, Set<KernelConnectionMetadata>>();
+    private get controllerRegistration(): IControllerRegistration {
+        return this.svcContainer.get<IControllerRegistration>(IControllerRegistration);
+    }
+    private get kernelRankingHelper(): IKernelRankingHelper {
+        return this.svcContainer.get<IKernelRankingHelper>(IKernelRankingHelper);
+    }
+    private get notebookConnectionMru(): IConnectionMru {
+        return this.svcContainer.get<IConnectionMru>(IConnectionMru);
+    }
 
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IKernelRankingHelper) private readonly kernelRankingHelper: IKernelRankingHelper,
-        @inject(IConnectionMru) private readonly notebookConnectionMru: IConnectionMru
+        @inject(IServiceContainer) private readonly svcContainer: IServiceContainer
     ) {}
 
     activate(): void {
