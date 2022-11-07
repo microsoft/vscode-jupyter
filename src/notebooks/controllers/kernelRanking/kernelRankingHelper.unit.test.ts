@@ -42,7 +42,6 @@ import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
-import { CondaService } from '../../../platform/common/process/condaService.node';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernelFinder';
@@ -238,7 +237,6 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernel
             const extensions = mock<IExtensions>();
             kernelFinder = new KernelFinder([]);
 
-            const condaService = mock<CondaService>();
             localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
                 instance(interpreterService),
                 instance(fs),
@@ -257,7 +255,6 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernel
                 [],
                 instance(extensionChecker),
                 instance(interpreterService),
-                instance(condaService),
                 instance(extensions)
             );
             localKernelFinder.activate();

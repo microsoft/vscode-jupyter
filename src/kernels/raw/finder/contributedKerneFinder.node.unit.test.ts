@@ -274,7 +274,6 @@ import { takeTopRankKernel } from '../../../notebooks/controllers/kernelRanking/
                 [],
                 instance(extensionChecker),
                 instance(interpreterService),
-                instance(condaService),
                 instance(extensions)
             );
             const pythonEnvKernelFinder = new ContributedLocalPythonEnvFinder(
