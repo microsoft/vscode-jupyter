@@ -6,7 +6,7 @@ import { NotebookControllerAffinity2, NotebookDocument, workspace } from 'vscode
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
-import { IDisposableRegistry } from '../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry, KernelPickerType } from '../../platform/common/types';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import {
@@ -20,23 +20,32 @@ import {
 @injectable()
 export class ConnectionTracker implements IExtensionSyncActivationService, IConnectionTracker {
     private documentSourceMapping = new WeakMap<NotebookDocument, Set<KernelConnectionMetadata>>();
+    private readonly kernelPickerType: KernelPickerType;
 
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IKernelRankingHelper) private readonly kernelRankingHelper: IKernelRankingHelper,
-        @inject(IConnectionMru) private readonly notebookConnectionMru: IConnectionMru
-    ) {}
+        @inject(IConnectionMru) private readonly notebookConnectionMru: IConnectionMru,
+        @inject(IConfigurationService) configuration: IConfigurationService
+    ) {
+        this.kernelPickerType = configuration.getSettings(undefined).kernelPickerType;
+    }
 
     activate(): void {
-        workspace.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposableRegistry);
-        this.controllerRegistration.onCreated(this.onCreatedController, this, this.disposableRegistry);
+        if (this.kernelPickerType) {
+            workspace.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposableRegistry);
+            this.controllerRegistration.onCreated(this.onCreatedController, this, this.disposableRegistry);
 
-        // Tag all open documents
-        workspace.notebookDocuments.forEach(this.onDidOpenNotebookDocument.bind(this));
+            // Tag all open documents
+            workspace.notebookDocuments.forEach(this.onDidOpenNotebookDocument.bind(this));
+        }
     }
 
     public async trackSelection(notebook: NotebookDocument, connection: KernelConnectionMetadata): Promise<void> {
+        if (this.kernelPickerType !== 'Insiders') {
+            return;
+        }
         const connections = this.documentSourceMapping.get(notebook) || new Set<KernelConnectionMetadata>();
         connections.add(connection);
         this.documentSourceMapping.set(notebook, connections);

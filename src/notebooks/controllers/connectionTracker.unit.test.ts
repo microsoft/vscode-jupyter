@@ -6,7 +6,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, NotebookController, NotebookControllerAffinity2, NotebookDocument } from 'vscode';
 import { LocalKernelSpecConnectionMetadata } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { IDisposable } from '../../platform/common/types';
+import { IConfigurationService, IDisposable } from '../../platform/common/types';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 import { ConnectionTracker } from './connectionTracker';
@@ -40,11 +40,14 @@ suite('Connection Tracker', () => {
         when(mockedVSCodeNamespaces.workspace.onDidOpenNotebookDocument).thenReturn(onDidOpenNotebookDocument.event);
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
         when(controllerRegistrations.onCreated).thenReturn(onCreated.event);
+        const configService = mock<IConfigurationService>();
+        when(configService.getSettings(anything())).thenReturn({ kernelPickerType: 'Insiders' } as any);
         tracker = new ConnectionTracker(
             disposables,
             instance(controllerRegistrations),
             instance(rankingHelper),
-            instance(mru)
+            instance(mru),
+            instance(configService)
         );
         tracker.activate();
         clock = fakeTimers.install();
