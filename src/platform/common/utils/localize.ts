@@ -1423,6 +1423,12 @@ export namespace DataScience {
         localize('DataScience.localPythonEnvironments', 'Local Python Environments');
     export const pickLocalKernelPythonEnvTitle = () =>
         localize('DataScience.pickLocalKernelPythonEnvTitle', `Select a Local Python Environment`);
+    export const UserJupyterServerUrlProviderDisplayName = () =>
+        localize('DataScience.UserJupyterServerUrlProviderDisplayName', 'Existing Jupyter Server');
+    export const UserJupyterServerUrlProviderDetail = () =>
+        localize('DataScience.UserJupyterServerUrlProviderDetail', 'Connect to an existing Jupyter Server');
+    export const UserJupyterServerUrlAlreadyExistError = () =>
+        localize('DataScience.UserJupyterServerUrlAlreadyExistError', 'A Jupyter Server with this URL already exists');
     export const universalRemoteKernelFinderDisplayName = () =>
         localize('DataScience.universalRemoteKernelFinderDisplayName', 'Remote - {0}');
     export const remoteKernelFinderDisplayName = () =>
