@@ -46,7 +46,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
-        this.registration.onCreated(() => this.refreshedEmitter.fire(), this, this.disposables);
+        this.registration.onChanged(() => this.refreshedEmitter.fire(), this, this.disposables);
 
         this.loadControllers();
     }

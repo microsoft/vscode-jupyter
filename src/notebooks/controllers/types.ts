@@ -79,10 +79,6 @@ export interface IControllerRegistration {
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): IVSCodeNotebookController | undefined;
     /**
-     * Event fired when a controller is created
-     */
-    onCreated: vscode.Event<IVSCodeNotebookController>;
-    /**
      * Event fired when controllers are added or removed
      */
     onChanged: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
