@@ -83,7 +83,6 @@ export class JupyterServer {
     private static _instance: JupyterServer;
     private _disposables: IDisposable[] = [];
     private _jupyterServerWithToken?: Promise<string>;
-    private _jupyterServerWithoutToken?: Promise<string>;
     private _secondJupyterServerWithToken?: Promise<string>;
     private _jupyterServerWithCert?: Promise<string>;
     private availablePort?: number;
@@ -155,30 +154,6 @@ export class JupyterServer {
             });
         }
         return this._jupyterServerWithToken;
-    }
-    public async startJupyterWithoutToken({ detached }: { detached?: boolean } = {}): Promise<string> {
-        if (!this._jupyterServerWithoutToken) {
-            this._jupyterServerWithoutToken = new Promise<string>(async (resolve, reject) => {
-                const port = await this.getFreePort();
-                // Possible previous instance of jupyter has not completely shutdown.
-                // Wait for it to shutdown fully so that we can re-use the same port.
-                await tcpPortUsed.waitUntilFree(port, 200, 10_000);
-                try {
-                    await this.startJupyterServer({
-                        port,
-                        token: '""',
-                        detached
-                    });
-                    await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    const url = `http://localhost:${port}/?token=`;
-                    console.log(`Started Jupyter Server on ${url}`);
-                    resolve(url);
-                } catch (ex) {
-                    reject(ex);
-                }
-            });
-        }
-        return this._jupyterServerWithoutToken;
     }
     public async startSecondJupyterWithToken(token = this.generateToken()): Promise<string> {
         if (!this._secondJupyterServerWithToken) {
