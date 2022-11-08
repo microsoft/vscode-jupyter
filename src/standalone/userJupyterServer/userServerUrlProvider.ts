@@ -25,6 +25,7 @@ import {
     GLOBAL_MEMENTO,
     IConfigurationService,
     IDisposable,
+    IDisposableRegistry,
     IMemento,
     IsWebExtension
 } from '../../platform/common/types';
@@ -41,7 +42,6 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     readonly detail: string = DataScience.UserJupyterServerUrlProviderDetail();
     private _onDidChangeHandles = new EventEmitter<void>();
     onDidChangeHandles: Event<void> = this._onDidChangeHandles.event;
-    private readonly _globalDisposables: IDisposable[] = [];
     private _servers: { handle: string; uri: string; serverInfo: IJupyterServerUri }[] = [];
     private _cachedServerInfoInitialized: Promise<void> | undefined;
 
@@ -54,14 +54,15 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
 
     activate() {
         this.uriProviderRegistration.registerProvider(this);
         this._servers = [];
 
-        this._globalDisposables.push(
+        this.disposables.push(
             commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
                 await this.encryptedStorage.store(
                     Settings.JupyterServerRemoteLaunchService,
