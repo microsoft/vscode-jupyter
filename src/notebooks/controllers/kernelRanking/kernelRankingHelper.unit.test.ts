@@ -45,6 +45,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernelFinder';
+import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
 
 [false, true].forEach((isWindows) => {
     suite(`Kernel Ranking ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -236,6 +237,8 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernel
 
             const extensions = mock<IExtensions>();
             kernelFinder = new KernelFinder([]);
+            const trustedKernels = mock<ITrustedKernelPaths>();
+            when(trustedKernels.isTrusted(anything())).thenReturn(true);
 
             localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
                 instance(interpreterService),
@@ -246,7 +249,8 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernel
                 nonPythonKernelSpecFinder,
                 instance(memento),
                 disposables,
-                instance(env)
+                instance(env),
+                instance(trustedKernels)
             );
             localKernelFinder = new ContributedLocalKernelSpecFinder(
                 nonPythonKernelSpecFinder,

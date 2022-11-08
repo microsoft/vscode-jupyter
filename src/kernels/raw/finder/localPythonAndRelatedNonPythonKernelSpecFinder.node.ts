@@ -37,6 +37,7 @@ import { ResourceSet } from '../../../platform/vscode-path/map';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { ITrustedKernelPaths } from './types';
 
 const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2022_10';
 /**
@@ -66,7 +67,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IApplicationEnvironment) env: IApplicationEnvironment
+        @inject(IApplicationEnvironment) env: IApplicationEnvironment,
+        @inject(ITrustedKernelPaths) private readonly trustedKernels: ITrustedKernelPaths
     ) {
         super(fs, workspaceService, extensionChecker, globalState, disposables, env);
         interpreterService.onDidChangeInterpreters(() => this.refresh().catch(noop), this, this.disposables);
@@ -491,7 +493,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
             // 3. Sometimes we have path paths such as `/usr/bin/python3.6` in the kernel spec.
             // & in the list of interpreters we have `/usr/bin/python3`, they are both the same.
             // Hence we need to ensure we take that into account (just get the interpreter info from Python extension).
-            const interpreterInArgv = await this.interpreterService.getInterpreterDetails(Uri.file(pathInArgv));
+            const checkInterpreterInfo =
+                !kernelSpec.specFile || this.trustedKernels.isTrusted(Uri.file(kernelSpec.specFile));
+            const interpreterInArgv = checkInterpreterInfo
+                ? await this.interpreterService.getInterpreterDetails(Uri.file(pathInArgv))
+                : undefined;
             if (interpreterInArgv) {
                 return interpreterInArgv;
             }
