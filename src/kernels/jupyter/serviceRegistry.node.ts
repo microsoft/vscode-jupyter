@@ -60,11 +60,10 @@ import {
     IJupyterRequestAgentCreator,
     INotebookServerFactory,
     ILiveRemoteKernelConnectionUsageTracker,
-    IJupyterRemoteCachedKernelValidator,
-    IServerConnectionType
+    IJupyterRemoteCachedKernelValidator
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
-import { UniversalRemoteKernelFinderController } from './finder/universalRemoteKernelFinderController';
+import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
@@ -127,7 +126,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterUriProviderRegistration
     );
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
-    serviceManager.addBinding(IJupyterServerUriStorage, IServerConnectionType);
     serviceManager.addSingleton<INotebookStarter>(INotebookStarter, NotebookStarter);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
@@ -153,6 +151,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandlerNode);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        UniversalRemoteKernelFinderController
+        RemoteKernelFinderController
     );
 }

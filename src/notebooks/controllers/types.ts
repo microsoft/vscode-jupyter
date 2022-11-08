@@ -9,7 +9,6 @@ import { KernelConnectionMetadata } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import { IDisposable, Resource } from '../../platform/common/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { IContributedKernelFinderInfo } from '../../kernels/internalTypes';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
 
@@ -184,8 +183,22 @@ export interface INotebookKernelSourceSelector {
 }
 
 // Track what kernel source is selected for each open notebook document and persist that data
-export const INotebookKernelSourceTracker = Symbol('INotebookKernelSourceTracker');
-export interface INotebookKernelSourceTracker {
-    getKernelSourceForNotebook(notebook: vscode.NotebookDocument): IContributedKernelFinderInfo | undefined;
-    setKernelSourceForNotebook(notebook: vscode.NotebookDocument, kernelFinderInfo: IContributedKernelFinderInfo): void;
+export const IConnectionTracker = Symbol('IConnectionTracker');
+export interface IConnectionTracker {
+    trackSelection(notebook: vscode.NotebookDocument, connection: KernelConnectionMetadata): void;
+}
+export const IConnectionMru = Symbol('IConnectionMru');
+export interface IConnectionMru {
+    /**
+     * Keeps track of the fact that a connection was used for a notebook.
+     */
+    add(notebook: vscode.NotebookDocument, connection: KernelConnectionMetadata): Promise<void>;
+    /**
+     * Whether a connection was used for a notebook.
+     */
+    exists(notebook: vscode.NotebookDocument, connection: KernelConnectionMetadata): Promise<boolean>;
+    /**
+     * Clears the MRU list.
+     */
+    clear?(): Promise<void>;
 }

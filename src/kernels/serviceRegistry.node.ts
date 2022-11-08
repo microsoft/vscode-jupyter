@@ -42,7 +42,6 @@ import { ServerPreload } from './jupyter/launcher/serverPreload.node';
 import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { PythonKernelInterruptDaemon } from './raw/finder/pythonKernelInterruptDaemon.node';
-import { LocalKernelFinder } from './raw/finder/localKernelFinder.node';
 import { DebugStartupCodeProvider } from './debuggerStartupCodeProvider';
 import { KernelWorkingFolder } from './kernelWorkingFolder.node';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.node';
@@ -50,6 +49,8 @@ import { ITrustedKernelPaths } from './raw/finder/types';
 import { KernelStatusProvider } from './kernelStatusProvider';
 import { KernelStartupTelemetry } from './kernelStartupTelemetry.node';
 import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarmer';
+import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
+import { ContributedLocalPythonEnvFinder } from './raw/finder/contributedLocalPythonEnvFinder.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
@@ -73,7 +74,14 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         KernelEnvironmentVariablesService
     );
     serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LocalKernelFinder);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        ContributedLocalKernelSpecFinder
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        ContributedLocalPythonEnvFinder
+    );
 
     serviceManager.addSingleton<JupyterPaths>(JupyterPaths, JupyterPaths);
     serviceManager.addSingleton<ITrustedKernelPaths>(ITrustedKernelPaths, TrustedKernelPaths);

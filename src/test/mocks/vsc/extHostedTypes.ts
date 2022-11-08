@@ -170,6 +170,11 @@ export namespace vscMockExtHostedTypes {
          */
         Preferred = 2
     }
+    export enum NotebookControllerAffinity2 {
+        Default = 1,
+        Preferred = 2,
+        Hidden = -1
+    }
 
     export enum NotebookRunState {
         Running = 1,

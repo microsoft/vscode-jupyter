@@ -20,7 +20,10 @@ import { WorkspaceService } from '../../../platform/common/application/workspace
 import { CryptoUtils } from '../../../platform/common/crypto';
 import { ApplicationEnvironment } from '../../../platform/common/application/applicationEnvironment.node';
 import { MockEncryptedStorage } from '../mockEncryptedStorage';
-import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
+import {
+    JupyterServerUriStorage,
+    mementoKeyToIndicateIfConnectingToLocalKernelsOnly
+} from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration';
 import { Settings } from '../../../platform/common/constants';
@@ -28,8 +31,8 @@ import { DataScienceErrorHandler } from '../../../kernels/errors/kernelErrorHand
 import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { JupyterConnection } from '../../../kernels/jupyter/jupyterConnection';
-import { IServerConnectionType } from '../../../kernels/jupyter/types';
 import { JupyterSettings } from '../../../platform/common/configSettings';
+import { noop } from '../../../platform/common/utils/misc';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('Jupyter Server URI Selector', () => {
@@ -69,18 +72,16 @@ suite('Jupyter Server URI Selector', () => {
         connection = mock<JupyterConnection>();
         when(connection.createConnectionInfo(anything())).thenResolve({ displayName: '' } as any);
         const handler = mock(DataScienceErrorHandler);
-        const connectionType = mock<IServerConnectionType>();
-        when(connectionType.isLocalLaunch).thenReturn(false);
         when(connection.validateRemoteUri(anything())).thenResolve();
-        const onDidChangeEvent = new EventEmitter<void>();
-        disposables.push(onDidChangeEvent);
-        when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
         when(configService.updateSetting(anything(), anything(), anything(), anything())).thenResolve();
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(configService.getSettings()).thenReturn(instance(settings));
         when(settings.kernelPickerType).thenReturn('Stable');
         onDidChangeSettings = sinon.stub();
         when(settings.onDidChange).thenReturn(onDidChangeSettings);
+        const memento = new MockMemento();
+        // local launch false
+        memento.update(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, false).then(noop, noop);
         const jupyterUriProviderRegistration = mock(JupyterUriProviderRegistration);
         const storage = new JupyterServerUriStorage(
             instance(workspaceService),

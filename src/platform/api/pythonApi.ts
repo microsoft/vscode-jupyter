@@ -513,7 +513,12 @@ export class InterpreterService implements IInterpreterService {
                     });
                     if (matchedPythonEnv) {
                         const env = await api.environments.resolveEnvironment(matchedPythonEnv.id);
-                        return this.trackResolvedEnvironment(env, false);
+                        const resolved = this.trackResolvedEnvironment(env, false);
+                        traceVerbose(
+                            `Interpreter details for ${getDisplayPath(uri)} from Python is ${JSON.stringify(
+                                env
+                            )} and our mapping is ${JSON.stringify(resolved)}`
+                        );
                     }
                     traceWarning(
                         `No interpreter with path ${getDisplayPath(

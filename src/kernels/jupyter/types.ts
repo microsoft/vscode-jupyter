@@ -28,7 +28,7 @@ import {
     RemoteKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
-import { IContributedKernelFinder } from '../internalTypes';
+import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -211,6 +211,7 @@ export interface IJupyterUriProvider {
      * Should be a unique string (like a guid)
      */
     readonly id: string;
+    readonly displayName?: string;
     onDidChangeHandles?: Event<void>;
     getQuickPickEntryItems?(): QuickPickItem[];
     handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
@@ -360,11 +361,7 @@ export interface IJupyterRemoteCachedKernelValidator {
     isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean>;
 }
 
-export const IServerConnectionType = Symbol('IServerConnectionType');
-
-export interface IServerConnectionType {
-    isLocalLaunch: boolean;
-    onDidChange: Event<void>;
+export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {
+    kind: ContributedKernelFinderKind.Remote;
+    serverUri: IJupyterServerUriEntry;
 }
-
-export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {}

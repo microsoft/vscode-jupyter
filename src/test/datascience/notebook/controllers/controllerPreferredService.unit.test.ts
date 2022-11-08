@@ -7,7 +7,7 @@ import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, NotebookControllerAffinity, NotebookDocument, Uri } from 'vscode';
-import { IServerConnectionType } from '../../../../kernels/jupyter/types';
+import { IJupyterServerUriStorage } from '../../../../kernels/jupyter/types';
 import {
     KernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
@@ -37,7 +37,7 @@ suite('Preferred Controller', () => {
     let controllerLoader: IControllerLoader;
     let vscNotebook: IVSCodeNotebook;
     let extensionChecker: IPythonExtensionChecker;
-    let serverConnectionType: IServerConnectionType;
+    let uriStorage: IJupyterServerUriStorage;
     let defaultControllerService: IControllerDefaultService;
     let interpreters: IInterpreterService;
     setup(() => {
@@ -45,7 +45,7 @@ suite('Preferred Controller', () => {
         controllerLoader = mock<IControllerLoader>();
         vscNotebook = mock<IVSCodeNotebook>();
         extensionChecker = mock<IPythonExtensionChecker>();
-        serverConnectionType = mock<IServerConnectionType>();
+        uriStorage = mock<IJupyterServerUriStorage>();
         defaultControllerService = mock<IControllerDefaultService>();
         interpreters = mock<IInterpreterService>();
         kernelRankHelper = mock<IKernelRankingHelper>();
@@ -66,7 +66,7 @@ suite('Preferred Controller', () => {
             instance(vscNotebook),
             disposables,
             instance(extensionChecker),
-            instance(serverConnectionType),
+            instance(uriStorage),
             instance(kernelRankHelper),
             instance(selection)
         );
@@ -130,7 +130,7 @@ suite('Preferred Controller', () => {
         return document;
     }
     function setupData(kernels: KernelConnectionMetadata[]) {
-        when(serverConnectionType.isLocalLaunch).thenReturn(true);
+        when(uriStorage.isLocalLaunch).thenReturn(true);
         when(
             kernelRankHelper.rankKernels(anything(), anything(), anything(), anything(), anything(), anything())
         ).thenResolve(kernels);

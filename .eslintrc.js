@@ -348,6 +348,12 @@ module.exports = {
                 'local-rules/dont-use-filename': ['off'],
                 'import/no-restricted-paths': ['off']
             }
+        },
+        {
+            files: ['**/*.test.ts'],
+            rules: {
+                '@typescript-eslint/no-explicit-any': 'off'
+            }
         }
     ],
     settings: {
