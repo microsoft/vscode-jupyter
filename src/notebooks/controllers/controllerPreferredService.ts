@@ -372,7 +372,18 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         }
 
         // This method can get called very frequently, hence compute the preferred once in 100ms
-        const timeout = setTimeout(() => this.computePreferred(document).catch(noop), 100);
+        const timeout = setTimeout(async () => {
+            // Provide the preferred controller only after we've loaded all controllers
+            // This avoids the kernel status label from flickering (i.e. changing from one to another).
+            // E.g. connect to a remote jupyter server
+            // Open a notebook with a kernel spec in the metadata
+            // We might set active interpreter as preferred,
+            // then change it to the local kernel spec.
+            // Then change to remove kernel spec
+            // Then change to the remote kernel session (assuming its still running).
+            await this.loader.loaded.catch(noop);
+            this.computePreferred(document).catch(noop);
+        }, 100);
         this.debouncedPreferredCompute.get(document)?.dispose();
         this.debouncedPreferredCompute.set(document, new Disposable(() => clearTimeout(timeout)));
     }
