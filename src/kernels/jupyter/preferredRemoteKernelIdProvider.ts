@@ -32,7 +32,7 @@ export class PreferredRemoteKernelIdProvider {
     public async getPreferredRemoteKernelId(uri: Uri): Promise<string | undefined> {
         // Stored as a list so we don't take up too much space
         const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
-        if (list) {
+        if (list.length) {
             // Not using a map as we're only going to store the last 40 items.
             const fileHash = await this.crypto.createHash(uri.toString());
             const entry = list.find((l) => l.fileHash === fileHash);

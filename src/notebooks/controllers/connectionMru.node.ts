@@ -21,7 +21,8 @@ const MruFolder = 'notebook-connection-mru';
 @injectable()
 export class ConnectionMRU implements IConnectionMru {
     private documentSourceMapping = new WeakMap<NotebookDocument, Set<KernelConnectionMetadata>>();
-    private documentMruContents = new WeakMap<NotebookDocument, string | undefined>();
+    private documentMruContents = new WeakMap<NotebookDocument, Promise<string | undefined>>();
+    private notebookCacheFileName = new WeakMap<NotebookDocument, Promise<Uri>>();
 
     constructor(
         @inject(IKernelRankingHelper) private readonly kernelRankingHelper: IKernelRankingHelper,
@@ -62,7 +63,7 @@ export class ConnectionMRU implements IConnectionMru {
             ]);
             const updatedConnectionIds = Array.from(new Set(connectionIdsInMru.concat(connectionIds)));
             const newContents = updatedConnectionIds.join(EOL);
-            this.documentMruContents.set(notebook, newContents);
+            this.documentMruContents.set(notebook, Promise.resolve(newContents));
             await this.fs.writeFile(file, newContents);
         }
     }
@@ -97,16 +98,31 @@ export class ConnectionMRU implements IConnectionMru {
         return exactMatchPromise.value || existsInFilePromise.value ? true : false;
     }
     private async getCacheFileName(notebook: NotebookDocument) {
-        const cacheKey = this.workspace.getWorkspaceFolder(notebook.uri);
-        console.error(cacheKey);
-        const workspaceId = this.workspace.getWorkspaceFolderIdentifier(notebook.uri, 'global');
-        const workspaceHash = await getTelemetrySafeHashedString(workspaceId);
-        return Uri.joinPath(
-            this.context.globalStorageUri,
-            MruFolder,
-            workspaceHash,
-            `${path.basename(notebook.uri)}.last_used_connections.txt`
-        );
+        if (!this.notebookCacheFileName.has(notebook)) {
+            const promise = (async () => {
+                const workspaceId = this.workspace.getWorkspaceFolderIdentifier(notebook.uri, 'global');
+                const workspaceHash = await getTelemetrySafeHashedString(workspaceId);
+                return Uri.joinPath(
+                    this.context.globalStorageUri,
+                    MruFolder,
+                    workspaceHash,
+                    `${path.basename(notebook.uri)}.last_used_connections.txt`
+                );
+            })();
+            this.notebookCacheFileName.set(notebook, promise);
+        }
+        return this.notebookCacheFileName.get(notebook)!;
+    }
+    private async loadNotebookCache(notebook: NotebookDocument) {
+        const mruFileContents = this.documentMruContents.get(notebook);
+        if (!mruFileContents) {
+            const promise = (async () => {
+                const file = await this.getCacheFileName(notebook);
+                return this.fs.readFile(file);
+            })();
+            this.documentMruContents.set(notebook, promise);
+        }
+        return this.documentMruContents.get(notebook);
     }
     private async existsInFile(notebook: NotebookDocument, connection: KernelConnectionMetadata) {
         const connections = this.documentSourceMapping.get(notebook);
@@ -119,19 +135,12 @@ export class ConnectionMRU implements IConnectionMru {
         ) {
             return true;
         }
-        const mruFileContents = this.documentMruContents.get(notebook);
-        if (mruFileContents?.length) {
-            const connectionIdHash = await connection.getHashId();
-            if (mruFileContents.includes(connectionIdHash)) {
-                return true;
-            }
-        }
-
         try {
-            const file = await this.getCacheFileName(notebook);
-            const [contents, connectionIdHash] = await Promise.all([this.fs.readFile(file), connection.getHashId()]);
-            this.documentMruContents.set(notebook, contents);
-            return contents.includes(connectionIdHash);
+            const [contents, connectionIdHash] = await Promise.all([
+                this.loadNotebookCache(notebook),
+                connection.getHashId()
+            ]);
+            return (contents || '').includes(connectionIdHash);
         } catch {
             return false;
         }
