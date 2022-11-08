@@ -27,6 +27,7 @@ import { IConfigurationService } from '../../platform/common/types';
 import { NotebookKernelSourceSelector } from './kernelSource/notebookKernelSourceSelector';
 import { ConnectionTracker } from './connectionTracker';
 import { ConnectionMru } from './connectionMru.web';
+import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IKernelRankingHelper>(IKernelRankingHelper, KernelRankingHelper);
@@ -37,6 +38,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IControllerPreferredService>(IControllerPreferredService, ControllerPreferredService);
     serviceManager.addBinding(IControllerPreferredService, IExtensionSyncActivationService);
     serviceManager.addSingleton<IControllerSelection>(IControllerSelection, ControllerSelection);
+    serviceManager.addSingleton<ConnectionDisplayDataProvider>(
+        ConnectionDisplayDataProvider,
+        ConnectionDisplayDataProvider
+    );
 
     // Register our kernel source selectors only on the Insiders picker type
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
