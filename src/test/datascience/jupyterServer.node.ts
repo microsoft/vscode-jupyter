@@ -166,11 +166,11 @@ export class JupyterServer {
                 try {
                     await this.startJupyterServer({
                         port,
-                        token: '',
+                        token: '""',
                         detached
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    const url = `http://localhost:${port}/`;
+                    const url = `http://localhost:${port}/?token=`;
                     console.log(`Started Jupyter Server on ${url}`);
                     resolve(url);
                 } catch (ex) {
