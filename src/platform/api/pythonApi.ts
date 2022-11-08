@@ -25,7 +25,7 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { TraceOptions } from '../logging/types';
-import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
+import { areObjectsWithUrisTheSame, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
 
@@ -413,7 +413,8 @@ export class InterpreterService implements IInterpreterService {
                 if (interpreters) {
                     await Promise.all(
                         interpreters.map((interpreter) => {
-                            return this.api?.environments.resolveEnvironment(interpreter.id);
+                            // eslint-disable-next-line local-rules/dont-use-fspath
+                            return this.api?.environments.resolveEnvironment(interpreter.uri.fsPath);
                         })
                     );
                 }
@@ -497,46 +498,43 @@ export class InterpreterService implements IInterpreterService {
     }
 
     @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
-    public async getInterpreterDetails(pythonPathOrPythonId: Uri | string): Promise<undefined | PythonEnvironment> {
+    public async getInterpreterDetails(pythonPath: Uri): Promise<undefined | PythonEnvironment> {
         this.hookupOnDidChangeInterpreterEvent();
         try {
             return await this.getApi().then(async (api) => {
                 if (!api) {
                     return;
                 }
-                const uri = isUri(pythonPathOrPythonId) ? pythonPathOrPythonId : undefined;
-                // eslint-disable-next-line local-rules/dont-use-fspath
-                const pythonEnvId = isUri(pythonPathOrPythonId) ? pythonPathOrPythonId.fsPath : pythonPathOrPythonId;
                 if (uri) {
                     // Find the Env with the same Uri.
                     const matchedPythonEnv = api.environments.known.find((item) => {
-                        return areInterpreterPathsSame(item.executable.uri, uri);
+                        return areInterpreterPathsSame(item.executable.uri, pythonPath);
                     });
                     if (matchedPythonEnv) {
-                        const env = await api.environments.resolveEnvironment(matchedPythonEnv.id);
+                        const env = await api.environments.resolveEnvironment(matchedPythonEnv);
                         const resolved = this.trackResolvedEnvironment(env, false);
                         traceVerbose(
-                            `Interpreter details for ${getDisplayPath(uri)} from Python is ${JSON.stringify(
+                            `Interpreter details for ${getDisplayPath(pythonPath)} from Python is ${JSON.stringify(
                                 env
                             )} and our mapping is ${JSON.stringify(resolved)}`
                         );
+                        return resolved;
                     }
                     traceWarning(
                         `No interpreter with path ${getDisplayPath(
-                            uri
-                        )} found in Python API, will convert Uri path to string as Id ${pythonEnvId}`
+                            pythonPath
+                        )} found in Python API, will convert Uri path to string as Id ${pythonPath}`
                     );
                 }
 
-                const env = await api.environments.resolveEnvironment(pythonEnvId);
+                // eslint-disable-next-line local-rules/dont-use-fspath
+                const env = await api.environments.resolveEnvironment(pythonPath.fsPath);
                 return this.trackResolvedEnvironment(env, false);
             });
         } catch (ex) {
             traceWarning(
                 `Failed to get Python interpreter details from Python Extension API for ${
-                    typeof pythonPathOrPythonId === 'string'
-                        ? pythonPathOrPythonId
-                        : getDisplayPath(pythonPathOrPythonId)
+                    typeof pythonPath === 'string' ? pythonPath : getDisplayPath(pythonPath)
                 }`,
                 ex
             );
@@ -627,7 +625,7 @@ export class InterpreterService implements IInterpreterService {
                         .filter((item) => this.isValidWorkSpaceRelatedEnvironment(item))
                         .map(async (item) => {
                             try {
-                                const env = await api.environments.resolveEnvironment(item.id);
+                                const env = await api.environments.resolveEnvironment(item);
                                 const resolved = this.trackResolvedEnvironment(env, true);
                                 traceVerbose(
                                     `Python environment for ${item.id} is ${
