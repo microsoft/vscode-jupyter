@@ -360,9 +360,9 @@ export function initializeCommonNodeApi() {
                     await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
                 } catch (ex) {
                     console.error('Failed to select jupyter server, retry in 1s', ex);
-                    await sleep(1_000);
-                    await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
                 }
+                // Todo: Fix in debt week, we need to retry, some changes have caused the first connection attempt to fail on CI.
+                // Possible we're trying to connect before the server is ready.
                 await sleep(5_000);
                 await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
             } else {
