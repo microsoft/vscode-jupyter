@@ -128,13 +128,24 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getNewApi();
         await pythonApi?.environments.refreshEnvironments({ forceRefresh: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const [interpreter1, interpreter2, interpreter3] = await Promise.all([
-            interpreterService.getInterpreterDetails(venvNoKernelPath),
-            interpreterService.getInterpreterDetails(venvNoRegPath),
-            interpreterService.getInterpreterDetails(venvKernelPath)
-        ]);
+        let lastError: Error | undefined = undefined;
+        const [interpreter1, interpreter2, interpreter3] = await waitForCondition(
+            async () => {
+                try {
+                    return await Promise.all([
+                        interpreterService.getInterpreterDetails(venvNoKernelPath),
+                        interpreterService.getInterpreterDetails(venvNoRegPath),
+                        interpreterService.getInterpreterDetails(venvKernelPath)
+                    ]);
+                } catch (ex) {
+                    lastError = ex;
+                }
+            },
+            defaultNotebookTestTimeout,
+            () => `Failed to get interpreter information for 1,2 &/or 3, ${lastError?.toString()}`
+        );
         if (!interpreter1 || !interpreter2 || !interpreter3) {
-            throw new Error('Unable to get information for interpreter 1');
+            throw new Error('Unable to get information for interpreter 1,2,3');
         }
         venvNoKernelPath = interpreter1.uri;
         venvNoRegPath = interpreter2.uri;
