@@ -43,6 +43,9 @@ export class JupyterUriProviderWrapper implements IJupyterUriProvider {
     public get displayName(): string | undefined {
         return this.provider.displayName;
     }
+    public get detail(): string | undefined {
+        return this.provider.detail;
+    }
     public getQuickPickEntryItems(): vscode.QuickPickItem[] {
         if (!this.provider.getQuickPickEntryItems) {
             return [];

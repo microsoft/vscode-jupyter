@@ -212,6 +212,7 @@ export interface IJupyterUriProvider {
      */
     readonly id: string;
     readonly displayName?: string;
+    readonly detail?: string;
     onDidChangeHandles?: Event<void>;
     getQuickPickEntryItems?(): QuickPickItem[];
     handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;

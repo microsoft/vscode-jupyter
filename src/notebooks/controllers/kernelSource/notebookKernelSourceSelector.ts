@@ -31,6 +31,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
+    InputFlowAction,
     InputStep,
     IQuickPickParameters
 } from '../../../platform/common/utils/multiStepInput';
@@ -60,10 +61,6 @@ interface LocalPythonEnvSourceQuickPickItem extends QuickPickItem {
     kernelFinderInfo: IContributedKernelFinder<PythonKernelConnectionMetadata>;
 }
 
-interface LocalJupyterServerSourceQuickPickItem extends QuickPickItem {
-    type: KernelSourceQuickPickType.LocalServer;
-}
-
 interface KernelProviderInfoQuickPickItem extends QuickPickItem {
     type: KernelSourceQuickPickType.ServerUriProvider;
     provider: IJupyterUriProvider;
@@ -72,10 +69,6 @@ interface KernelProviderInfoQuickPickItem extends QuickPickItem {
 interface ContributedKernelFinderQuickPickItem extends QuickPickItem {
     type: KernelFinderEntityQuickPickType.KernelFinder;
     kernelFinderInfo: IContributedKernelFinder;
-}
-
-interface LocalJupyterServerQuickPickItem extends QuickPickItem {
-    type: KernelFinderEntityQuickPickType.LocalServer;
 }
 
 interface KernelProviderItemsQuickPickItem extends QuickPickItem {
@@ -87,8 +80,7 @@ interface KernelProviderItemsQuickPickItem extends QuickPickItem {
 type KernelSourceQuickPickItem =
     | LocalKernelSpecSourceQuickPickItem
     | LocalPythonEnvSourceQuickPickItem
-    | KernelProviderInfoQuickPickItem
-    | LocalJupyterServerSourceQuickPickItem;
+    | KernelProviderInfoQuickPickItem;
 
 // type KernelFinderEntityQuickPickItem =
 //     | ContributedKernelFinderQuickPickItem
@@ -179,20 +171,13 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             });
         }
 
-        // Manual remote server kernel finder
-        items.push({
-            type: KernelSourceQuickPickType.LocalServer,
-            label: 'Existing Jupyter Server',
-            detail: DataScience.jupyterSelectURINewDetail()
-        });
-
         // 3rd party remote server uri providers
         const providers = await this.uriProviderRegistration.getProviders();
         providers.forEach((p) => {
             items.push({
                 type: KernelSourceQuickPickType.ServerUriProvider,
                 label: p.displayName ?? p.id,
-                detail: `Connect to Jupyter servers from ${p.displayName ?? p.id}`,
+                detail: p.detail ?? `Connect to Jupyter servers from ${p.displayName ?? p.id}`,
                 provider: p
             });
         });
@@ -220,75 +205,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 case KernelSourceQuickPickType.LocalPythonEnv:
                     state.source = selectedSource.kernelFinderInfo;
                     return this.getKernel.bind(this, async () => selectedSource.kernelFinderInfo.kernels, token);
-                case KernelSourceQuickPickType.LocalServer:
-                    return this.getUserProvidedJupyterServers.bind(this, token);
                 case KernelSourceQuickPickType.ServerUriProvider:
                     return this.getRemoteServersFromProvider.bind(this, selectedSource.provider, token);
-                default:
-                    break;
-            }
-        }
-    }
-
-    private async getUserProvidedJupyterServers(
-        token: CancellationToken,
-        multiStep: IMultiStepInput<MultiStepResult>,
-        state: MultiStepResult
-    ) {
-        const servers = this.kernelFinder.registered.filter((info) => {
-            return info.kind === 'remote' && (info as IRemoteKernelFinder).serverUri.uri;
-        }) as IRemoteKernelFinder[];
-        const items: (ContributedKernelFinderQuickPickItem | LocalJupyterServerQuickPickItem | QuickPickItem)[] = [];
-
-        for (const server of servers) {
-            // remote server
-            const savedURIList = await this.serverUriStorage.getSavedUriList();
-            const savedURI = savedURIList.find((uri) => uri.uri === server.serverUri.uri);
-            if (savedURI) {
-                const idAndHandle = extractJupyterServerHandleAndId(savedURI.uri);
-                if (!idAndHandle) {
-                    const uriDate = new Date(savedURI.time);
-                    items.push({
-                        kernelFinderInfo: server,
-                        label: server.displayName,
-                        type: KernelFinderEntityQuickPickType.KernelFinder,
-                        detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString())
-                    });
-                }
-            }
-        }
-
-        if (items.length > 0) {
-            // insert separator
-            items.push({ label: 'More', kind: QuickPickItemKind.Separator });
-        }
-
-        items.push({
-            type: KernelFinderEntityQuickPickType.LocalServer,
-            label: 'Connect to a Jupyter Server',
-            detail: DataScience.jupyterSelectURINewDetail()
-        });
-
-        const selectedSource = await multiStep.showQuickPick<
-            ContributedKernelFinderQuickPickItem | LocalJupyterServerQuickPickItem | QuickPickItem,
-            IQuickPickParameters<ContributedKernelFinderQuickPickItem | LocalJupyterServerQuickPickItem | QuickPickItem>
-        >({
-            items: items,
-            placeholder: '',
-            title: 'Select a Jupyter Server'
-        });
-
-        if (token.isCancellationRequested) {
-            return;
-        }
-
-        if (selectedSource && 'type' in selectedSource) {
-            switch (selectedSource.type) {
-                case KernelFinderEntityQuickPickType.KernelFinder:
-                    state.source = selectedSource.kernelFinderInfo;
-                    return this.getKernel.bind(this, async () => selectedSource.kernelFinderInfo.kernels, token);
-                case KernelFinderEntityQuickPickType.LocalServer:
-                    break;
                 default:
                     break;
             }
@@ -383,6 +301,10 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                                 true
                             );
 
+                            if (handle === 'back') {
+                                throw InputFlowAction.back;
+                            }
+
                             if (token.isCancellationRequested) {
                                 return [];
                             }
@@ -426,11 +348,11 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         multiStep: IMultiStepInput<MultiStepResult>,
         state: MultiStepResult
     ): Promise<InputStep<MultiStepResult> | void> {
+        const matchingConnections = await getMatchingControllers();
+
         if (!state.source) {
             return;
         }
-
-        const matchingConnections = await getMatchingControllers();
 
         if (token.isCancellationRequested) {
             return;
