@@ -76,11 +76,23 @@ suite('Intellisense Switch interpreters in a notebook @lsp', function () {
             'Waiting for interpreters to be discovered'
         );
 
-        const [activeInterpreter, interpreter1, interpreter2] = await Promise.all([
-            interpreterService.getActiveInterpreter(),
-            interpreterService.getInterpreterDetails(venvNoKernelPython),
-            interpreterService.getInterpreterDetails(venvKernelPython)
-        ]);
+        let lastError: Error | undefined = undefined;
+        const [activeInterpreter, interpreter1, interpreter2] = await waitForCondition(
+            async () => {
+                try {
+                    return await Promise.all([
+                        interpreterService.getActiveInterpreter(),
+                        interpreterService.getInterpreterDetails(venvNoKernelPython),
+                        interpreterService.getInterpreterDetails(venvKernelPython)
+                    ]);
+                } catch (ex) {
+                    lastError = ex;
+                }
+            },
+            defaultNotebookTestTimeout,
+            () => `Failed to get interpreter information for 1,2 &/or 3, ${lastError?.toString()}`
+        );
+
         if (!activeInterpreter || !interpreter1 || !interpreter2) {
             throw new Error('Unable to get information for interpreter 1');
         }

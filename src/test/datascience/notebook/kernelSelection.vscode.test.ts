@@ -112,14 +112,26 @@ suite('Kernel Selection @kernelPicker', function () {
             'Waiting for interpreters to be discovered'
         );
 
-        const [activeInterpreter, interpreter1, interpreter2, interpreter3] = await Promise.all([
-            interpreterService.getActiveInterpreter(),
-            interpreterService.getInterpreterDetails(venvNoKernelPython),
-            interpreterService.getInterpreterDetails(venvKernelPython),
-            interpreterService.getInterpreterDetails(venvNoRegPath)
-        ]);
+        let lastError: Error | undefined = undefined;
+        const [activeInterpreter, interpreter1, interpreter2, interpreter3] = await waitForCondition(
+            async () => {
+                try {
+                    return await Promise.all([
+                        interpreterService.getActiveInterpreter(),
+                        interpreterService.getInterpreterDetails(venvNoKernelPython),
+                        interpreterService.getInterpreterDetails(venvKernelPython),
+                        interpreterService.getInterpreterDetails(venvNoRegPath)
+                    ]);
+                } catch (ex) {
+                    lastError = ex;
+                }
+            },
+            defaultNotebookTestTimeout,
+            () => `Failed to get interpreter information for 1,2, 3 &/or 4, ${lastError?.toString()}`
+        );
+
         if (!activeInterpreter || !interpreter1 || !interpreter2 || !interpreter3) {
-            throw new Error('Unable to get information for interpreter 1');
+            throw new Error('Unable to get information for interpreter 2');
         }
         activeInterpreterPath = activeInterpreter.uri;
         venvNoKernelPythonPath = interpreter1.uri;

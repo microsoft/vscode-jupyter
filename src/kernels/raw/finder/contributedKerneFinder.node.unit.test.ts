@@ -55,7 +55,6 @@ import { IJupyterServerUriStorage } from '../../jupyter/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
-import { CondaService } from '../../../platform/common/process/condaService.node';
 import { noop } from '../../../platform/common/utils/misc';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
@@ -257,7 +256,6 @@ import { ITrustedKernelPaths } from './types';
             kernelFinder = new KernelFinder([]);
             const trustedKernels = mock<ITrustedKernelPaths>();
             when(trustedKernels.isTrusted(anything())).thenReturn(true);
-            const condaService = mock<CondaService>();
             localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
                 instance(interpreterService),
                 instance(fs),
@@ -285,7 +283,6 @@ import { ITrustedKernelPaths } from './types';
                 [],
                 instance(extensionChecker),
                 instance(interpreterService),
-                instance(condaService),
                 instance(extensions)
             );
             changeEventFired = createEventHandler(kernelFinder, 'onDidChangeKernels', disposables);

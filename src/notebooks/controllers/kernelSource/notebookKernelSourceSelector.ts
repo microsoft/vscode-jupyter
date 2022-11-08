@@ -4,7 +4,15 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, CancellationTokenSource, NotebookDocument, QuickPickItem, QuickPickItemKind } from 'vscode';
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    Event,
+    EventEmitter,
+    NotebookDocument,
+    QuickPickItem,
+    QuickPickItemKind
+} from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import {
     computeServerId,
@@ -26,8 +34,10 @@ import {
 } from '../../../kernels/types';
 import { ICommandManager } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -92,7 +102,11 @@ interface ConnectionQuickPickItem extends QuickPickItem {
 }
 
 // The return type of our multistep selection process
-type MultiStepResult = { source?: IContributedKernelFinder; connection?: KernelConnectionMetadata };
+type MultiStepResult = {
+    source?: IContributedKernelFinder;
+    connection?: KernelConnectionMetadata;
+    disposables: IDisposable[];
+};
 
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
@@ -125,10 +139,11 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
 
         this.cancellationTokenSource = new CancellationTokenSource();
         const multiStep = this.multiStepFactory.create<MultiStepResult>();
-        const state: MultiStepResult = {};
+        const state: MultiStepResult = { disposables: [] };
         await multiStep.run(this.getSourceNested.bind(this, this.cancellationTokenSource.token), state);
 
         if (this.cancellationTokenSource.token.isCancellationRequested) {
+            disposeAllDisposables(state.disposables);
             return;
         }
 
@@ -136,6 +151,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         if (state.source && state.connection) {
             await this.onKernelConnectionSelected(notebook, state.connection);
         }
+        disposeAllDisposables(state.disposables);
     }
 
     private async getSourceNested(
@@ -203,8 +219,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             switch (selectedSource.type) {
                 case KernelSourceQuickPickType.LocalKernelSpec:
                 case KernelSourceQuickPickType.LocalPythonEnv:
-                    state.source = selectedSource.kernelFinderInfo;
-                    return this.getKernel.bind(this, async () => selectedSource.kernelFinderInfo.kernels, token);
+                    return this.selectKernelFromKernelFinder(selectedSource.kernelFinderInfo, state, token);
                 case KernelSourceQuickPickType.ServerUriProvider:
                     return this.getRemoteServersFromProvider.bind(this, selectedSource.provider, token);
                 default:
@@ -286,80 +301,127 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         if (selectedSource && 'type' in selectedSource) {
             switch (selectedSource.type) {
                 case KernelFinderEntityQuickPickType.KernelFinder:
-                    state.source = selectedSource.kernelFinderInfo;
-                    return this.getKernel.bind(this, async () => selectedSource.kernelFinderInfo.kernels, token);
-                case KernelFinderEntityQuickPickType.UriProviderQuickPick:
-                    return this.getKernel.bind(
-                        this,
-                        async () => {
-                            if (!selectedSource.provider.handleQuickPick) {
-                                return [];
-                            }
+                    return this.selectKernelFromKernelFinder(selectedSource.kernelFinderInfo, state, token);
+                case KernelFinderEntityQuickPickType.UriProviderQuickPick: {
+                    if (!selectedSource.provider.handleQuickPick || token.isCancellationRequested) {
+                        return;
+                    }
 
-                            const handle = await selectedSource.provider.handleQuickPick(
-                                selectedSource.originalItem,
-                                true
+                    const handle = await selectedSource.provider.handleQuickPick(selectedSource.originalItem, true);
+                    if (!handle || token.isCancellationRequested) {
+                        return;
+                    }
+                    if (handle === 'back') {
+                        throw InputFlowAction.back;
+                    }
+                    const onDidChange = new EventEmitter<void>();
+                    const onDidChangeStatus = new EventEmitter<void>();
+                    const kernels: KernelConnectionMetadata[] = [];
+                    let status: 'loading' | 'idle' = 'loading';
+                    const provider = {
+                        onDidChange: onDidChange.event,
+                        onDidChangeStatus: onDidChangeStatus.event,
+                        get kernels() {
+                            return kernels;
+                        },
+                        get status() {
+                            return status;
+                        }
+                    };
+                    state.disposables.push(onDidChange);
+                    state.disposables.push(onDidChangeStatus);
+
+                    (async () => {
+                        const uri = generateUriFromRemoteProvider(selectedSource.provider.id, handle);
+                        const serverId = await computeServerId(uri);
+                        const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
+                            serverId,
+                            this.controllerRegistration,
+                            this.localDisposables
+                        );
+                        if (token.isCancellationRequested) {
+                            return;
+                        }
+                        await this.serverSelector.setJupyterURIToRemote(uri);
+                        await controllerCreatedPromise;
+                        if (token.isCancellationRequested) {
+                            return;
+                        }
+
+                        const finder = this.kernelFinder.registered.find(
+                            (f) => f.kind === 'remote' && (f as IRemoteKernelFinder).serverUri.uri === uri
+                        );
+                        status = 'idle';
+                        onDidChangeStatus.fire();
+                        if (finder) {
+                            finder.onDidChangeKernels(
+                                () => {
+                                    kernels.length = 0;
+                                    kernels.push(...finder.kernels);
+                                    onDidChange.fire();
+                                },
+                                this,
+                                state.disposables
                             );
 
-                            if (handle === 'back') {
-                                throw InputFlowAction.back;
-                            }
+                            state.source = finder;
+                            kernels.length = 0;
+                            kernels.push(...finder.kernels);
+                            onDidChange.fire();
+                        }
+                    })().catch(noop);
 
-                            if (token.isCancellationRequested) {
-                                return [];
-                            }
-
-                            if (handle) {
-                                const uri = generateUriFromRemoteProvider(selectedSource.provider.id, handle);
-                                const serverId = await computeServerId(uri);
-                                const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
-                                    serverId,
-                                    this.controllerRegistration,
-                                    this.localDisposables
-                                );
-                                await this.serverSelector.setJupyterURIToRemote(uri);
-                                await controllerCreatedPromise;
-
-                                const finder = this.kernelFinder.registered.find(
-                                    (f) => f.kind === 'remote' && (f as IRemoteKernelFinder).serverUri.uri === uri
-                                );
-                                if (finder) {
-                                    state.source = finder;
-                                    return finder.kernels;
-                                }
-                            }
-
-                            return [];
-                        },
-                        token
-                    );
+                    return this.selectKernel.bind(this, provider, token);
+                }
                 default:
                     break;
             }
         }
     }
 
+    private selectKernelFromKernelFinder(
+        source: IContributedKernelFinder<KernelConnectionMetadata>,
+        state: MultiStepResult,
+        token: CancellationToken
+    ) {
+        state.source = source;
+        const onDidChange = new EventEmitter<void>();
+        const onDidChangeStatus = new EventEmitter<void>();
+        const provider = {
+            onDidChange: onDidChange.event,
+            onDidChangeStatus: onDidChangeStatus.event,
+            get kernels() {
+                return source.kernels;
+            },
+            get status(): 'idle' {
+                return 'idle';
+            }
+        };
+        const disposable = source.onDidChangeKernels(() => onDidChange.fire());
+        state.disposables.push(disposable);
+        state.disposables.push(onDidChange);
+        state.disposables.push(onDidChangeStatus);
+        return this.selectKernel.bind(this, provider, token);
+    }
     /**
      * Second stage of the multistep to pick a kernel
      */
-    private async getKernel(
-        getMatchingControllers: () => Promise<KernelConnectionMetadata[]>,
+    private async selectKernel(
+        provider: {
+            readonly onDidChange: Event<void>;
+            readonly kernels: KernelConnectionMetadata[];
+            onDidChangeStatus: Event<void>;
+            status: 'loading' | 'idle';
+        },
         token: CancellationToken,
         multiStep: IMultiStepInput<MultiStepResult>,
         state: MultiStepResult
     ): Promise<InputStep<MultiStepResult> | void> {
-        const matchingConnections = await getMatchingControllers();
-
-        if (!state.source) {
-            return;
-        }
-
         if (token.isCancellationRequested) {
             return;
         }
 
-        // Create controller items and group the by category
-        const connectionPickItems: ConnectionQuickPickItem[] = matchingConnections.map((connection) => {
+        const connectionToQuickPick = (connection: KernelConnectionMetadata): ConnectionQuickPickItem => {
             const displayData = this.displayDataProvider.getDisplayData(connection);
             return {
                 label: displayData.label,
@@ -367,40 +429,128 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 description: displayData.description,
                 connection: connection
             };
-        });
+        };
 
-        const kernelsPerCategory = groupBy(connectionPickItems, (a, b) =>
+        const connectionToCategory = (connection: KernelConnectionMetadata): QuickPickItem => {
+            const kind = this.displayDataProvider.getDisplayData(connection).category || 'Other';
+            return {
+                kind: QuickPickItemKind.Separator,
+                label: kind
+            };
+        };
+
+        const trackedIds = new Set(provider.kernels.map((item) => item.id));
+        const connectionPickItems = provider.kernels.map((connection) => connectionToQuickPick(connection));
+
+        // Insert separators into the right spots in the list
+        let quickPickItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
+        const categories = new Map<QuickPickItem, Set<ConnectionQuickPickItem>>();
+        groupBy(connectionPickItems, (a, b) =>
             compareIgnoreCase(
                 this.displayDataProvider.getDisplayData(a.connection).category || 'z',
                 this.displayDataProvider.getDisplayData(b.connection).category || 'z'
             )
-        );
-
-        // Insert separators into the right spots in the list
-        const kindIndexes = new Map<string, number>();
-        const quickPickItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
-
-        kernelsPerCategory.forEach((items) => {
-            const kind = this.displayDataProvider.getDisplayData(items[0].connection).category || 'Other';
-            quickPickItems.push({
-                kind: QuickPickItemKind.Separator,
-                label: kind
-            });
+        ).forEach((items) => {
+            const item = connectionToCategory(items[0].connection);
+            quickPickItems.push(item);
             quickPickItems.push(...items);
-            kindIndexes.set(kind, quickPickItems.length);
+            categories.set(item, new Set(items));
         });
 
-        const result = await multiStep.showQuickPick<
+        const { quickPick, selection } = multiStep.showLazyLoadQuickPick<
             ConnectionQuickPickItem | QuickPickItem,
             IQuickPickParameters<ConnectionQuickPickItem | QuickPickItem>
         >({
-            title: DataScience.kernelPickerSelectKernelTitle() + ` from ${state.source.displayName}`,
+            title:
+                DataScience.kernelPickerSelectKernelTitle() + (state.source ? ` from ${state.source.displayName}` : ''),
             items: quickPickItems,
             matchOnDescription: true,
             matchOnDetail: true,
             placeholder: ''
         });
+        if (provider.status === 'loading') {
+            quickPick.busy = true;
+        }
+        provider.onDidChangeStatus(
+            () => {
+                if (provider.status === 'idle') {
+                    quickPick.busy = false;
+                }
+            },
+            this,
+            state.disposables
+        );
+        provider.onDidChange(() => {
+            quickPick.title =
+                DataScience.kernelPickerSelectKernelTitle() + (state.source ? ` from ${state.source.displayName}` : '');
+            const allIds = new Set<string>();
+            const newQuickPickItems = provider.kernels
+                .filter((item) => {
+                    allIds.add(item.id);
+                    if (!trackedIds.has(item.id)) {
+                        trackedIds.add(item.id);
+                        return true;
+                    }
+                    return false;
+                })
+                .map((item) => connectionToQuickPick(item));
+            const removedIds = Array.from(trackedIds).filter((id) => !allIds.has(id));
+            if (removedIds.length) {
+                const itemsRemoved: (ConnectionQuickPickItem | QuickPickItem)[] = [];
+                categories.forEach((items, category) => {
+                    items.forEach((item) => {
+                        if (removedIds.includes(item.connection.id)) {
+                            items.delete(item);
+                            itemsRemoved.push(item);
+                        }
+                    });
+                    if (!items.size) {
+                        itemsRemoved.push(category);
+                        categories.delete(category);
+                    }
+                });
+                const previousActiveItem = quickPick.activeItems.length ? quickPick.activeItems[0] : undefined;
+                quickPickItems = quickPickItems.filter((item) => !itemsRemoved.includes(item));
+                quickPick.items = quickPickItems;
+                quickPick.activeItems =
+                    previousActiveItem && !itemsRemoved.includes(previousActiveItem) ? [previousActiveItem] : [];
+            }
+            if (!newQuickPickItems.length) {
+                return;
+            }
+            groupBy(newQuickPickItems, (a, b) =>
+                compareIgnoreCase(
+                    this.displayDataProvider.getDisplayData(a.connection).category || 'z',
+                    this.displayDataProvider.getDisplayData(b.connection).category || 'z'
+                )
+            ).forEach((items) => {
+                items.sort((a, b) => a.label.localeCompare(b.label));
+                const newCategory = connectionToCategory(items[0].connection);
+                // Check if we already have a item for this category in the quick pick.
+                const existingCategory = quickPickItems.find(
+                    (item) => item.kind === QuickPickItemKind.Separator && item.label === newCategory.label
+                );
+                if (existingCategory) {
+                    const indexOfExistingCategory = quickPickItems.indexOf(existingCategory);
+                    const currentItemsInCategory = categories.get(existingCategory)!;
+                    const oldItemCount = currentItemsInCategory.size;
+                    items.forEach((item) => currentItemsInCategory.add(item));
+                    const newItems = Array.from(currentItemsInCategory);
+                    newItems.sort((a, b) => a.label.localeCompare(b.label));
+                    quickPickItems.splice(indexOfExistingCategory + 1, oldItemCount, ...newItems);
+                } else {
+                    quickPickItems.push(newCategory);
+                    items.sort((a, b) => a.label.localeCompare(b.label));
+                    quickPickItems.push(...items);
+                    categories.set(newCategory, new Set(items));
+                }
+                const previousActiveItem = quickPick.activeItems.length ? quickPick.activeItems[0] : undefined;
+                quickPick.items = quickPickItems;
+                quickPick.activeItems = previousActiveItem ? [previousActiveItem] : [];
+            });
+        });
 
+        const result = await selection;
         if (token.isCancellationRequested) {
             return;
         }
