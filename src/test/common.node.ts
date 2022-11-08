@@ -369,6 +369,8 @@ export function initializeCommonNodeApi() {
                     await sleep(1_000);
                     await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
                 }
+                await sleep(5_000);
+                await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
             } else {
                 console.info(`Jupyter not started and set to local`); // This is the default
             }
