@@ -120,9 +120,9 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             const platform = api.serviceContainer.get<IPlatformService>(IPlatformService);
             kernelConnectionMetadata = await getDefaultKernelConnection();
             const displayDataProvider = new ConnectionDisplayDataProvider(
-                instance(workspaceService),
-                instance(platform),
-                instance(uriStorage),
+                workspaceService,
+                platform,
+                uriStorage,
                 disposables
             );
             const createNbController = sinon.stub(vscodeNotebook, 'createNotebookController');
