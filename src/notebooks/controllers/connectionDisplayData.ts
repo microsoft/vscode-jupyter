@@ -45,7 +45,7 @@ export class ConnectionDisplayDataProvider {
         const description = getKernelConnectionDisplayPath(connection, this.workspace, this.platform);
         const detail =
             connection.kind === 'connectToLiveRemoteKernel' ? getRemoteKernelSessionInformation(connection) : '';
-        const category = '';
+        const category = getKernelConnectionCategorySync(connection);
 
         const details: ReadWrite<ConnectionDisplayData> = this.details.get(connection.id) || {
             connectionId: connection.id,
@@ -100,6 +100,12 @@ async function getKernelConnectionCategory(
         case 'startUsingRemoteKernelSpec':
             const remoteDisplayNameSpec = await getRemoteServerDisplayName(kernelConnection, serverUriStorage);
             return DataScience.kernelCategoryForRemoteJupyterKernel().format(remoteDisplayNameSpec);
+        default:
+            return getKernelConnectionCategorySync(kernelConnection);
+    }
+}
+function getKernelConnectionCategorySync(kernelConnection: KernelConnectionMetadata): string {
+    switch (kernelConnection.kind) {
         case 'startUsingLocalKernelSpec':
             return DataScience.kernelCategoryForJupyterKernel();
         case 'startUsingPythonInterpreter': {
@@ -126,5 +132,7 @@ async function getKernelConnectionCategory(
                     return DataScience.kernelCategoryForGlobal();
             }
         }
+        default:
+            return '';
     }
 }
