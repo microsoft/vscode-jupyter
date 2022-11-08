@@ -360,7 +360,7 @@ export function initializeCommonNodeApi() {
 
                 const uriString = useCert
                     ? await JupyterServer.instance.startJupyterWithCert()
-                    : await JupyterServer.instance.startJupyterWithoutToken();
+                    : await JupyterServer.instance.startJupyterWithToken();
                 console.info(`Jupyter started and listening at ${uriString}`);
                 try {
                     await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
