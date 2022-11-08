@@ -156,7 +156,7 @@ export class JupyterServer {
         }
         return this._jupyterServerWithToken;
     }
-    public async startJupyterWithoutToken({ detached, api }: { detached?: boolean, api?: IExtensionTestApi } = {}): Promise<string> {
+    public async startJupyterWithoutToken({ detached }: { detached?: boolean } = {}): Promise<string> {
         if (!this._jupyterServerWithoutToken) {
             this._jupyterServerWithoutToken = new Promise<string>(async (resolve, reject) => {
                 const port = await this.getFreePort();
