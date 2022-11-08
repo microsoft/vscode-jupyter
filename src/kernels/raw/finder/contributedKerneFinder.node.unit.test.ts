@@ -64,6 +64,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { ContributedLocalKernelSpecFinder } from './contributedLocalKernelSpecFinder.node';
 import { ContributedLocalPythonEnvFinder } from './contributedLocalPythonEnvFinder.node';
 import { takeTopRankKernel } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper.unit.test';
+import { ITrustedKernelPaths } from './types';
 
 [false, true].forEach((isWindows) => {
     suite(`Contributed Local Kernel Spec Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -254,7 +255,8 @@ import { takeTopRankKernel } from '../../../notebooks/controllers/kernelRanking/
 
             const extensions = mock<IExtensions>();
             kernelFinder = new KernelFinder([]);
-
+            const trustedKernels = mock<ITrustedKernelPaths>();
+            when(trustedKernels.isTrusted(anything())).thenReturn(true);
             const condaService = mock<CondaService>();
             localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
                 instance(interpreterService),
@@ -265,7 +267,8 @@ import { takeTopRankKernel } from '../../../notebooks/controllers/kernelRanking/
                 nonPythonKernelSpecFinder,
                 instance(memento),
                 disposables,
-                instance(env)
+                instance(env),
+                instance(trustedKernels)
             );
             const localKernelSpecFinder = new ContributedLocalKernelSpecFinder(
                 nonPythonKernelSpecFinder,
