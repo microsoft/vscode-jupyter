@@ -45,8 +45,7 @@ export class ConnectionDisplayDataProvider {
         const description = getKernelConnectionDisplayPath(connection, this.workspace, this.platform);
         const detail =
             connection.kind === 'connectToLiveRemoteKernel' ? getRemoteKernelSessionInformation(connection) : '';
-        const category =
-            connection.kind === 'connectToLiveRemoteKernel' ? getRemoteKernelSessionInformation(connection) : '';
+        const category = '';
 
         const details: ReadWrite<ConnectionDisplayData> = this.details.get(connection.id) || {
             connectionId: connection.id,
