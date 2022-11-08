@@ -18,11 +18,11 @@ import {
     IS_REMOTE_NATIVE_TEST,
     IS_SMOKE_TEST
 } from './constants.node';
-import { noop, sleep } from './core';
+import { noop } from './core';
 import { isCI } from '../platform/common/constants';
 import { IWorkspaceService } from '../platform/common/application/types';
-import { generateScreenShotFileName, initializeCommonApi } from './common';
-import { IDisposable } from '../platform/common/types';
+import { generateScreenShotFileName, IExtensionTestApi, initializeCommonApi } from './common';
+import { IDisposable, IExtensionContext } from '../platform/common/types';
 import { swallowExceptions } from '../platform/common/utils/misc';
 import { JupyterServer } from './datascience/jupyterServer.node';
 import type { ConfigurationTarget, NotebookDocument, TextDocument, Uri } from 'vscode';
@@ -352,10 +352,17 @@ export function initializeCommonNodeApi() {
         },
         async startJupyterServer(notebook?: NotebookDocument, useCert: boolean = false): Promise<any> {
             if (IS_REMOTE_NATIVE_TEST()) {
+                if (!useCert) {
+                    const api = (await initialize()) as IExtensionTestApi;
+                    const context = api.serviceContainer.get<IExtensionContext>(IExtensionContext);
+                    await context.globalState.update('DataScienceAllowInsecureConnections', true);
+                }
+
                 const uriString = useCert
                     ? await JupyterServer.instance.startJupyterWithCert()
-                    : await JupyterServer.instance.startJupyterWithToken();
+                    : await JupyterServer.instance.startJupyterWithoutToken();
                 console.info(`Jupyter started and listening at ${uriString}`);
+<<<<<<< HEAD
                 try {
                     await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
                 } catch (ex) {
@@ -364,6 +371,8 @@ export function initializeCommonNodeApi() {
                 // Todo: Fix in debt week, we need to retry, some changes have caused the first connection attempt to fail on CI.
                 // Possible we're trying to connect before the server is ready.
                 await sleep(5_000);
+=======
+>>>>>>> c682e3c7d (Misc)
                 await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
             } else {
                 console.info(`Jupyter not started and set to local`); // This is the default
