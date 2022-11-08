@@ -2,26 +2,48 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { inject, injectable } from 'inversify';
-import { Disposable, QuickInputButtons, QuickPickItem, Uri, window } from 'vscode';
+import { inject, injectable, named } from 'inversify';
+import uuid from 'uuid/v4';
+import {
+    commands,
+    Disposable,
+    Event,
+    EventEmitter,
+    Memento,
+    QuickInputButtons,
+    QuickPickItem,
+    Uri,
+    window
+} from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/jupyterConnection';
 import { validateSelectJupyterURI } from '../../kernels/jupyter/serverSelector';
 import { IJupyterServerUri, IJupyterUriProvider, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IApplicationShell, IClipboard, IEncryptedStorage } from '../../platform/common/application/types';
 import { Settings } from '../../platform/common/constants';
-import { IConfigurationService, IDisposable, IsWebExtension } from '../../platform/common/types';
+import {
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    IDisposable,
+    IMemento,
+    IsWebExtension
+} from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
+import { traceError } from '../../platform/logging';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
+const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.uriList';
 
 @injectable()
 export class UserJupyterServerUrlProvider implements IExtensionSyncActivationService, IDisposable, IJupyterUriProvider {
     readonly id: string = '_builtin.jupyterServerUrlProvider';
     readonly displayName: string = DataScience.UserJupyterServerUrlProviderDisplayName();
     readonly detail: string = DataScience.UserJupyterServerUrlProviderDetail();
-    private _servers: { handle: string; serverInfo: IJupyterServerUri }[] = [];
-    private _initialized: Promise<void> | undefined;
+    private _onDidChangeHandles = new EventEmitter<void>();
+    onDidChangeHandles: Event<void> = this._onDidChangeHandles.event;
+    private readonly _globalDisposables: IDisposable[] = [];
+    private _servers: { handle: string; uri: string; serverInfo: IJupyterServerUri }[] = [];
+    private _cachedServerInfoInitialized: Promise<void> | undefined;
 
     constructor(
         @inject(IClipboard) private readonly clipboard: IClipboard,
@@ -31,29 +53,77 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
-        @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage
+        @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {}
 
     activate() {
         this.uriProviderRegistration.registerProvider(this);
-        this._initialized = new Promise(async (resolve) => {
+        this._servers = [];
+
+        this._globalDisposables.push(
+            commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
+                await this.encryptedStorage.store(
+                    Settings.JupyterServerRemoteLaunchService,
+                    UserJupyterServerUriListKey,
+                    ''
+                );
+                await this.globalMemento.update(UserJupyterServerUriListMementoKey, []);
+                this._servers = [];
+                this._onDidChangeHandles.fire();
+            })
+        );
+    }
+
+    private async _initializeCachedServerInfo(): Promise<void> {
+        if (this._cachedServerInfoInitialized) {
+            return this._cachedServerInfoInitialized;
+        }
+
+        this._cachedServerInfoInitialized = new Promise<void>(async (resolve) => {
+            const serverList = this.globalMemento.get<{ index: number; handle: string }[]>(
+                UserJupyterServerUriListMementoKey
+            );
+
             const cache = await this.encryptedStorage.retrieve(
                 Settings.JupyterServerRemoteLaunchService,
                 UserJupyterServerUriListKey
             );
 
-            if (cache) {
-                const servers = cache.split(Settings.JupyterServerRemoteLaunchUriSeparator);
-                for (let server of servers) {
-                    const serverInfo = await this.parseUri(server);
-                    if (serverInfo) {
-                        this._servers.push({ handle: server, serverInfo });
-                    }
+            if (!cache || !serverList) {
+                resolve();
+                return;
+            }
+
+            const encryptedList = cache.split(Settings.JupyterServerRemoteLaunchUriSeparator);
+
+            if (encryptedList.length === 0) {
+                traceError('Invalid server list, unable to retrieve server info');
+                resolve();
+                return;
+            }
+
+            const servers = [];
+
+            for (let i = 0; i < encryptedList.length; i += 1) {
+                const serverInfo = this.parseUri(encryptedList[i]);
+                if (!serverInfo) {
+                    traceError('Unable to parse server info', serverInfo);
+                } else {
+                    servers.push({
+                        handle: serverList[i].handle,
+                        uri: encryptedList[i],
+                        serverInfo
+                    });
                 }
             }
 
+            this._servers = servers;
+
             resolve();
         });
+
+        return this._cachedServerInfoInitialized;
     }
 
     getQuickPickEntryItems(): QuickPickItem[] {
@@ -66,7 +136,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     }
 
     async handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
-        await this._initialized;
+        await this._cachedServerInfoInitialized;
         if (item.label !== DataScience.jupyterSelectURIPrompt()) {
             return undefined;
         }
@@ -107,10 +177,17 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 input.onDidAccept(async () => {
                     const uri = input.value;
 
-                    if (this._servers.find((s) => s.handle === uri)) {
-                        // already exist
-                        input.validationMessage = DataScience.UserJupyterServerUrlAlreadyExistError();
-                        return;
+                    try {
+                        for (let server of this._servers) {
+                            if (server.uri === uri) {
+                                // already exist
+                                input.validationMessage = DataScience.UserJupyterServerUrlAlreadyExistError();
+                                return;
+                            }
+                        }
+                    } catch (ex) {
+                        // Ignore errors.
+                        traceError('Failed to check if server already exists', ex);
                     }
 
                     const message = await validateSelectJupyterURI(
@@ -126,9 +203,14 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                     } else {
                         const serverInfo = this.parseUri(uri);
                         if (serverInfo) {
-                            this._servers.push({ handle: uri, serverInfo });
+                            const handle = uuid();
+                            this._servers.push({
+                                handle: handle,
+                                uri: uri,
+                                serverInfo
+                            });
                             await this.updateMemento();
-                            resolve(uri);
+                            resolve(handle);
                         } else {
                             resolve(undefined);
                         }
@@ -173,8 +255,6 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     }
 
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
-        await this._initialized;
-
         const server = this._servers.find((s) => s.handle === handle);
 
         if (!server) {
@@ -185,13 +265,14 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     }
 
     async getHandles(): Promise<string[]> {
-        await this._initialized;
-
+        await this._initializeCachedServerInfo();
         return this._servers.map((s) => s.handle);
     }
 
     private async updateMemento() {
-        const blob = this._servers.map((e) => `${e.handle}`).join(Settings.JupyterServerRemoteLaunchUriSeparator);
+        const blob = this._servers.map((e) => `${e.uri}`).join(Settings.JupyterServerRemoteLaunchUriSeparator);
+        const mementoList = this._servers.map((v, i) => ({ index: i, handle: v.handle }));
+        await this.globalMemento.update(UserJupyterServerUriListMementoKey, mementoList);
         return this.encryptedStorage.store(
             Settings.JupyterServerRemoteLaunchService,
             UserJupyterServerUriListKey,

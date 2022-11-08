@@ -35,6 +35,7 @@
     },
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.media.altText": "Image representing our documentation page and mailing list resources.",
     "jupyter.command.dataScience.clearCache.title": "Clear Cache",
+    "jupyter.command.dataScience.clearUserProviderJupyterServerCache.title": "Clear User Jupyter Server Cache",
     "jupyter.command.jupyter.replayPylanceLog.title": "Replay Pylance Log",
     "jupyter.command.jupyter.replayPylanceLogStep.title": "Step Pylance Log",
     "jupyter.command.jupyter.exportAsPythonScript.title": "Export to Python Script",

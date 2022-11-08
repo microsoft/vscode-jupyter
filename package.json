@@ -276,6 +276,12 @@
                 "enablement": "jupyter.development"
             },
             {
+                "command": "dataScience.ClearUserProviderJupyterServerCache",
+                "title": "%jupyter.command.dataScience.clearUserProviderJupyterServerCache.title%",
+                "category": "Jupyter (Dev)",
+                "enablement": "jupyter.development"
+            },
+            {
                 "command": "jupyter.replayPylanceLog",
                 "title": "%jupyter.command.jupyter.replayPylanceLog.title%",
                 "category": "Jupyter (Dev)",
