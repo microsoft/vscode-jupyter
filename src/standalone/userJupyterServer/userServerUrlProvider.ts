@@ -191,10 +191,6 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     }
 
     private async updateMemento() {
-        // Sort based on time. Newest time first
-
-        // Write the uris to the storage in one big blob (max length issues?)
-        // This is because any part of the URI may be a secret (we don't know it's just token values for instance)
         const blob = this._servers.map((e) => `${e.handle}`).join(Settings.JupyterServerRemoteLaunchUriSeparator);
         return this.encryptedStorage.store(
             Settings.JupyterServerRemoteLaunchService,
