@@ -21,8 +21,8 @@ import {
 import { noop, sleep } from './core';
 import { isCI } from '../platform/common/constants';
 import { IWorkspaceService } from '../platform/common/application/types';
-import { generateScreenShotFileName, IExtensionTestApi, initializeCommonApi } from './common';
-import { IDisposable, IExtensionContext } from '../platform/common/types';
+import { generateScreenShotFileName, initializeCommonApi } from './common';
+import { IDisposable } from '../platform/common/types';
 import { swallowExceptions } from '../platform/common/utils/misc';
 import { JupyterServer } from './datascience/jupyterServer.node';
 import type { ConfigurationTarget, NotebookDocument, TextDocument, Uri } from 'vscode';
@@ -352,12 +352,6 @@ export function initializeCommonNodeApi() {
         },
         async startJupyterServer(notebook?: NotebookDocument, useCert: boolean = false): Promise<any> {
             if (IS_REMOTE_NATIVE_TEST()) {
-                if (!useCert) {
-                    const api = (await initialize()) as IExtensionTestApi;
-                    const context = api.serviceContainer.get<IExtensionContext>(IExtensionContext);
-                    await context.globalState.update('DataScienceAllowInsecureConnections', true);
-                }
-
                 const uriString = useCert
                     ? await JupyterServer.instance.startJupyterWithCert()
                     : await JupyterServer.instance.startJupyterWithToken();
