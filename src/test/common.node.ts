@@ -18,7 +18,7 @@ import {
     IS_REMOTE_NATIVE_TEST,
     IS_SMOKE_TEST
 } from './constants.node';
-import { noop } from './core';
+import { noop, sleep } from './core';
 import { isCI } from '../platform/common/constants';
 import { IWorkspaceService } from '../platform/common/application/types';
 import { generateScreenShotFileName, IExtensionTestApi, initializeCommonApi } from './common';
@@ -362,7 +362,6 @@ export function initializeCommonNodeApi() {
                     ? await JupyterServer.instance.startJupyterWithCert()
                     : await JupyterServer.instance.startJupyterWithoutToken();
                 console.info(`Jupyter started and listening at ${uriString}`);
-<<<<<<< HEAD
                 try {
                     await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
                 } catch (ex) {
@@ -371,8 +370,6 @@ export function initializeCommonNodeApi() {
                 // Todo: Fix in debt week, we need to retry, some changes have caused the first connection attempt to fail on CI.
                 // Possible we're trying to connect before the server is ready.
                 await sleep(5_000);
-=======
->>>>>>> c682e3c7d (Misc)
                 await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
             } else {
                 console.info(`Jupyter not started and set to local`); // This is the default
