@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { TextDocument, Uri } from 'vscode';
+import type { TextDocument, Uri } from 'vscode';
 import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
 import { InterpreterUri, Resource } from '../types';
 import { isPromise } from './async';
