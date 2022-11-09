@@ -40,6 +40,7 @@ import { KernelFinder } from '../../kernelFinder';
 import { removeOldCachedItems } from '../../common/commonFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { PromiseMonitor } from '../../../platform/common/utils/promises';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -47,7 +48,7 @@ const REMOTE_KERNEL_REFRESH_INTERVAL = 2_000;
 
 // This class watches a single jupyter server URI and returns kernels from it
 export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
-    private _status: 'discovering' | 'idle' = 'discovering';
+    private _status: 'discovering' | 'idle' = 'idle';
     public get status() {
         return this._status;
     }
@@ -60,6 +61,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
     private readonly _onDidChangeStatus = new EventEmitter<void>();
     public readonly onDidChangeStatus = this._onDidChangeStatus.event;
+    private readonly promiseMonitor = new PromiseMonitor();
     /**
      * List of ids of kernels that should be hidden from the kernel picker.
      */
@@ -101,6 +103,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
 
         this.disposables.push(this._onDidChangeKernels);
         this.disposables.push(this._onDidChangeStatus);
+        this.disposables.push(this.promiseMonitor);
     }
 
     dispose(): void | undefined {
@@ -112,6 +115,10 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
 
     async activate(): Promise<void> {
+        this.promiseMonitor.onStateChange(() => {
+            this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering';
+        });
+
         // warm up the cache
         this.loadCache().then(noop, noop);
 
@@ -168,8 +175,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
 
     public async loadCache() {
         traceInfoIfCI(`Remote Kernel Finder load cache Server: ${this.id}`);
-        this.status = 'discovering';
-        try {
+        const promise = (async () => {
             const kernelsFromCache = await this.getFromCache();
 
             let kernels: RemoteKernelConnectionMetadata[] = [];
@@ -193,17 +199,13 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             }
 
             await this.writeToCache(kernels);
-        } finally {
-            this.status = 'idle';
-        }
+        })();
+        this.promiseMonitor.push(promise);
+        await promise;
     }
 
     private async updateCache() {
-        const previousStatus = this.status;
-        if (previousStatus === 'idle') {
-            this.status = 'discovering';
-        }
-        try {
+        const promise = (async () => {
             let kernels: RemoteKernelConnectionMetadata[] = [];
             this._cacheUpdateCancelTokenSource?.dispose();
             const updateCacheCancellationToken = new CancellationTokenSource();
@@ -231,12 +233,9 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             }
 
             await this.writeToCache(kernels);
-        } finally {
-            // If we updated the status to loading, then unset it back.
-            if (previousStatus === 'idle') {
-                this.status = 'idle';
-            }
-        }
+        })();
+        this.promiseMonitor.push(promise);
+        await promise;
     }
 
     /**
