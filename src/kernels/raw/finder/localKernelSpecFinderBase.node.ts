@@ -13,7 +13,7 @@ import { traceInfo, traceVerbose, traceError, traceDecoratorError } from '../../
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable, IDisposableRegistry, ReadWrite } from '../../../platform/common/types';
-import { isUri, noop, PromiseMonitor } from '../../../platform/common/utils/misc';
+import { isUri, noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers';
 import {
@@ -26,6 +26,7 @@ import {
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
 import { removeOldCachedItems } from '../../common/commonFinder';
+import { PromiseMonitor } from '../../../platform/common/utils/promises';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
