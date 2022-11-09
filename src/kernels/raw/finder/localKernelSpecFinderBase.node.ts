@@ -41,7 +41,7 @@ export abstract class LocalKernelSpecFinderBase<
     T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
 > implements IDisposable
 {
-    private _status: 'discovering' | 'idle' = 'discovering';
+    private _status: 'discovering' | 'idle' = 'idle';
     public get status() {
         return this._status;
     }

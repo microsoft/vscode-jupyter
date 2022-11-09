@@ -317,7 +317,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                     const onDidChange = new EventEmitter<void>();
                     const onDidChangeStatus = new EventEmitter<void>();
                     const kernels: KernelConnectionMetadata[] = [];
-                    let status: 'discovering' | 'idle' = 'discovering';
+                    let status: 'discovering' | 'idle' = 'idle';
                     const provider = {
                         onDidChange: onDidChange.event,
                         onDidChangeStatus: onDidChangeStatus.event,
