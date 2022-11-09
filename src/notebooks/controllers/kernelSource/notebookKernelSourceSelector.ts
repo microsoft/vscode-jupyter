@@ -45,6 +45,7 @@ import {
     InputStep,
     IQuickPickParameters
 } from '../../../platform/common/utils/multiStepInput';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ConnectionDisplayDataProvider } from '../connectionDisplayData';
 import { IControllerRegistration, INotebookKernelSourceSelector, IConnectionTracker } from '../types';
 
@@ -123,7 +124,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(ConnectionDisplayDataProvider) private readonly displayDataProvider: ConnectionDisplayDataProvider
+        @inject(ConnectionDisplayDataProvider) private readonly displayDataProvider: ConnectionDisplayDataProvider,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
 
     public async selectKernelSource(notebook: NotebookDocument): Promise<void> {
@@ -317,7 +319,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                     const onDidChange = new EventEmitter<void>();
                     const onDidChangeStatus = new EventEmitter<void>();
                     const kernels: KernelConnectionMetadata[] = [];
-                    let status: 'loading' | 'idle' = 'loading';
+                    let status: 'discovering' | 'idle' = 'idle';
                     const provider = {
                         onDidChange: onDidChange.event,
                         onDidChangeStatus: onDidChangeStatus.event,
@@ -354,6 +356,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                         status = 'idle';
                         onDidChangeStatus.fire();
                         if (finder) {
+                            status = finder.status;
                             finder.onDidChangeKernels(
                                 () => {
                                     kernels.length = 0;
@@ -363,11 +366,15 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                                 this,
                                 state.disposables
                             );
-
+                            finder.onDidChangeStatus(() => {
+                                status = finder.status;
+                                onDidChangeStatus.fire();
+                            });
                             state.source = finder;
                             kernels.length = 0;
                             kernels.push(...finder.kernels);
                             onDidChange.fire();
+                            onDidChangeStatus.fire();
                         }
                     })().catch(noop);
 
@@ -384,23 +391,23 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         state: MultiStepResult,
         token: CancellationToken
     ) {
+        // Kick off a refresh of Python environments when displaying the quick pick for local kernels or Python envs.
+        this.interpreterService.refreshInterpreters().ignoreErrors();
         state.source = source;
         const onDidChange = new EventEmitter<void>();
-        const onDidChangeStatus = new EventEmitter<void>();
         const provider = {
             onDidChange: onDidChange.event,
-            onDidChangeStatus: onDidChangeStatus.event,
+            onDidChangeStatus: source.onDidChangeStatus,
             get kernels() {
                 return source.kernels;
             },
-            get status(): 'idle' {
-                return 'idle';
+            get status(): 'discovering' | 'idle' {
+                return source.status;
             }
         };
         const disposable = source.onDidChangeKernels(() => onDidChange.fire());
         state.disposables.push(disposable);
         state.disposables.push(onDidChange);
-        state.disposables.push(onDidChangeStatus);
         return this.selectKernel.bind(this, provider, token);
     }
     /**
@@ -411,7 +418,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             readonly onDidChange: Event<void>;
             readonly kernels: KernelConnectionMetadata[];
             onDidChangeStatus: Event<void>;
-            status: 'loading' | 'idle';
+            status: 'discovering' | 'idle';
         },
         token: CancellationToken,
         multiStep: IMultiStepInput<MultiStepResult>,
@@ -468,7 +475,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             matchOnDetail: true,
             placeholder: ''
         });
-        if (provider.status === 'loading') {
+        if (provider.status === 'discovering') {
             quickPick.busy = true;
         }
         provider.onDidChangeStatus(

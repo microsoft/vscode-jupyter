@@ -7,6 +7,8 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
+    readonly status: 'refreshing' | 'idle';
+    readonly onDidChangeStatus: Event<void>;
     /**
      * Contains details of all the currently discovered Python Environments along with all of their resolved information.
      */

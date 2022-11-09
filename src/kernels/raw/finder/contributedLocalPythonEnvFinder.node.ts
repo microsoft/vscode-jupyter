@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { IKernelFinder, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
-import { traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
+import { traceDecoratorError, traceError } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
@@ -17,6 +17,8 @@ import * as localize from '../../../platform/common/utils/localize';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../internalTypes';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
+import { PromiseMonitor } from '../../../platform/common/utils/promises';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -25,6 +27,20 @@ import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../int
 export class ContributedLocalPythonEnvFinder
     implements IContributedKernelFinder<PythonKernelConnectionMetadata>, IExtensionSyncActivationService
 {
+    private _status: 'discovering' | 'idle' = 'idle';
+    public get status() {
+        return this._status;
+    }
+    private set status(value: typeof this._status) {
+        if (this._status === value) {
+            return;
+        }
+        this._status = value;
+        this._onDidChangeStatus.fire();
+    }
+    private readonly _onDidChangeStatus = new EventEmitter<void>();
+    public readonly onDidChangeStatus = this._onDidChangeStatus.event;
+    private readonly promiseMonitor = new PromiseMonitor();
     kind = ContributedKernelFinderKind.LocalPythonEnvironment;
     id: string = ContributedKernelFinderKind.LocalPythonEnvironment;
     displayName: string = localize.DataScience.localPythonEnvironments();
@@ -46,16 +62,26 @@ export class ContributedLocalPythonEnvFinder
         @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         kernelFinder.registerKernelFinder(this);
+        this.disposables.push(this.promiseMonitor);
     }
 
     activate() {
-        this.loadInitialState().then(noop, noop);
-
-        this.interpreters.onDidChangeInterpreters(
-            async () => this.updateCache().then(noop, noop),
-            this,
-            this.disposables
-        );
+        this.promiseMonitor.onStateChange(() => {
+            this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering';
+        });
+        this.refresh().then(noop, noop);
+        let deferred: Deferred<void> | undefined = undefined;
+        this.interpreters.onDidChangeStatus(() => {
+            if (this.interpreters.status === 'idle') {
+                deferred?.resolve();
+                deferred = undefined;
+            } else if (this.interpreters.status === 'refreshing') {
+                deferred?.resolve();
+                deferred = createDeferred<void>();
+                this.promiseMonitor.push(deferred.promise);
+            }
+        });
+        this.interpreters.onDidChangeInterpreters(async () => this.refresh().then(noop, noop), this, this.disposables);
         this.extensions.onDidChange(
             () => {
                 // If we just installed the Python extension and we fetched the controllers, then fetch it again.
@@ -63,20 +89,20 @@ export class ContributedLocalPythonEnvFinder
                     !this.wasPythonInstalledWhenFetchingControllers &&
                     this.extensionChecker.isPythonExtensionInstalled
                 ) {
-                    this.updateCache().then(noop, noop);
+                    this.refresh().then(noop, noop);
                 }
             },
             this,
             this.disposables
         );
-        this.pythonKernelFinder.onDidChangeKernels(() => this.updateCache().then(noop, noop), this, this.disposables);
+        this.pythonKernelFinder.onDidChangeKernels(() => this.refresh().then(noop, noop), this, this.disposables);
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
     }
 
-    private async loadInitialState() {
-        traceVerbose('LocalKernelFinder: load initial set of kernels');
-        await this.updateCache();
-        traceVerbose('LocalKernelFinder: loaded initial set of kernels');
+    private async refresh() {
+        const promise = this.updateCache();
+        this.promiseMonitor.push(promise);
+        await promise;
     }
 
     @traceDecoratorError('List kernels failed')

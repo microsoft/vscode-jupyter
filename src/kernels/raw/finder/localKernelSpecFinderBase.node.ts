@@ -5,7 +5,7 @@
 
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
-import { CancellationToken, Memento, Uri } from 'vscode';
+import { CancellationToken, EventEmitter, Memento, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -26,6 +26,7 @@ import {
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
 import { removeOldCachedItems } from '../../common/commonFinder';
+import { PromiseMonitor } from '../../../platform/common/utils/promises';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
@@ -40,6 +41,21 @@ export abstract class LocalKernelSpecFinderBase<
     T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
 > implements IDisposable
 {
+    private _status: 'discovering' | 'idle' = 'idle';
+    public get status() {
+        return this._status;
+    }
+    private set status(value: typeof this._status) {
+        if (this._status === value) {
+            return;
+        }
+        this._status = value;
+        this._onDidChangeStatus.fire();
+    }
+    protected readonly promiseMonitor = new PromiseMonitor();
+    private readonly _onDidChangeStatus = new EventEmitter<void>();
+    public readonly onDidChangeStatus = this._onDidChangeStatus.event;
+
     private _oldKernelSpecsFolder?: string;
     private findKernelSpecsInPathCache = new Map<string, Promise<KernelSpecFileWithContainingInterpreter[]>>();
 
@@ -73,9 +89,14 @@ export abstract class LocalKernelSpecFinderBase<
         private readonly env: IApplicationEnvironment
     ) {
         disposables.push(this);
+        disposables.push(this.promiseMonitor);
+        this.promiseMonitor.onStateChange(() => {
+            this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering';
+        });
     }
 
     public abstract dispose(): void | undefined;
+    public abstract refresh(): Promise<void>;
     /**
      * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.
      * If for instance first Python Extension isn't installed, then we call this again, after installing it, then the cache will be blown away
@@ -130,35 +151,40 @@ export abstract class LocalKernelSpecFinderBase<
         return this.kernelSpecCache.get(cacheKey)!.promise;
     }
     protected async listKernelsFirstTimeFromMemento(cacheKey: string): Promise<T[]> {
-        // Check memento too
-        const cache = this.globalState.get<{ kernels: T[]; extensionVersion: string }>(cacheKey, {
-            kernels: [],
-            extensionVersion: ''
-        });
+        const promise = (async () => {
+            // Check memento too
+            const cache = this.globalState.get<{ kernels: T[]; extensionVersion: string }>(cacheKey, {
+                kernels: [],
+                extensionVersion: ''
+            });
 
-        let kernels: T[] = [];
-        /**
-         * The cached list of raw kernels is pointing to kernelSpec.json files in the extensions directory.
-         * Assume you have version 1 of extension installed.
-         * Now you update to version 2, at this point the cache still points to version 1 and the kernelSpec.json files are in the directory version 1.
-         * Those files in directory for version 1 could get deleted by VS Code at any point in time, as thats an old version of the extension and user has now installed version 2.
-         * Hence its wrong and buggy to use those files.
-         * To ensure we don't run into weird issues with the use of cached kernelSpec.json files, we ensure the cache is tied to each version of the extension.
-         */
-        if (cache && Array.isArray(cache.kernels) && cache.extensionVersion === this.env.extensionVersion) {
-            kernels = cache.kernels.map((item) => BaseKernelConnectionMetadata.fromJSON(item)) as T[];
-        }
+            let kernels: T[] = [];
+            /**
+             * The cached list of raw kernels is pointing to kernelSpec.json files in the extensions directory.
+             * Assume you have version 1 of extension installed.
+             * Now you update to version 2, at this point the cache still points to version 1 and the kernelSpec.json files are in the directory version 1.
+             * Those files in directory for version 1 could get deleted by VS Code at any point in time, as thats an old version of the extension and user has now installed version 2.
+             * Hence its wrong and buggy to use those files.
+             * To ensure we don't run into weird issues with the use of cached kernelSpec.json files, we ensure the cache is tied to each version of the extension.
+             */
+            if (cache && Array.isArray(cache.kernels) && cache.extensionVersion === this.env.extensionVersion) {
+                kernels = cache.kernels.map((item) => BaseKernelConnectionMetadata.fromJSON(item)) as T[];
+            }
 
-        // Validate
-        const validValues: T[] = [];
-        await Promise.all(
-            kernels.map(async (item) => {
-                if (await this.isValidCachedKernel(item)) {
-                    validValues.push(item);
-                }
-            })
-        );
-        return validValues;
+            // Validate
+            const validValues: T[] = [];
+            await Promise.all(
+                kernels.map(async (item) => {
+                    if (await this.isValidCachedKernel(item)) {
+                        validValues.push(item);
+                    }
+                })
+            );
+            return validValues;
+        })();
+
+        this.promiseMonitor.push(promise);
+        return promise;
     }
 
     protected async writeToMementoCache(values: T[], cacheKey: string) {

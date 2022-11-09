@@ -40,6 +40,7 @@ import { KernelFinder } from '../../kernelFinder';
 import { removeOldCachedItems } from '../../common/commonFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { PromiseMonitor } from '../../../platform/common/utils/promises';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -47,6 +48,20 @@ const REMOTE_KERNEL_REFRESH_INTERVAL = 2_000;
 
 // This class watches a single jupyter server URI and returns kernels from it
 export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
+    private _status: 'discovering' | 'idle' = 'idle';
+    public get status() {
+        return this._status;
+    }
+    private set status(value: typeof this._status) {
+        if (this._status === value) {
+            return;
+        }
+        this._status = value;
+        this._onDidChangeStatus.fire();
+    }
+    private readonly _onDidChangeStatus = new EventEmitter<void>();
+    public readonly onDidChangeStatus = this._onDidChangeStatus.event;
+    private readonly promiseMonitor = new PromiseMonitor();
     /**
      * List of ids of kernels that should be hidden from the kernel picker.
      */
@@ -87,6 +102,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         this.disposables.push(kernelFinder.registerKernelFinder(this));
 
         this.disposables.push(this._onDidChangeKernels);
+        this.disposables.push(this._onDidChangeStatus);
+        this.disposables.push(this.promiseMonitor);
     }
 
     dispose(): void | undefined {
@@ -98,6 +115,10 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
 
     async activate(): Promise<void> {
+        this.promiseMonitor.onStateChange(() => {
+            this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering';
+        });
+
         // warm up the cache
         this.loadCache().then(noop, noop);
 
@@ -154,60 +175,67 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
 
     public async loadCache() {
         traceInfoIfCI(`Remote Kernel Finder load cache Server: ${this.id}`);
+        const promise = (async () => {
+            const kernelsFromCache = await this.getFromCache();
 
-        const kernelsFromCache = await this.getFromCache();
+            let kernels: RemoteKernelConnectionMetadata[] = [];
 
-        let kernels: RemoteKernelConnectionMetadata[] = [];
+            // If we finish the cache first, and we don't have any items, in the cache, then load without cache.
+            if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
+                kernels = kernelsFromCache;
+                // kick off a cache update request
+                this.updateCache().then(noop, noop);
+            } else {
+                try {
+                    const kernelsWithoutCachePromise = (async () => {
+                        const connInfo = await this.getRemoteConnectionInfo();
+                        return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
+                    })();
 
-        // If we finish the cache first, and we don't have any items, in the cache, then load without cache.
-        if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
-            kernels = kernelsFromCache;
-            // kick off a cache update request
-            this.updateCache().then(noop, noop);
-        } else {
+                    kernels = await kernelsWithoutCachePromise;
+                } catch (ex) {
+                    traceError('UniversalRemoteKernelFinder: Failed to get kernels without cache', ex);
+                }
+            }
+
+            await this.writeToCache(kernels);
+        })();
+        this.promiseMonitor.push(promise);
+        await promise;
+    }
+
+    private async updateCache() {
+        const promise = (async () => {
+            let kernels: RemoteKernelConnectionMetadata[] = [];
+            this._cacheUpdateCancelTokenSource?.dispose();
+            const updateCacheCancellationToken = new CancellationTokenSource();
+            this._cacheUpdateCancelTokenSource = updateCacheCancellationToken;
+
             try {
                 const kernelsWithoutCachePromise = (async () => {
-                    const connInfo = await this.getRemoteConnectionInfo();
+                    const connInfo = await this.getRemoteConnectionInfo(updateCacheCancellationToken.token);
                     return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
                 })();
 
                 kernels = await kernelsWithoutCachePromise;
             } catch (ex) {
-                traceError('UniversalRemoteKernelFinder: Failed to get kernels without cache', ex);
+                traceWarning(`Could not fetch kernels from the ${this.kind} server, falling back to cache: ${ex}`);
+                // Since fetching the remote kernels failed, we fall back to the cache,
+                // at this point no need to display all of the kernel specs,
+                // Its possible the connection is dead, just display the live kernels we had.
+                // I.e. if user had a notebook connected to a remote kernel, then just display that live kernel.
+                kernels = await this.getFromCache(updateCacheCancellationToken.token);
+                kernels = kernels.filter((item) => item.kind === 'connectToLiveRemoteKernel');
             }
-        }
 
-        await this.writeToCache(kernels);
-    }
+            if (updateCacheCancellationToken.token.isCancellationRequested) {
+                return;
+            }
 
-    private async updateCache() {
-        let kernels: RemoteKernelConnectionMetadata[] = [];
-        this._cacheUpdateCancelTokenSource?.dispose();
-        const updateCacheCancellationToken = new CancellationTokenSource();
-        this._cacheUpdateCancelTokenSource = updateCacheCancellationToken;
-
-        try {
-            const kernelsWithoutCachePromise = (async () => {
-                const connInfo = await this.getRemoteConnectionInfo(updateCacheCancellationToken.token);
-                return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
-            })();
-
-            kernels = await kernelsWithoutCachePromise;
-        } catch (ex) {
-            traceWarning(`Could not fetch kernels from the ${this.kind} server, falling back to cache: ${ex}`);
-            // Since fetching the remote kernels failed, we fall back to the cache,
-            // at this point no need to display all of the kernel specs,
-            // Its possible the connection is dead, just display the live kernels we had.
-            // I.e. if user had a notebook connected to a remote kernel, then just display that live kernel.
-            kernels = await this.getFromCache(updateCacheCancellationToken.token);
-            kernels = kernels.filter((item) => item.kind === 'connectToLiveRemoteKernel');
-        }
-
-        if (updateCacheCancellationToken.token.isCancellationRequested) {
-            return;
-        }
-
-        await this.writeToCache(kernels);
+            await this.writeToCache(kernels);
+        })();
+        this.promiseMonitor.push(promise);
+        await promise;
     }
 
     /**

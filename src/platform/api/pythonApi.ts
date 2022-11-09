@@ -28,6 +28,7 @@ import { TraceOptions } from '../logging/types';
 import { areObjectsWithUrisTheSame, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
+import { PromiseMonitor } from '../common/utils/promises';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -334,6 +335,21 @@ export class InterpreterService implements IInterpreterService {
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
     private apiPromise: Promise<ProposedExtensionAPI | undefined> | undefined;
     private api?: ProposedExtensionAPI;
+    private _status: 'refreshing' | 'idle' = 'idle';
+    public get status() {
+        return this._status;
+    }
+    private set status(value: typeof this._status) {
+        if (this._status === value) {
+            return;
+        }
+        this._status = value;
+        this._onDidChangeStatus.fire();
+    }
+    private readonly _onDidChangeStatus = new EventEmitter<void>();
+    public readonly onDidChangeStatus = this._onDidChangeStatus.event;
+    private refreshPromises = new PromiseMonitor();
+
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
@@ -357,8 +373,12 @@ export class InterpreterService implements IInterpreterService {
             }
         }
         this.workspace.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders, this, disposables);
+        this.disposables.push(this._onDidChangeStatus);
+        this.disposables.push(this.refreshPromises);
+        this.refreshPromises.onStateChange(() => {
+            this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
+        });
     }
-
     public get onDidChangeInterpreter(): Event<void> {
         this.hookupOnDidChangeInterpreterEvent();
         return this.didChangeInterpreter.event;
@@ -388,6 +408,7 @@ export class InterpreterService implements IInterpreterService {
             const cancellation = (this.getInterpretersCancellation = new CancellationTokenSource());
             this.interpreterListCachePromise = this.getInterpretersImpl(cancellation.token);
             this.interpreterListCachePromise.finally(() => cancellation.dispose);
+            this.refreshPromises.push(this.interpreterListCachePromise);
         }
         return this.interpreterListCachePromise;
     }
@@ -424,18 +445,20 @@ export class InterpreterService implements IInterpreterService {
         return this._waitForAllInterpretersToLoad;
     }
     public async refreshInterpreters(forceRefresh: boolean = false) {
-        const api = await this.getApi();
-        if (!api) {
-            return;
-        }
-        try {
-            await api.environments.refreshEnvironments({ forceRefresh });
-            this.interpreterListCachePromise = undefined;
-            this.didChangeInterpreters.fire();
-            traceVerbose(`Refreshed Environments`);
-        } catch (ex) {
-            traceError(`Failed to refresh the list of interpreters`);
-        }
+        const promise = (async () => {
+            const api = await this.getApi();
+            if (!api) {
+                return;
+            }
+            try {
+                await api.environments.refreshEnvironments({ forceRefresh });
+                traceVerbose(`Refreshed Environments`);
+            } catch (ex) {
+                traceError(`Failed to refresh the list of interpreters`);
+            }
+        })();
+        this.refreshPromises.push(promise);
+        await promise;
     }
     private workspaceCachedActiveInterpreter = new Set<string>();
     @traceDecoratorVerbose(
@@ -647,7 +670,6 @@ export class InterpreterService implements IInterpreterService {
         if (cancelToken.isCancellationRequested) {
             return [];
         }
-
         traceVerbose(
             `Full interpreter list is length: ${allInterpreters.length}, ${allInterpreters
                 .map((item) => `${item.id}:${item.displayName}:${item.envType}:${getDisplayPath(item.uri)}`)
@@ -706,7 +728,6 @@ export class InterpreterService implements IInterpreterService {
                             }
                             traceVerbose(`Detected change in Python environments via Python API`);
                             this.interpreterListCachePromise = undefined;
-                            this.refreshInterpreters().ignoreErrors();
                             this.populateCachedListOfInterpreters();
                             this.didChangeInterpreters.fire();
                         },
