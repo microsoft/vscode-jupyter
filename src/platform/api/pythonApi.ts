@@ -505,27 +505,25 @@ export class InterpreterService implements IInterpreterService {
                 if (!api) {
                     return;
                 }
-                if (uri) {
-                    // Find the Env with the same Uri.
-                    const matchedPythonEnv = api.environments.known.find((item) => {
-                        return areInterpreterPathsSame(item.executable.uri, pythonPath);
-                    });
-                    if (matchedPythonEnv) {
-                        const env = await api.environments.resolveEnvironment(matchedPythonEnv);
-                        const resolved = this.trackResolvedEnvironment(env, false);
-                        traceVerbose(
-                            `Interpreter details for ${getDisplayPath(pythonPath)} from Python is ${JSON.stringify(
-                                env
-                            )} and our mapping is ${JSON.stringify(resolved)}`
-                        );
-                        return resolved;
-                    }
-                    traceWarning(
-                        `No interpreter with path ${getDisplayPath(
-                            pythonPath
-                        )} found in Python API, will convert Uri path to string as Id ${pythonPath}`
+                // Find the Env with the same Uri.
+                const matchedPythonEnv = api.environments.known.find((item) => {
+                    return areInterpreterPathsSame(item.executable.uri, pythonPath);
+                });
+                if (matchedPythonEnv) {
+                    const env = await api.environments.resolveEnvironment(matchedPythonEnv);
+                    const resolved = this.trackResolvedEnvironment(env, false);
+                    traceVerbose(
+                        `Interpreter details for ${getDisplayPath(pythonPath)} from Python is ${JSON.stringify(
+                            env
+                        )} and our mapping is ${JSON.stringify(resolved)}`
                     );
+                    return resolved;
                 }
+                traceWarning(
+                    `No interpreter with path ${getDisplayPath(
+                        pythonPath
+                    )} found in Python API, will convert Uri path to string as Id ${pythonPath}`
+                );
 
                 // eslint-disable-next-line local-rules/dont-use-fspath
                 const env = await api.environments.resolveEnvironment(pythonPath.fsPath);
