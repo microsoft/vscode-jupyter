@@ -82,6 +82,7 @@ import { ITrustedKernelPaths } from './types';
         let cancelToken: CancellationTokenSource;
         let onDidChangeInterpreters: EventEmitter<void>;
         let onDidChangeInterpreter: EventEmitter<void>;
+        let onDidChangeInterpreterStatus: EventEmitter<void>;
         let changeEventFired: TestEventHandler<void>;
         let localPythonAndRelatedKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
         type TestData = {
@@ -112,8 +113,10 @@ import { ITrustedKernelPaths } from './types';
             interpreterService = mock(InterpreterService);
             onDidChangeInterpreter = new EventEmitter<void>();
             onDidChangeInterpreters = new EventEmitter<void>();
+            onDidChangeInterpreterStatus = new EventEmitter<void>();
             disposables.push(onDidChangeInterpreter);
             disposables.push(onDidChangeInterpreters);
+            disposables.push(onDidChangeInterpreterStatus);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
                 testData.interpreters = testData.interpreters || [];
@@ -129,6 +132,7 @@ import { ITrustedKernelPaths } from './types';
             testData.interpreters = Array.from(distinctInterpreters);
             when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
             when(interpreterService.onDidChangeInterpreters).thenReturn(onDidChangeInterpreters.event);
+            when(interpreterService.onDidChangeStatus).thenReturn(onDidChangeInterpreterStatus.event);
             when(interpreterService.resolvedEnvironments).thenReturn(Array.from(distinctInterpreters));
             when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
             when(interpreterService.getInterpreterDetails(anything())).thenResolve();

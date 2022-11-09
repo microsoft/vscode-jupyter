@@ -95,8 +95,10 @@ import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
             remoteKernelFinder = mock(RemoteKernelFinder);
             onDidChangeInterpreter = new EventEmitter<void>();
             onDidChangeInterpreters = new EventEmitter<void>();
+            const onDidChangeInterpreterStatus = new EventEmitter<void>();
             disposables.push(onDidChangeInterpreter);
             disposables.push(onDidChangeInterpreters);
+            disposables.push(onDidChangeInterpreterStatus);
             when(remoteKernelFinder.listKernelsFromConnection(anything())).thenResolve([]);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
@@ -113,6 +115,7 @@ import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
             testData.interpreters = Array.from(distinctInterpreters);
             when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
             when(interpreterService.onDidChangeInterpreters).thenReturn(onDidChangeInterpreters.event);
+            when(interpreterService.onDidChangeStatus).thenReturn(onDidChangeInterpreterStatus.event);
             when(interpreterService.resolvedEnvironments).thenReturn(Array.from(distinctInterpreters));
             when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
             when(interpreterService.getInterpreterDetails(anything())).thenResolve();
