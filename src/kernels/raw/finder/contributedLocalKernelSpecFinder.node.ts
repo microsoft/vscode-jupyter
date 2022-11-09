@@ -120,7 +120,6 @@ export class ContributedLocalKernelSpecFinder
             await this.writeToCache(kernels);
         } catch (ex) {
             traceError('Exception Saving loaded kernels', ex);
-            console.error('Exception Saving loaded kernels', ex);
         }
     }
 
