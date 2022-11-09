@@ -45,6 +45,7 @@ import {
     InputStep,
     IQuickPickParameters
 } from '../../../platform/common/utils/multiStepInput';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ConnectionDisplayDataProvider } from '../connectionDisplayData';
 import { IControllerRegistration, INotebookKernelSourceSelector, IConnectionTracker } from '../types';
 
@@ -123,7 +124,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(ConnectionDisplayDataProvider) private readonly displayDataProvider: ConnectionDisplayDataProvider
+        @inject(ConnectionDisplayDataProvider) private readonly displayDataProvider: ConnectionDisplayDataProvider,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
 
     public async selectKernelSource(notebook: NotebookDocument): Promise<void> {
@@ -389,6 +391,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         state: MultiStepResult,
         token: CancellationToken
     ) {
+        // Kick off a refresh of Python environments when displaying the quick pick for local kernels or Python envs.
+        this.interpreterService.refreshInterpreters().ignoreErrors();
         state.source = source;
         const onDidChange = new EventEmitter<void>();
         const provider = {

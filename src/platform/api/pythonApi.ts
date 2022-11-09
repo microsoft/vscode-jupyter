@@ -343,7 +343,7 @@ export class InterpreterService implements IInterpreterService {
         if (this._status === value) {
             return;
         }
-        this._status = this.status;
+        this._status = value;
         this._onDidChangeStatus.fire();
     }
     private readonly _onDidChangeStatus = new EventEmitter<void>();
@@ -378,17 +378,6 @@ export class InterpreterService implements IInterpreterService {
         this.refreshPromises.onStateChange(() => {
             this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
         });
-    }
-    private _refreshOnLoadPromise?: Promise<void>;
-    public refreshOnLoad(): void {
-        if (this._refreshOnLoadPromise) {
-            return;
-        }
-        this._refreshOnLoadPromise = (async () => {
-            if (this.extensionChecker.isPythonExtensionInstalled) {
-                await this.refreshInterpreters(false);
-            }
-        })().catch(noop);
     }
     public get onDidChangeInterpreter(): Event<void> {
         this.hookupOnDidChangeInterpreterEvent();
@@ -463,8 +452,6 @@ export class InterpreterService implements IInterpreterService {
             }
             try {
                 await api.environments.refreshEnvironments({ forceRefresh });
-                this.interpreterListCachePromise = undefined;
-                this.didChangeInterpreters.fire();
                 traceVerbose(`Refreshed Environments`);
             } catch (ex) {
                 traceError(`Failed to refresh the list of interpreters`);
@@ -741,7 +728,6 @@ export class InterpreterService implements IInterpreterService {
                             }
                             traceVerbose(`Detected change in Python environments via Python API`);
                             this.interpreterListCachePromise = undefined;
-                            this.refreshInterpreters().ignoreErrors();
                             this.populateCachedListOfInterpreters();
                             this.didChangeInterpreters.fire();
                         },

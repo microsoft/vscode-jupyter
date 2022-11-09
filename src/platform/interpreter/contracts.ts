@@ -20,10 +20,4 @@ export interface IInterpreterService {
     refreshInterpreters(forceRefresh?: boolean): Promise<void>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
     getInterpreterDetails(pythonPath: Uri): Promise<undefined | PythonEnvironment>;
-    /**
-     * Refreshes the list of Python environments in the background.
-     * Generally executed after we load the extension.
-     * This way users have the latest python environments in the kernel picker.
-     */
-    refreshOnLoad(): void;
 }
