@@ -27,6 +27,20 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 export class ContributedLocalKernelSpecFinder
     implements IContributedKernelFinder<LocalKernelSpecConnectionMetadata>, IExtensionSyncActivationService
 {
+    private _status: 'discovering' | 'idle' = 'discovering';
+    public get status() {
+        return this._status;
+    }
+    private set status(value: typeof this._status) {
+        if (this._status === value) {
+            return;
+        }
+        this._status = value;
+        this._onDidChangeStatus.fire();
+    }
+    private readonly _onDidChangeStatus = new EventEmitter<void>();
+    public readonly onDidChangeStatus = this._onDidChangeStatus.event;
+
     kind = ContributedKernelFinderKind.LocalKernelSpec;
     id: string = ContributedKernelFinderKind.LocalKernelSpec;
     displayName: string = DataScience.localKernelSpecs();
@@ -49,6 +63,8 @@ export class ContributedLocalKernelSpecFinder
         @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         kernelFinder.registerKernelFinder(this);
+        this.disposables.push(this._onDidChangeStatus);
+        this.disposables.push(this._onDidChangeKernels);
     }
 
     activate() {

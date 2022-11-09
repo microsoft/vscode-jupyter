@@ -47,6 +47,12 @@ export class ContributedLocalPythonEnvFinder
     ) {
         kernelFinder.registerKernelFinder(this);
     }
+    public get status(): 'idle' | 'discovering' {
+        return this.pythonKernelFinder.status;
+    }
+    public get onDidChangeStatus(): Event<void> {
+        return this.pythonKernelFinder.onDidChangeStatus;
+    }
 
     activate() {
         this.loadInitialState().then(noop, noop);

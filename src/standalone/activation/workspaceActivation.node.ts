@@ -10,6 +10,8 @@ import { IDisposable, Resource } from '../../platform/common/types';
 import { traceDecoratorError } from '../../platform/logging';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IFileSystem } from '../../platform/common/platform/types';
+import { IPythonExtensionChecker } from '../../platform/api/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 
 /**
  * Responsible for sending workspace level telemetry and making sure that the list of interpreters is always fetched when opening a workspace.
@@ -23,7 +25,9 @@ export class WorkspaceActivation implements IExtensionSingleActivationService {
     constructor(
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
 
     public async activate(): Promise<void> {
@@ -50,6 +54,10 @@ export class WorkspaceActivation implements IExtensionSingleActivationService {
             return;
         }
         this.activatedWorkspaces.add(key);
+        // Get latest interpreter list in the background.
+        if (this.extensionChecker.isPythonExtensionActive) {
+            this.interpreterService.refreshOnLoad();
+        }
 
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
     }

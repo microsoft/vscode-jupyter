@@ -38,6 +38,7 @@ import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ITrustedKernelPaths } from './types';
+// import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 
 const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2022_10';
 /**
@@ -72,6 +73,27 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
     ) {
         super(fs, workspaceService, extensionChecker, globalState, disposables, env);
         interpreterService.onDidChangeInterpreters(() => this.refresh().catch(noop), this, this.disposables);
+        // let deferred: Deferred<void> | undefined = undefined;
+        this.interpreterService.onDidChangeStatus(
+            () => {
+                // switch (this.interpreterService.status) {
+                //     case 'idle': {
+                //         deferred?.resolve();
+                //         deferred = undefined;
+                //         return;
+                //     }
+                //     case 'refreshing': {
+                //         if (deferred) {
+                //             return;
+                //         }
+                //         deferred = createDeferred<void>();
+                //         this.promiseMonitor.push(deferred?.promise);
+                //     }
+                // }
+            },
+            this,
+            this.disposables
+        );
     }
     public activate() {
         this.listKernelsFirstTimeFromMemento(LocalPythonKernelsCacheKey)
@@ -121,22 +143,26 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
     }
     private refreshCancellation?: CancellationTokenSource;
     private lastKnownGlobalPythonKernelSpecs: LocalKernelSpecConnectionMetadata[] = [];
-    private async refresh() {
-        // Don't refresh until we've actually waited for interpreters to load
-        await this.interpreterService.waitForAllInterpretersToLoad();
-        const previousListOfKernels = this._cachedKernels;
-        this.refreshCancellation?.cancel();
-        const cancelToken = (this.refreshCancellation = new CancellationTokenSource());
-        await this.listKernelsImplementation(cancelToken.token)
-            .then(noop, noop)
-            .finally(() => cancelToken.dispose());
-        if (
-            this._cachedKernels.length !== previousListOfKernels.length ||
-            JSON.stringify(this._cachedKernels) !== JSON.stringify(previousListOfKernels)
-        ) {
-            this._onDidChangeKernels.fire();
-            this.writeToMementoCache(this._cachedKernels, LocalPythonKernelsCacheKey).ignoreErrors();
-        }
+    public async refresh() {
+        const promise = (async () => {
+            // Don't refresh until we've actually waited for interpreters to load
+            await this.interpreterService.waitForAllInterpretersToLoad();
+            const previousListOfKernels = this._cachedKernels;
+            this.refreshCancellation?.cancel();
+            const cancelToken = (this.refreshCancellation = new CancellationTokenSource());
+            await this.listKernelsImplementation(cancelToken.token)
+                .then(noop, noop)
+                .finally(() => cancelToken.dispose());
+            if (
+                this._cachedKernels.length !== previousListOfKernels.length ||
+                JSON.stringify(this._cachedKernels) !== JSON.stringify(previousListOfKernels)
+            ) {
+                this._onDidChangeKernels.fire();
+                this.writeToMementoCache(this._cachedKernels, LocalPythonKernelsCacheKey).ignoreErrors();
+            }
+        })();
+        this.promiseMonitor.push(promise);
+        return promise;
     }
 
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })

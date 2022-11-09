@@ -75,12 +75,20 @@ export class LocalKnownPathKernelSpecFinder
     public dispose(): void | undefined {
         this._onDidChangeKernels.dispose();
     }
+    public async refresh() {
+        const cancellation = new CancellationTokenSource();
+        try {
+            await this.listKernelSpecs(cancellation.token);
+        } finally {
+            cancellation.dispose();
+        }
+    }
     /**
      * @param {boolean} includePythonKernels Include/exclude Python kernels in the result.
      */
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localKernelSpec' })
     private async listKernelSpecs(cancelToken: CancellationToken): Promise<LocalKernelSpecConnectionMetadata[]> {
-        return this.listKernelsWithCache('LocalKnownPathKernelSpecFinder', false, async () => {
+        const promise = this.listKernelsWithCache('LocalKnownPathKernelSpecFinder', false, async () => {
             // First find the on disk kernel specs and interpreters
             const kernelSpecs = await this.findKernelSpecs(cancelToken);
 
@@ -110,6 +118,8 @@ export class LocalKnownPathKernelSpecFinder
             this._onDidChangeKernels.fire();
             return mappedKernelSpecs;
         });
+        this.promiseMonitor.push(promise);
+        return promise;
     }
     private async findKernelSpecs(cancelToken: CancellationToken): Promise<IJupyterKernelSpec[]> {
         let results: IJupyterKernelSpec[] = [];
