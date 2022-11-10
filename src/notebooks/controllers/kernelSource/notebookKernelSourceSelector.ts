@@ -192,22 +192,11 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             });
         }
 
-        // 3rd party remote server uri providers
-        const providers = await this.uriProviderRegistration.getProviders();
-        providers.forEach((p) => {
-            items.push({
-                type: KernelSourceQuickPickType.ServerUriProvider,
-                label: p.displayName ?? p.id,
-                detail: p.detail ?? `Connect to Jupyter servers from ${p.displayName ?? p.id}`,
-                provider: p
-            });
-        });
-
         if (token.isCancellationRequested) {
             return;
         }
 
-        const selectedSource = await multiStep.showQuickPick<
+        const { quickPick, selection } = await multiStep.showLazyLoadQuickPick<
             KernelSourceQuickPickItem,
             IQuickPickParameters<KernelSourceQuickPickItem>
         >({
@@ -215,7 +204,26 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             placeholder: '',
             title: DataScience.kernelPickerSelectSourceTitle()
         });
+        quickPick.busy = true;
 
+        (async () => {
+            // 3rd party remote server uri providers
+            const providers = await this.uriProviderRegistration.getProviders();
+            providers.forEach((p) => {
+                items.push({
+                    type: KernelSourceQuickPickType.ServerUriProvider,
+                    label: p.displayName ?? p.id,
+                    detail: p.detail ?? `Connect to Jupyter servers from ${p.displayName ?? p.id}`,
+                    provider: p
+                });
+            });
+            const oldActiveItem = quickPick.activeItems.length ? [quickPick.activeItems[0]] : [];
+            quickPick.items = items;
+            quickPick.activeItems = oldActiveItem;
+            quickPick.busy = false;
+        })().ignoreErrors();
+
+        const selectedSource = await selection;
         if (token.isCancellationRequested) {
             return;
         }
