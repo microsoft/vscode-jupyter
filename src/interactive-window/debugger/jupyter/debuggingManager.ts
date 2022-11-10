@@ -177,7 +177,7 @@ export class InteractiveWindowDebuggingManager
 
         const cell = notebook.cellAt(config.__cellIndex);
         const controller = new DebugCellController(adapter, cell, this.kernelProvider.getKernelExecution(kernel!));
-        adapter.setDebuggingDelegates([controller, new RestartNotSupportedController(cell, this.serviceContainer)]);
+        adapter.addDebuggingDelegates([controller, new RestartNotSupportedController(cell, this.serviceContainer)]);
         controller.ready
             .then(() => dbgr.resolve())
             .catch((ex) => console.error('Failed waiting for controller to be ready', ex));
