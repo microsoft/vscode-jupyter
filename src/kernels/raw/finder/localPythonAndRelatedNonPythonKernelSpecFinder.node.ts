@@ -72,7 +72,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         @inject(ITrustedKernelPaths) private readonly trustedKernels: ITrustedKernelPaths
     ) {
         super(fs, workspaceService, extensionChecker, globalState, disposables, env);
-        interpreterService.onDidChangeInterpreters(() => this.refresh().catch(noop), this, this.disposables);
+        interpreterService.onDidChangeInterpreters(() => this.refreshData().catch(noop), this, this.disposables);
         // let deferred: Deferred<void> | undefined = undefined;
         this.interpreterService.onDidChangeStatus(
             () => {
@@ -104,7 +104,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                 }
             })
             .finally(async () => {
-                this.refresh().ignoreErrors();
+                this.refreshData().ignoreErrors();
                 this.kernelSpecsFromKnownLocations.onDidChangeKernels(
                     () => {
                         // Only refresh if we know there are new global Python kernels that we haven't already seen before.
@@ -114,14 +114,14 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                             lastKnownPythonKernels.length !== newPythonKernels.length ||
                             !areObjectsWithUrisTheSame(lastKnownPythonKernels, newPythonKernels)
                         ) {
-                            this.refresh().catch(noop);
+                            this.refreshData().catch(noop);
                         }
                     },
                     this,
                     this.disposables
                 );
                 this.interpreterService.onDidChangeInterpreter(
-                    () => this.refresh().catch(noop),
+                    () => this.refreshData().catch(noop),
                     this,
                     this.disposables
                 );
@@ -144,7 +144,13 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
     private refreshCancellation?: CancellationTokenSource;
     private lastKnownGlobalPythonKernelSpecs: LocalKernelSpecConnectionMetadata[] = [];
     public async refresh() {
+        await this.refreshData(true);
+    }
+    public async refreshData(forcePythonInterpreterRefresh: boolean = false) {
         const promise = (async () => {
+            if (forcePythonInterpreterRefresh) {
+                await this.interpreterService.refreshInterpreters(true);
+            }
             // Don't refresh until we've actually waited for interpreters to load
             await this.interpreterService.waitForAllInterpretersToLoad();
             const previousListOfKernels = this._cachedKernels;

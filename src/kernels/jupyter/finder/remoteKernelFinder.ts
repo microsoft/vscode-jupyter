@@ -173,15 +173,19 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         this.wasPythonInstalledWhenFetchingKernels = this.extensionChecker.isPythonExtensionInstalled;
     }
 
-    public async loadCache() {
+    public async refresh(): Promise<void> {
+        await this.loadCache(true);
+    }
+
+    public async loadCache(ignoreCache: boolean = false) {
         traceInfoIfCI(`Remote Kernel Finder load cache Server: ${this.id}`);
         const promise = (async () => {
-            const kernelsFromCache = await this.getFromCache();
+            const kernelsFromCache = ignoreCache ? [] : await this.getFromCache();
 
             let kernels: RemoteKernelConnectionMetadata[] = [];
 
             // If we finish the cache first, and we don't have any items, in the cache, then load without cache.
-            if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
+            if (!ignoreCache && Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
                 kernels = kernelsFromCache;
                 // kick off a cache update request
                 this.updateCache().then(noop, noop);

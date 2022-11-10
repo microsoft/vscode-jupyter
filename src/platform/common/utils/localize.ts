@@ -58,6 +58,8 @@ export namespace Common {
     export const canceled = () => localize('Common.canceled', 'Canceled');
     export const cancel = () => localize('Common.cancel', 'Cancel');
     export const ok = () => localize('Common.ok', 'Ok');
+    export const refresh = () => localize('Common.refresh', 'Refresh');
+    export const refreshing = () => localize('Common.refreshing', 'Refreshing...');
     export const download = () => localize('Common.download', 'Download');
     export const gotIt = () => localize('Common.gotIt', 'Got it!');
     export const install = () => localize('Common.install', 'Install');

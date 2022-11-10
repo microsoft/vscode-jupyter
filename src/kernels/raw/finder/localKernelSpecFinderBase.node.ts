@@ -96,7 +96,7 @@ export abstract class LocalKernelSpecFinderBase<
     }
 
     public abstract dispose(): void | undefined;
-    public abstract refresh(): Promise<void>;
+    public abstract refreshData(): Promise<void>;
     /**
      * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.
      * If for instance first Python Extension isn't installed, then we call this again, after installing it, then the cache will be blown away
