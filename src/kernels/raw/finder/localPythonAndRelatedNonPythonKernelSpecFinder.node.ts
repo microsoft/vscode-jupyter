@@ -134,6 +134,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
     private refreshCancellation?: CancellationTokenSource;
     private lastKnownGlobalPythonKernelSpecs: LocalKernelSpecConnectionMetadata[] = [];
     public async refresh() {
+        this.kernelSpecFinder.clearCache();
         await this.refreshData(true);
     }
     public async refreshData(forcePythonInterpreterRefresh: boolean = false) {

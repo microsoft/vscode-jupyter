@@ -98,10 +98,8 @@ export class ContributedLocalKernelSpecFinder
 
     public async refresh() {
         const promise = (async () => {
-            if (this.extensionChecker.isPythonExtensionInstalled) {
-                await this.interpreters.refreshInterpreters(true);
-                await this.interpreters.waitForAllInterpretersToLoad();
-            }
+            await this.nonPythonKernelFinder.refresh();
+            await this.pythonKernelFinder.refresh();
             await this.updateCache();
         })();
         this.promiseMonitor.push(promise);

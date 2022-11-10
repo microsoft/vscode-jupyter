@@ -70,7 +70,11 @@ export class LocalKnownPathKernelSpecFinder
     public dispose(): void | undefined {
         this._onDidChangeKernels.dispose();
     }
-    public async refreshData() {
+    public async refresh() {
+        this.kernelSpecFinder.clearCache();
+        await this.refreshData();
+    }
+    private async refreshData() {
         const cancellation = new CancellationTokenSource();
         try {
             await this.listKernelSpecs(cancellation.token);
