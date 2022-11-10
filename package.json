@@ -1483,7 +1483,7 @@
                 },
                 "jupyter.showVariableViewWhenDebugging": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "%jupyter.configuration.jupyter.showVariableViewWhenDebugging.description%",
                     "scope": "application"
                 },
