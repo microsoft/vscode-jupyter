@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { instance, mock, when } from 'ts-mockito';
 import {
     CancellationToken,
     NotebookCell,
@@ -129,7 +130,7 @@ export class TestNotebookDocument implements NotebookDocument {
         language: string = PYTHON_LANGUAGE,
         metadata: { readonly [key: string]: any } = {}
     ): Promise<TestNotebookCell> {
-        const textDoc = await workspace.openTextDocument({ language, content });
+        const textDoc = await createTextDocument({ language, content });
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         const cell = new TestNotebookCell(this, textDoc, NotebookCellKind.Code, 'text/plain', metadata);
         this.cells.push(cell);
@@ -141,7 +142,7 @@ export class TestNotebookDocument implements NotebookDocument {
         language: string = PYTHON_LANGUAGE,
         metadata: { readonly [key: string]: any } = {}
     ): Promise<TestNotebookCell> {
-        const textDoc = await workspace.openTextDocument({ language, content });
+        const textDoc = await createTextDocument({ language, content });
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         const cell = new TestNotebookCell(this, textDoc, NotebookCellKind.Code, 'text/plain', metadata);
         this.cells.splice(index, 0, cell);
@@ -151,7 +152,7 @@ export class TestNotebookDocument implements NotebookDocument {
         content: string,
         metadata: { readonly [key: string]: any } = {}
     ): Promise<TestNotebookCell> {
-        const textDoc = await workspace.openTextDocument({ language: 'markdown', content });
+        const textDoc = await createTextDocument({ language: 'markdown', content });
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         const cell = new TestNotebookCell(this, textDoc, NotebookCellKind.Markup, 'text/markdown', metadata);
         this.cells.push(cell);
@@ -162,7 +163,7 @@ export class TestNotebookDocument implements NotebookDocument {
         content: string,
         metadata: { readonly [key: string]: any } = {}
     ): Promise<TestNotebookCell> {
-        const textDoc = await workspace.openTextDocument({ language: 'markdown', content });
+        const textDoc = await createTextDocument({ language: 'markdown', content });
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         const cell = new TestNotebookCell(this, textDoc, NotebookCellKind.Markup, 'text/markdown', metadata);
         this.cells.splice(index, 0, cell);
@@ -182,6 +183,17 @@ export class TestNotebookDocument implements NotebookDocument {
     }
 }
 
+async function createTextDocument({ language, content }: { language: string; content: string }) {
+    let textDoc = await workspace.openTextDocument({ language, content });
+    if (textDoc) {
+        return textDoc;
+    }
+    textDoc = mock<TextDocument>();
+    when(textDoc.languageId).thenReturn(language);
+    when(textDoc.getText()).thenReturn(content);
+    (instance(textDoc) as any).then = undefined;
+    return instance(textDoc);
+}
 export class TestNotebookCell implements NotebookCell {
     public get index(): number {
         return this.notebook.cells.findIndex((c) => c === this);

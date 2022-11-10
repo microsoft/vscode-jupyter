@@ -36,7 +36,6 @@ import {
     runAllCellsInActiveNotebook,
     waitForKernelToGetAutoSelected,
     defaultNotebookTestTimeout,
-    waitForExecutionCompletedWithoutChangesToExecutionCount,
     getCellOutputs,
     getDefaultKernelConnection
 } from './helper.node';
@@ -206,60 +205,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    suite('Jupyter Kernels', () => {
-        setup(function () {
-            if (!IS_REMOTE_NATIVE_TEST() && !IS_NON_RAW_NATIVE_TEST()) {
-                return this.skip();
-            }
-        });
-        test('Ensure kernel is automatically restarted by jupyter & we get a status of restarting & autorestarting when kernel dies while executing a cell', async function () {
-            const cell1 = await notebook.appendCodeCell('print("123412341234")');
-            const cell2 = await notebook.appendCodeCell(codeToKillKernel);
-
-            await Promise.all([
-                cellExecutionHandler([cell1], notebook, controller),
-                waitForExecutionCompletedSuccessfully(cell1)
-            ]);
-            const kernel = kernelProvider.get(notebook)!;
-            const restartingEventFired = createDeferred<boolean>();
-            const autoRestartingEventFired = createDeferred<boolean>();
-
-            kernel.onStatusChanged((status) => {
-                if (status === 'restarting') {
-                    restartingEventFired.resolve();
-                }
-                if (status === 'autorestarting') {
-                    autoRestartingEventFired.resolve();
-                }
-            });
-            // Run cell that will kill the kernel.
-            await Promise.all([
-                cellExecutionHandler([cell2], notebook, controller),
-                waitForExecutionCompletedSuccessfully(cell2)
-            ]);
-
-            // Confirm we get the terminating & dead events.
-            // Kernel must die immediately, lets just wait for 10s.
-            await Promise.race([
-                Promise.all([restartingEventFired, autoRestartingEventFired]),
-                sleep(10_000).then(() => Promise.reject(new Error('Did not fail')))
-            ]);
-
-            // Verify we have output in the cell to indicate the cell crashed.
-            await waitForCondition(
-                async () => {
-                    const output = getCellOutputs(cell2);
-                    return (
-                        output.includes(kernelCrashFailureMessageInCell) &&
-                        output.includes('https://aka.ms/vscodeJupyterKernelCrash')
-                    );
-                },
-                defaultNotebookTestTimeout,
-                () => `Cell did not have kernel crash output, the output is = ${getCellOutputs(cell2)}`
-            );
-        });
-    });
-
     suite('Raw Kernels', () => {
         setup(function () {
             if (IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
@@ -323,79 +268,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 () => `Cell did not have kernel crash output, the output is = ${getCellOutputs(cell2)}`
             );
         }
-        test('Ensure we get an error message & a status of terminating & dead when kernel dies while executing a cell', async function () {
-            await runAndFailWithKernelCrash();
-        });
-        test('Ensure we get a modal prompt to restart kernel when running cells against a dead kernel', async function () {
-            await runAndFailWithKernelCrash();
-            const cell3 = await notebook.appendCodeCell('print("123412341234")');
-            const kernel = kernelProvider.get(notebook)!;
-            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
-                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
-            );
-            const restartPrompt = await hijackPrompt(
-                'showErrorMessage',
-                {
-                    exactMatch: expectedErrorMessage
-                },
-                { result: DataScience.restartKernel(), clickImmediately: true },
-                disposables
-            );
-
-            await sleep(5_000);
-            // Confirm we get a prompt to restart the kernel, and it gets restarted.
-            // & also confirm the cell completes execution with an execution count of 1 (thats how we tell kernel restarted).
-            await Promise.all([
-                restartPrompt.displayed,
-                cellExecutionHandler([cell3], notebook, controller),
-                waitForExecutionCompletedSuccessfully(cell3)
-            ]);
-            // If execution order is 1, then we know the kernel restarted.
-            assert.strictEqual(cell3.executionSummary?.executionOrder, 1);
-        });
-        test('Ensure we get a modal prompt to restart kernel when running cells against a dead kernel (dismiss and run again)', async function () {
-            await runAndFailWithKernelCrash();
-            const cell3 = await notebook.appendCodeCell('print("123412341234")');
-            const kernel = kernelProvider.get(notebook)!;
-            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
-                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
-            );
-            let restartPrompt = await hijackPrompt(
-                'showErrorMessage',
-                {
-                    exactMatch: expectedErrorMessage
-                },
-                { dismissPrompt: true },
-                disposables
-            );
-            // Confirm we get a prompt to restart the kernel
-            await Promise.all([
-                restartPrompt.displayed,
-                cellExecutionHandler([cell3], notebook, controller),
-                waitForExecutionCompletedWithoutChangesToExecutionCount(cell3)
-            ]);
-
-            restartPrompt.dispose();
-
-            // Running cell again should display the prompt and restart the kernel.
-            restartPrompt = await hijackPrompt(
-                'showErrorMessage',
-                {
-                    exactMatch: expectedErrorMessage
-                },
-                { result: DataScience.restartKernel(), clickImmediately: true },
-                disposables
-            );
-            // Confirm we get a prompt to restart the kernel, and it gets restarted.
-            // & also confirm the cell completes execution with an execution count of 1 (thats how we tell kernel restarted).
-            await Promise.all([
-                restartPrompt.displayed,
-                cellExecutionHandler([cell3], notebook, controller),
-                waitForExecutionCompletedSuccessfully(cell3)
-            ]);
-            // If execution order is 1, then we know the kernel restarted.
-            assert.strictEqual(cell3.executionSummary?.executionOrder, 1);
-        });
         test('Ensure we get an error displayed in cell output and prompt when user has a file named random.py next to the ipynb file', async function () {
             await runAndFailWithKernelCrash();
             const cell3 = await notebook.appendCodeCell('print("123412341234")');
