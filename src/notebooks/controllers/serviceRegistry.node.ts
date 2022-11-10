@@ -26,7 +26,7 @@ import { KernelRankingHelper } from './kernelRanking/kernelRankingHelper';
 import { IConfigurationService } from '../../platform/common/types';
 import { NotebookKernelSourceSelector } from './kernelSource/notebookKernelSourceSelector';
 import { ConnectionTracker } from './connectionTracker';
-import { ConnectionMRU } from './connectionMru.node';
+import { ConnectionMru } from './connectionMru.node';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
@@ -53,6 +53,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     }
     serviceManager.addSingleton<IConnectionTracker>(IConnectionTracker, ConnectionTracker);
     serviceManager.addBinding(IConnectionTracker, IExtensionSyncActivationService);
-    serviceManager.addSingleton<IConnectionMru>(IConnectionMru, ConnectionMRU);
+    serviceManager.addSingleton<IConnectionMru>(IConnectionMru, ConnectionMru);
     registerWidgetTypes(serviceManager, isDevMode);
 }
