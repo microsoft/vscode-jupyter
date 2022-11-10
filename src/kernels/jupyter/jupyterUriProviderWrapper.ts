@@ -13,6 +13,7 @@ import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from '
 export class JupyterUriProviderWrapper implements IJupyterUriProvider {
     onDidChangeHandles?: vscode.Event<void>;
     getHandles?(): Promise<JupyterServerUriHandle[]>;
+    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
 
     constructor(
         private readonly provider: IJupyterUriProvider,
@@ -34,6 +35,12 @@ export class JupyterUriProviderWrapper implements IJupyterUriProvider {
         if (provider.getHandles) {
             this.getHandles = async () => {
                 return provider.getHandles!();
+            };
+        }
+
+        if (provider.removeHandle) {
+            this.removeHandle = (handle: JupyterServerUriHandle) => {
+                return provider.removeHandle!(handle);
             };
         }
     }

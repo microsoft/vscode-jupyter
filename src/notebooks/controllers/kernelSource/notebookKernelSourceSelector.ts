@@ -11,7 +11,8 @@ import {
     EventEmitter,
     NotebookDocument,
     QuickPickItem,
-    QuickPickItemKind
+    QuickPickItemKind,
+    ThemeIcon
 } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import {
@@ -79,6 +80,8 @@ interface KernelProviderInfoQuickPickItem extends QuickPickItem {
 
 interface ContributedKernelFinderQuickPickItem extends QuickPickItem {
     type: KernelFinderEntityQuickPickType.KernelFinder;
+    serverUri: string;
+    idAndHandle: { id: string; handle: string };
     kernelFinderInfo: IContributedKernelFinder;
 }
 
@@ -259,8 +262,18 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                     items.push({
                         type: KernelFinderEntityQuickPickType.KernelFinder,
                         kernelFinderInfo: server,
+                        serverUri: savedURI.uri,
+                        idAndHandle: idAndHandle,
                         label: server.displayName,
-                        detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString())
+                        detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
+                        buttons: provider.removeHandle
+                            ? [
+                                  {
+                                      iconPath: new ThemeIcon('trash'),
+                                      tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick()
+                                  }
+                              ]
+                            : []
                     });
                 }
             }
@@ -285,6 +298,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             items.push(...newProviderItems);
         }
 
+        const onDidChangeItems = new EventEmitter<typeof items>();
         const selectedSource = await multiStep.showQuickPick<
             ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem,
             IQuickPickParameters<
@@ -293,7 +307,18 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         >({
             items: items,
             placeholder: '',
-            title: `Select a Jupyter Server from ${provider.displayName ?? provider.id}`
+            title: `Select a Jupyter Server from ${provider.displayName ?? provider.id}`,
+            onDidTriggerItemButton: async (e) => {
+                if ('type' in e.item && e.item.type === KernelFinderEntityQuickPickType.KernelFinder) {
+                    if (provider.removeHandle) {
+                        await provider.removeHandle(e.item.idAndHandle.handle);
+                        // the serverUriStorage should be refreshed after the handle removal
+                        items.splice(items.indexOf(e.item), 1);
+                        onDidChangeItems.fire(items.concat([]));
+                    }
+                }
+            },
+            onDidChangeItems: onDidChangeItems.event
         });
 
         if (token.isCancellationRequested) {
