@@ -7,16 +7,17 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
 import { Identifiers, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { Experiments } from '../../platform/common/experiments/groups';
-import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
+import { traceVerbose } from '../../platform/logging';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
 import { IKernel, IKernelConnectionSession, IKernelProvider } from '../types';
 import {
     IJupyterVariable,
     IJupyterVariables,
-    IKernelVariableRequester,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse
+    IJupyterVariablesResponse,
+    IKernelVariableRequester
 } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -341,12 +342,14 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<IJupyterVariable> {
         let result = { ...targetVariable };
         if (!kernel.disposed && kernel.session) {
+            traceVerbose(`Inspecting '${targetVariable.name}'`);
             const output = await this.inspect(kernel.session, targetVariable.name, 0, token);
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const text = (output as any)['text/plain'].toString();
+                const text = (output as any)['text/plain'].toString() as string;
+                traceVerbose(`Inspected '${targetVariable.name}' and got ${text.length} characters`);
 
                 // Parse into bits
                 const type = TypeRegex.exec(text);
