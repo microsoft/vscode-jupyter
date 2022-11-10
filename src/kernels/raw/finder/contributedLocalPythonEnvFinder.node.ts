@@ -19,6 +19,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../internalTypes';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
+import { getKernelRegistrationInfo } from '../../helpers';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -101,10 +102,7 @@ export class ContributedLocalPythonEnvFinder
 
     public async refresh() {
         const promise = (async () => {
-            if (this.extensionChecker.isPythonExtensionInstalled) {
-                await this.interpreters.refreshInterpreters(true);
-                await this.interpreters.waitForAllInterpretersToLoad();
-            }
+            await this.pythonKernelFinder.refresh();
             await this.updateCache();
         })();
         this.promiseMonitor.push(promise);
@@ -122,7 +120,10 @@ export class ContributedLocalPythonEnvFinder
     private async updateCache() {
         try {
             const pythonKernels = this.pythonKernelFinder.kernels.filter(
-                (item) => item.kind === 'startUsingPythonInterpreter'
+                (item) =>
+                    item.kind === 'startUsingPythonInterpreter' &&
+                    // Exclude kernel Specs that are in a non-global directory
+                    getKernelRegistrationInfo(item.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec'
             ) as PythonKernelConnectionMetadata[];
             await this.writeToCache(pythonKernels);
         } catch (ex) {
@@ -145,7 +146,7 @@ export class ContributedLocalPythonEnvFinder
                 return true;
             });
             this.cache = uniqueKernels;
-            if (areObjectsWithUrisTheSame(oldValues, this.cache)) {
+            if (oldValues.length === this.cache.length && areObjectsWithUrisTheSame(oldValues, this.cache)) {
                 return;
             }
 

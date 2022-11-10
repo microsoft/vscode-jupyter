@@ -11,7 +11,7 @@ import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
-import { traceInfo, traceError } from '../../../platform/logging';
+import { traceError } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
@@ -49,11 +49,6 @@ export class LocalKnownPathKernelSpecFinder
         @inject(IApplicationEnvironment) env: IApplicationEnvironment
     ) {
         super(fs, workspaceService, extensionChecker, memento, disposables, env);
-        if (this.oldKernelSpecsFolder) {
-            traceInfo(
-                `Old kernelSpecs (created by Jupyter Extension) stored in directory ${this.oldKernelSpecsFolder}`
-            );
-        }
     }
     activate(): void {
         const cancellation = new CancellationTokenSource();
@@ -132,7 +127,7 @@ export class LocalKnownPathKernelSpecFinder
         if (cancelToken.isCancellationRequested) {
             return [];
         }
-        const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
+        const searchResults = await this.kernelSpecFinder.findKernelSpecsInPaths(paths, cancelToken);
         if (cancelToken.isCancellationRequested) {
             return [];
         }
@@ -143,7 +138,7 @@ export class LocalKnownPathKernelSpecFinder
                         return;
                     }
                     // Add these into our path cache to speed up later finds
-                    const kernelSpec = await this.getKernelSpec(
+                    const kernelSpec = await this.kernelSpecFinder.getKernelSpec(
                         resultPath.kernelSpecFile,
                         cancelToken,
                         resultPath.interpreter,
@@ -185,7 +180,6 @@ export class LocalKnownPathKernelSpecFinder
                 byDisplayName.set(r.display_name, r);
             }
         });
-
         return unique;
     }
 }

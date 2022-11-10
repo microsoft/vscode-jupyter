@@ -20,6 +20,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../internalTypes';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
+import { getKernelRegistrationInfo } from '../../helpers';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -126,7 +127,11 @@ export class ContributedLocalKernelSpecFinder
                 return true;
             });
             const kernelSpecsFromPythonKernelFinder = this.pythonKernelFinder.kernels.filter(
-                (item) => item.kind === 'startUsingLocalKernelSpec'
+                (item) =>
+                    item.kind === 'startUsingLocalKernelSpec' ||
+                    (item.kind === 'startUsingPythonInterpreter' &&
+                        // Also include kernel Specs that are in a non-global directory.
+                        getKernelRegistrationInfo(item.kernelSpec) === 'registeredByNewVersionOfExtForCustomKernelSpec')
             ) as LocalKernelSpecConnectionMetadata[];
             kernels = kernels.concat(kernelSpecs).concat(kernelSpecsFromPythonKernelFinder);
             await this.writeToCache(kernels);
@@ -165,7 +170,7 @@ export class ContributedLocalKernelSpecFinder
                 return true;
             });
             this.cache = this.filterKernels(uniqueKernels);
-            if (areObjectsWithUrisTheSame(oldValues, this.cache)) {
+            if (oldValues.length === this.cache.length && areObjectsWithUrisTheSame(oldValues, this.cache)) {
                 return;
             }
 
