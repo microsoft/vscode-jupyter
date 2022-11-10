@@ -270,6 +270,12 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         return this._servers.map((s) => s.handle);
     }
 
+    async removeHandle(handle: string): Promise<void> {
+        this._servers = this._servers.filter((s) => s.handle !== handle);
+        await this.updateMemento();
+        this._onDidChangeHandles.fire();
+    }
+
     private async updateMemento() {
         const blob = this._servers.map((e) => `${e.uri}`).join(Settings.JupyterServerRemoteLaunchUriSeparator);
         const mementoList = this._servers.map((v, i) => ({ index: i, handle: v.handle }));
