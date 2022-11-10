@@ -539,8 +539,13 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         }
         provider.onDidChangeStatus(
             () => {
-                if (provider.status === 'idle') {
-                    quickPick.busy = false;
+                switch (provider.status) {
+                    case 'discovering':
+                        quickPick.busy = true;
+                        break;
+                    case 'idle':
+                        quickPick.busy = false;
+                        break;
                 }
             },
             this,
