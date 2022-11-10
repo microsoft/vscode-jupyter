@@ -104,7 +104,7 @@ export class CellExecutionCreator {
                 }
             }
         }
-        return cellExecution as NotebookCellExecution;
+        return cellExecution;
     }
     static get(cell: NotebookCell) {
         const key = cell.document;
