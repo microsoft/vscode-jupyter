@@ -504,6 +504,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         ).forEach((items) => {
             const item = connectionToCategory(items[0].connection);
             quickPickItems.push(item);
+            items.sort((a, b) => a.label.localeCompare(b.label));
             quickPickItems.push(...items);
             categories.set(item, new Set(items));
         });
@@ -598,15 +599,42 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 if (existingCategory) {
                     const indexOfExistingCategory = quickPickItems.indexOf(existingCategory);
                     const currentItemsInCategory = categories.get(existingCategory)!;
+                    const currentItemIdsInCategory = new Map(
+                        Array.from(currentItemsInCategory).map((item) => [item.connection.id, item])
+                    );
                     const oldItemCount = currentItemsInCategory.size;
-                    items.forEach((item) => currentItemsInCategory.add(item));
+                    items.forEach((item) => {
+                        const existingItem = currentItemIdsInCategory.get(item.connection.id);
+                        if (existingItem) {
+                            currentItemsInCategory.delete(existingItem);
+                        }
+                        currentItemsInCategory.add(item);
+                    });
                     const newItems = Array.from(currentItemsInCategory);
                     newItems.sort((a, b) => a.label.localeCompare(b.label));
                     quickPickItems.splice(indexOfExistingCategory + 1, oldItemCount, ...newItems);
                 } else {
-                    quickPickItems.push(newCategory);
+                    // Since we sort items by Env type, ensure this new item is inserted in the right place.
+                    const currentCategories = quickPickItems
+                        .map((item, index) => [item, index])
+                        .filter(([item, _]) => (item as QuickPickItem).kind === QuickPickItemKind.Separator)
+                        .map(([item, index]) => [(item as QuickPickItem).label, index]);
+
+                    currentCategories.push([newCategory.label, -1]);
+                    currentCategories.sort((a, b) => a[0].toString().localeCompare(b[0].toString()));
+
+                    // Find where we need to insert this new category.
+                    const indexOfNewCategoryInList = currentCategories.findIndex((item) => item[1] === -1);
+                    let newIndex = 0;
+                    if (indexOfNewCategoryInList > 0) {
+                        newIndex =
+                            currentCategories.length === indexOfNewCategoryInList + 1
+                                ? quickPickItems.length
+                                : (currentCategories[indexOfNewCategoryInList + 1][1] as number);
+                    }
+
                     items.sort((a, b) => a.label.localeCompare(b.label));
-                    quickPickItems.push(...items);
+                    quickPickItems.splice(newIndex, 0, newCategory, ...items);
                     categories.set(newCategory, new Set(items));
                 }
                 const previousActiveItem = quickPick.activeItems.length ? quickPick.activeItems[0] : undefined;
