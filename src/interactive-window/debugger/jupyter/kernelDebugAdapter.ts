@@ -3,18 +3,17 @@
 
 'use strict';
 
-import type { KernelMessage } from '@jupyterlab/services';
-import * as path from '../../../platform/vscode-path/path';
 import { DebugAdapterTracker, DebugSession, NotebookDocument, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernel, IKernelConnectionSession } from '../../../kernels/types';
-import { IPlatformService } from '../../../platform/common/platform/types';
-import { IDumpCellResponse, IDebugLocationTrackerFactory } from '../../../notebooks/debugger/debuggingTypes';
-import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { getInteractiveCellMetadata } from '../../../interactive-window/helpers';
+import { IKernel, IKernelConnectionSession } from '../../../kernels/types';
+import { IDebugLocationTrackerFactory, IDumpCellResponse } from '../../../notebooks/debugger/debuggingTypes';
 import { KernelDebugAdapterBase } from '../../../notebooks/debugger/kernelDebugAdapterBase';
-import { InteractiveCellMetadata } from '../../editor-integration/types';
 import { IDebugService } from '../../../platform/common/application/types';
+import { IPlatformService } from '../../../platform/common/platform/types';
+import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging';
+import * as path from '../../../platform/vscode-path/path';
+import { InteractiveCellMetadata } from '../../editor-integration/types';
 /**
  * KernelDebugAdapter listens to debug messages in order to translate file requests into real files
  * (Interactive Window generally executes against a real file)
@@ -67,7 +66,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
         }
     }
 
-    override handleMessage(message: DebugProtocol.ProtocolMessage): Promise<KernelMessage.IDebugReplyMsg | undefined> {
+    override handleClientMessageAsync(message: DebugProtocol.ProtocolMessage): Promise<void> {
         traceInfoIfCI(`KernelDebugAdapter::handleMessage ${JSON.stringify(message, undefined, ' ')}`);
         if (message.type === 'request' && this.debugLocationTracker?.onWillReceiveMessage) {
             this.debugLocationTracker.onWillReceiveMessage(message);
@@ -75,7 +74,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
         if (message.type === 'response' && this.debugLocationTracker?.onDidSendMessage) {
             this.debugLocationTracker.onDidSendMessage(message);
         }
-        return super.handleMessage(message);
+        return super.handleClientMessageAsync(message);
     }
 
     // Dump content of given cell into a tmp file and return path to file.
