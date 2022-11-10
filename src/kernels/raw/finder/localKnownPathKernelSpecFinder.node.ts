@@ -75,7 +75,7 @@ export class LocalKnownPathKernelSpecFinder
     public dispose(): void | undefined {
         this._onDidChangeKernels.dispose();
     }
-    public async refresh() {
+    public async refreshData() {
         const cancellation = new CancellationTokenSource();
         try {
             await this.listKernelSpecs(cancellation.token);

@@ -39,6 +39,7 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     activeItem?: T;
     placeholder: string;
     buttons?: QuickInputButton[];
+    onDidTriggerButton?: (e: QuickInputButton) => void;
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
@@ -133,6 +134,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         stopBusy,
         validate,
         onDidTriggerItemButton,
+        onDidTriggerButton,
         onDidChangeItems
     }: P): { quickPick: QuickPick<T>; selection: Promise<MultiStepInputQuickPicResponseType<T, P>> } {
         const disposables: Disposable[] = [];
@@ -181,6 +183,8 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
             input.onDidTriggerButton((item) => {
                 if (item === QuickInputButtons.Back) {
                     deferred.reject(InputFlowAction.back);
+                } else if (onDidTriggerButton) {
+                    onDidTriggerButton(item);
                 } else {
                     deferred.resolve(<any>item);
                 }

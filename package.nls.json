@@ -521,6 +521,8 @@
     "Common.ok": "Ok",
     "Common.install": "Install",
     "Common.learnMore": "Learn more",
+    "Common.refresh": "Refresh",
+    "Common.refreshing": "Refreshing...",
     "Common.reportThisIssue": "Report this issue",
     "CommonSurvey.remindMeLaterLabel": "Remind me later",
     "CommonSurvey.yesLabel": "Yes, take survey now",

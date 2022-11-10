@@ -10,6 +10,7 @@ import {
     Event,
     EventEmitter,
     NotebookDocument,
+    QuickInputButton,
     QuickPickItem,
     QuickPickItemKind,
     ThemeIcon
@@ -37,7 +38,7 @@ import { ICommandManager } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
+import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import {
     IMultiStepInput,
@@ -353,6 +354,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                     const onDidChangeStatus = new EventEmitter<void>();
                     const kernels: KernelConnectionMetadata[] = [];
                     let status: 'discovering' | 'idle' = 'idle';
+                    let refreshInvoked: boolean = false;
                     const provider = {
                         onDidChange: onDidChange.event,
                         onDidChangeStatus: onDidChangeStatus.event,
@@ -361,6 +363,9 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                         },
                         get status() {
                             return status;
+                        },
+                        refresh: async () => {
+                            refreshInvoked = true;
                         }
                     };
                     state.disposables.push(onDidChange);
@@ -389,6 +394,10 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                         status = 'idle';
                         onDidChangeStatus.fire();
                         if (finder) {
+                            provider.refresh = async () => finder.refresh();
+                            if (refreshInvoked) {
+                                await finder.refresh();
+                            }
                             status = finder.status;
                             finder.onDidChangeKernels(
                                 () => {
@@ -436,7 +445,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             },
             get status(): 'discovering' | 'idle' {
                 return source.status;
-            }
+            },
+            refresh: () => source.refresh()
         };
         const disposable = source.onDidChangeKernels(() => onDidChange.fire());
         state.disposables.push(disposable);
@@ -452,6 +462,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             readonly kernels: KernelConnectionMetadata[];
             onDidChangeStatus: Event<void>;
             status: 'discovering' | 'idle';
+            refresh: () => Promise<void>;
         },
         token: CancellationToken,
         multiStep: IMultiStepInput<MultiStepResult>,
@@ -497,6 +508,11 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             categories.set(item, new Set(items));
         });
 
+        const refreshButton: QuickInputButton = { iconPath: new ThemeIcon('refresh'), tooltip: Common.refresh() };
+        const refreshingButton: QuickInputButton = {
+            iconPath: new ThemeIcon('loading~spin'),
+            tooltip: Common.refreshing()
+        };
         const { quickPick, selection } = multiStep.showLazyLoadQuickPick<
             ConnectionQuickPickItem | QuickPickItem,
             IQuickPickParameters<ConnectionQuickPickItem | QuickPickItem>
@@ -506,7 +522,16 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             items: quickPickItems,
             matchOnDescription: true,
             matchOnDetail: true,
-            placeholder: ''
+            placeholder: '',
+            buttons: [refreshButton],
+            onDidTriggerButton: async (e) => {
+                if (e === refreshButton) {
+                    const buttons = quickPick.buttons;
+                    quickPick.buttons = buttons.filter((btn) => btn !== refreshButton).concat(refreshingButton);
+                    await provider.refresh().catch(noop);
+                    quickPick.buttons = buttons;
+                }
+            }
         });
         if (provider.status === 'discovering') {
             quickPick.busy = true;

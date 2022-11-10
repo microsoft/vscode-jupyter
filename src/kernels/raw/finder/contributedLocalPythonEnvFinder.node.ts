@@ -69,7 +69,7 @@ export class ContributedLocalPythonEnvFinder
         this.promiseMonitor.onStateChange(() => {
             this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering';
         });
-        this.refresh().then(noop, noop);
+        this.loadData().then(noop, noop);
         let deferred: Deferred<void> | undefined = undefined;
         this.interpreters.onDidChangeStatus(() => {
             if (this.interpreters.status === 'idle') {
@@ -81,7 +81,7 @@ export class ContributedLocalPythonEnvFinder
                 this.promiseMonitor.push(deferred.promise);
             }
         });
-        this.interpreters.onDidChangeInterpreters(async () => this.refresh().then(noop, noop), this, this.disposables);
+        this.interpreters.onDidChangeInterpreters(async () => this.loadData().then(noop, noop), this, this.disposables);
         this.extensions.onDidChange(
             () => {
                 // If we just installed the Python extension and we fetched the controllers, then fetch it again.
@@ -89,17 +89,29 @@ export class ContributedLocalPythonEnvFinder
                     !this.wasPythonInstalledWhenFetchingControllers &&
                     this.extensionChecker.isPythonExtensionInstalled
                 ) {
-                    this.refresh().then(noop, noop);
+                    this.loadData().then(noop, noop);
                 }
             },
             this,
             this.disposables
         );
-        this.pythonKernelFinder.onDidChangeKernels(() => this.refresh().then(noop, noop), this, this.disposables);
+        this.pythonKernelFinder.onDidChangeKernels(() => this.loadData().then(noop, noop), this, this.disposables);
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
     }
 
-    private async refresh() {
+    public async refresh() {
+        const promise = (async () => {
+            if (this.extensionChecker.isPythonExtensionInstalled) {
+                await this.interpreters.refreshInterpreters(true);
+                await this.interpreters.waitForAllInterpretersToLoad();
+            }
+            await this.updateCache();
+        })();
+        this.promiseMonitor.push(promise);
+        await promise;
+    }
+
+    private async loadData() {
         const promise = this.updateCache();
         this.promiseMonitor.push(promise);
         await promise;
