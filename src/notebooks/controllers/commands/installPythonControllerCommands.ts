@@ -107,6 +107,11 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
                     return;
                 }
 
+                // Python extension is installed, let's wait for interpreters to be detected
+                if (this.interpreterService.environments.length === 0) {
+                    await this.interpreterService.waitForAllInterpretersToLoad();
+                }
+
                 if (this.interpreterService.environments.length === 0) {
                     // Extension is installed, but we didn't find any python connections
                     // recommend installing python in this case
