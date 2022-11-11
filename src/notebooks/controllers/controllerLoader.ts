@@ -94,7 +94,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
             if (this.extensionChecker.isPythonExtensionInstalled) {
                 // This is temporary, when we create an MRU list in VS Code or the like, this should go away.
                 // Debt https://github.com/microsoft/vscode-jupyter/issues/11988
-                
+
                 // First thing is to always create the controller for the active interpreter only if we don't have any remote connections.
                 // This reduces flickering (changing controllers from one to another).
                 if (this.serverUriStorage.isLocalLaunch) {
