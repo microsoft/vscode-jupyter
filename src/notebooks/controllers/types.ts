@@ -59,13 +59,12 @@ export interface IControllerRegistration {
     batchAdd(
         metadatas: KernelConnectionMetadata[],
         types: (typeof JupyterNotebookView | typeof InteractiveWindowView)[]
-    ): IVSCodeNotebookController[];
+    ): void;
     /**
-     * Registers a new controller. Disposing a controller unregisters it.
-     * @param metadata
-     * @param types Types of notebooks to create the controller for
+     * Registers a new controller or updates one. Disposing a controller unregisters it.
+     * @return Returns the added and updated controller(s)
      */
-    add(
+    addOrUpdate(
         metadata: KernelConnectionMetadata,
         types: (typeof JupyterNotebookView | typeof InteractiveWindowView)[]
     ): IVSCodeNotebookController[];
@@ -108,7 +107,8 @@ export interface IControllerPreferredService {
      */
     computePreferred(
         document: vscode.NotebookDocument,
-        serverId?: string
+        serverId?: string,
+        cancelToken?: vscode.CancellationToken
     ): Promise<{ preferredConnection?: KernelConnectionMetadata; controller?: IVSCodeNotebookController }>;
 
     /**

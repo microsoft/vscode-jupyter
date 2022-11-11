@@ -28,6 +28,6 @@ export async function createActiveInterpreterController(
             interpreter: pythonInterpreter,
             id: getKernelId(spec, pythonInterpreter)
         });
-        return registration.add(metadata, [viewType])[0]; // Should only create one because only one view type
+        return registration.addOrUpdate(metadata, [viewType])[0]; // Should only create one because only one view type
     }
 }

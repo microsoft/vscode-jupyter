@@ -654,7 +654,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
     }
 
     private async onKernelConnectionSelected(notebook: NotebookDocument, connection: KernelConnectionMetadata) {
-        const controllers = this.controllerRegistration.add(connection, [
+        const controllers = this.controllerRegistration.addOrUpdate(connection, [
             notebook.notebookType as typeof JupyterNotebookView | typeof InteractiveWindowView
         ]);
         if (!Array.isArray(controllers) || controllers.length === 0) {

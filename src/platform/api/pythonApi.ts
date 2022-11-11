@@ -729,7 +729,6 @@ export class InterpreterService implements IInterpreterService {
                             traceVerbose(`Detected change in Python environments via Python API`);
                             this.interpreterListCachePromise = undefined;
                             this.populateCachedListOfInterpreters();
-                            this.didChangeInterpreters.fire();
                         },
                         this,
                         this.disposables

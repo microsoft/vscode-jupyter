@@ -82,26 +82,30 @@ export class ControllerRegistration implements IControllerRegistration {
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
     }
     batchAdd(metadatas: KernelConnectionMetadata[], types: ('jupyter-notebook' | 'interactive')[]) {
-        const added: IVSCodeNotebookController[] = [];
+        const addedList: IVSCodeNotebookController[] = [];
         metadatas.forEach((metadata) => {
-            added.push(...this.addImpl(metadata, types, false));
+            const { added } = this.addImpl(metadata, types, false);
+            addedList.push(...added);
         });
 
-        this.changeEmitter.fire({ added, removed: [] });
-        return added;
+        if (addedList.length) {
+            this.changeEmitter.fire({ added: addedList, removed: [] });
+        }
     }
-    add(
+    addOrUpdate(
         metadata: KernelConnectionMetadata,
         types: ('jupyter-notebook' | 'interactive')[]
     ): IVSCodeNotebookController[] {
-        return this.addImpl(metadata, types, true);
+        const { added, existing } = this.addImpl(metadata, types, true);
+        return added.concat(existing);
     }
     addImpl(
         metadata: KernelConnectionMetadata,
         types: ('jupyter-notebook' | 'interactive')[],
         triggerChangeEvent: boolean
-    ): IVSCodeNotebookController[] {
-        let results: IVSCodeNotebookController[] = [];
+    ): { added: IVSCodeNotebookController[]; existing: IVSCodeNotebookController[] } {
+        const added: IVSCodeNotebookController[] = [];
+        const existing: IVSCodeNotebookController[] = [];
         try {
             // Create notebook selector
             types
@@ -124,7 +128,7 @@ export class ControllerRegistration implements IControllerRegistration {
                         controller.updateConnection(metadata);
 
                         // Add to results so that callers can find
-                        results.push(controller);
+                        existing.push(controller);
                         return false;
                     } else if (this.isFiltered(metadata)) {
                         // Filter out those in our kernel filter
@@ -172,16 +176,16 @@ export class ControllerRegistration implements IControllerRegistration {
                     // We are disposing as documents are closed, but do this as well
                     this.disposables.push(controller);
                     this.registeredControllers.set(controller.id, controller);
-                    results.push(controller);
+                    added.push(controller);
                 });
-            if (triggerChangeEvent && results.length) {
-                this.changeEmitter.fire({ added: results, removed: [] });
+            if (triggerChangeEvent && added.length) {
+                this.changeEmitter.fire({ added: added, removed: [] });
             }
         } catch (ex) {
             if (isCancellationError(ex, true)) {
                 // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
                 // Hence swallow cancellation errors.
-                return results;
+                return { added, existing };
             }
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
             sendTelemetryEvent(
@@ -193,7 +197,7 @@ export class ControllerRegistration implements IControllerRegistration {
             );
             traceError(`Failed to create notebook controller for ${metadata.id}`, ex);
         }
-        return results;
+        return { added, existing };
     }
     get(
         metadata: KernelConnectionMetadata,
@@ -262,7 +266,7 @@ export class ControllerRegistration implements IControllerRegistration {
         const metadatas = this.metadatas.filter((item) => !this.isFiltered(item));
 
         // Try to re-create the missing controllers.
-        metadatas.forEach((c) => this.add(c, [JupyterNotebookView, InteractiveWindowView]));
+        metadatas.forEach((c) => this.addOrUpdate(c, [JupyterNotebookView, InteractiveWindowView]));
 
         // Go through all controllers that have been created and hide them.
         // Unless they are attached to an existing document.

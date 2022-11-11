@@ -110,7 +110,8 @@ export class ControllerPreferredService implements IControllerPreferredService, 
     @traceDecoratorVerbose('Compute Preferred Controller')
     public async computePreferred(
         @logValue<NotebookDocument>('uri') document: NotebookDocument,
-        serverId?: string | undefined
+        serverId?: string | undefined,
+        cancelToken?: CancellationToken
     ): Promise<{
         preferredConnection?: KernelConnectionMetadata | undefined;
         controller?: IVSCodeNotebookController | undefined;
@@ -124,7 +125,11 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         this.preferredCancelTokens.get(document)?.cancel();
         this.preferredCancelTokens.get(document)?.dispose();
         const preferredSearchToken = new CancellationTokenSource();
+        const changeHandler = cancelToken?.onCancellationRequested(() => preferredSearchToken.cancel());
         this.disposables.add(preferredSearchToken);
+        if (changeHandler) {
+            this.disposables.add(changeHandler);
+        }
         this.preferredCancelTokens.set(document, preferredSearchToken);
         try {
             let preferredConnection: KernelConnectionMetadata | undefined;
@@ -138,6 +143,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     document.uri,
                     document.notebookType
                 );
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    return {};
+                }
                 preferredConnection = defaultPythonController?.connection;
                 if (preferredConnection) {
                     traceInfoIfCI(
@@ -261,7 +269,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 if (!targetController) {
                     traceVerbose(`Early registration of controller for Kernel connection ${preferredConnection.id}`);
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    this.registration.add(preferredConnection, [JupyterNotebookView]);
+                    this.registration.addOrUpdate(preferredConnection, [JupyterNotebookView]);
                 }
             } else if (document.notebookType === InteractiveWindowView) {
                 // Wait for our controllers to be loaded before we try to set a preferred on
@@ -346,6 +354,10 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             traceError('Failed to find & set preferred controllers', ex);
             return {};
         } finally {
+            if (changeHandler) {
+                changeHandler.dispose();
+                this.disposables.delete(changeHandler);
+            }
             preferredSearchToken.dispose();
             this.disposables.delete(preferredSearchToken);
         }
@@ -372,6 +384,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         }
 
         // This method can get called very frequently, hence compute the preferred once in 100ms
+        const cancellationToken = new CancellationTokenSource();
         const timeout = setTimeout(async () => {
             // Provide the preferred controller only after we've loaded all controllers
             // This avoids the kernel status label from flickering (i.e. changing from one to another).
@@ -382,10 +395,21 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             // Then change to remove kernel spec
             // Then change to the remote kernel session (assuming its still running).
             await this.loader.loaded.catch(noop);
-            this.computePreferred(document).catch(noop);
+            if (cancellationToken.token.isCancellationRequested) {
+                return;
+            }
+            this.computePreferred(document, undefined, cancellationToken.token).catch(noop);
         }, 100);
         this.debouncedPreferredCompute.get(document)?.dispose();
         this.debouncedPreferredCompute.set(document, new Disposable(() => clearTimeout(timeout)));
+        this.debouncedPreferredCompute.set(
+            document,
+            new Disposable(() => {
+                clearTimeout(timeout);
+                cancellationToken.cancel();
+                cancellationToken.dispose();
+            })
+        );
     }
 
     // Use our kernel finder to rank our kernels, and see if we have an exact match
