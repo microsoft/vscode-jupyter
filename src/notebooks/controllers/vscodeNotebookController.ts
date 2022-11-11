@@ -11,7 +11,6 @@ import {
     NotebookCellExecution,
     NotebookCellKind,
     NotebookController,
-    NotebookControllerAffinity,
     NotebookDocument,
     NotebookEdit,
     NotebookEditor,
@@ -256,11 +255,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this._onDidDispose.fire();
         this._onDidDispose.dispose();
         disposeAllDisposables(this.disposables);
-    }
-
-    public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
-        traceVerbose(`Setting controller affinity for ${getDisplayPath(notebook.uri)} ${this.id}`);
-        this.controller.updateNotebookAffinity(notebook, affinity);
     }
     private updateDisplayData() {
         const displayData = this.displayDataProvider.getDisplayData(this.connection);
