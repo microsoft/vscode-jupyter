@@ -52,6 +52,12 @@ export interface IControllerRegistration {
      */
     all: KernelConnectionMetadata[];
     /**
+     * Keeps track of controllers created for the active interpreter.
+     * These are very special controllers, as they are created out of band even before kernel discovery completes.
+     */
+    trackActiveInterpreterControllers(controllers: IVSCodeNotebookController[]): void;
+    canControllerBeDisposed(controller: IVSCodeNotebookController): boolean;
+    /**
      * Batch registers new controllers. Disposing a controller unregisters it.
      * @param a list of metadatas
      * @param types Types of notebooks to create the controller for

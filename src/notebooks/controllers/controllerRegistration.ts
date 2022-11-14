@@ -92,6 +92,13 @@ export class ControllerRegistration implements IControllerRegistration {
             this.changeEmitter.fire({ added: addedList, removed: [] });
         }
     }
+    private activeInterpreterControllers = new WeakSet<IVSCodeNotebookController>();
+    trackActiveInterpreterControllers(controllers: IVSCodeNotebookController[]) {
+        controllers.forEach((controller) => this.activeInterpreterControllers.add(controller));
+    }
+    public canControllerBeDisposed(controller: IVSCodeNotebookController) {
+        return !this.activeInterpreterControllers.has(controller) || !this.isControllerAttachedToADocument(controller);
+    }
     addOrUpdate(
         metadata: KernelConnectionMetadata,
         types: ('jupyter-notebook' | 'interactive')[]

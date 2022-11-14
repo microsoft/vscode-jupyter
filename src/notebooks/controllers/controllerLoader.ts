@@ -114,6 +114,13 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
             traceVerbose(`Found ${connections.length} cached controllers`);
             this.createNotebookControllers(connections);
 
+            traceInfoIfCI(
+                `Kernels found in kernel finder include ${connections
+                    .map((c) => `${c.kind}:${c.id}`)
+                    .join('\n')} and currently registered controllers include ${this.registration.registered
+                    .map((c) => `${c.connection.kind}:${c.connection.id}`)
+                    .join('\n')}`
+            );
             // Look for any controllers that we have disposed (no longer found when fetching)
             const disposedControllers = Array.from(this.registration.registered).filter((controller) => {
                 const connectionIsNoLongerValid = !connections.some((connection) => {
@@ -125,6 +132,11 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                 // then notify the user and remove them.
                 if (connectionIsNoLongerValid && controller.connection.kind === 'connectToLiveRemoteKernel') {
                     return true;
+                }
+
+                // Don't dispose this controller if it's attached to a document.
+                if (!this.registration.canControllerBeDisposed(controller)) {
+                    return false;
                 }
                 return connectionIsNoLongerValid;
             });

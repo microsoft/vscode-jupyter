@@ -248,6 +248,11 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 nbDocumentUris.length ? 'and documents ' + nbDocumentUris.join(', ') : ''
             }`
         );
+        traceInfoIfCI(
+            `Disposing controller ${this.id} associated with connection ${this.connection.id} ${
+                nbDocumentUris.length ? 'and documents ' + nbDocumentUris.join(', ') : ''
+            } called from ${new Error('').stack}`
+        );
         this.isDisposed = true;
         this._onNotebookControllerSelected.dispose();
         this._onNotebookControllerSelectionChanged.dispose();
@@ -357,6 +362,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }
         this.warnWhenUsingOutdatedPython();
         const deferred = createDeferred<void>();
+        traceInfoIfCI(
+            `Controller ${this.connection.kind}:${this.id} associated with nb ${getDisplayPath(event.notebook.uri)}`
+        );
         this.associatedDocuments.set(event.notebook, deferred.promise);
         await this.onDidSelectController(event.notebook);
         await this.updateCellLanguages(event.notebook);
