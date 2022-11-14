@@ -787,10 +787,6 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         // First apply the kernel filter to this document
         this.connectionTracker.trackSelection(notebook, connection);
 
-        if (KernelPickerType.useNewKernelPicker) {
-            // With the new Quick pick, we don't need to force the selection of a kernel.
-            return;
-        }
         // Then select the kernel that we wanted
         await this.commandManager.executeCommand('notebook.selectKernel', {
             id: controllers[0].id,
