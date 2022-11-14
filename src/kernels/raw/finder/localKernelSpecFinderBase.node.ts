@@ -28,8 +28,6 @@ import { getComparisonKey } from '../../../platform/vscode-path/resources';
 import { removeOldCachedItems } from '../../common/commonFinder';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: Uri };
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
@@ -136,7 +134,7 @@ export class LocalKernelSpecFinder implements IDisposable {
         cancelToken: CancellationToken
     ): Promise<KernelSpecFileWithContainingInterpreter[]> {
         const items = await Promise.all(paths.map((searchItem) => this.findKernelSpecsInPath(searchItem, cancelToken)));
-        return flatten(items);
+        return items.flat();
     }
     // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
     private async findKernelSpecsInPath(
