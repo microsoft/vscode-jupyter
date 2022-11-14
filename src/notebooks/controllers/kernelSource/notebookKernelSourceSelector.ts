@@ -655,12 +655,12 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         state.disposables.push(new Disposable(() => timeout && clearTimeout(timeout)));
         provider.onDidChangeStatus(
             () => {
+                timeout && clearTimeout(timeout);
                 switch (provider.status) {
                     case 'discovering':
                         quickPick.busy = true;
                         break;
                     case 'idle': {
-                        timeout && clearTimeout(timeout);
                         // Debounce the busy state (sometimes we get idle & then immediately go to a busy state).
                         timeout = setTimeout(() => (quickPick.busy = false), 500);
                         state.disposables.push(new Disposable(() => timeout && clearTimeout(timeout)));
