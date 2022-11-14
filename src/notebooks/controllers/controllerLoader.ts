@@ -126,6 +126,11 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                 if (connectionIsNoLongerValid && controller.connection.kind === 'connectToLiveRemoteKernel') {
                     return true;
                 }
+
+                // Don't dispose this controller if it's attached to a document.
+                if (this.notebook.notebookDocuments.some((notebook) => controller.isAssociatedWithDocument(notebook))) {
+                    return false;
+                }
                 return connectionIsNoLongerValid;
             });
 
