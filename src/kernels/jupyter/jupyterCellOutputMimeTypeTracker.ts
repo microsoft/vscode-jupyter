@@ -61,13 +61,13 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
     }
     private checkCell(cell: NotebookCell, when: 'onExecution' | 'onOpenCloseOrSave') {
         if (cell.kind === NotebookCellKind.Markup) {
-            return [];
+            return;
         }
         if (cell.document.languageId === 'raw') {
-            return [];
+            return;
         }
         const resourceType = cell.notebook.notebookType === JupyterNotebookView ? 'notebook' : 'interactive';
-        return cell.outputs
+        cell.outputs
             .map((output) => output.items.map((item) => item.mime))
             .flat()
             .map((mime) => this.sendTelemetry(mime, when, resourceType));
