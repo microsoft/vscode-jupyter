@@ -29,7 +29,9 @@ export async function createActiveInterpreterController(
             interpreter: pythonInterpreter,
             id: getKernelId(spec, pythonInterpreter)
         });
-        const controller = registration.addOrUpdate(metadata, [viewType])[0]; // Should only create one because only one view type
+        const controllers = registration.addOrUpdate(metadata, [viewType]);
+        const controller = controllers[0]; // Should only create one because only one view type
+        registration.trackActiveInterpreterControllers(controllers);
         traceInfoIfCI(`Controller ${controller.connection.kind}:${controller.id} created for ${viewType}`);
         return controller;
     }

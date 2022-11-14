@@ -135,7 +135,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                 }
 
                 // Don't dispose this controller if it's attached to a document.
-                if (this.notebook.notebookDocuments.some((notebook) => controller.isAssociatedWithDocument(notebook))) {
+                if (!this.registration.canControllerBeDisposed(controller)) {
                     return false;
                 }
                 return connectionIsNoLongerValid;
