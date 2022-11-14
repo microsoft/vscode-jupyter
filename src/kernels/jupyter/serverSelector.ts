@@ -6,7 +6,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import isNil = require('lodash/isNil');
 import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
 import { IApplicationShell, IClipboard, IWorkspaceService } from '../../platform/common/application/types';
 import { traceDecoratorError, traceError, traceWarning } from '../../platform/logging';
@@ -324,7 +323,7 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         if (item.label === this.localLabel) {
             await this.setJupyterURIToLocal();
         } else if (!item.newChoice && !item.provider) {
-            await this.setJupyterURIToRemote(!isNil(item.url) ? item.url : item.label, false, item.label);
+            await this.setJupyterURIToRemote(item.url || item.label, false, item.label);
         } else if (!item.provider) {
             return this.selectRemoteURI.bind(this);
         } else {
@@ -431,11 +430,10 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
                 const uriDate = new Date(uriItem.time);
                 const isSelected = currentRemoteUri?.uri === uriItem.uri;
                 items.push({
-                    label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
+                    label: uriItem.displayName || uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
                     // If our display name is not the same as the URI, render the uri as description
-                    description:
-                        !isNil(uriItem.displayName) && uriItem.displayName !== uriItem.uri ? uriItem.uri : undefined,
+                    description: uriItem.displayName !== uriItem.uri ? uriItem.uri : undefined,
                     newChoice: false,
                     url: uriItem.uri,
                     buttons: isSelected
@@ -575,7 +573,7 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         if (item.label === this.localLabel) {
             await this.setJupyterURIToLocal();
         } else if (!item.newChoice && !item.provider) {
-            await this.setJupyterURIToRemote(!isNil(item.url) ? item.url : item.label, false, item.label);
+            await this.setJupyterURIToRemote(item.url || item.label, false, item.label);
         } else if (!item.provider) {
             return this.selectRemoteURI.bind(this);
         } else {
@@ -721,11 +719,10 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
                 const uriDate = new Date(uriItem.time);
                 const isSelected = currentRemoteUri?.uri === uriItem.uri;
                 items.push({
-                    label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
+                    label: uriItem.displayName || uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
                     // If our display name is not the same as the URI, render the uri as description
-                    description:
-                        !isNil(uriItem.displayName) && uriItem.displayName !== uriItem.uri ? uriItem.uri : undefined,
+                    description: uriItem.displayName !== uriItem.uri ? uriItem.uri : undefined,
                     newChoice: false,
                     url: uriItem.uri,
                     buttons: isSelected
