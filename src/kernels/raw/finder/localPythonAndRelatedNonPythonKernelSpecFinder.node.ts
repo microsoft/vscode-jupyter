@@ -315,15 +315,15 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                 this.interpreterService.getActiveInterpreter(folder.uri)
             )
         );
-        const [kernelSpecs, activeInterpreters, globalKernelSpecs, tempDirForKernelSpecs] = await Promise.all([
+        const [kernelSpecs, activeInterpreters, tempDirForKernelSpecs] = await Promise.all([
             this.findKernelSpecsInInterpreters(interpreters, cancelToken),
             activeInterpreterInAWorkspacePromise,
-            this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs(),
             this.jupyterPaths.getKernelSpecTempRegistrationFolder()
         ]);
         if (cancelToken.isCancellationRequested) {
             return [];
         }
+        const globalKernelSpecs = this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs();
         const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
             getKernelRegistrationInfo(item.kernelSpec)
         );
@@ -391,7 +391,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                     // If we cannot find a matching interpreter, then too bad.
                     // We can't use any interpreter, because the module used is not `ipykernel_laucnher`.
                     // Its something special, hence ignore if we cannot find a matching interpreter.
-                    const matchingInterpreter = await this.findMatchingInterpreter(item.kernelSpec, interpreters);
+                    const matchingInterpreter = await this.findMatchingInterpreter(item.kernelSpec);
                     if (!matchingInterpreter) {
                         traceVerbose(
                             `Kernel Spec for ${
@@ -439,7 +439,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
 
                     // Find the interpreter that matches. If we find one, we want to use
                     // this to start the kernel.
-                    const matchingInterpreter = await this.findMatchingInterpreter(k, interpreters);
+                    const matchingInterpreter = await this.findMatchingInterpreter(k);
                     if (matchingInterpreter) {
                         const result = PythonKernelConnectionMetadata.create({
                             kernelSpec: k,
@@ -579,10 +579,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         });
     }
 
-    private async findMatchingInterpreter(
-        kernelSpec: IJupyterKernelSpec,
-        interpreters: PythonEnvironment[]
-    ): Promise<PythonEnvironment | undefined> {
+    private async findMatchingInterpreter(kernelSpec: IJupyterKernelSpec): Promise<PythonEnvironment | undefined> {
+        const interpreters = this.extensionChecker.isPythonExtensionInstalled
+            ? this.interpreterService.resolvedEnvironments
+            : [];
+
         // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
         if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
             traceInfoIfCI(`Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`);

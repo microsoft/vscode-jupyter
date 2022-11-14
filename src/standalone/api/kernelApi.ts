@@ -9,7 +9,8 @@ import {
     KernelConnectionMetadata as IKernelKernelConnectionMetadata,
     IThirdPartyKernelProvider,
     IBaseKernel,
-    BaseKernelConnectionMetadata
+    BaseKernelConnectionMetadata,
+    IKernelFinder
 } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceVerbose, traceInfoIfCI } from '../../platform/logging';
@@ -39,6 +40,7 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
     private readonly extensionApi = new Map<string, IExportedKernelService>();
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IThirdPartyKernelProvider) private readonly thirdPartyKernelProvider: IThirdPartyKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
@@ -60,6 +62,7 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
         const service = new JupyterKernelService(
             accessInfo.extensionId,
             this.kernelProvider,
+            this.kernelFinder,
             this.thirdPartyKernelProvider,
             this.disposables,
             this.controllerRegistration,
@@ -96,16 +99,34 @@ class JupyterKernelService implements IExportedKernelService {
         });
         return this._onDidChangeKernels.event;
     }
+    private _status: 'idle' | 'discovering';
+    public get status() {
+        return this._status;
+    }
+    private readonly _onDidChangeStatus = new EventEmitter<void>();
+    public get onDidChangeStatus(): Event<void> {
+        return this._onDidChangeStatus.event;
+    }
+
     private static readonly wrappedKernelConnections = new WeakMap<IBaseKernel, IKernelConnectionInfo>();
     constructor(
         private readonly callingExtensionId: string,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IThirdPartyKernelProvider) private readonly thirdPartyKernelProvider: IThirdPartyKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {
+        this.kernelFinder.onDidChangeStatus(
+            () => {
+                this._status = this.kernelFinder.status;
+                this._onDidChangeStatus.fire();
+            },
+            this,
+            disposables
+        );
         this.kernelProvider.onDidDisposeKernel(
             (e) => {
                 traceInfoIfCI(

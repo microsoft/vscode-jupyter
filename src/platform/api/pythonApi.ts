@@ -407,43 +407,13 @@ export class InterpreterService implements IInterpreterService {
             this.getInterpretersCancellation?.dispose();
             const cancellation = (this.getInterpretersCancellation = new CancellationTokenSource());
             this.interpreterListCachePromise = this.getInterpretersImpl(cancellation.token);
-            this.interpreterListCachePromise.finally(() => cancellation.dispose);
+            this.interpreterListCachePromise.finally(() => cancellation.dispose());
             this.refreshPromises.push(this.interpreterListCachePromise);
         }
         return this.interpreterListCachePromise;
     }
-    private _waitForAllInterpretersToLoad?: Promise<void>;
     public async waitForAllInterpretersToLoad(): Promise<void> {
-        if (!this._waitForAllInterpretersToLoad) {
-            const lazyLoadControllers = this.workspace
-                .getConfiguration('jupyter', undefined)
-                .get<boolean>('lazyLoadControllers', false);
-            if (lazyLoadControllers) {
-                return;
-            }
-            const fn = async () => {
-                await this.refreshInterpreters();
-
-                // Don't allow for our call of getInterpretersImpl to be cancelled
-                // getInterpreters returns a promise that can get cancelled by itself
-                // so you can't use that to await here
-                const source = new CancellationTokenSource();
-                const interpreters = await this.getInterpretersImpl(source.token);
-
-                // After getting interpreters, resolve them all
-                if (interpreters) {
-                    await Promise.all(
-                        interpreters.map((interpreter) => {
-                            // eslint-disable-next-line local-rules/dont-use-fspath
-                            return this.api?.environments.resolveEnvironment(interpreter.uri.fsPath);
-                        })
-                    );
-                }
-            };
-            this._waitForAllInterpretersToLoad = fn();
-            this.refreshPromises.push(this._waitForAllInterpretersToLoad);
-        }
-        return this._waitForAllInterpretersToLoad;
+        await this.getInterpreters();
     }
     public async refreshInterpreters(forceRefresh: boolean = false) {
         const promise = (async () => {
@@ -453,6 +423,8 @@ export class InterpreterService implements IInterpreterService {
             }
             try {
                 await api.environments.refreshEnvironments({ forceRefresh });
+                this.interpreterListCachePromise = undefined;
+                await this.getInterpreters();
                 traceVerbose(`Refreshed Environments`);
             } catch (ex) {
                 traceError(`Failed to refresh the list of interpreters`);

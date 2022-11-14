@@ -69,9 +69,30 @@ export class ContributedLocalPythonEnvFinder
     activate() {
         this.promiseMonitor.onStateChange(() => {
             this.status =
-                this.promiseMonitor.isComplete && this.interpreters.status === 'idle' ? 'idle' : 'discovering';
+                this.promiseMonitor.isComplete &&
+                this.interpreters.status === 'idle' &&
+                this.pythonKernelFinder.status === 'idle'
+                    ? 'idle'
+                    : 'discovering';
         });
         this.loadData().then(noop, noop);
+        let pythonKernelDiscoveryPromise: Deferred<void> | undefined = undefined;
+        if (this.pythonKernelFinder.status === 'discovering') {
+            pythonKernelDiscoveryPromise = createDeferred<void>();
+            this.promiseMonitor.push(pythonKernelDiscoveryPromise.promise);
+        }
+        this.pythonKernelFinder.onDidChangeStatus(() => {
+            if (this.pythonKernelFinder.status === 'idle') {
+                pythonKernelDiscoveryPromise?.resolve();
+                pythonKernelDiscoveryPromise = undefined;
+            } else if (this.pythonKernelFinder.status === 'discovering') {
+                if (pythonKernelDiscoveryPromise) {
+                    return;
+                }
+                pythonKernelDiscoveryPromise = createDeferred<void>();
+                this.promiseMonitor.push(pythonKernelDiscoveryPromise.promise);
+            }
+        });
         let deferred: Deferred<void> | undefined = undefined;
         if (this.interpreters.status === 'refreshing') {
             deferred = createDeferred<void>();

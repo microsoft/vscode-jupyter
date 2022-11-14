@@ -80,31 +80,39 @@ export class LocalKernelSpecFinder implements IDisposable {
         const key = getComparisonKey(specPath);
         // If we have not already loaded this kernel spec, then load it
         if (!this.pathToKernelSpec.has(key)) {
-            this.pathToKernelSpec.set(key, this.loadKernelSpec(specPath, cancelToken, interpreter));
+            const promise = this.loadKernelSpec(specPath, cancelToken, interpreter).then((kernelSpec) => {
+                // Delete old kernelSpecs that we created in the global kernelSpecs folder.
+                const shouldDeleteKernelSpec =
+                    kernelSpec &&
+                    globalSpecRootPath &&
+                    getKernelRegistrationInfo(kernelSpec) &&
+                    kernelSpec.specFile &&
+                    uriPath.isEqualOrParent(Uri.file(kernelSpec.specFile), globalSpecRootPath);
+                if (kernelSpec && !shouldDeleteKernelSpec) {
+                    return kernelSpec;
+                }
+                if (kernelSpec?.specFile && shouldDeleteKernelSpec) {
+                    // If this kernelSpec was registered by us and is in the global kernels folder,
+                    // then remove it.
+                    this.deleteOldKernelSpec(kernelSpec.specFile).catch(noop);
+                }
+
+                // If we failed to get a kernelSpec full path from our cache and loaded list
+                if (this.pathToKernelSpec.get(key) === promise) {
+                    this.pathToKernelSpec.delete(key);
+                }
+                this.cache = this.cache?.filter((itemPath) => uriPath.isEqual(itemPath.kernelSpecFile, specPath));
+                return undefined;
+            });
+            this.pathToKernelSpec.set(key, promise);
+            promise.finally(() => {
+                if (cancelToken.isCancellationRequested && this.pathToKernelSpec.get(key) === promise) {
+                    this.pathToKernelSpec.delete(key);
+                }
+            });
         }
         // ! as the has and set above verify that we have a return here
-        return this.pathToKernelSpec.get(key)!.then((kernelSpec) => {
-            // Delete old kernelSpecs that we created in the global kernelSpecs folder.
-            const shouldDeleteKernelSpec =
-                kernelSpec &&
-                globalSpecRootPath &&
-                getKernelRegistrationInfo(kernelSpec) &&
-                kernelSpec.specFile &&
-                uriPath.isEqualOrParent(Uri.file(kernelSpec.specFile), globalSpecRootPath);
-            if (kernelSpec && !shouldDeleteKernelSpec) {
-                return kernelSpec;
-            }
-            if (kernelSpec?.specFile && shouldDeleteKernelSpec) {
-                // If this kernelSpec was registered by us and is in the global kernels folder,
-                // then remove it.
-                this.deleteOldKernelSpec(kernelSpec.specFile).catch(noop);
-            }
-
-            // If we failed to get a kernelSpec full path from our cache and loaded list
-            this.pathToKernelSpec.delete(key);
-            this.cache = this.cache?.filter((itemPath) => uriPath.isEqual(itemPath.kernelSpecFile, specPath));
-            return undefined;
-        });
+        return this.pathToKernelSpec.get(key)!;
     }
 
     private async deleteOldKernelSpec(kernelSpecFile: string) {
@@ -175,7 +183,12 @@ export class LocalKernelSpecFinder implements IDisposable {
                 this.findKernelSpecsInPathCache.delete(cacheKey);
             }
         });
-        promise.finally(() => disposable.dispose());
+        promise.finally(() => {
+            if (cancelToken.isCancellationRequested && this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
+                this.findKernelSpecsInPathCache.delete(cacheKey);
+            }
+            disposable.dispose();
+        });
         promise.catch((ex) => {
             if (this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
                 this.findKernelSpecsInPathCache.delete(cacheKey);

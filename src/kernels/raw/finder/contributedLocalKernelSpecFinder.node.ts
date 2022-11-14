@@ -75,7 +75,48 @@ export class ContributedLocalKernelSpecFinder
     activate() {
         this.promiseMonitor.onStateChange(() => {
             this.status =
-                this.promiseMonitor.isComplete && this.interpreters.status === 'idle' ? 'idle' : 'discovering';
+                this.promiseMonitor.isComplete &&
+                this.interpreters.status === 'idle' &&
+                this.nonPythonKernelFinder.status === 'idle' &&
+                this.pythonKernelFinder.status === 'idle'
+                    ? 'idle'
+                    : 'discovering';
+        });
+
+        this.loadData().then(noop, noop);
+        let nonPythonKernelDiscoveryPromise: Deferred<void> | undefined = undefined;
+        if (this.nonPythonKernelFinder.status === 'discovering') {
+            nonPythonKernelDiscoveryPromise = createDeferred<void>();
+            this.promiseMonitor.push(nonPythonKernelDiscoveryPromise.promise);
+        }
+        this.nonPythonKernelFinder.onDidChangeStatus(() => {
+            if (this.pythonKernelFinder.status === 'idle') {
+                nonPythonKernelDiscoveryPromise?.resolve();
+                nonPythonKernelDiscoveryPromise = undefined;
+            } else if (this.nonPythonKernelFinder.status === 'discovering') {
+                if (nonPythonKernelDiscoveryPromise) {
+                    return;
+                }
+                nonPythonKernelDiscoveryPromise = createDeferred<void>();
+                this.promiseMonitor.push(nonPythonKernelDiscoveryPromise.promise);
+            }
+        });
+        let pythonKernelDiscoveryPromise: Deferred<void> | undefined = undefined;
+        if (this.pythonKernelFinder.status === 'discovering') {
+            pythonKernelDiscoveryPromise = createDeferred<void>();
+            this.promiseMonitor.push(pythonKernelDiscoveryPromise.promise);
+        }
+        this.pythonKernelFinder.onDidChangeStatus(() => {
+            if (this.pythonKernelFinder.status === 'idle') {
+                pythonKernelDiscoveryPromise?.resolve();
+                pythonKernelDiscoveryPromise = undefined;
+            } else if (this.pythonKernelFinder.status === 'discovering') {
+                if (pythonKernelDiscoveryPromise) {
+                    return;
+                }
+                pythonKernelDiscoveryPromise = createDeferred<void>();
+                this.promiseMonitor.push(pythonKernelDiscoveryPromise.promise);
+            }
         });
         let deferred: Deferred<void> | undefined = undefined;
         if (this.interpreters.status === 'refreshing') {
@@ -94,8 +135,6 @@ export class ContributedLocalKernelSpecFinder
                 this.promiseMonitor.push(deferred.promise);
             }
         });
-
-        this.loadData().then(noop, noop);
 
         this.interpreters.onDidChangeInterpreters(async () => this.loadData().then(noop, noop), this, this.disposables);
         this.extensions.onDidChange(

@@ -237,6 +237,11 @@ export type IKernelConnectionInfo = {
 };
 
 export interface IExportedKernelService {
+    readonly status: 'discovering' | 'idle';
+    /**
+     * Changes in kernel state (e.g. discovered kernels, not discovering kernel, etc).
+     */
+    onDidChangeStatus: Event<void>;
     /**
      * List of running kernels changed.
      */
