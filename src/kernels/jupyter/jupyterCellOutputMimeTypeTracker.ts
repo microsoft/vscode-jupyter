@@ -14,8 +14,6 @@ import { IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { ResourceTypeTelemetryProperty, sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { isTelemetryDisabled } from '../../telemetry';
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 /**
  * Sends telemetry about cell output mime types
@@ -63,15 +61,16 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
     }
     private checkCell(cell: NotebookCell, when: 'onExecution' | 'onOpenCloseOrSave') {
         if (cell.kind === NotebookCellKind.Markup) {
-            return [];
+            return;
         }
         if (cell.document.languageId === 'raw') {
-            return [];
+            return;
         }
         const resourceType = cell.notebook.notebookType === JupyterNotebookView ? 'notebook' : 'interactive';
-        return flatten(cell.outputs.map((output) => output.items.map((item) => item.mime))).map((mime) =>
-            this.sendTelemetry(mime, when, resourceType)
-        );
+        cell.outputs
+            .map((output) => output.items.map((item) => item.mime))
+            .flat()
+            .map((mime) => this.sendTelemetry(mime, when, resourceType));
     }
 
     private sendTelemetry(
