@@ -46,7 +46,7 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
 export class FeatureManager implements IFeaturesManager {
     private _onDidChangeFeatures = new Emitter<void>();
     readonly onDidChangeFeatures = this._onDidChangeFeatures.event;
-    private _features: IFeatureSet;
+    private _features: IFeatureSet = { kernelPickerType: 'Stable' };
     get features(): IFeatureSet {
         return this._features;
     }
@@ -84,7 +84,7 @@ export class FeatureManager implements IFeaturesManager {
 
     private _updateFeatures() {
         const kernelPickerType =
-            this.workspace.getConfiguration('notebook.experimental.kernelPicker.mru') ||
+            this.workspace.getConfiguration('notebook.experimental.kernelPicker').get('mru') ||
             this.configService.getSettings().kernelPickerType === 'Insiders'
                 ? 'Insiders'
                 : 'Stable';
