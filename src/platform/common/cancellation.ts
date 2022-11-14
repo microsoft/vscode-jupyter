@@ -65,24 +65,20 @@ export function createPromiseFromCancellation<T>(
 
 /**
  * Create a single unified cancellation token that wraps multiple cancellation tokens.
- *
- * @export
- * @param {(...(CancellationToken | undefined)[])} tokens
- * @returns {CancellationToken}
  */
-export function wrapCancellationTokens(...tokens: (CancellationToken | undefined)[]): CancellationToken {
+export function wrapCancellationTokens(...tokens: CancellationToken[]) {
     const wrappedCancellationToken = new CancellationTokenSource();
     for (const token of tokens) {
         if (!token) {
             continue;
         }
         if (token.isCancellationRequested) {
-            return token;
+            wrappedCancellationToken.cancel();
         }
         token.onCancellationRequested(() => wrappedCancellationToken.cancel());
     }
 
-    return wrappedCancellationToken.token;
+    return wrappedCancellationToken;
 }
 
 export namespace Cancellation {

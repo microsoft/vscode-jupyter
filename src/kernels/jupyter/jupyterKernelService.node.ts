@@ -75,14 +75,14 @@ export class JupyterKernelService implements IJupyterKernelService {
             kernel.interpreter &&
             kernel.kind !== 'startUsingRemoteKernelSpec'
         ) {
-            const result = await this.kernelDependencyService.installMissingDependencies(
+            const result = await this.kernelDependencyService.installMissingDependencies({
                 resource,
-                kernel,
+                kernelConnection: kernel,
                 ui,
-                cancelToken,
-                true,
+                token: cancelToken,
+                ignoreCache: true,
                 cannotChangeKernels
-            );
+            });
             switch (result) {
                 case KernelInterpreterDependencyResponse.cancel:
                 case KernelInterpreterDependencyResponse.selectDifferentKernel:

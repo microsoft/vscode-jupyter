@@ -812,6 +812,9 @@ export namespace DataScience {
             'Choose the kernels that are available in the kernel picker.'
         );
     export const recommendedKernelCategoryInQuickPick = () => localize('jupyter.kernel.recommended', 'Recommended');
+    export const createPythonEnvironmentInQuickPick = () =>
+        localize('jupyter.kernel.createPythonEnvironment', 'Create Python Environment');
+
     export const selectDifferentJupyterInterpreter = () =>
         localize('DataScience.selectDifferentJupyterInterpreter', 'Change Interpreter');
     export const localJupyterServer = () => localize('DataScience.localJupyterServer', 'local');

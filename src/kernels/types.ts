@@ -799,14 +799,15 @@ export interface IKernelDependencyService {
     /**
      * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
      */
-    installMissingDependencies(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        ui: IDisplayOptions,
-        token: CancellationToken,
-        ignoreCache?: boolean,
-        cannotChangeKernels?: boolean
-    ): Promise<KernelInterpreterDependencyResponse>;
+    installMissingDependencies(options: {
+        resource: Resource;
+        kernelConnection: KernelConnectionMetadata;
+        ui: IDisplayOptions;
+        token: CancellationToken;
+        ignoreCache?: boolean;
+        cannotChangeKernels?: boolean;
+        installWithoutPrompting?: boolean;
+    }): Promise<KernelInterpreterDependencyResponse>;
     /**
      * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
      */
