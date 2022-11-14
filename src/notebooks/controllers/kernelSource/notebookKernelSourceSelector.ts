@@ -119,11 +119,34 @@ type MultiStepResult = {
     connection?: KernelConnectionMetadata;
     disposables: IDisposable[];
 };
-
-function updateQuickPickWithNewItems(
-    quickPick: QuickPick<KernelSourceQuickPickItem | QuickPickItem>,
-    items: (KernelSourceQuickPickItem | QuickPickItem)[],
-    activeItem?: KernelSourceQuickPickItem | QuickPickItem
+function isKernelPick(item: ConnectionQuickPickItem | QuickPickItem): item is ConnectionQuickPickItem {
+    return 'connection' in item;
+}
+function updateKernelSourceQuickPickWithNewItems<T extends ConnectionQuickPickItem | QuickPickItem>(
+    quickPick: QuickPick<T>,
+    items: T[],
+    activeItem?: T
+) {
+    const activeItems = quickPick.activeItems.length ? [quickPick.activeItems[0]] : activeItem ? [activeItem] : [];
+    if (activeItems.length && !items.includes(activeItems[0])) {
+        const oldActiveItem = activeItems[0];
+        const newActiveKernelQuickPickItem =
+            isKernelPick(oldActiveItem) &&
+            items.find((item) => isKernelPick(item) && item.connection.id === oldActiveItem.connection.id);
+        // Find this same quick pick item.
+        if (newActiveKernelQuickPickItem) {
+            activeItems[0] = newActiveKernelQuickPickItem;
+        } else {
+            activeItems.length = 0;
+        }
+    }
+    quickPick.items = items;
+    quickPick.activeItems = activeItems;
+}
+function updateKernelQuickPickWithNewItems<T extends ConnectionQuickPickItem | QuickPickItem>(
+    quickPick: QuickPick<T>,
+    items: T[],
+    activeItem?: T
 ) {
     const activeItems = quickPick.activeItems.length ? [quickPick.activeItems[0]] : activeItem ? [activeItem] : [];
     quickPick.items = items;
@@ -238,7 +261,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                     provider: p
                 });
             });
-            updateQuickPickWithNewItems(quickPick, items);
+            updateKernelSourceQuickPickWithNewItems(quickPick, items);
             quickPick.busy = false;
         })().ignoreErrors();
 
@@ -251,7 +274,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             switch (selectedSource.type) {
                 case KernelSourceQuickPickType.LocalKernelSpec:
                 case KernelSourceQuickPickType.LocalPythonEnv:
-                    return this.selectKernelFromKernelFinder(selectedSource.kernelFinderInfo, state, token);
+                    return this.selectKernelFromLocalKernelFinder(selectedSource.kernelFinderInfo, state, token);
                 case KernelSourceQuickPickType.ServerUriProvider:
                     return this.getRemoteServersFromProvider.bind(this, selectedSource.provider, token);
                 default:
@@ -354,121 +377,128 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         if (selectedSource && 'type' in selectedSource) {
             switch (selectedSource.type) {
                 case KernelFinderEntityQuickPickType.KernelFinder:
-                    return this.selectKernelFromKernelFinder(selectedSource.kernelFinderInfo, state, token);
-                case KernelFinderEntityQuickPickType.UriProviderQuickPick: {
-                    if (!selectedSource.provider.handleQuickPick || token.isCancellationRequested) {
-                        return;
-                    }
+                    return this.selectKernelFromLocalKernelFinder(selectedSource.kernelFinderInfo, state, token);
+                case KernelFinderEntityQuickPickType.UriProviderQuickPick:
+                    return this.selectKernelFromRemoteKernelFinder(selectedSource, state, token);
 
-                    const handle = await selectedSource.provider.handleQuickPick(selectedSource.originalItem, true);
-                    if (!handle || token.isCancellationRequested) {
-                        return;
-                    }
-                    if (handle === 'back') {
-                        throw InputFlowAction.back;
-                    }
-                    const onDidChange = new EventEmitter<void>();
-                    const onDidChangeStatus = new EventEmitter<void>();
-                    const kernels: KernelConnectionMetadata[] = [];
-                    let status: 'discovering' | 'idle' = 'idle';
-                    let refreshInvoked: boolean = false;
-                    let recommended: KernelConnectionMetadata | undefined;
-                    const onDidChangeRecommended = new EventEmitter<void>();
-                    const provider = {
-                        onDidChange: onDidChange.event,
-                        onDidChangeStatus: onDidChangeStatus.event,
-                        onDidChangeRecommended: onDidChangeRecommended.event,
-                        get kernels() {
-                            return kernels;
-                        },
-                        get status() {
-                            return status;
-                        },
-                        get recommended() {
-                            return recommended;
-                        },
-                        refresh: async () => {
-                            refreshInvoked = true;
-                        }
-                    };
-                    state.disposables.push(onDidChange);
-                    state.disposables.push(onDidChangeStatus);
-                    state.disposables.push(onDidChangeRecommended);
-
-                    (async () => {
-                        const uri = generateUriFromRemoteProvider(selectedSource.provider.id, handle);
-                        const serverId = await computeServerId(uri);
-                        const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
-                            serverId,
-                            this.controllerRegistration,
-                            this.localDisposables
-                        );
-                        if (token.isCancellationRequested) {
-                            return;
-                        }
-                        await this.serverSelector.setJupyterURIToRemote(uri);
-                        await controllerCreatedPromise;
-                        if (token.isCancellationRequested) {
-                            return;
-                        }
-
-                        const finder = this.kernelFinder.registered.find(
-                            (f) => f.kind === 'remote' && (f as IRemoteKernelFinder).serverUri.uri === uri
-                        );
-                        status = 'idle';
-                        onDidChangeStatus.fire();
-                        if (finder) {
-                            provider.refresh = async () => finder.refresh();
-                            if (refreshInvoked) {
-                                await finder.refresh();
-                            }
-                            status = finder.status;
-                            finder.onDidChangeKernels(
-                                () => {
-                                    kernels.length = 0;
-                                    kernels.push(...finder.kernels);
-                                    onDidChange.fire();
-                                },
-                                this,
-                                state.disposables
-                            );
-                            finder.onDidChangeStatus(() => {
-                                status = finder.status;
-                                onDidChangeStatus.fire();
-                            });
-                            state.source = finder;
-                            kernels.length = 0;
-                            kernels.push(...finder.kernels);
-                            onDidChange.fire();
-                            onDidChangeStatus.fire();
-
-                            // We need a cancellation in case the user aborts the quick pick
-                            const cancellationToken = new CancellationTokenSource();
-                            const preferred = new PreferredKernelConnectionService();
-                            state.disposables.push(new Disposable(() => cancellationToken.cancel()));
-                            state.disposables.push(cancellationToken);
-                            state.disposables.push(preferred);
-                            preferred
-                                .findPreferredRemoteKernelConnection(state.notebook, finder, cancellationToken.token)
-                                .then((kernel) => {
-                                    recommended = kernel;
-                                    onDidChangeRecommended.fire();
-                                })
-                                .catch((ex) =>
-                                    traceError(`Preferred connection failure ${getDisplayPath(state.notebook.uri)}`, ex)
-                                );
-                        }
-                    })().catch((ex) => traceError('Kernel selection failure', ex));
-
-                    return this.selectKernel.bind(this, provider, token);
-                }
                 default:
                     break;
             }
         }
     }
 
-    private selectKernelFromKernelFinder(
+    private async selectKernelFromRemoteKernelFinder(
+        selectedSource: KernelProviderItemsQuickPickItem,
+        state: MultiStepResult,
+        token: CancellationToken
+    ) {
+        if (!selectedSource.provider.handleQuickPick || token.isCancellationRequested) {
+            return;
+        }
+
+        const handle = await selectedSource.provider.handleQuickPick(selectedSource.originalItem, true);
+        if (!handle || token.isCancellationRequested) {
+            return;
+        }
+        if (handle === 'back') {
+            throw InputFlowAction.back;
+        }
+        const onDidChange = new EventEmitter<void>();
+        const onDidChangeStatus = new EventEmitter<void>();
+        const kernels: KernelConnectionMetadata[] = [];
+        let status: 'discovering' | 'idle' = 'idle';
+        let refreshInvoked: boolean = false;
+        let recommended: KernelConnectionMetadata | undefined;
+        const onDidChangeRecommended = new EventEmitter<void>();
+        const provider = {
+            onDidChange: onDidChange.event,
+            onDidChangeStatus: onDidChangeStatus.event,
+            onDidChangeRecommended: onDidChangeRecommended.event,
+            get kernels() {
+                return kernels;
+            },
+            get status() {
+                return status;
+            },
+            get recommended() {
+                return recommended;
+            },
+            refresh: async () => {
+                refreshInvoked = true;
+            }
+        };
+        state.disposables.push(onDidChange);
+        state.disposables.push(onDidChangeStatus);
+        state.disposables.push(onDidChangeRecommended);
+
+        (async () => {
+            const uri = generateUriFromRemoteProvider(selectedSource.provider.id, handle);
+            const serverId = await computeServerId(uri);
+            const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
+                serverId,
+                this.controllerRegistration,
+                this.localDisposables
+            );
+            if (token.isCancellationRequested) {
+                return;
+            }
+            await this.serverSelector.setJupyterURIToRemote(uri);
+            await controllerCreatedPromise;
+            if (token.isCancellationRequested) {
+                return;
+            }
+
+            const finder = this.kernelFinder.registered.find(
+                (f) => f.kind === 'remote' && (f as IRemoteKernelFinder).serverUri.uri === uri
+            );
+            status = 'idle';
+            onDidChangeStatus.fire();
+            if (finder) {
+                provider.refresh = async () => finder.refresh();
+                if (refreshInvoked) {
+                    await finder.refresh();
+                }
+                status = finder.status;
+                finder.onDidChangeKernels(
+                    () => {
+                        kernels.length = 0;
+                        kernels.push(...finder.kernels);
+                        onDidChange.fire();
+                    },
+                    this,
+                    state.disposables
+                );
+                finder.onDidChangeStatus(() => {
+                    status = finder.status;
+                    onDidChangeStatus.fire();
+                });
+                state.source = finder;
+                kernels.length = 0;
+                kernels.push(...finder.kernels);
+                onDidChange.fire();
+                onDidChangeStatus.fire();
+
+                // We need a cancellation in case the user aborts the quick pick
+                const cancellationToken = new CancellationTokenSource();
+                const preferred = new PreferredKernelConnectionService();
+                state.disposables.push(new Disposable(() => cancellationToken.cancel()));
+                state.disposables.push(cancellationToken);
+                state.disposables.push(preferred);
+                preferred
+                    .findPreferredRemoteKernelConnection(state.notebook, finder, cancellationToken.token)
+                    .then((kernel) => {
+                        recommended = kernel;
+                        onDidChangeRecommended.fire();
+                    })
+                    .catch((ex) =>
+                        traceError(`Preferred connection failure ${getDisplayPath(state.notebook.uri)}`, ex)
+                    );
+            }
+        })().catch((ex) => traceError('Kernel selection failure', ex));
+
+        return this.selectKernel.bind(this, provider, token);
+    }
+    private selectKernelFromLocalKernelFinder(
         source: IContributedKernelFinder<KernelConnectionMetadata>,
         state: MultiStepResult,
         token: CancellationToken
@@ -621,7 +651,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         // Assume we're always busy.
         quickPick.busy = true;
         let noLongerBusy = true;
-        // If we don't get any updates after 1s, then hide the busy indicator
+        // If we don't get any updates after 2s, then hide the busy indicator
         let updateTimeout = setTimeout(() => {
             if (noLongerBusy) {
                 quickPick.busy = false;
@@ -651,7 +681,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             state.disposables
         );
 
-        const recommendedItems: QuickPickItem[] = [];
+        const recommendedItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
         const updateRecommended = () => {
             if (!provider.recommended) {
                 return;
@@ -669,7 +699,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             } else {
                 recommendedItems.push(recommendedItem);
             }
-            updateQuickPickWithNewItems(quickPick, recommendedItems.concat(quickPickItems), recommendedItems[1]);
+            updateKernelQuickPickWithNewItems(quickPick, recommendedItems.concat(quickPickItems), recommendedItems[1]);
         };
         provider.onDidChangeRecommended(updateRecommended, this, state.disposables);
         updateRecommended();
@@ -702,10 +732,11 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                         categories.delete(category);
                     }
                 });
-                updateQuickPickWithNewItems(
-                    quickPick,
-                    recommendedItems.concat(quickPickItems.filter((item) => !itemsRemoved.includes(item)))
-                );
+                const previousActiveItem = quickPick.activeItems.length ? quickPick.activeItems[0] : undefined;
+                quickPickItems = quickPickItems.filter((item) => !itemsRemoved.includes(item));
+                quickPick.items = quickPickItems;
+                quickPick.activeItems =
+                    previousActiveItem && !itemsRemoved.includes(previousActiveItem) ? [previousActiveItem] : [];
             }
             if (!newQuickPickItems.length) {
                 return;
@@ -763,7 +794,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                     quickPickItems.splice(newIndex, 0, newCategory, ...items);
                     categories.set(newCategory, new Set(items));
                 }
-                updateQuickPickWithNewItems(quickPick, recommendedItems.concat(quickPickItems));
+                updateKernelQuickPickWithNewItems(quickPick, recommendedItems.concat(quickPickItems));
             });
         });
 
