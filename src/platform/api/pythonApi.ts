@@ -17,15 +17,15 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
-import { createDeferred } from '../common/utils/async';
+import { createDeferred, sleep } from '../common/utils/async';
 import { traceDecoratorVerbose, traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
-import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
+import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironments/info/interpreter';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { TraceOptions } from '../logging/types';
-import { areObjectsWithUrisTheSame, noop } from '../common/utils/misc';
+import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
 import { PromiseMonitor } from '../common/utils/promises';
@@ -441,6 +441,7 @@ export class InterpreterService implements IInterpreterService {
                 }
             };
             this._waitForAllInterpretersToLoad = fn();
+            this.refreshPromises.push(this._waitForAllInterpretersToLoad);
         }
         return this._waitForAllInterpretersToLoad;
     }
@@ -458,6 +459,14 @@ export class InterpreterService implements IInterpreterService {
             }
         })();
         this.refreshPromises.push(promise);
+        // Python extension might completely this promise, however this doesn't mean all of the
+        // events have been triggered,
+        // I.e. even after we call refresh the python extension could trigger events indicating that there are more changes to the interpreters.
+        // Hence wait for at least 2 seconds for these events to complete getting triggered.
+        // Why 2s and not 5 or why not 1s, there's no real reason, just a guess.
+        // This promise only improves the discovery of kernels, even without this things work,
+        // but with this things work better as the kernel discovery knows that Python refresh has finished.
+        this.refreshPromises.push(promise.then(() => sleep(1_000)));
         await promise;
     }
     private workspaceCachedActiveInterpreter = new Set<string>();
@@ -519,9 +528,13 @@ export class InterpreterService implements IInterpreterService {
         }
         return promise;
     }
+    private readonly pythonEnvHashes = new Map<string, string>();
+    getInterpreterHash(id: string) {
+        return this.pythonEnvHashes.get(id);
+    }
 
     @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
-    public async getInterpreterDetails(pythonPath: Uri): Promise<undefined | PythonEnvironment> {
+    public async getInterpreterDetails(pythonPath: Uri | { path: string }): Promise<undefined | PythonEnvironment> {
         this.hookupOnDidChangeInterpreterEvent();
         try {
             return await this.getApi().then(async (api) => {
@@ -530,32 +543,40 @@ export class InterpreterService implements IInterpreterService {
                 }
                 // Find the Env with the same Uri.
                 const matchedPythonEnv = api.environments.known.find((item) => {
-                    return areInterpreterPathsSame(item.executable.uri, pythonPath);
+                    return isUri(pythonPath)
+                        ? areInterpreterPathsSame(item.executable.uri, pythonPath)
+                        : areInterpreterPathsSame(Uri.file(item.path), Uri.file(pythonPath.path));
                 });
                 if (matchedPythonEnv) {
                     const env = await api.environments.resolveEnvironment(matchedPythonEnv);
                     const resolved = this.trackResolvedEnvironment(env, false);
                     traceVerbose(
-                        `Interpreter details for ${getDisplayPath(pythonPath)} from Python is ${JSON.stringify(
-                            env
-                        )} and our mapping is ${JSON.stringify(resolved)}`
+                        `Interpreter details for ${getDisplayPath(
+                            isUri(pythonPath) ? pythonPath : Uri.file(pythonPath.path)
+                        )} from Python is ${JSON.stringify(env)} and our mapping is ${JSON.stringify(resolved)}`
                     );
                     return resolved;
                 }
                 traceWarning(
                     `No interpreter with path ${getDisplayPath(
-                        pythonPath
-                    )} found in Python API, will convert Uri path to string as Id ${pythonPath}`
+                        isUri(pythonPath) ? pythonPath : Uri.file(pythonPath.path)
+                    )} found in Python API, will convert Uri path to string as Id ${
+                        isUri(pythonPath) ? pythonPath : Uri.file(pythonPath.path)
+                    }`
                 );
 
-                // eslint-disable-next-line local-rules/dont-use-fspath
-                const env = await api.environments.resolveEnvironment(pythonPath.fsPath);
+                const env = await api.environments.resolveEnvironment(
+                    // eslint-disable-next-line local-rules/dont-use-fspath
+                    isUri(pythonPath) ? pythonPath.fsPath : pythonPath.path
+                );
                 return this.trackResolvedEnvironment(env, false);
             });
         } catch (ex) {
             traceWarning(
                 `Failed to get Python interpreter details from Python Extension API for ${
-                    typeof pythonPath === 'string' ? pythonPath : getDisplayPath(pythonPath)
+                    typeof pythonPath === 'string'
+                        ? pythonPath
+                        : getDisplayPath(isUri(pythonPath) ? pythonPath : Uri.file(pythonPath.path))
                 }`,
                 ex
             );
@@ -581,6 +602,11 @@ export class InterpreterService implements IInterpreterService {
             if (!resolved) {
                 return;
             }
+            getInterpreterHash(resolved)
+                .then((hash) => {
+                    this.pythonEnvHashes.set(resolved.id, hash);
+                })
+                .catch(noop);
 
             if (
                 !this._interpreters.get(env.id) ||
@@ -609,19 +635,33 @@ export class InterpreterService implements IInterpreterService {
         this.interpreterListCachePromise = undefined;
     }
     private populateCachedListOfInterpreters() {
-        this.getInterpreters().ignoreErrors();
+        const promise = this.getInterpreters().catch(noop);
+        this.refreshPromises.push(promise);
+        // Python extension might completely this promise, however this doesn't mean all of the
+        // events have been triggered,
+        // I.e. even after we call refresh the python extension could trigger events indicating that there are more changes to the interpreters.
+        // Hence wait for at least 2 seconds for these events to complete getting triggered.
+        // Why 2s and not 5 or why not 1s, there's no real reason, just a guess.
+        // This promise only improves the discovery of kernels, even without this things work,
+        // but with this things work better as the kernel discovery knows that Python refresh has finished.
+        this.refreshPromises.push(promise.then(() => sleep(1_000)));
     }
-    private async getInterpretersImpl(cancelToken: CancellationToken): Promise<PythonEnvironment[]> {
+    private async getInterpretersImpl(
+        cancelToken: CancellationToken,
+        recursiveCounter = 0
+    ): Promise<PythonEnvironment[]> {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             this.builtListOfInterpretersAtLeastOnce = true;
         }
 
         const allInterpreters: PythonEnvironment[] = [];
         const stopWatch = new StopWatch();
+        let buildListOfInterpretersAgain = false;
         await this.getApi().then(async (api) => {
             if (!api || cancelToken.isCancellationRequested) {
                 return [];
             }
+            let previousListOfInterpreters = api.environments.known.length;
             try {
                 const apiResolveTime = stopWatch.elapsedTime;
                 await api.environments.refreshEnvironments();
@@ -666,9 +706,21 @@ export class InterpreterService implements IInterpreterService {
             } catch (ex) {
                 traceError(`Failed to refresh list of interpreters and get their details`, ex);
             }
+
+            if (previousListOfInterpreters < api.environments.known.length) {
+                // this means we haven't completed the first refresh of the list of interpreters.
+                // We've received yet another set of interpreters.
+                buildListOfInterpretersAgain = true;
+            }
         });
         if (cancelToken.isCancellationRequested) {
             return [];
+        }
+        if (buildListOfInterpretersAgain && recursiveCounter < 10) {
+            traceVerbose(
+                `List of interpreters changed after a while, will need to rebuild it again, counter = ${recursiveCounter}`
+            );
+            return this.getInterpretersImpl(cancelToken, recursiveCounter++);
         }
         traceVerbose(
             `Full interpreter list is length: ${allInterpreters.length}, ${allInterpreters

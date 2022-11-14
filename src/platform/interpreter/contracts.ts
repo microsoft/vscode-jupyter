@@ -19,5 +19,17 @@ export interface IInterpreterService {
     onDidChangeInterpreters: Event<void>;
     refreshInterpreters(forceRefresh?: boolean): Promise<void>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
-    getInterpreterDetails(pythonPath: Uri): Promise<undefined | PythonEnvironment>;
+    /**
+     * Gets the details of a Python Environment
+     * @param pythonPath Absolute path to the python executable or the path to the Environment as {path: string}.
+     */
+    getInterpreterDetails(
+        pythonPath:
+            | Uri
+            | {
+                  /** Environment Path */
+                  path: string;
+              }
+    ): Promise<undefined | PythonEnvironment>;
+    getInterpreterHash(id: string): string | undefined;
 }

@@ -129,7 +129,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         this.kernelSpecFinder.clearCache();
         await this.refreshData(true);
     }
-    public async refreshData(forcePythonInterpreterRefresh: boolean = false) {
+    public refreshData(forcePythonInterpreterRefresh: boolean = false) {
         // If we're already discovering, then no need to cancel the existing search process
         // unless we're forcing a refresh.
         if (

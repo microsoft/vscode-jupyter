@@ -68,16 +68,23 @@ export class ContributedLocalPythonEnvFinder
 
     activate() {
         this.promiseMonitor.onStateChange(() => {
-            this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering';
+            this.status =
+                this.promiseMonitor.isComplete && this.interpreters.status === 'idle' ? 'idle' : 'discovering';
         });
         this.loadData().then(noop, noop);
         let deferred: Deferred<void> | undefined = undefined;
+        if (this.interpreters.status === 'refreshing') {
+            deferred = createDeferred<void>();
+            this.promiseMonitor.push(deferred.promise);
+        }
         this.interpreters.onDidChangeStatus(() => {
             if (this.interpreters.status === 'idle') {
                 deferred?.resolve();
                 deferred = undefined;
             } else if (this.interpreters.status === 'refreshing') {
-                deferred?.resolve();
+                if (deferred) {
+                    return;
+                }
                 deferred = createDeferred<void>();
                 this.promiseMonitor.push(deferred.promise);
             }
@@ -100,19 +107,19 @@ export class ContributedLocalPythonEnvFinder
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
     }
 
-    public async refresh() {
+    public refresh() {
         const promise = (async () => {
             await this.pythonKernelFinder.refresh();
             await this.updateCache();
         })();
         this.promiseMonitor.push(promise);
-        await promise;
+        return promise;
     }
 
-    private async loadData() {
+    private loadData() {
         const promise = this.updateCache();
         this.promiseMonitor.push(promise);
-        await promise;
+        return promise;
     }
 
     @traceDecoratorError('List kernels failed')

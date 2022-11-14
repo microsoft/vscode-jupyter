@@ -97,7 +97,8 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
 
                 // First thing is to always create the controller for the active interpreter only if we don't have any remote connections.
                 // This reduces flickering (changing controllers from one to another).
-                if (this.serverUriStorage.isLocalLaunch) {
+                const useNewKernelPicker = this.configService.getSettings().kernelPickerType === 'Insiders';
+                if (this.serverUriStorage.isLocalLaunch && !useNewKernelPicker) {
                     await createActiveInterpreterController(
                         JupyterNotebookView,
                         undefined,

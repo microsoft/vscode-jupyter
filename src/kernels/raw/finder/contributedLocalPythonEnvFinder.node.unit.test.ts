@@ -83,6 +83,7 @@ suite('Contributed Python Kernel Finder', () => {
         disposables.push(onDidChangeNonPythonKernels);
         disposables.push(onDidChangePythonKernels);
         disposables.push(onDidChangeInterpreterStatus);
+        when(interpreterService.status).thenReturn('idle');
         when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreters.event);
         when(interpreterService.onDidChangeStatus).thenReturn(onDidChangeInterpreterStatus.event);
         when(extensions.onDidChange).thenReturn(onDidChangeExtensions.event);
@@ -116,6 +117,55 @@ suite('Contributed Python Kernel Finder', () => {
         assert.isAtLeast(onDidChangeStatus.count, 2, 'onDidChangeStatus not fired 2 times');
         assert.deepEqual(statuses, ['discovering', 'idle']);
     });
+    test('Status is discovering until Python extension finishes refreshing interpreters', async () => {
+        when(pythonKernelFinder.kernels).thenReturn([]);
+        when(interpreterService.status).thenReturn('refreshing');
+        const statuses: typeof finder.status[] = [];
+        finder.onDidChangeStatus(() => statuses.push(finder.status));
+        const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels', disposables);
+        const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);
+
+        finder.activate();
+        await clock.runAllAsync();
+
+        assert.isAtLeast(onDidChangeKernels.count, 0, 'onDidChangeKernels not fired');
+        assert.isAtLeast(onDidChangeStatus.count, 1, 'onDidChangeStatus not fired 2 times');
+        assert.deepEqual(statuses, ['discovering']);
+
+        // Finish refreshing interpreters
+        when(interpreterService.status).thenReturn('idle');
+        onDidChangeInterpreterStatus.fire();
+        await clock.runAllAsync();
+
+        assert.isAtLeast(onDidChangeStatus.count, 2, 'onDidChangeStatus not fired 2 times');
+        assert.deepEqual(statuses, ['discovering', 'idle']);
+    });
+    test('Status is discovering if Python extension starts refreshing interpreters', async () => {
+        when(pythonKernelFinder.kernels).thenReturn([]);
+        const statuses: typeof finder.status[] = [];
+        finder.onDidChangeStatus(() => statuses.push(finder.status));
+        const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);
+
+        finder.activate();
+        await clock.runAllAsync();
+
+        assert.isAtLeast(onDidChangeStatus.count, 2, 'onDidChangeStatus not fired 2 times');
+        assert.deepEqual(statuses, ['discovering', 'idle']);
+
+        // Ensure we start refreshing python interpreters
+        when(interpreterService.status).thenReturn('refreshing');
+        onDidChangeInterpreterStatus.fire();
+        await clock.runAllAsync();
+
+        // Now finish refreshing interpreters
+        when(interpreterService.status).thenReturn('idle');
+        onDidChangeInterpreterStatus.fire();
+        await clock.runAllAsync();
+
+        assert.isAtLeast(onDidChangeStatus.count, 4, 'onDidChangeStatus not fired 4 times');
+        assert.deepEqual(statuses, ['discovering', 'idle', 'discovering', 'idle']);
+    });
+
     test('Notify status of discovery', async () => {
         when(pythonKernelFinder.kernels).thenReturn([pythonKernelSpec]);
         const statuses: typeof finder.status[] = [];

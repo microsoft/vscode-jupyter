@@ -65,10 +65,8 @@ export function initialize() {
     generateMock('debug');
     generateMock('scm');
     generateMock('notebooks');
+    generateMock('commands');
 
-    const commands = new MockCommands();
-    (mockedVSCode as any).commands = commands;
-    mockedVSCodeNamespaces.commands = commands as any;
     when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
     when(mockedVSCodeNamespaces.window.visibleNotebookEditors).thenReturn([]);
     // Use mock clipboard fo testing purposes.
