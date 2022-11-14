@@ -811,6 +811,7 @@ export namespace DataScience {
             { key: 'jupyter.kernel.filter.placeholder', comment: ['{Locked="kernel"}', '{Locked="kernels"}'] },
             'Choose the kernels that are available in the kernel picker.'
         );
+    export const recommendedKernelCategoryInQuickPick = () => localize('jupyter.kernel.recommended', 'Recommended');
     export const selectDifferentJupyterInterpreter = () =>
         localize('DataScience.selectDifferentJupyterInterpreter', 'Change Interpreter');
     export const localJupyterServer = () => localize('DataScience.localJupyterServer', 'local');

@@ -21,6 +21,7 @@ import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../int
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getKernelRegistrationInfo } from '../../helpers';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -73,8 +74,27 @@ export class ContributedLocalKernelSpecFinder
 
     activate() {
         this.promiseMonitor.onStateChange(() => {
-            this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering';
+            this.status =
+                this.promiseMonitor.isComplete && this.interpreters.status === 'idle' ? 'idle' : 'discovering';
         });
+        let deferred: Deferred<void> | undefined = undefined;
+        if (this.interpreters.status === 'refreshing') {
+            deferred = createDeferred<void>();
+            this.promiseMonitor.push(deferred.promise);
+        }
+        this.interpreters.onDidChangeStatus(() => {
+            if (this.interpreters.status === 'idle') {
+                deferred?.resolve();
+                deferred = undefined;
+            } else if (this.interpreters.status === 'refreshing') {
+                if (deferred) {
+                    return;
+                }
+                deferred = createDeferred<void>();
+                this.promiseMonitor.push(deferred.promise);
+            }
+        });
+
         this.loadData().then(noop, noop);
 
         this.interpreters.onDidChangeInterpreters(async () => this.loadData().then(noop, noop), this, this.disposables);

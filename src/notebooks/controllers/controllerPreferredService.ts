@@ -10,7 +10,6 @@ import {
     Disposable,
     NotebookControllerAffinity,
     NotebookDocument,
-    Uri,
     workspace
 } from 'vscode';
 import { getKernelConnectionLanguage, getLanguageInNotebookMetadata, isPythonNotebook } from '../../kernels/helpers';
@@ -27,6 +26,7 @@ import {
     Telemetry
 } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
+import { KernelPickerType } from '../../platform/common/kernelPickerType';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable, IDisposableRegistry, Resource } from '../../platform/common/types';
 import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../platform/common/utils';
@@ -43,6 +43,7 @@ import {
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { findKernelSpecMatchingInterpreter } from './kernelRanking/helpers';
+import { PreferredKernelConnectionService } from './preferredKernelConnectionService';
 import {
     IControllerDefaultService,
     IControllerLoader,
@@ -180,13 +181,13 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 }
 
                 // Await looking for the preferred kernel
-                ({ preferredConnection } = await this.findPreferredKernelExactMatch(
-                    document.uri,
+                preferredConnection = await this.findPreferredKernelExactMatch(
+                    document,
                     notebookMetadata,
                     preferredSearchToken.token,
                     preferredInterpreter,
                     serverId
-                ));
+                );
                 if (preferredConnection) {
                     traceInfoIfCI(
                         `Found target controller with an exact match (1) ${getDisplayPath(document.uri)} ${
@@ -201,13 +202,13 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 // If we didn't find an exact match in the cache, try awaiting for the non-cache version
                 if (!preferredConnection) {
                     // Don't start this ahead of time to save some CPU cycles
-                    ({ preferredConnection } = await this.findPreferredKernelExactMatch(
-                        document.uri,
+                    preferredConnection = await this.findPreferredKernelExactMatch(
+                        document,
                         notebookMetadata,
                         preferredSearchToken.token,
                         preferredInterpreter,
                         serverId
-                    ));
+                    );
                     if (preferredConnection) {
                         traceInfoIfCI(
                             `Found target controller with an exact match (2) ${getDisplayPath(document.uri)} ${
@@ -414,15 +415,32 @@ export class ControllerPreferredService implements IControllerPreferredService, 
 
     // Use our kernel finder to rank our kernels, and see if we have an exact match
     private async findPreferredKernelExactMatch(
-        uri: Uri,
+        notebook: NotebookDocument,
         notebookMetadata: INotebookMetadata | undefined,
         cancelToken: CancellationToken,
         preferredInterpreter: PythonEnvironment | undefined,
         serverId: string | undefined
-    ): Promise<{
-        rankedConnections: KernelConnectionMetadata[] | undefined;
-        preferredConnection: KernelConnectionMetadata | undefined;
-    }> {
+    ): Promise<KernelConnectionMetadata | undefined> {
+        const uri = notebook.uri;
+        if (KernelPickerType.useNewKernelPicker) {
+            // With the new kernel picker always find exact matches when updating the affinity.
+            // Attempt to clean up https://github.com/microsoft/vscode-jupyter/issues/11914
+            // Here we actually need an exact match instead of close matches,
+            // For the new kernel picker we will always try to find an exact match, if not found, then we
+            // do not show anything in the VS Codes kernel picker.
+            const preferredService = new PreferredKernelConnectionService();
+            try {
+                if (serverId) {
+                    return preferredService.findExactRemoteKernelConnection(notebook, cancelToken);
+                } else if (isPythonNotebook(notebookMetadata) || notebook.notebookType === InteractiveWindowView) {
+                    return preferredService.findExactPythonKernelConnection(notebook, cancelToken);
+                } else {
+                    return preferredService.findExactLocalKernelSpecConnection(notebook, cancelToken);
+                }
+            } finally {
+                preferredService.dispose();
+            }
+        }
         let preferredConnection: KernelConnectionMetadata | undefined;
         const rankedConnections = await this.kernelRankHelper.rankKernels(
             uri,
@@ -433,7 +451,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             serverId
         );
         if (cancelToken.isCancellationRequested) {
-            return { preferredConnection: undefined, rankedConnections: undefined };
+            return;
         }
         if (rankedConnections && rankedConnections.length) {
             const potentialMatch = rankedConnections[rankedConnections.length - 1];
@@ -446,13 +464,13 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 potentialMatch
             ]);
             if (cancelToken.isCancellationRequested) {
-                return { preferredConnection: undefined, rankedConnections: undefined };
+                return;
             }
 
             // Are we an exact match based on metadata hash / name / ect...?
             const isExactMatch = await this.kernelRankHelper.isExactMatch(uri, potentialMatch, notebookMetadata);
             if (cancelToken.isCancellationRequested) {
-                return { preferredConnection: undefined, rankedConnections: undefined };
+                return;
             }
 
             // non-exact matches are ok for non-python kernels, else we revert to active interpreter for non-python kernels.
@@ -490,7 +508,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             });
         }
 
-        return { rankedConnections, preferredConnection };
+        return preferredConnection;
     }
     private sendPreferredKernelTelemetry(
         resource: Resource,
