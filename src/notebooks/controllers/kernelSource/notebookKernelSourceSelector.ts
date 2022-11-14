@@ -40,7 +40,6 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { ICommandManager } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { KernelPickerType } from '../../../platform/common/kernelPickerType';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
