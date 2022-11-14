@@ -3,7 +3,7 @@
 
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { Uri } from 'vscode';
+import { commands, Uri } from 'vscode';
 import { IDisposable, IExtensionContext, IHttpClient } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, startJupyterServer } from '../../common';
 import { openNotebook } from '../helpers';
@@ -81,7 +81,7 @@ suite('IPyWidget Script Manager @widgets', function () {
                 controllerRegistration
             );
             if (controller) {
-                await this.commandManager.executeCommand('notebook.selectKernel', {
+                await commands.executeCommand('notebook.selectKernel', {
                     id: controller.id,
                     extension: JVSC_EXTENSION_ID
                 });
