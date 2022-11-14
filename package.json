@@ -2157,7 +2157,6 @@
         "format-util": "^1.0.5",
         "fs-extra": "^4.0.3",
         "glob": "^7.1.2",
-        "image-size": "^1.0.0",
         "inversify": "^5.0.1",
         "isomorphic-ws": "^4.0.1",
         "jquery": "^3.6.0",
