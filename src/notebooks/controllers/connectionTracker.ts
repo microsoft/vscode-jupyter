@@ -6,7 +6,7 @@ import { NotebookControllerAffinity2, NotebookDocument, workspace } from 'vscode
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
-import { IConfigurationService, IDisposableRegistry, KernelPickerType } from '../../platform/common/types';
+import { IDisposableRegistry, IFeaturesManager, KernelPickerType } from '../../platform/common/types';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import {
@@ -27,9 +27,9 @@ export class ConnectionTracker implements IExtensionSyncActivationService, IConn
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IKernelRankingHelper) private readonly kernelRankingHelper: IKernelRankingHelper,
         @inject(IConnectionMru) private readonly notebookConnectionMru: IConnectionMru,
-        @inject(IConfigurationService) configuration: IConfigurationService
+        @inject(IFeaturesManager) featuresManager: IFeaturesManager
     ) {
-        this.kernelPickerType = configuration.getSettings(undefined).kernelPickerType;
+        this.kernelPickerType = featuresManager.features.kernelPickerType;
     }
 
     activate(): void {

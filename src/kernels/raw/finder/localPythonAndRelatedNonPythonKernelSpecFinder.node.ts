@@ -28,7 +28,13 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IMemento, GLOBAL_MEMENTO, IDisposable, IDisposableRegistry } from '../../../platform/common/types';
+import {
+    IMemento,
+    GLOBAL_MEMENTO,
+    IDisposable,
+    IDisposableRegistry,
+    IFeaturesManager
+} from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
@@ -38,9 +44,6 @@ import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ITrustedKernelPaths } from './types';
-import { KernelPickerType } from '../../../platform/common/kernelPickerType';
-// import { KernelPickerType } from '../../../platform/common/kernelPickerType';
-// import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 
 export const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2022_10';
 type InterpreterId = string;
@@ -77,7 +80,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IApplicationEnvironment) env: IApplicationEnvironment,
-        @inject(ITrustedKernelPaths) private readonly trustedKernels: ITrustedKernelPaths
+        @inject(ITrustedKernelPaths) private readonly trustedKernels: ITrustedKernelPaths,
+        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
     ) {
         super(fs, workspaceService, extensionChecker, globalState, disposables, env);
         interpreterService.onDidChangeInterpreters(() => this.refreshData().catch(noop), this, this.disposables);
@@ -93,7 +97,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
             })
             .finally(async () => {
                 this.refreshData().ignoreErrors();
-                if (!KernelPickerType.useNewKernelPicker) {
+                if (this.featuresManager.features.kernelPickerType === 'Stable') {
                     this.kernelSpecsFromKnownLocations.onDidChangeKernels(
                         () => {
                             // Only refresh if we know there are new global Python kernels that we haven't already seen before.
@@ -137,7 +141,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
             this.refreshCancellation &&
             !this.refreshCancellation.token.isCancellationRequested &&
             this.previousRefresh &&
-            KernelPickerType.useNewKernelPicker
+            this.featuresManager.features.kernelPickerType === 'Insiders'
         ) {
             return this.previousRefresh;
         }
@@ -146,7 +150,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         const cancelToken = (this.refreshCancellation = new CancellationTokenSource());
         const previousListOfKernels = this._cachedKernels;
         const promise = (async () => {
-            if (KernelPickerType.useNewKernelPicker) {
+            if (this.featuresManager.features.kernelPickerType === 'Insiders') {
                 if (forcePythonInterpreterRefresh) {
                     this.cachedInformationForPythonInterpreter.clear();
                     this.discoveredKernelSpecFiles.clear();
@@ -166,7 +170,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                 return;
             }
 
-            if (KernelPickerType.useNewKernelPicker) {
+            if (this.featuresManager.features.kernelPickerType === 'Insiders') {
                 // Possible we haven't finished analyzing all of the interpreters,
                 // Since there can be race conditions, loop through interpreters again.
                 // E.g. we call refresh of interpreters, and then start analyzing interpreters
@@ -196,7 +200,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                 this._cachedKernels.length !== previousListOfKernels.length ||
                 JSON.stringify(this._cachedKernels) !== JSON.stringify(previousListOfKernels)
             ) {
-                if (KernelPickerType.useNewKernelPicker) {
+                if (this.featuresManager.features.kernelPickerType === 'Insiders') {
                     await this.updateCache();
                 } else {
                     // Previously we didn't wait, leave that behavior for the old approach (this will go away soon).
@@ -204,7 +208,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                 }
             }
 
-            if (KernelPickerType.useNewKernelPicker && forcePythonInterpreterRefresh) {
+            if (this.featuresManager.features.kernelPickerType === 'Insiders' && forcePythonInterpreterRefresh) {
                 this._kernelsFromCache = [];
             }
         })().finally(() => {
@@ -221,7 +225,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
     }
     private async updateCache() {
         this._onDidChangeKernels.fire();
-        if (KernelPickerType.useNewKernelPicker) {
+        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
             this.updateCachePromise = this.updateCachePromise.finally(() =>
                 this.writeToMementoCache(this._cachedKernels, LocalPythonKernelsCacheKey).catch(noop)
             );
@@ -253,7 +257,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
 
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
     private async listKernelsImplementation(cancelToken: CancellationToken) {
-        if (!KernelPickerType.useNewKernelPicker) {
+        if (this.featuresManager.features.kernelPickerType === 'Stable') {
             return this.listKernelsImplementationOld(cancelToken);
         }
 

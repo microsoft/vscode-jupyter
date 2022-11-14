@@ -20,7 +20,7 @@ import { IExportedKernelServiceFactory } from './api/api';
 import { ApiAccessService } from './api/apiAccessService';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
-import { IConfigurationService, IExtensionContext } from '../platform/common/types';
+import { IExtensionContext, IFeaturesManager } from '../platform/common/types';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.web';
 import { PythonExtensionRestartNotification } from './notification/pythonExtensionRestartNotification';
 import { ImportTracker } from './import-export/importTracker';
@@ -64,8 +64,8 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     // Dev Tools
     registerDevToolTypes(context, serviceManager, isDevMode);
 
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-    if (configuration.getSettings().kernelPickerType === 'Insiders') {
+    const featureManager = serviceManager.get<IFeaturesManager>(IFeaturesManager);
+    if (featureManager.features.kernelPickerType === 'Insiders') {
         // User jupyter server url provider
         serviceManager.addSingleton<IExtensionSyncActivationService>(
             IExtensionSyncActivationService,

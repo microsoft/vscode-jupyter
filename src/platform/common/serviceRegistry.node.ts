@@ -26,7 +26,7 @@ import {
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { CryptoUtils } from './crypto';
 import { ExperimentService } from './experiments/service';
-import { FeatureDeprecationManager } from './featureDeprecationManager';
+import { FeatureManager } from './featureManager';
 import { BrowserService } from './net/browser';
 import { HttpClient } from './net/httpClient';
 import { PersistentStateFactory } from './persistentState';
@@ -38,7 +38,7 @@ import {
     IBrowserService,
     ICryptoUtils,
     IExtensions,
-    IFeatureDeprecationManager,
+    IFeaturesManager,
     IPersistentStateFactory,
     IsWindows
 } from './types';
@@ -74,7 +74,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataFrameScriptGenerator>(IDataFrameScriptGenerator, DataFrameScriptGenerator);
     serviceManager.addSingleton<IVariableScriptGenerator>(IVariableScriptGenerator, VariableScriptGenerator);
 
-    serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
+    serviceManager.addSingleton<IFeaturesManager>(IFeaturesManager, FeatureManager);
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);

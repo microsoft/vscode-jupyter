@@ -24,7 +24,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
 import { CancellationTokenSource, EventEmitter, Memento, Uri } from 'vscode';
-import { IDisposable, IExtensionContext, IExtensions } from '../../../platform/common/types';
+import { IDisposable, IExtensionContext, IExtensions, IFeaturesManager } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import {
     KernelConnectionMetadata,
@@ -242,6 +242,8 @@ import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
             kernelFinder = new KernelFinder([]);
             const trustedKernels = mock<ITrustedKernelPaths>();
             when(trustedKernels.isTrusted(anything())).thenReturn(true);
+            const featuresManager = mock<IFeaturesManager>();
+            when(featuresManager.features).thenReturn({ kernelPickerType: 'Stable' });
 
             localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
                 instance(interpreterService),
@@ -253,7 +255,8 @@ import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
                 instance(memento),
                 disposables,
                 instance(env),
-                instance(trustedKernels)
+                instance(trustedKernels),
+                instance(featuresManager)
             );
             localKernelFinder = new ContributedLocalKernelSpecFinder(
                 nonPythonKernelSpecFinder,
