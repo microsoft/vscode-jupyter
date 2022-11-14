@@ -246,7 +246,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         traceVerbose(
             `Disposing controller ${this.id} associated with connection ${this.connection.id} ${
                 nbDocumentUris.length ? 'and documents ' + nbDocumentUris.join(', ') : ''
-            }`
+            } called from ${new Error('').stack}`
         );
         this.isDisposed = true;
         this._onNotebookControllerSelected.dispose();
