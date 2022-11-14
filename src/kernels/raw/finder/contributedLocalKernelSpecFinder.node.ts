@@ -84,57 +84,27 @@ export class ContributedLocalKernelSpecFinder
         });
 
         this.loadData().then(noop, noop);
-        let nonPythonKernelDiscoveryPromise: Deferred<void> | undefined = undefined;
-        if (this.nonPythonKernelFinder.status === 'discovering') {
-            nonPythonKernelDiscoveryPromise = createDeferred<void>();
-            this.promiseMonitor.push(nonPythonKernelDiscoveryPromise.promise);
-        }
-        this.nonPythonKernelFinder.onDidChangeStatus(() => {
-            if (this.pythonKernelFinder.status === 'idle') {
-                nonPythonKernelDiscoveryPromise?.resolve();
-                nonPythonKernelDiscoveryPromise = undefined;
-            } else if (this.nonPythonKernelFinder.status === 'discovering') {
-                if (nonPythonKernelDiscoveryPromise) {
-                    return;
+        let combinedProgress: Deferred<void> | undefined = undefined;
+        const updateCombinedStatus = () => {
+            const latestStatus: typeof this.nonPythonKernelFinder.status[] = [
+                this.nonPythonKernelFinder.status,
+                this.pythonKernelFinder.status,
+                this.interpreters.status === 'refreshing' ? 'discovering' : 'idle'
+            ];
+            if (latestStatus.includes('discovering')) {
+                if (!combinedProgress) {
+                    combinedProgress = createDeferred<void>();
+                    this.promiseMonitor.push(combinedProgress.promise);
                 }
-                nonPythonKernelDiscoveryPromise = createDeferred<void>();
-                this.promiseMonitor.push(nonPythonKernelDiscoveryPromise.promise);
+            } else {
+                combinedProgress?.resolve();
+                combinedProgress = undefined;
             }
-        });
-        let pythonKernelDiscoveryPromise: Deferred<void> | undefined = undefined;
-        if (this.pythonKernelFinder.status === 'discovering') {
-            pythonKernelDiscoveryPromise = createDeferred<void>();
-            this.promiseMonitor.push(pythonKernelDiscoveryPromise.promise);
-        }
-        this.pythonKernelFinder.onDidChangeStatus(() => {
-            if (this.pythonKernelFinder.status === 'idle') {
-                pythonKernelDiscoveryPromise?.resolve();
-                pythonKernelDiscoveryPromise = undefined;
-            } else if (this.pythonKernelFinder.status === 'discovering') {
-                if (pythonKernelDiscoveryPromise) {
-                    return;
-                }
-                pythonKernelDiscoveryPromise = createDeferred<void>();
-                this.promiseMonitor.push(pythonKernelDiscoveryPromise.promise);
-            }
-        });
-        let deferred: Deferred<void> | undefined = undefined;
-        if (this.interpreters.status === 'refreshing') {
-            deferred = createDeferred<void>();
-            this.promiseMonitor.push(deferred.promise);
-        }
-        this.interpreters.onDidChangeStatus(() => {
-            if (this.interpreters.status === 'idle') {
-                deferred?.resolve();
-                deferred = undefined;
-            } else if (this.interpreters.status === 'refreshing') {
-                if (deferred) {
-                    return;
-                }
-                deferred = createDeferred<void>();
-                this.promiseMonitor.push(deferred.promise);
-            }
-        });
+        };
+        updateCombinedStatus();
+        this.nonPythonKernelFinder.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
+        this.pythonKernelFinder.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
+        this.interpreters.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
         this.loadData().then(noop, noop);
         this.interpreters.onDidChangeInterpreters(async () => this.loadData().then(noop, noop), this, this.disposables);
         this.extensions.onDidChange(
