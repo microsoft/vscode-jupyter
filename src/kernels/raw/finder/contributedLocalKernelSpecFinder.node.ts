@@ -135,7 +135,7 @@ export class ContributedLocalKernelSpecFinder
                 this.promiseMonitor.push(deferred.promise);
             }
         });
-
+        this.loadData().then(noop, noop);
         this.interpreters.onDidChangeInterpreters(async () => this.loadData().then(noop, noop), this, this.disposables);
         this.extensions.onDidChange(
             () => {
