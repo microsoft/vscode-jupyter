@@ -244,7 +244,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             .filter((item) => this.associatedDocuments.has(item))
             .map((item) => item.uri.toString());
         traceVerbose(
-            `Disposing controller ${this.id} associated with connection ${this.connection.id} ${
+        `Disposing controller ${this.id} associated with connection ${this.connection.id} ${
                 nbDocumentUris.length ? 'and documents ' + nbDocumentUris.join(', ') : ''
             }`
         );
