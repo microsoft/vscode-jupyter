@@ -41,7 +41,6 @@ import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
 import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
-import isObject = require('lodash/isObject');
 import { Identifiers, WIDGET_MIMETYPE } from '../../platform/common/constants';
 import { Lazy } from '../../platform/common/utils/lazy';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
@@ -412,7 +411,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             method: 'update';
             state: { msg_id: string } | { children: string[] };
         }>;
-        if (!isObject(data) || data.method !== 'update' || !isObject(data.state)) {
+        if (!data || data.method !== 'update' || typeof data.state !== 'object') {
             return;
         }
 
