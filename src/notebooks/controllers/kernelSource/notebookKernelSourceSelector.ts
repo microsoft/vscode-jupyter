@@ -11,8 +11,6 @@ import {
     Event,
     EventEmitter,
     NotebookDocument,
-    QuickInputButton,
-    QuickPick,
     QuickPickItem,
     QuickPickItemKind,
     ThemeIcon
@@ -42,8 +40,7 @@ import { InteractiveWindowView, JupyterNotebookView, JVSC_EXTENSION_ID } from '.
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../platform/common/types';
-import { Common, DataScience } from '../../../platform/common/utils/localize';
-import { noop } from '../../../platform/common/utils/misc';
+import { DataScience } from '../../../platform/common/utils/localize';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -52,17 +49,11 @@ import {
     IQuickPickParameters
 } from '../../../platform/common/utils/multiStepInput';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError } from '../../../platform/logging';
-import { ConnectionDisplayDataProvider } from '../connectionDisplayData';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
-import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator';
-import {
-    IControllerRegistration,
-    INotebookKernelSourceSelector,
-    IConnectionTracker,
-    IControllerSelection
-} from '../types';
+import { IControllerRegistration, INotebookKernelSourceSelector, IConnectionTracker } from '../types';
+import { KernelSelector } from './kernelSelector';
+import { MultiStepResult } from './types';
 
 enum KernelSourceQuickPickType {
     LocalKernelSpec = 'localKernelSpec',
@@ -110,46 +101,6 @@ type KernelSourceQuickPickItem =
     | LocalPythonEnvSourceQuickPickItem
     | KernelProviderInfoQuickPickItem;
 
-// type KernelFinderEntityQuickPickItem =
-//     | ContributedKernelFinderQuickPickItem
-//     | LocalJupyterServerQuickPickItem
-//     | KernelProviderItemsQuickPickItem;
-
-interface ConnectionQuickPickItem extends QuickPickItem {
-    connection: KernelConnectionMetadata;
-}
-
-// The return type of our multistep selection process
-type MultiStepResult = {
-    notebook: NotebookDocument;
-    source?: IContributedKernelFinder;
-    connection?: KernelConnectionMetadata;
-    disposables: IDisposable[];
-};
-function isKernelPick(item: ConnectionQuickPickItem | QuickPickItem): item is ConnectionQuickPickItem {
-    return 'connection' in item;
-}
-function updateKernelQuickPickWithNewItems<T extends ConnectionQuickPickItem | QuickPickItem>(
-    quickPick: QuickPick<T>,
-    items: T[],
-    activeItem?: T
-) {
-    const activeItems = quickPick.activeItems.length ? [quickPick.activeItems[0]] : activeItem ? [activeItem] : [];
-    if (activeItems.length && !items.includes(activeItems[0])) {
-        const oldActiveItem = activeItems[0];
-        const newActiveKernelQuickPickItem =
-            isKernelPick(oldActiveItem) &&
-            items.find((item) => isKernelPick(item) && item.connection.id === oldActiveItem.connection.id);
-        // Find this same quick pick item.
-        if (newActiveKernelQuickPickItem) {
-            activeItems[0] = newActiveKernelQuickPickItem;
-        } else {
-            activeItems.length = 0;
-        }
-    }
-    quickPick.items = items;
-    quickPick.activeItems = activeItems;
-}
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
 export class NotebookKernelSourceSelector implements INotebookKernelSourceSelector {
@@ -165,7 +116,6 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(ConnectionDisplayDataProvider) private readonly displayDataProvider: ConnectionDisplayDataProvider,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
@@ -583,253 +533,9 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         if (token.isCancellationRequested) {
             return;
         }
-
-        const connectionToQuickPick = (connection: KernelConnectionMetadata): ConnectionQuickPickItem => {
-            const displayData = this.displayDataProvider.getDisplayData(connection);
-            return {
-                label: displayData.label,
-                detail: displayData.detail,
-                description: displayData.description,
-                connection: connection
-            };
-        };
-
-        const connectionToCategory = (connection: KernelConnectionMetadata): QuickPickItem => {
-            const kind = this.displayDataProvider.getDisplayData(connection).category || 'Other';
-            return {
-                kind: QuickPickItemKind.Separator,
-                label: kind
-            };
-        };
-
-        const trackedIds = new Set(provider.kernels.map((item) => item.id));
-        const connectionPickItems = provider.kernels.map((connection) => connectionToQuickPick(connection));
-
-        // Insert separators into the right spots in the list
-        let quickPickItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
-        const categories = new Map<QuickPickItem, Set<ConnectionQuickPickItem>>();
-        groupBy(connectionPickItems, (a, b) =>
-            compareIgnoreCase(
-                this.displayDataProvider.getDisplayData(a.connection).category || 'z',
-                this.displayDataProvider.getDisplayData(b.connection).category || 'z'
-            )
-        ).forEach((items) => {
-            const item = connectionToCategory(items[0].connection);
-            quickPickItems.push(item);
-            items.sort((a, b) => a.label.localeCompare(b.label));
-            quickPickItems.push(...items);
-            categories.set(item, new Set(items));
-        });
-
-        const refreshButton: QuickInputButton = { iconPath: new ThemeIcon('refresh'), tooltip: Common.refresh() };
-        const refreshingButton: QuickInputButton = {
-            iconPath: new ThemeIcon('loading~spin'),
-            tooltip: Common.refreshing()
-        };
-
-        const createPythonItems: (ConnectionQuickPickItem | QuickPickItem)[] = [];
-        let createPythonQuickPickItem: QuickPickItem | undefined;
-        if (this.extensionChecker.isPythonExtensionInstalled) {
-            createPythonQuickPickItem = {
-                label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`
-            };
-            createPythonItems.push(createPythonQuickPickItem);
-        }
-        const { quickPick, selection } = multiStep.showLazyLoadQuickPick<
-            ConnectionQuickPickItem | QuickPickItem,
-            IQuickPickParameters<ConnectionQuickPickItem | QuickPickItem>
-        >({
-            title:
-                DataScience.kernelPickerSelectKernelTitle() + (state.source ? ` from ${state.source.displayName}` : ''),
-            items: createPythonItems.concat(quickPickItems),
-            matchOnDescription: true,
-            matchOnDetail: true,
-            placeholder: '',
-            activeItem: undefined,
-            buttons: [refreshButton],
-            onDidTriggerButton: async (e) => {
-                if (e === refreshButton) {
-                    const buttons = quickPick.buttons;
-                    quickPick.buttons = buttons.filter((btn) => btn !== refreshButton).concat(refreshingButton);
-                    await provider.refresh().catch(noop);
-                    quickPick.buttons = buttons;
-                }
-            }
-        });
-        if (provider.status === 'discovering') {
-            quickPick.busy = true;
-        }
-        let timeout: NodeJS.Timer | undefined;
-        state.disposables.push(new Disposable(() => timeout && clearTimeout(timeout)));
-        provider.onDidChangeStatus(
-            () => {
-                timeout && clearTimeout(timeout);
-                switch (provider.status) {
-                    case 'discovering':
-                        quickPick.busy = true;
-                        break;
-                    case 'idle': {
-                        // Debounce the busy state (sometimes we get idle & then immediately go to a busy state).
-                        timeout = setTimeout(() => (quickPick.busy = false), 500);
-                        state.disposables.push(new Disposable(() => timeout && clearTimeout(timeout)));
-                        break;
-                    }
-                }
-            },
-            this,
-            state.disposables
-        );
-
-        const recommendedItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
-        const updateRecommended = () => {
-            if (!provider.recommended) {
-                return;
-            }
-            if (!recommendedItems.length) {
-                recommendedItems.push(<QuickPickItem>{
-                    label: DataScience.recommendedKernelCategoryInQuickPick(),
-                    kind: QuickPickItemKind.Separator
-                });
-            }
-            const recommendedItem = connectionToQuickPick(provider.recommended);
-            recommendedItem.label = `$(star-full) ${recommendedItem.label}`;
-            if (recommendedItems.length === 2) {
-                recommendedItems[1] = recommendedItem;
-            } else {
-                recommendedItems.push(recommendedItem);
-            }
-            updateKernelQuickPickWithNewItems(
-                quickPick,
-                createPythonItems.concat(recommendedItems).concat(quickPickItems),
-                recommendedItems[1]
-            );
-        };
-        provider.onDidChangeRecommended(updateRecommended, this, state.disposables);
-        updateRecommended();
-        provider.onDidChange(() => {
-            quickPick.title =
-                DataScience.kernelPickerSelectKernelTitle() + (state.source ? ` from ${state.source.displayName}` : '');
-            const allIds = new Set<string>();
-            const newQuickPickItems = provider.kernels
-                .filter((item) => {
-                    allIds.add(item.id);
-                    if (!trackedIds.has(item.id)) {
-                        trackedIds.add(item.id);
-                        return true;
-                    }
-                    return false;
-                })
-                .map((item) => connectionToQuickPick(item));
-            const removedIds = Array.from(trackedIds).filter((id) => !allIds.has(id));
-            if (removedIds.length) {
-                const itemsRemoved: (ConnectionQuickPickItem | QuickPickItem)[] = [];
-                categories.forEach((items, category) => {
-                    items.forEach((item) => {
-                        if (removedIds.includes(item.connection.id)) {
-                            items.delete(item);
-                            itemsRemoved.push(item);
-                        }
-                    });
-                    if (!items.size) {
-                        itemsRemoved.push(category);
-                        categories.delete(category);
-                    }
-                });
-                updateKernelQuickPickWithNewItems(
-                    quickPick,
-                    createPythonItems
-                        .concat(recommendedItems)
-                        .concat(quickPickItems.filter((item) => !itemsRemoved.includes(item))),
-                    recommendedItems[1]
-                );
-            }
-            if (!newQuickPickItems.length) {
-                return;
-            }
-            groupBy(newQuickPickItems, (a, b) =>
-                compareIgnoreCase(
-                    this.displayDataProvider.getDisplayData(a.connection).category || 'z',
-                    this.displayDataProvider.getDisplayData(b.connection).category || 'z'
-                )
-            ).forEach((items) => {
-                items.sort((a, b) => a.label.localeCompare(b.label));
-                const newCategory = connectionToCategory(items[0].connection);
-                // Check if we already have a item for this category in the quick pick.
-                const existingCategory = quickPickItems.find(
-                    (item) => item.kind === QuickPickItemKind.Separator && item.label === newCategory.label
-                );
-                if (existingCategory) {
-                    const indexOfExistingCategory = quickPickItems.indexOf(existingCategory);
-                    const currentItemsInCategory = categories.get(existingCategory)!;
-                    const currentItemIdsInCategory = new Map(
-                        Array.from(currentItemsInCategory).map((item) => [item.connection.id, item])
-                    );
-                    const oldItemCount = currentItemsInCategory.size;
-                    items.forEach((item) => {
-                        const existingItem = currentItemIdsInCategory.get(item.connection.id);
-                        if (existingItem) {
-                            currentItemsInCategory.delete(existingItem);
-                        }
-                        currentItemsInCategory.add(item);
-                    });
-                    const newItems = Array.from(currentItemsInCategory);
-                    newItems.sort((a, b) => a.label.localeCompare(b.label));
-                    quickPickItems.splice(indexOfExistingCategory + 1, oldItemCount, ...newItems);
-                } else {
-                    // Since we sort items by Env type, ensure this new item is inserted in the right place.
-                    const currentCategories = quickPickItems
-                        .map((item, index) => [item, index])
-                        .filter(([item, _]) => (item as QuickPickItem).kind === QuickPickItemKind.Separator)
-                        .map(([item, index]) => [(item as QuickPickItem).label, index]);
-
-                    currentCategories.push([newCategory.label, -1]);
-                    currentCategories.sort((a, b) => a[0].toString().localeCompare(b[0].toString()));
-
-                    // Find where we need to insert this new category.
-                    const indexOfNewCategoryInList = currentCategories.findIndex((item) => item[1] === -1);
-                    let newIndex = 0;
-                    if (indexOfNewCategoryInList > 0) {
-                        newIndex =
-                            currentCategories.length === indexOfNewCategoryInList + 1
-                                ? quickPickItems.length
-                                : (currentCategories[indexOfNewCategoryInList + 1][1] as number);
-                    }
-
-                    items.sort((a, b) => a.label.localeCompare(b.label));
-                    quickPickItems.splice(newIndex, 0, newCategory, ...items);
-                    categories.set(newCategory, new Set(items));
-                }
-                updateKernelQuickPickWithNewItems(
-                    quickPick,
-                    createPythonItems.concat(recommendedItems).concat(quickPickItems)
-                );
-            });
-        });
-
-        const result = await selection;
-        if (token.isCancellationRequested) {
-            return;
-        }
-
-        if (createPythonQuickPickItem && result === createPythonQuickPickItem) {
-            const creator = new PythonEnvKernelConnectionCreator();
-            state.disposables.push(creator);
-            const cancellationToken = new CancellationTokenSource();
-            state.disposables.push(cancellationToken);
-            const controllerSelection = ServiceContainer.instance.get<IControllerSelection>(IControllerSelection);
-            // If user selects another controller for this notebook, then stop waiting for the environment to be created.
-            controllerSelection.onControllerSelected(
-                (e) => e.notebook === state.notebook && cancellationToken.cancel(),
-                this,
-                state.disposables
-            );
-
-            state.connection = await creator.createPythonEnvFromKernelPicker(state.notebook, cancellationToken.token);
-            return;
-        }
-        if ('connection' in result) {
-            state.connection = result.connection;
-        }
+        const selector = new KernelSelector(state.notebook, provider, token);
+        state.disposables.push(selector);
+        state.connection = await selector.selectKernel(multiStep, state);
     }
     private async onKernelConnectionSelected(notebook: NotebookDocument, connection: KernelConnectionMetadata) {
         const controllers = this.controllerRegistration.addOrUpdate(connection, [
@@ -847,24 +553,6 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             extension: JVSC_EXTENSION_ID
         });
     }
-}
-
-function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][] {
-    const result: T[][] = [];
-    let currentGroup: T[] | undefined = undefined;
-    for (const element of data.slice(0).sort(compare)) {
-        if (!currentGroup || compare(currentGroup[0], element) !== 0) {
-            currentGroup = [element];
-            result.push(currentGroup);
-        } else {
-            currentGroup.push(element);
-        }
-    }
-    return result;
-}
-
-function compareIgnoreCase(a: string, b: string) {
-    return a.localeCompare(b, undefined, { sensitivity: 'accent' });
 }
 
 function waitForNotebookControllersCreationForServer(
