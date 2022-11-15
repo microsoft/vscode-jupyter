@@ -72,7 +72,9 @@ suite('Contributed Local Kernel Spec Finder', () => {
         when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreters.event);
         when(interpreterService.onDidChangeStatus).thenReturn(onDidChangeInterpreterStatus.event);
         when(extensions.onDidChange).thenReturn(onDidChangeExtensions.event);
+        when(nonPythonKernelFinder.status).thenReturn('idle');
         when(nonPythonKernelFinder.onDidChangeKernels).thenReturn(onDidChangeNonPythonKernels.event);
+        when(pythonKernelFinder.status).thenReturn('idle');
         when(pythonKernelFinder.onDidChangeKernels).thenReturn(onDidChangePythonKernels.event);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 

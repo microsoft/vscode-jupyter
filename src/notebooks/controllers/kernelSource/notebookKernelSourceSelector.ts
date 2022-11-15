@@ -656,33 +656,24 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 }
             }
         });
-        // Assume we're always busy.
-        quickPick.busy = true;
-        let noLongerBusy = true;
-        // If we don't get any updates after 2s, then hide the busy indicator
-        let updateTimeout = setTimeout(() => {
-            if (noLongerBusy) {
-                quickPick.busy = false;
-            }
-        }, 2_000);
-        state.disposables.push(new Disposable(() => clearTimeout(updateTimeout)));
+        if (provider.status === 'discovering') {
+            quickPick.busy = true;
+        }
+        let timeout: NodeJS.Timer | undefined;
+        state.disposables.push(new Disposable(() => timeout && clearTimeout(timeout)));
         provider.onDidChangeStatus(
             () => {
-                clearTimeout(updateTimeout);
+                timeout && clearTimeout(timeout);
                 switch (provider.status) {
                     case 'discovering':
                         quickPick.busy = true;
-                        noLongerBusy = false;
                         break;
-                    case 'idle':
-                        noLongerBusy = true;
-                        updateTimeout = setTimeout(() => {
-                            if (noLongerBusy) {
-                                quickPick.busy = false;
-                            }
-                        }, 2_000);
-                        state.disposables.push(new Disposable(() => clearTimeout(updateTimeout)));
+                    case 'idle': {
+                        // Debounce the busy state (sometimes we get idle & then immediately go to a busy state).
+                        timeout = setTimeout(() => (quickPick.busy = false), 500);
+                        state.disposables.push(new Disposable(() => timeout && clearTimeout(timeout)));
                         break;
+                    }
                 }
             },
             this,

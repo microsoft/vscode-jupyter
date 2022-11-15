@@ -821,6 +821,8 @@ export interface IKernelDependencyService {
 export const IKernelFinder = Symbol('IKernelFinder');
 
 export interface IKernelFinder {
+    readonly status: 'discovering' | 'idle';
+    onDidChangeStatus: Event<void>;
     onDidChangeKernels: Event<void>;
     kernels: KernelConnectionMetadata[];
     /*
