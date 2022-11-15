@@ -69,26 +69,32 @@ export class ContributedLocalPythonEnvFinder
     activate() {
         this.promiseMonitor.onStateChange(() => {
             this.status =
-                this.promiseMonitor.isComplete && this.interpreters.status === 'idle' ? 'idle' : 'discovering';
+                this.promiseMonitor.isComplete &&
+                this.interpreters.status === 'idle' &&
+                this.pythonKernelFinder.status === 'idle'
+                    ? 'idle'
+                    : 'discovering';
         });
         this.loadData().then(noop, noop);
-        let deferred: Deferred<void> | undefined = undefined;
-        if (this.interpreters.status === 'refreshing') {
-            deferred = createDeferred<void>();
-            this.promiseMonitor.push(deferred.promise);
-        }
-        this.interpreters.onDidChangeStatus(() => {
-            if (this.interpreters.status === 'idle') {
-                deferred?.resolve();
-                deferred = undefined;
-            } else if (this.interpreters.status === 'refreshing') {
-                if (deferred) {
-                    return;
+        let combinedProgress: Deferred<void> | undefined = undefined;
+        const updateCombinedStatus = () => {
+            const latestStatus: typeof this.pythonKernelFinder.status[] = [
+                this.pythonKernelFinder.status,
+                this.interpreters.status === 'refreshing' ? 'discovering' : 'idle'
+            ];
+            if (latestStatus.includes('discovering')) {
+                if (!combinedProgress) {
+                    combinedProgress = createDeferred<void>();
+                    this.promiseMonitor.push(combinedProgress.promise);
                 }
-                deferred = createDeferred<void>();
-                this.promiseMonitor.push(deferred.promise);
+            } else {
+                combinedProgress?.resolve();
+                combinedProgress = undefined;
             }
-        });
+        };
+        updateCombinedStatus();
+        this.pythonKernelFinder.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
+        this.interpreters.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
         this.interpreters.onDidChangeInterpreters(async () => this.loadData().then(noop, noop), this, this.disposables);
         this.extensions.onDidChange(
             () => {

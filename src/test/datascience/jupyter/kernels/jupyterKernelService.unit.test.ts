@@ -426,16 +426,9 @@ suite('JupyterKernelService', () => {
             })
         );
         token.dispose();
-        verify(
-            kernelDependencyService.installMissingDependencies(
-                anything(),
-                anything(),
-                anything(),
-                anything(),
-                anything(),
-                anything()
-            )
-        ).times(kernels.filter((k) => k.interpreter).length);
+        verify(kernelDependencyService.installMissingDependencies(anything())).times(
+            kernels.filter((k) => k.interpreter).length
+        );
     });
     test('Kernel installed when spec comes from interpreter', async () => {
         const kernelsWithInvalidName = kernels.filter(
