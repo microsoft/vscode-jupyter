@@ -4,11 +4,9 @@
 import { getOSType, OSType } from '../utils/platform';
 import { getDisplayPath as getDisplayPathCommon } from './fs-paths';
 import { Uri, WorkspaceFolder } from 'vscode';
+import { homedir } from 'os';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const untildify = require('untildify');
-
-export const homePath = Uri.file(untildify('~')); // This is the only thing requiring a node version
+export const homePath = Uri.file(homedir()); // This is the only thing requiring a node version
 
 export function removeHomeFromFile(file: string | undefined) {
     if (getOSType() === OSType.Windows) {

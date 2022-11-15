@@ -6,12 +6,11 @@
 import { expect } from 'chai';
 import * as path from '../../../platform/vscode-path/path';
 import * as TypeMoq from 'typemoq';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import untildify = require('untildify');
 
 import { ProcessLogger } from '../../../platform/common/process/logger.node';
 import { IOutputChannel } from '../../../platform/common/types';
 import { Logging } from '../../../platform/common/utils/localize';
+import { homedir } from 'os';
 
 /* eslint-disable  */
 suite('ProcessLogger suite', () => {
@@ -69,7 +68,7 @@ suite('ProcessLogger suite', () => {
     });
 
     test('Logger replaces the path/to/home with ~ in the current working directory', async () => {
-        const options = { cwd: path.join(untildify('~'), 'debug', 'path') };
+        const options = { cwd: path.join(homedir(), 'debug', 'path') };
         const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess('test', ['--foo', '--bar'], options);
 
@@ -84,7 +83,7 @@ suite('ProcessLogger suite', () => {
     test('Logger replaces the path/to/home with ~ in the command path', async () => {
         const options = { cwd: path.join('debug', 'path') };
         const logger = new ProcessLogger(outputChannel.object);
-        logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
+        logger.logProcess(path.join(homedir(), 'test'), ['--foo', '--bar'], options);
 
         const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n${Logging.currentWorkingDirectory()} ${
             options.cwd
@@ -94,7 +93,7 @@ suite('ProcessLogger suite', () => {
 
     test("Logger doesn't display the working directory line if there is no options parameter", async () => {
         const logger = new ProcessLogger(outputChannel.object);
-        logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar']);
+        logger.logProcess(path.join(homedir(), 'test'), ['--foo', '--bar']);
 
         const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
         expect(outputResult).to.equal(
@@ -106,7 +105,7 @@ suite('ProcessLogger suite', () => {
     test("Logger doesn't display the working directory line if there is no cwd key in the options parameter", async () => {
         const options = {};
         const logger = new ProcessLogger(outputChannel.object);
-        logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
+        logger.logProcess(path.join(homedir(), 'test'), ['--foo', '--bar'], options);
 
         const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
         expect(outputResult).to.equal(
