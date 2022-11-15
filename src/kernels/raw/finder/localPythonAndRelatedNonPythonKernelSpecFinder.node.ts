@@ -33,6 +33,7 @@ import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/in
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ResourceSet } from '../../../platform/vscode-path/map';
+import { ITrustedKernelPaths } from './types';
 
 /**
  * Returns all Python kernels and any related kernels registered in the python environment.
@@ -52,7 +53,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(LocalKnownPathKernelSpecFinder)
         private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
+        @inject(ITrustedKernelPaths) private readonly trustedKernels: ITrustedKernelPaths
     ) {
         super(fs, workspaceService, extensionChecker, globalState);
     }
@@ -372,7 +374,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             // 3. Sometimes we have path paths such as `/usr/bin/python3.6` in the kernel spec.
             // & in the list of interpreters we have `/usr/bin/python3`, they are both the same.
             // Hence we need to ensure we take that into account (just get the interpreter info from Python extension).
-            const interpreterInArgv = await this.interpreterService.getInterpreterDetails(Uri.file(pathInArgv));
+            const checkInterpreterInfo =
+                !kernelSpec.specFile || this.trustedKernels.isTrusted(Uri.file(kernelSpec.specFile));
+            const interpreterInArgv = checkInterpreterInfo
+                ? await this.interpreterService.getInterpreterDetails(Uri.file(pathInArgv))
+                : undefined;
             if (interpreterInArgv) {
                 return interpreterInArgv;
             }
