@@ -1,5 +1,11 @@
 # Changelog
 
+## 2022.9.130 (15 November 2022)
+### Fixes
+1. Disable spawning Kernel processes from an untrusted location.
+   ([#12039](https://github.com/microsoft/vscode-jupyter/issues/12039))
+
+
 ## 2022.9.120 (11 October 2022)
 ### Enhancements
 1. Display an error message (with instructions to resolve the issue) in the cell output when attempting to run a cell against a kernel from an untrusted location.
