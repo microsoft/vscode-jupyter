@@ -52,10 +52,17 @@ import {
     IQuickPickParameters
 } from '../../../platform/common/utils/multiStepInput';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError } from '../../../platform/logging';
 import { ConnectionDisplayDataProvider } from '../connectionDisplayData';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
-import { IControllerRegistration, INotebookKernelSourceSelector, IConnectionTracker } from '../types';
+import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator';
+import {
+    IControllerRegistration,
+    INotebookKernelSourceSelector,
+    IConnectionTracker,
+    IControllerSelection
+} from '../types';
 
 enum KernelSourceQuickPickType {
     LocalKernelSpec = 'localKernelSpec',
@@ -122,7 +129,7 @@ type MultiStepResult = {
 function isKernelPick(item: ConnectionQuickPickItem | QuickPickItem): item is ConnectionQuickPickItem {
     return 'connection' in item;
 }
-function updateKernelSourceQuickPickWithNewItems<T extends ConnectionQuickPickItem | QuickPickItem>(
+function updateKernelQuickPickWithNewItems<T extends ConnectionQuickPickItem | QuickPickItem>(
     quickPick: QuickPick<T>,
     items: T[],
     activeItem?: T
@@ -140,15 +147,6 @@ function updateKernelSourceQuickPickWithNewItems<T extends ConnectionQuickPickIt
             activeItems.length = 0;
         }
     }
-    quickPick.items = items;
-    quickPick.activeItems = activeItems;
-}
-function updateKernelQuickPickWithNewItems<T extends ConnectionQuickPickItem | QuickPickItem>(
-    quickPick: QuickPick<T>,
-    items: T[],
-    activeItem?: T
-) {
-    const activeItems = quickPick.activeItems.length ? [quickPick.activeItems[0]] : activeItem ? [activeItem] : [];
     quickPick.items = items;
     quickPick.activeItems = activeItems;
 }
@@ -261,7 +259,9 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                     provider: p
                 });
             });
-            updateKernelSourceQuickPickWithNewItems(quickPick, items);
+            const oldActiveItem = quickPick.activeItems.length ? [quickPick.activeItems[0]] : [];
+            quickPick.items = items;
+            quickPick.activeItems = oldActiveItem;
             quickPick.busy = false;
         })().ignoreErrors();
 
@@ -627,13 +627,21 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             tooltip: Common.refreshing()
         };
 
+        const createPythonItems: (ConnectionQuickPickItem | QuickPickItem)[] = [];
+        let createPythonQuickPickItem: QuickPickItem | undefined;
+        if (this.extensionChecker.isPythonExtensionInstalled) {
+            createPythonQuickPickItem = {
+                label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`
+            };
+            createPythonItems.push(createPythonQuickPickItem);
+        }
         const { quickPick, selection } = multiStep.showLazyLoadQuickPick<
             ConnectionQuickPickItem | QuickPickItem,
             IQuickPickParameters<ConnectionQuickPickItem | QuickPickItem>
         >({
             title:
                 DataScience.kernelPickerSelectKernelTitle() + (state.source ? ` from ${state.source.displayName}` : ''),
-            items: quickPickItems,
+            items: createPythonItems.concat(quickPickItems),
             matchOnDescription: true,
             matchOnDetail: true,
             placeholder: '',
@@ -699,7 +707,11 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             } else {
                 recommendedItems.push(recommendedItem);
             }
-            updateKernelQuickPickWithNewItems(quickPick, recommendedItems.concat(quickPickItems), recommendedItems[1]);
+            updateKernelQuickPickWithNewItems(
+                quickPick,
+                createPythonItems.concat(recommendedItems).concat(quickPickItems),
+                recommendedItems[1]
+            );
         };
         provider.onDidChangeRecommended(updateRecommended, this, state.disposables);
         updateRecommended();
@@ -732,11 +744,13 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                         categories.delete(category);
                     }
                 });
-                const previousActiveItem = quickPick.activeItems.length ? quickPick.activeItems[0] : undefined;
-                quickPickItems = quickPickItems.filter((item) => !itemsRemoved.includes(item));
-                quickPick.items = quickPickItems;
-                quickPick.activeItems =
-                    previousActiveItem && !itemsRemoved.includes(previousActiveItem) ? [previousActiveItem] : [];
+                updateKernelQuickPickWithNewItems(
+                    quickPick,
+                    createPythonItems
+                        .concat(recommendedItems)
+                        .concat(quickPickItems.filter((item) => !itemsRemoved.includes(item))),
+                    recommendedItems[1]
+                );
             }
             if (!newQuickPickItems.length) {
                 return;
@@ -794,7 +808,10 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                     quickPickItems.splice(newIndex, 0, newCategory, ...items);
                     categories.set(newCategory, new Set(items));
                 }
-                updateKernelQuickPickWithNewItems(quickPick, recommendedItems.concat(quickPickItems));
+                updateKernelQuickPickWithNewItems(
+                    quickPick,
+                    createPythonItems.concat(recommendedItems).concat(quickPickItems)
+                );
             });
         });
 
@@ -803,6 +820,22 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             return;
         }
 
+        if (createPythonQuickPickItem && result === createPythonQuickPickItem) {
+            const creator = new PythonEnvKernelConnectionCreator();
+            state.disposables.push(creator);
+            const cancellationToken = new CancellationTokenSource();
+            state.disposables.push(cancellationToken);
+            const controllerSelection = ServiceContainer.instance.get<IControllerSelection>(IControllerSelection);
+            // If user selects another controller for this notebook, then stop waiting for the environment to be created.
+            controllerSelection.onControllerSelected(
+                (e) => e.notebook === state.notebook && cancellationToken.cancel(),
+                this,
+                state.disposables
+            );
+
+            state.connection = await creator.createPythonEnvFromKernelPicker(state.notebook, cancellationToken.token);
+            return;
+        }
         if ('connection' in result) {
             state.connection = result.connection;
         }

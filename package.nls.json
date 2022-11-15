@@ -125,6 +125,7 @@
     "jupyter.kernel.category.global": "Global Env",
     "jupyter.kernel.category.virtual": "Virtual Env",
     "jupyter.kernel.recommended": "Recommended",
+    "jupyter.kernel.createPythonEnvironment": "Create Python Environment",
     "jupyter.command.jupyter.viewLanguageServerOutput.title": "Show Language Server Output",
     "jupyter.command.jupyter.selectAndRunTestMethod.title": "Run Test Method ...",
     "jupyter.command.jupyter.selectAndDebugTestMethod.title": "Debug Test Method ...",
