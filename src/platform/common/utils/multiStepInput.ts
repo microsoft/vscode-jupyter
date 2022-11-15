@@ -64,7 +64,7 @@ export interface InputBoxParameters {
     shouldResume?(): Promise<boolean>;
 }
 
-type MultiStepInputQuickPicResponseType<T, P> = T | (P extends { buttons: (infer I)[] } ? I : never);
+export type MultiStepInputQuickPicResponseType<T, P> = T | (P extends { buttons: (infer I)[] } ? I : never);
 type MultiStepInputInputBoxResponseType<P> = string | (P extends { buttons: (infer I)[] } ? I : never);
 /**
  * Interface used to provide a series of QuickPicks and input boxes to the user. Back buttons allow the user to move back to the previous step.
