@@ -51,7 +51,7 @@ def _download_and_extract(root, url):
 def main(root):
     if DEBUGGER_VERSION == "dev":
         _download_and_extract(root, "https://github.com/microsoft/debugpy/archive/refs/heads/main.zip")
-        os.rename(os.path.join(root, "debugpy-main"), os.path.join(root, "debugpy"))
+        os.rename(os.path.join(root, "debugpy-main/src/debugpy"), os.path.join(root, "debugpy"))
         return
 
     data = _get_package_data()
