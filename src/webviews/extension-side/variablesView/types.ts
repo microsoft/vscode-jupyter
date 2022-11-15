@@ -39,7 +39,7 @@ export interface INotebookWatcher {
     readonly activeKernel?: IKernel;
     readonly activeNotebookExecutionCount?: number;
     readonly onDidChangeActiveNotebook: Event<IActiveNotebookChangedEvent>;
-    readonly onDidExecuteActiveNotebook: Event<{ executionCount: number }>;
+    readonly onDidFinishExecutingActiveNotebook: Event<{ executionCount: number }>;
     readonly onDidRestartActiveNotebook: Event<void>;
 }
 

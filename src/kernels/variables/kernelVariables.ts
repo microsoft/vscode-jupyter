@@ -177,11 +177,13 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
         let list = this.cachedVariables.get(kernel.uri.toString());
+        const hasExecutingCells = this.kernelProvider.getKernelExecution(kernel).pendingCells.length > 0;
         const execution = this.kernelProvider.getKernelExecution(kernel);
         if (
             !list ||
-            list.currentExecutionCount !== request.executionCount ||
-            list.currentExecutionCount !== execution.executionCount
+            (!hasExecutingCells &&
+                (list.currentExecutionCount !== request.executionCount ||
+                    list.currentExecutionCount !== execution.executionCount))
         ) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {

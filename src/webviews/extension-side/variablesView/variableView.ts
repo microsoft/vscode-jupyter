@@ -70,7 +70,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         );
 
         // Sign up if the active variable view notebook is changed, restarted or updated
-        this.notebookWatcher.onDidExecuteActiveNotebook(this.activeNotebookExecuted, this, this.disposables);
+        this.notebookWatcher.onDidFinishExecutingActiveNotebook(this.activeNotebookExecuted, this, this.disposables);
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
         this.variables.refreshRequired(this.sendRefreshMessage, this, this.disposables);
