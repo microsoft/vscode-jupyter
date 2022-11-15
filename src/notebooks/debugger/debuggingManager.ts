@@ -279,8 +279,10 @@ export class DebuggingManager
         };
         const opts: DebugSessionOptions | undefined =
             mode === KernelDebugMode.RunByLine
-                ? { debugUI: { simple: true }, suppressSaveBeforeStart: true }
-                : { suppressSaveBeforeStart: true };
+                ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  ({ debugUI: { simple: true }, suppressSaveBeforeStart: true } as any)
+                : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  ({ suppressSaveBeforeStart: true } as any);
         return this.startDebuggingConfig(doc, config, opts);
     }
 
