@@ -28,7 +28,12 @@ import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration';
 import { Settings } from '../../../platform/common/constants';
 import { DataScienceErrorHandler } from '../../../kernels/errors/kernelErrorHandler';
-import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IFeaturesManager,
+    IWatchableJupyterSettings
+} from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { JupyterConnection } from '../../../kernels/jupyter/jupyterConnection';
 import { JupyterSettings } from '../../../platform/common/configSettings';
@@ -93,6 +98,8 @@ suite('Jupyter Server URI Selector', () => {
             instance(configService),
             instance(jupyterUriProviderRegistration)
         );
+        const featuresManager = mock<IFeaturesManager>();
+        when(featuresManager.features).thenReturn({ kernelPickerType: 'Stable' });
         const selector = new JupyterServerSelector(
             instance(clipboard),
             multiStepFactory,
@@ -104,7 +111,8 @@ suite('Jupyter Server URI Selector', () => {
             instance(connection),
             false,
             instance(workspaceService),
-            disposables
+            disposables,
+            instance(featuresManager)
         );
         return { selector, storage };
     }

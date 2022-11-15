@@ -31,6 +31,7 @@ import { IDataScienceErrorHandler } from '../errors/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IFeaturesManager,
     IsWebExtension,
     KernelPickerType
 } from '../../platform/common/types';
@@ -142,13 +143,14 @@ export class JupyterServerSelector {
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry,
+        @inject(IFeaturesManager) featuresManager: IFeaturesManager
     ) {
-        this.createImpl(this.configService.getSettings().kernelPickerType);
+        this.createImpl(featuresManager.features.kernelPickerType);
         this.disposableRegistry.push(
-            this.configService.getSettings().onDidChange(() => {
+            featuresManager.onDidChangeFeatures(() => {
                 // Create impl will ignore if the setting has not changed
-                this.createImpl(this.configService.getSettings().kernelPickerType);
+                this.createImpl(featuresManager.features.kernelPickerType);
             })
         );
     }

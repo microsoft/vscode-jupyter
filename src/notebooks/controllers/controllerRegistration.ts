@@ -21,7 +21,8 @@ import {
     IDisposableRegistry,
     IConfigurationService,
     IExtensionContext,
-    IBrowserService
+    IBrowserService,
+    IFeaturesManager
 } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceError, traceVerbose } from '../../platform/logging';
@@ -62,6 +63,7 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
+        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
@@ -218,7 +220,7 @@ export class ControllerRegistration implements IControllerRegistration {
         const userFiltered = this.kernelFilter.isKernelHidden(metadata);
         const urlFiltered = isRemoteConnection(metadata) && this.serverUriStorage.currentServerId !== metadata.serverId;
 
-        if (this.configuration.getSettings().kernelPickerType === 'Insiders') {
+        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
             // In the 'Insiders' experiment remove the url filters as we want to register everything.
             return userFiltered;
         }

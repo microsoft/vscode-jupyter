@@ -8,7 +8,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { KernelPickerType } from '../../../platform/common/kernelPickerType';
-import { IDisposable } from '../../../platform/common/types';
+import { IDisposable, IFeaturesManager } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
@@ -107,6 +107,9 @@ suite('Local Python and related kernels (new Kernel Picker)', () => {
         when(env.extensionVersion).thenReturn('1');
         when(fs.exists(anything())).thenResolve(true);
 
+        const featuresManager = mock<IFeaturesManager>();
+        when(featuresManager.features).thenReturn({ kernelPickerType: 'Stable' });
+
         const stub = sinon.stub(KernelPickerType, 'useNewKernelPicker').returns(true);
         clock = fakeTimers.install();
 
@@ -123,7 +126,8 @@ suite('Local Python and related kernels (new Kernel Picker)', () => {
             instance(globalState),
             disposables,
             instance(env),
-            instance(trustedKernels)
+            instance(trustedKernels),
+            instance(featuresManager)
         );
     });
     teardown(() => disposeAllDisposables(disposables));

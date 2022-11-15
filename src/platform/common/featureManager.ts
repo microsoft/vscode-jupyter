@@ -10,9 +10,12 @@ import { Deprecated } from './utils/localize';
 import {
     DeprecatedFeatureInfo,
     DeprecatedSettingAndValue,
-    IFeatureDeprecationManager,
+    IConfigurationService,
+    IFeaturesManager,
+    IFeatureSet,
     IPersistentStateFactory
 } from './types';
+import { Emitter } from 'vscode-jsonrpc';
 
 const deprecatedFeatures: DeprecatedFeatureInfo[] = [
     {
@@ -36,17 +39,60 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
 ];
 
 /**
- * Manages deprecation of features. Commands that are deprecated end up here.
+ * Manages experimental and deprecated of features.
+ * Commands that are deprecated end up here.
  */
 @injectable()
-export class FeatureDeprecationManager implements IFeatureDeprecationManager {
+export class FeatureManager implements IFeaturesManager {
+    private _onDidChangeFeatures = new Emitter<void>();
+    readonly onDidChangeFeatures = this._onDidChangeFeatures.event;
+    private _features: IFeatureSet = { kernelPickerType: 'Stable' };
+    get features(): IFeatureSet {
+        return this._features;
+    }
+
+    set features(newFeatures: IFeatureSet) {
+        if (newFeatures.kernelPickerType === this._features.kernelPickerType) {
+            return;
+        }
+
+        this._features = newFeatures;
+        this._onDidChangeFeatures.fire();
+    }
+
     private disposables: Disposable[] = [];
     constructor(
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
         @inject(ICommandManager) private cmdMgr: ICommandManager,
+        @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IApplicationShell) private appShell: IApplicationShell
-    ) {}
+    ) {
+        this._updateFeatures();
+
+        this.disposables.push(
+            this.configService.getSettings().onDidChange(() => {
+                this._updateFeatures();
+            })
+        );
+        this.disposables.push(
+            this.workspace.onDidChangeConfiguration(() => {
+                this._updateFeatures();
+            })
+        );
+    }
+
+    private _updateFeatures() {
+        const kernelPickerType =
+            this.workspace.getConfiguration('notebook.experimental.kernelPicker').get('mru') ||
+            this.configService.getSettings().kernelPickerType === 'Insiders'
+                ? 'Insiders'
+                : 'Stable';
+
+        this.features = {
+            kernelPickerType
+        };
+    }
 
     public dispose() {
         this.disposables.forEach((disposable) => disposable.dispose());
