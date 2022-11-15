@@ -58,6 +58,8 @@ export namespace Common {
     export const canceled = () => localize('Common.canceled', 'Canceled');
     export const cancel = () => localize('Common.cancel', 'Cancel');
     export const ok = () => localize('Common.ok', 'Ok');
+    export const refresh = () => localize('Common.refresh', 'Refresh');
+    export const refreshing = () => localize('Common.refreshing', 'Refreshing...');
     export const download = () => localize('Common.download', 'Download');
     export const gotIt = () => localize('Common.gotIt', 'Got it!');
     export const install = () => localize('Common.install', 'Install');
@@ -809,6 +811,10 @@ export namespace DataScience {
             { key: 'jupyter.kernel.filter.placeholder', comment: ['{Locked="kernel"}', '{Locked="kernels"}'] },
             'Choose the kernels that are available in the kernel picker.'
         );
+    export const recommendedKernelCategoryInQuickPick = () => localize('jupyter.kernel.recommended', 'Recommended');
+    export const createPythonEnvironmentInQuickPick = () =>
+        localize('jupyter.kernel.createPythonEnvironment', 'Create Python Environment');
+
     export const selectDifferentJupyterInterpreter = () =>
         localize('DataScience.selectDifferentJupyterInterpreter', 'Change Interpreter');
     export const localJupyterServer = () => localize('DataScience.localJupyterServer', 'local');
@@ -1415,7 +1421,7 @@ export namespace DataScience {
             { key: 'DataScience.failedToInstallPandas', comment: ['{Locked="Pandas"}'] },
             'Failed to install Pandas to use the Data Viewer.'
         );
-    export const localKernelSpecs = () => localize('DataScience.localKernelSpecs', 'Local Kernel specs');
+    export const localKernelSpecs = () => localize('DataScience.localKernelSpecs', 'Local Kernel Specs');
     export const pickLocalKernelSpecTitle = () =>
         localize('DataScience.pickLocalKernelSpecTitle', `Select a Local Kernel spec`);
 
@@ -1423,12 +1429,18 @@ export namespace DataScience {
         localize('DataScience.localPythonEnvironments', 'Local Python Environments');
     export const pickLocalKernelPythonEnvTitle = () =>
         localize('DataScience.pickLocalKernelPythonEnvTitle', `Select a Local Python Environment`);
+    export const UserJupyterServerUrlProviderDisplayName = () =>
+        localize('DataScience.UserJupyterServerUrlProviderDisplayName', 'Existing Jupyter Server');
+    export const UserJupyterServerUrlProviderDetail = () =>
+        localize('DataScience.UserJupyterServerUrlProviderDetail', 'Connect to an existing Jupyter Server');
+    export const UserJupyterServerUrlAlreadyExistError = () =>
+        localize('DataScience.UserJupyterServerUrlAlreadyExistError', 'A Jupyter Server with this URL already exists');
     export const universalRemoteKernelFinderDisplayName = () =>
         localize('DataScience.universalRemoteKernelFinderDisplayName', 'Remote - {0}');
     export const remoteKernelFinderDisplayName = () =>
         localize('DataScience.remoteKernelFinderDisplayName', 'Current Remote');
     export const kernelPickerSelectSourceTitle = () =>
-        localize('DataScience.kernelPickerSelectSourceTitle', 'Select Kernel Source');
+        localize('DataScience.kernelPickerSelectSourceTitle', 'Select Another Jupyter Kernel...');
     export const kernelPickerSelectKernelTitle = () =>
         localize('DataScience.kernelPickerSelectKernelTitle', 'Select Kernel');
 }

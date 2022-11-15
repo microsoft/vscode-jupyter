@@ -66,7 +66,7 @@ import {
     IDisposableRegistry,
     IExperimentService,
     IExtensionContext,
-    IFeatureDeprecationManager,
+    IFeaturesManager,
     IMemento,
     IOutputChannel,
     IsCodeSpace,
@@ -337,11 +337,9 @@ async function activateLegacy(
     context.subscriptions.push(manager);
     manager.activateSync();
     const activationPromise = manager.activate();
-
-    const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
-    deprecationMgr.initialize();
-    context.subscriptions.push(deprecationMgr);
-
+    const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
+    featureManager.initialize();
+    context.subscriptions.push(featureManager);
     return activationPromise;
 }
 

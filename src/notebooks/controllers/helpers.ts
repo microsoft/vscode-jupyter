@@ -8,6 +8,7 @@ import { PythonKernelConnectionMetadata } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import { Resource } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { traceInfoIfCI } from '../../platform/logging';
 import { IControllerRegistration, IVSCodeNotebookController } from './types';
 
 // This is here so the default service and the loader service can both use it without having
@@ -28,6 +29,10 @@ export async function createActiveInterpreterController(
             interpreter: pythonInterpreter,
             id: getKernelId(spec, pythonInterpreter)
         });
-        return registration.add(metadata, [viewType])[0]; // Should only create one because only one view type
+        const controllers = registration.addOrUpdate(metadata, [viewType]);
+        const controller = controllers[0]; // Should only create one because only one view type
+        registration.trackActiveInterpreterControllers(controllers);
+        traceInfoIfCI(`Controller ${controller.connection.kind}:${controller.id} created for ${viewType}`);
+        return controller;
     }
 }

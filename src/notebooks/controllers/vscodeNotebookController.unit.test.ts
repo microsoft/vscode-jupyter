@@ -37,6 +37,7 @@ import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { KernelConnector } from './kernelConnector';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
+import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 
 suite('Notebook Controller', function () {
     let controller: NotebookController;
@@ -66,6 +67,7 @@ suite('Notebook Controller', function () {
     let clock: fakeTimers.InstalledClock;
     let jupyterSettings: IWatchableJupyterSettings;
     let trustedPaths: ITrustedKernelPaths;
+    let displayDataProvider: ConnectionDisplayDataProvider;
     setup(async function () {
         kernelConnection = mock<KernelConnectionMetadata>();
         vscNotebookApi = mock<IVSCodeNotebook>();
@@ -130,6 +132,12 @@ suite('Notebook Controller', function () {
         when(serviceContainer.get<ITrustedKernelPaths>(ITrustedKernelPaths)).thenReturn(instance(trustedPaths));
         when(trustedPaths.isTrusted(anything())).thenReturn(true);
         when(jupyterSettings.disableJupyterAutoStart).thenReturn(false);
+        displayDataProvider = new ConnectionDisplayDataProvider(
+            instance(workspace),
+            instance(platform),
+            instance(jupyterUriStorage),
+            disposables
+        );
     });
     teardown(() => disposeAllDisposables(disposables));
     function createController(viewType: 'jupyter-notebook' | 'interactive') {
@@ -137,7 +145,6 @@ suite('Notebook Controller', function () {
             instance(kernelConnection),
             '1',
             viewType,
-            'Label',
             instance(vscNotebookApi),
             instance(commandManager),
             instance(kernelProvider),
@@ -151,8 +158,7 @@ suite('Notebook Controller', function () {
             instance(browser),
             instance(extensionChecker),
             instance(serviceContainer),
-            instance(jupyterUriStorage),
-            instance(platform)
+            displayDataProvider
         );
         notebook = new TestNotebookDocument(undefined, viewType);
     }

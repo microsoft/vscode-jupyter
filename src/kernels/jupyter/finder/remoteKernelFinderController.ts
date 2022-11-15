@@ -8,9 +8,9 @@ import { Memento } from 'vscode';
 import { IKernelFinder, IKernelProvider, INotebookProvider } from '../../types';
 import {
     GLOBAL_MEMENTO,
-    IConfigurationService,
     IDisposableRegistry,
     IExtensions,
+    IFeaturesManager,
     IMemento,
     IsWebExtension
 } from '../../../platform/common/types';
@@ -204,7 +204,6 @@ export class RemoteKernelFinderController implements IExtensionSingleActivationS
     private _strategy: IRemoteKernelFinderRegistrationStrategy;
 
     constructor(
-        @inject(IConfigurationService) readonly configurationService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory)
         private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -219,14 +218,15 @@ export class RemoteKernelFinderController implements IExtensionSingleActivationS
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean
+        @inject(IsWebExtension) private readonly isWebExtension: boolean,
+        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
     ) {
         this._strategy = this.getStrategy();
         this.disposables.push(this._strategy);
     }
 
     private getStrategy(): IRemoteKernelFinderRegistrationStrategy {
-        if (this.configurationService.getSettings().kernelPickerType === 'Insiders') {
+        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
             return new MultiServerStrategy(
                 this.jupyterSessionManagerFactory,
                 this.interpreterService,

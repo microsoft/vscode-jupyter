@@ -52,6 +52,12 @@ export interface IControllerRegistration {
      */
     all: KernelConnectionMetadata[];
     /**
+     * Keeps track of controllers created for the active interpreter.
+     * These are very special controllers, as they are created out of band even before kernel discovery completes.
+     */
+    trackActiveInterpreterControllers(controllers: IVSCodeNotebookController[]): void;
+    canControllerBeDisposed(controller: IVSCodeNotebookController): boolean;
+    /**
      * Batch registers new controllers. Disposing a controller unregisters it.
      * @param a list of metadatas
      * @param types Types of notebooks to create the controller for
@@ -59,13 +65,12 @@ export interface IControllerRegistration {
     batchAdd(
         metadatas: KernelConnectionMetadata[],
         types: (typeof JupyterNotebookView | typeof InteractiveWindowView)[]
-    ): IVSCodeNotebookController[];
+    ): void;
     /**
-     * Registers a new controller. Disposing a controller unregisters it.
-     * @param metadata
-     * @param types Types of notebooks to create the controller for
+     * Registers a new controller or updates one. Disposing a controller unregisters it.
+     * @return Returns the added and updated controller(s)
      */
-    add(
+    addOrUpdate(
         metadata: KernelConnectionMetadata,
         types: (typeof JupyterNotebookView | typeof InteractiveWindowView)[]
     ): IVSCodeNotebookController[];
@@ -78,10 +83,6 @@ export interface IControllerRegistration {
         connection: KernelConnectionMetadata,
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): IVSCodeNotebookController | undefined;
-    /**
-     * Event fired when a controller is created
-     */
-    onCreated: vscode.Event<IVSCodeNotebookController>;
     /**
      * Event fired when controllers are added or removed
      */
@@ -112,7 +113,8 @@ export interface IControllerPreferredService {
      */
     computePreferred(
         document: vscode.NotebookDocument,
-        serverId?: string
+        serverId?: string,
+        cancelToken?: vscode.CancellationToken
     ): Promise<{ preferredConnection?: KernelConnectionMetadata; controller?: IVSCodeNotebookController }>;
 
     /**

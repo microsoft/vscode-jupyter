@@ -308,15 +308,15 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 // auto start (ui hidden), now we need to display the error to the user.
                 const tokenSource = new CancellationTokenSource();
                 try {
-                    const cannotChangeKernel = actionSource === '3rdPartyExtension';
-                    return this.kernelDependency.installMissingDependencies(
+                    const cannotChangeKernels = actionSource === '3rdPartyExtension';
+                    return this.kernelDependency.installMissingDependencies({
                         resource,
                         kernelConnection,
-                        new DisplayOptions(false),
-                        tokenSource.token,
-                        true,
-                        cannotChangeKernel
-                    );
+                        ui: new DisplayOptions(false),
+                        token: tokenSource.token,
+                        ignoreCache: true,
+                        cannotChangeKernels
+                    });
                 } finally {
                     tokenSource.dispose();
                 }
@@ -430,15 +430,15 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             this.sendKernelTelemetry(err, errorContext, resource, 'noipykernel');
             const tokenSource = new CancellationTokenSource();
             try {
-                const cannotChangeKernel = actionSource === '3rdPartyExtension';
-                return this.kernelDependency.installMissingDependencies(
+                const cannotChangeKernels = actionSource === '3rdPartyExtension';
+                return this.kernelDependency.installMissingDependencies({
                     resource,
                     kernelConnection,
-                    new DisplayOptions(false),
-                    tokenSource.token,
-                    true,
-                    cannotChangeKernel
-                );
+                    ui: new DisplayOptions(false),
+                    token: tokenSource.token,
+                    ignoreCache: true,
+                    cannotChangeKernels
+                });
             } finally {
                 tokenSource.dispose();
             }

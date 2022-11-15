@@ -212,6 +212,7 @@ export interface IJupyterUriProvider {
      */
     readonly id: string;
     readonly displayName?: string;
+    readonly detail?: string;
     onDidChangeHandles?: Event<void>;
     getQuickPickEntryItems?(): QuickPickItem[];
     handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
@@ -223,6 +224,10 @@ export interface IJupyterUriProvider {
      * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
      */
     getHandles?(): Promise<JupyterServerUriHandle[]>;
+    /**
+     * Users request to remove a handle.
+     */
+    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
 }
 
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');

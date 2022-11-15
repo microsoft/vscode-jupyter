@@ -21,11 +21,27 @@ export class KernelFinder implements IKernelFinder {
 
     private _onDidChangeKernels = new EventEmitter<void>();
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
-
-    constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {}
+    private _status: 'idle' | 'discovering';
+    public get status() {
+        return this._status;
+    }
+    public set status(value) {
+        if (this._status != value) {
+            this._status = value;
+            this._onDidChangeStatus.fire();
+        }
+    }
+    private readonly _onDidChangeStatus = new EventEmitter<void>();
+    public get onDidChangeStatus(): Event<void> {
+        return this._onDidChangeStatus.event;
+    }
+    constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {
+        disposables.push(this._onDidChangeStatus);
+    }
 
     public registerKernelFinder(finder: IContributedKernelFinder<KernelConnectionMetadata>): IDisposable {
         this._finders.push(finder);
+        const statusChange = finder.onDidChangeStatus(() => (this.status = finder.status), this, this.disposables);
         const onDidChangeDisposable = finder.onDidChangeKernels(() => this._onDidChangeKernels.fire());
         this.disposables.push(onDidChangeDisposable);
 
@@ -39,6 +55,7 @@ export class KernelFinder implements IKernelFinder {
                 });
                 this._finders.splice(removeIndex, 1);
                 onDidChangeDisposable.dispose();
+                statusChange.dispose();
 
                 // Notify that kernels have changed
                 this._onDidChangeKernels.fire();

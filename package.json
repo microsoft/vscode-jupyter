@@ -276,6 +276,12 @@
                 "enablement": "jupyter.development"
             },
             {
+                "command": "dataScience.ClearUserProviderJupyterServerCache",
+                "title": "%jupyter.command.dataScience.clearUserProviderJupyterServerCache.title%",
+                "category": "Jupyter (Dev)",
+                "enablement": "jupyter.development"
+            },
+            {
                 "command": "jupyter.replayPylanceLog",
                 "title": "%jupyter.command.jupyter.replayPylanceLog.title%",
                 "category": "Jupyter (Dev)",
@@ -1477,7 +1483,7 @@
                 },
                 "jupyter.showVariableViewWhenDebugging": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "%jupyter.configuration.jupyter.showVariableViewWhenDebugging.description%",
                     "scope": "application"
                 },
@@ -2036,7 +2042,8 @@
                 {
                     "type": "webview",
                     "id": "jupyterViewVariables",
-                    "name": "Variables"
+                    "name": "Variables",
+                    "when": "jupyter.hasNativeNotebookOrInteractiveWindowOpen"
                 }
             ]
         },
@@ -2150,7 +2157,6 @@
         "format-util": "^1.0.5",
         "fs-extra": "^4.0.3",
         "glob": "^7.1.2",
-        "image-size": "^1.0.0",
         "inversify": "^5.0.1",
         "isomorphic-ws": "^4.0.1",
         "jquery": "^3.6.0",

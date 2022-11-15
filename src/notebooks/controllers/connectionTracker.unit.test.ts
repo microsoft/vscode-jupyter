@@ -6,11 +6,17 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, NotebookController, NotebookControllerAffinity2, NotebookDocument } from 'vscode';
 import { LocalKernelSpecConnectionMetadata } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { IConfigurationService, IDisposable } from '../../platform/common/types';
+import { IDisposable, IFeaturesManager } from '../../platform/common/types';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 import { ConnectionTracker } from './connectionTracker';
-import { IConnectionMru, IControllerRegistration, IKernelRankingHelper, IVSCodeNotebookController } from './types';
+import {
+    IConnectionMru,
+    IControllerRegistration,
+    IKernelRankingHelper,
+    IVSCodeNotebookController,
+    IVSCodeNotebookControllerUpdateEvent
+} from './types';
 
 suite('Connection Tracker', () => {
     let tracker: ConnectionTracker;
@@ -20,7 +26,7 @@ suite('Connection Tracker', () => {
     let controllerRegistrations: IControllerRegistration;
     let notebook: NotebookDocument;
     let onDidOpenNotebookDocument: EventEmitter<NotebookDocument>;
-    let onCreated: EventEmitter<IVSCodeNotebookController>;
+    let onChanged: EventEmitter<IVSCodeNotebookControllerUpdateEvent>;
     let clock: fakeTimers.InstalledClock;
     let controller: NotebookController;
     let ourController: IVSCodeNotebookController;
@@ -30,24 +36,24 @@ suite('Connection Tracker', () => {
         mru = mock<IConnectionMru>();
         notebook = new TestNotebookDocument();
         onDidOpenNotebookDocument = new EventEmitter<NotebookDocument>();
-        onCreated = new EventEmitter<IVSCodeNotebookController>();
+        onChanged = new EventEmitter<IVSCodeNotebookControllerUpdateEvent>();
         disposables.push(onDidOpenNotebookDocument);
-        disposables.push(onCreated);
+        disposables.push(onChanged);
         controller = mock<NotebookController>();
         ourController = mock<IVSCodeNotebookController>();
         when(ourController.id).thenReturn('1');
         when(ourController.controller).thenReturn(instance(controller));
         when(mockedVSCodeNamespaces.workspace.onDidOpenNotebookDocument).thenReturn(onDidOpenNotebookDocument.event);
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
-        when(controllerRegistrations.onCreated).thenReturn(onCreated.event);
-        const configService = mock<IConfigurationService>();
-        when(configService.getSettings(anything())).thenReturn({ kernelPickerType: 'Insiders' } as any);
+        when(controllerRegistrations.onChanged).thenReturn(onChanged.event);
+        const featureManager = mock<IFeaturesManager>();
+        when(featureManager.features).thenReturn({ kernelPickerType: 'Insiders' });
         tracker = new ConnectionTracker(
             disposables,
             instance(controllerRegistrations),
             instance(rankingHelper),
             instance(mru),
-            instance(configService)
+            instance(featureManager)
         );
         tracker.activate();
         clock = fakeTimers.install();
@@ -89,7 +95,7 @@ suite('Connection Tracker', () => {
         when(mru.exists(notebook, connection)).thenResolve(false);
         when(controllerRegistrations.get(anything(), notebook.notebookType as any)).thenReturn(instance(ourController));
 
-        onCreated.fire(ourController);
+        onChanged.fire({ added: [ourController], removed: [] });
         await clock.runAllAsync();
 
         verify(mru.exists(anything(), anything())).once();

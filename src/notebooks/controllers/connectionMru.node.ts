@@ -11,17 +11,19 @@ import { getNotebookMetadata } from '../../platform/common/utils';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { traceWarning } from '../../platform/logging';
 import { IKernelRankingHelper, IConnectionMru } from './types';
-import { EOL } from 'os';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { createDeferredFromPromise } from '../../platform/common/utils/async';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
+import * as fs from 'fs';
+import { MaxMRUSizePerNotebook, MRUItem } from './connectionMru';
 
 const MruFolder = 'notebook-connection-mru';
 @injectable()
-export class ConnectionMRU implements IConnectionMru {
+export class ConnectionMru implements IConnectionMru {
     private documentSourceMapping = new WeakMap<NotebookDocument, Set<KernelConnectionMetadata>>();
-    private documentMruContents = new WeakMap<NotebookDocument, string | undefined>();
+    private documentMruContents = new WeakMap<NotebookDocument, Promise<MRUItem[]>>();
+    private notebookCacheFileName = new WeakMap<NotebookDocument, Promise<Uri>>();
 
     constructor(
         @inject(IKernelRankingHelper) private readonly kernelRankingHelper: IKernelRankingHelper,
@@ -47,30 +49,47 @@ export class ConnectionMRU implements IConnectionMru {
         const file = await this.getCacheFileName(notebook);
         if (!(await this.fs.exists(path.dirname(file)))) {
             try {
-                await this.fs.createDirectory(this.context.storageUri);
+                await this.fs.createDirectory(path.dirname(file));
             } catch (ex) {
                 traceWarning(`Failed to create directory ${getDisplayPath(this.context.storageUri)}`, ex);
             }
         }
         if (await this.fs.exists(path.dirname(file))) {
-            const [connectionIdsInMru, connectionIds] = await Promise.all([
-                this.fs
-                    .readFile(file)
-                    .then((c) => c.splitLines({ trim: true, removeEmptyEntries: true }))
-                    .catch(() => <string[]>[]),
-                Promise.all(Array.from(connections).map((item) => item.getHashId()))
+            const connectionIdsUsedInSession = new Set<string>();
+            const [currentMru, connectionsUsedInSession] = await Promise.all([
+                this.loadNotebookCache(notebook),
+                Promise.all(
+                    Array.from(connections).map(async (item) => {
+                        const id = await item.getHashId();
+                        connectionIdsUsedInSession.add(id);
+                        return <MRUItem>[Date.now(), id];
+                    })
+                )
             ]);
-            const updatedConnectionIds = Array.from(new Set(connectionIdsInMru.concat(connectionIds)));
-            const newContents = updatedConnectionIds.join(EOL);
-            this.documentMruContents.set(notebook, newContents);
-            await this.fs.writeFile(file, newContents);
+            const idsInMru = new Set<string>();
+
+            // For existing items, update the last used time.
+            currentMru.forEach((mru) => {
+                idsInMru.add(mru[1]);
+                if (connectionIdsUsedInSession.has(mru[1])) {
+                    mru[0] = Date.now();
+                }
+            });
+            // If we have more than 10 items, then remove the oldest items.
+            const newMruItems = currentMru
+                .concat(connectionsUsedInSession.filter((item) => !idsInMru.has(item[1])))
+                .sort((a, b) => b[0] - a[0])
+                .slice(0, MaxMRUSizePerNotebook);
+
+            this.documentMruContents.set(notebook, Promise.resolve(newMruItems));
+            await this.fs.writeFile(file, JSON.stringify(newMruItems));
         }
     }
     public async clear(): Promise<void> {
         const cacheFolder = Uri.joinPath(this.context.globalStorageUri, MruFolder);
-        await this.fs
-            .delete(cacheFolder)
-            .catch((ex) => traceWarning(`Failed to delete MRU cache folder ${getDisplayPath(cacheFolder)}`, ex));
+        new Promise<void>((resolve, reject) =>
+            fs.rmdir(cacheFolder.fsPath, { recursive: true }, (ex) => (ex ? reject(ex) : resolve()))
+        ).catch((ex) => traceWarning(`Failed to delete MRU cache folder ${getDisplayPath(cacheFolder)}`, ex));
     }
     /**
      * Checks whether a connection was used by a notebook.
@@ -97,16 +116,37 @@ export class ConnectionMRU implements IConnectionMru {
         return exactMatchPromise.value || existsInFilePromise.value ? true : false;
     }
     private async getCacheFileName(notebook: NotebookDocument) {
-        const cacheKey = this.workspace.getWorkspaceFolder(notebook.uri);
-        console.error(cacheKey);
-        const workspaceId = this.workspace.getWorkspaceFolderIdentifier(notebook.uri, 'global');
-        const workspaceHash = await getTelemetrySafeHashedString(workspaceId);
-        return Uri.joinPath(
-            this.context.globalStorageUri,
-            MruFolder,
-            workspaceHash,
-            `${path.basename(notebook.uri)}.last_used_connections.txt`
-        );
+        if (!this.notebookCacheFileName.has(notebook)) {
+            const promise = (async () => {
+                const workspaceId = this.workspace.getWorkspaceFolderIdentifier(notebook.uri, 'global');
+                const workspaceHash = await getTelemetrySafeHashedString(workspaceId);
+                return Uri.joinPath(
+                    this.context.storageUri || this.context.globalStorageUri,
+                    MruFolder,
+                    workspaceHash,
+                    `${path.basename(notebook.uri)}.last_used_connections.json`
+                );
+            })();
+            this.notebookCacheFileName.set(notebook, promise);
+        }
+        return this.notebookCacheFileName.get(notebook)!;
+    }
+    private async loadNotebookCache(notebook: NotebookDocument) {
+        const mruFileContents = this.documentMruContents.get(notebook);
+        if (!mruFileContents) {
+            const promise = (async () => {
+                try {
+                    const file = await this.getCacheFileName(notebook);
+                    const contents = await this.fs.readFile(file);
+                    return JSON.parse(contents) as MRUItem[];
+                } catch {
+                    // File doesn't exist.
+                    return [];
+                }
+            })();
+            this.documentMruContents.set(notebook, promise);
+        }
+        return this.documentMruContents.get(notebook)!;
     }
     private async existsInFile(notebook: NotebookDocument, connection: KernelConnectionMetadata) {
         const connections = this.documentSourceMapping.get(notebook);
@@ -119,19 +159,12 @@ export class ConnectionMRU implements IConnectionMru {
         ) {
             return true;
         }
-        const mruFileContents = this.documentMruContents.get(notebook);
-        if (mruFileContents?.length) {
-            const connectionIdHash = await connection.getHashId();
-            if (mruFileContents.includes(connectionIdHash)) {
-                return true;
-            }
-        }
-
         try {
-            const file = await this.getCacheFileName(notebook);
-            const [contents, connectionIdHash] = await Promise.all([this.fs.readFile(file), connection.getHashId()]);
-            this.documentMruContents.set(notebook, contents);
-            return contents.includes(connectionIdHash);
+            const [contents, connectionIdHash] = await Promise.all([
+                this.loadNotebookCache(notebook),
+                connection.getHashId()
+            ]);
+            return contents.some((item) => item[1] === connectionIdHash);
         } catch {
             return false;
         }

@@ -17,17 +17,18 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
-import { createDeferred } from '../common/utils/async';
+import { createDeferred, sleep } from '../common/utils/async';
 import { traceDecoratorVerbose, traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
-import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
+import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironments/info/interpreter';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { TraceOptions } from '../logging/types';
 import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
+import { PromiseMonitor } from '../common/utils/promises';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -334,6 +335,21 @@ export class InterpreterService implements IInterpreterService {
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
     private apiPromise: Promise<ProposedExtensionAPI | undefined> | undefined;
     private api?: ProposedExtensionAPI;
+    private _status: 'refreshing' | 'idle' = 'idle';
+    public get status() {
+        return this._status;
+    }
+    private set status(value: typeof this._status) {
+        if (this._status === value) {
+            return;
+        }
+        this._status = value;
+        this._onDidChangeStatus.fire();
+    }
+    private readonly _onDidChangeStatus = new EventEmitter<void>();
+    public readonly onDidChangeStatus = this._onDidChangeStatus.event;
+    private refreshPromises = new PromiseMonitor();
+
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
@@ -357,8 +373,12 @@ export class InterpreterService implements IInterpreterService {
             }
         }
         this.workspace.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders, this, disposables);
+        this.disposables.push(this._onDidChangeStatus);
+        this.disposables.push(this.refreshPromises);
+        this.refreshPromises.onStateChange(() => {
+            this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
+        });
     }
-
     public get onDidChangeInterpreter(): Event<void> {
         this.hookupOnDidChangeInterpreterEvent();
         return this.didChangeInterpreter.event;
@@ -376,7 +396,7 @@ export class InterpreterService implements IInterpreterService {
     public get environments(): readonly PythonEnvironmentV2[] {
         this.getApi().catch(noop);
         this.hookupOnDidChangeInterpreterEvent();
-        return (this.api?.environments?.known || []).filter((item) => this.isValidWorkSpaceRelatedEnvironment(item));
+        return this.api?.environments?.known || [];
     }
     private getInterpretersCancellation?: CancellationTokenSource;
     private getInterpreters(): Promise<PythonEnvironment[]> {
@@ -387,53 +407,39 @@ export class InterpreterService implements IInterpreterService {
             this.getInterpretersCancellation?.dispose();
             const cancellation = (this.getInterpretersCancellation = new CancellationTokenSource());
             this.interpreterListCachePromise = this.getInterpretersImpl(cancellation.token);
-            this.interpreterListCachePromise.finally(() => cancellation.dispose);
+            this.interpreterListCachePromise.finally(() => cancellation.dispose());
+            this.refreshPromises.push(this.interpreterListCachePromise);
         }
         return this.interpreterListCachePromise;
     }
-    private _waitForAllInterpretersToLoad?: Promise<void>;
     public async waitForAllInterpretersToLoad(): Promise<void> {
-        if (!this._waitForAllInterpretersToLoad) {
-            const lazyLoadControllers = this.workspace
-                .getConfiguration('jupyter', undefined)
-                .get<boolean>('lazyLoadControllers', false);
-            if (lazyLoadControllers) {
-                return;
-            }
-            this._waitForAllInterpretersToLoad = (async () => {
-                await this.refreshInterpreters();
-
-                // Don't allow for our call of getInterpretersImpl to be cancelled
-                // getInterpreters returns a promise that can get cancelled by itself
-                // so you can't use that to await here
-                const source = new CancellationTokenSource();
-                const interpreters = await this.getInterpretersImpl(source.token);
-
-                // After getting interpreters, resolve them all
-                if (interpreters) {
-                    await Promise.all(
-                        interpreters.map((interpreter) => {
-                            return this.api?.environments.resolveEnvironment(interpreter.id);
-                        })
-                    );
-                }
-            })();
-        }
-        return this._waitForAllInterpretersToLoad;
+        await this.getInterpreters();
     }
     public async refreshInterpreters(forceRefresh: boolean = false) {
-        const api = await this.getApi();
-        if (!api) {
-            return;
-        }
-        try {
-            await api.environments.refreshEnvironments({ forceRefresh });
-            this.interpreterListCachePromise = undefined;
-            this.didChangeInterpreters.fire();
-            traceVerbose(`Refreshed Environments`);
-        } catch (ex) {
-            traceError(`Failed to refresh the list of interpreters`);
-        }
+        const promise = (async () => {
+            const api = await this.getApi();
+            if (!api) {
+                return;
+            }
+            try {
+                await api.environments.refreshEnvironments({ forceRefresh });
+                this.interpreterListCachePromise = undefined;
+                await this.getInterpreters();
+                traceVerbose(`Refreshed Environments`);
+            } catch (ex) {
+                traceError(`Failed to refresh the list of interpreters`);
+            }
+        })();
+        this.refreshPromises.push(promise);
+        // Python extension might completely this promise, however this doesn't mean all of the
+        // events have been triggered,
+        // I.e. even after we call refresh the python extension could trigger events indicating that there are more changes to the interpreters.
+        // Hence wait for at least 2 seconds for these events to complete getting triggered.
+        // Why 2s and not 5 or why not 1s, there's no real reason, just a guess.
+        // This promise only improves the discovery of kernels, even without this things work,
+        // but with this things work better as the kernel discovery knows that Python refresh has finished.
+        this.refreshPromises.push(promise.then(() => sleep(1_000)));
+        await promise;
     }
     private workspaceCachedActiveInterpreter = new Set<string>();
     @traceDecoratorVerbose(
@@ -494,48 +500,55 @@ export class InterpreterService implements IInterpreterService {
         }
         return promise;
     }
+    private readonly pythonEnvHashes = new Map<string, string>();
+    getInterpreterHash(id: string) {
+        return this.pythonEnvHashes.get(id);
+    }
 
     @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
-    public async getInterpreterDetails(pythonPathOrPythonId: Uri | string): Promise<undefined | PythonEnvironment> {
+    public async getInterpreterDetails(pythonPath: Uri | { path: string }): Promise<undefined | PythonEnvironment> {
         this.hookupOnDidChangeInterpreterEvent();
         try {
             return await this.getApi().then(async (api) => {
                 if (!api) {
                     return;
                 }
-                const uri = isUri(pythonPathOrPythonId) ? pythonPathOrPythonId : undefined;
-                // eslint-disable-next-line local-rules/dont-use-fspath
-                const pythonEnvId = isUri(pythonPathOrPythonId) ? pythonPathOrPythonId.fsPath : pythonPathOrPythonId;
-                if (uri) {
-                    // Find the Env with the same Uri.
-                    const matchedPythonEnv = api.environments.known.find((item) => {
-                        return areInterpreterPathsSame(item.executable.uri, uri);
-                    });
-                    if (matchedPythonEnv) {
-                        const env = await api.environments.resolveEnvironment(matchedPythonEnv.id);
-                        const resolved = this.trackResolvedEnvironment(env, false);
-                        traceVerbose(
-                            `Interpreter details for ${getDisplayPath(uri)} from Python is ${JSON.stringify(
-                                env
-                            )} and our mapping is ${JSON.stringify(resolved)}`
-                        );
-                    }
-                    traceWarning(
-                        `No interpreter with path ${getDisplayPath(
-                            uri
-                        )} found in Python API, will convert Uri path to string as Id ${pythonEnvId}`
+                // Find the Env with the same Uri.
+                const matchedPythonEnv = api.environments.known.find((item) => {
+                    return isUri(pythonPath)
+                        ? areInterpreterPathsSame(item.executable.uri, pythonPath)
+                        : areInterpreterPathsSame(Uri.file(item.path), Uri.file(pythonPath.path));
+                });
+                if (matchedPythonEnv) {
+                    const env = await api.environments.resolveEnvironment(matchedPythonEnv);
+                    const resolved = this.trackResolvedEnvironment(env, false);
+                    traceVerbose(
+                        `Interpreter details for ${getDisplayPath(
+                            isUri(pythonPath) ? pythonPath : Uri.file(pythonPath.path)
+                        )} from Python is ${JSON.stringify(env)} and our mapping is ${JSON.stringify(resolved)}`
                     );
+                    return resolved;
                 }
+                traceWarning(
+                    `No interpreter with path ${getDisplayPath(
+                        isUri(pythonPath) ? pythonPath : Uri.file(pythonPath.path)
+                    )} found in Python API, will convert Uri path to string as Id ${
+                        isUri(pythonPath) ? pythonPath : Uri.file(pythonPath.path)
+                    }`
+                );
 
-                const env = await api.environments.resolveEnvironment(pythonEnvId);
+                const env = await api.environments.resolveEnvironment(
+                    // eslint-disable-next-line local-rules/dont-use-fspath
+                    isUri(pythonPath) ? pythonPath.fsPath : pythonPath.path
+                );
                 return this.trackResolvedEnvironment(env, false);
             });
         } catch (ex) {
             traceWarning(
                 `Failed to get Python interpreter details from Python Extension API for ${
-                    typeof pythonPathOrPythonId === 'string'
-                        ? pythonPathOrPythonId
-                        : getDisplayPath(pythonPathOrPythonId)
+                    typeof pythonPath === 'string'
+                        ? pythonPath
+                        : getDisplayPath(isUri(pythonPath) ? pythonPath : Uri.file(pythonPath.path))
                 }`,
                 ex
             );
@@ -561,6 +574,11 @@ export class InterpreterService implements IInterpreterService {
             if (!resolved) {
                 return;
             }
+            getInterpreterHash(resolved)
+                .then((hash) => {
+                    this.pythonEnvHashes.set(resolved.id, hash);
+                })
+                .catch(noop);
 
             if (
                 !this._interpreters.get(env.id) ||
@@ -589,19 +607,33 @@ export class InterpreterService implements IInterpreterService {
         this.interpreterListCachePromise = undefined;
     }
     private populateCachedListOfInterpreters() {
-        this.getInterpreters().ignoreErrors();
+        const promise = this.getInterpreters().catch(noop);
+        this.refreshPromises.push(promise);
+        // Python extension might completely this promise, however this doesn't mean all of the
+        // events have been triggered,
+        // I.e. even after we call refresh the python extension could trigger events indicating that there are more changes to the interpreters.
+        // Hence wait for at least 2 seconds for these events to complete getting triggered.
+        // Why 2s and not 5 or why not 1s, there's no real reason, just a guess.
+        // This promise only improves the discovery of kernels, even without this things work,
+        // but with this things work better as the kernel discovery knows that Python refresh has finished.
+        this.refreshPromises.push(promise.then(() => sleep(1_000)));
     }
-    private async getInterpretersImpl(cancelToken: CancellationToken): Promise<PythonEnvironment[]> {
+    private async getInterpretersImpl(
+        cancelToken: CancellationToken,
+        recursiveCounter = 0
+    ): Promise<PythonEnvironment[]> {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             this.builtListOfInterpretersAtLeastOnce = true;
         }
 
         const allInterpreters: PythonEnvironment[] = [];
         const stopWatch = new StopWatch();
+        let buildListOfInterpretersAgain = false;
         await this.getApi().then(async (api) => {
             if (!api || cancelToken.isCancellationRequested) {
                 return [];
             }
+            let previousListOfInterpreters = api.environments.known.length;
             try {
                 const apiResolveTime = stopWatch.elapsedTime;
                 await api.environments.refreshEnvironments();
@@ -622,81 +654,52 @@ export class InterpreterService implements IInterpreterService {
                         .join(', ')}`
                 );
                 await Promise.all(
-                    api.environments.known
-                        .filter((item) => this.isValidWorkSpaceRelatedEnvironment(item))
-                        .map(async (item) => {
-                            try {
-                                const env = await api.environments.resolveEnvironment(item.id);
-                                const resolved = this.trackResolvedEnvironment(env, true);
-                                traceVerbose(
-                                    `Python environment for ${item.id} is ${
-                                        env?.id
-                                    } from Python Extension API is ${JSON.stringify(
-                                        env
-                                    )} and translated is ${JSON.stringify(resolved)}`
-                                );
-                                if (!this.isValidWorkSpaceRelatedEnvironment(item)) {
-                                    return;
-                                }
-                                if (resolved) {
-                                    allInterpreters.push(resolved);
-                                } else {
-                                    traceError(
-                                        `Failed to get env details from Python API for ${item.id} without an error`
-                                    );
-                                }
-                            } catch (ex) {
-                                traceError(`Failed to get env details from Python API for ${item.id}`, ex);
+                    api.environments.known.map(async (item) => {
+                        try {
+                            const env = await api.environments.resolveEnvironment(item.id);
+                            const resolved = this.trackResolvedEnvironment(env, true);
+                            traceVerbose(
+                                `Python environment for ${item.id} is ${
+                                    env?.id
+                                } from Python Extension API is ${JSON.stringify(
+                                    env
+                                )} and translated is ${JSON.stringify(resolved)}`
+                            );
+                            if (resolved) {
+                                allInterpreters.push(resolved);
+                            } else {
+                                traceError(`Failed to get env details from Python API for ${item.id} without an error`);
                             }
-                        })
+                        } catch (ex) {
+                            traceError(`Failed to get env details from Python API for ${item.id}`, ex);
+                        }
+                    })
                 );
             } catch (ex) {
                 traceError(`Failed to refresh list of interpreters and get their details`, ex);
+            }
+
+            if (previousListOfInterpreters < api.environments.known.length) {
+                // this means we haven't completed the first refresh of the list of interpreters.
+                // We've received yet another set of interpreters.
+                buildListOfInterpretersAgain = true;
             }
         });
         if (cancelToken.isCancellationRequested) {
             return [];
         }
-
+        if (buildListOfInterpretersAgain && recursiveCounter < 10) {
+            traceVerbose(
+                `List of interpreters changed after a while, will need to rebuild it again, counter = ${recursiveCounter}`
+            );
+            return this.getInterpretersImpl(cancelToken, recursiveCounter++);
+        }
         traceVerbose(
             `Full interpreter list is length: ${allInterpreters.length}, ${allInterpreters
                 .map((item) => `${item.id}:${item.displayName}:${item.envType}:${getDisplayPath(item.uri)}`)
                 .join(', ')}`
         );
         return allInterpreters;
-    }
-    /**
-     * Python extension API returns all envs from all known workspace folders, including those that do not
-     * belong to the currently opened workspace folders.
-     * This will is used to determine whether an env belongs to the currently opened workspace folders.
-     */
-    private isValidWorkSpaceRelatedEnvironment(_env: PythonEnvironmentV2 | ResolvedEnvironment) {
-        // Disabled this code due to upstream bugs.
-        // https://github.com/microsoft/vscode-python/issues/20105
-        // https://github.com/microsoft/vscode-python/issues/20104
-        return true;
-        // const envWorkspaceFolder = env?.environment?.workspaceFolder;
-        // if (envWorkspaceFolder) {
-        //     if (!this.workspace.workspaceFolders) {
-        //         traceVerbose(`Exclude env ${env.id} as it belongs to a workspace folder`);
-        //         return false;
-        //     }
-        //     if (
-        //         !this.workspace.workspaceFolders.some(
-        //             (item) =>
-        //                 item.uri.toString() === envWorkspaceFolder.toString() ||
-        //                 item.uri.path === envWorkspaceFolder.path
-        //         )
-        //     ) {
-        //         traceVerbose(
-        //             `Exclude env ${
-        //                 env.id
-        //             } as it belongs to a different workspace folder ${envWorkspaceFolder.toString()}`
-        //         );
-        //         return false;
-        //     }
-        // }
-        // return true;
     }
     private builtListOfInterpretersAtLeastOnce?: boolean;
     private buildListOfInterpretersForFirstTime() {
@@ -742,12 +745,14 @@ export class InterpreterService implements IInterpreterService {
                         this.disposables
                     );
                     api.environments.onDidChangeEnvironments(
-                        () => {
+                        (e) => {
+                            // Remove items that are no longer valid.
+                            if (e.type === 'remove') {
+                                this._interpreters.delete(e.env.id);
+                            }
                             traceVerbose(`Detected change in Python environments via Python API`);
                             this.interpreterListCachePromise = undefined;
-                            this.refreshInterpreters().ignoreErrors();
                             this.populateCachedListOfInterpreters();
-                            this.didChangeInterpreters.fire();
                         },
                         this,
                         this.disposables

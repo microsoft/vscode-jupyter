@@ -8,7 +8,7 @@ import { IExtensionSingleActivationService } from '../../../platform/activation/
 import { ICommandManager } from '../../../platform/common/application/types';
 import { Commands } from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
-import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
+import { IDisposableRegistry, IFeaturesManager } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { INotebookKernelSourceSelector } from '../types';
 
@@ -19,7 +19,7 @@ export class PickDocumentKernelSourceCommand implements IExtensionSingleActivati
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
         @inject(INotebookKernelSourceSelector) private readonly kernelSourceSelector: INotebookKernelSourceSelector
     ) {
         // Context keys to control when these commands are shown
@@ -31,7 +31,7 @@ export class PickDocumentKernelSourceCommand implements IExtensionSingleActivati
 
     public async activate(): Promise<void> {
         // Register for config changes
-        this.disposables.push(this.configService.getSettings().onDidChange(this.updateVisibility));
+        this.disposables.push(this.featuresManager.onDidChangeFeatures(this.updateVisibility));
 
         // Register our command to execute
         this.disposables.push(
@@ -43,14 +43,14 @@ export class PickDocumentKernelSourceCommand implements IExtensionSingleActivati
 
     private async pickDocumentKernelSource(notebook?: NotebookDocument) {
         const targetNotebook = notebook || window.activeNotebookEditor?.notebook;
-        if (targetNotebook && this.configService.getSettings().kernelPickerType === 'Insiders') {
+        if (targetNotebook && this.featuresManager.features.kernelPickerType === 'Insiders') {
             await this.kernelSourceSelector.selectKernelSource(targetNotebook);
         }
     }
 
     // Only show this command if we are in our Insiders picker type
     private updateVisibility() {
-        if (this.configService.getSettings().kernelPickerType === 'Insiders') {
+        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
             this.showPickDocumentKernelSourceContext.set(true).then(noop, noop);
         } else {
             this.showPickDocumentKernelSourceContext.set(false).then(noop, noop);

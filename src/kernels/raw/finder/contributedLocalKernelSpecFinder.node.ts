@@ -8,7 +8,7 @@ import { Event, EventEmitter } from 'vscode';
 import { IKernelFinder, LocalKernelSpecConnectionMetadata } from '../../types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { traceInfo, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
+import { traceInfo, traceDecoratorError, traceError } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
@@ -19,6 +19,9 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../internalTypes';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { PromiseMonitor } from '../../../platform/common/utils/promises';
+import { getKernelRegistrationInfo } from '../../helpers';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -27,6 +30,21 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 export class ContributedLocalKernelSpecFinder
     implements IContributedKernelFinder<LocalKernelSpecConnectionMetadata>, IExtensionSyncActivationService
 {
+    private _status: 'discovering' | 'idle' = 'idle';
+    public get status() {
+        return this._status;
+    }
+    private set status(value: typeof this._status) {
+        if (this._status === value) {
+            return;
+        }
+        this._status = value;
+        this._onDidChangeStatus.fire();
+    }
+    private readonly _onDidChangeStatus = new EventEmitter<void>();
+    public readonly onDidChangeStatus = this._onDidChangeStatus.event;
+    private readonly promiseMonitor = new PromiseMonitor();
+
     kind = ContributedKernelFinderKind.LocalKernelSpec;
     id: string = ContributedKernelFinderKind.LocalKernelSpec;
     displayName: string = DataScience.localKernelSpecs();
@@ -49,16 +67,46 @@ export class ContributedLocalKernelSpecFinder
         @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         kernelFinder.registerKernelFinder(this);
+        this.disposables.push(this._onDidChangeStatus);
+        this.disposables.push(this._onDidChangeKernels);
+        this.disposables.push(this.promiseMonitor);
     }
 
     activate() {
-        this.loadInitialState().then(noop, noop);
+        this.promiseMonitor.onStateChange(() => {
+            this.status =
+                this.promiseMonitor.isComplete &&
+                this.interpreters.status === 'idle' &&
+                this.nonPythonKernelFinder.status === 'idle' &&
+                this.pythonKernelFinder.status === 'idle'
+                    ? 'idle'
+                    : 'discovering';
+        });
 
-        this.interpreters.onDidChangeInterpreters(
-            async () => this.updateCache().then(noop, noop),
-            this,
-            this.disposables
-        );
+        this.loadData().then(noop, noop);
+        let combinedProgress: Deferred<void> | undefined = undefined;
+        const updateCombinedStatus = () => {
+            const latestStatus: typeof this.nonPythonKernelFinder.status[] = [
+                this.nonPythonKernelFinder.status,
+                this.pythonKernelFinder.status,
+                this.interpreters.status === 'refreshing' ? 'discovering' : 'idle'
+            ];
+            if (latestStatus.includes('discovering')) {
+                if (!combinedProgress) {
+                    combinedProgress = createDeferred<void>();
+                    this.promiseMonitor.push(combinedProgress.promise);
+                }
+            } else {
+                combinedProgress?.resolve();
+                combinedProgress = undefined;
+            }
+        };
+        updateCombinedStatus();
+        this.nonPythonKernelFinder.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
+        this.pythonKernelFinder.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
+        this.interpreters.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
+        this.loadData().then(noop, noop);
+        this.interpreters.onDidChangeInterpreters(async () => this.loadData().then(noop, noop), this, this.disposables);
         this.extensions.onDidChange(
             () => {
                 // If we just installed the Python extension and we fetched the controllers, then fetch it again.
@@ -66,25 +114,31 @@ export class ContributedLocalKernelSpecFinder
                     !this.wasPythonInstalledWhenFetchingControllers &&
                     this.extensionChecker.isPythonExtensionInstalled
                 ) {
-                    this.updateCache().then(noop, noop);
+                    this.loadData().then(noop, noop);
                 }
             },
             this,
             this.disposables
         );
-        this.nonPythonKernelFinder.onDidChangeKernels(
-            () => this.updateCache().then(noop, noop),
-            this,
-            this.disposables
-        );
-        this.pythonKernelFinder.onDidChangeKernels(() => this.updateCache().then(noop, noop), this, this.disposables);
+        this.nonPythonKernelFinder.onDidChangeKernels(() => this.loadData().then(noop, noop), this, this.disposables);
+        this.pythonKernelFinder.onDidChangeKernels(() => this.loadData().then(noop, noop), this, this.disposables);
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
     }
 
-    private async loadInitialState() {
-        traceVerbose('LocalKernelFinder: load initial set of kernels');
-        await this.updateCache();
-        traceVerbose('LocalKernelFinder: loaded initial set of kernels');
+    public async refresh() {
+        const promise = (async () => {
+            await this.nonPythonKernelFinder.refresh();
+            await this.pythonKernelFinder.refresh();
+            await this.updateCache();
+        })();
+        this.promiseMonitor.push(promise);
+        await promise;
+    }
+
+    private async loadData() {
+        const promise = this.updateCache();
+        this.promiseMonitor.push(promise);
+        await promise;
     }
 
     @traceDecoratorError('List kernels failed')
@@ -100,7 +154,11 @@ export class ContributedLocalKernelSpecFinder
                 return true;
             });
             const kernelSpecsFromPythonKernelFinder = this.pythonKernelFinder.kernels.filter(
-                (item) => item.kind === 'startUsingLocalKernelSpec'
+                (item) =>
+                    item.kind === 'startUsingLocalKernelSpec' ||
+                    (item.kind === 'startUsingPythonInterpreter' &&
+                        // Also include kernel Specs that are in a non-global directory.
+                        getKernelRegistrationInfo(item.kernelSpec) === 'registeredByNewVersionOfExtForCustomKernelSpec')
             ) as LocalKernelSpecConnectionMetadata[];
             kernels = kernels.concat(kernelSpecs).concat(kernelSpecsFromPythonKernelFinder);
             await this.writeToCache(kernels);
@@ -139,7 +197,7 @@ export class ContributedLocalKernelSpecFinder
                 return true;
             });
             this.cache = this.filterKernels(uniqueKernels);
-            if (areObjectsWithUrisTheSame(oldValues, this.cache)) {
+            if (oldValues.length === this.cache.length && areObjectsWithUrisTheSame(oldValues, this.cache)) {
                 return;
             }
 

@@ -3,7 +3,7 @@
 
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { Uri } from 'vscode';
+import { commands, Uri } from 'vscode';
 import { IDisposable, IExtensionContext, IHttpClient } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, startJupyterServer } from '../../common';
 import { openNotebook } from '../helpers';
@@ -16,7 +16,7 @@ import {
     waitForKernelToGetAutoSelected
 } from '../notebook/helper';
 import { initialize } from '../../initialize';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo } from '../../../platform/logging';
 import { IKernel, IKernelProvider, isLocalConnection } from '../../../kernels/types';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
@@ -26,6 +26,10 @@ import {
     IIPyWidgetScriptManager,
     IIPyWidgetScriptManagerFactory
 } from '../../../notebooks/controllers/ipywidgets/types';
+import { isWeb } from '../../../platform/common/utils/misc';
+import { createActiveInterpreterController } from '../../../notebooks/controllers/helpers';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IControllerRegistration } from '../../../notebooks/controllers/types';
 
 suite('IPyWidget Script Manager @widgets', function () {
     this.timeout(120_000);
@@ -66,6 +70,23 @@ suite('IPyWidget Script Manager @widgets', function () {
             disposables
         );
         const { notebook, editor } = await openNotebook(testWidgetNb);
+        if (!isWeb()) {
+            // Create the controller and select it for the tests.
+            const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+            const controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+            const controller = await createActiveInterpreterController(
+                notebook.notebookType as 'jupyter-notebook' | 'interactive',
+                notebook.uri,
+                interpreterService,
+                controllerRegistration
+            );
+            if (controller) {
+                await commands.executeCommand('notebook.selectKernel', {
+                    id: controller.id,
+                    extension: JVSC_EXTENSION_ID
+                });
+            }
+        }
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         const cell = notebook.cellAt(0);
 

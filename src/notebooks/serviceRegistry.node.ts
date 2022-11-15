@@ -7,7 +7,7 @@ import { ITracebackFormatter } from '../kernels/types';
 import { IJupyterVariables } from '../kernels/variables/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { Identifiers } from '../platform/common/constants';
-import { IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
+import { IDataScienceCommandListener, IFeaturesManager } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { InstallPythonControllerCommands } from './controllers/commands/installPythonControllerCommands';
 import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
@@ -149,8 +149,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
     serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
 
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-    if (configuration.getSettings().kernelPickerType === 'Insiders') {
+    const featureManager = serviceManager.get<IFeaturesManager>(IFeaturesManager);
+    if (featureManager.features.kernelPickerType === 'Insiders') {
         serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,
             PickDocumentKernelSourceCommand

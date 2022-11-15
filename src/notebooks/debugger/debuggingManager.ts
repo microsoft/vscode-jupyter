@@ -240,7 +240,7 @@ export class DebuggingManager
                     this.kernelProvider.getKernelExecution(kernel!),
                     this.configurationService
                 );
-                adapter.setDebuggingDelegates([
+                adapter.addDebuggingDelegates([
                     rblController,
                     new RestartController(KernelDebugMode.RunByLine, adapter, cell, this.serviceContainer)
                 ]);
@@ -254,7 +254,7 @@ export class DebuggingManager
                     this.kernelProvider.getKernelExecution(kernel!),
                     this.commandManager
                 );
-                adapter.setDebuggingDelegates([
+                adapter.addDebuggingDelegates([
                     controller,
                     new RestartController(KernelDebugMode.Cell, adapter, cell, this.serviceContainer)
                 ]);

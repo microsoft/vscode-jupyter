@@ -267,9 +267,15 @@ export type DeprecatedFeatureInfo = {
     setting?: DeprecatedSettingAndValue;
 };
 
-export const IFeatureDeprecationManager = Symbol('IFeatureDeprecationManager');
+export interface IFeatureSet {
+    readonly kernelPickerType: KernelPickerType;
+}
 
-export interface IFeatureDeprecationManager extends Disposable {
+export const IFeaturesManager = Symbol('IFeaturesManager');
+
+export interface IFeaturesManager extends Disposable {
+    readonly features: IFeatureSet;
+    readonly onDidChangeFeatures: Event<void>;
     initialize(): void;
     registerDeprecation(deprecatedInfo: DeprecatedFeatureInfo): void;
 }

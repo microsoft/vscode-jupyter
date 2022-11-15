@@ -11,7 +11,6 @@ import {
     NotebookCellExecution,
     NotebookCellKind,
     NotebookController,
-    NotebookControllerAffinity,
     NotebookDocument,
     NotebookEdit,
     NotebookEditor,
@@ -51,26 +50,22 @@ import { DataScience, Common } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
 import { WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../messageTypes';
 import {
-    getKernelConnectionDisplayPath,
     getRemoteKernelSessionInformation,
     getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection,
-    areKernelConnectionsEqual,
-    getKernelRegistrationInfo
+    areKernelConnectionsEqual
 } from '../../kernels/helpers';
 import {
     IKernel,
     IKernelController,
     IKernelProvider,
     isLocalConnection,
-    KernelConnectionMetadata,
-    RemoteKernelConnectionMetadata
+    KernelConnectionMetadata
 } from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
@@ -89,10 +84,9 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../kernels/telemetry/helper';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
-import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
-import { IPlatformService } from '../../platform/common/platform/types';
 import { KernelController } from '../../kernels/kernelController';
+import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -155,7 +149,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private kernelConnection: KernelConnectionMetadata,
         id: string,
         private _viewType: string,
-        label: string,
         private readonly notebookApi: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
         private readonly kernelProvider: IKernelProvider,
@@ -169,39 +162,39 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
-        private readonly serverUriStorage: IJupyterServerUriStorage,
-        private readonly platform: IPlatformService
+        private readonly displayDataProvider: ConnectionDisplayDataProvider
     ) {
         disposableRegistry.push(this);
+        displayDataProvider.onDidChange(
+            (e) => {
+                if (e.connectionId === this.connection.id) {
+                    this.updateDisplayData();
+                }
+            },
+            this,
+            this.disposables
+        );
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
             controller: VSCodeNotebookController;
         }>();
 
+        const displayData = this.displayDataProvider.getDisplayData(this.connection);
         traceVerbose(
-            `Creating notebook controller for ${kernelConnection.kind} (id=${kernelConnection.id}) with name '${label}'`
+            `Creating notebook controller for ${kernelConnection.kind} (id=${kernelConnection.id}) with name '${displayData.label}'`
         );
         this.controller = this.notebookApi.createNotebookController(
             id,
             _viewType,
-            label,
+            displayData.label,
             this.handleExecution.bind(this),
             this.getRendererScripts(),
             []
         );
+        this.updateDisplayData();
 
         // Fill in extended info for our controller
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
-        this.controller.description = getKernelConnectionDisplayPath(kernelConnection, this.workspace, this.platform);
-        this.controller.detail =
-            kernelConnection.kind === 'connectToLiveRemoteKernel'
-                ? getRemoteKernelSessionInformation(kernelConnection)
-                : '';
-        getKernelConnectionCategory(kernelConnection, this.serverUriStorage)
-            .then((kind) => {
-                this.controller.kind = kind;
-            })
-            .catch(noop);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
@@ -255,6 +248,11 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 nbDocumentUris.length ? 'and documents ' + nbDocumentUris.join(', ') : ''
             }`
         );
+        traceInfoIfCI(
+            `Disposing controller ${this.id} associated with connection ${this.connection.id} ${
+                nbDocumentUris.length ? 'and documents ' + nbDocumentUris.join(', ') : ''
+            } called from ${new Error('').stack}`
+        );
         this.isDisposed = true;
         this._onNotebookControllerSelected.dispose();
         this._onNotebookControllerSelectionChanged.dispose();
@@ -263,12 +261,13 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this._onDidDispose.dispose();
         disposeAllDisposables(this.disposables);
     }
-
-    public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
-        traceVerbose(`Setting controller affinity for ${getDisplayPath(notebook.uri)} ${this.id}`);
-        this.controller.updateNotebookAffinity(notebook, affinity);
+    private updateDisplayData() {
+        const displayData = this.displayDataProvider.getDisplayData(this.connection);
+        this.controller.label = displayData.label;
+        this.controller.description = displayData.description;
+        this.controller.detail = displayData.detail;
+        this.controller.kind = displayData.category;
     }
-
     // Handle the execution of notebook cell
     @traceDecoratorVerbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
@@ -363,6 +362,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }
         this.warnWhenUsingOutdatedPython();
         const deferred = createDeferred<void>();
+        traceInfoIfCI(
+            `Controller ${this.connection.kind}:${this.id} associated with nb ${getDisplayPath(event.notebook.uri)}`
+        );
         this.associatedDocuments.set(event.notebook, deferred.promise);
         await this.onDidSelectController(event.notebook);
         await this.updateCellLanguages(event.notebook);
@@ -687,60 +689,4 @@ async function updateNotebookDocumentMetadata(
         ]);
         await editManager.applyEdit(edit);
     }
-}
-
-async function getKernelConnectionCategory(
-    kernelConnection: KernelConnectionMetadata,
-    serverUriStorage: IJupyterServerUriStorage
-): Promise<string> {
-    switch (kernelConnection.kind) {
-        case 'connectToLiveRemoteKernel':
-            const remoteDisplayNameSession = await getRemoteServerDisplayName(kernelConnection, serverUriStorage);
-            return DataScience.kernelCategoryForJupyterSession().format(remoteDisplayNameSession);
-        case 'startUsingRemoteKernelSpec':
-            const remoteDisplayNameSpec = await getRemoteServerDisplayName(kernelConnection, serverUriStorage);
-            return DataScience.kernelCategoryForRemoteJupyterKernel().format(remoteDisplayNameSpec);
-        case 'startUsingLocalKernelSpec':
-            return DataScience.kernelCategoryForJupyterKernel();
-        case 'startUsingPythonInterpreter': {
-            if (
-                getKernelRegistrationInfo(kernelConnection.kernelSpec) ===
-                'registeredByNewVersionOfExtForCustomKernelSpec'
-            ) {
-                return DataScience.kernelCategoryForJupyterKernel();
-            }
-            switch (kernelConnection.interpreter.envType) {
-                case EnvironmentType.Conda:
-                    return DataScience.kernelCategoryForConda();
-                case EnvironmentType.Pipenv:
-                    return DataScience.kernelCategoryForPipEnv();
-                case EnvironmentType.Poetry:
-                    return DataScience.kernelCategoryForPoetry();
-                case EnvironmentType.Pyenv:
-                    return DataScience.kernelCategoryForPyEnv();
-                case EnvironmentType.Venv:
-                case EnvironmentType.VirtualEnv:
-                case EnvironmentType.VirtualEnvWrapper:
-                    return DataScience.kernelCategoryForVirtual();
-                default:
-                    return DataScience.kernelCategoryForGlobal();
-            }
-        }
-    }
-}
-
-// For Remote connections, check if we have a saved display name for the server.
-async function getRemoteServerDisplayName(
-    kernelConnection: RemoteKernelConnectionMetadata,
-    serverUriStorage: IJupyterServerUriStorage
-): Promise<string> {
-    const savedUriList = await serverUriStorage.getSavedUriList();
-    const targetConnection = savedUriList.find((uriEntry) => uriEntry.serverId === kernelConnection.serverId);
-
-    // We only show this if we have a display name and the name is not the same as the URI (this prevents showing the long token for user entered URIs).
-    if (targetConnection && targetConnection.displayName && targetConnection.uri !== targetConnection.displayName) {
-        return targetConnection.displayName;
-    }
-
-    return DataScience.kernelDefaultRemoteDisplayName();
 }

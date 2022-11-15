@@ -167,7 +167,7 @@ suite('Remote Kernel Execution', function () {
         assert.ok(async () => {
             const controllers = controllerRegistration.registered;
             return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
-        }, 'Should have at least one remote kernelspec');
+        }, 'Should have at least one remote kernel Spec');
 
         // After resetting connection to local only, then remove all remote connections.
         await jupyterServerSelector.setJupyterURIToLocal();
@@ -180,7 +180,9 @@ suite('Remote Kernel Execution', function () {
             },
             defaultNotebookTestTimeout,
             () =>
-                `Should not have any remote controllers, existing ${JSON.stringify(controllerRegistration.registered)}`
+                `Should not have any remote controllers, existing ${controllerRegistration.registered
+                    .map((item) => `${item.controller.kind}:${item.controller.id}`)
+                    .join(', ')}`
         );
     });
 

@@ -7,6 +7,7 @@ const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const webpack = require('webpack');
 const constants = require('../constants');
 const CleanTerminalPlugin = require('clean-terminal-webpack-plugin');
+const common = require('./common');
 
 const devEntry = {
     extension: './src/extension.web.ts'
@@ -89,6 +90,7 @@ const config = {
     },
     externals: ['vscode', 'commonjs', 'electron'], // Don't bundle these
     plugins: [
+        ...common.getDefaultPlugins('web'),
         // Work around for Buffer is undefined:
         new webpack.ProvidePlugin({
             Buffer: ['buffer', 'Buffer']

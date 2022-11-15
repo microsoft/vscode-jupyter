@@ -6,7 +6,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import isNil = require('lodash/isNil');
 import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
 import { IApplicationShell, IClipboard, IWorkspaceService } from '../../platform/common/application/types';
 import { traceDecoratorError, traceError, traceWarning } from '../../platform/logging';
@@ -32,6 +31,7 @@ import { IDataScienceErrorHandler } from '../errors/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IFeaturesManager,
     IsWebExtension,
     KernelPickerType
 } from '../../platform/common/types';
@@ -60,7 +60,7 @@ interface IJupyterServerSelector {
     ): Promise<InputFlowAction | undefined | InputStep<{}> | void>;
 
     setJupyterURIToLocal(): Promise<void>;
-    setJupyterURIToRemote(userURI: string | undefined, ignoreValidation?: boolean): Promise<void>;
+    setJupyterURIToRemote(userURI: string | undefined, ignoreValidation?: boolean, displayName?: string): Promise<void>;
 }
 
 export type SelectJupyterUriCommandSource =
@@ -71,6 +71,57 @@ export type SelectJupyterUriCommandSource =
     | 'nativeNotebookToolbar'
     | 'errorHandler'
     | 'prompt';
+
+export async function validateSelectJupyterURI(
+    jupyterConnection: JupyterConnection,
+    applicationShell: IApplicationShell,
+    configService: IConfigurationService,
+    isWebExtension: boolean,
+    inputText: string
+): Promise<string | undefined> {
+    inputText = inputText.trim();
+    try {
+        new URL(inputText);
+    } catch {
+        return DataScience.jupyterSelectURIInvalidURI();
+    }
+
+    // Double check http
+    if (!inputText.toLowerCase().startsWith('http')) {
+        return DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps();
+    }
+    // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
+    try {
+        await jupyterConnection.validateRemoteUri(inputText);
+    } catch (err) {
+        traceWarning('Uri verification error', err);
+        if (JupyterSelfCertsError.isSelfCertsError(err)) {
+            sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+            const handled = await handleSelfCertsError(applicationShell, configService, err.message);
+            if (!handled) {
+                return DataScience.jupyterSelfCertFailErrorMessageOnly();
+            }
+        } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
+            sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+            const handled = await handleExpiredCertsError(applicationShell, configService, err.message);
+            if (!handled) {
+                return DataScience.jupyterSelfCertExpiredErrorMessageOnly();
+            }
+        } else {
+            // Notify the user of web extension specific connection help
+            if (isWebExtension) {
+                applicationShell
+                    .showErrorMessage(DataScience.remoteJupyterConnectionFailedWebExtension())
+                    .then(noop, noop);
+            }
+
+            // Return the general connection error to show in the validation box
+            return DataScience.remoteJupyterConnectionFailedWithoutServerWithError().format(
+                err.message || err.toString()
+            );
+        }
+    }
+}
 
 /**
  * Provides the UI for picking a remote server. Multiplexes to one of two implementations based on the 'showOnlyOneTypeOfKernel' experiment.
@@ -92,13 +143,14 @@ export class JupyterServerSelector {
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry,
+        @inject(IFeaturesManager) featuresManager: IFeaturesManager
     ) {
-        this.createImpl(this.configService.getSettings().kernelPickerType);
+        this.createImpl(featuresManager.features.kernelPickerType);
         this.disposableRegistry.push(
-            this.configService.getSettings().onDidChange(() => {
+            featuresManager.onDidChangeFeatures(() => {
                 // Create impl will ignore if the setting has not changed
-                this.createImpl(this.configService.getSettings().kernelPickerType);
+                this.createImpl(featuresManager.features.kernelPickerType);
             })
         );
     }
@@ -114,8 +166,12 @@ export class JupyterServerSelector {
         return this.impl.setJupyterURIToLocal();
     }
 
-    public setJupyterURIToRemote(userURI: string | undefined, ignoreValidation?: boolean): Promise<void> {
-        return this.impl.setJupyterURIToRemote(userURI, ignoreValidation);
+    public setJupyterURIToRemote(
+        userURI: string | undefined,
+        ignoreValidation?: boolean,
+        displayName?: string
+    ): Promise<void> {
+        return this.impl.setJupyterURIToRemote(userURI, ignoreValidation, displayName);
     }
 
     private createImpl(kernelPickerType: KernelPickerType) {
@@ -269,7 +325,7 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         if (item.label === this.localLabel) {
             await this.setJupyterURIToLocal();
         } else if (!item.newChoice && !item.provider) {
-            await this.setJupyterURIToRemote(!isNil(item.url) ? item.url : item.label, false, item.label);
+            await this.setJupyterURIToRemote(item.url || item.label, false, item.label);
         } else if (!item.provider) {
             return this.selectRemoteURI.bind(this);
         } else {
@@ -314,7 +370,13 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         const uri = await input.showInputBox({
             title: DataScience.jupyterSelectURIPrompt(),
             value: initialValue || defaultUri,
-            validate: this.validateSelectJupyterURI,
+            validate: validateSelectJupyterURI.bind(
+                this,
+                this.jupyterConnection,
+                this.applicationShell,
+                this.configService,
+                this.isWebExtension
+            ),
             prompt: ''
         });
 
@@ -328,51 +390,6 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
             await this.setJupyterURIToRemote(uri, true, newDisplayName || uri);
         }
     }
-
-    public validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
-        inputText = inputText.trim();
-        try {
-            new URL(inputText);
-        } catch {
-            return DataScience.jupyterSelectURIInvalidURI();
-        }
-
-        // Double check http
-        if (!inputText.toLowerCase().startsWith('http')) {
-            return DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps();
-        }
-        // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
-        try {
-            await this.jupyterConnection.validateRemoteUri(inputText);
-        } catch (err) {
-            traceWarning('Uri verification error', err);
-            if (JupyterSelfCertsError.isSelfCertsError(err)) {
-                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
-                const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
-                if (!handled) {
-                    return DataScience.jupyterSelfCertFailErrorMessageOnly();
-                }
-            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
-                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
-                const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
-                if (!handled) {
-                    return DataScience.jupyterSelfCertExpiredErrorMessageOnly();
-                }
-            } else {
-                // Notify the user of web extension specific connection help
-                if (this.isWebExtension) {
-                    this.applicationShell
-                        .showErrorMessage(DataScience.remoteJupyterConnectionFailedWebExtension())
-                        .then(noop, noop);
-                }
-
-                // Return the general connection error to show in the validation box
-                return DataScience.remoteJupyterConnectionFailedWithoutServerWithError().format(
-                    err.message || err.toString()
-                );
-            }
-        }
-    };
 
     private async getUriPickList(
         allowLocal: boolean,
@@ -415,11 +432,10 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
                 const uriDate = new Date(uriItem.time);
                 const isSelected = currentRemoteUri?.uri === uriItem.uri;
                 items.push({
-                    label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
+                    label: uriItem.displayName || uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
                     // If our display name is not the same as the URI, render the uri as description
-                    description:
-                        !isNil(uriItem.displayName) && uriItem.displayName !== uriItem.uri ? uriItem.uri : undefined,
+                    description: uriItem.displayName !== uriItem.uri ? uriItem.uri : undefined,
                     newChoice: false,
                     url: uriItem.uri,
                     buttons: isSelected
@@ -559,7 +575,7 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         if (item.label === this.localLabel) {
             await this.setJupyterURIToLocal();
         } else if (!item.newChoice && !item.provider) {
-            await this.setJupyterURIToRemote(!isNil(item.url) ? item.url : item.label, false, item.label);
+            await this.setJupyterURIToRemote(item.url || item.label, false, item.label);
         } else if (!item.provider) {
             return this.selectRemoteURI.bind(this);
         } else {
@@ -705,11 +721,10 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
                 const uriDate = new Date(uriItem.time);
                 const isSelected = currentRemoteUri?.uri === uriItem.uri;
                 items.push({
-                    label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
+                    label: uriItem.displayName || uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
                     // If our display name is not the same as the URI, render the uri as description
-                    description:
-                        !isNil(uriItem.displayName) && uriItem.displayName !== uriItem.uri ? uriItem.uri : undefined,
+                    description: uriItem.displayName !== uriItem.uri ? uriItem.uri : undefined,
                     newChoice: false,
                     url: uriItem.uri,
                     buttons: isSelected

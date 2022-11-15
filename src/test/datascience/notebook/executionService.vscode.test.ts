@@ -23,7 +23,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { Common } from '../../../platform/common/utils/localize';
-import { traceInfo } from '../../../platform/logging';
+import { traceError, traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
@@ -105,7 +105,7 @@ suite('Kernel Execution @kernelCore', function () {
             kernelExecution = kernelProvider.getKernelExecution(kernel);
             traceInfo('Suite Setup (completed)');
         } catch (e) {
-            traceInfo('Suite Setup (failed) - Execution');
+            traceError('Suite Setup (failed) - Execution', e);
             await captureScreenShot('execution-suite');
             throw e;
         }
@@ -122,9 +122,21 @@ suite('Kernel Execution @kernelCore', function () {
         const cell = await notebook.appendCodeCell('print("123412341234")');
         await kernelExecution.executeCell(cell);
 
-        assert.strictEqual(cell.executionSummary?.executionOrder, 1);
-        assert.strictEqual(cell.outputs.length, 1);
-        assert.strictEqual(cell.outputs[0].items.length, 1);
+        assert.isAtLeast(cell.executionSummary?.executionOrder || 0, 1);
+        assert.strictEqual(
+            cell.outputs.length,
+            1,
+            `Cell should have one output, but has ${cell.outputs.length}, ${cell.outputs
+                .map((item) => `Cell Output items => ${item.items.map((oi) => oi.mime).join('')}`)
+                .join(', ')}`
+        );
+        assert.strictEqual(
+            cell.outputs[0].items.length,
+            1,
+            `First output should one output item, but has ${cell.outputs[0].items.length}, ${cell.outputs[0].items
+                .map((oi) => oi.mime)
+                .join(', ')}`
+        );
         assert.strictEqual(Buffer.from(cell.outputs[0].items[0].data).toString().trim(), '123412341234');
         assert.isTrue(cell.executionSummary?.success);
     });

@@ -13,9 +13,12 @@ export enum ContributedKernelFinderKind {
 }
 
 export interface IContributedKernelFinder<T extends KernelConnectionMetadata = KernelConnectionMetadata> {
+    status: 'discovering' | 'idle';
+    onDidChangeStatus: Event<void>;
     id: string;
     displayName: string;
     kind: ContributedKernelFinderKind;
     onDidChangeKernels: Event<void>;
     kernels: T[];
+    refresh(): Promise<void>;
 }

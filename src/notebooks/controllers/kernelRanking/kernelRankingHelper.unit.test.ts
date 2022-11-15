@@ -24,7 +24,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
 import { CancellationTokenSource, EventEmitter, Memento, Uri } from 'vscode';
-import { IDisposable, IExtensionContext, IExtensions } from '../../../platform/common/types';
+import { IDisposable, IExtensionContext, IExtensions, IFeaturesManager } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import {
     KernelConnectionMetadata,
@@ -45,6 +45,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernelFinder';
+import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
 
 [false, true].forEach((isWindows) => {
     suite(`Kernel Ranking ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -94,8 +95,10 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernel
             remoteKernelFinder = mock(RemoteKernelFinder);
             onDidChangeInterpreter = new EventEmitter<void>();
             onDidChangeInterpreters = new EventEmitter<void>();
+            const onDidChangeInterpreterStatus = new EventEmitter<void>();
             disposables.push(onDidChangeInterpreter);
             disposables.push(onDidChangeInterpreters);
+            disposables.push(onDidChangeInterpreterStatus);
             when(remoteKernelFinder.listKernelsFromConnection(anything())).thenResolve([]);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
@@ -112,6 +115,7 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernel
             testData.interpreters = Array.from(distinctInterpreters);
             when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
             when(interpreterService.onDidChangeInterpreters).thenReturn(onDidChangeInterpreters.event);
+            when(interpreterService.onDidChangeStatus).thenReturn(onDidChangeInterpreterStatus.event);
             when(interpreterService.resolvedEnvironments).thenReturn(Array.from(distinctInterpreters));
             when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
             when(interpreterService.getInterpreterDetails(anything())).thenResolve();
@@ -236,6 +240,10 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernel
 
             const extensions = mock<IExtensions>();
             kernelFinder = new KernelFinder([]);
+            const trustedKernels = mock<ITrustedKernelPaths>();
+            when(trustedKernels.isTrusted(anything())).thenReturn(true);
+            const featuresManager = mock<IFeaturesManager>();
+            when(featuresManager.features).thenReturn({ kernelPickerType: 'Stable' });
 
             localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
                 instance(interpreterService),
@@ -246,7 +254,9 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernel
                 nonPythonKernelSpecFinder,
                 instance(memento),
                 disposables,
-                instance(env)
+                instance(env),
+                instance(trustedKernels),
+                instance(featuresManager)
             );
             localKernelFinder = new ContributedLocalKernelSpecFinder(
                 nonPythonKernelSpecFinder,

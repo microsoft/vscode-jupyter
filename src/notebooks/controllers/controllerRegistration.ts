@@ -4,7 +4,6 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
@@ -18,17 +17,18 @@ import {
 } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
-import { IPlatformService } from '../../platform/common/platform/types';
 import {
     IDisposableRegistry,
     IConfigurationService,
     IExtensionContext,
-    IBrowserService
+    IBrowserService,
+    IFeaturesManager
 } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceError, traceVerbose } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
+import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import {
     IControllerRegistration,
@@ -45,13 +45,8 @@ import { VSCodeNotebookController } from './vscodeNotebookController';
 @injectable()
 export class ControllerRegistration implements IControllerRegistration {
     private registeredControllers = new Map<string, VSCodeNotebookController>();
-    private creationEmitter = new EventEmitter<IVSCodeNotebookController>();
     private changeEmitter = new EventEmitter<IVSCodeNotebookControllerUpdateEvent>();
     private registeredMetadatas = new Map<string, KernelConnectionMetadata>();
-
-    public get onCreated(): Event<IVSCodeNotebookController> {
-        return this.creationEmitter.event;
-    }
     public get onChanged(): Event<IVSCodeNotebookControllerUpdateEvent> {
         return this.changeEmitter.event;
     }
@@ -68,6 +63,7 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
+        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
@@ -80,7 +76,7 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IPlatformService) private readonly platform: IPlatformService
+        @inject(ConnectionDisplayDataProvider) private readonly displayDataProvider: ConnectionDisplayDataProvider
     ) {
         this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChangeConnectionType(this.onDidChangeFilter, this, this.disposables);
@@ -88,19 +84,37 @@ export class ControllerRegistration implements IControllerRegistration {
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
     }
     batchAdd(metadatas: KernelConnectionMetadata[], types: ('jupyter-notebook' | 'interactive')[]) {
-        const added: IVSCodeNotebookController[] = [];
+        const addedList: IVSCodeNotebookController[] = [];
         metadatas.forEach((metadata) => {
-            added.push(...this.add(metadata, types));
+            const { added } = this.addImpl(metadata, types, false);
+            addedList.push(...added);
         });
 
-        this.changeEmitter.fire({ added, removed: [] });
-        return added;
+        if (addedList.length) {
+            this.changeEmitter.fire({ added: addedList, removed: [] });
+        }
     }
-    add(
+    private activeInterpreterControllers = new WeakSet<IVSCodeNotebookController>();
+    trackActiveInterpreterControllers(controllers: IVSCodeNotebookController[]) {
+        controllers.forEach((controller) => this.activeInterpreterControllers.add(controller));
+    }
+    public canControllerBeDisposed(controller: IVSCodeNotebookController) {
+        return !this.activeInterpreterControllers.has(controller) || !this.isControllerAttachedToADocument(controller);
+    }
+    addOrUpdate(
         metadata: KernelConnectionMetadata,
         types: ('jupyter-notebook' | 'interactive')[]
     ): IVSCodeNotebookController[] {
-        let results: IVSCodeNotebookController[] = [];
+        const { added, existing } = this.addImpl(metadata, types, true);
+        return added.concat(existing);
+    }
+    addImpl(
+        metadata: KernelConnectionMetadata,
+        types: ('jupyter-notebook' | 'interactive')[],
+        triggerChangeEvent: boolean
+    ): { added: IVSCodeNotebookController[]; existing: IVSCodeNotebookController[] } {
+        const added: IVSCodeNotebookController[] = [];
+        const existing: IVSCodeNotebookController[] = [];
         try {
             // Create notebook selector
             types
@@ -123,7 +137,7 @@ export class ControllerRegistration implements IControllerRegistration {
                         controller.updateConnection(metadata);
 
                         // Add to results so that callers can find
-                        results.push(controller);
+                        existing.push(controller);
                         return false;
                     } else if (this.isFiltered(metadata)) {
                         // Filter out those in our kernel filter
@@ -136,7 +150,6 @@ export class ControllerRegistration implements IControllerRegistration {
                         metadata,
                         id,
                         viewType,
-                        getDisplayNameOrNameOfKernelConnection(metadata),
                         this.notebook,
                         this.commandManager,
                         this.kernelProvider,
@@ -150,8 +163,7 @@ export class ControllerRegistration implements IControllerRegistration {
                         this.browser,
                         this.extensionChecker,
                         this.serviceContainer,
-                        this.serverUriStorage,
-                        this.platform
+                        this.displayDataProvider
                     );
                     controller.onDidDispose(
                         () => {
@@ -173,14 +185,16 @@ export class ControllerRegistration implements IControllerRegistration {
                     // We are disposing as documents are closed, but do this as well
                     this.disposables.push(controller);
                     this.registeredControllers.set(controller.id, controller);
-                    results.push(controller);
-                    this.creationEmitter.fire(controller);
+                    added.push(controller);
                 });
+            if (triggerChangeEvent && added.length) {
+                this.changeEmitter.fire({ added: added, removed: [] });
+            }
         } catch (ex) {
             if (isCancellationError(ex, true)) {
                 // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
                 // Hence swallow cancellation errors.
-                return results;
+                return { added, existing };
             }
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
             sendTelemetryEvent(
@@ -192,7 +206,7 @@ export class ControllerRegistration implements IControllerRegistration {
             );
             traceError(`Failed to create notebook controller for ${metadata.id}`, ex);
         }
-        return results;
+        return { added, existing };
     }
     get(
         metadata: KernelConnectionMetadata,
@@ -206,7 +220,7 @@ export class ControllerRegistration implements IControllerRegistration {
         const userFiltered = this.kernelFilter.isKernelHidden(metadata);
         const urlFiltered = isRemoteConnection(metadata) && this.serverUriStorage.currentServerId !== metadata.serverId;
 
-        if (this.configuration.getSettings().kernelPickerType === 'Insiders') {
+        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
             // In the 'Insiders' experiment remove the url filters as we want to register everything.
             return userFiltered;
         }
@@ -261,7 +275,7 @@ export class ControllerRegistration implements IControllerRegistration {
         const metadatas = this.metadatas.filter((item) => !this.isFiltered(item));
 
         // Try to re-create the missing controllers.
-        metadatas.forEach((c) => this.add(c, [JupyterNotebookView, InteractiveWindowView]));
+        metadatas.forEach((c) => this.addOrUpdate(c, [JupyterNotebookView, InteractiveWindowView]));
 
         // Go through all controllers that have been created and hide them.
         // Unless they are attached to an existing document.

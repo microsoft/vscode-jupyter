@@ -96,7 +96,7 @@ export async function waitForCondition<T>(
                 resolve(success as NonNullable<T>);
             }
         };
-        timer = setTimeout(timerFunc, intervalTimeoutMs);
+        timer = setTimeout(timerFunc, 0);
         if (cancelToken) {
             cancelToken.onCancellationRequested(
                 () => {

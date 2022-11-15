@@ -6,7 +6,7 @@ import { NotebookControllerAffinity2, NotebookDocument, workspace } from 'vscode
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
-import { IConfigurationService, IDisposableRegistry, KernelPickerType } from '../../platform/common/types';
+import { IDisposableRegistry, IFeaturesManager, KernelPickerType } from '../../platform/common/types';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import {
@@ -14,7 +14,7 @@ import {
     IKernelRankingHelper,
     IConnectionMru,
     IConnectionTracker,
-    IVSCodeNotebookController
+    IVSCodeNotebookControllerUpdateEvent
 } from './types';
 
 @injectable()
@@ -27,15 +27,15 @@ export class ConnectionTracker implements IExtensionSyncActivationService, IConn
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IKernelRankingHelper) private readonly kernelRankingHelper: IKernelRankingHelper,
         @inject(IConnectionMru) private readonly notebookConnectionMru: IConnectionMru,
-        @inject(IConfigurationService) configuration: IConfigurationService
+        @inject(IFeaturesManager) featuresManager: IFeaturesManager
     ) {
-        this.kernelPickerType = configuration.getSettings(undefined).kernelPickerType;
+        this.kernelPickerType = featuresManager.features.kernelPickerType;
     }
 
     activate(): void {
         if (this.kernelPickerType === 'Insiders') {
             workspace.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposableRegistry);
-            this.controllerRegistration.onCreated(this.onCreatedController, this, this.disposableRegistry);
+            this.controllerRegistration.onChanged(this.onChangeController, this, this.disposableRegistry);
 
             // Tag all open documents
             workspace.notebookDocuments.forEach(this.onDidOpenNotebookDocument.bind(this));
@@ -87,11 +87,15 @@ export class ConnectionTracker implements IExtensionSyncActivationService, IConn
      * & if this matches exactly with the last used kernel connection, then mark it as preferred.
      */
     @swallowExceptions()
-    private async onCreatedController(controller: IVSCodeNotebookController) {
+    private async onChangeController(e: IVSCodeNotebookControllerUpdateEvent) {
         await Promise.all(
-            workspace.notebookDocuments.map(async (notebook) => {
-                await this.updateAffinity(notebook, controller.connection);
-            })
+            e.added.map((controller) =>
+                Promise.all(
+                    workspace.notebookDocuments.map(async (notebook) => {
+                        await this.updateAffinity(notebook, controller.connection);
+                    })
+                )
+            )
         );
     }
     private async updateAffinity(notebook: NotebookDocument, connection: KernelConnectionMetadata) {

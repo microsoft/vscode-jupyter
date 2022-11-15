@@ -20,10 +20,11 @@ import { IExportedKernelServiceFactory } from './api/api';
 import { ApiAccessService } from './api/apiAccessService';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
-import { IExtensionContext } from '../platform/common/types';
+import { IExtensionContext, IFeaturesManager } from '../platform/common/types';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.web';
 import { PythonExtensionRestartNotification } from './notification/pythonExtensionRestartNotification';
 import { ImportTracker } from './import-export/importTracker';
+import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
@@ -62,4 +63,13 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
 
     // Dev Tools
     registerDevToolTypes(context, serviceManager, isDevMode);
+
+    const featureManager = serviceManager.get<IFeaturesManager>(IFeaturesManager);
+    if (featureManager.features.kernelPickerType === 'Insiders') {
+        // User jupyter server url provider
+        serviceManager.addSingleton<IExtensionSyncActivationService>(
+            IExtensionSyncActivationService,
+            UserJupyterServerUrlProvider
+        );
+    }
 }
