@@ -154,9 +154,6 @@ export class JupyterConnectionWaiter implements IDisposable {
             const host = groups.LOCAL ? groups.LOCAL : groups.IP;
             const uriString = `${groups.PREFIX}${host}${groups.REST}`;
 
-            // URL is not being found for some reason. Pull it in forcefully
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const URL = require('url').URL;
             let url: URL;
             try {
                 url = new URL(uriString);
