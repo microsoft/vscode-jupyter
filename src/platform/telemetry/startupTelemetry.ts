@@ -44,9 +44,6 @@ export async function sendErrorTelemetry(
     durations: {
         workspaceFolderCount: number;
         totalActivateTime: number;
-        codeLoadingTime: number;
-        startActivateTime: number;
-        endActivateTime: number;
     },
     serviceContainer?: IServiceContainer
 ) {

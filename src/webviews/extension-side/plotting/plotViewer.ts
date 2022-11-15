@@ -22,6 +22,8 @@ import * as localize from '../../../platform/common/utils/localize';
 import { WebviewPanelHost } from '../../../platform/webviews/webviewPanelHost';
 import { joinPath } from '../../../platform/vscode-path/resources';
 import { noop } from '../../../platform/common/utils/misc';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
 
 @injectable()
 export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
@@ -36,6 +38,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         @inject(IFileSystem) protected fs: IFileSystem,
         @inject(IExtensionContext) readonly context: IExtensionContext
     ) {
+        const startupTimer = new StopWatch();
         const plotDir = joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
         super(
             configuration,
@@ -48,7 +51,13 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             ViewColumn.One
         );
         // Load the web panel using our current directory as we don't expect to load any other files
-        super.loadWebview(Uri.file(process.cwd())).catch(traceError);
+        super
+            .loadWebview(Uri.file(process.cwd()))
+            .catch(traceError)
+            .finally(() => {
+                // Send our telemetry for the webview loading when the load is done.
+                sendTelemetryEvent(Telemetry.PlotViewerWebviewLoaded, { duration: startupTimer.elapsedTime });
+            });
     }
 
     public get closed(): Event<IPlotViewer> {

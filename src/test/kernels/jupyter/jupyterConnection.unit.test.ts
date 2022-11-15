@@ -12,8 +12,7 @@ import {
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
-    IJupyterUriProviderRegistration,
-    IServerConnectionType
+    IJupyterUriProviderRegistration
 } from '../../../kernels/jupyter/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
@@ -23,21 +22,18 @@ suite('Jupyter Connection', async () => {
     let jupyterConnection: JupyterConnection;
     let registrationPicker: IJupyterUriProviderRegistration;
     let sessionManagerFactory: IJupyterSessionManagerFactory;
-    let serverConnectionType: IServerConnectionType;
     let sessionManager: IJupyterSessionManager;
     let serverUriStorage: IJupyterServerUriStorage;
     const disposables: IDisposable[] = [];
     setup(() => {
         registrationPicker = mock<IJupyterUriProviderRegistration>();
         sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
-        serverConnectionType = mock<IServerConnectionType>();
         sessionManager = mock<IJupyterSessionManager>();
         serverUriStorage = mock<IJupyterServerUriStorage>();
         jupyterConnection = new JupyterConnection(
             instance(registrationPicker),
             instance(sessionManagerFactory),
             disposables,
-            instance(serverConnectionType),
             instance(serverUriStorage)
         );
 
@@ -46,7 +42,7 @@ suite('Jupyter Connection', async () => {
         const serverConnectionChangeEvent = new EventEmitter<void>();
         disposables.push(serverConnectionChangeEvent);
 
-        when(serverConnectionType.onDidChange).thenReturn(serverConnectionChangeEvent.event);
+        when(serverUriStorage.onDidChangeConnectionType).thenReturn(serverConnectionChangeEvent.event);
 
         jupyterConnection.activate();
     });
@@ -55,7 +51,7 @@ suite('Jupyter Connection', async () => {
     });
 
     test('Ensure event handler is added', () => {
-        verify(serverConnectionType.onDidChange).once();
+        verify(serverUriStorage.onDidChangeConnectionType).once();
     });
     test('Validation will result in fetching kernels and kernelspecs', async () => {
         const uri = 'http://localhost:8888/?token=1234';

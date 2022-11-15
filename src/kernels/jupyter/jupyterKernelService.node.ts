@@ -16,7 +16,8 @@ import {
     traceVerbose,
     logValue,
     ignoreLogging,
-    traceDecoratorError
+    traceDecoratorError,
+    traceError
 } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
@@ -74,14 +75,14 @@ export class JupyterKernelService implements IJupyterKernelService {
             kernel.interpreter &&
             kernel.kind !== 'startUsingRemoteKernelSpec'
         ) {
-            const result = await this.kernelDependencyService.installMissingDependencies(
+            const result = await this.kernelDependencyService.installMissingDependencies({
                 resource,
-                kernel,
+                kernelConnection: kernel,
                 ui,
-                cancelToken,
-                true,
+                token: cancelToken,
+                ignoreCache: true,
                 cannotChangeKernels
-            );
+            });
             switch (result) {
                 case KernelInterpreterDependencyResponse.cancel:
                 case KernelInterpreterDependencyResponse.selectDifferentKernel:
@@ -197,8 +198,15 @@ export class JupyterKernelService implements IJupyterKernelService {
         try {
             await this.fs.writeFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
         } catch (ex) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any);
+            const name = kernel.kernelSpec.name;
+            const language = kernel.kernelSpec.language;
+            sendTelemetryEvent(
+                Telemetry.FailedToUpdateKernelSpec,
+                undefined,
+                { name, language, failed: true },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ex as any
+            );
             throw ex;
         }
         if (cancelToken.isCancellationRequested) {
@@ -220,7 +228,6 @@ export class JupyterKernelService implements IJupyterKernelService {
             );
         }
 
-        sendTelemetryEvent(Telemetry.RegisterAndUseInterpreterAsKernel);
         return kernelSpecFilePath.fsPath;
     }
     private async updateKernelEnvironment(
@@ -281,14 +288,17 @@ export class JupyterKernelService implements IJupyterKernelService {
             specModel = cleanEnvironment(specModel);
 
             // Update the kernel.json with our new stuff.
+            const uri = Uri.file(kernelSpecFilePath);
             try {
-                await this.fs.writeFile(Uri.file(kernelSpecFilePath), JSON.stringify(specModel, undefined, 2));
+                await this.fs.writeFile(uri, JSON.stringify(specModel, undefined, 2));
+                traceVerbose(`Updated kernel spec with environment variables for ${getDisplayPath(uri)}`);
             } catch (ex) {
                 if (Cancellation.isCanceled(cancelToken)) {
                     return;
                 }
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any);
+                traceError(`Failed to update kernel spec with environment variables for ${getDisplayPath(uri)}`, ex);
                 throw ex;
             }
 

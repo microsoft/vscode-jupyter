@@ -19,7 +19,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (DataViewer)', function () {
+suite('DataViewer @webview', function () {
     const disposables: IDisposable[] = [];
     const testPythonFile = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,

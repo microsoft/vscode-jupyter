@@ -6,25 +6,7 @@ const glob = require('glob');
 const path = require('path');
 const webpack_bundle_analyzer = require('webpack-bundle-analyzer');
 const constants = require('../constants');
-exports.nodeModulesToExternalize = [
-    'unicode/category/Lu',
-    'unicode/category/Ll',
-    'unicode/category/Lt',
-    'unicode/category/Lo',
-    'unicode/category/Lm',
-    'unicode/category/Nl',
-    'unicode/category/Mn',
-    'unicode/category/Mc',
-    'unicode/category/Nd',
-    'unicode/category/Pc',
-    '@jupyterlab/services',
-    'node-stream-zip',
-    'pdfkit/js/pdfkit.standalone',
-    'crypto-js',
-    'fontkit',
-    'png-js',
-    'zeromq'
-];
+exports.nodeModulesToExternalize = ['pdfkit/js/pdfkit.standalone', 'crypto-js', 'fontkit', 'png-js', 'zeromq'];
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {
     const plugins = [];

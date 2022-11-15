@@ -15,7 +15,7 @@ import {
     NotebookRange,
     NotebookCellData
 } from 'vscode';
-import { JupyterNotebookView, NotebookCellScheme } from '../../../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView, NotebookCellScheme } from '../../../platform/common/constants';
 
 /* eslint-disable , no-trailing-spaces, no-multi-str */
 // Disable whitespace / multiline as we use that to pass in our fake file strings
@@ -158,7 +158,8 @@ const defaultMetadata = {
 export function createMockedNotebookDocument(
     cells: NotebookCellData[],
     metadata: Partial<nbformat.INotebookMetadata> = defaultMetadata,
-    uri: Uri = Uri.file('foo.ipynb')
+    uri: Uri = Uri.file('foo.ipynb'),
+    notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView = JupyterNotebookView
 ): NotebookDocument {
     const notebook = mock<NotebookDocument>();
     const nbMetadata = JSON.parse(JSON.stringify(defaultMetadata));
@@ -174,7 +175,7 @@ export function createMockedNotebookDocument(
     const notebookContent: Partial<nbformat.INotebookContent> = {
         metadata: nbMetadata
     };
-    when(notebook.notebookType).thenReturn(JupyterNotebookView);
+    when(notebook.notebookType).thenReturn(notebookType);
     when(notebook.metadata).thenReturn({ custom: notebookContent } as never);
 
     const nbCells = cells.map((data, index) => {
@@ -194,6 +195,7 @@ export function createMockedNotebookDocument(
     });
     when(notebook.cellCount).thenReturn(nbCells.length);
     when(notebook.cellAt(anything())).thenCall((index) => nbCells[index]);
+    when(notebook.getCells()).thenCall(() => nbCells);
     when(notebook.getCells(anything())).thenCall((range: NotebookRange) => nbCells.slice(range.start, range.end));
     return instance(notebook);
 }

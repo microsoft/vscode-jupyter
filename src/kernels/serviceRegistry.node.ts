@@ -40,11 +40,17 @@ import { Activation } from './activation.node';
 import { PortAttributesProviders } from './raw/port/portAttributeProvider.node';
 import { ServerPreload } from './jupyter/launcher/serverPreload.node';
 import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
-import { KernelAutoReConnectFailedMonitor } from './kernelAutoReConnectFailedMonitor';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { PythonKernelInterruptDaemon } from './raw/finder/pythonKernelInterruptDaemon.node';
-import { LocalKernelFinder } from './raw/finder/localKernelFinder.node';
 import { DebugStartupCodeProvider } from './debuggerStartupCodeProvider';
+import { KernelWorkingFolder } from './kernelWorkingFolder.node';
+import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.node';
+import { ITrustedKernelPaths } from './raw/finder/types';
+import { KernelStatusProvider } from './kernelStatusProvider';
+import { KernelStartupTelemetry } from './kernelStartupTelemetry.node';
+import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarmer';
+import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
+import { ContributedLocalPythonEnvFinder } from './raw/finder/contributedLocalPythonEnvFinder.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
@@ -68,20 +74,28 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         KernelEnvironmentVariablesService
     );
     serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        LocalKernelFinder
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        ContributedLocalKernelSpecFinder
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        ContributedLocalPythonEnvFinder
     );
 
     serviceManager.addSingleton<JupyterPaths>(JupyterPaths, JupyterPaths);
+    serviceManager.addSingleton<ITrustedKernelPaths>(ITrustedKernelPaths, TrustedKernelPaths);
     serviceManager.addSingleton<LocalKnownPathKernelSpecFinder>(
         LocalKnownPathKernelSpecFinder,
         LocalKnownPathKernelSpecFinder
     );
+    serviceManager.addBinding(LocalKnownPathKernelSpecFinder, IExtensionSyncActivationService);
     serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinder>(
         LocalPythonAndRelatedNonPythonKernelSpecFinder,
         LocalPythonAndRelatedNonPythonKernelSpecFinder
     );
+    serviceManager.addBinding(LocalPythonAndRelatedNonPythonKernelSpecFinder, IExtensionSyncActivationService);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         PreWarmActivatedJupyterEnvironmentVariables
@@ -97,15 +111,19 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
-        KernelAutoReConnectFailedMonitor
-    );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
         KernelAutoReconnectMonitor
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelAutoRestartMonitor
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelStartupTelemetry
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelCompletionsPreWarmer
     );
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<IThirdPartyKernelProvider>(IThirdPartyKernelProvider, ThirdPartyKernelProvider);
@@ -122,9 +140,13 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
-    serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        CellOutputDisplayIdTracker
+    );
 
     serviceManager.addSingleton<IStartupCodeProvider>(IStartupCodeProvider, KernelStartupCodeProvider);
     serviceManager.addSingleton<IStartupCodeProvider>(IStartupCodeProvider, DebugStartupCodeProvider);
     serviceManager.addSingleton<PythonKernelInterruptDaemon>(PythonKernelInterruptDaemon, PythonKernelInterruptDaemon);
+    serviceManager.addSingleton(KernelWorkingFolder, KernelWorkingFolder);
 }

@@ -42,7 +42,7 @@ import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Commands } from '../../platform/common/constants';
 import { IControllerSelection } from '../../notebooks/controllers/types';
 
-suite(`Interactive window Execution`, async function () {
+suite(`Interactive window Execution @iw`, async function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -72,10 +72,19 @@ suite(`Interactive window Execution`, async function () {
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
     async function preSwitch() {
-        const pythonApi = await pythonApiProvider.getApi();
-        await pythonApi.refreshInterpreters({ clearCache: true });
+        const pythonApi = await pythonApiProvider.getNewApi();
+        await pythonApi?.environments.refreshEnvironments({ forceRefresh: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreters = await interpreterService.getInterpreters();
+        const interpreters = interpreterService.resolvedEnvironments;
+        await waitForCondition(
+            () => {
+                const venvNoKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvnokernel'));
+                const venvKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvkernel'));
+                return venvNoKernelInterpreter && venvKernelInterpreter ? true : false;
+            },
+            defaultNotebookTestTimeout,
+            'Waiting for interpreters to be discovered'
+        );
         const venvNoKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvnokernel'));
         const venvKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvkernel'));
 

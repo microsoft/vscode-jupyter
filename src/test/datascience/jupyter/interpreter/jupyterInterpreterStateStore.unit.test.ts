@@ -12,7 +12,7 @@ import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interp
 import { MockMemento } from '../../../mocks/mementos';
 import { arePathsSame } from '../../../../platform/common/platform/fileUtils';
 
-suite('DataScience - Jupyter Interpreter State', () => {
+suite('Jupyter Interpreter State', () => {
     let selected: JupyterInterpreterStateStore;
     let memento: Memento;
     let interpreterService: JupyterInterpreterService;

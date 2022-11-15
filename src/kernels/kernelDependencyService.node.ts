@@ -7,14 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
-import {
-    traceInfo,
-    traceError,
-    traceInfoIfCI,
-    traceDecoratorVerbose,
-    ignoreLogging,
-    logValue
-} from '../platform/logging';
+import { traceInfo, traceError, traceInfoIfCI, traceDecoratorVerbose, logValue } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource, IDisplayOptions } from '../platform/common/types';
 import { DataScience, Common } from '../platform/common/utils/localize';
@@ -54,14 +47,23 @@ export class KernelDependencyService implements IKernelDependencyService {
      * If user opts not to install they can opt to select another interpreter.
      */
     @traceDecoratorVerbose('Install Missing Dependencies')
-    public async installMissingDependencies(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        ui: IDisplayOptions,
-        @ignoreLogging() token: CancellationToken,
-        ignoreCache?: boolean,
-        cannotChangeKernels?: boolean
-    ): Promise<KernelInterpreterDependencyResponse> {
+    public async installMissingDependencies({
+        resource,
+        kernelConnection,
+        ui,
+        token,
+        ignoreCache,
+        cannotChangeKernels,
+        installWithoutPrompting
+    }: {
+        resource: Resource;
+        kernelConnection: KernelConnectionMetadata;
+        ui: IDisplayOptions;
+        token: CancellationToken;
+        ignoreCache?: boolean;
+        cannotChangeKernels?: boolean;
+        installWithoutPrompting?: boolean;
+    }): Promise<KernelInterpreterDependencyResponse> {
         traceInfo(
             `installMissingDependencies ${
                 kernelConnection.interpreter?.uri ? getDisplayPath(kernelConnection.interpreter?.uri) : ''
@@ -74,16 +76,29 @@ export class KernelDependencyService implements IKernelDependencyService {
         ) {
             return KernelInterpreterDependencyResponse.ok;
         }
-        const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
-            resource,
-            DataScience.validatingKernelDependencies(),
-            () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
-        );
-        if (alreadyInstalled) {
-            return KernelInterpreterDependencyResponse.ok;
-        }
-        if (token?.isCancellationRequested) {
-            return KernelInterpreterDependencyResponse.cancel;
+
+        const checkForPackages = async () => {
+            const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
+                resource,
+                DataScience.validatingKernelDependencies(),
+                () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
+            );
+            if (alreadyInstalled) {
+                return KernelInterpreterDependencyResponse.ok;
+            }
+            if (token?.isCancellationRequested) {
+                return KernelInterpreterDependencyResponse.cancel;
+            }
+        };
+
+        if (!installWithoutPrompting) {
+            const result = await checkForPackages();
+            if (
+                result === KernelInterpreterDependencyResponse.ok ||
+                result === KernelInterpreterDependencyResponse.cancel
+            ) {
+                return result;
+            }
         }
 
         // Cache the install run
@@ -99,14 +114,25 @@ export class KernelDependencyService implements IKernelDependencyService {
             promise = KernelProgressReporter.wrapAndReportProgress(
                 resource,
                 DataScience.installingMissingDependencies(),
-                () =>
-                    this.runInstaller(
+                async () => {
+                    if (installWithoutPrompting) {
+                        const result = await checkForPackages();
+                        if (
+                            result === KernelInterpreterDependencyResponse.ok ||
+                            result === KernelInterpreterDependencyResponse.cancel
+                        ) {
+                            return result;
+                        }
+                    }
+                    return this.runInstaller(
                         resource,
                         kernelConnection.interpreter!,
                         ui,
                         cancelTokenSource,
-                        cannotChangeKernels
-                    )
+                        cannotChangeKernels,
+                        installWithoutPrompting
+                    );
+                }
             );
             promise
                 .finally(() => {
@@ -186,7 +212,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         interpreter: PythonEnvironment,
         ui: IDisplayOptions,
         cancelTokenSource: CancellationTokenSource,
-        cannotChangeKernels?: boolean
+        cannotChangeKernels?: boolean,
+        installWithoutPrompting?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfoIfCI(
             `Run Installer for ${getDisplayPath(resource)} ui.disableUI=${
@@ -243,7 +270,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         options.push(moreInfoOption);
 
         try {
-            if (!this.isCodeSpace) {
+            if (!this.isCodeSpace || !installWithoutPrompting) {
                 sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'prompted',
                     moduleName: productNameForTelemetry,
@@ -255,12 +282,13 @@ export class KernelDependencyService implements IKernelDependencyService {
             traceInfoIfCI(`Prompting user for install (this.isCodeSpace=${this.isCodeSpace}).`);
             let selection;
             do {
-                selection = this.isCodeSpace
-                    ? installOption
-                    : await Promise.race([
-                          this.appShell.showInformationMessage(message, { modal: true }, ...options),
-                          promptCancellationPromise
-                      ]);
+                selection =
+                    this.isCodeSpace || installWithoutPrompting
+                        ? installOption
+                        : await Promise.race([
+                              this.appShell.showInformationMessage(message, { modal: true }, ...options),
+                              promptCancellationPromise
+                          ]);
 
                 if (selection === moreInfoOption) {
                     sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {

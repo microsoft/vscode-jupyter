@@ -21,6 +21,7 @@ import { noop } from '../../../../platform/common/utils/misc';
 import { createDeferred, Deferred } from '../../../../platform/common/utils/async';
 import { ScriptUriConverter } from './scriptUriConverter';
 import { ResourceMap } from '../../../../platform/vscode-path/map';
+import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 
 /**
  * Handles messages from the kernel related to setting up widgets.
@@ -58,7 +59,8 @@ export class IPyWidgetScriptSource {
         private readonly configurationSettings: IConfigurationService,
         private readonly httpClient: IHttpClient,
         private readonly sourceProviderFactory: IWidgetScriptSourceProviderFactory,
-        isWebExtension: boolean
+        isWebExtension: boolean,
+        private readonly cdnScriptProvider: CDNWidgetScriptSourceProvider
     ) {
         this.uriConverter = new ScriptUriConverter(isWebExtension, (resource) => {
             if (!this.uriTranslationRequests.has(resource))
@@ -132,7 +134,8 @@ export class IPyWidgetScriptSource {
             this.configurationSettings,
             this.httpClient,
             this.sourceProviderFactory,
-            this.isWebViewOnline.promise
+            this.isWebViewOnline.promise,
+            this.cdnScriptProvider
         );
         this.kernel.onDisposed(() => this.dispose());
         this.handlePendingRequests();

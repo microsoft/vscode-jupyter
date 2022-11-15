@@ -48,7 +48,7 @@ export function configure(setupOptions: SetupOptions): void {
 }
 
 export async function run(): Promise<void> {
-    const testsRoot = path.join(__dirname);
+    const testsRoot = path.join(__dirname, '..');
     // Enable source map support.
     require('source-map-support').install();
 

@@ -24,7 +24,6 @@ module.exports = {
         'src/test/mocks/autoSelector.ts',
         'src/test/mocks/vsc/strings.ts',
         'src/test/mocks/vsc/charCode.ts',
-        'src/test/mocks/vsc/htmlContent.ts',
         'src/test/mocks/vsc/position.ts',
         'src/test/mocks/vsc/range.ts',
         'src/test/mocks/vsc/arrays.ts',
@@ -266,12 +265,12 @@ module.exports = {
                         message: 'Importing test modules from ./src/test into extension code is not allowed.'
                     },
                     {
-                        target: './src/**[!test]**/**/*[!.node].ts',
+                        target: './src/**[!test]**/**/*[!.node|.unit].ts',
                         from: './src/**/*.node.ts',
                         message: 'Importing node modules into non node files is not allowed.'
                     },
                     {
-                        target: './src/**[!test]**/**/*[!.web].ts',
+                        target: './src/**[!test]**/**/*[!.web|.unit].ts',
                         from: './src/**/*.web.ts',
                         message: 'Importing web modules into non web files is not allowed.'
                     },
@@ -286,19 +285,19 @@ module.exports = {
                         message: 'Importing node modules into extension.web.ts is not allowed.'
                     },
                     {
-                        target: './src/kernels/**/*.ts',
+                        target: './src/kernels/**/*[!.unit].ts',
                         from: './src/**[!platform,telemetry,kernels]**/**/*.ts',
                         message:
                             'Only modules from ./src/platform and ./src/telemetry can be imported into ./src/kernels.'
                     },
                     {
-                        target: './src/notebooks/**/*.ts',
+                        target: './src/notebooks/**/*[!.unit].ts',
                         from: './src/**[!platform,telemetry,kernels,notebooks]**/**/*.ts',
                         message:
                             'Only modules from ./src/platform, ./src/telemetry and ./src/kernels can be imported into ./src/notebooks.'
                     },
                     {
-                        target: './src/interactive-window/**/*.ts',
+                        target: './src/interactive-window/**/*[!.unit].ts',
                         from: './src/**webview**/**/*.ts',
                         message:
                             'Only modules from ./src/platform, ./src/telemetry, ./src/kernels and ./src/notebooks can be imported into ./src/interactive-window.'
@@ -320,7 +319,7 @@ module.exports = {
                         message: 'Importing non-telemetry modules into telemetry files is not allowed.'
                     },
                     {
-                        target: './src/platform/**/*.ts',
+                        target: './src/platform/**/*[!.unit].ts',
                         from: './src/**[!platform]**/**/*.ts',
                         message: 'Importing non-platform modules into platform files is not allowed.'
                     }
@@ -348,6 +347,12 @@ module.exports = {
                 'local-rules/dont-use-fspath': ['off'],
                 'local-rules/dont-use-filename': ['off'],
                 'import/no-restricted-paths': ['off']
+            }
+        },
+        {
+            files: ['**/*.test.ts'],
+            rules: {
+                '@typescript-eslint/no-explicit-any': 'off'
             }
         }
     ],

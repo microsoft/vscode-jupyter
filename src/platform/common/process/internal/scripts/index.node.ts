@@ -46,23 +46,6 @@ export type PythonEnvInfo = {
     exe: string;
 };
 
-export function interpreterInfo(): [string[], (out: string) => PythonEnvInfo] {
-    const script = path.join(SCRIPTS_DIR, 'interpreterInfo.py');
-    const args = [script];
-
-    function parse(out: string): PythonEnvInfo {
-        let json: PythonEnvInfo;
-        try {
-            json = JSON.parse(out);
-        } catch (ex) {
-            throw Error(`python ${args} returned bad JSON (${out}) (${ex})`);
-        }
-        return json;
-    }
-
-    return [args, parse];
-}
-
 //============================
 // completion.py
 

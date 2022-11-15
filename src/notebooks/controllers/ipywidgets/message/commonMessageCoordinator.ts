@@ -34,9 +34,9 @@ import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherF
 import { IPyWidgetScriptSource } from '../scriptSourceProvider/ipyWidgetScriptSource';
 import { IIPyWidgetMessageDispatcher, IWidgetScriptSourceProviderFactory } from '../types';
 import { ConsoleForegroundColors } from '../../../../platform/logging/types';
-import { createDeferred } from '../../../../platform/common/utils/async';
 import { IWebviewCommunication } from '../../../../platform/webviews/types';
 import { swallowExceptions } from '../../../../platform/common/utils/decorators';
+import { CDNWidgetScriptSourceProvider } from '../scriptSourceProvider/cdnWidgetScriptSourceProvider';
 
 /**
  * This class wraps all of the ipywidgets communication with a backing notebook
@@ -63,8 +63,10 @@ export class CommonMessageCoordinator {
     private disposables: IDisposableRegistry;
     private jupyterOutput: IOutputChannel;
     private readonly configService: IConfigurationService;
-    private webview: IWebviewCommunication | undefined;
+    private readonly attachedWebviews = new WeakSet<IWebviewCommunication>();
     private modulesForWhichWeHaveDisplayedWidgetErrorMessage = new Set<string>();
+    private queuedMessages: { type: string; payload: unknown }[] = [];
+    private readyMessageReceived?: boolean;
 
     public constructor(
         private readonly document: NotebookDocument,
@@ -75,6 +77,7 @@ export class CommonMessageCoordinator {
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell, IApplicationShell);
         this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.initialize();
     }
 
     public dispose() {
@@ -83,63 +86,60 @@ export class CommonMessageCoordinator {
         this.ipyWidgetScriptSource?.dispose(); // NOSONAR
     }
 
-    public async attach(webview: IWebviewCommunication) {
-        if (this.webview !== webview) {
-            // New webview, make sure to initialize.
-            this.initialize();
-
-            // Save the webview
-            this.webview = webview;
-            const promise = createDeferred<void>();
-
-            // Attach message requests to this webview (should dupe to all of them)
-            this.postMessage(
-                (e) => {
-                    traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator sent ${e.message}`);
-                    // Special case for webview URI translation
-                    if (e.message === InteractiveWindowMessages.ConvertUriForUseInWebViewRequest) {
-                        this.onMessage(InteractiveWindowMessages.ConvertUriForUseInWebViewResponse, {
-                            request: e.payload,
-                            response: webview.asWebviewUri(e.payload)
-                        });
-                    } else {
-                        webview.postMessage({ type: e.message, payload: e.payload }).then(noop, noop);
-                    }
-                },
-                this,
-                this.disposables
-            );
-            webview.onDidReceiveMessage(
-                (m) => {
-                    traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator received ${m.type}`);
-                    this.onMessage(m.type, m.payload);
-
-                    // Special case the WidgetManager loaded message. It means we're ready
-                    // to use a kernel. (IPyWidget Dispatcher uses this too)
-                    if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
-                        promise.resolve();
-                    }
-                },
-                this,
-                this.disposables
-            );
-            // In case the webview loaded earlier and it already sent the IPyWidgetMessages.IPyWidgets_Ready message
-            // This way we don't make assumptions, we just query widgets and ask its its ready (avoids timing issues etc).
-            webview
-                .postMessage({ type: IPyWidgetMessages.IPyWidgets_IsReadyRequest, payload: undefined })
-                .then(noop, noop);
-
-            // Wait for the widgets ready message
-            await promise.promise;
+    public attach(webview: IWebviewCommunication) {
+        if (this.attachedWebviews.has(webview)) {
+            return;
         }
+        this.attachedWebviews.add(webview);
+        // New webview, make sure to initialize.
+
+        // Attach message requests to this webview (should dupe to all of them)
+        this.postMessage(
+            (e) => {
+                traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator sent ${e.message}`);
+                // Special case for webview URI translation
+                if (e.message === InteractiveWindowMessages.ConvertUriForUseInWebViewRequest) {
+                    this.onMessage(webview, InteractiveWindowMessages.ConvertUriForUseInWebViewResponse, {
+                        request: e.payload,
+                        response: webview.asWebviewUri(e.payload)
+                    });
+                } else {
+                    if (!this.readyMessageReceived) {
+                        // Web view is not yet ready to receive messages, hence queue these to be sent later.
+                        this.queuedMessages.push({ type: e.message, payload: e.payload });
+                        return;
+                    }
+                    this.sendPendingWebViewMessages(webview);
+                    webview.postMessage({ type: e.message, payload: e.payload }).then(noop, noop);
+                }
+            },
+            this,
+            this.disposables
+        );
+        webview.onDidReceiveMessage(
+            (m) => {
+                traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator received ${m.type}`);
+                this.onMessage(webview, m.type, m.payload);
+                if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
+                    traceInfoIfCI('Web view is ready to receive widget messages');
+                    this.readyMessageReceived = true;
+                    this.sendPendingWebViewMessages(webview);
+                }
+            },
+            this,
+            this.disposables
+        );
+        // In case the webview loaded earlier and it already sent the IPyWidgetMessages.IPyWidgets_Ready message
+        // This way we don't make assumptions, we just query widgets and ask its its ready (avoids timing issues etc).
+        webview.postMessage({ type: IPyWidgetMessages.IPyWidgets_IsReadyRequest, payload: undefined }).then(noop, noop);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public onMessage(message: string, payload?: any): void {
+    public onMessage(webview: IWebviewCommunication, message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
             this.sendLoadSucceededTelemetry(payload).ignoreErrors();
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
-            this.handleWidgetLoadFailure(payload).ignoreErrors();
+            this.handleWidgetLoadFailure(webview, payload).ignoreErrors();
         } else if (message === InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported) {
             this.sendUnsupportedWidgetVersionFailureTelemetry(payload).ignoreErrors();
         } else if (message === InteractiveWindowMessages.IPyWidgetRenderFailure) {
@@ -153,6 +153,14 @@ export class CommonMessageCoordinator {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.getIPyWidgetMessageDispatcher().receiveMessage({ message: message as any, payload }); // NOSONAR
         this.getIPyWidgetScriptSource().onMessage(message, payload);
+    }
+    private sendPendingWebViewMessages(webview: IWebviewCommunication) {
+        if (!this.readyMessageReceived) {
+            return;
+        }
+        while (this.queuedMessages.length) {
+            webview.postMessage(this.queuedMessages.shift()!).then(noop, noop);
+        }
     }
 
     private initialize() {
@@ -173,7 +181,7 @@ export class CommonMessageCoordinator {
         }
     }
 
-    private async handleWidgetLoadFailure(payload: ILoadIPyWidgetClassFailureAction) {
+    private async handleWidgetLoadFailure(webview: IWebviewCommunication, payload: ILoadIPyWidgetClassFailureAction) {
         try {
             let errorMessage: string = payload.error.toString();
             const cdnsEnabled = this.configService.getSettings(undefined).widgetScriptSources.length > 0;
@@ -200,7 +208,7 @@ export class CommonMessageCoordinator {
                                 this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
                                 break;
                             case enableDownloads:
-                                this.enableCDNForWidgets().ignoreErrors();
+                                this.enableCDNForWidgets(webview).ignoreErrors();
                                 break;
                             default:
                                 break;
@@ -220,11 +228,9 @@ export class CommonMessageCoordinator {
         }
     }
     @swallowExceptions()
-    private async enableCDNForWidgets() {
+    private async enableCDNForWidgets(webview: IWebviewCommunication) {
         await this.commandManager.executeCommand(Commands.EnableLoadingWidgetsFrom3rdPartySource);
-        if (this.webview) {
-            await this.webview.postMessage({ type: IPyWidgetMessages.IPyWidgets_AttemptToDownloadFailedWidgetsAgain });
-        }
+        await webview.postMessage({ type: IPyWidgetMessages.IPyWidgets_AttemptToDownloadFailedWidgetsAgain });
     }
     private async sendUnsupportedWidgetVersionFailureTelemetry(
         payload: NotifyIPyWidgetWidgetVersionNotSupportedAction
@@ -285,7 +291,8 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IConfigurationService>(IConfigurationService),
                 this.serviceContainer.get<IHttpClient>(IHttpClient),
                 this.serviceContainer.get<IWidgetScriptSourceProviderFactory>(IWidgetScriptSourceProviderFactory),
-                this.serviceContainer.get<boolean>(IsWebExtension)
+                this.serviceContainer.get<boolean>(IsWebExtension),
+                this.serviceContainer.get<CDNWidgetScriptSourceProvider>(CDNWidgetScriptSourceProvider)
             );
             this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.cacheOrSend, this));
         }

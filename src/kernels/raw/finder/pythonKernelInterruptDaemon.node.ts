@@ -23,8 +23,7 @@ function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironm
     // At least this way user will  not have to exit vscode completely to delete such files/folders.
     if (
         isSupportedPythonVersion(interpreter) &&
-        (interpreter?.envType === EnvironmentType.Global ||
-            interpreter?.envType === EnvironmentType.WindowsStore ||
+        (interpreter?.envType === EnvironmentType.Unknown ||
             interpreter?.envType === EnvironmentType.Pyenv ||
             interpreter?.envType === EnvironmentType.Conda)
     ) {
@@ -95,12 +94,12 @@ export class PythonKernelInterruptDaemon {
         };
     }
 
-    private async getInterpreter(interpreter: PythonEnvironment, resource: Resource) {
+    private async getInterpreter(interpreter: PythonEnvironment) {
         if (interpreter && isBestPythonInterpreterForAnInterruptDaemon(interpreter)) {
             return interpreter;
         }
 
-        const interpreters = await this.interpreters.getInterpreters(resource);
+        const interpreters = this.interpreters.resolvedEnvironments;
         if (interpreters.length === 0) {
             return interpreter;
         }
@@ -115,7 +114,7 @@ export class PythonKernelInterruptDaemon {
             return this.startupPromise;
         }
         const promise = (async () => {
-            const interpreter = await this.getInterpreter(pythonEnvironment, resource);
+            const interpreter = await this.getInterpreter(pythonEnvironment);
             const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
                 interpreter,
                 resource
@@ -132,19 +131,23 @@ export class PythonKernelInterruptDaemon {
                         .splitLines({ trim: true, removeEmptyEntries: true })
                         .filter((output) => output.includes('INTERRUPT:'))
                         .forEach((output) => {
-                            const [command, id, response] = output.split(':');
-                            const deferred = this.messages.get(parseInt(id, 10));
-                            if (deferred) {
-                                traceVerbose(`Got a response of ${response} for ${command}:${id}`);
-                                deferred.resolve(response);
-                            } else {
-                                traceError(
-                                    `Got a response of ${response} for ${command}:${id} but no command entry found`
-                                );
+                            try {
+                                const [command, id, response] = output.split(':');
+                                const deferred = this.messages.get(parseInt(id, 10));
+                                if (deferred) {
+                                    traceVerbose(`Got a response of ${response} for ${command}:${id}`);
+                                    deferred.resolve(response);
+                                } else {
+                                    traceError(
+                                        `Got a response of ${response} for ${command}:${id} but no command entry found in ${out.out}`
+                                    );
+                                }
+                            } catch (ex) {
+                                traceError(`Failed to parse interrupt daemon response, ${out.out}`, ex);
                             }
                         });
                 } else {
-                    traceWarning(out.out);
+                    traceWarning(`Error output in interrupt daemon response ${out.out}`);
                 }
             });
             this.disposableRegistry.push(new Disposable(() => subscription.unsubscribe()));

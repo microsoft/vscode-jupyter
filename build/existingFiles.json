@@ -481,7 +481,6 @@
     "src/test/mocks/process.ts",
     "src/test/mocks/vsc/arrays.ts",
     "src/test/mocks/vsc/extHostedTypes.ts",
-    "src/test/mocks/vsc/htmlContent.ts",
     "src/test/mocks/vsc/index.ts",
     "src/test/mocks/vsc/position.ts",
     "src/test/mocks/vsc/range.ts",

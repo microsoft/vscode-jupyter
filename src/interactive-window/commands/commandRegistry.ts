@@ -51,20 +51,21 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { ExportFormat, IExportDialog, IFileConverter } from '../../notebooks/export/types';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
-import { traceError, traceInfo } from '../../platform/logging';
+import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
 import { generateCellsFromDocument } from '../editor-integration/cellFactory';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { INotebookExporter, IJupyterExecution } from '../../kernels/jupyter/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IControllerPreferredService } from '../../notebooks/controllers/types';
-import { IStatusProvider } from '../../platform/progress/types';
+import { StatusProvider } from './statusProvider';
 
 /**
  * Class that registers command handlers for interactive window commands.
  */
 @injectable()
 export class CommandRegistry implements IDisposable, IExtensionSingleActivationService {
+    private readonly statusProvider: StatusProvider;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookExporter) @optional() private jupyterExporter: INotebookExporter | undefined,
@@ -90,9 +91,9 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         @inject(IExportDialog) private exportDialog: IExportDialog,
         @inject(IClipboard) private clipboard: IClipboard,
         @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook,
-        @inject(IControllerPreferredService) private controllerPreferredService: IControllerPreferredService,
-        @inject(IStatusProvider) private statusProvider: IStatusProvider
+        @inject(IControllerPreferredService) private controllerPreferredService: IControllerPreferredService
     ) {
+        this.statusProvider = new StatusProvider(applicationShell);
         if (!this.workspace.isTrusted) {
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
@@ -433,6 +434,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
             if (iw && iw.notebookDocument) {
                 const kernel = this.kernelProvider.get(iw.notebookDocument);
                 if (kernel) {
+                    traceVerbose(`Interrupt kernel due to debug stop of IW ${uri.toString()}`);
                     // If we have a matching iw, then stop current execution
                     await kernel.interrupt();
                 }

@@ -276,7 +276,6 @@ export namespace Commands {
     export const InteractiveCopyCell = 'jupyter.interactive.copyCell';
     export const InteractiveExportAsNotebook = 'jupyter.interactive.exportasnotebook';
     export const InteractiveExportAs = 'jupyter.interactive.exportas';
-    export const DebugNotebook = 'jupyter.debugNotebook';
     export const RunByLine = 'jupyter.runByLine';
     export const RunAndDebugCell = 'jupyter.runAndDebugCell';
     export const RunByLineNext = 'jupyter.runByLineNext';
@@ -285,9 +284,7 @@ export namespace Commands {
     export const ReplayPylanceLogStep = 'jupyter.replayPylanceLogStep';
     export const InstallPythonExtensionViaKernelPicker = 'jupyter.installPythonExtensionViaKernelPicker';
     export const InstallPythonViaKernelPicker = 'jupyter.installPythonViaKernelPicker';
-    export const SwitchToLocalKernels = 'jupyter.switchToLocalKernels';
-    export const SwitchToRemoteKernels = 'jupyter.switchToRemoteKernels';
-    export const SwitchToAnotherRemoteKernels = 'jupyter.switchToAnotherRemoteKernels';
+    export const PickDocumentKernelSource = 'jupyter.pickDocumentKernelSource';
 }
 
 export namespace CodeLensCommands {
@@ -374,8 +371,6 @@ export enum Telemetry {
     RunSelectionOrLine = 'DATASCIENCE.RUN_SELECTION_OR_LINE',
     RunToLine = 'DATASCIENCE.RUN_TO_LINE',
     RunFromLine = 'DATASCIENCE.RUN_FROM_LINE',
-    RestartKernel = 'DS_INTERNAL.RESTART_KERNEL',
-    RestartKernelCommand = 'DATASCIENCE.RESTART_KERNEL_COMMAND',
     /**
      * Whether auto save feature in VS Code is enabled or not.
      */
@@ -412,15 +407,12 @@ export enum Telemetry {
     FailedToCreateNotebookController = 'DATASCIENCE.FAILED_TO_CREATE_CONTROLLER',
 
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
-    ConnectLocalJupyter = 'DS_INTERNAL.CONNECTLOCALJUPYTER',
-    ConnectRemoteJupyter = 'DS_INTERNAL.CONNECTREMOTEJUPYTER',
     ConnectRemoteJupyterViaLocalHost = 'DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST',
     ConnectFailedJupyter = 'DS_INTERNAL.CONNECTFAILEDJUPYTER',
     ConnectRemoteFailedJupyter = 'DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER',
     StartSessionFailedJupyter = 'DS_INTERNAL.START_SESSION_FAILED_JUPYTER',
     ConnectRemoteSelfCertFailedJupyter = 'DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER',
     ConnectRemoteExpiredCertFailedJupyter = 'DS_INTERNAL.CONNECTREMOTEEXPIREDCERTFAILEDJUPYTER',
-    RegisterAndUseInterpreterAsKernel = 'DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL',
     SelfCertsMessageEnabled = 'DATASCIENCE.SELFCERTSMESSAGEENABLED',
     SelfCertsMessageClose = 'DATASCIENCE.SELFCERTSMESSAGECLOSE',
     ShiftEnterBannerShown = 'DS_INTERNAL.SHIFTENTER_BANNER_SHOWN',
@@ -445,6 +437,7 @@ export enum Telemetry {
     OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
     DebugCurrentCell = 'DATASCIENCE.DEBUG_CURRENT_CELL',
     CodeLensAverageAcquisitionTime = 'DS_INTERNAL.CODE_LENS_ACQ_TIME',
+    DocumentWithCodeCells = 'DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS',
     /**
      * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
      */
@@ -453,13 +446,9 @@ export enum Telemetry {
      * User used command to select an intrepreter for the jupyter server.
      */
     SelectJupyterInterpreterCommand = 'DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command',
-    StartJupyterProcess = 'DS_INTERNAL.START_JUPYTER_PROCESS',
     NumberOfSavedRemoteKernelIds = 'DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED',
     WaitForIdleJupyter = 'DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER',
-    ExecuteCellPerceivedCold = 'DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD',
-    ExecuteCellPerceivedWarm = 'DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM',
     PerceivedJupyterStartupNotebook = 'DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK',
-    StartExecuteNotebookCellPerceivedCold = 'DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD',
     GetActivatedEnvironmentVariables = 'DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES',
     WebviewStartup = 'DS_INTERNAL.WEBVIEW_STARTUP',
     VariableExplorerFetchTime = 'DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME',
@@ -475,8 +464,6 @@ export enum Telemetry {
     DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
     DebugStop = 'DATASCIENCE.DEBUG_STOP',
     OpenNotebookAll = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL',
-    NotebookRunCount = 'DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT',
-    NotebookOpenCount = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT',
     JupyterNotInstalledErrorShown = 'DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN',
     RegisterInterpreterAsKernel = 'DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL',
     UserInstalledJupyter = 'DATASCIENCE.USER_INSTALLED_JUPYTER',
@@ -489,7 +476,6 @@ export enum Telemetry {
     PreferredKernel = 'DS_INTERNAL.PREFERRED_KERNEL',
     RankKernelsPerf = 'DS_INTERNAL.RANK_KERNELS_PERF',
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
-    InterpreterListingPerf = 'DS_INTERNAL.INTERPRETER_LISTING_PERF',
     ActiveInterpreterListingPerf = 'DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF',
     PythonModuleInstall = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',
     PythonNotInstalled = 'DS_INTERNAL.PYTHON_NOT_INSTALLED',
@@ -497,8 +483,6 @@ export enum Telemetry {
     PythonExtensionInstalledViaKernelPicker = 'DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
-    ZMQSupported = 'DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING',
-    ZMQNotSupported = 'DS_INTERNAL.ZMQ_NATIVE_BINARIES_NOT_LOADING',
     IPyWidgetLoadSuccess = 'DS_INTERNAL.IPYWIDGET_LOAD_SUCCESS',
     IPyWidgetLoadFailure = 'DS_INTERNAL.IPYWIDGET_LOAD_FAILURE',
     IPyWidgetWidgetVersionNotSupportedLoadFailure = 'DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE',
@@ -513,13 +497,7 @@ export enum Telemetry {
     IPyWidgetOverhead = 'DS_INTERNAL.IPYWIDGET_OVERHEAD',
     IPyWidgetRenderFailure = 'DS_INTERNAL.IPYWIDGET_RENDER_FAILURE',
     IPyWidgetUnhandledMessage = 'DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE',
-    RawKernelCreatingNotebook = 'DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK',
-    JupyterCreatingNotebook = 'DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK',
-    RawKernelSessionConnect = 'DS_INTERNAL.RAWKERNEL_SESSION_CONNECT',
-    RawKernelStartRawSession = 'DS_INTERNAL.RAWKERNEL_START_RAW_SESSION',
     RawKernelInfoResponse = 'DS_INTERNAL.RAWKERNEL_INFO_RESPONSE',
-    RawKernelSessionStart = 'DS_INTERNAL.RAWKERNEL_SESSION_START',
-    RawKernelSessionStartUserCancel = 'DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL',
     RawKernelSessionStartNoIpykernel = 'DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
     RawKernelSessionShutdown = 'DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN',
@@ -535,7 +513,6 @@ export enum Telemetry {
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
     KernelCount = 'DS_INTERNAL.KERNEL_COUNT',
     ExecuteCell = 'DATASCIENCE.EXECUTE_CELL',
-    PythonKerneExecutableMatches = 'DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES',
     /**
      * Sent when a command we register is executed.
      */
@@ -557,8 +534,6 @@ export enum Telemetry {
      */
     DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION',
     RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION',
-    // Sent when we get a jupyter execute_request error reply when running some part of our internal kernel startup code
-    KernelStartupCodeFailure = 'DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE',
     // Sent when we get a jupyter execute_request error reply when running some part of our internal variable fetching code
     PythonVariableFetchingCodeFailure = 'DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE',
     // Sent when we get a jupyter execute_request error reply when running some part of interactive window debug setup code
@@ -569,7 +544,9 @@ export enum Telemetry {
     JupyterInstalled = 'JUPYTER_IS_INSTALLED',
     NoActiveKernelSession = 'DATASCIENCE.NO_ACTIVE_KERNEL_SESSION',
     DataViewerUsingInterpreter = 'DATAVIEWER.USING_INTERPRETER',
-    DataViewerUsingKernel = 'DATAVIEWER.USING_KERNEL'
+    DataViewerUsingKernel = 'DATAVIEWER.USING_KERNEL',
+    DataViewerWebviewLoaded = 'DATAVIEWER.WEBVIEW_LOADED',
+    PlotViewerWebviewLoaded = 'PLOTVIEWER.WEBVIEW_LOADED'
 }
 
 export enum JupyterCommands {

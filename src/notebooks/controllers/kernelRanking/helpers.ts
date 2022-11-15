@@ -4,19 +4,21 @@
 'use strict';
 
 import * as nbformat from '@jupyterlab/nbformat';
+import { CancellationToken } from 'vscode';
 import {
     createInterpreterKernelSpec,
     getKernelId,
     getKernelRegistrationInfo,
     isDefaultKernelSpec,
     isDefaultPythonKernelSpecName,
+    isPythonKernelConnection,
     isPythonNotebook
 } from '../../../kernels/helpers';
 import { IJupyterKernelSpec, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { isCI, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { Resource } from '../../../platform/common/types';
-import { getResourceType } from '../../../platform/common/utils';
+import { getResourceType, NotebookMetadata } from '../../../platform/common/utils';
 import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
@@ -40,6 +42,15 @@ export async function findKernelSpecMatchingInterpreter(
             if (
                 kernel.kind === 'startUsingPythonInterpreter' &&
                 getKernelRegistrationInfo(kernel.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
+                kernel.interpreter.id === interpreter.id &&
+                kernel.interpreter.envName === interpreter.envName
+            ) {
+                result.push(kernel);
+                return;
+            }
+            if (
+                kernel.kind === 'startUsingPythonInterpreter' &&
+                getKernelRegistrationInfo(kernel.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec' &&
                 (await getInterpreterHash(kernel.interpreter)) === (await getInterpreterHash(interpreter)) &&
                 kernel.interpreter.envName === interpreter.envName
             ) {
@@ -58,34 +69,36 @@ export async function findKernelSpecMatchingInterpreter(
     return result.length ? result[0] : undefined;
 }
 
-function getInterpreterHashInMetadata(notebookMetadata: nbformat.INotebookMetadata | undefined): string | undefined {
+function getVSCodeInfoInInMetadata(
+    notebookMetadata: NotebookMetadata | undefined
+): NotebookMetadata['vscode'] | undefined {
     if (!notebookMetadata) {
         return;
     }
 
-    const metadataInterpreter: undefined | { hash?: string } =
-        'interpreter' in notebookMetadata // In the past we'd store interpreter.hash directly under metadata, but now we store it under metadata.vscode.
-            ? (notebookMetadata.interpreter as undefined | { hash?: string })
-            : 'vscode' in notebookMetadata &&
-              notebookMetadata.vscode &&
-              typeof notebookMetadata.vscode === 'object' &&
-              'interpreter' in notebookMetadata.vscode
-            ? (notebookMetadata.vscode.interpreter as undefined | { hash?: string })
-            : undefined;
-    return metadataInterpreter?.hash;
-}
+    const oldInterpreter = notebookMetadata.interpreter?.hash // In the past we'd store interpreter.hash directly under metadata, but now we store it under metadata.vscode.
+        ? notebookMetadata.interpreter
+        : undefined;
 
+    if (oldInterpreter) {
+        return { interpreter: oldInterpreter };
+    }
+    return notebookMetadata.vscode;
+}
 export async function rankKernels(
     kernels: KernelConnectionMetadata[],
     resource: Resource,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     preferredInterpreter: PythonEnvironment | undefined,
-    preferredRemoteKernelId: string | undefined
+    preferredRemoteKernelId: string | undefined,
+    cancelToken?: CancellationToken
 ): Promise<KernelConnectionMetadata[] | undefined> {
     traceInfo(
         `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
             notebookMetadata || {}
-        )} & preferred interpreter ${getDisplayPath(preferredInterpreter?.uri)}`
+        )} & preferred interpreter ${
+            preferredInterpreter?.uri ? getDisplayPath(preferredInterpreter?.uri) : '<undefined>'
+        }`
     );
 
     if (kernels.length === 0) {
@@ -95,14 +108,16 @@ export async function rankKernels(
     // First calculate what the kernel spec would be for our active interpreter
     let preferredInterpreterKernelSpec =
         preferredInterpreter && (await findKernelSpecMatchingInterpreter(preferredInterpreter, kernels));
+    if (cancelToken?.isCancellationRequested) {
+        return;
+    }
     if (preferredInterpreter && !preferredInterpreterKernelSpec) {
         const spec = await createInterpreterKernelSpec(preferredInterpreter);
-        preferredInterpreterKernelSpec = <PythonKernelConnectionMetadata>{
-            kind: 'startUsingPythonInterpreter',
+        preferredInterpreterKernelSpec = PythonKernelConnectionMetadata.create({
             kernelSpec: spec,
             interpreter: preferredInterpreter,
             id: getKernelId(spec, preferredInterpreter)
-        };
+        });
         // Active interpreter isn't in the list of kernels,
         // Either because we're using a cached list or Python API isn't returning active interpreter
         // along with list of all interpreters.
@@ -116,9 +131,15 @@ export async function rankKernels(
         notebookMetadata?.language_info?.name.toLowerCase() ||
         (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language?.toLowerCase();
     let possibleNbMetadataLanguage = actualNbMetadataLanguage;
-
     // If the notebook has a language set, remove anything not that language as we don't want to rank those items
     kernels = kernels.filter((kernel) => {
+        if (
+            possibleNbMetadataLanguage &&
+            possibleNbMetadataLanguage === PYTHON_LANGUAGE &&
+            isPythonKernelConnection(kernel)
+        ) {
+            return true;
+        }
         if (
             possibleNbMetadataLanguage &&
             possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&
@@ -145,6 +166,9 @@ export async function rankKernels(
                 : (
                       (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
                   )?.toLowerCase();
+    }
+    if (cancelToken?.isCancellationRequested) {
+        return;
     }
 
     const interpreterHashes = new Map<KernelConnectionMetadata, string | undefined>();
@@ -191,7 +215,7 @@ export async function isExactMatch(
     }
 
     if (
-        getInterpreterHashInMetadata(notebookMetadata) &&
+        getVSCodeInfoInInMetadata(notebookMetadata)?.interpreter &&
         (await interpreterMatchesThatInNotebookMetadata(
             kernelConnection,
             notebookMetadata,
@@ -908,13 +932,13 @@ function interpreterMatchesThatInNotebookMetadata(
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     interpreterHashForKernel: string | undefined
 ) {
-    const interpreterHashInMetadata = getInterpreterHashInMetadata(notebookMetadata);
+    const vscodeInfo = getVSCodeInfoInInMetadata(notebookMetadata);
     return (
-        interpreterHashInMetadata &&
+        vscodeInfo?.interpreter?.hash &&
         (kernelConnection.kind === 'startUsingLocalKernelSpec' ||
             kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
             kernelConnection.kind === 'startUsingPythonInterpreter') &&
         kernelConnection.interpreter &&
-        interpreterHashForKernel === interpreterHashInMetadata
+        interpreterHashForKernel === vscodeInfo.interpreter?.hash
     );
 }

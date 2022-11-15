@@ -255,11 +255,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     protected webViewRendered() {
         if (this.webviewInit && !this.webviewInit.resolved) {
             // Send telemetry for startup
-            sendTelemetryEvent(
-                Telemetry.WebviewStartup,
-                { duration: this.startupStopwatch.elapsedTime },
-                { type: this.title }
-            );
+            sendTelemetryEvent(Telemetry.WebviewStartup, { duration: this.startupStopwatch.elapsedTime });
 
             // Resolve our started promise. This means the webpanel is ready to go.
             this.webviewInit.resolve();

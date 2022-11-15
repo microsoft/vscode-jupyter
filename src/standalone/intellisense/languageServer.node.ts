@@ -22,7 +22,7 @@ import {
 import * as path from '../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { FileBasedCancellationStrategy } from './fileBasedCancellationStrategy.node';
-import { createNotebookMiddleware, createPylanceMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
+import { createNotebookMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
 import uuid from 'uuid/v4';
 import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
@@ -160,7 +160,6 @@ export class LanguageServer implements Disposable {
     }
 
     public static async createLanguageServer(
-        middlewareType: 'pylance' | 'jupyter',
         interpreter: PythonEnvironment,
         shouldAllowIntellisense: (uri: Uri, interpreterId: string, interpreterPath: Uri) => boolean,
         getNotebookHeader: (uri: Uri) => string
@@ -171,23 +170,14 @@ export class LanguageServer implements Disposable {
             let languageClient: LanguageClient | undefined;
             const outputChannel = window.createOutputChannel(`${interpreter.displayName || 'notebook'}-languageserver`);
             const interpreterId = getComparisonKey(interpreter.uri);
-            const middleware =
-                middlewareType == 'jupyter'
-                    ? createNotebookMiddleware(
-                          () => languageClient,
-                          () => noop, // Don't trace output. Slows things down too much
-                          NOTEBOOK_SELECTOR,
-                          getFilePath(interpreter.uri),
-                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.uri),
-                          getNotebookHeader
-                      )
-                    : createPylanceMiddleware(
-                          () => languageClient,
-                          NOTEBOOK_SELECTOR,
-                          getFilePath(interpreter.uri),
-                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.uri),
-                          getNotebookHeader
-                      );
+            const middleware = createNotebookMiddleware(
+                () => languageClient,
+                () => noop, // Don't trace output. Slows things down too much
+                NOTEBOOK_SELECTOR,
+                getFilePath(interpreter.uri),
+                (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.uri),
+                getNotebookHeader
+            );
 
             // Client options should be the same for all servers we support.
             const clientOptions: LanguageClientOptions = {

@@ -37,7 +37,6 @@ import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { NotebookStarter } from './launcher/notebookStarter.node';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
-import { RemoteKernelFinder } from './finder/remoteKernelFinder';
 import { JupyterServerSelector } from './serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.node';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';
@@ -61,19 +60,15 @@ import {
     IJupyterRequestAgentCreator,
     INotebookServerFactory,
     ILiveRemoteKernelConnectionUsageTracker,
-    IJupyterRemoteCachedKernelValidator,
-    IServerConnectionType
+    IJupyterRemoteCachedKernelValidator
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
+import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookServerFactory>(INotebookServerFactory, HostJupyterServerFactory);
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        RemoteKernelFinder
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         CellOutputMimeTypeTracker
@@ -131,7 +126,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterUriProviderRegistration
     );
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
-    serviceManager.addBinding(IJupyterServerUriStorage, IServerConnectionType);
     serviceManager.addSingleton<INotebookStarter>(INotebookStarter, NotebookStarter);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
@@ -155,4 +149,8 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
     serviceManager.addSingleton<JupyterDetectionTelemetry>(IExtensionSyncActivationService, JupyterDetectionTelemetry);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandlerNode);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        RemoteKernelFinderController
+    );
 }

@@ -6,15 +6,14 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
 
 import { Newable } from '../../ioc/types';
-import { InterpreterInformation, PythonEnvironment } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { BaseError } from '../../errors/types';
 import { IDisposable } from '../types';
 import { EnvironmentVariables } from '../variables/types';
-import { PythonExecInfo } from '../../pythonEnvironments/exec';
 
 export const IBufferDecoder = Symbol('IBufferDecoder');
 export interface IBufferDecoder {
-    decode(buffers: Buffer[], encoding: string): string;
+    decode(buffers: Buffer[]): string;
 }
 
 export type Output<T extends string | Buffer> = {
@@ -137,7 +136,7 @@ export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
     /**
      * Creates a daemon Python Process.
-     * On windows it's cheaper to create a daemon and use that than spin up Python Processes everytime.
+     * On windows it's cheaper to create a daemon and use that than spin up Python Processes every time.
      * If something cannot be executed within the daemon, it will resort to using the standard IPythonExecutionService.
      * Note: The returned execution service is always using an activated environment.
      *
@@ -153,11 +152,7 @@ export interface IPythonExecutionFactory {
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
 
 export interface IPythonExecutionService {
-    getInterpreterInformation(): Promise<InterpreterInformation | undefined>;
-    getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
-    getExecutionInfo(pythonArgs?: string[]): PythonExecInfo;
-
     execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
     execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
 

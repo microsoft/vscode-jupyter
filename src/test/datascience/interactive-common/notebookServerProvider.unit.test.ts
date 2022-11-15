@@ -24,12 +24,13 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
 }
 
 /* eslint-disable  */
-suite('DataScience - NotebookServerProvider', () => {
+suite('NotebookServerProvider', () => {
     let serverProvider: NotebookServerProvider;
     let jupyterExecution: IJupyterExecution;
     let interpreterService: IInterpreterService;
     const workingPython: PythonEnvironment = {
         uri: Uri.file('/foo/bar/python.exe'),
+        id: Uri.file('/foo/bar/python.exe').fsPath,
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python'
@@ -41,7 +42,7 @@ suite('DataScience - NotebookServerProvider', () => {
         interpreterService = mock<IInterpreterService>();
 
         const serverStorage = mock(JupyterServerUriStorage);
-        when(serverStorage.getUri()).thenResolve('local');
+        when(serverStorage.getUri()).thenResolve({ uri: 'local', time: Date.now(), serverId: 'local' });
         when(serverStorage.getRemoteUri()).thenResolve();
         const eventEmitter = new EventEmitter<void>();
         disposables.push(eventEmitter);

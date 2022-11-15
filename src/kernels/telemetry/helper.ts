@@ -4,8 +4,7 @@
 import { Resource } from '../../platform/common/types';
 import { WorkspaceInterpreterTracker } from '../../platform/interpreter/workspaceInterpreterTracker';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { InterpreterCountTracker } from '../../platform/interpreter/interpreterCountTracker';
-import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { getNormalizedInterpreterPath } from '../../platform/pythonEnvironments/info/interpreter';
 import { getResourceType } from '../../platform/common/utils';
 import { getComparisonKey } from '../../platform/vscode-path/resources';
@@ -26,11 +25,6 @@ export type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
     startFailed: boolean;
     kernelDied: boolean;
-    interruptKernel: boolean;
-    restartKernel: boolean;
-    kernelSpecCount: number; // Total number of kernel specs in list of kernels.
-    kernelInterpreterCount: number; // Total number of interpreters in list of kernels
-    kernelLiveCount: number; // Total number of live kernels in list of kernels.
     /**
      * When we start local Python kernels, this property indicates whether the interpreter matches the kernel. If not this means we've started the wrong interpreter or the mapping is wrong.
      */
@@ -68,22 +62,6 @@ export async function trackKernelResourceInformation(
         },
         { previouslySelectedKernelConnectionId: '' }
     ];
-
-    if (information.restartKernel) {
-        currentData.kernelSessionId = await getTelemetrySafeHashedString(Date.now().toString());
-        currentData.interruptCount = 0;
-        currentData.restartCount = (currentData.restartCount || 0) + 1;
-    }
-    if (information.interruptKernel) {
-        currentData.interruptCount = (currentData.interruptCount || 0) + 1;
-    }
-    if (information.startFailed) {
-        currentData.startFailureCount = (currentData.startFailureCount || 0) + 1;
-    }
-    currentData.kernelSpecCount = information.kernelSpecCount || currentData.kernelSpecCount || 0;
-    currentData.kernelLiveCount = information.kernelLiveCount || currentData.kernelLiveCount || 0;
-    currentData.kernelInterpreterCount = information.kernelInterpreterCount || currentData.kernelInterpreterCount || 0;
-    currentData.pythonEnvironmentCount = InterpreterCountTracker.totalNumberOfInterpreters;
     if (typeof information.capturedEnvVars === 'boolean') {
         currentData.capturedEnvVars = information.capturedEnvVars;
     }
@@ -99,8 +77,6 @@ export async function trackKernelResourceInformation(
         // If we have selected a whole new kernel connection for this,
         // Then reset some of the data
         if (context.previouslySelectedKernelConnectionId !== newKernelConnectionId) {
-            clearInterruptCounter(resource);
-            clearRestartCounter(resource);
             currentData.userExecutedCell = information.userExecutedCell;
             currentData.disableUI = information.disableUI;
         }
@@ -109,7 +85,6 @@ export async function trackKernelResourceInformation(
             context.previouslySelectedKernelConnectionId !== newKernelConnectionId
         ) {
             currentData.kernelSessionId = await getTelemetrySafeHashedString(Date.now().toString());
-            currentData.switchKernelCount = (currentData.switchKernelCount || 0) + 1;
         }
         let language: string | undefined;
         switch (kernelConnection.kind) {
@@ -127,7 +102,7 @@ export async function trackKernelResourceInformation(
                 break;
         }
         [currentData.kernelLanguage, currentData.kernelId] = await Promise.all([
-            getTelemetrySafeLanguage(language),
+            language,
             getTelemetrySafeHashedString(kernelConnection.id)
         ]);
 
@@ -171,26 +146,4 @@ export async function initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
     kernelConnection: KernelConnectionMetadata
 ) {
     await trackKernelResourceInformation(resourceUri, { kernelConnection, userExecutedCell: true });
-}
-
-export function clearInterruptCounter(resource: Resource) {
-    if (!resource) {
-        return;
-    }
-    const key = getComparisonKey(resource);
-    const currentData = trackedInfo.get(key);
-    if (currentData) {
-        currentData[0].interruptCount = 0;
-    }
-}
-export function clearRestartCounter(resource: Resource) {
-    if (!resource) {
-        return;
-    }
-    const key = getComparisonKey(resource);
-    const currentData = trackedInfo.get(key);
-    if (currentData) {
-        currentData[0].restartCount = 0;
-        currentData[0].startFailureCount = 0;
-    }
 }

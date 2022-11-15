@@ -37,7 +37,7 @@ use(chaiPromise);
 
 /* eslint-disable  */
 
-suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
+suite('Jupyter InterpreterSubCommandExecutionService', () => {
     let jupyterInterpreter: JupyterInterpreterService;
     let interpreterService: IInterpreterService;
     let jupyterDependencyService: JupyterInterpreterDependencyService;

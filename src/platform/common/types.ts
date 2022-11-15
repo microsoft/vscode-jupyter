@@ -102,6 +102,7 @@ export interface IJupyterSettings {
     readonly jupyterCommandLineArguments: string[];
     readonly widgetScriptSources: WidgetCDNs[];
     readonly interactiveWindowMode: InteractiveWindowMode;
+    readonly pythonCellFolding: boolean;
     readonly interactiveWindowViewColumn: InteractiveWindowViewColumn;
     readonly disableZMQSupport: boolean;
     readonly forceIPyKernelDebugger?: boolean;
@@ -109,8 +110,6 @@ export interface IJupyterSettings {
     readonly variableTooltipFields: IVariableTooltipFields;
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;
-    readonly pylanceHandlesNotebooks?: boolean;
-    readonly pylanceLspNotebooksEnabled?: boolean;
     readonly pythonCompletionTriggerCharacters?: string;
     readonly logKernelOutputSeparately: boolean;
     readonly poetryPath: string;
@@ -161,7 +160,7 @@ export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
 
 export type InteractiveWindowViewColumn = 'beside' | 'active' | 'secondGroup';
 
-export type KernelPickerType = 'Stable' | 'OnlyOneTypeOfKernel' | 'Insiders';
+export type KernelPickerType = 'Stable' | 'Insiders';
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 
@@ -268,9 +267,15 @@ export type DeprecatedFeatureInfo = {
     setting?: DeprecatedSettingAndValue;
 };
 
-export const IFeatureDeprecationManager = Symbol('IFeatureDeprecationManager');
+export interface IFeatureSet {
+    readonly kernelPickerType: KernelPickerType;
+}
 
-export interface IFeatureDeprecationManager extends Disposable {
+export const IFeaturesManager = Symbol('IFeaturesManager');
+
+export interface IFeaturesManager extends Disposable {
+    readonly features: IFeatureSet;
+    readonly onDidChangeFeatures: Event<void>;
     initialize(): void;
     registerDeprecation(deprecatedInfo: DeprecatedFeatureInfo): void;
 }

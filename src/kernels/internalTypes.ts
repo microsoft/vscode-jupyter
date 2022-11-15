@@ -4,12 +4,21 @@
 'use strict';
 
 import { Event } from 'vscode';
-import { Resource } from '../platform/common/types';
 import { KernelConnectionMetadata } from './types';
 
-export interface IContributedKernelFinder {
-    kind: string;
-    initialized: Promise<void>;
+export enum ContributedKernelFinderKind {
+    Remote = 'remote',
+    LocalKernelSpec = 'localKernelSpec',
+    LocalPythonEnvironment = 'localPythonEnvironment'
+}
+
+export interface IContributedKernelFinder<T extends KernelConnectionMetadata = KernelConnectionMetadata> {
+    status: 'discovering' | 'idle';
+    onDidChangeStatus: Event<void>;
+    id: string;
+    displayName: string;
+    kind: ContributedKernelFinderKind;
     onDidChangeKernels: Event<void>;
-    listContributedKernels(resource: Resource): KernelConnectionMetadata[];
+    kernels: T[];
+    refresh(): Promise<void>;
 }

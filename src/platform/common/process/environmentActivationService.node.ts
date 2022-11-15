@@ -17,7 +17,6 @@ import { OSType } from '../utils/platform';
 import { EnvironmentVariables, ICustomEnvironmentVariablesProvider } from '../variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { IPythonApiProvider } from '../../api/types';
 import { StopWatch } from '../utils/stopWatch';
 import { Memento, Uri } from 'vscode';
@@ -144,19 +143,39 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this.getActivatedEnvironmentVariablesFromPython(resource, interpreter)
         );
 
-        await Promise.race([envVariablesOurSelves.promise, envVariablesFromPython.promise]);
         envVariablesFromPython.promise
-            .then(() =>
+            .then((env) =>
                 traceVerbose(
-                    `Got env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`
+                    `Got env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms with ${
+                        Object.keys(env || {}).length
+                    } variables`
                 )
             )
-            .catch(noop);
+            .catch((ex) =>
+                traceError(
+                    `Failed to get env vars with python ${getDisplayPath(interpreter?.uri)} in ${
+                        stopWatch.elapsedTime
+                    }ms`,
+                    ex
+                )
+            );
         envVariablesOurSelves.promise
-            .then(() =>
-                traceVerbose(`Got env vars ourselves ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`)
+            .then((env) =>
+                traceVerbose(
+                    `Got env vars ourselves ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms with ${
+                        Object.keys(env || {}).length
+                    } variables`
+                )
             )
-            .catch(noop);
+            .catch((ex) =>
+                traceError(
+                    `Failed to get env vars with ourselves ${getDisplayPath(interpreter?.uri)} in ${
+                        stopWatch.elapsedTime
+                    }ms`,
+                    ex
+                )
+            );
+        await Promise.race([envVariablesOurSelves.promise, envVariablesFromPython.promise]);
         // If this is a conda environment and we get empty env variables from the Python extension,
         // Then try our approach.
         // This could happen when Python extension fails to get the activated env variables.
@@ -173,22 +192,24 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             await envVariablesOurSelves.promise;
         }
 
-        // If we got this using our way, and we have env variables use it.
-        if (envVariablesOurSelves.resolved) {
-            if (envVariablesOurSelves.value) {
+        // Give preference to environment variables from Python extension.
+        if (envVariablesFromPython.resolved) {
+            if (envVariablesFromPython.value) {
                 traceInfo(
-                    `Got env vars ourselves faster ${getDisplayPath(interpreter?.uri)} with env var count ${
-                        Object.keys(envVariablesOurSelves.value).length
+                    `Got env vars from Python Ext ${
+                        envVariablesOurSelves.resolved && envVariablesOurSelves.value
+                            ? ' as quickly as Jupyter code'
+                            : 'faster'
+                    } ${getDisplayPath(interpreter?.uri)} with env var count ${
+                        Object.keys(envVariablesFromPython.value).length
                     } in ${stopWatch.elapsedTime}ms`
                 );
-                return envVariablesOurSelves.value;
+                return envVariablesFromPython.value;
             } else {
-                traceVerbose(`Got env vars ourselves faster, but empty ${getDisplayPath(interpreter?.uri)}`);
+                traceVerbose(`Got env vars from Python faster, but empty ${getDisplayPath(interpreter?.uri)}`);
             }
-        } else {
-            traceVerbose(`Got env vars with python ext faster ${getDisplayPath(interpreter?.uri)}`);
         }
-        return envVariablesFromPython.promise;
+        return envVariablesOurSelves.promise;
     }
     @traceDecoratorVerbose(
         'Getting activated env variables from Python',
@@ -287,7 +308,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
-        const key = `${workspaceKey}_${interpreter && (await getInterpreterHash(interpreter))}`;
+        const key = `${workspaceKey}_${interpreter?.id || ''}`;
 
         if (this.activatedEnvVariablesCache.has(key)) {
             traceVerbose(`Got activation Env Vars from cached promise with key ${key}`);
@@ -363,7 +384,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
     public async getActivatedEnvVarsUsingActivationCommands(resource: Resource, interpreter: PythonEnvironment) {
         const shellInfo = defaultShells[this.platform.osType]!;
-        const interpreterDetails = await this.interpreterService.getInterpreterDetails(interpreter.uri, resource);
+        const interpreterDetails = await this.interpreterService.getInterpreterDetails(interpreter.uri);
         const envType = interpreterDetails?.envType;
         const stopWatch = new StopWatch();
         try {

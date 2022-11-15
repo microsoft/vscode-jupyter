@@ -65,10 +65,8 @@ export function initialize() {
     generateMock('debug');
     generateMock('scm');
     generateMock('notebooks');
+    generateMock('commands');
 
-    const commands = new MockCommands();
-    (mockedVSCode as any).commands = commands;
-    mockedVSCodeNamespaces.commands = commands as any;
     when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
     when(mockedVSCodeNamespaces.window.visibleNotebookEditors).thenReturn([]);
     // Use mock clipboard fo testing purposes.
@@ -142,10 +140,16 @@ mockedVSCode.ThemeIcon = vscodeMocks.vscMockExtHostedTypes.ThemeIcon;
 mockedVSCode.ThemeColor = vscodeMocks.vscMockExtHostedTypes.ThemeColor;
 mockedVSCode.FileSystemError = vscodeMocks.vscMockExtHostedTypes.FileSystemError;
 mockedVSCode.FileDecoration = vscodeMocks.vscMockExtHostedTypes.FileDecoration;
+mockedVSCode.PortAutoForwardAction = vscodeMocks.vscMockExtHostedTypes.PortAutoForwardAction;
+mockedVSCode.PortAttributes = vscodeMocks.vscMockExtHostedTypes.PortAttributes;
+mockedVSCode.NotebookRendererScript = vscodeMocks.vscMockExtHostedTypes.NotebookRendererScript;
+mockedVSCode.NotebookEdit = vscodeMocks.vscMockExtHostedTypes.NotebookEdit;
+mockedVSCode.NotebookRange = vscodeMocks.vscMockExtHostedTypes.NotebookRange;
 (mockedVSCode as any).NotebookCellKind = vscodeMocks.vscMockExtHostedTypes.NotebookCellKind;
 (mockedVSCode as any).NotebookRunState = vscodeMocks.vscMockExtHostedTypes.NotebookRunState;
 (mockedVSCode as any).NotebookCellRunState = vscodeMocks.vscMockExtHostedTypes.NotebookCellRunState;
 (mockedVSCode as any).NotebookControllerAffinity = vscodeMocks.vscMockExtHostedTypes.NotebookControllerAffinity;
+(mockedVSCode as any).NotebookControllerAffinity2 = vscodeMocks.vscMockExtHostedTypes.NotebookControllerAffinity2;
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
 (mockedVSCode as any).NotebookCellOutput = vscodeMocks.vscMockExtHostedTypes.NotebookCellOutput;

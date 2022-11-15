@@ -39,7 +39,7 @@ import {
 } from '../../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - Remote Execution', function () {
+suite('Remote Execution @kernelCore', function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -128,7 +128,7 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
     });
 
     test('Can run against a remote kernelspec', async function () {
-        await controllerLoader.loadControllers();
+        await controllerLoader.loaded;
         const controllers = controllerRegistration.registered;
 
         // Verify we have a remote kernel spec.

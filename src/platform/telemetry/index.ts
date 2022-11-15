@@ -386,12 +386,6 @@ export class SharedPropertyMapping {
     ['isamlcompute']: 'true' | 'false';
 
     /**
-     * For every telemetry event from the extension we want to make sure we can associate it with install
-     * source. We took this approach to work around very limiting query performance issues.
-     */
-    ['installSource']: undefined | 'marketPlace' | 'pythonCodingPack';
-
-    /**
      * Whether raw kernel is supported or not.
      */
     ['rawKernelSupported']: 'true' | 'false';

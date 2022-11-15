@@ -93,6 +93,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public jupyterCommandLineArguments: string[] = [];
     public widgetScriptSources: WidgetCDNs[] = [];
     public interactiveWindowMode: InteractiveWindowMode = 'multiple';
+    public pythonCellFolding: boolean = true;
     public interactiveWindowViewColumn: InteractiveWindowViewColumn = 'secondGroup';
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
@@ -103,8 +104,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public verboseLogging: boolean = false;
     public showVariableViewWhenDebugging: boolean = true;
     public newCellOnRunLast: boolean = true;
-    public pylanceHandlesNotebooks: boolean = true;
-    public pylanceLspNotebooksEnabled: boolean = false;
     public pythonCompletionTriggerCharacters: string = '';
     public logKernelOutputSeparately: boolean = false;
     public poetryPath: string = '';
@@ -232,13 +231,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
                   optOutFrom: []
               };
 
-        // For kernelPickerType internally collapse into just the kernelPickerType value
-        // Prefer the existing showOnlyOneTypeOfKernel value over the experimental picker
         const kernelPickerType = jupyterConfig.get<KernelPickerType>('experimental.kernelPickerType');
-        const showOnlyOneTypeOfKernel = jupyterConfig.get<boolean>('showOnlyOneTypeOfKernel');
-        if (showOnlyOneTypeOfKernel) {
-            this.kernelPickerType = 'OnlyOneTypeOfKernel';
-        } else if (kernelPickerType) {
+        if (kernelPickerType) {
             this.kernelPickerType = kernelPickerType;
         }
 
@@ -252,14 +246,13 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             }
         };
         const keys = this.getSerializableKeys().filter(
-            (f) => f !== 'experiments' && f !== 'logging' && f !== 'kernelPickerType' && f !== 'showOnlyOneTypeOfKernel'
+            (f) => f !== 'experiments' && f !== 'logging' && f !== 'kernelPickerType'
         );
         keys.forEach((k) => replacer(k, jupyterConfig));
 
         // Special case poetryPath. It actually comes from the python settings
         if (pythonConfig) {
             replacer('poetryPath', pythonConfig);
-            replacer('pylanceLspNotebooksEnabled', pythonConfig);
         }
     }
 

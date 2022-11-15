@@ -21,7 +21,7 @@ import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../platfo
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { Telemetry } from '../../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import {
     isLocalConnection,
     LocalKernelSpecConnectionMetadata,
@@ -39,6 +39,7 @@ import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaem
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { TraceOptions } from '../../../platform/logging/types';
+import { getResourceType } from '../../../platform/common/utils';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -125,7 +126,11 @@ export class KernelLauncher implements IKernelLauncher {
         promise
             .then(() =>
                 /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
-                sendKernelTelemetryEvent(resource, Telemetry.KernelLauncherPerf, { duration: stopWatch.elapsedTime })
+                sendTelemetryEvent(
+                    Telemetry.KernelLauncherPerf,
+                    { duration: stopWatch.elapsedTime },
+                    { resourceType: getResourceType(resource) }
+                )
             )
             .ignoreErrors();
         return promise;

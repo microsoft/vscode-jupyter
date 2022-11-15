@@ -61,7 +61,7 @@ export class CellExecutionQueue implements Disposable {
             traceCellMessage(cell, 'Use existing cell execution');
             return;
         }
-        const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata, this.resourceUri);
+        const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata);
         this.disposables.push(cellExecution);
         cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
         this.queueOfCellsToExecute.push(cellExecution);

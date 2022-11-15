@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     # Eventually we can use a pool here to run this on custom hardware
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
         fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
@@ -40,7 +40,7 @@ jobs:
     # This is the part that will run a test eventually
     - name: Create local changes
       if: (steps.test_make_change.outputs.shouldMakeChange == 1)
-      uses: jsdaniell/create-json@1.1.2
+      uses: jsdaniell/create-json@v1.2.1
       with:
         name: 'perf-results.json'
         dir: './build/ci/performance'

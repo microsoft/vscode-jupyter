@@ -5,11 +5,9 @@
 
 import { CancellationToken, Event } from 'vscode';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
-import { IContributedKernelFinder } from '../internalTypes';
 import {
     IKernelConnectionSession,
     KernelConnectionMetadata,
-    LocalKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../types';
@@ -56,13 +54,6 @@ export interface IKernelProcess extends IAsyncDisposable {
      * This method is to be used only if `canInterrupt` is true.
      */
     interrupt(): Promise<void>;
-}
-
-export interface ILocalKernelFinder extends IContributedKernelFinder {
-    /**
-     * Finds all kernel specs including Python.
-     */
-    listKernels(resource: Resource, cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
 }
 
 /**

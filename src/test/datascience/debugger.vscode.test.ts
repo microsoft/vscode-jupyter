@@ -9,7 +9,7 @@ import * as os from 'os';
 import * as sinon from 'sinon';
 import { debug } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
+import { IDebuggingManager, INotebookDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
 import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { Commands } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
@@ -73,7 +73,7 @@ function processDebugpyLogs(testName: string, _state?: 'passed' | 'failed'): Pro
 }
 
 // eslint-disable-next-line no-only-tests/no-only-tests
-suite.only('VSCode Notebook - Run By Line', function () {
+suite.only('Run By Line @debugger', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
@@ -97,7 +97,7 @@ suite.only('VSCode Notebook - Run By Line', function () {
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
-        debuggingManager = api.serviceContainer.get<IDebuggingManager>(IDebuggingManager);
+        debuggingManager = api.serviceContainer.get<IDebuggingManager>(INotebookDebuggingManager);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         traceInfo(`Start Test Suite (completed)`);
     });
@@ -149,7 +149,7 @@ suite.only('VSCode Notebook - Run By Line', function () {
             await waitForStoppedEvent(debugAdapter!);
 
             // Go head and run to the end now
-            await commandManager.executeCommand(Commands.RunByLineStop);
+            await commandManager.executeCommand(Commands.RunByLineStop, cell);
 
             // Wait until we have finished and have output
             await waitForCondition(
@@ -264,6 +264,28 @@ suite.only('VSCode Notebook - Run By Line', function () {
         assert.equal(stack2.stackFrames[0].line, 4, 'Stopped at the wrong line');
     });
 
+    test('Restart while debugging', async function () {
+        const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
+        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
+
+        await commandManager.executeCommand(Commands.RunByLine, cell);
+        const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
+        await waitForStoppedEvent(debugAdapter!); // First line
+        await commandManager.executeCommand('workbench.action.debug.restart');
+        const { debugAdapter: debugAdapter2, session: session2 } = await getDebugSessionAndAdapter(
+            debuggingManager,
+            doc,
+            session.id
+        );
+        const stoppedEvent = await waitForStoppedEvent(debugAdapter2!); // First line
+        const stack: DebugProtocol.StackTraceResponse['body'] = await session2!.customRequest('stackTrace', {
+            threadId: stoppedEvent.body.threadId
+        });
+        assert.isTrue(stack.stackFrames.length > 0, 'has frames');
+        assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
+        assert.equal(stack.stackFrames[0].line, 1, 'Stopped at the wrong line');
+    });
+    
     testN('Does not stop in other cell', N, async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
         const cell0 = await insertCodeCell('def foo():\n    print(1)');
@@ -326,7 +348,7 @@ suite.only('VSCode Notebook - Run By Line', function () {
             `Print during time loop is not working. Outputs: ${getCellOutputs(cell)}}`,
             1000
         );
-        await commandManager.executeCommand(Commands.RunByLineStop);
+        await commandManager.executeCommand(Commands.RunByLineStop, cell);
         await waitForCondition(
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,

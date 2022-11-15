@@ -9,7 +9,7 @@ import { startJupyterServer } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 
-suite('DataScience - Interpreter Packages', () => {
+suite('Interpreter Packages @python', () => {
     let packages: IInterpreterPackages;
     suiteSetup(async function () {
         if (IS_REMOTE_NATIVE_TEST() || isWeb()) {

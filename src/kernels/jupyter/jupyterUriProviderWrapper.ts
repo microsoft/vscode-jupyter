@@ -13,6 +13,7 @@ import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from '
 export class JupyterUriProviderWrapper implements IJupyterUriProvider {
     onDidChangeHandles?: vscode.Event<void>;
     getHandles?(): Promise<JupyterServerUriHandle[]>;
+    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
 
     constructor(
         private readonly provider: IJupyterUriProvider,
@@ -36,9 +37,21 @@ export class JupyterUriProviderWrapper implements IJupyterUriProvider {
                 return provider.getHandles!();
             };
         }
+
+        if (provider.removeHandle) {
+            this.removeHandle = (handle: JupyterServerUriHandle) => {
+                return provider.removeHandle!(handle);
+            };
+        }
     }
     public get id() {
         return this.provider.id;
+    }
+    public get displayName(): string | undefined {
+        return this.provider.displayName;
+    }
+    public get detail(): string | undefined {
+        return this.provider.detail;
     }
     public getQuickPickEntryItems(): vscode.QuickPickItem[] {
         if (!this.provider.getQuickPickEntryItems) {

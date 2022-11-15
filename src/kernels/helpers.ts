@@ -31,9 +31,10 @@ import { DataScience } from '../platform/common/utils/localize';
 import { getNormalizedInterpreterPath, getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../platform/telemetry/helpers';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
+import { deserializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { sendTelemetryEvent } from '../telemetry';
+import { IPlatformService } from '../platform/common/platform/types';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -242,7 +243,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
         case 'startUsingLocalKernelSpec': {
             if (
                 kernelConnection.interpreter?.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Global
+                kernelConnection.interpreter.envType !== EnvironmentType.Unknown
             ) {
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
@@ -261,13 +262,13 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
             }
         }
         case 'startUsingPythonInterpreter':
+            const pythonVersion = (
+                getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+            ).trim();
             if (
                 kernelConnection.interpreter.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Global
+                kernelConnection.interpreter.envType !== EnvironmentType.Unknown
             ) {
-                const pythonVersion = `Python ${
-                    getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
-                }`.trim();
                 // If user has created a custom kernelspec, then use that.
                 if (
                     kernelConnection.kernelSpec.display_name &&
@@ -276,9 +277,31 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                 ) {
                     return kernelConnection.kernelSpec.display_name;
                 }
-                const pythonDisplayName = pythonVersion.trim();
+                // If this is a conda environment without Python, then don't display `Python` in it.
+                const isEmptyVersion =
+                    !kernelConnection.interpreter.version ||
+                    (!kernelConnection.interpreter.version.major &&
+                        !kernelConnection.interpreter.version.minor &&
+                        !kernelConnection.interpreter.version.patch &&
+                        !kernelConnection.interpreter.version.raw);
+                const isCondaEnvWithoutPython =
+                    kernelConnection.interpreter.envType === EnvironmentType.Conda &&
+                    !kernelConnection.interpreter.sysPrefix &&
+                    isEmptyVersion &&
+                    (kernelConnection.interpreter.uri.path === '/python' ||
+                        kernelConnection.interpreter.uri.path === 'python');
+                const pythonDisplayName = pythonVersion.trim() ? `Python ${pythonVersion}` : 'Python';
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
+                if (isCondaEnvWithoutPython && envName) {
+                    return envName;
+                }
                 return envName ? `${envName} (${pythonDisplayName})` : pythonDisplayName;
+            } else if (!oldDisplayName.includes(pythonVersion)) {
+                if (oldDisplayName === `Python ${pythonVersion.substring(0, 1)}`) {
+                    return `Python ${pythonVersion}`;
+                } else {
+                    return `${oldDisplayName} (Python ${pythonVersion})`;
+                }
             }
     }
     return oldDisplayName;
@@ -323,7 +346,7 @@ export function getNameOfKernelConnection(
         : kernelConnection.kernelSpec?.name;
 }
 
-export function getKernelPathFromKernelConnection(kernelConnection?: KernelConnectionMetadata): Uri | undefined {
+export function getKernelDisplayPathFromKernelConnection(kernelConnection?: KernelConnectionMetadata): Uri | undefined {
     if (!kernelConnection) {
         return;
     }
@@ -339,6 +362,9 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
     ) {
         const pathValue =
             kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.executable;
+        if (pathValue === '/python' || pathValue === 'python') {
+            return kernelConnection.interpreter?.displayPath;
+        }
         return pathValue ? Uri.file(pathValue) : undefined;
     } else {
         // For non python kernels, give preference to the executable path in the kernelspec
@@ -365,18 +391,19 @@ export function getRemoteKernelSessionInformation(
     return defaultValue;
 }
 
-export function getKernelConnectionPath(
+export function getKernelConnectionDisplayPath(
     kernelConnection: KernelConnectionMetadata | undefined,
-    workspaceService: IWorkspaceService
+    workspaceService: IWorkspaceService,
+    platform: IPlatformService
 ) {
     if (kernelConnection?.kind === 'connectToLiveRemoteKernel') {
         return undefined;
     }
-    const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
+    const kernelPath = getKernelDisplayPathFromKernelConnection(kernelConnection);
     // If we have just one workspace folder opened, then ensure to use relative paths
     // where possible (e.g. for virtual environments).
     const folders = workspaceService.workspaceFolders ? workspaceService.workspaceFolders : [];
-    return kernelPath ? getDisplayPath(kernelPath, folders) : '';
+    return kernelPath ? getDisplayPath(kernelPath, folders, platform.homeDir) : '';
 }
 
 export function getInterpreterFromKernelConnectionMetadata(
@@ -390,12 +417,12 @@ export function getInterpreterFromKernelConnectionMetadata(
     }
     const model = kernelConnectionMetadataHasKernelModel(kernelConnection) ? kernelConnection.kernelModel : undefined;
     if (model?.metadata?.interpreter) {
-        return deserializePythonEnvironment(model?.metadata?.interpreter);
+        return deserializePythonEnvironment(model?.metadata?.interpreter, '');
     }
     const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
         ? kernelConnection.kernelSpec
         : undefined;
-    return deserializePythonEnvironment(kernelSpec?.metadata?.interpreter);
+    return deserializePythonEnvironment(kernelSpec?.metadata?.interpreter, '');
 }
 export function isPythonKernelConnection(kernelConnection?: KernelConnectionMetadata): boolean {
     if (!kernelConnection) {
@@ -449,7 +476,7 @@ export function getLanguageInKernelSpec(kernelSpec?: Partial<IJupyterKernelSpec>
  * This helps us easily identify such kernels.
  * WARNING: Never change this, this is stored in ipynb & kernelspec.json.
  */
-const autoGeneratedKernelNameIdentifier = 'jvsc74a57bd0';
+export const autoGeneratedKernelNameIdentifier = 'jvsc74a57bd0';
 /**
  * The name generated here is tied to the interpreter & is predictable.
  * WARNING: Changes to this will impact `getKernelId()`
@@ -569,10 +596,7 @@ export type SilentExecutionErrorOptions = {
     // This optional message will be displayed as a prefix for the error or warning message
     traceErrorsMessage?: string;
     // Setting this will log telemetry on the given name
-    telemetryName?:
-        | Telemetry.InteractiveWindowDebugSetupCodeFailure
-        | Telemetry.KernelStartupCodeFailure
-        | Telemetry.PythonVariableFetchingCodeFailure;
+    telemetryName?: Telemetry.InteractiveWindowDebugSetupCodeFailure | Telemetry.PythonVariableFetchingCodeFailure;
 };
 
 export async function executeSilently(
@@ -684,31 +708,7 @@ function handleExecuteSilentErrors(
 
             // Send telemetry if requested, no traceback for PII
             if (errorOptions.telemetryName) {
-                sendTelemetryEvent(errorOptions.telemetryName, undefined, {
-                    ename: errorOutput.ename,
-                    evalue: errorOutput.evalue
-                });
+                sendTelemetryEvent(errorOptions.telemetryName);
             }
         });
-}
-
-export function serializeKernelConnection(kernelConnection: KernelConnectionMetadata) {
-    if (kernelConnection.interpreter) {
-        return {
-            ...kernelConnection,
-            interpreter: serializePythonEnvironment(kernelConnection.interpreter)!
-        };
-    }
-    return kernelConnection;
-}
-
-export function deserializeKernelConnection(kernelConnection: any): KernelConnectionMetadata {
-    if (kernelConnection.interpreter) {
-        return {
-            ...kernelConnection,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            interpreter: deserializePythonEnvironment(kernelConnection.interpreter as any)!
-        };
-    }
-    return kernelConnection;
 }

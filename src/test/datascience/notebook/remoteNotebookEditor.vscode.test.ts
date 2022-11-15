@@ -16,7 +16,7 @@ import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
 import { captureScreenShot, IExtensionTestApi, initialize, waitForCondition } from '../../common';
 import { openNotebook } from '../helpers';
 import { JupyterServer } from '../jupyterServer.node';
-import { changeShowOnlyOneTypeOfKernel, closeNotebooksAndCleanUpAfterTests, hijackPrompt } from './helper';
+import { closeNotebooksAndCleanUpAfterTests, hijackPrompt } from './helper';
 import {
     createEmptyPythonNotebook,
     createTemporaryNotebook,
@@ -36,7 +36,7 @@ import { runCellAndVerifyUpdateOfPreferredRemoteKernelId } from './remoteNoteboo
 import { IControllerLoader, IControllerRegistration, IControllerSelection } from '../../../notebooks/controllers/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
-suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
+suite('Remote Kernel Execution', function () {
     let controllerLoader: IControllerLoader;
     let controllerRegistration: IControllerRegistration;
     let jupyterServerSelector: JupyterServerSelector;
@@ -96,11 +96,10 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
             disposables
         );
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
-        await controllerLoader.loadControllers(true);
+        await controllerLoader.loaded;
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        await changeShowOnlyOneTypeOfKernel(false);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
@@ -110,8 +109,8 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // This test needs to run in node only as we have to start another jupyter server
-    test('Old Remote kernels are removed when switching to new Remote Server', async function () {
-        await controllerLoader.loadControllers();
+    test('Old Remote kernels are removed when switching to new Remote Server @kernelPicker', async function () {
+        await controllerLoader.loaded;
 
         // Opening a notebook will trigger the refresh of the kernel list.
         let nbUri = await createTemporaryNotebook([], disposables);
@@ -163,39 +162,12 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         );
     });
 
-    test.skip('Local and Remote kernels are not listed', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/11324
-        await changeShowOnlyOneTypeOfKernel(true);
-        await controllerLoader.loadControllers();
-        const controllers = controllerRegistration.registered;
-        assert.ok(
-            controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
-            'Should have at least one remote kernelspec'
-        );
-
-        await waitForCondition(
-            async () => {
-                return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
-            },
-            defaultNotebookTestTimeout,
-            () => `Should have at least one remote kernelspec`
-        );
-
-        assert.notOk(
-            controllers.some(
-                (item) =>
-                    item.connection.kind === 'startUsingLocalKernelSpec' ||
-                    item.connection.kind === 'startUsingPythonInterpreter'
-            ),
-            'Should have no local kernels'
-        );
-    });
-    test('Remote kernels are removed when switching to local', async function () {
-        await controllerLoader.loadControllers();
+    test('Remote kernels are removed when switching to local @kernelPicker', async function () {
+        await controllerLoader.loaded;
         assert.ok(async () => {
             const controllers = controllerRegistration.registered;
             return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
-        }, 'Should have at least one remote kernelspec');
+        }, 'Should have at least one remote kernel Spec');
 
         // After resetting connection to local only, then remove all remote connections.
         await jupyterServerSelector.setJupyterURIToLocal();
@@ -208,12 +180,14 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
             },
             defaultNotebookTestTimeout,
             () =>
-                `Should not have any remote controllers, existing ${JSON.stringify(controllerRegistration.registered)}`
+                `Should not have any remote controllers, existing ${controllerRegistration.registered
+                    .map((item) => `${item.controller.kind}:${item.controller.id}`)
+                    .join(', ')}`
         );
     });
 
-    test('Local Kernel state is not lost when connecting to remote', async function () {
-        await controllerLoader.loadControllers();
+    test('Local Kernel state is not lost when connecting to remote @kernelPicker', async function () {
+        await controllerLoader.loaded;
 
         // After resetting connection to local only, verify all remote connections are no longer available.
         await jupyterServerSelector.setJupyterURIToLocal();
@@ -228,7 +202,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
 
         const activeInterpreter = await interpreterService.getActiveInterpreter();
         traceInfoIfCI(`active interpreter ${activeInterpreter?.uri.path}`);
-        const notebook = await createEmptyPythonNotebook(disposables);
+        const { notebook } = await createEmptyPythonNotebook(disposables);
         const controllerManager = svcContainer.get<IControllerSelection>(IControllerSelection);
         const preferredController = controllerManager.getSelected(notebook);
         traceInfoIfCI(`preferred controller ${preferredController?.connection.id}`);
@@ -246,6 +220,12 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         await waitForCondition(
             async () => {
                 const controllers = controllerRegistration.registered;
+                traceInfoIfCI(`Check ${controllers.length} registered controllers`);
+                traceInfoIfCI(
+                    `list controllers ${controllers.length}: ${controllers
+                        .map((i) => `${i.connection.id}, ${i.connection.kind}`)
+                        .join('\n')}`
+                );
                 return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
             },
             defaultNotebookTestTimeout,
@@ -259,7 +239,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         await Promise.all([runCell(cell2), waitForTextOutput(cell2, '123412341234')]);
     });
 
-    test('Remote kernels support intellisense', async function () {
+    test('Remote kernels support intellisense @lsp', async function () {
         const { editor } = await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
@@ -287,7 +267,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         );
     });
 
-    test('Remote kernels work with https', async function () {
+    test('Remote kernels work with https @kernelCore', async function () {
         // Note, this test won't work in web yet.
         const config = workspace.getConfiguration('jupyter');
         await config.update('allowUnauthorizedRemoteConnection', false);
@@ -321,7 +301,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
             waitForTextOutput(cell2, 'Hello World', 0, false)
         ]);
     });
-    test('When switching from remote to local, then clear the preferred remote kernel', async function () {
+    test('When switching from remote to local, then clear the preferred remote kernel @kernelPicker', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/10046
         return this.skip();
         await runCellAndVerifyUpdateOfPreferredRemoteKernelId(ipynbFile, svcContainer);
@@ -341,7 +321,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         );
 
         // Switch to a local kernel.
-        await controllerLoader.loadControllers();
+        await controllerLoader.loaded;
         const localKernelController = controllerRegistration.registered.find(
             (item) =>
                 item.connection.kind === 'startUsingLocalKernelSpec' ||

@@ -7,7 +7,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { traceInfo } from '../../../platform/logging';
-import { captureScreenShot, IExtensionTestApi } from '../../common.node';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -17,7 +17,7 @@ import { IS_WINDOWS } from '../../../platform/common/platform/constants.node';
 import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
-import { IPythonApiProvider, IPythonExtensionChecker, PythonApi } from '../../../platform/api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { CondaService } from '../../../platform/common/process/condaService.node';
@@ -26,8 +26,10 @@ import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/va
 import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
+import { ProposedExtensionAPI } from '../../../platform/api/pythonApiTypes';
+import { defaultNotebookTestTimeout } from '../notebook/helper';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
+suite('Conda Execution @python @mandatory', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let envActivationService: EnvironmentActivationService;
@@ -35,7 +37,7 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
     const pathEnvVariableName = IS_WINDOWS ? 'Path' : 'PATH';
     let pythonApiProvider: IPythonApiProvider;
     let extensionChecker: IPythonExtensionChecker;
-    let pythonApi: PythonApi;
+    let pythonApi: ProposedExtensionAPI;
     let originalActiveInterpreter: PythonEnvironment | undefined;
     this.timeout(120_000);
     suiteSetup(async function () {
@@ -52,11 +54,17 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             extensionChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
             originalActiveInterpreter = await interpreterService.getActiveInterpreter();
             if (!originalActiveInterpreter || originalActiveInterpreter.envType !== EnvironmentType.Conda) {
-                const interpreters = await interpreterService.getInterpreters();
+                const interpreters = interpreterService.resolvedEnvironments;
+                await waitForCondition(
+                    () => interpreters.find((i) => i.envType === EnvironmentType.Conda) !== undefined,
+                    defaultNotebookTestTimeout,
+                    'Waiting for interpreters to be discovered'
+                );
+
                 const firstCondaInterpreter = interpreters.find((i) => i.envType === EnvironmentType.Conda);
-                pythonApi = await pythonApiProvider.getApi();
+                pythonApi = (await pythonApiProvider.getNewApi())!;
                 if (firstCondaInterpreter) {
-                    await pythonApi.setActiveInterpreter(getFilePath(firstCondaInterpreter.uri));
+                    await pythonApi?.environments.updateActiveEnvironmentPath(getFilePath(firstCondaInterpreter.uri));
                 }
                 activeCondaInterpreter = firstCondaInterpreter!;
             } else {
@@ -85,9 +93,11 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         disposeAllDisposables(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(() => {
+    suiteTeardown(async () => {
         if (originalActiveInterpreter && pythonApi) {
-            pythonApi.setActiveInterpreter(getFilePath(originalActiveInterpreter.uri)).ignoreErrors();
+            await pythonApi.environments
+                .updateActiveEnvironmentPath(getFilePath(originalActiveInterpreter.uri))
+                .ignoreErrors();
         }
     });
     function createService(serviceContainer: IServiceContainer) {
