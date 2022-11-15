@@ -18,7 +18,7 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 
-type ConnectionDisplayData = {
+export type ConnectionDisplayData = {
     readonly connectionId: string;
     readonly label: string;
     readonly description: string | undefined;
@@ -104,7 +104,7 @@ async function getKernelConnectionCategory(
             return getKernelConnectionCategorySync(kernelConnection);
     }
 }
-function getKernelConnectionCategorySync(kernelConnection: KernelConnectionMetadata): string {
+export function getKernelConnectionCategorySync(kernelConnection: KernelConnectionMetadata): string {
     switch (kernelConnection.kind) {
         case 'startUsingLocalKernelSpec':
             return DataScience.kernelCategoryForJupyterKernel();

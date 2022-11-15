@@ -15,6 +15,7 @@ import {
     QuickPickItemKind,
     ThemeIcon
 } from 'vscode';
+import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -28,7 +29,7 @@ import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCr
 import { IControllerSelection } from '../types';
 import { ConnectionQuickPickItem, MultiStepResult } from './types';
 
-function isKernelPick(item: ConnectionQuickPickItem | QuickPickItem): item is ConnectionQuickPickItem {
+export function isKernelPickItem(item: ConnectionQuickPickItem | QuickPickItem): item is ConnectionQuickPickItem {
     return 'connection' in item;
 }
 function updateKernelQuickPickWithNewItems<T extends ConnectionQuickPickItem | QuickPickItem>(
@@ -40,8 +41,8 @@ function updateKernelQuickPickWithNewItems<T extends ConnectionQuickPickItem | Q
     if (activeItems.length && !items.includes(activeItems[0])) {
         const oldActiveItem = activeItems[0];
         const newActiveKernelQuickPickItem =
-            isKernelPick(oldActiveItem) &&
-            items.find((item) => isKernelPick(item) && item.connection.id === oldActiveItem.connection.id);
+            isKernelPickItem(oldActiveItem) &&
+            items.find((item) => isKernelPickItem(item) && item.connection.id === oldActiveItem.connection.id);
         // Find this same quick pick item.
         if (newActiveKernelQuickPickItem) {
             activeItems[0] = newActiveKernelQuickPickItem;
@@ -82,9 +83,6 @@ export class KernelSelector implements IDisposable {
     public dispose() {
         disposeAllDisposables(this.disposables);
     }
-    /**
-     * Second stage of the multistep to pick a kernel
-     */
     public async selectKernel(
         multiStep: IMultiStepInput<MultiStepResult>,
         state: MultiStepResult
@@ -134,7 +132,10 @@ export class KernelSelector implements IDisposable {
         };
 
         let createPythonQuickPickItem: QuickPickItem | undefined;
-        if (this.extensionChecker.isPythonExtensionInstalled) {
+        if (
+            this.extensionChecker.isPythonExtensionInstalled &&
+            state.source?.kind === ContributedKernelFinderKind.LocalPythonEnvironment
+        ) {
             createPythonQuickPickItem = {
                 label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`
             };
@@ -184,7 +185,6 @@ export class KernelSelector implements IDisposable {
 
         this.updateRecommended(quickPick);
         this.updateQuickPickItems(quickPick, state);
-
         this.provider.onDidChangeRecommended(() => this.updateRecommended(quickPick), this, this.disposables);
         this.provider.onDidChange(() => this.updateQuickPickItems(quickPick, state), this, state.disposables);
 
@@ -208,7 +208,7 @@ export class KernelSelector implements IDisposable {
 
             return creator.createPythonEnvFromKernelPicker(this.notebook, cancellationToken.token);
         }
-        if ('connection' in result) {
+        if (result && 'connection' in result) {
             return result.connection;
         }
     }
@@ -318,6 +318,7 @@ export class KernelSelector implements IDisposable {
         if (!this.provider.recommended) {
             return;
         }
+        console.error('Adding recommended');
         if (!this.recommendedItems.length) {
             this.recommendedItems.push(<QuickPickItem>{
                 label: DataScience.recommendedKernelCategoryInQuickPick(),
