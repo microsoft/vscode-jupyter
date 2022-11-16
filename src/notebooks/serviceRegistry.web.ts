@@ -52,7 +52,6 @@ import { PickDocumentKernelSourceCommand } from './controllers/commands/pickDocu
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     registerControllerTypes(serviceManager, isDevMode);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
 
     serviceManager.addSingleton<KernelFilterService>(KernelFilterService, KernelFilterService);
@@ -129,6 +128,11 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,
             PickDocumentKernelSourceCommand
+        );
+    } else {
+        serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            RemoteSwitcher
         );
     }
 }
