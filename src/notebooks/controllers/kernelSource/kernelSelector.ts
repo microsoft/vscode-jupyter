@@ -295,10 +295,8 @@ export class KernelSelector implements IDisposable {
     }
     private updateQuickPickItems(quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>) {
         quickPick.title = this.provider.title;
-        const kernels = new Map<string, KernelConnectionMetadata>();
         const newQuickPickItems = this.provider.kernels
             .filter((kernel) => {
-                kernels.set(kernel.id, kernel);
                 if (!this.trackedKernelIds.has(kernel.id)) {
                     this.trackedKernelIds.add(kernel.id);
                     return true;
@@ -307,55 +305,8 @@ export class KernelSelector implements IDisposable {
             })
             .map((item) => this.connectionToQuickPick(item));
 
-            // Possible the labels have changed, hence update the quick pick labels.
-        if (
-            this.quickPickItems.some(
-                (item) =>
-                    isKernelPickItem(item) &&
-                    kernels.has(item.connection.id) &&
-                    item.label !== this.connectionToQuickPick(kernels.get(item.connection.id)!).label
-            )
-        ) {
-            this.quickPickItems.forEach((item) => {
-                if (!isKernelPickItem(item) || kernels.has(item.connection.id)) {
-                    return;
-                }
-                const kernel = kernels.get(item.connection.id);
-                if (!kernel) {
-                    return;
-                }
-                item.label = this.connectionToQuickPick(kernel).label;
-            });
-            updateKernelQuickPickWithNewItems(
-                quickPick,
-                this.createPythonItems.concat(this.recommendedItems).concat(this.quickPickItems),
-                this.recommendedItems[1]
-            );
-        }
-
-        const removedIds = Array.from(this.trackedKernelIds).filter((id) => !kernels.has(id));
-        if (removedIds.length) {
-            const itemsRemoved: (ConnectionQuickPickItem | QuickPickItem)[] = [];
-            this.categories.forEach((items, category) => {
-                items.forEach((item) => {
-                    if (removedIds.includes(item.connection.id)) {
-                        items.delete(item);
-                        itemsRemoved.push(item);
-                    }
-                });
-                if (!items.size) {
-                    itemsRemoved.push(category);
-                    this.categories.delete(category);
-                }
-            });
-            updateKernelQuickPickWithNewItems(
-                quickPick,
-                this.createPythonItems
-                    .concat(this.recommendedItems)
-                    .concat(this.quickPickItems.filter((item) => !itemsRemoved.includes(item))),
-                this.recommendedItems[1]
-            );
-        }
+        this.updateQuickPickWithLatestConnection(quickPick);
+        this.removeMissingKernels(quickPick);
         groupBy(newQuickPickItems, (a, b) =>
             compareIgnoreCase(
                 this.displayDataProvider.getDisplayData(a.connection).category || 'z',
@@ -415,6 +366,35 @@ export class KernelSelector implements IDisposable {
             );
         });
     }
+
+    private removeMissingKernels(quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>) {
+        const kernels = new Map<string, KernelConnectionMetadata>(
+            this.provider.kernels.map((kernel) => [kernel.id, kernel])
+        );
+        const removedIds = Array.from(this.trackedKernelIds).filter((id) => !kernels.has(id));
+        if (removedIds.length) {
+            const itemsRemoved: (ConnectionQuickPickItem | QuickPickItem)[] = [];
+            this.categories.forEach((items, category) => {
+                items.forEach((item) => {
+                    if (removedIds.includes(item.connection.id)) {
+                        items.delete(item);
+                        itemsRemoved.push(item);
+                    }
+                });
+                if (!items.size) {
+                    itemsRemoved.push(category);
+                    this.categories.delete(category);
+                }
+            });
+            updateKernelQuickPickWithNewItems(
+                quickPick,
+                this.createPythonItems
+                    .concat(this.recommendedItems)
+                    .concat(this.quickPickItems.filter((item) => !itemsRemoved.includes(item))),
+                this.recommendedItems[1]
+            );
+        }
+    }
     private updateRecommended(quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>) {
         if (!this.provider.recommended) {
             return;
@@ -426,8 +406,7 @@ export class KernelSelector implements IDisposable {
                 kind: QuickPickItemKind.Separator
             });
         }
-        const recommendedItem = this.connectionToQuickPick(this.provider.recommended);
-        recommendedItem.label = `$(star-full) ${recommendedItem.label}`;
+        const recommendedItem = this.connectionToQuickPick(this.provider.recommended, true);
         if (this.recommendedItems.length === 2) {
             this.recommendedItems[1] = recommendedItem;
         } else {
@@ -439,11 +418,42 @@ export class KernelSelector implements IDisposable {
             this.recommendedItems[1]
         );
     }
+    /**
+     * Possible the labels have changed, hence update the quick pick labels.
+     * E.g. we got more information about an interpreter or a display name of a kernelSpec has changed.
+     *
+     * Similarly its possible the user updated the kernelSpec args or the like and we need to update the quick pick to have the latest connection object.
+     */
+    private updateQuickPickWithLatestConnection(quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>) {
+        const kernels = new Map<string, KernelConnectionMetadata>(
+            this.provider.kernels.map((kernel) => [kernel.id, kernel])
+        );
+        this.recommendedItems.concat(this.quickPickItems).forEach((item) => {
+            if (!isKernelPickItem(item) || !kernels.has(item.connection.id)) {
+                return;
+            }
+            const kernel = kernels.get(item.connection.id);
+            if (!kernel) {
+                return;
+            }
+            item.label = this.connectionToQuickPick(kernel, item.isRecommended).label;
+            item.connection = kernel; // Possible some other information since then has changed, hence keep the connection up to date.
+        });
+        updateKernelQuickPickWithNewItems(
+            quickPick,
+            this.createPythonItems.concat(this.recommendedItems).concat(this.quickPickItems),
+            this.recommendedItems[1]
+        );
+    }
 
-    private connectionToQuickPick(connection: KernelConnectionMetadata): ConnectionQuickPickItem {
+    private connectionToQuickPick(
+        connection: KernelConnectionMetadata,
+        recommended: boolean = false
+    ): ConnectionQuickPickItem {
         const displayData = this.displayDataProvider.getDisplayData(connection);
         return {
-            label: displayData.label,
+            label: `${recommended ? '$(star-full) ' : ''}${displayData.label}`,
+            isRecommended: recommended,
             detail: displayData.detail,
             description: displayData.description,
             connection: connection

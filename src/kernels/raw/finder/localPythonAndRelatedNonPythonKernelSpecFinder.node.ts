@@ -268,9 +268,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         traceInfoIfCI(`Listing kernels for ${interpreters.length} interpreters`);
         // If we don't have Python extension installed or don't discover any Python interpreters
         // then list all of the global python kernel specs.
-        if (interpreters.length === 0 || !this.extensionChecker.isPythonExtensionInstalled) {
-            this._cachedKernels = await this.listGlobalPythonKernelSpecs(false);
-        } else {
+        this._cachedKernels = this.listGlobalPythonKernelSpecs(false);
+        if (this.extensionChecker.isPythonExtensionInstalled) {
             await Promise.all(
                 interpreters.map(async (interpreter) => {
                     const kernels = await this.listPythonAndRelatedNonPythonKernelSpecs([interpreter], cancelToken);
