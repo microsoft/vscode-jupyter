@@ -238,19 +238,19 @@ export class KernelVariables implements IJupyterVariables {
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
             for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
+                if (exclusionList && exclusionList.indexOf(list.variables[i].type) >= 0) {
+                    // Remove from the list before fetching the full value
+                    list.variables.splice(i, 1);
+                    continue;
+                }
+
                 const fullVariable = list.variables[i].value
                     ? list.variables[i]
                     : await this.getVariableValueFromKernel(list.variables[i], kernel);
 
-                // See if this is excluded or not.
-                if (exclusionList && exclusionList.indexOf(fullVariable.type) >= 0) {
-                    // Not part of our actual list. Remove from the real list too
-                    list.variables.splice(i, 1);
-                } else {
-                    list.variables[i] = fullVariable;
-                    result.pageResponse.push(fullVariable);
-                    i += 1;
-                }
+                list.variables[i] = fullVariable;
+                result.pageResponse.push(fullVariable);
+                i += 1;
             }
 
             // Save in our cache
