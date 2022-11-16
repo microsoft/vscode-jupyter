@@ -61,6 +61,7 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper';
 import { CondaService } from '../../../platform/common/process/condaService.node';
 import { noop } from '../../../platform/common/utils/misc';
+import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -249,7 +250,8 @@ import { noop } from '../../../platform/common/utils/misc';
 
             const extensions = mock<IExtensions>();
             kernelFinder = new KernelFinder([]);
-
+            const trustedKernels = mock<ITrustedKernelPaths>();
+            when(trustedKernels.isTrusted(anything())).thenReturn(true);
             const condaService = mock<CondaService>();
 
             localKernelFinder = new LocalKernelFinder(
@@ -261,13 +263,14 @@ import { noop } from '../../../platform/common/utils/misc';
                     jupyterPaths,
                     instance(extensionChecker),
                     nonPythonKernelSpecFinder,
-                    instance(memento)
+                    instance(memento),
+                    instance(trustedKernels)
                 ),
                 instance(memento),
                 instance(fs),
                 instance(env),
                 kernelFinder,
-                [],
+                disposables,
                 instance(extensionChecker),
                 instance(interpreterService),
                 instance(condaService),
