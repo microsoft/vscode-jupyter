@@ -5,11 +5,7 @@
 
 import { injectable } from 'inversify';
 import type { ICryptoUtils } from './types';
-import { computeHash as computeHashLib } from '../../platform/msrCrypto/hash';
 
-/**
- * Provides hashing functions. These hashing functions should only be used for non sensitive data. For sensitive data, use msrCrypto instead.
- */
 @injectable()
 export class CryptoUtils implements ICryptoUtils {
     public async createHash(data: string, algorithm: 'SHA-512' | 'SHA-256' = 'SHA-256'): Promise<string> {
@@ -19,6 +15,10 @@ export class CryptoUtils implements ICryptoUtils {
 
 const computedHashes: Record<string, string> = {};
 let stopStoringHashes = false;
+
+let cryptoProvider: Crypto =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, local-rules/node-imports
+    typeof window === 'object' ? (window as any).crypto : require('node:crypto').webcrypto;
 
 /**
  * Computes a hash for a give string and returns hash as a hex value.
@@ -34,7 +34,7 @@ export async function computeHash(data: string, algorithm: 'SHA-512' | 'SHA-256'
         return computedHashes[data];
     }
 
-    const hash = await computeHashLib(data, algorithm);
+    const hash = await computeHashInternal(data, algorithm);
 
     if (isCandidateForCaching && !stopStoringHashes) {
         // Just a simple fail safe, why 10_000, simple why not 10_000
@@ -47,4 +47,13 @@ export async function computeHash(data: string, algorithm: 'SHA-512' | 'SHA-256'
         computedHashes[data] = hash;
     }
     return hash;
+}
+
+async function computeHashInternal(data: string, algorithm: 'SHA-512' | 'SHA-256' | 'SHA-1'): Promise<string> {
+    const inputBuffer = new TextEncoder().encode(data);
+    const hashBuffer = await cryptoProvider.subtle.digest({ name: algorithm }, inputBuffer);
+
+    // Turn into hash string (got this logic from https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest)
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }

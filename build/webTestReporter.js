@@ -12,7 +12,7 @@ const colors = require('colors');
 const core = require('@actions/core');
 const glob = require('glob');
 const { ExtensionRootDir } = require('./constants');
-const { computeHash } = require('../src/platform/msrCrypto/hash');
+const { computeHash } = require('../out/platform/common/crypto');
 
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
 const webTestSummaryJsonFile = path.join(__dirname, '..', 'logs', 'testresults.json');
