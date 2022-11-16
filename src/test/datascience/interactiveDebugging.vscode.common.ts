@@ -26,6 +26,7 @@ import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { pythonIWKernelDebugAdapter } from '../../notebooks/debugger/constants';
 import { isWeb, noop } from '../../platform/common/utils/misc';
+import { IControllerDefaultService } from '../../notebooks/controllers/types';
 
 export type DebuggerType = 'VSCodePythonDebugger' | 'JupyterProtocolDebugger';
 
@@ -65,6 +66,11 @@ export function sharedIWDebuggerTests(
                 api = await initialize();
                 if (isWeb() || (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger')) {
                     await startJupyterServer();
+                }
+                if (!isWeb() && !IS_REMOTE_NATIVE_TEST()) {
+                    await api.serviceContainer
+                        .get<IControllerDefaultService>(IControllerDefaultService)
+                        .computeDefaultController(undefined, 'interactive');
                 }
                 await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
                 disposables.push(vscode.debug.registerDebugAdapterTrackerFactory('python', tracker));
