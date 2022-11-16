@@ -1,53 +1,48 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { injectable } from 'inversify';
-import { Command, commands, NotebookDocument, NotebookKernelSourceAction, notebooks, window } from 'vscode';
+import { commands, env, NotebookDocument, notebooks, window } from 'vscode';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError } from '../../../platform/logging';
 import { INotebookKernelSourceSelector } from '../types';
 
-interface KernelSourceProviderItem extends IDisposable {
-    label: string;
-    description?: string | boolean;
-    id: string;
-    command: Command;
-}
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
     private readonly disposables: IDisposable[] = [];
-    private readonly providerMappings = new Map<string, IDisposable>();
+    private readonly providerMappings = new Map<string, IDisposable[]>();
     public dispose() {
         disposeAllDisposables(this.disposables);
     }
     activate(): void {
-        notebooks.registerKernelSourceActionProvider('jupyter-notebook', {
-            provideNotebookKernelSourceActions: () => {
-                return [
-                    <NotebookKernelSourceAction>{
-                        label: DataScience.localKernelSpecs(),
-                        description: DataScience.pickLocalKernelSpecTitle(),
-                        command: {
-                            command: 'jupyter.kernel.selectLocalKernelSpec'
+        if (!env.appName.toLowerCase().includes('oss')){
+            return;
+        }
+        this.disposables.push(
+            notebooks.registerKernelSourceActionProvider('jupyter-notebook', {
+                provideNotebookKernelSourceActions: () => {
+                    return [
+                        {
+                            label: DataScience.localKernelSpecs(),
+                            detail: DataScience.pickLocalKernelSpecTitle(),
+                            command: 'jupyter.kernel.selectLocalKernelSpec' as any
+                        },
+                        {
+                            label: DataScience.localPythonEnvironments(),
+                            detail: DataScience.pickLocalKernelPythonEnvTitle(),
+                            command: 'jupyter.kernel.selectLocalPythonEnvironment' as any
                         }
-                    },
-                    <NotebookKernelSourceAction>{
-                        label: DataScience.localPythonEnvironments(),
-                        description: DataScience.pickLocalKernelPythonEnvTitle(),
-                        command: {
-                            command: 'jupyter.kernel.selectLocalPythonEnvironment'
-                        }
-                    }
-                ];
-            }
-        });
+                    ];
+                }
+            })
+        );
         this.disposables.push(
             commands.registerCommand(
                 'jupyter.kernel.selectLocalKernelSpec',
@@ -61,6 +56,9 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                 this.onSelectLocalKernel.bind(this, ContributedKernelFinderKind.LocalPythonEnvironment),
                 this
             )
+        );
+        this.disposables.push(
+            commands.registerCommand('jupyter.kernel.selectJupyterServerKernel', this.onSelectRemoteKernel, this)
         );
         const uriRegistration = ServiceContainer.instance.get<IJupyterUriProviderRegistration>(
             IJupyterUriProviderRegistration
@@ -81,24 +79,35 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     if (this.providerMappings.has(provider.id)) {
                         return;
                     }
-                    const providerItem: KernelSourceProviderItem = {
-                        command: {
-                            command: '',
-                            title: provider.displayName ?? provider.id,
-                            arguments: [provider]
-                        },
-                        id: provider.id,
-                        label: provider.displayName ?? provider.id,
-                        description:
-                            provider.detail ?? `Connect to Jupyter servers from ${provider.displayName ?? provider.id}`,
-                        dispose: noop
-                    };
-                    this.providerMappings.set(provider.id, providerItem);
+                    const providerItem = notebooks.registerKernelSourceActionProvider('jupyter-notebook', {
+                        provideNotebookKernelSourceActions: () => {
+                            return [
+                                {
+                                    label: provider.displayName ?? provider.id,
+                                    detail:
+                                        provider.detail ??
+                                        `Connect to Jupyter servers from ${provider.displayName ?? provider.id}`,
+                                    command: `jupyter.kernel.selectJupyterServerKernel${provider.id}` as any
+                                    // command: {
+                                    //     command: 'jupyter.kernel.selectLocalPythonEnvironment',
+                                    //     arguments: [provider.id],
+                                    //     title: provider.displayName ?? provider.id
+                                    // }
+                                }
+                            ];
+                        }
+                    });
+                    this.disposables.push(providerItem);
+                    const commandHandler = commands.registerCommand(
+                        `jupyter.kernel.selectJupyterServerKernel${provider.id}`,
+                        this.onSelectRemoteKernel.bind(this, provider.id),
+                        this
+                    );
+                    this.providerMappings.set(provider.id, [providerItem, commandHandler]);
                 });
-
-                this.providerMappings.forEach((disposable, providerId) => {
+                this.providerMappings.forEach((disposables, providerId) => {
                     if (!existingItems.has(providerId)) {
-                        disposable.dispose();
+                        disposeAllDisposables(disposables);
                         this.providerMappings.delete(providerId);
                     }
                 });
@@ -115,6 +124,15 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         }
         const selector = ServiceContainer.instance.get<INotebookKernelSourceSelector>(INotebookKernelSourceSelector);
         const kernel = await selector.selectLocalKernel(notebook, kind);
+        return kernel?.id;
+    }
+    private async onSelectRemoteKernel(providerId: string, notebook?: NotebookDocument) {
+        notebook = notebook || window.activeNotebookEditor?.notebook;
+        if (!notebook) {
+            return;
+        }
+        const selector = ServiceContainer.instance.get<INotebookKernelSourceSelector>(INotebookKernelSourceSelector);
+        const kernel = await selector.selectRemoteKernel(notebook, providerId);
         return kernel?.id;
     }
 }

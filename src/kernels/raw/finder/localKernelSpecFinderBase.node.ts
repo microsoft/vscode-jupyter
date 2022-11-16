@@ -247,7 +247,10 @@ export abstract class LocalKernelSpecFinderBase<
         this.kernelSpecFinder = new LocalKernelSpecFinder(fs, globalState);
         disposables.push(this.kernelSpecFinder);
     }
-
+    public clearCache() {
+        this.kernelSpecCache.clear();
+        this.kernelSpecFinder.clearCache();
+    }
     public abstract dispose(): void | undefined;
     /**
      * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.

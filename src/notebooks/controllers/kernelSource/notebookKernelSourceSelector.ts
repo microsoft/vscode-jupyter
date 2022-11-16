@@ -31,8 +31,10 @@ import {
 import {
     IKernelFinder,
     KernelConnectionMetadata,
+    LocalKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
-    PythonKernelConnectionMetadata
+    PythonKernelConnectionMetadata,
+    RemoteKernelConnectionMetadata
 } from '../../../kernels/types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
@@ -156,7 +158,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
     public async selectLocalKernel(
         notebook: NotebookDocument,
         kind: ContributedKernelFinderKind.LocalKernelSpec | ContributedKernelFinderKind.LocalPythonEnvironment
-    ): Promise<KernelConnectionMetadata | undefined> {
+    ): Promise<LocalKernelConnectionMetadata | undefined> {
         // Reject if it's not our type
         if (notebook.notebookType !== JupyterNotebookView && notebook.notebookType !== InteractiveWindowView) {
             return;
@@ -185,7 +187,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             // If we got both parts of the equation, then perform the kernel source and kernel switch
             if (state.source && state.connection) {
                 await this.onKernelConnectionSelected(notebook, state.connection, false);
-                return state.connection;
+                return state.connection as LocalKernelConnectionMetadata;
             }
         } finally {
             disposeAllDisposables(state.disposables);
@@ -193,11 +195,15 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
     }
     public async selectRemoteKernel(
         notebook: NotebookDocument,
-        provider: IJupyterUriProvider
-    ): Promise<KernelConnectionMetadata | undefined> {
+        providerId: string
+    ): Promise<RemoteKernelConnectionMetadata | undefined> {
         // Reject if it's not our type
         if (notebook.notebookType !== JupyterNotebookView && notebook.notebookType !== InteractiveWindowView) {
             return;
+        }
+        const provider = await this.uriProviderRegistration.getProvider(providerId);
+        if (!provider) {
+            throw new Error(`Remote Provider Id ${providerId} not found`);
         }
         this.localDisposables.forEach((d) => d.dispose());
         this.localDisposables = [];
@@ -222,7 +228,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             // If we got both parts of the equation, then perform the kernel source and kernel switch
             if (state.source && state.connection) {
                 await this.onKernelConnectionSelected(notebook, state.connection, false);
-                return state.connection;
+                return state.connection as RemoteKernelConnectionMetadata;
             }
         } finally {
             disposeAllDisposables(state.disposables);
