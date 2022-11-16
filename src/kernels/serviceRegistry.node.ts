@@ -51,7 +51,7 @@ import { KernelStartupTelemetry } from './kernelStartupTelemetry.node';
 import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarmer';
 import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
 import { ContributedLocalPythonEnvFinder } from './raw/finder/contributedLocalPythonEnvFinder.node';
-import { KernelRefreshIndicator } from './kernelRefresher';
+import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);

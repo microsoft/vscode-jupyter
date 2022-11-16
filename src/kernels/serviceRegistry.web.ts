@@ -27,7 +27,7 @@ import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.web';
 import { ITrustedKernelPaths } from './raw/finder/types';
 import { KernelStatusProvider } from './kernelStatusProvider';
 import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarmer';
-import { KernelRefreshIndicator } from './kernelRefresher';
+import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {

@@ -17,6 +17,7 @@ import { IKernelFinder } from './types';
  */
 @injectable()
 export class KernelRefreshIndicator implements IExtensionSyncActivationService {
+    private refreshedOnceBefore?: boolean;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
@@ -24,10 +25,25 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
     ) {}
     public activate() {
-        if (!this.extensionChecker.isPythonExtensionInstalled) {
+        if (this.extensionChecker.isPythonExtensionInstalled) {
+            this.startRefresh();
+        } else {
+            this.extensionChecker.onPythonExtensionInstallationStatusChanged(
+                () => {
+                    if (this.extensionChecker.isPythonExtensionInstalled) {
+                        this.startRefresh();
+                    }
+                },
+                this,
+                this.disposables
+            );
+        }
+    }
+    private startRefresh() {
+        if (this.refreshedOnceBefore) {
             return;
         }
-
+        this.refreshedOnceBefore = true;
         const task = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
         this.disposables.push(task);
 
