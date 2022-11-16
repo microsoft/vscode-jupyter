@@ -19,7 +19,7 @@ if ((Reflect as any).metadata === undefined) {
 require('setimmediate');
 
 // Initialize the logger first.
-require('./platform/logging');
+import './platform/logging';
 
 //===============================================
 // We start tracking the extension's startup time at this point.  The
