@@ -826,6 +826,24 @@
             {
                 "command": "jupyter.pickDocumentKernelSource",
                 "title": "%DataScience.pickDocumentKernelSourceTitle%"
+            },
+            {
+                "command": "jupyter.kernel.selectLocalKernelSpec",
+                "title": "%DataScience.localKernelSpecs%",
+                "category": "Jupyter",
+                "enablement": "config.notebook.experimental.kernelPicker.mru"
+            },
+            {
+                "command": "jupyter.kernel.selectLocalPythonEnvironment",
+                "title": "%DataScience.localPythonEnvironments%",
+                "category": "Jupyter",
+                "enablement": "config.notebook.experimental.kernelPicker.mru"
+            },
+            {
+                "command": "jupyter.kernel.selectJupyterServerKernel",
+                "title": "%DataScience.UserJupyterServerUrlProviderDisplayName%",
+                "category": "Jupyter",
+                "enablement": "config.notebook.experimental.kernelPicker.mru"
             }
         ],
         "menus": {
@@ -1461,6 +1479,24 @@
                 {
                     "command": "jupyter.pickDocumentKernelSource",
                     "when": "false"
+                },
+                {
+                    "command": "jupyter.kernel.selectLocalKernelSpec",
+                    "group": "Jupyter",
+                    "title": "%DataScience.localKernelSpecs%",
+                    "enablement": "config.notebook.experimental.kernelPicker.mru"
+                },
+                {
+                    "command": "jupyter.kernel.selectLocalPythonEnvironment",
+                    "group": "Jupyter",
+                    "title": "%DataScience.localPythonEnvironments%",
+                    "enablement": "config.notebook.experimental.kernelPicker.mru"
+                },
+                {
+                    "command": "jupyter.kernel.selectJupyterServerKernel",
+                    "title": "%DataScience.UserJupyterServerUrlProviderDisplayName%",
+                    "group": "Jupyter",
+                    "enablement": "config.notebook.experimental.kernelPicker.mru"
                 }
             ],
             "debug/variables/context": [

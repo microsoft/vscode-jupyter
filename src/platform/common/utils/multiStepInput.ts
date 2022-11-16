@@ -107,7 +107,7 @@ export interface IMultiStepInput<S> {
 export class MultiStepInput<S> implements IMultiStepInput<S> {
     private current?: QuickInput;
     private steps: InputStep<S>[] = [];
-    constructor(private readonly shell: IApplicationShell) {}
+    constructor(private readonly shell: IApplicationShell, private readonly backOnMainStep = false) {}
     public run(start: InputStep<S>, state: S) {
         return this.stepThrough(start, state);
     }
@@ -178,10 +178,19 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         } else {
             input.activeItems = [];
         }
-        input.buttons = [...(this.steps.length > 1 ? [QuickInputButtons.Back] : []), ...(buttons || [])];
+        input.buttons = [
+            ...(this.steps.length > 1 || this.backOnMainStep ? [QuickInputButtons.Back] : []),
+            ...(buttons || [])
+        ];
         disposables.push(
             input.onDidTriggerButton((item) => {
                 if (item === QuickInputButtons.Back) {
+                    if (this.steps.length === 1 && this.backOnMainStep) {
+                        input.hide();
+                        input.dispose();
+                        deferred.reject(InputFlowAction.cancel);
+                        return;
+                    }
                     deferred.reject(InputFlowAction.back);
                 } else if (onDidTriggerButton) {
                     onDidTriggerButton(item);
