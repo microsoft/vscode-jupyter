@@ -242,19 +242,6 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         const items: KernelSourceQuickPickItem[] = [];
         const allKernelFinders = this.kernelFinder.registered;
 
-        const localPythonEnvKernelFinder = allKernelFinders.find(
-            (finder) => finder.id === ContributedKernelFinderKind.LocalPythonEnvironment
-        );
-        if (localPythonEnvKernelFinder) {
-            // local kernel spec and python env finder
-            items.push({
-                type: KernelSourceQuickPickType.LocalPythonEnv,
-                label: DataScience.localPythonEnvironments(),
-                detail: DataScience.pickLocalKernelPythonEnvTitle(),
-                kernelFinderInfo: localPythonEnvKernelFinder as IContributedKernelFinder<PythonKernelConnectionMetadata>
-            });
-        }
-
         const localKernelFinder = allKernelFinders.find(
             (finder) => finder.id === ContributedKernelFinderKind.LocalKernelSpec
         );
@@ -265,6 +252,19 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 label: DataScience.localKernelSpecs(),
                 detail: DataScience.pickLocalKernelSpecTitle(),
                 kernelFinderInfo: localKernelFinder as IContributedKernelFinder<LocalKernelSpecConnectionMetadata>
+            });
+        }
+
+        const localPythonEnvKernelFinder = allKernelFinders.find(
+            (finder) => finder.id === ContributedKernelFinderKind.LocalPythonEnvironment
+        );
+        if (localPythonEnvKernelFinder) {
+            // local kernel spec and python env finder
+            items.push({
+                type: KernelSourceQuickPickType.LocalPythonEnv,
+                label: DataScience.localPythonEnvironments(),
+                detail: DataScience.pickLocalKernelPythonEnvTitle(),
+                kernelFinderInfo: localPythonEnvKernelFinder as IContributedKernelFinder<PythonKernelConnectionMetadata>
             });
         }
 
