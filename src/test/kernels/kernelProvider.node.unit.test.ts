@@ -70,6 +70,8 @@ suite('KernelProvider Node', () => {
         vscNotebook = mock<IVSCodeNotebook>();
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
         context = mock<IExtensionContext>();
+        const onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
+        disposables.push(onDidChangeNotebookCellExecutionState);
         const configSettings = mock<IWatchableJupyterSettings>();
         const onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
         disposables.push(onDidChangeNotebookCellExecutionState);
@@ -77,6 +79,9 @@ suite('KernelProvider Node', () => {
             onDidChangeNotebookCellExecutionState.event
         );
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
+        when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
+            onDidChangeNotebookCellExecutionState.event
+        );
         when(configService.getSettings(anything())).thenReturn(instance(configSettings));
         when(vscNotebook.notebookDocuments).thenReturn([
             instance(sampleNotebook1),

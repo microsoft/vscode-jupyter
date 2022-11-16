@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { notebooks } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
-import { JupyterNotebookView } from '../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { IKernelFinder } from './types';
@@ -55,13 +55,16 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         );
     }
     private displayProgressIndicator() {
-        const task = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
-        this.disposables.push(task);
+        const taskNb = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
+        const taskIW = notebooks.createNotebookControllerDetectionTask(InteractiveWindowView);
+        this.disposables.push(taskNb);
+        this.disposables.push(taskIW);
 
         this.kernelFinder.onDidChangeStatus(
             () => {
                 if (this.kernelFinder.status === 'idle') {
-                    return task.dispose();
+                    taskNb.dispose();
+                    taskIW.dispose();
                 }
             },
             this,

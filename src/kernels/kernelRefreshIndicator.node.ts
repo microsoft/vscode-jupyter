@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { notebooks } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
-import { JupyterNotebookView } from '../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
@@ -54,13 +54,16 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         this.refreshedOnceBefore = true;
 
         const displayProgress = () => {
-            const task = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
-            this.disposables.push(task);
+            const taskNb = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
+            const taskIW = notebooks.createNotebookControllerDetectionTask(InteractiveWindowView);
+            this.disposables.push(taskNb);
+            this.disposables.push(taskIW);
 
             this.kernelFinder.onDidChangeStatus(
                 () => {
                     if (this.kernelFinder.status === 'idle') {
-                        return task.dispose();
+                        taskNb.dispose();
+                        taskIW.dispose();
                     }
                 },
                 this,
@@ -91,17 +94,22 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
             return;
         }
         this.refreshedOnceBefore = true;
-        const task = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
-        this.disposables.push(task);
+        const taskNb = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
+        const taskIW = notebooks.createNotebookControllerDetectionTask(InteractiveWindowView);
+        this.disposables.push(taskNb);
+        this.disposables.push(taskIW);
 
         this.interpreterService.refreshInterpreters().finally(() => {
             if (this.kernelFinder.status === 'idle') {
-                return task.dispose();
+                taskNb.dispose();
+                taskIW.dispose();
+                return;
             }
             this.kernelFinder.onDidChangeStatus(
                 () => {
                     if (this.kernelFinder.status === 'idle') {
-                        return task.dispose();
+                        taskNb.dispose();
+                        taskIW.dispose();
                     }
                 },
                 this,

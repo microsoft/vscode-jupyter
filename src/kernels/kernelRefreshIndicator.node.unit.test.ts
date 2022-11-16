@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as fakeTimers from '@sinonjs/fake-timers';
-import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
+import { instance, mock, reset, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, NotebookControllerDetectionTask } from 'vscode';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';
@@ -12,13 +12,15 @@ import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { createDeferred } from '../platform/common/utils/async';
+import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 
 suite('Kernel Refresh Indicator (node)', () => {
     let indicator: KernelRefreshIndicator;
     const disposables: IDisposable[] = [];
     let kernelFinder: IKernelFinder;
     let onDidChangeStatus: EventEmitter<void>;
-    let task: NotebookControllerDetectionTask;
+    let taskNb: NotebookControllerDetectionTask;
+    let taskIW: NotebookControllerDetectionTask;
     let extensionChecker: IPythonExtensionChecker;
     let interpreterService: IInterpreterService;
     let onPythonExtensionInstallationStatusChanged: EventEmitter<'installed' | 'uninstalled'>;
@@ -34,9 +36,13 @@ suite('Kernel Refresh Indicator (node)', () => {
         when(extensionChecker.onPythonExtensionInstallationStatusChanged).thenReturn(
             onPythonExtensionInstallationStatusChanged.event
         );
-        task = mock<NotebookControllerDetectionTask>();
-        when(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(anything())).thenReturn(
-            instance(task)
+        taskNb = mock<NotebookControllerDetectionTask>();
+        taskIW = mock<NotebookControllerDetectionTask>();
+        when(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(JupyterNotebookView)).thenReturn(
+            instance(taskNb)
+        );
+        when(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)).thenReturn(
+            instance(taskIW)
         );
         indicator = new KernelRefreshIndicator(
             disposables,
@@ -63,21 +69,30 @@ suite('Kernel Refresh Indicator (node)', () => {
             indicator.activate();
             await clock.runAllAsync();
 
-            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(anything())).never();
+            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(JupyterNotebookView)).never();
+            verify(
+                mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)
+            ).never();
+            verify(taskNb.dispose()).never();
+            verify(taskIW.dispose()).never();
         });
         test('Progress when finder is initially discovering', async () => {
             when(kernelFinder.status).thenReturn('discovering');
 
             indicator.activate();
 
-            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(anything())).once();
-            verify(task.dispose()).never();
+            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(JupyterNotebookView)).once();
+            verify(
+                mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)
+            ).once();
+            verify(taskNb.dispose()).never();
+            verify(taskIW.dispose()).never();
 
             // Ensure task stops once finder is idle.
             when(kernelFinder.status).thenReturn('idle');
             onDidChangeStatus.fire();
 
-            verify(task.dispose()).once();
+            verify(taskNb.dispose()).once();
         });
         test('Progress when finder is initially idle then starts discovering', async () => {
             when(kernelFinder.status).thenReturn('idle');
@@ -86,21 +101,30 @@ suite('Kernel Refresh Indicator (node)', () => {
             onDidChangeStatus.fire(); // This should have no effect.
             onDidChangeStatus.fire(); // This should have no effect.
 
-            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(anything())).never();
-            verify(task.dispose()).never();
+            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(JupyterNotebookView)).never();
+            verify(
+                mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)
+            ).never();
+            verify(taskNb.dispose()).never();
+            verify(taskIW.dispose()).never();
 
             // Now start discovering.
             when(kernelFinder.status).thenReturn('discovering');
             onDidChangeStatus.fire();
 
-            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(anything())).once();
-            verify(task.dispose()).never();
+            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(JupyterNotebookView)).once();
+            verify(
+                mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)
+            ).once();
+            verify(taskNb.dispose()).never();
+            verify(taskIW.dispose()).never();
 
             // Ensure task stops once finder is idle.
             when(kernelFinder.status).thenReturn('idle');
             onDidChangeStatus.fire();
 
-            verify(task.dispose()).once();
+            verify(taskNb.dispose()).once();
+            verify(taskIW.dispose()).once();
         });
     });
     suite('Python extension is installed', () => {
@@ -116,14 +140,19 @@ suite('Kernel Refresh Indicator (node)', () => {
             indicator.activate();
             await clock.runAllAsync();
 
-            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(anything())).once();
-            verify(task.dispose()).never();
+            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(JupyterNotebookView)).once();
+            verify(
+                mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)
+            ).once();
+            verify(taskNb.dispose()).never();
+            verify(taskIW.dispose()).never();
 
             // End refresh and task should stop.
             deferred.resolve();
             await clock.runAllAsync();
 
-            verify(task.dispose()).once();
+            verify(taskNb.dispose()).once();
+            verify(taskIW.dispose()).once();
         });
         test('Progress when finder is initially discovering', async () => {
             when(kernelFinder.status).thenReturn('discovering');
@@ -134,21 +163,27 @@ suite('Kernel Refresh Indicator (node)', () => {
             indicator.activate();
             await clock.runAllAsync();
 
-            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(anything())).once();
-            verify(task.dispose()).never();
+            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(JupyterNotebookView)).once();
+            verify(
+                mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)
+            ).once();
+            verify(taskNb.dispose()).never();
+            verify(taskIW.dispose()).never();
 
             // Even after we finish finder, the task should go on (till interpreter discovery finishes).
             when(kernelFinder.status).thenReturn('idle');
             onDidChangeStatus.fire();
             await clock.runAllAsync();
 
-            verify(task.dispose()).never();
+            verify(taskNb.dispose()).never();
+            verify(taskIW.dispose()).never();
 
             // End refresh and task should stop.
             deferred.resolve();
             await clock.runAllAsync();
 
-            verify(task.dispose()).once();
+            verify(taskNb.dispose()).once();
+            verify(taskIW.dispose()).once();
         });
         test('Progress when finder is initially idle then starts discovering', async () => {
             when(kernelFinder.status).thenReturn('idle');
@@ -161,28 +196,35 @@ suite('Kernel Refresh Indicator (node)', () => {
             onDidChangeStatus.fire(); // This should have no effect.
             await clock.runAllAsync();
 
-            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(anything())).once();
-            verify(task.dispose()).never();
+            verify(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(JupyterNotebookView)).once();
+            verify(
+                mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)
+            ).once();
+            verify(taskNb.dispose()).never();
+            verify(taskIW.dispose()).never();
 
             // Now start discovering.
             when(kernelFinder.status).thenReturn('discovering');
             onDidChangeStatus.fire();
             await clock.runAllAsync();
 
-            verify(task.dispose()).never();
+            verify(taskNb.dispose()).never();
+            verify(taskIW.dispose()).never();
 
             // End refresh, task should keep going as finder is still busy.
             deferred.resolve();
             await clock.runAllAsync();
 
-            verify(task.dispose()).never();
+            verify(taskNb.dispose()).never();
+            verify(taskIW.dispose()).never();
 
             // Ensure task stops once finder is idle.
             when(kernelFinder.status).thenReturn('idle');
             onDidChangeStatus.fire();
             await clock.runAllAsync();
 
-            verify(task.dispose()).once();
+            verify(taskNb.dispose()).once();
+            verify(taskIW.dispose()).once();
         });
     });
 });
