@@ -26,7 +26,6 @@ import {
     Telemetry
 } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { KernelPickerType } from '../../platform/common/kernelPickerType';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable, IDisposableRegistry, Resource } from '../../platform/common/types';
 import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../platform/common/utils';
@@ -43,7 +42,6 @@ import {
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { findKernelSpecMatchingInterpreter } from './kernelRanking/helpers';
-import { PreferredKernelConnectionService } from './preferredKernelConnectionService';
 import {
     IControllerDefaultService,
     IControllerLoader,
@@ -422,25 +420,6 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         serverId: string | undefined
     ): Promise<KernelConnectionMetadata | undefined> {
         const uri = notebook.uri;
-        if (KernelPickerType.useNewKernelPicker) {
-            // With the new kernel picker always find exact matches when updating the affinity.
-            // Attempt to clean up https://github.com/microsoft/vscode-jupyter/issues/11914
-            // Here we actually need an exact match instead of close matches,
-            // For the new kernel picker we will always try to find an exact match, if not found, then we
-            // do not show anything in the VS Codes kernel picker.
-            const preferredService = new PreferredKernelConnectionService();
-            try {
-                if (serverId) {
-                    return preferredService.findExactRemoteKernelConnection(notebook, cancelToken);
-                } else if (isPythonNotebook(notebookMetadata) || notebook.notebookType === InteractiveWindowView) {
-                    return preferredService.findExactPythonKernelConnection(notebook, cancelToken);
-                } else {
-                    return preferredService.findExactLocalKernelSpecConnection(notebook, cancelToken);
-                }
-            } finally {
-                preferredService.dispose();
-            }
-        }
         let preferredConnection: KernelConnectionMetadata | undefined;
         const rankedConnections = await this.kernelRankHelper.rankKernels(
             uri,

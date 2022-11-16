@@ -176,7 +176,11 @@ export class ControllerRegistration implements IControllerRegistration {
                         this.disposables
                     );
                     controller.onNotebookControllerSelectionChanged((e) => {
-                        if (!e.selected && this.isFiltered(controller.connection)) {
+                        if (
+                            !e.selected &&
+                            this.isFiltered(controller.connection) &&
+                            !this.canControllerBeDisposed(controller)
+                        ) {
                             // This item was selected but is no longer allowed in the kernel list. Remove it
                             traceVerbose(`Removing controller ${controller.id} from kernel list`);
                             controller.dispose();
