@@ -27,6 +27,7 @@ import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.web';
 import { ITrustedKernelPaths } from './raw/finder/types';
 import { KernelStatusProvider } from './kernelStatusProvider';
 import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarmer';
+import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -57,6 +58,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelRefreshIndicator
+    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
