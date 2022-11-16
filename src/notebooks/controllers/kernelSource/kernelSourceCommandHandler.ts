@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { Command, commands, NotebookDocument, window } from 'vscode';
+import { Command, commands, NotebookDocument, NotebookKernelSourceAction, notebooks, window } from 'vscode';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError } from '../../../platform/logging';
@@ -27,6 +28,26 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         disposeAllDisposables(this.disposables);
     }
     activate(): void {
+        notebooks.registerKernelSourceActionProvider('jupyter-notebook', {
+            provideNotebookKernelSourceActions: () => {
+                return [
+                    <NotebookKernelSourceAction>{
+                        label: DataScience.localKernelSpecs(),
+                        description: DataScience.pickLocalKernelSpecTitle(),
+                        command: {
+                            command: 'jupyter.kernel.selectLocalKernelSpec'
+                        }
+                    },
+                    <NotebookKernelSourceAction>{
+                        label: DataScience.localPythonEnvironments(),
+                        description: DataScience.pickLocalKernelPythonEnvTitle(),
+                        command: {
+                            command: 'jupyter.kernel.selectLocalPythonEnvironment'
+                        }
+                    }
+                ];
+            }
+        });
         this.disposables.push(
             commands.registerCommand(
                 'jupyter.kernel.selectLocalKernelSpec',
