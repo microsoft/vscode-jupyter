@@ -91,7 +91,8 @@ export function sharedIWDebuggerTests(
                 await closeNotebooksAndCleanUpAfterTests(disposables);
             });
 
-            test('Debug a cell from a python file @mandatory', async () => {
+            test.skip('Debug a cell from a python file @mandatory', async () => {
+                // #11917
                 // Run a cell to get IW open
                 const source = 'print(42)';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
