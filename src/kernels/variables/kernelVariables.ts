@@ -355,23 +355,18 @@ export class KernelVariables implements IJupyterVariables {
 
                 // Parse into bits
                 const type = TypeRegex.exec(text);
-                const value = ValueRegex.exec(text);
-                const stringForm = StringFormRegex.exec(text);
-                const docString = DocStringRegex.exec(text);
                 const count = CountRegex.exec(text);
                 const shape = ShapeRegex.exec(text);
                 if (type) {
                     result.type = type[1];
                 }
-                if (value) {
-                    result.value = value[1];
-                } else if (stringForm) {
-                    result.value = stringForm[1];
-                } else if (docString) {
-                    result.value = docString[1];
-                } else {
-                    result.value = '';
-                }
+
+                // Take the first regex that returns a value
+                result.value = [ValueRegex, StringFormRegex, DocStringRegex].reduce(
+                    (value, regex) => value || regex.exec(text)?.[1] || '',
+                    ''
+                );
+
                 if (count) {
                     result.count = parseInt(count[1], 10);
                 }
