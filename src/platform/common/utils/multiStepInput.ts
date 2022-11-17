@@ -47,6 +47,11 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     stopBusy?: Event<void>;
     validate?(selection: T | QuickPick<T>): Promise<string | undefined>;
     shouldResume?(): Promise<boolean>;
+    /**
+     * Displays a back button on the first step which allows one to go back to the calling code,
+     * Will return InputFlowAction.back
+     */
+    supportBackInFirstStep?: boolean;
     onDidTriggerItemButton?(e: QuickPickItemButtonEvent<T>): void;
     onDidChangeItems?: Event<T[]>;
 }
@@ -135,6 +140,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         validate,
         onDidTriggerItemButton,
         onDidTriggerButton,
+        supportBackInFirstStep,
         onDidChangeItems
     }: P): { quickPick: QuickPick<T>; selection: Promise<MultiStepInputQuickPicResponseType<T, P>> } {
         const disposables: Disposable[] = [];
@@ -178,7 +184,10 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         } else {
             input.activeItems = [];
         }
-        input.buttons = [...(this.steps.length > 1 ? [QuickInputButtons.Back] : []), ...(buttons || [])];
+        input.buttons = [
+            ...(this.steps.length > 1 || supportBackInFirstStep ? [QuickInputButtons.Back] : []),
+            ...(buttons || [])
+        ];
         disposables.push(
             input.onDidTriggerButton((item) => {
                 if (item === QuickInputButtons.Back) {

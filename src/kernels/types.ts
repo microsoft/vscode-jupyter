@@ -834,6 +834,7 @@ export interface IKernelFinder {
      * Return basic info on all currently registered kernel finders
      */
     registered: IContributedKernelFinder[];
+    onDidChangeRegistrations: Event<{ added: IContributedKernelFinder[]; removed: IContributedKernelFinder[] }>;
 }
 
 export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';

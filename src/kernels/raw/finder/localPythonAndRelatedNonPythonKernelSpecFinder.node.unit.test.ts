@@ -2,12 +2,10 @@
 // Licensed under the MIT License.
 
 import * as fakeTimers from '@sinonjs/fake-timers';
-import * as sinon from 'sinon';
 import { Disposable, Memento, Uri, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { KernelPickerType } from '../../../platform/common/kernelPickerType';
 import { IDisposable, IFeaturesManager } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../types';
@@ -110,10 +108,8 @@ suite('Local Python and related kernels (new Kernel Picker)', () => {
         const featuresManager = mock<IFeaturesManager>();
         when(featuresManager.features).thenReturn({ kernelPickerType: 'Stable' });
 
-        const stub = sinon.stub(KernelPickerType, 'useNewKernelPicker').returns(true);
         clock = fakeTimers.install();
 
-        disposables.push(new Disposable(() => stub.restore()));
         disposables.push(new Disposable(() => clock.uninstall()));
 
         finder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
