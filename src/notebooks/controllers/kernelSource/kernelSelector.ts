@@ -7,7 +7,6 @@ import {
     CancellationToken,
     CancellationTokenSource,
     Disposable,
-    Event,
     NotebookDocument,
     QuickInputButton,
     QuickPick,
@@ -26,7 +25,7 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { ConnectionDisplayDataProvider } from '../connectionDisplayData';
 import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator';
 import { IControllerSelection } from '../types';
-import { ConnectionQuickPickItem } from './types';
+import { ConnectionQuickPickItem, IQuickPickKernelItemProvider } from './types';
 
 export function isKernelPickItem(item: ConnectionQuickPickItem | QuickPickItem): item is ConnectionQuickPickItem {
     return 'connection' in item;
@@ -74,17 +73,7 @@ export class KernelSelector implements IDisposable {
     private readonly trackedKernelIds = new Set<string>();
     constructor(
         private readonly notebook: NotebookDocument,
-        private readonly provider: {
-            title: string;
-            kind: ContributedKernelFinderKind;
-            readonly onDidChange: Event<void>;
-            readonly kernels: KernelConnectionMetadata[];
-            onDidChangeStatus: Event<void>;
-            onDidChangeRecommended: Event<void>;
-            status: 'discovering' | 'idle';
-            refresh: () => Promise<void>;
-            recommended: KernelConnectionMetadata | undefined;
-        },
+        private readonly provider: IQuickPickKernelItemProvider,
         private readonly token: CancellationToken
     ) {
         this.displayDataProvider =

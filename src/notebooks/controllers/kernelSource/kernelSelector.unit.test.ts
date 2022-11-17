@@ -8,7 +8,6 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import {
     CancellationTokenSource,
     Disposable,
-    Event,
     EventEmitter,
     NotebookDocument,
     QuickInputButton,
@@ -25,7 +24,7 @@ import {
 } from '../../../kernels/types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable } from '../../../platform/common/types';
+import { IDisposable, ReadWrite } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import {
@@ -41,7 +40,7 @@ import {
     getKernelConnectionCategorySync
 } from '../connectionDisplayData';
 import { CreateAndSelectItemFromQuickPick, isKernelPickItem, KernelSelector } from './kernelSelector';
-import { ConnectionQuickPickItem } from './types';
+import { ConnectionQuickPickItem, IQuickPickKernelItemProvider } from './types';
 
 suite('Kernel Selector', () => {
     let kernelSelector: KernelSelector;
@@ -54,17 +53,7 @@ suite('Kernel Selector', () => {
     let notebook: NotebookDocument;
     let displayDataProvider: ConnectionDisplayDataProvider;
     let pythonChecker: IPythonExtensionChecker;
-    let provider: {
-        title: string;
-        kind: ContributedKernelFinderKind;
-        onDidChange: Event<void>;
-        kernels: KernelConnectionMetadata[];
-        onDidChangeStatus: Event<void>;
-        onDidChangeRecommended: Event<void>;
-        status: 'discovering' | 'idle';
-        refresh: () => Promise<void>;
-        recommended: KernelConnectionMetadata | undefined;
-    };
+    let provider: ReadWrite<IQuickPickKernelItemProvider>;
     let kernelFinder: IContributedKernelFinder<KernelConnectionMetadata>;
     let quickPickFactory: CreateAndSelectItemFromQuickPick;
     let quickPickCreated: boolean | undefined;

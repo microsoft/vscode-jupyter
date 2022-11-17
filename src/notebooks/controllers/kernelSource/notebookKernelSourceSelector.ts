@@ -8,8 +8,6 @@ import {
     CancellationError,
     CancellationToken,
     CancellationTokenSource,
-    Disposable,
-    Event,
     EventEmitter,
     NotebookDocument,
     QuickPickItem,
@@ -34,7 +32,6 @@ import {
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import {
@@ -46,11 +43,10 @@ import {
     MultiStepInput
 } from '../../../platform/common/utils/multiStepInput';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { traceError } from '../../../platform/logging';
-import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { IControllerRegistration, INotebookKernelSourceSelector, IConnectionTracker } from '../types';
 import { CreateAndSelectItemFromQuickPick, KernelSelector } from './kernelSelector';
-import { ConnectionQuickPickItem, MultiStepResult } from './types';
+import { QuickPickKernelItemProvider } from './provider';
+import { ConnectionQuickPickItem, IQuickPickKernelItemProvider, MultiStepResult } from './types';
 
 enum KernelFinderEntityQuickPickType {
     KernelFinder = 'finder',
@@ -296,47 +292,17 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         if (handle === 'back') {
             throw InputFlowAction.back;
         }
-        const onDidChange = new EventEmitter<void>();
-        const onDidChangeStatus = new EventEmitter<void>();
-        const kernels: KernelConnectionMetadata[] = [];
-        let status: 'discovering' | 'idle' = 'discovering';
-        let refreshInvoked: boolean = false;
-        let recommended: KernelConnectionMetadata | undefined;
-        const onDidChangeRecommended = new EventEmitter<void>();
-        const provider = {
-            title: DataScience.kernelPickerSelectKernelTitle(),
-            kind: ContributedKernelFinderKind.Remote,
-            onDidChange: onDidChange.event,
-            onDidChangeStatus: onDidChangeStatus.event,
-            onDidChangeRecommended: onDidChangeRecommended.event,
-            get kernels() {
-                return kernels;
-            },
-            get status() {
-                return status;
-            },
-            get recommended() {
-                return recommended;
-            },
-            refresh: async () => {
-                refreshInvoked = true;
-            }
-        };
-        state.disposables.push(onDidChange);
-        state.disposables.push(onDidChangeStatus);
-        state.disposables.push(onDidChangeRecommended);
-
-        (async () => {
+        const finderPromise = (async () => {
             const uri = generateUriFromRemoteProvider(selectedSource.provider.id, handle);
             if (token.isCancellationRequested) {
-                return;
+                throw new CancellationError();
             }
             await this.serverSelector.setJupyterURIToRemote(uri);
             if (token.isCancellationRequested) {
-                return;
+                throw new CancellationError();
             }
             // Wait for the remote provider to be registered.
-            const finder = await new Promise<IContributedKernelFinder>((resolve) => {
+            return new Promise<IContributedKernelFinder>((resolve) => {
                 const found = this.kernelFinder.registered.find(
                     (f) => f.kind === 'remote' && (f as IRemoteKernelFinder).serverUri.uri === uri
                 );
@@ -356,51 +322,15 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                     state.disposables
                 );
             });
-            status = 'idle';
-            onDidChangeStatus.fire();
-            if (finder) {
-                provider.refresh = async () => finder.refresh();
-                if (refreshInvoked) {
-                    await finder.refresh();
-                }
-                status = finder.status;
-                provider.title = `${DataScience.kernelPickerSelectKernelTitle()} from ${finder.displayName}`;
-                finder.onDidChangeKernels(
-                    () => {
-                        kernels.length = 0;
-                        kernels.push(...finder.kernels);
-                        onDidChange.fire();
-                    },
-                    this,
-                    state.disposables
-                );
-                finder.onDidChangeStatus(() => {
-                    status = finder.status;
-                    onDidChangeStatus.fire();
-                });
-                state.source = finder;
-                kernels.length = 0;
-                kernels.push(...finder.kernels);
-                onDidChange.fire();
-                onDidChangeStatus.fire();
+        })();
 
-                // We need a cancellation in case the user aborts the quick pick
-                const cancellationToken = new CancellationTokenSource();
-                const preferred = new PreferredKernelConnectionService();
-                state.disposables.push(new Disposable(() => cancellationToken.cancel()));
-                state.disposables.push(cancellationToken);
-                state.disposables.push(preferred);
-                preferred
-                    .findPreferredRemoteKernelConnection(state.notebook, finder, cancellationToken.token)
-                    .then((kernel) => {
-                        recommended = kernel;
-                        onDidChangeRecommended.fire();
-                    })
-                    .catch((ex) =>
-                        traceError(`Preferred connection failure ${getDisplayPath(state.notebook.uri)}`, ex)
-                    );
-            }
-        })().catch((ex) => traceError('Kernel selection failure', ex));
+        const provider = new QuickPickKernelItemProvider(
+            state.notebook,
+            ContributedKernelFinderKind.Remote,
+            finderPromise
+        );
+        provider.status = 'discovering';
+        state.disposables.push(provider);
 
         return this.selectKernel.bind(this, provider, token);
     }
@@ -411,83 +341,15 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         state: MultiStepResult
     ) {
         state.source = source;
-        const onDidChange = new EventEmitter<void>();
-        let recommended: KernelConnectionMetadata | undefined;
-        const onDidChangeRecommended = new EventEmitter<void>();
-        const provider = {
-            title:
-                DataScience.kernelPickerSelectKernelTitle() + (state.source ? ` from ${state.source.displayName}` : ''),
-            kind: source.kind,
-            onDidChange: onDidChange.event,
-            onDidChangeStatus: source.onDidChangeStatus,
-            onDidChangeRecommended: onDidChangeRecommended.event,
-            get kernels() {
-                return source.kernels;
-            },
-            get status(): 'discovering' | 'idle' {
-                return source.status;
-            },
-            get recommended() {
-                return recommended;
-            },
-            refresh: () => source.refresh()
-        };
-        const disposable = source.onDidChangeKernels(() => onDidChange.fire());
-        state.disposables.push(disposable);
-        state.disposables.push(onDidChange);
-        state.disposables.push(onDidChangeRecommended);
-
-        if (
-            source.kind === ContributedKernelFinderKind.LocalKernelSpec ||
-            source.kind === ContributedKernelFinderKind.LocalPythonEnvironment
-        ) {
-            // We need a cancellation in case the user aborts the quick pick
-            const cancellationToken = new CancellationTokenSource();
-            const preferred = new PreferredKernelConnectionService();
-            state.disposables.push(new Disposable(() => cancellationToken.cancel()));
-            state.disposables.push(cancellationToken);
-            state.disposables.push(preferred);
-            const computePreferred = () => {
-                if (recommended) {
-                    return;
-                }
-                const preferredMethod =
-                    source.kind === ContributedKernelFinderKind.LocalKernelSpec
-                        ? preferred.findPreferredLocalKernelSpecConnection.bind(preferred)
-                        : preferred.findPreferredPythonKernelConnection.bind(preferred);
-
-                preferredMethod(state.notebook, source, cancellationToken.token)
-                    .then((kernel) => {
-                        if (recommended) {
-                            return;
-                        }
-                        recommended = kernel;
-                        onDidChangeRecommended.fire();
-                    })
-                    .catch((ex) =>
-                        traceError(`Preferred connection failure ${getDisplayPath(state.notebook.uri)}`, ex)
-                    );
-            };
-            computePreferred();
-            source.onDidChangeKernels(computePreferred, this, state.disposables);
-        }
+        const provider = new QuickPickKernelItemProvider(state.notebook, source.kind, source);
+        state.disposables.push(provider);
         return this.selectKernel(provider, token, multiStep, state);
     }
     /**
      * Second stage of the multistep to pick a kernel
      */
     private async selectKernel(
-        provider: {
-            title: string;
-            kind: ContributedKernelFinderKind;
-            readonly onDidChange: Event<void>;
-            readonly kernels: KernelConnectionMetadata[];
-            onDidChangeStatus: Event<void>;
-            onDidChangeRecommended: Event<void>;
-            status: 'discovering' | 'idle';
-            refresh: () => Promise<void>;
-            recommended: KernelConnectionMetadata | undefined;
-        },
+        provider: IQuickPickKernelItemProvider,
         token: CancellationToken,
         multiStep: IMultiStepInput<MultiStepResult>,
         state: MultiStepResult
