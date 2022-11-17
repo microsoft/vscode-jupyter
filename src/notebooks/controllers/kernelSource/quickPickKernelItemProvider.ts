@@ -17,7 +17,7 @@ export class QuickPickKernelItemProvider {
     onDidRefresh = this._onDidRefresh.event;
     title: string;
     kind: ContributedKernelFinderKind;
-    private readonly _onDidChange = new EventEmitter<void>;
+    private readonly _onDidChange = new EventEmitter<void>();
     onDidChange = this._onDidChange.event;
     kernels: KernelConnectionMetadata[] = [];
     private readonly _onDidChangeStatus = new EventEmitter<void>();
@@ -29,7 +29,11 @@ export class QuickPickKernelItemProvider {
     recommended: KernelConnectionMetadata | undefined;
     private readonly disposables: IDisposable[] = [];
     private refreshInvoked?: boolean;
-    constructor(private readonly notebook: NotebookDocument, kind: ContributedKernelFinderKind, finderPromise: IContributedKernelFinder | Promise<IContributedKernelFinder>) {
+    constructor(
+        private readonly notebook: NotebookDocument,
+        kind: ContributedKernelFinderKind,
+        finderPromise: IContributedKernelFinder | Promise<IContributedKernelFinder>
+    ) {
         this.refresh = async () => {
             this.refreshInvoked = true;
         };
@@ -37,9 +41,9 @@ export class QuickPickKernelItemProvider {
         this.kind = kind;
         this.disposables.push(this._onDidRefresh);
         if (isPromise(finderPromise)) {
-        finderPromise
-            .then(finder => this.setupFinder(finder))
-            .catch((ex) => traceError(`Failed to setup finder for ${this.title}`, ex));
+            finderPromise
+                .then((finder) => this.setupFinder(finder))
+                .catch((ex) => traceError(`Failed to setup finder for ${this.title}`, ex));
         } else {
             this.setupFinder(finderPromise);
         }
@@ -47,14 +51,14 @@ export class QuickPickKernelItemProvider {
     public dispose() {
         disposeAllDisposables(this.disposables);
     }
-    private  setupFinder(finder: IContributedKernelFinder) {
+    private setupFinder(finder: IContributedKernelFinder) {
         this.refresh = async () => finder.refresh();
-        if (this.status !== finder.status && !this.refreshInvoked){
+        if (this.status !== finder.status && !this.refreshInvoked) {
             this.status = finder.status;
             this._onDidChangeStatus.fire();
         }
         if (this.refreshInvoked) {
-            finder.refresh().catch(ex => traceError(`Failed to refresh finder for ${this.title}`, ex));
+            finder.refresh().catch((ex) => traceError(`Failed to refresh finder for ${this.title}`, ex));
         }
 
         this.title = `${DataScience.kernelPickerSelectKernelTitle()} from ${finder.displayName}`;
@@ -83,23 +87,30 @@ export class QuickPickKernelItemProvider {
         const preferred = new PreferredKernelConnectionService();
         this.disposables.push(preferred);
 
-        if (finder.kind === ContributedKernelFinderKind.Remote){
+        if (finder.kind === ContributedKernelFinderKind.Remote) {
             this.computePreferredRemoteKernel(finder, preferred, cancellationToken.token);
         } else {
             this.computePreferredLocalKernel(finder, preferred, cancellationToken.token);
         }
     }
-    private computePreferredRemoteKernel(finder: IContributedKernelFinder, preferred:PreferredKernelConnectionService, cancelToken: CancellationToken){
+    private computePreferredRemoteKernel(
+        finder: IContributedKernelFinder,
+        preferred: PreferredKernelConnectionService,
+        cancelToken: CancellationToken
+    ) {
         preferred
-        .findPreferredRemoteKernelConnection(this.notebook, finder, cancelToken)
-        .then((kernel) => {
-            this.recommended = kernel;
-            this._onDidChangeRecommended.fire();
-        })
-        .catch((ex) => traceError(`Preferred connection failure ${getDisplayPath(this.notebook.uri)}`, ex));
-
+            .findPreferredRemoteKernelConnection(this.notebook, finder, cancelToken)
+            .then((kernel) => {
+                this.recommended = kernel;
+                this._onDidChangeRecommended.fire();
+            })
+            .catch((ex) => traceError(`Preferred connection failure ${getDisplayPath(this.notebook.uri)}`, ex));
     }
-    private computePreferredLocalKernel(finder: IContributedKernelFinder, preferred:PreferredKernelConnectionService, cancelToken: CancellationToken){
+    private computePreferredLocalKernel(
+        finder: IContributedKernelFinder,
+        preferred: PreferredKernelConnectionService,
+        cancelToken: CancellationToken
+    ) {
         const computePreferred = () => {
             if (this.recommended) {
                 return;
@@ -117,11 +128,9 @@ export class QuickPickKernelItemProvider {
                     this.recommended = kernel;
                     this._onDidChangeRecommended.fire();
                 })
-                .catch((ex) =>
-                    traceError(`Preferred connection failure ${getDisplayPath(this.notebook.uri)}`, ex)
-                );
+                .catch((ex) => traceError(`Preferred connection failure ${getDisplayPath(this.notebook.uri)}`, ex));
         };
         computePreferred();
         finder.onDidChangeKernels(computePreferred, this, this.disposables);
-}
+    }
 }
