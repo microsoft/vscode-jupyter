@@ -31,7 +31,7 @@ import {
     LocalKernelConnectionMetadata,
     RemoteKernelConnectionMetadata
 } from '../../../kernels/types';
-import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
+import { IApplicationShell } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
