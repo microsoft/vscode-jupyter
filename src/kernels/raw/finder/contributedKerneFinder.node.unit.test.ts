@@ -31,7 +31,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvi
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
-import { CancellationTokenSource, Disposable, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationTokenSource, EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable, IExtensionContext, IExtensions, IFeaturesManager } from '../../../platform/common/types';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -64,7 +64,6 @@ import { ContributedLocalKernelSpecFinder } from './contributedLocalKernelSpecFi
 import { ContributedLocalPythonEnvFinder } from './contributedLocalPythonEnvFinder.node';
 import { takeTopRankKernel } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper.unit.test';
 import { ITrustedKernelPaths } from './types';
-import { KernelPickerType } from '../../../platform/common/kernelPickerType';
 
 [false, true].forEach((isWindows) => {
     [false, true].forEach((newKernelPicker) => {
@@ -110,8 +109,6 @@ import { KernelPickerType } from '../../../platform/common/kernelPickerType';
                     globalKernelSpecs?: KernelSpec.ISpecModel[];
                 };
                 async function initialize(testData: TestData, activeInterpreter?: PythonEnvironment) {
-                    const stub = sinon.stub(KernelPickerType, 'useNewKernelPicker').get(() => false);
-                    disposables.push(new Disposable(() => stub.restore()));
                     disposables.push(cancelToken);
                     cancelToken = new CancellationTokenSource();
                     const getRealPathStub = sinon.stub(fsExtra, 'realpath');

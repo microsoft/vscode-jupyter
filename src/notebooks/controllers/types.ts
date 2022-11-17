@@ -5,10 +5,15 @@
 
 import * as vscode from 'vscode';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
-import { KernelConnectionMetadata } from '../../kernels/types';
+import {
+    KernelConnectionMetadata,
+    LocalKernelConnectionMetadata,
+    RemoteKernelConnectionMetadata
+} from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import { IDisposable, Resource } from '../../platform/common/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { ContributedKernelFinderKind } from '../../kernels/internalTypes';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
 
@@ -181,7 +186,14 @@ export enum PreferredKernelExactMatchReason {
 // Provides the UI to select a kernel source for a notebook document
 export const INotebookKernelSourceSelector = Symbol('INotebookKernelSourceSelector');
 export interface INotebookKernelSourceSelector {
-    selectKernelSource(notebook: vscode.NotebookDocument): Promise<void>;
+    selectLocalKernel(
+        notebook: vscode.NotebookDocument,
+        kind: ContributedKernelFinderKind.LocalKernelSpec | ContributedKernelFinderKind.LocalPythonEnvironment
+    ): Promise<LocalKernelConnectionMetadata | undefined>;
+    selectRemoteKernel(
+        notebook: vscode.NotebookDocument,
+        providerId: string
+    ): Promise<RemoteKernelConnectionMetadata | undefined>;
 }
 
 // Track what kernel source is selected for each open notebook document and persist that data

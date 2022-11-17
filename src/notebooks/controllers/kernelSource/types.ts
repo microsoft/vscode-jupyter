@@ -9,6 +9,7 @@ import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IDisposable } from '../../../platform/common/types';
 export interface ConnectionQuickPickItem extends QuickPickItem {
     connection: KernelConnectionMetadata;
+    isRecommended?: boolean;
 }
 
 export type MultiStepResult = {

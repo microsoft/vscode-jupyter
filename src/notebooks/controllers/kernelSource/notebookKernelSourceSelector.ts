@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import {
+    CancellationError,
     CancellationToken,
     CancellationTokenSource,
     Disposable,
@@ -16,11 +17,7 @@ import {
     ThemeIcon
 } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
-import {
-    computeServerId,
-    extractJupyterServerHandleAndId,
-    generateUriFromRemoteProvider
-} from '../../../kernels/jupyter/jupyterUtils';
+import { extractJupyterServerHandleAndId, generateUriFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import {
     IJupyterServerUriStorage,
@@ -31,11 +28,10 @@ import {
 import {
     IKernelFinder,
     KernelConnectionMetadata,
-    LocalKernelSpecConnectionMetadata,
-    PythonKernelConnectionMetadata
+    LocalKernelConnectionMetadata,
+    RemoteKernelConnectionMetadata
 } from '../../../kernels/types';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { ICommandManager } from '../../../platform/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -46,41 +42,20 @@ import {
     IMultiStepInputFactory,
     InputFlowAction,
     InputStep,
-    IQuickPickParameters
+    IQuickPickParameters,
+    MultiStepInput
 } from '../../../platform/common/utils/multiStepInput';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError } from '../../../platform/logging';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { IControllerRegistration, INotebookKernelSourceSelector, IConnectionTracker } from '../types';
-import { KernelSelector } from './kernelSelector';
-import { MultiStepResult } from './types';
-
-enum KernelSourceQuickPickType {
-    LocalKernelSpec = 'localKernelSpec',
-    LocalPythonEnv = 'localPythonEnv',
-    LocalServer = 'localServer',
-    ServerUriProvider = 'serverUriProvider'
-}
+import { CreateAndSelectItemFromQuickPick, KernelSelector } from './kernelSelector';
+import { ConnectionQuickPickItem, MultiStepResult } from './types';
 
 enum KernelFinderEntityQuickPickType {
     KernelFinder = 'finder',
     LocalServer = 'localServer',
     UriProviderQuickPick = 'uriProviderQuickPick'
-}
-
-interface LocalKernelSpecSourceQuickPickItem extends QuickPickItem {
-    type: KernelSourceQuickPickType.LocalKernelSpec;
-    kernelFinderInfo: IContributedKernelFinder<LocalKernelSpecConnectionMetadata>;
-}
-
-interface LocalPythonEnvSourceQuickPickItem extends QuickPickItem {
-    type: KernelSourceQuickPickType.LocalPythonEnv;
-    kernelFinderInfo: IContributedKernelFinder<PythonKernelConnectionMetadata>;
-}
-
-interface KernelProviderInfoQuickPickItem extends QuickPickItem {
-    type: KernelSourceQuickPickType.ServerUriProvider;
-    provider: IJupyterUriProvider;
 }
 
 interface ContributedKernelFinderQuickPickItem extends QuickPickItem {
@@ -96,11 +71,6 @@ interface KernelProviderItemsQuickPickItem extends QuickPickItem {
     originalItem: QuickPickItem;
 }
 
-type KernelSourceQuickPickItem =
-    | LocalKernelSpecSourceQuickPickItem
-    | LocalPythonEnvSourceQuickPickItem
-    | KernelProviderInfoQuickPickItem;
-
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
 export class NotebookKernelSourceSelector implements INotebookKernelSourceSelector {
@@ -115,19 +85,15 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         private readonly uriProviderRegistration: IJupyterUriProviderRegistration,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector
     ) {}
-
-    public async selectKernelSource(notebook: NotebookDocument): Promise<void> {
+    public async selectLocalKernel(
+        notebook: NotebookDocument,
+        kind: ContributedKernelFinderKind.LocalKernelSpec | ContributedKernelFinderKind.LocalPythonEnvironment
+    ): Promise<LocalKernelConnectionMetadata | undefined> {
         // Reject if it's not our type
         if (notebook.notebookType !== JupyterNotebookView && notebook.notebookType !== InteractiveWindowView) {
             return;
-        }
-        // Kick off a refresh of Python environments when displaying the quick pick for local kernels or Python envs.
-        if (this.extensionChecker.isPythonExtensionInstalled) {
-            this.interpreterService.refreshInterpreters().ignoreErrors();
         }
         this.localDisposables.forEach((d) => d.dispose());
         this.localDisposables = [];
@@ -137,103 +103,79 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         this.cancellationTokenSource = new CancellationTokenSource();
         const multiStep = this.multiStepFactory.create<MultiStepResult>();
         const state: MultiStepResult = { disposables: [], notebook };
-        await multiStep.run(this.getSourceNested.bind(this, this.cancellationTokenSource.token), state);
-
-        if (this.cancellationTokenSource.token.isCancellationRequested) {
-            disposeAllDisposables(state.disposables);
-            return;
-        }
-
-        // If we got both parts of the equation, then perform the kernel source and kernel switch
-        if (state.source && state.connection) {
-            await this.onKernelConnectionSelected(notebook, state.connection);
-        }
-        disposeAllDisposables(state.disposables);
-    }
-
-    private async getSourceNested(
-        token: CancellationToken,
-        multiStep: IMultiStepInput<MultiStepResult>,
-        state: MultiStepResult
-    ): Promise<InputStep<MultiStepResult> | void> {
-        const items: KernelSourceQuickPickItem[] = [];
-        const allKernelFinders = this.kernelFinder.registered;
-
-        const localPythonEnvKernelFinder = allKernelFinders.find(
-            (finder) => finder.id === ContributedKernelFinderKind.LocalPythonEnvironment
-        );
-        if (localPythonEnvKernelFinder) {
-            // local kernel spec and python env finder
-            items.push({
-                type: KernelSourceQuickPickType.LocalPythonEnv,
-                label: DataScience.localPythonEnvironments(),
-                detail: DataScience.pickLocalKernelPythonEnvTitle(),
-                kernelFinderInfo: localPythonEnvKernelFinder as IContributedKernelFinder<PythonKernelConnectionMetadata>
-            });
-        }
-
-        const localKernelFinder = allKernelFinders.find(
-            (finder) => finder.id === ContributedKernelFinderKind.LocalKernelSpec
-        );
-        if (localKernelFinder) {
-            // local kernel spec and python env finder
-            items.push({
-                type: KernelSourceQuickPickType.LocalKernelSpec,
-                label: DataScience.localKernelSpecs(),
-                detail: DataScience.pickLocalKernelSpecTitle(),
-                kernelFinderInfo: localKernelFinder as IContributedKernelFinder<LocalKernelSpecConnectionMetadata>
-            });
-        }
-
-        if (token.isCancellationRequested) {
-            return;
-        }
-
-        const { quickPick, selection } = await multiStep.showLazyLoadQuickPick<
-            KernelSourceQuickPickItem,
-            IQuickPickParameters<KernelSourceQuickPickItem>
-        >({
-            items: items,
-            placeholder: '',
-            title: DataScience.kernelPickerSelectSourceTitle()
-        });
-        quickPick.busy = true;
-
-        (async () => {
-            // 3rd party remote server uri providers
-            const providers = await this.uriProviderRegistration.getProviders();
-            providers.forEach((p) => {
-                items.push({
-                    type: KernelSourceQuickPickType.ServerUriProvider,
-                    label: p.displayName ?? p.id,
-                    detail: p.detail ?? `Connect to Jupyter servers from ${p.displayName ?? p.id}`,
-                    provider: p
-                });
-            });
-            const oldActiveItem = quickPick.activeItems.length ? [quickPick.activeItems[0]] : [];
-            quickPick.items = items;
-            quickPick.activeItems = oldActiveItem;
-            quickPick.busy = false;
-        })().ignoreErrors();
-
-        const selectedSource = await selection;
-        if (token.isCancellationRequested) {
-            return;
-        }
-
-        if (selectedSource) {
-            switch (selectedSource.type) {
-                case KernelSourceQuickPickType.LocalKernelSpec:
-                case KernelSourceQuickPickType.LocalPythonEnv:
-                    return this.selectKernelFromLocalKernelFinder(selectedSource.kernelFinderInfo, state, token);
-                case KernelSourceQuickPickType.ServerUriProvider:
-                    return this.getRemoteServersFromProvider.bind(this, selectedSource.provider, token);
-                default:
-                    break;
+        const kernelFinder = this.kernelFinder.registered.find((finder) => finder.id === kind)!;
+        try {
+            const result = await multiStep.run(
+                this.selectKernelFromKernelFinder.bind(
+                    this,
+                    kernelFinder,
+                    this.cancellationTokenSource.token,
+                    multiStep,
+                    state
+                ),
+                state
+            );
+            if (result === InputFlowAction.cancel) {
+                throw new CancellationError();
             }
+            if (this.cancellationTokenSource.token.isCancellationRequested) {
+                disposeAllDisposables(state.disposables);
+                return;
+            }
+
+            // If we got both parts of the equation, then perform the kernel source and kernel switch
+            if (state.source && state.connection) {
+                await this.onKernelConnectionSelected(notebook, state.connection, false);
+                return state.connection as LocalKernelConnectionMetadata;
+            }
+        } finally {
+            disposeAllDisposables(state.disposables);
         }
     }
+    public async selectRemoteKernel(
+        notebook: NotebookDocument,
+        providerId: string
+    ): Promise<RemoteKernelConnectionMetadata | undefined> {
+        // Reject if it's not our type
+        if (notebook.notebookType !== JupyterNotebookView && notebook.notebookType !== InteractiveWindowView) {
+            return;
+        }
+        const provider = await this.uriProviderRegistration.getProvider(providerId);
+        if (!provider) {
+            throw new Error(`Remote Provider Id ${providerId} not found`);
+        }
+        this.localDisposables.forEach((d) => d.dispose());
+        this.localDisposables = [];
+        this.cancellationTokenSource?.cancel();
+        this.cancellationTokenSource?.dispose();
 
+        this.cancellationTokenSource = new CancellationTokenSource();
+        const appShell = ServiceContainer.instance.get<IApplicationShell>(IApplicationShell);
+        const multiStep = new MultiStepInput<MultiStepResult>(appShell);
+        const state: MultiStepResult = { disposables: [], notebook };
+        try {
+            const result = await multiStep.run(
+                this.getRemoteServersFromProvider.bind(this, provider, this.cancellationTokenSource.token),
+                state
+            );
+            if (result === InputFlowAction.cancel) {
+                throw new CancellationError();
+            }
+
+            if (this.cancellationTokenSource.token.isCancellationRequested) {
+                disposeAllDisposables(state.disposables);
+                return;
+            }
+
+            // If we got both parts of the equation, then perform the kernel source and kernel switch
+            if (state.source && state.connection) {
+                await this.onKernelConnectionSelected(notebook, state.connection, false);
+                return state.connection as RemoteKernelConnectionMetadata;
+            }
+        } finally {
+            disposeAllDisposables(state.disposables);
+        }
+    }
     private async getRemoteServersFromProvider(
         provider: IJupyterUriProvider,
         token: CancellationToken,
@@ -308,6 +250,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             items: items,
             placeholder: '',
             title: `Select a Jupyter Server from ${provider.displayName ?? provider.id}`,
+            supportBackInFirstStep: true,
             onDidTriggerItemButton: async (e) => {
                 if ('type' in e.item && e.item.type === KernelFinderEntityQuickPickType.KernelFinder) {
                     if (provider.removeHandle) {
@@ -328,9 +271,9 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         if (selectedSource && 'type' in selectedSource) {
             switch (selectedSource.type) {
                 case KernelFinderEntityQuickPickType.KernelFinder:
-                    return this.selectKernelFromLocalKernelFinder(selectedSource.kernelFinderInfo, state, token);
+                    return this.selectKernelFromKernelFinder.bind(this, selectedSource.kernelFinderInfo, token);
                 case KernelFinderEntityQuickPickType.UriProviderQuickPick:
-                    return this.selectKernelFromRemoteKernelFinder(selectedSource, state, token);
+                    return this.selectRemoteServerFromRemoteKernelFinder(selectedSource, state, token);
 
                 default:
                     break;
@@ -338,7 +281,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         }
     }
 
-    private async selectKernelFromRemoteKernelFinder(
+    private async selectRemoteServerFromRemoteKernelFinder(
         selectedSource: KernelProviderItemsQuickPickItem,
         state: MultiStepResult,
         token: CancellationToken
@@ -357,11 +300,13 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         const onDidChange = new EventEmitter<void>();
         const onDidChangeStatus = new EventEmitter<void>();
         const kernels: KernelConnectionMetadata[] = [];
-        let status: 'discovering' | 'idle' = 'idle';
+        let status: 'discovering' | 'idle' = 'discovering';
         let refreshInvoked: boolean = false;
         let recommended: KernelConnectionMetadata | undefined;
         const onDidChangeRecommended = new EventEmitter<void>();
         const provider = {
+            title: DataScience.kernelPickerSelectKernelTitle(),
+            kind: ContributedKernelFinderKind.Remote,
             onDidChange: onDidChange.event,
             onDidChangeStatus: onDidChangeStatus.event,
             onDidChangeRecommended: onDidChangeRecommended.event,
@@ -384,24 +329,34 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
 
         (async () => {
             const uri = generateUriFromRemoteProvider(selectedSource.provider.id, handle);
-            const serverId = await computeServerId(uri);
-            const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
-                serverId,
-                this.controllerRegistration,
-                this.localDisposables
-            );
             if (token.isCancellationRequested) {
                 return;
             }
             await this.serverSelector.setJupyterURIToRemote(uri);
-            await controllerCreatedPromise;
             if (token.isCancellationRequested) {
                 return;
             }
-
-            const finder = this.kernelFinder.registered.find(
-                (f) => f.kind === 'remote' && (f as IRemoteKernelFinder).serverUri.uri === uri
-            );
+            // Wait for the remote provider to be registered.
+            const finder = await new Promise<IContributedKernelFinder>((resolve) => {
+                const found = this.kernelFinder.registered.find(
+                    (f) => f.kind === 'remote' && (f as IRemoteKernelFinder).serverUri.uri === uri
+                );
+                if (found) {
+                    return resolve(found);
+                }
+                this.kernelFinder.onDidChangeRegistrations(
+                    (e) => {
+                        const found = e.added.find(
+                            (f) => f.kind === 'remote' && (f as IRemoteKernelFinder).serverUri.uri === uri
+                        );
+                        if (found) {
+                            return resolve(found);
+                        }
+                    },
+                    this,
+                    state.disposables
+                );
+            });
             status = 'idle';
             onDidChangeStatus.fire();
             if (finder) {
@@ -410,6 +365,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                     await finder.refresh();
                 }
                 status = finder.status;
+                provider.title = `${DataScience.kernelPickerSelectKernelTitle()} from ${finder.displayName}`;
                 finder.onDidChangeKernels(
                     () => {
                         kernels.length = 0;
@@ -449,16 +405,20 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
 
         return this.selectKernel.bind(this, provider, token);
     }
-    private selectKernelFromLocalKernelFinder(
+    private selectKernelFromKernelFinder(
         source: IContributedKernelFinder<KernelConnectionMetadata>,
-        state: MultiStepResult,
-        token: CancellationToken
+        token: CancellationToken,
+        multiStep: IMultiStepInput<MultiStepResult>,
+        state: MultiStepResult
     ) {
         state.source = source;
         const onDidChange = new EventEmitter<void>();
         let recommended: KernelConnectionMetadata | undefined;
         const onDidChangeRecommended = new EventEmitter<void>();
         const provider = {
+            title:
+                DataScience.kernelPickerSelectKernelTitle() + (state.source ? ` from ${state.source.displayName}` : ''),
+            kind: source.kind,
             onDidChange: onDidChange.event,
             onDidChangeStatus: source.onDidChangeStatus,
             onDidChangeRecommended: onDidChangeRecommended.event,
@@ -512,13 +472,15 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             computePreferred();
             source.onDidChangeKernels(computePreferred, this, state.disposables);
         }
-        return this.selectKernel.bind(this, provider, token);
+        return this.selectKernel(provider, token, multiStep, state);
     }
     /**
      * Second stage of the multistep to pick a kernel
      */
     private async selectKernel(
         provider: {
+            title: string;
+            kind: ContributedKernelFinderKind;
             readonly onDidChange: Event<void>;
             readonly kernels: KernelConnectionMetadata[];
             onDidChangeStatus: Event<void>;
@@ -536,9 +498,24 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         }
         const selector = new KernelSelector(state.notebook, provider, token);
         state.disposables.push(selector);
-        state.connection = await selector.selectKernel(multiStep, state);
+        const quickPickFactory: CreateAndSelectItemFromQuickPick = (options) => {
+            const { quickPick, selection } = multiStep.showLazyLoadQuickPick({
+                ...options,
+                placeholder: '',
+                matchOnDescription: true,
+                matchOnDetail: true,
+                supportBackInFirstStep: true,
+                activeItem: undefined
+            });
+            return { quickPick, selection: selection as Promise<ConnectionQuickPickItem | QuickPickItem> };
+        };
+        state.connection = await selector.selectKernel(quickPickFactory);
     }
-    private async onKernelConnectionSelected(notebook: NotebookDocument, connection: KernelConnectionMetadata) {
+    private async onKernelConnectionSelected(
+        notebook: NotebookDocument,
+        connection: KernelConnectionMetadata,
+        forceFullySelectKernel = true
+    ) {
         const controllers = this.controllerRegistration.addOrUpdate(connection, [
             notebook.notebookType as typeof JupyterNotebookView | typeof InteractiveWindowView
         ]);
@@ -547,45 +524,12 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         }
         // First apply the kernel filter to this document
         this.connectionTracker.trackSelection(notebook, connection);
-
-        // Then select the kernel that we wanted
-        await this.commandManager.executeCommand('notebook.selectKernel', {
-            id: controllers[0].id,
-            extension: JVSC_EXTENSION_ID
-        });
+        if (forceFullySelectKernel) {
+            // Then select the kernel that we wanted
+            await this.commandManager.executeCommand('notebook.selectKernel', {
+                id: controllers[0].id,
+                extension: JVSC_EXTENSION_ID
+            });
+        }
     }
-}
-
-function waitForNotebookControllersCreationForServer(
-    serverId: string,
-    controllerRegistration: IControllerRegistration,
-    localDisposables: IDisposable[]
-) {
-    if (
-        controllerRegistration.all.find(
-            (connection) =>
-                (connection.kind === 'connectToLiveRemoteKernel' || connection.kind === 'startUsingRemoteKernelSpec') &&
-                connection.id === serverId
-        )
-    ) {
-        return;
-    }
-
-    return new Promise<void>((resolve) => {
-        const d = controllerRegistration.onChanged((e) => {
-            for (let controller of e.added) {
-                if (
-                    controller.connection.kind === 'connectToLiveRemoteKernel' ||
-                    controller.connection.kind === 'startUsingRemoteKernelSpec'
-                ) {
-                    if (controller.connection.serverId === serverId) {
-                        d.dispose();
-                        resolve();
-                    }
-                }
-            }
-        });
-
-        localDisposables.push(d);
-    });
 }
