@@ -309,7 +309,6 @@ export class KernelSelector implements IDisposable {
         if (!this.provider.recommended) {
             return;
         }
-        console.error('Adding recommended');
         if (!this.recommendedItems.length) {
             this.recommendedItems.push(<QuickPickItem>{
                 label: DataScience.recommendedKernelCategoryInQuickPick(),
