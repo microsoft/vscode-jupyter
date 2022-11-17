@@ -32,7 +32,7 @@ import {
     RemoteKernelConnectionMetadata
 } from '../../../kernels/types';
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
-import { InteractiveWindowView, JupyterNotebookView, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../platform/common/types';
@@ -83,7 +83,6 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IJupyterUriProviderRegistration)
         private readonly uriProviderRegistration: IJupyterUriProviderRegistration,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector
     ) {}
@@ -125,7 +124,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
 
             // If we got both parts of the equation, then perform the kernel source and kernel switch
             if (state.source && state.connection) {
-                await this.onKernelConnectionSelected(notebook, state.connection, false);
+                await this.onKernelConnectionSelected(notebook, state.connection);
                 return state.connection as LocalKernelConnectionMetadata;
             }
         } finally {
@@ -169,7 +168,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
 
             // If we got both parts of the equation, then perform the kernel source and kernel switch
             if (state.source && state.connection) {
-                await this.onKernelConnectionSelected(notebook, state.connection, false);
+                await this.onKernelConnectionSelected(notebook, state.connection);
                 return state.connection as RemoteKernelConnectionMetadata;
             }
         } finally {
@@ -511,11 +510,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         };
         state.connection = await selector.selectKernel(quickPickFactory);
     }
-    private async onKernelConnectionSelected(
-        notebook: NotebookDocument,
-        connection: KernelConnectionMetadata,
-        forceFullySelectKernel = true
-    ) {
+    private async onKernelConnectionSelected(notebook: NotebookDocument, connection: KernelConnectionMetadata) {
         const controllers = this.controllerRegistration.addOrUpdate(connection, [
             notebook.notebookType as typeof JupyterNotebookView | typeof InteractiveWindowView
         ]);
@@ -524,12 +519,5 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         }
         // First apply the kernel filter to this document
         this.connectionTracker.trackSelection(notebook, connection);
-        if (forceFullySelectKernel) {
-            // Then select the kernel that we wanted
-            await this.commandManager.executeCommand('notebook.selectKernel', {
-                id: controllers[0].id,
-                extension: JVSC_EXTENSION_ID
-            });
-        }
     }
 }
