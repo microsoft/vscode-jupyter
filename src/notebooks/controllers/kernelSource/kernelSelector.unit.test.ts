@@ -104,7 +104,8 @@ suite('Kernel Selector', () => {
             sysPrefix: '',
             uri: Uri.file('venv'),
             displayName: 'Venv',
-            envType: EnvironmentType.Venv
+            envType: EnvironmentType.Venv,
+            version: { major: 3, minor: 8, patch: 0, raw: '3.8.0' }
         },
         kernelSpec: {
             argv: [],
@@ -138,7 +139,8 @@ suite('Kernel Selector', () => {
             sysPrefix: '',
             uri: Uri.file('sys'),
             displayName: 'Global',
-            envType: EnvironmentType.Unknown
+            envType: EnvironmentType.Unknown,
+            version: { major: 3, minor: 11, patch: 0, raw: '3.11.0' }
         },
         kernelSpec: {
             argv: [],
@@ -376,6 +378,79 @@ suite('Kernel Selector', () => {
         verifyExistenceOfConnectionsInQuickPick(
             quickPick.items.filter((item) => isKernelPickItem(item)) as ConnectionQuickPickItem[],
             provider.kernels
+        );
+
+        // Remove an item
+        provider.status = 'idle';
+        provider.kernels = [sysPythonKernel];
+        onDidChangeProvider.fire();
+        onDidChangeProviderStatus.fire();
+        await clock.runAllAsync();
+
+        nonConnectionItems = quickPick.items.filter((item) => !isKernelPickItem(item));
+        assert.strictEqual(nonConnectionItems.length, 2);
+        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
+        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForGlobal());
+        verifyExistenceOfConnectionsInQuickPick(
+            quickPick.items.filter((item) => isKernelPickItem(item)) as ConnectionQuickPickItem[],
+            provider.kernels
+        );
+    });
+    test('Update labels in quick pick when the label (display name of kernel spec or python version) of a connection changes', async () => {
+        provider.kernels = [venvPythonKernel, condaKernel, sysPythonKernel];
+        provider.kind = ContributedKernelFinderKind.LocalPythonEnvironment;
+        when(kernelFinder.displayName).thenReturn('Kernel Finder');
+        when(kernelFinder.kind).thenReturn(provider.kind);
+        when(kernelFinder.kernels).thenReturn(provider.kernels);
+
+        kernelSelector.selectKernel(quickPickFactory).catch(noop);
+        onDidChangeProvider.fire();
+        await clock.runAllAsync();
+
+        const displayNameOfConda = getDisplayNameOrNameOfKernelConnection(condaKernel);
+        const displayNameOfVenv = getDisplayNameOrNameOfKernelConnection(venvPythonKernel);
+        const displayNameOfSys = getDisplayNameOrNameOfKernelConnection(sysPythonKernel);
+        assert.strictEqual(
+            quickPick.items.find((item) => isKernelPickItem(item) && item.connection.id === condaKernel.id)?.label,
+            displayNameOfConda
+        );
+        assert.strictEqual(
+            quickPick.items.find((item) => isKernelPickItem(item) && item.connection.id === venvPythonKernel.id)?.label,
+            displayNameOfVenv
+        );
+        assert.strictEqual(
+            quickPick.items.find((item) => isKernelPickItem(item) && item.connection.id === sysPythonKernel.id)?.label,
+            displayNameOfSys
+        );
+
+        // Update the version of Conda & sys
+        condaKernel.interpreter.version = { major: 4, minor: 5, patch: 6, raw: '4.5.6' };
+        sysPythonKernel.interpreter.version = { major: 4, minor: 5, patch: 6, raw: '4.5.6' };
+        const newDisplayNameOfConda = getDisplayNameOrNameOfKernelConnection(condaKernel);
+        const newDisplayNameOfVenv = getDisplayNameOrNameOfKernelConnection(venvPythonKernel);
+        const newDisplayNameOfSys = getDisplayNameOrNameOfKernelConnection(sysPythonKernel);
+
+        // Verify the labels will be different.
+        assert.notStrictEqual(displayNameOfConda, newDisplayNameOfConda);
+        assert.notStrictEqual(displayNameOfSys, newDisplayNameOfSys);
+        // Verify venv still has the same display name.
+        assert.strictEqual(displayNameOfVenv, newDisplayNameOfVenv);
+
+        // Trigger a change
+        onDidChangeProvider.fire();
+
+        //Verify the labels have been updated to reflect the new version.
+        assert.strictEqual(
+            quickPick.items.find((item) => isKernelPickItem(item) && item.connection.id === condaKernel.id)?.label,
+            newDisplayNameOfConda
+        );
+        assert.strictEqual(
+            quickPick.items.find((item) => isKernelPickItem(item) && item.connection.id === venvPythonKernel.id)?.label,
+            displayNameOfVenv
+        );
+        assert.strictEqual(
+            quickPick.items.find((item) => isKernelPickItem(item) && item.connection.id === sysPythonKernel.id)?.label,
+            newDisplayNameOfSys
         );
     });
 });
