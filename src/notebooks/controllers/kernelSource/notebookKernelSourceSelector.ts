@@ -45,7 +45,7 @@ import {
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IControllerRegistration, INotebookKernelSourceSelector, IConnectionTracker } from '../types';
 import { CreateAndSelectItemFromQuickPick, KernelSelector } from './kernelSelector';
-import { QuickPickKernelItemProvider } from './provider';
+import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
 import { ConnectionQuickPickItem, IQuickPickKernelItemProvider, MultiStepResult } from './types';
 
 enum KernelFinderEntityQuickPickType {

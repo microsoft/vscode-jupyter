@@ -29,7 +29,7 @@ export class QuickPickKernelItemProvider {
     recommended: KernelConnectionMetadata | undefined;
     private readonly disposables: IDisposable[] = [];
     private refreshInvoked?: boolean;
-    constructor(public readonly notebook: NotebookDocument, kind: ContributedKernelFinderKind, finderPromise: IContributedKernelFinder | Promise<IContributedKernelFinder>) {
+    constructor(private readonly notebook: NotebookDocument, kind: ContributedKernelFinderKind, finderPromise: IContributedKernelFinder | Promise<IContributedKernelFinder>) {
         this.refresh = async () => {
             this.refreshInvoked = true;
         };
