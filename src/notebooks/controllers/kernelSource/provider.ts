@@ -19,7 +19,7 @@ export class QuickPickKernelItemProvider {
     kind: ContributedKernelFinderKind;
     private readonly _onDidChange = new EventEmitter<void>;
     onDidChange = this._onDidChange.event;
-    kernels: KernelConnectionMetadata[];
+    kernels: KernelConnectionMetadata[] = [];
     private readonly _onDidChangeStatus = new EventEmitter<void>();
     onDidChangeStatus = this._onDidChangeStatus.event;
     private readonly _onDidChangeRecommended = new EventEmitter<void>();
@@ -100,9 +100,8 @@ export class QuickPickKernelItemProvider {
 
     }
     private computePreferredLocalKernel(finder: IContributedKernelFinder, preferred:PreferredKernelConnectionService, cancelToken: CancellationToken){
-        let recommended: KernelConnectionMetadata | undefined;
         const computePreferred = () => {
-            if (recommended) {
+            if (this.recommended) {
                 return;
             }
             const preferredMethod =
@@ -112,10 +111,10 @@ export class QuickPickKernelItemProvider {
 
             preferredMethod(this.notebook, finder, cancelToken)
                 .then((kernel) => {
-                    if (recommended) {
+                    if (this.recommended) {
                         return;
                     }
-                    recommended = kernel;
+                    this.recommended = kernel;
                     this._onDidChangeRecommended.fire();
                 })
                 .catch((ex) =>
