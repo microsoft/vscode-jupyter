@@ -329,8 +329,6 @@ export namespace EditorContexts {
 export namespace RegExpValues {
     export const PythonCellMarker = /^(#\s*%%|#\s*\<codecell\>|#\s*In\[\d*?\]|#\s*In\[ \])/;
     export const PythonMarkdownCellMarker = /^(#\s*%%\s*\[markdown\]|#\s*\<markdowncell\>)/;
-    // This next one has to be a string because uglifyJS isn't handling the groups. We use named-js-regexp to parse it
-    // instead.
     export const UrlPatternRegEx =
         '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)';
     export interface IUrlPatternGroupType {
