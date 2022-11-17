@@ -179,7 +179,7 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 'error',
         '@typescript-eslint/no-non-null-assertion': 'off',
         'no-unused-vars': 'off',
-        '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '_\\w*' }],
+        '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '_\\w*' }],
         'no-use-before-define': 'off',
         '@typescript-eslint/no-use-before-define': [
             'error',

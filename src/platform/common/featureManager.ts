@@ -84,7 +84,7 @@ export class FeatureManager implements IFeaturesManager {
 
     private _updateFeatures() {
         const kernelPickerType =
-            this.workspace.getConfiguration('notebook.experimental.kernelPicker').get('mru') ||
+            this.workspace.getConfiguration('notebook.kernelPicker').get('type') === 'mru' ||
             this.configService.getSettings().kernelPickerType === 'Insiders'
                 ? 'Insiders'
                 : 'Stable';
