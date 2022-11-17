@@ -177,11 +177,13 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
         let list = this.cachedVariables.get(kernel.uri.toString());
+        const hasExecutingCells = this.kernelProvider.getKernelExecution(kernel).pendingCells.length > 0;
         const execution = this.kernelProvider.getKernelExecution(kernel);
         if (
             !list ||
-            list.currentExecutionCount !== request.executionCount ||
-            list.currentExecutionCount !== execution.executionCount
+            (!hasExecutingCells &&
+                (list.currentExecutionCount !== request.executionCount ||
+                    list.currentExecutionCount !== execution.executionCount))
         ) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
@@ -236,19 +238,19 @@ export class KernelVariables implements IJupyterVariables {
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
             for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
+                if (exclusionList && exclusionList.indexOf(list.variables[i].type) >= 0) {
+                    // Remove from the list before fetching the full value
+                    list.variables.splice(i, 1);
+                    continue;
+                }
+
                 const fullVariable = list.variables[i].value
                     ? list.variables[i]
                     : await this.getVariableValueFromKernel(list.variables[i], kernel);
 
-                // See if this is excluded or not.
-                if (exclusionList && exclusionList.indexOf(fullVariable.type) >= 0) {
-                    // Not part of our actual list. Remove from the real list too
-                    list.variables.splice(i, 1);
-                } else {
-                    list.variables[i] = fullVariable;
-                    result.pageResponse.push(fullVariable);
-                    i += 1;
-                }
+                list.variables[i] = fullVariable;
+                result.pageResponse.push(fullVariable);
+                i += 1;
             }
 
             // Save in our cache
@@ -353,23 +355,18 @@ export class KernelVariables implements IJupyterVariables {
 
                 // Parse into bits
                 const type = TypeRegex.exec(text);
-                const value = ValueRegex.exec(text);
-                const stringForm = StringFormRegex.exec(text);
-                const docString = DocStringRegex.exec(text);
                 const count = CountRegex.exec(text);
                 const shape = ShapeRegex.exec(text);
                 if (type) {
                     result.type = type[1];
                 }
-                if (value) {
-                    result.value = value[1];
-                } else if (stringForm) {
-                    result.value = stringForm[1];
-                } else if (docString) {
-                    result.value = docString[1];
-                } else {
-                    result.value = '';
-                }
+
+                // Take the first regex that returns a value
+                result.value = [ValueRegex, StringFormRegex, DocStringRegex].reduce(
+                    (value, regex) => value || regex.exec(text)?.[1] || '',
+                    ''
+                );
+
                 if (count) {
                     result.count = parseInt(count[1], 10);
                 }
