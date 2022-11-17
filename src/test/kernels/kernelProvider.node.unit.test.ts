@@ -70,8 +70,6 @@ suite('KernelProvider Node', () => {
         vscNotebook = mock<IVSCodeNotebook>();
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
         context = mock<IExtensionContext>();
-        const onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
-        disposables.push(onDidChangeNotebookCellExecutionState);
         const configSettings = mock<IWatchableJupyterSettings>();
         const onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
         disposables.push(onDidChangeNotebookCellExecutionState);
