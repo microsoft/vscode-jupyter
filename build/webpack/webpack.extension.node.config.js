@@ -13,12 +13,12 @@ const common = require('./common');
 const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.node.json');
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
-const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
+// const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 const config = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: './src/extension.node.ts'
+        extension: './out/extension.node.js'
     },
     devtool: 'source-map',
     node: {
@@ -36,7 +36,7 @@ const config = {
                 ]
             },
             {
-                test: /\.ts$/,
+                test: /\.js$/,
                 use: [
                     ...(process.env.BUILD_WITH_VSCODE_NLS
                         ? [
@@ -50,15 +50,6 @@ const config = {
                         : []),
                     {
                         loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
-                    }
-                ]
-            },
-            {
-                test: /\.ts$/,
-                exclude: /node_modules/,
-                use: [
-                    {
-                        loader: 'ts-loader'
                     }
                 ]
             },
@@ -106,7 +97,7 @@ const config = {
         'electron',
         './node_modules/zeromq',
         './node_modules/@vscode/jupyter-ipywidgets',
-        ...existingModulesInOutDir,
+        // ...existingModulesInOutDir,
         '@opentelemetry/tracing',
         'applicationinsights-native-metrics'
     ], // Don't bundle these
@@ -164,8 +155,8 @@ const config = {
     },
     output: {
         filename: '[name].node.js',
-        path: path.resolve(constants.ExtensionRootDir, 'out'),
-        libraryTarget: 'commonjs2',
+        path: path.resolve(constants.ExtensionRootDir, 'dist'),
+        libraryTarget: 'commonjs',
         devtoolModuleFilenameTemplate: '../../[resource-path]'
     }
 };

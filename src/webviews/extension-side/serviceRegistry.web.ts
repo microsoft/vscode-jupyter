@@ -5,7 +5,7 @@
 
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
-import { VariableViewProvider } from './variablesView/variableViewProvider';
+import { VariableViewProvider } from './variablesView/variableViewProvider.web';
 import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from './dataviewer/jupyterVariableDataProviderFactory';
 import {

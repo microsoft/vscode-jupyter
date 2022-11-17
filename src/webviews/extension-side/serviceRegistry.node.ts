@@ -28,7 +28,7 @@ import { IPlotSaveHandler } from './plotView/types';
 import { NotebookWatcher } from './variablesView/notebookWatcher';
 import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
-import { VariableViewProvider } from './variablesView/variableViewProvider';
+import { VariableViewProvider } from './variablesView/variableViewProvider.node';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
