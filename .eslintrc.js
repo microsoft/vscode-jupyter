@@ -7,7 +7,7 @@ module.exports = {
     extends: ['prettier', 'prettier/@typescript-eslint'],
     ignorePatterns: [
         '*.js',
-        'vscode.d.ts',
+        'vscode.*.d.ts',
         '**/*.test.ts',
         // TODO: Does this file need to be linted?
         'src/test/pythonFiles/formatting/dummy.ts'
@@ -17,8 +17,8 @@ module.exports = {
         project: [
             'tsconfig.json',
             'tsconfig.datascience-ui.json',
-            'tsconfig.extension.node.json',
-            'tsconfig.extension.web.json'
+            'src/tsconfig.extension.node.json',
+            'src/tsconfig.extension.web.json'
         ],
         sourceType: 'module'
     },

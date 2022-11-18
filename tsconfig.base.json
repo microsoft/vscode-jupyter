@@ -1,12 +1,10 @@
 {
     "compilerOptions": {
-        "baseUrl": ".",
-        "paths": {
-            "*": ["types/*"]
-        },
         "module": "commonjs",
         "target": "es2020",
         "jsx": "react",
+
+        // Types
         "lib": [],
         "types": [],
 

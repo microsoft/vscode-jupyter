@@ -1,8 +1,8 @@
 {
-    "extends": "./tsconfig.base.json",
+    "extends": "../tsconfig.base.json",
     "compilerOptions": {
-        "baseUrl": ".",
-        "rootDir": "src",
+        "baseUrl": "..",
+        "rootDir": ".",
         "outDir": "out",
 
         // Types
@@ -13,37 +13,34 @@
             "./node_modules/@types",
         ],
         "types": [
+            // "vscode-notebook-renderer",
             "webpack-env"
         ],
         "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"],
 
-        // Strictness
         // TODO: This should be removed eventually
         "allowJs": true
     },
     "include": [
-        "./src/**/*",
+        "./**/*",
 
         // Include all types outside the type roots manually
-        "./types/slickgrid",
-        "./vscode.*"
+        "../types/slickgrid",
+        "../vscode.*"
     ],
     "exclude": [
+        "node_modules",
         ".vscode-test",
         ".vscode test",
-        "src/server/node_modules",
-        "src/node_modules",
-        "src/server/src/typings",
-        "src/typings",
-        "src/ipywidgets",
-        "src/smoke",
         "src/test/datascience/extensionapi",
         "build",
         "out",
-        "ipywidgets",
         "tmp",
         ".nyc_output",
         ".git",
+        "src/*.node.ts",
+        "src/**/*.node.ts",
+        ".vscode-test-web",
         "gulpfile.js"
     ]
 }
