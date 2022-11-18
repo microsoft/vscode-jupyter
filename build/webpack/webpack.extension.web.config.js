@@ -88,7 +88,7 @@ const config = {
             }
         ]
     },
-    externals: ['vscode', 'commonjs', 'electron'], // Don't bundle these
+    externals: ['vscode', 'commonjs', 'electron', 'node:crypto'], // Don't bundle these
     plugins: [
         ...common.getDefaultPlugins('web'),
         // Work around for Buffer is undefined:
@@ -141,7 +141,6 @@ const config = {
             stream: require.resolve('stream-browserify'),
             os: require.resolve('os-browserify'),
             path: require.resolve('path-browserify'),
-            crypto: require.resolve(path.join(constants.ExtensionRootDir, 'src/platform/msrCrypto/msrCrypto.js')),
             fs: false
         }
     },

@@ -9,6 +9,7 @@ module.exports = {
         '*.js',
         'vscode.*.d.ts',
         '**/*.test.ts',
+        'types',
         // TODO: Does this file need to be linted?
         'src/test/pythonFiles/formatting/dummy.ts'
     ],
