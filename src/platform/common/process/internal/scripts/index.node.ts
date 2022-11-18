@@ -199,7 +199,7 @@ export function refactor(root: string): [string[], (out: string) => object[]] {
 
 export function normalizeSelection(): [string[], (out: string) => string] {
     const script = path.join(SCRIPTS_DIR, 'normalizeSelection.py');
-    const args = [script];
+    const args = ['-I', '-S', script];
 
     function parse(out: string) {
         // The text will be used as-is.

@@ -56,6 +56,9 @@ def _get_statements(selection):
         #
         # The first block would have lineno = 1,and the second block lineno = 4
         start = node.lineno - 1
+        if start == end:
+            # "a=3; b=4"
+            continue
         block = "\n".join(lines[start:end])
 
         # If the block is multiline, add an extra newline character at its end.
