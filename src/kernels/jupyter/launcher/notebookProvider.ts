@@ -5,8 +5,6 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { trackKernelResourceInformation } from '../../telemetry/helper';
-import { Telemetry } from '../../../telemetry';
 import {
     ConnectNotebookProviderOptions,
     GetServerOptions,
@@ -19,8 +17,7 @@ import {
 import { Cancellation } from '../../../platform/common/cancellation';
 import { DisplayOptions } from '../../displayOptions';
 import { IRawNotebookProvider } from '../../raw/types';
-import { IJupyterNotebookProvider, IServerConnectionType } from '../types';
-import { sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
+import { IJupyterNotebookProvider, IJupyterServerUriStorage } from '../types';
 
 /**
  * Generic class for connecting to a server. Probably could be renamed as it doesn't provide notebooks, but rather connections.
@@ -35,7 +32,7 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IJupyterNotebookProvider)
         private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType
+        @inject(IJupyterServerUriStorage) private readonly uriStorage: IJupyterServerUriStorage
     ) {}
 
     // Attempt to connect to our server provider, and if we do, return the connection info
@@ -52,7 +49,7 @@ export class NotebookProvider implements INotebookProvider {
         options.ui = this.startupUi;
         if (this.rawNotebookProvider?.isSupported && options.localJupyter) {
             throw new Error('Connect method should not be invoked for local Connections when Raw is supported');
-        } else if (this.extensionChecker.isPythonExtensionInstalled || !this.serverConnectionType.isLocalLaunch) {
+        } else if (this.extensionChecker.isPythonExtensionInstalled || !this.uriStorage.isLocalLaunch) {
             return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
         } else {
             handler.dispose();
@@ -88,11 +85,7 @@ export class NotebookProvider implements INotebookProvider {
             await this.jupyterNotebookProvider.connect(serverOptions);
         }
         Cancellation.throwIfCanceled(options.token);
-        trackKernelResourceInformation(options.resource, {
-            kernelConnection: options.kernelConnection,
-            actionSource: options.creator
-        });
-        const promise = rawLocalKernel
+        return rawLocalKernel
             ? this.rawNotebookProvider!.createNotebook(
                   options.resource,
                   options.kernelConnection,
@@ -100,17 +93,5 @@ export class NotebookProvider implements INotebookProvider {
                   options.token
               )
             : this.jupyterNotebookProvider.createNotebook(options);
-
-        sendKernelTelemetryWhenDone(
-            options.resource,
-            Telemetry.NotebookStart,
-            promise || Promise.resolve(undefined),
-            false, // Error telemetry will be sent further up the chain, after we have analyzed the error, such as if dependencies are installed or not.
-            {
-                disableUI: options.ui.disableUI === true
-            }
-        );
-
-        return promise;
     }
 }

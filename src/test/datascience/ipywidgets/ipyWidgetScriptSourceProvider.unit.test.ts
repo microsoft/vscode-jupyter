@@ -12,12 +12,14 @@ import { ConfigurationService } from '../../../platform/common/configuration/ser
 import { HttpClient } from '../../../platform/common/net/httpClient';
 import { PersistentState, PersistentStateFactory } from '../../../platform/common/persistentState';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { IConfigurationService, IExtensionContext, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import {
-    IKernel,
-    LocalKernelSpecConnectionMetadata,
-    RemoteKernelSpecConnectionMetadata
-} from '../../../platform/../kernels/types';
+    IConfigurationService,
+    IDisposable,
+    IExtensionContext,
+    IJupyterSettings,
+    ReadWrite
+} from '../../../platform/common/types';
+import { IKernel, LocalKernelSpecConnectionMetadata, RemoteKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { IPyWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/ipyWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/localWidgetScriptSourceProvider.node';
 import { RemoteWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/remoteWidgetScriptSourceProvider';
@@ -30,10 +32,12 @@ import { CDNWidgetScriptSourceProvider } from '../../../notebooks/controllers/ip
 import { IPyWidgetScriptManagerFactory } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/ipyWidgetScriptManagerFactory.node';
 import { NbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/nbExtensionsPathProvider.node';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { noop } from '../../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 
-suite('DataScience - ipywidget - Widget Script Source Provider', () => {
+suite('ipywidget - Widget Script Source Provider', () => {
     let scriptSourceProvider: IPyWidgetScriptSourceProvider;
     let kernel: IKernel;
     let configService: IConfigurationService;
@@ -46,6 +50,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
     let context: IExtensionContext;
     let memento: Memento;
     let jupyterPaths: JupyterPaths;
+    const disposables: IDisposable[] = [];
     setup(() => {
         configService = mock(ConfigurationService);
         appShell = mock(ApplicationShell);
@@ -57,6 +62,17 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         const stateFactory = mock(PersistentStateFactory);
         userSelectedOkOrDoNotShowAgainInPrompt = mock<PersistentState<boolean>>();
         kernel = mock<IKernel>();
+        const onStarted = new EventEmitter<void>();
+        const onReStarted = new EventEmitter<void>();
+        disposables.push(onStarted);
+        disposables.push(onReStarted);
+        when(kernel.onStarted).thenReturn(onStarted.event);
+        when(kernel.onRestarted).thenReturn(onReStarted.event);
+        when(kernel.kernelSocket).thenReturn({
+            subscribe: () => ({
+                dispose: () => noop()
+            })
+        } as any);
         when(stateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(
             instance(userSelectedOkOrDoNotShowAgainInPrompt)
         );
@@ -65,8 +81,11 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         when(userSelectedOkOrDoNotShowAgainInPrompt.value).thenReturn(false);
         when(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(anything())).thenResolve();
     });
-    teardown(() => sinon.restore());
-    function createScritpSourceProvider() {
+    teardown(() => {
+        sinon.restore();
+        disposeAllDisposables(disposables);
+    });
+    function createScripSourceProvider() {
         const httpClient = mock(HttpClient);
         const resourceConverter = mock<ILocalResourceUriConverter>();
         const fs = mock(FileSystem);
@@ -76,7 +95,8 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
             instance(fs),
             instance(context),
             instance(httpClient),
-            instance(jupyterPaths)
+            instance(jupyterPaths),
+            disposables
         );
         scriptSourceFactory = new ScriptSourceProviderFactory(
             instance(configService),
@@ -84,34 +104,39 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
             instance(appShell),
             instance(memento)
         );
-
+        const cdnScriptProvider = mock<CDNWidgetScriptSourceProvider>();
+        when(cdnScriptProvider.isOnCDN(anything())).thenResolve(false);
         scriptSourceProvider = new IPyWidgetScriptSourceProvider(
             instance(kernel),
             instance(resourceConverter),
             instance(configService),
             instance(httpClient),
             scriptSourceFactory,
-            Promise.resolve(true)
+            Promise.resolve(true),
+            instance(cdnScriptProvider)
         );
     }
     [true, false].forEach((localLaunch) => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
             setup(() => {
                 if (localLaunch) {
-                    when(kernel.kernelConnectionMetadata).thenReturn(<LocalKernelSpecConnectionMetadata>{
-                        id: '',
-                        kernelSpec: {},
-                        kind: 'startUsingLocalKernelSpec'
-                    });
+                    when(kernel.kernelConnectionMetadata).thenReturn(
+                        LocalKernelSpecConnectionMetadata.create({
+                            id: '',
+                            kernelSpec: {} as any
+                        })
+                    );
                 } else {
-                    when(kernel.kernelConnectionMetadata).thenReturn(<RemoteKernelSpecConnectionMetadata>{
-                        baseUrl: '',
-                        id: '',
-                        kernelSpec: {},
-                        kind: 'startUsingRemoteKernelSpec'
-                    });
+                    when(kernel.kernelConnectionMetadata).thenReturn(
+                        RemoteKernelSpecConnectionMetadata.create({
+                            baseUrl: '',
+                            id: '',
+                            serverId: '',
+                            kernelSpec: {} as any
+                        })
+                    );
                 }
-                createScritpSourceProvider();
+                createScripSourceProvider();
             });
             test('Attempt to get widget source from CDN', async () => {
                 settings.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];

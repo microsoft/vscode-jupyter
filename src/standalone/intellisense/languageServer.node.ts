@@ -22,14 +22,14 @@ import {
 import * as path from '../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { FileBasedCancellationStrategy } from './fileBasedCancellationStrategy.node';
-import { createNotebookMiddleware, createPylanceMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
-import * as uuid from 'uuid/v4';
+import { createNotebookMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
+import uuid from 'uuid/v4';
 import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
-import { getInterpreterId } from '../../platform/pythonEnvironments/info/interpreter';
 import { noop } from '../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
+import { getComparisonKey } from '../../platform/vscode-path/resources';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ensure(target: any, key: string) {
@@ -114,7 +114,7 @@ export class LanguageServer implements Disposable {
     ) {
         // Client should be already started. We can expose it right away.
         this._client = client;
-        this._interpreterId = getInterpreterId(interpreter);
+        this._interpreterId = getComparisonKey(interpreter.uri);
         workspace.onDidChangeNotebookDocument(this.onDidChangeNotebookDocument, this, disposables);
     }
 
@@ -160,7 +160,6 @@ export class LanguageServer implements Disposable {
     }
 
     public static async createLanguageServer(
-        middlewareType: 'pylance' | 'jupyter',
         interpreter: PythonEnvironment,
         shouldAllowIntellisense: (uri: Uri, interpreterId: string, interpreterPath: Uri) => boolean,
         getNotebookHeader: (uri: Uri) => string
@@ -170,24 +169,15 @@ export class LanguageServer implements Disposable {
         if (serverOptions) {
             let languageClient: LanguageClient | undefined;
             const outputChannel = window.createOutputChannel(`${interpreter.displayName || 'notebook'}-languageserver`);
-            const interpreterId = getInterpreterId(interpreter);
-            const middleware =
-                middlewareType == 'jupyter'
-                    ? createNotebookMiddleware(
-                          () => languageClient,
-                          () => noop, // Don't trace output. Slows things down too much
-                          NOTEBOOK_SELECTOR,
-                          getFilePath(interpreter.uri),
-                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.uri),
-                          getNotebookHeader
-                      )
-                    : createPylanceMiddleware(
-                          () => languageClient,
-                          NOTEBOOK_SELECTOR,
-                          getFilePath(interpreter.uri),
-                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.uri),
-                          getNotebookHeader
-                      );
+            const interpreterId = getComparisonKey(interpreter.uri);
+            const middleware = createNotebookMiddleware(
+                () => languageClient,
+                () => noop, // Don't trace output. Slows things down too much
+                NOTEBOOK_SELECTOR,
+                getFilePath(interpreter.uri),
+                (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.uri),
+                getNotebookHeader
+            );
 
             // Client options should be the same for all servers we support.
             const clientOptions: LanguageClientOptions = {

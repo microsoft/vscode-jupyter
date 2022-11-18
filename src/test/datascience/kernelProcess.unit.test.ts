@@ -42,6 +42,7 @@ import { waitForCondition } from '../common.node';
 import { uriEquals } from './helpers';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { traceInfo } from '../../platform/logging';
+import { IPlatformService } from '../../platform/common/platform/types';
 
 suite('kernel Process', () => {
     let kernelProcess: KernelProcess;
@@ -131,6 +132,8 @@ suite('kernel Process', () => {
             filePath: 'connection.json'
         });
         when(jupyterPaths.getRuntimeDir()).thenResolve();
+        const platform = mock<IPlatformService>();
+        when(platform.isWindows).thenReturn(false);
         kernelProcess = new KernelProcess(
             instance(processServiceFactory),
             connection,
@@ -143,7 +146,8 @@ suite('kernel Process', () => {
             instance(outputChannel),
             instance(jupyterSettings),
             instance(jupyterPaths),
-            instance(daemon)
+            instance(daemon),
+            instance(platform)
         );
     });
     teardown(() => {
@@ -408,7 +412,7 @@ suite('kernel Process', () => {
     });
 });
 
-suite('DataScience - Kernel Process', () => {
+suite('Kernel Process', () => {
     let processService: IProcessService;
     let pythonExecFactory: IPythonExecutionFactory;
     const disposables: IDisposable[] = [];
@@ -477,6 +481,9 @@ suite('DataScience - Kernel Process', () => {
             interrupt: () => Promise.resolve(),
             handle: 1
         });
+        const platform = mock<IPlatformService>();
+        when(platform.isWindows).thenReturn(false);
+
         return new KernelProcess(
             instance(processExecutionFactory),
             instance(connection),
@@ -489,11 +496,12 @@ suite('DataScience - Kernel Process', () => {
             undefined,
             instance(settings),
             instance(jupyterPaths),
-            instance(interruptDaemon)
+            instance(interruptDaemon),
+            instance(platform)
         );
     }
     test('Launch from kernelspec (linux)', async function () {
-        const metadata: LocalKernelSpecConnectionMetadata = {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
             id: '1',
             kernelSpec: {
                 argv: [
@@ -513,9 +521,8 @@ suite('DataScience - Kernel Process', () => {
                 display_name: '',
                 name: '',
                 executable: ''
-            },
-            kind: 'startUsingLocalKernelSpec'
-        };
+            }
+        });
         const kernelProcess = launchKernel(metadata, 'wow/connection_config.json');
         await kernelProcess.launch('', 10_000, token.token);
         const args = capture(processService.execObservable).first();
@@ -530,7 +537,7 @@ suite('DataScience - Kernel Process', () => {
         await kernelProcess.dispose();
     });
     test('Launch from kernelspec (linux with space in file name)', async function () {
-        const metadata: LocalKernelSpecConnectionMetadata = {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
             id: '1',
             kernelSpec: {
                 argv: [
@@ -550,9 +557,8 @@ suite('DataScience - Kernel Process', () => {
                 display_name: '',
                 name: '',
                 executable: ''
-            },
-            kind: 'startUsingLocalKernelSpec'
-        };
+            }
+        });
         const kernelProcess = launchKernel(metadata, 'wow/connection config.json');
         await kernelProcess.launch('', 10_000, token.token);
         const args = capture(processService.execObservable).first();
@@ -567,7 +573,7 @@ suite('DataScience - Kernel Process', () => {
         await kernelProcess.dispose();
     });
     test('Launch from kernelspec (windows)', async function () {
-        const metadata: LocalKernelSpecConnectionMetadata = {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
             id: '1',
             kernelSpec: {
                 argv: [
@@ -585,9 +591,8 @@ suite('DataScience - Kernel Process', () => {
                 display_name: '',
                 name: '',
                 executable: ''
-            },
-            kind: 'startUsingLocalKernelSpec'
-        };
+            }
+        });
         const kernelProcess = launchKernel(metadata, 'connection_config.json');
         await kernelProcess.launch('', 10_000, token.token);
         const args = capture(processService.execObservable).first();
@@ -602,7 +607,7 @@ suite('DataScience - Kernel Process', () => {
         await kernelProcess.dispose();
     });
     test('Launch from kernelspec (windows with space in file name)', async function () {
-        const metadata: LocalKernelSpecConnectionMetadata = {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
             id: '1',
             kernelSpec: {
                 argv: [
@@ -620,9 +625,8 @@ suite('DataScience - Kernel Process', () => {
                 display_name: '',
                 name: '',
                 executable: ''
-            },
-            kind: 'startUsingLocalKernelSpec'
-        };
+            }
+        });
         const kernelProcess = launchKernel(metadata, 'D:\\hello\\connection config.json');
         await kernelProcess.launch('', 10_000, token.token);
         const args = capture(processService.execObservable).first();

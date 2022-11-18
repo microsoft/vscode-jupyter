@@ -5,9 +5,8 @@
 import '../../../platform/common/extensions';
 
 import * as vscode from 'vscode';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { injectable, inject } from 'inversify';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceInfo, traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -21,8 +20,6 @@ import {
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
-import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { isPythonKernelConnection } from '../../helpers';
 import { IRawKernelConnectionSession, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
@@ -50,7 +47,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
         @inject(IRawNotebookSupportedService)
         private readonly rawNotebookSupportedService: IRawNotebookSupportedService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         this.asyncRegistry.push(this);
@@ -70,32 +66,19 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         return this.rawNotebookSupportedService.isSupported;
     }
 
-    @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
     public async createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         cancelToken: vscode.CancellationToken
     ): Promise<IRawKernelConnectionSession> {
-        traceInfo(`Creating raw notebook for resource '${getDisplayPath(resource)}'`);
+        traceVerbose(`Creating raw notebook for resource '${getDisplayPath(resource)}'`);
         const sessionPromise = createDeferred<IRawKernelConnectionSession>();
         this.trackDisposable(sessionPromise.promise);
         let rawSession: RawJupyterSession | undefined;
 
-        traceVerbose(`Getting preferred kernel for resource '${getDisplayPath(resource)}'`);
         try {
             const kernelConnectionProvided = !!kernelConnection;
-            if (
-                kernelConnection &&
-                isPythonKernelConnection(kernelConnection) &&
-                kernelConnection.kind === 'startUsingLocalKernelSpec'
-            ) {
-                if (!kernelConnection.interpreter) {
-                    sendTelemetryEvent(Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter, undefined, {
-                        pythonExtensionInstalled: this.extensionChecker.isPythonExtensionInstalled
-                    });
-                }
-            }
             traceInfo(`Computing working directory for resource '${getDisplayPath(resource)}'`);
             const workingDirectory = await this.workspaceService.computeWorkingDirectory(resource);
             Cancellation.throwIfCanceled(cancelToken);
@@ -113,18 +96,13 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
             // If a kernel connection was not provided, then we set it up here.
             if (!kernelConnectionProvided) {
-                trackKernelResourceInformation(resource, { kernelConnection });
+                await trackKernelResourceInformation(resource, { kernelConnection });
             }
-            traceVerbose(
-                `Connecting to raw session for ${getDisplayPath(resource)} with connection ${kernelConnection.id}`
-            );
             await rawSession.connect({ token: cancelToken, ui });
             if (cancelToken.isCancellationRequested) {
                 throw new vscode.CancellationError();
             }
             if (rawSession.isConnected) {
-                traceInfo(`Finished connecting ${this.id}`);
-
                 sessionPromise.resolve(rawSession);
             } else {
                 sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError()));

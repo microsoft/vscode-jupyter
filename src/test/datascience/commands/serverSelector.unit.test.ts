@@ -7,11 +7,11 @@ import { CommandManager } from '../../../platform/common/application/commandMana
 import { ICommandManager } from '../../../platform/common/application/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { Commands } from '../../../platform/common/constants';
-import { JupyterServerSelectorCommand } from '../../../notebooks/serverSelector';
+import { JupyterServerSelectorCommand } from '../../../notebooks/serverSelectorCommand';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 
 /* eslint-disable  */
-suite('DataScience - Server Selector Command', () => {
+suite('Server Selector Command', () => {
     let serverSelectorCommand: JupyterServerSelectorCommand;
     let commandManager: ICommandManager;
     let serverSelector: JupyterServerSelector;

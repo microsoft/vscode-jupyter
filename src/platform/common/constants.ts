@@ -221,7 +221,6 @@ export namespace Commands {
     export const NotebookEditorUndoCells = 'jupyter.notebookeditor.undocells';
     export const NotebookEditorRedoCells = 'jupyter.notebookeditor.redocells';
     export const NotebookEditorRemoveAllCells = 'jupyter.notebookeditor.removeallcells';
-    export const NotebookEditorInterruptKernel = 'jupyter.notebookeditor.interruptkernel';
     export const NotebookEditorRestartKernel = 'jupyter.notebookeditor.restartkernel';
     export const NotebookEditorRunAllCells = 'jupyter.notebookeditor.runallcells';
     export const NotebookEditorRunSelectedCell = 'jupyter.notebookeditor.runselectedcell';
@@ -273,12 +272,10 @@ export namespace Commands {
     export const OpenVariableView = 'jupyter.openVariableView';
     export const OpenOutlineView = 'jupyter.openOutlineView';
     export const InteractiveClearAll = 'jupyter.interactive.clearAllCells';
-    export const InteractiveRemoveCell = 'jupyter.interactive.removeCell';
     export const InteractiveGoToCode = 'jupyter.interactive.goToCode';
     export const InteractiveCopyCell = 'jupyter.interactive.copyCell';
     export const InteractiveExportAsNotebook = 'jupyter.interactive.exportasnotebook';
     export const InteractiveExportAs = 'jupyter.interactive.exportas';
-    export const DebugNotebook = 'jupyter.debugNotebook';
     export const RunByLine = 'jupyter.runByLine';
     export const RunAndDebugCell = 'jupyter.runAndDebugCell';
     export const RunByLineNext = 'jupyter.runByLineNext';
@@ -287,9 +284,6 @@ export namespace Commands {
     export const ReplayPylanceLogStep = 'jupyter.replayPylanceLogStep';
     export const InstallPythonExtensionViaKernelPicker = 'jupyter.installPythonExtensionViaKernelPicker';
     export const InstallPythonViaKernelPicker = 'jupyter.installPythonViaKernelPicker';
-    export const SwitchToLocalKernels = 'jupyter.switchToLocalKernels';
-    export const SwitchToRemoteKernels = 'jupyter.switchToRemoteKernels';
-    export const SwitchToAnotherRemoteKernels = 'jupyter.switchToAnotherRemoteKernels';
 }
 
 export namespace CodeLensCommands {
@@ -334,8 +328,6 @@ export namespace EditorContexts {
 export namespace RegExpValues {
     export const PythonCellMarker = /^(#\s*%%|#\s*\<codecell\>|#\s*In\[\d*?\]|#\s*In\[ \])/;
     export const PythonMarkdownCellMarker = /^(#\s*%%\s*\[markdown\]|#\s*\<markdowncell\>)/;
-    // This next one has to be a string because uglifyJS isn't handling the groups. We use named-js-regexp to parse it
-    // instead.
     export const UrlPatternRegEx =
         '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)';
     export interface IUrlPatternGroupType {
@@ -353,13 +345,11 @@ export namespace RegExpValues {
 
 export enum Telemetry {
     ImportNotebook = 'DATASCIENCE.IMPORT_NOTEBOOK',
-    RunCell = 'DATASCIENCE.RUN_CELL',
     RunCurrentCell = 'DATASCIENCE.RUN_CURRENT_CELL',
     RunCurrentCellAndAdvance = 'DATASCIENCE.RUN_CURRENT_CELL_AND_ADVANCE',
     RunAllCells = 'DATASCIENCE.RUN_ALL_CELLS',
     RunAllCellsAbove = 'DATASCIENCE.RUN_ALL_CELLS_ABOVE',
     RunCellAndAllBelow = 'DATASCIENCE.RUN_CELL_AND_ALL_BELOW',
-    AddEmptyCellToBottom = 'DATASCIENCE.RUN_ADD_EMPTY_CELL_TO_BOTTOM',
     RunCurrentCellAndAddBelow = 'DATASCIENCE.RUN_CURRENT_CELL_AND_ADD_BELOW',
     InsertCellBelowPosition = 'DATASCIENCE.RUN_INSERT_CELL_BELOW_POSITION',
     InsertCellBelow = 'DATASCIENCE.RUN_INSERT_CELL_BELOW',
@@ -378,26 +368,10 @@ export enum Telemetry {
     RunSelectionOrLine = 'DATASCIENCE.RUN_SELECTION_OR_LINE',
     RunToLine = 'DATASCIENCE.RUN_TO_LINE',
     RunFromLine = 'DATASCIENCE.RUN_FROM_LINE',
-    DeleteAllCells = 'DATASCIENCE.DELETE_ALL_CELLS',
-    DeleteCell = 'DATASCIENCE.DELETE_CELL',
-    GotoSourceCode = 'DATASCIENCE.GOTO_SOURCE',
-    CopySourceCode = 'DATASCIENCE.COPY_SOURCE',
-    RestartKernel = 'DS_INTERNAL.RESTART_KERNEL',
-    RestartKernelCommand = 'DATASCIENCE.RESTART_KERNEL_COMMAND',
-    ExportNotebookInteractive = 'DATASCIENCE.EXPORT_NOTEBOOK',
-    Undo = 'DATASCIENCE.UNDO',
-    Redo = 'DATASCIENCE.REDO',
-    /**
-     * Saving a notebook
-     */
-    Save = 'DATASCIENCE.SAVE',
-    CellCount = 'DS_INTERNAL.CELL_COUNT',
     /**
      * Whether auto save feature in VS Code is enabled or not.
      */
     CreateNewInteractive = 'DATASCIENCE.CREATE_NEW_INTERACTIVE',
-    ExpandAll = 'DATASCIENCE.EXPAND_ALL',
-    CollapseAll = 'DATASCIENCE.COLLAPSE_ALL',
     SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI',
     EnterJupyterURI = 'DATASCIENCE.ENTER_JUPYTER_URI',
     SelectLocalJupyterKernel = 'DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL',
@@ -428,24 +402,14 @@ export enum Telemetry {
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
     FailedToCreateNotebookController = 'DATASCIENCE.FAILED_TO_CREATE_CONTROLLER',
-    FetchControllers = 'DATASCIENCE.FETCH_CONTROLLERS',
-    FailedToFindKernelSpecInterpreterForInteractive = 'DATASCIENCE.FAILED_TO_FIND_INTERPRETER_KERNEL_CONNECTION_FOR_INTERACTIVE',
 
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
-    SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
-    ConnectLocalJupyter = 'DS_INTERNAL.CONNECTLOCALJUPYTER',
-    ConnectRemoteJupyter = 'DS_INTERNAL.CONNECTREMOTEJUPYTER',
     ConnectRemoteJupyterViaLocalHost = 'DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST',
     ConnectFailedJupyter = 'DS_INTERNAL.CONNECTFAILEDJUPYTER',
     ConnectRemoteFailedJupyter = 'DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER',
     StartSessionFailedJupyter = 'DS_INTERNAL.START_SESSION_FAILED_JUPYTER',
     ConnectRemoteSelfCertFailedJupyter = 'DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER',
     ConnectRemoteExpiredCertFailedJupyter = 'DS_INTERNAL.CONNECTREMOTEEXPIREDCERTFAILEDJUPYTER',
-    RegisterAndUseInterpreterAsKernel = 'DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL',
-    UseInterpreterAsKernel = 'DS_INTERNAL.USE_INTERPRETER_AS_KERNEL',
-    UseExistingKernel = 'DS_INTERNAL.USE_EXISTING_KERNEL',
-    SwitchToInterpreterAsKernel = 'DS_INTERNAL.SWITCH_TO_INTERPRETER_AS_KERNEL',
-    SwitchToExistingKernel = 'DS_INTERNAL.SWITCH_TO_EXISTING_KERNEL',
     SelfCertsMessageEnabled = 'DATASCIENCE.SELFCERTSMESSAGEENABLED',
     SelfCertsMessageClose = 'DATASCIENCE.SELFCERTSMESSAGECLOSE',
     ShiftEnterBannerShown = 'DS_INTERNAL.SHIFTENTER_BANNER_SHOWN',
@@ -453,6 +417,7 @@ export enum Telemetry {
     DisableInteractiveShiftEnter = 'DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER',
     StartShowDataViewer = 'DATASCIENCE.START_SHOW_DATA_EXPLORER', // Called by the factory when attempting to load the data viewer
     ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER', // Called by the data viewer itself when it is actually loaded
+    ShowDataViewerRowsLoaded = 'DATASCIENCE.SHOW_DATA_EXPLORER_ROWS_LOADED',
     FailedShowDataViewer = 'DATASCIENCE.FAILED_SHOW_DATA_EXPLORER', // Called by the factory when the data viewer fails to load
     RefreshDataViewer = 'DATASCIENCE.REFRESH_DATA_VIEWER',
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
@@ -462,149 +427,80 @@ export enum Telemetry {
     PandasOK = 'DS_INTERNAL.SHOW_DATA_PANDAS_OK',
     PandasInstallCanceled = 'DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED',
     DataScienceSettings = 'DS_INTERNAL.SETTINGS',
-    VariableExplorerToggled = 'DATASCIENCE.VARIABLE_EXPLORER_TOGGLE',
     VariableExplorerVariableCount = 'DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT',
     AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW',
-    GetPasswordAttempt = 'DATASCIENCE.GET_PASSWORD_ATTEMPT',
     GetPasswordFailure = 'DS_INTERNAL.GET_PASSWORD_FAILURE',
     GetPasswordSuccess = 'DS_INTERNAL.GET_PASSWORD_SUCCESS',
     OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
     DebugCurrentCell = 'DATASCIENCE.DEBUG_CURRENT_CELL',
     CodeLensAverageAcquisitionTime = 'DS_INTERNAL.CODE_LENS_ACQ_TIME',
-    FindJupyterCommand = 'DS_INTERNAL.FIND_JUPYTER_COMMAND',
+    DocumentWithCodeCells = 'DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS',
     /**
      * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
      */
     SelectJupyterInterpreter = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER',
-    SelectJupyterInterpreterMessageDisplayed = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER_MESSAGE_DISPLAYED',
     /**
      * User used command to select an intrepreter for the jupyter server.
      */
     SelectJupyterInterpreterCommand = 'DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command',
-    StartJupyterProcess = 'DS_INTERNAL.START_JUPYTER_PROCESS',
     NumberOfSavedRemoteKernelIds = 'DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED',
     WaitForIdleJupyter = 'DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER',
-    HiddenCellTime = 'DS_INTERNAL.HIDDEN_EXECUTION_TIME',
-    RestartJupyterTime = 'DS_INTERNAL.RESTART_JUPYTER_TIME',
-    InterruptJupyterTime = 'DS_INTERNAL.INTERRUPT_JUPYTER_TIME',
-    ExecuteCellTime = 'DATASCIENCE.EXECUTE_CELL_TIME',
-    ExecuteCellPerceivedCold = 'DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD',
-    ExecuteCellPerceivedWarm = 'DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM',
     PerceivedJupyterStartupNotebook = 'DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK',
-    StartExecuteNotebookCellPerceivedCold = 'DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD',
     GetActivatedEnvironmentVariables = 'DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES',
     WebviewStartup = 'DS_INTERNAL.WEBVIEW_STARTUP',
     VariableExplorerFetchTime = 'DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME',
-    WebviewStyleUpdate = 'DS_INTERNAL.WEBVIEW_STYLE_UPDATE',
-    FindJupyterKernelSpec = 'DS_INTERNAL.FIND_JUPYTER_KERNEL_SPEC',
     FailedToUpdateKernelSpec = 'DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC',
-    HashedCellOutputMimeType = 'DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE',
-    HashedCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE_PERF',
+    CellOutputMimeType = 'DS_INTERNAL.CELL_OUTPUT_MIME_TYPE',
     JupyterKernelApiUsage = 'DATASCIENCE.JUPYTER_KERNEL_API_USAGE',
     JupyterKernelApiAccess = 'DATASCIENCE.JUPYTER_KERNEL_API_ACCESS',
     JupyterKernelHiddenViaFilter = 'DATASCIENCE.JUPYTER_KERNEL_HIDDEN_VIA_FILTER',
     JupyterKernelFilterUsed = 'DATASCIENCE.JUPYTER_KERNEL_FILTER_USED',
-    HashedNotebookCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_NOTEBOOK_OUTPUT_MIME_TYPE_PERF',
     JupyterInstalledButNotKernelSpecModule = 'DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE',
-    DebugpyPromptToInstall = 'DATASCIENCE.DEBUGPY_PROMPT_TO_INSTALL',
-    DebugpySuccessfullyInstalled = 'DATASCIENCE.DEBUGPY_SUCCESSFULLY_INSTALLED',
-    DebugpyInstallFailed = 'DATASCIENCE.DEBUGPY_INSTALL_FAILED',
-    DebugpyInstallCancelled = 'DATASCIENCE.DEBUGPY_INSTALL_CANCELLED',
-    ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
     CreateNewNotebook = 'DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK',
     DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
     DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
     DebugStop = 'DATASCIENCE.DEBUG_STOP',
-    OpenNotebook = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK',
     OpenNotebookAll = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL',
-    OpenNotebookSelection = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_SELECTION',
-    OpenNotebookSelectionRegistered = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_SELECTION_REGISTERED',
-    ConvertToPythonFile = 'DATASCIENCE.NATIVE.CONVERT_NOTEBOOK_TO_PYTHON',
-    NotebookRunCount = 'DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT',
-    NotebookOpenCount = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT',
-    NotebookOpenTime = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_TIME',
-    SessionIdleTimeout = 'DS_INTERNAL.JUPYTER_IDLE_TIMEOUT',
-    JupyterStartTimeout = 'DS_INTERNAL.JUPYTER_START_TIMEOUT',
     JupyterNotInstalledErrorShown = 'DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN',
-    JupyterCommandSearch = 'DATASCIENCE.JUPYTER_COMMAND_SEARCH',
     RegisterInterpreterAsKernel = 'DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL',
     UserInstalledJupyter = 'DATASCIENCE.USER_INSTALLED_JUPYTER',
     UserInstalledPandas = 'DATASCIENCE.USER_INSTALLED_PANDAS',
     UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER',
     UserDidNotInstallPandas = 'DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS',
-    FailedToInstallPandas = 'DATASCIENCE.FAILED_TO_INSTALL_PANDAS',
-    OpenedInteractiveWindow = 'DATASCIENCE.OPENED_INTERACTIVE',
-    OpenNotebookFailure = 'DS_INTERNAL.NATIVE.OPEN_NOTEBOOK_FAILURE',
-    FindKernelForLocalConnection = 'DS_INTERNAL.FIND_KERNEL_FOR_LOCAL_CONNECTION',
-    CompletionTimeFromLS = 'DS_INTERNAL.COMPLETION_TIME_FROM_LS',
-    CompletionTimeFromJupyter = 'DS_INTERNAL.COMPLETION_TIME_FROM_JUPYTER',
-    NotebookLanguage = 'DATASCIENCE.NOTEBOOK_LANGUAGE',
     KernelSpecLanguage = 'DATASCIENCE.KERNEL_SPEC_LANGUAGE',
-    NumberOfLocalKernelSpecs = 'DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT',
-    NumberOfRemoteKernelSpecs = 'DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT',
     KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',
-    KernelRegisterFailed = 'DS_INTERNAL.KERNEL_REGISTER_FAILED',
-    KernelEnumeration = 'DS_INTERNAL.KERNEL_ENUMERATION',
     KernelLauncherPerf = 'DS_INTERNAL.KERNEL_LAUNCHER_PERF',
-    KernelProviderPerf = 'DS_INTERNAL.KERNEL_PROVIDER_PERF',
-    GetPreferredKernelPerf = 'DS_INTERNAL.GET_PREFERRED_KERNEL_PERF',
     PreferredKernel = 'DS_INTERNAL.PREFERRED_KERNEL',
     RankKernelsPerf = 'DS_INTERNAL.RANK_KERNELS_PERF',
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
-    InterpreterListingPerf = 'DS_INTERNAL.INTERPRETER_LISTING_PERF',
     ActiveInterpreterListingPerf = 'DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF',
-    JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
-    UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     PythonModuleInstall = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',
     PythonNotInstalled = 'DS_INTERNAL.PYTHON_NOT_INSTALLED',
     PythonExtensionNotInstalled = 'DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED',
     PythonExtensionInstalledViaKernelPicker = 'DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER',
-    KernelNotInstalled = 'DS_INTERNAL.KERNEL_NOT_INSTALLED',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
-    KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
-    ZMQSupported = 'DS_INTERNAL.ZMQ_NATIVE_BINARIES_LOADING',
-    ZMQNotSupported = 'DS_INTERNAL.ZMQ_NATIVE_BINARIES_NOT_LOADING',
     IPyWidgetLoadSuccess = 'DS_INTERNAL.IPYWIDGET_LOAD_SUCCESS',
     IPyWidgetLoadFailure = 'DS_INTERNAL.IPYWIDGET_LOAD_FAILURE',
     IPyWidgetWidgetVersionNotSupportedLoadFailure = 'DS_INTERNAL.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED_LOAD_FAILURE',
-    IPyWidgetLoadDisabled = 'DS_INTERNAL.IPYWIDGET_LOAD_DISABLED',
     IPyWidgetExtensionJsInfo = 'DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO',
     IPyWidgetNbExtensionCopyTime = 'DS_INTERNAL.IPYWIDGET_TIME_TO_COPY_NBEXTENSIONS_DIR',
     HashedIPyWidgetNameUsed = 'DS_INTERNAL.IPYWIDGET_USED_BY_USER',
     VSCNotebookCellTranslationFailed = 'DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED',
-    HashedIPyWidgetNameDiscovered = 'DS_INTERNAL.IPYWIDGET_DISCOVERED',
     HashedIPyWidgetScriptDiscoveryError = 'DS_INTERNAL.IPYWIDGET_DISCOVERY_ERRORED',
     DiscoverIPyWidgetNamesPerf = 'DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS',
-    DiscoverIPyWidgetNamesCDNPerf = 'DS_INTERNAL.IPYWIDGET_TEST_AVAILABILITY_ON_CDN',
     IPyWidgetPromptToUseCDN = 'DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN',
     IPyWidgetPromptToUseCDNSelection = 'DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN_SELECTION',
     IPyWidgetOverhead = 'DS_INTERNAL.IPYWIDGET_OVERHEAD',
     IPyWidgetRenderFailure = 'DS_INTERNAL.IPYWIDGET_RENDER_FAILURE',
     IPyWidgetUnhandledMessage = 'DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE',
-    RawKernelCreatingNotebook = 'DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK',
-    JupyterCreatingNotebook = 'DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK',
-    KernelStartFailedAndUIDisabled = 'DS_INTERNAL.START_RAW_FAILED_UI_DISABLED',
-    RawKernelSessionConnect = 'DS_INTERNAL.RAWKERNEL_SESSION_CONNECT',
-    RawKernelStartRawSession = 'DS_INTERNAL.RAWKERNEL_START_RAW_SESSION',
-    RawKernelInfoResonse = 'DS_INTERNAL.RAWKERNEL_INFO_RESPONSE',
-    RawKernelSessionStartSuccess = 'DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS',
-    RawKernelSessionStart = 'DS_INTERNAL.RAWKERNEL_SESSION_START',
-    RawKernelSessionStartUserCancel = 'DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL',
-    RawKernelSessionStartTimeout = 'DS_INTERNAL.RAWKERNEL_SESSION_START_TIMEOUT',
-    RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
+    RawKernelInfoResponse = 'DS_INTERNAL.RAWKERNEL_INFO_RESPONSE',
     RawKernelSessionStartNoIpykernel = 'DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
     RawKernelSessionShutdown = 'DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN',
     RawKernelSessionKernelProcessExited = 'DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED',
     RawKernelSessionDisposed = 'DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED',
-    AttemptedToLaunchRawKernelWithoutInterpreter = 'DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER',
-    RunByLineStart = 'DATASCIENCE.RUN_BY_LINE',
-    RunByLineStep = 'DATASCIENCE.RUN_BY_LINE_STEP',
-    RunByLineStop = 'DATASCIENCE.RUN_BY_LINE_STOP',
     RunByLineVariableHover = 'DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER',
-    SyncAllCells = 'DS_INTERNAL.SYNC_ALL_CELLS',
-    SyncSingleCell = 'DS_INTERNAL.SYNC_SINGLE_CELL',
     InteractiveFileTooltipsPerf = 'DS_INTERNAL.INTERACTIVE_FILE_TOOLTIPS_PERF',
     NativeVariableViewLoaded = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED',
     NativeVariableViewMadeVisible = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE',
@@ -614,11 +510,6 @@ export enum Telemetry {
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
     KernelCount = 'DS_INTERNAL.KERNEL_COUNT',
     ExecuteCell = 'DATASCIENCE.EXECUTE_CELL',
-    PythonKerneExecutableMatches = 'DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES',
-    /**
-     * Sent when a jupyter kernel cannot start for some reason and we're asking the user to pick another.
-     */
-    AskUserForNewJupyterKernel = 'DS_INTERNAL.ASK_USER_FOR_NEW_KERNEL_JUPYTER',
     /**
      * Sent when a command we register is executed.
      */
@@ -640,75 +531,19 @@ export enum Telemetry {
      */
     DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION',
     RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION',
-    // Sent when we get a jupyter execute_request error reply when running some part of our internal kernel startup code
-    KernelStartupCodeFailure = 'DATASCIENCE.KERNEL_STARTUP_CODE_FAILURE',
     // Sent when we get a jupyter execute_request error reply when running some part of our internal variable fetching code
     PythonVariableFetchingCodeFailure = 'DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE',
-    // Sent when we get a jupyter execute_request error reply when running some part of user specified startup code
-    UserStartupCodeFailure = 'DATASCIENCE.USER_STARTUP_CODE_FAILURE',
     // Sent when we get a jupyter execute_request error reply when running some part of interactive window debug setup code
     InteractiveWindowDebugSetupCodeFailure = 'DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE',
     KernelCrash = 'DATASCIENCE.KERNEL_CRASH',
     RunTest = 'DS_INTERNAL.RUNTEST',
     PreferredKernelExactMatch = 'DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH',
-    FetchError = 'DS_INTERNAL.WEB_FETCH_ERROR',
-    TerminalShellIdentification = 'TERMINAL_SHELL_IDENTIFICATION',
-    TerminalEnvVariableExtraction = 'TERMINAL_ENV_VAR_EXTRACTION',
     JupyterInstalled = 'JUPYTER_IS_INSTALLED',
     NoActiveKernelSession = 'DATASCIENCE.NO_ACTIVE_KERNEL_SESSION',
     DataViewerUsingInterpreter = 'DATAVIEWER.USING_INTERPRETER',
-    DataViewerUsingKernel = 'DATAVIEWER.USING_KERNEL'
-}
-
-export enum NativeKeyboardCommandTelemetry {
-    ArrowDown = 'DATASCIENCE.NATIVE.KEYBOARD.ARROW_DOWN',
-    ArrowUp = 'DATASCIENCE.NATIVE.KEYBOARD.ARROW_UP',
-    ChangeToCode = 'DATASCIENCE.NATIVE.KEYBOARD.CHANGE_TO_CODE',
-    ChangeToMarkdown = 'DATASCIENCE.NATIVE.KEYBOARD.CHANGE_TO_MARKDOWN',
-    DeleteCell = 'DATASCIENCE.NATIVE.KEYBOARD.DELETE_CELL',
-    InsertAbove = 'DATASCIENCE.NATIVE.KEYBOARD.INSERT_ABOVE',
-    InsertBelow = 'DATASCIENCE.NATIVE.KEYBOARD.INSERT_BELOW',
-    Redo = 'DATASCIENCE.NATIVE.KEYBOARD.REDO',
-    Run = 'DATASCIENCE.NATIVE.KEYBOARD.RUN',
-    Save = 'DATASCIENCE.NATIVE.KEYBOARD.SAVE',
-    RunAndAdd = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_ADD',
-    RunAndMove = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_MOVE',
-    ToggleLineNumbers = 'DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_LINE_NUMBERS',
-    ToggleOutput = 'DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_OUTPUT',
-    Undo = 'DATASCIENCE.NATIVE.KEYBOARD.UNDO',
-    Unfocus = 'DATASCIENCE.NATIVE.KEYBOARD.UNFOCUS'
-}
-
-export enum NativeMouseCommandTelemetry {
-    AddToEnd = 'DATASCIENCE.NATIVE.MOUSE.ADD_TO_END',
-    ChangeToCode = 'DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_CODE',
-    ChangeToMarkdown = 'DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_MARKDOWN',
-    DeleteCell = 'DATASCIENCE.NATIVE.MOUSE.DELETE_CELL',
-    InsertBelow = 'DATASCIENCE.NATIVE.MOUSE.INSERT_BELOW',
-    MoveCellDown = 'DATASCIENCE.NATIVE.MOUSE.MOVE_CELL_DOWN',
-    MoveCellUp = 'DATASCIENCE.NATIVE.MOUSE.MOVE_CELL_UP',
-    Run = 'DATASCIENCE.NATIVE.MOUSE.RUN',
-    RunAbove = 'DATASCIENCE.NATIVE.MOUSE.RUN_ABOVE',
-    RunAll = 'DATASCIENCE.NATIVE.MOUSE.RUN_ALL',
-    RunBelow = 'DATASCIENCE.NATIVE.MOUSE.RUN_BELOW',
-    SelectKernel = 'DATASCIENCE.NATIVE.MOUSE.SELECT_KERNEL',
-    SelectServer = 'DATASCIENCE.NATIVE.MOUSE.SELECT_SERVER',
-    Save = 'DATASCIENCE.NATIVE.MOUSE.SAVE',
-    ToggleVariableExplorer = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_VARIABLE_EXPLORER'
-}
-
-/**
- * Notebook editing in VS Code Notebooks is handled by VSC.
- * There's no way for us to know whether user added a cell using keyboard or not.
- * Similarly a cell could have been added as part of an undo operation.
- * All we know is previously user had n # of cells and now they have m # of cells.
- */
-export enum VSCodeNativeTelemetry {
-    AddCell = 'DATASCIENCE.VSCODE_NATIVE.INSERT_CELL',
-    DeleteCell = 'DATASCIENCE.VSCODE_NATIVE.DELETE_CELL',
-    MoveCell = 'DATASCIENCE.VSCODE_NATIVE.MOVE_CELL',
-    ChangeToCode = 'DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_CODE', // Not guaranteed to work see, https://github.com/microsoft/vscode/issues/100042
-    ChangeToMarkdown = 'DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_MARKDOWN' // Not guaranteed to work see, https://github.com/microsoft/vscode/issues/100042
+    DataViewerUsingKernel = 'DATAVIEWER.USING_KERNEL',
+    DataViewerWebviewLoaded = 'DATAVIEWER.WEBVIEW_LOADED',
+    PlotViewerWebviewLoaded = 'PLOTVIEWER.WEBVIEW_LOADED'
 }
 
 export enum JupyterCommands {

@@ -3,38 +3,35 @@
 
 'use strict';
 
+import { ITracebackFormatter } from '../kernels/types';
+import { IJupyterVariables } from '../kernels/variables/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
+import { Identifiers } from '../platform/common/constants';
+import { IDataScienceCommandListener } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
+import { InstallPythonControllerCommands } from './controllers/commands/installPythonControllerCommands';
 import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
 import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI';
 import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
-import { RemoteSwitcher } from './controllers/remoteSwitcher';
-import { NotebookCommandListener } from './notebookCommandListener';
-import { NotebookEditorProvider } from './notebookEditorProvider';
-import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
-import { INotebookCompletionProvider, INotebookEditorProvider } from './types';
-import { NotebookUsageTracker } from './notebookUsageTracker';
-import { IDataScienceCommandListener } from '../platform/common/types';
-import { CondaControllerRefresher } from './controllers/condaControllerRefresher.node';
+import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
+import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnectionHandler';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
-import { ITracebackFormatter } from '../kernels/types';
-import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
+import { RemoteSwitcher } from './controllers/remoteSwitcher';
+import { registerTypes as registerControllerTypes } from './controllers/serviceRegistry.node';
+import { CommandRegistry } from './debugger/commandRegistry';
+import { DebuggerVariableRegistration } from './debugger/debuggerVariableRegistration.node';
+import { DebuggerVariables } from './debugger/debuggerVariables';
+import { DebuggingManager } from './debugger/debuggingManager';
 import {
     IDebuggingManager,
     IDebugLocationTracker,
     IDebugLocationTrackerFactory,
-    IJupyterDebugService
+    IJupyterDebugService,
+    INotebookDebuggingManager
 } from './debugger/debuggingTypes';
-import { Identifiers } from '../platform/common/constants';
+import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
 import { JupyterDebugService } from './debugger/jupyterDebugService.node';
-import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
-import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnectionHandler';
-import { JupyterServerSelectorCommand } from './serverSelector';
-import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
-import { InstallPythonControllerCommands } from './controllers/commands/installPythonControllerCommands';
-import { NotebookCellLanguageService } from './languages/cellLanguageService';
-import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
-import { DebuggingManager } from './debugger/debuggingManager';
+import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { ExportBase } from './export/exportBase.node';
 import { ExportDialog } from './export/exportDialog';
 import { ExportFileOpener } from './export/exportFileOpener';
@@ -43,26 +40,24 @@ import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
 import { ExportToPythonPlain } from './export/exportToPythonPlain';
+import { ExportUtilBase } from './export/exportUtil';
 import { ExportUtil } from './export/exportUtil.node';
 import { FileConverter } from './export/fileConverter.node';
-import { IFileConverter, INbConvertExport, ExportFormat, IExport, IExportDialog, IExportBase } from './export/types';
-import { ExportUtilBase } from './export/exportUtil';
-import { registerTypes as registerControllerTypes } from './controllers/serviceRegistry.node';
-import { ServerConnectionControllerCommands } from './controllers/commands/serverConnectionControllerCommands';
-import { DebuggerVariableRegistration } from './debugger/debuggerVariableRegistration.node';
-import { IJupyterVariables } from '../kernels/variables/types';
-import { DebuggerVariables } from './debugger/debuggerVariables';
-import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
-import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
+import { ExportFormat, IExport, IExportBase, IExportDialog, IFileConverter, INbConvertExport } from './export/types';
+import { NotebookCellLanguageService } from './languages/cellLanguageService';
+import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
+import { NotebookCommandListener } from './notebookCommandListener';
+import { NotebookEditorProvider } from './notebookEditorProvider';
+import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
+import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
+import { JupyterServerSelectorCommand } from './serverSelectorCommand';
+import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
+import { INotebookCompletionProvider, INotebookEditorProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     registerControllerTypes(serviceManager, isDevMode);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        CondaControllerRefresher
-    );
 
     serviceManager.addSingleton<KernelFilterService>(KernelFilterService, KernelFilterService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -75,10 +70,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         ErrorRendererCommunicationHandler
     );
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        NotebookUsageTracker
-    );
     serviceManager.addBinding(INotebookCompletionProvider, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
@@ -111,10 +102,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSingleActivationService,
         InstallPythonControllerCommands
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        ServerConnectionControllerCommands
-    );
 
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
     serviceManager.addBinding(NotebookCellLanguageService, IExtensionSingleActivationService);
@@ -124,7 +111,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
 
     // Debugging
-    serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
+    serviceManager.addSingleton<IDebuggingManager>(INotebookDebuggingManager, DebuggingManager, undefined, [
         IExtensionSingleActivationService
     ]);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -144,6 +131,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
         IDebugLocationTrackerFactory
     ]);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
 
     // File export/import
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);

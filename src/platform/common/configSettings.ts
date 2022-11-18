@@ -20,9 +20,11 @@ import {
     IExperiments,
     ILoggingSettings,
     InteractiveWindowMode,
+    InteractiveWindowViewColumn,
     IVariableQuery,
     IVariableTooltipFields,
     IWatchableJupyterSettings,
+    KernelPickerType,
     LoggingLevelSettingType,
     Resource,
     WidgetCDNs
@@ -91,6 +93,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public jupyterCommandLineArguments: string[] = [];
     public widgetScriptSources: WidgetCDNs[] = [];
     public interactiveWindowMode: InteractiveWindowMode = 'multiple';
+    public pythonCellFolding: boolean = true;
+    public interactiveWindowViewColumn: InteractiveWindowViewColumn = 'secondGroup';
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     // Hidden settings not surfaced in package.json
@@ -100,14 +104,12 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public verboseLogging: boolean = false;
     public showVariableViewWhenDebugging: boolean = true;
     public newCellOnRunLast: boolean = true;
-    public pylanceHandlesNotebooks: boolean = true;
-    public pylanceLspNotebooksEnabled: boolean = false;
     public pythonCompletionTriggerCharacters: string = '';
     public logKernelOutputSeparately: boolean = false;
     public poetryPath: string = '';
     public excludeUserSitePackages: boolean = false;
     public enableExtendedKernelCompletions: boolean = false;
-    public showOnlyOneTypeOfKernel: boolean = false;
+    public kernelPickerType: KernelPickerType = 'Stable';
 
     public variableTooltipFields: IVariableTooltipFields = {
         python: {
@@ -229,6 +231,11 @@ export class JupyterSettings implements IWatchableJupyterSettings {
                   optOutFrom: []
               };
 
+        const kernelPickerType = jupyterConfig.get<KernelPickerType>('experimental.kernelPickerType');
+        if (kernelPickerType) {
+            this.kernelPickerType = kernelPickerType;
+        }
+
         // The rest are all the same.
         const replacer = (k: string, config: WorkspaceConfiguration) => {
             // Replace variables with their actual value.
@@ -238,13 +245,14 @@ export class JupyterSettings implements IWatchableJupyterSettings {
                 (<any>this)[k] = val;
             }
         };
-        const keys = this.getSerializableKeys().filter((f) => f !== 'experiments' && f !== 'logging');
+        const keys = this.getSerializableKeys().filter(
+            (f) => f !== 'experiments' && f !== 'logging' && f !== 'kernelPickerType'
+        );
         keys.forEach((k) => replacer(k, jupyterConfig));
 
         // Special case poetryPath. It actually comes from the python settings
         if (pythonConfig) {
             replacer('poetryPath', pythonConfig);
-            replacer('pylanceLspNotebooksEnabled', pythonConfig);
         }
     }
 

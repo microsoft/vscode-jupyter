@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -10,7 +10,7 @@ suite('Dummy10', () => {
 // /* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 // import '../../platform/common/extensions.node';
 
-// import * as assert from 'assert';
+// import assert from 'assert';
 // import { ComponentClass, mount, ReactWrapper } from 'enzyme';
 // import { parse } from 'node-html-parser';
 // import * as React from 'react';
@@ -21,7 +21,7 @@ suite('Dummy10', () => {
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 // // import { asyncDump } from '../common/asyncDump';
-// suite('DataScience PlotViewer tests', () => {
+// suite('PlotViewer tests', () => {
 //     const disposables: Disposable[] = [];
 //     let plotViewerProvider: IPlotViewerProvider;
 //     let ioc: DataScienceIocContainer;

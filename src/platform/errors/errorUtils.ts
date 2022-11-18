@@ -634,7 +634,7 @@ function isBuiltInModuleOverwritten(
     }
 
     // eslint-disable-next-line local-rules/dont-use-fspath
-    if (!workspaceFolders.some((folder) => fileName?.toLowerCase().startsWith(folder.uri.fsPath?.toLowerCase()))) {
+    if (!workspaceFolders.some((folder) => fileName.toLowerCase().startsWith(folder.uri.fsPath.toLowerCase()))) {
         return;
     }
 
@@ -655,7 +655,7 @@ export function createOutputWithErrorMessageForDisplay(errorMessage: string) {
         return;
     }
     // If we have markdown links to run a command, turn that into a link.
-    const regex = /\[(?<name>.*)\]\((?<command>command:\S*)\)/gm;
+    const regex = /\[([^\[\]]*)\]\((.*?)\)/gm;
     let matches: RegExpExecArray | undefined | null;
     while ((matches = regex.exec(errorMessage)) !== null) {
         if (matches.length === 3) {

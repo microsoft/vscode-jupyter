@@ -160,12 +160,46 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
         return option.notebookType === JupyterNotebookView || option.notebookType === InteractiveWindowView;
     }
 }
+export type NotebookMetadata = nbformat.INotebookMetadata & {
+    /**
+     * We used to store interpreter at this level.
+     * @deprecated
+     */
+    interpreter?: { hash?: string };
+    /**
+     * As per docs in Jupyter, custom metadata should go into a separate namespace.
+     */
+    vscode?: {
+        /**
+         * If we've selected a Python env for this notebook, then this is the hash of the interpreter.
+         */
+        interpreter?: {
+            /**
+             * Hash of the interpreter executable path.
+             */
+            hash?: string;
+        };
+    };
+};
 
-export function getNotebookMetadata(document: NotebookDocument | NotebookData): nbformat.INotebookMetadata | undefined {
+export function getNotebookMetadata(document: NotebookDocument | NotebookData): NotebookMetadata | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
     // Create a clone.
     return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
+}
+
+export function getNotebookFormat(document: NotebookDocument): {
+    nbformat: number | undefined;
+    nbformat_minor: number | undefined;
+} {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
+    // Create a clone.
+    return {
+        nbformat: notebookContent?.nbformat,
+        nbformat_minor: notebookContent?.nbformat_minor
+    };
 }
 
 export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDocument | undefined {

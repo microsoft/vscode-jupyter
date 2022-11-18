@@ -6,12 +6,13 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { IDisposable } from '../../platform/common/types';
+import { IDisposable, InteractiveWindowMode } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { IKernelProvider } from '../../platform/../kernels/types';
+import { IKernelProvider } from '../../kernels/types';
 import {
     captureScreenShot,
     createEventHandler,
+    createTemporaryFile,
     IExtensionTestApi,
     initialize,
     startJupyterServer,
@@ -24,6 +25,7 @@ import {
     runNewPythonFile,
     submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,
+    waitForCodeLenses,
     waitForInteractiveWindow,
     waitForLastCellToComplete
 } from './helpers';
@@ -46,13 +48,14 @@ import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { sleep } from '../core';
 import { IPYTHON_VERSION_CODE } from '../constants';
 import { translateCellErrorOutput, getTextOutputValue } from '../../kernels/execution/helpers';
-import * as dedent from 'dedent';
+import dedent from 'dedent';
 import { generateCellRangesFromDocument } from '../../interactive-window/editor-integration/cellFactory';
 import { Commands } from '../../platform/common/constants';
 import { IControllerSelection } from '../../notebooks/controllers/types';
 import { format } from 'util';
+import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
 
-suite(`Interactive window execution`, async function () {
+suite(`Interactive window execution @iw`, async function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -79,7 +82,8 @@ suite(`Interactive window execution`, async function () {
         await settings.update('interactiveWindowMode', 'multiple');
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    test('Execute cell from Python file', async () => {
+    test.skip('Execute cell from Python file @mandatory', async () => {
+        // #11917
         const source = 'print(42)';
         const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, source, disposables);
         const notebookDocument = vscode.workspace.notebookDocuments.find(
@@ -199,21 +203,6 @@ suite(`Interactive window execution`, async function () {
         await waitForTextOutput(cell, 'foo');
     });
 
-    test('Clear output', async function () {
-        // Test failing after using python insiders. Not getting expected
-        // output
-        // https://github.com/microsoft/vscode-jupyter/issues/7580
-        this.skip();
-        const text = `from IPython.display import clear_output
-for i in range(10):
-    clear_output()
-    print("Hello World {0}!".format(i))
-`;
-        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, text, disposables);
-        const cell = await waitForLastCellToComplete(activeInteractiveWindow);
-        await waitForTextOutput(cell!, 'Hello World 9!');
-    });
-
     test('Clear input box', async () => {
         const text = '42';
         // Create interactive window with no owner
@@ -233,52 +222,6 @@ for i in range(10):
             vscode.window.activeTextEditor?.document.getText() === text,
             'Text not restored to input editor after undo'
         );
-    });
-
-    test('LiveLossPlot', async () => {
-        const code = `from time import sleep
-import numpy as np
-
-from livelossplot import PlotLosses
-liveplot = PlotLosses()
-
-for i in range(10):
-    liveplot.update({
-        'accuracy': 1 - np.random.rand() / (i + 2.),
-        'val_accuracy': 1 - np.random.rand() / (i + 0.5),
-        'mse': 1. / (i + 2.),
-        'val_mse': 1. / (i + 0.5)
-    })
-    liveplot.draw()
-    sleep(0.1)`;
-        const interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
-        await runInteractiveWindowInput(code, interactiveWindow, 1);
-
-        const codeCell = await waitForLastCellToComplete(interactiveWindow);
-        const output = codeCell?.outputs[0];
-        assert.ok(output?.items[0].mime === 'image/png', 'No png output found');
-        assert.ok(
-            output?.metadata?.outputType === 'display_data',
-            `Expected metadata.outputType to be 'display_data' but got ${output?.metadata?.outputType}`
-        );
-    });
-
-    // Create 3 cells. Last cell should update the second
-    test('Update display data', async () => {
-        const interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
-
-        // Create cell 1
-        await runInteractiveWindowInput('dh = display(display_id=True)', interactiveWindow, 1);
-
-        // Create cell 2
-        const secondCell = await runInteractiveWindowInput('dh.display("Hello")', interactiveWindow, 2);
-        await waitForTextOutput(secondCell!, "'Hello'");
-
-        // Create cell 3
-        const thirdCell = await runInteractiveWindowInput('dh.update("Goodbye")', interactiveWindow, 3);
-        assert.equal(thirdCell?.outputs.length, 0, 'Third cell should not have any outputs');
-        // Second cell output is updated
-        await waitForTextOutput(secondCell!, "'Goodbye'");
     });
 
     test('Cells with errors cancel execution for others', async () => {
@@ -436,7 +379,7 @@ ${actualCode}
     test('Run current file in interactive window (without cells)', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
-            'a=1\nprint(a)\nb=2\nprint(b)\n',
+            'a=1\nprint(a)',
             disposables
         );
 
@@ -450,7 +393,7 @@ ${actualCode}
         assert.equal(notebookDocument?.cellCount, 2, `Running a file should use one cell`);
 
         // Wait for output to appear
-        await waitForTextOutput(notebookDocument!.cellAt(1), '1\n2');
+        await waitForTextOutput(notebookDocument!.cellAt(1), '1', 0, false);
     });
 
     test('Error stack traces have correct line hrefs with mix of cell sources', async function () {
@@ -608,5 +551,35 @@ ${actualCode}
             60_000,
             'Exported python file was not opened'
         );
+    });
+
+    test('Cells from python files and the input box are executed in correct order', async () => {
+        const source = ['# %%', 'x = 1', '# %%', 'import time', 'time.sleep(3)', '# %%', 'print(x)', ''].join('\n');
+        const tempFile = await createTemporaryFile({ contents: 'print(42)', extension: '.py' });
+        await vscode.window.showTextDocument(tempFile.file);
+        await vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows);
+
+        const edit = new vscode.WorkspaceEdit();
+        const textEdit = vscode.TextEdit.replace(new vscode.Range(0, 0, 0, 9), source);
+        edit.set(tempFile.file, [textEdit]);
+        await vscode.workspace.applyEdit(edit);
+        await waitForCodeLenses(tempFile.file, Commands.DebugCell);
+
+        let runFilePromise = vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows);
+
+        const settings = vscode.workspace.getConfiguration('jupyter', null);
+        const mode = (await settings.get('interactiveWindowMode')) as InteractiveWindowMode;
+        const interactiveWindow = interactiveWindowProvider.getExisting(tempFile.file, mode) as InteractiveWindow;
+        await runInteractiveWindowInput('x = 5', interactiveWindow, 5);
+        await runFilePromise;
+        await waitForLastCellToComplete(interactiveWindow, 5, false);
+
+        const cells = interactiveWindow.notebookDocument
+            .getCells()
+            .filter((c) => c.kind === vscode.NotebookCellKind.Code);
+        const printCell = cells[cells.length - 2];
+
+        const output = getTextOutputValue(printCell.outputs[0]);
+        assert.equal(output.trim(), '1', 'original value should have been printed');
     });
 });

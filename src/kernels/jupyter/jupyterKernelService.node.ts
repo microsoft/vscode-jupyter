@@ -16,13 +16,14 @@ import {
     traceVerbose,
     logValue,
     ignoreLogging,
-    traceDecoratorError
+    traceDecoratorError,
+    traceError
 } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { Resource, ReadWrite, IDisplayOptions } from '../../platform/common/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { JupyterKernelDependencyError } from '../errors/jupyterKernelDependencyError';
 import { cleanEnvironment } from '../helpers';
 import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
@@ -74,14 +75,14 @@ export class JupyterKernelService implements IJupyterKernelService {
             kernel.interpreter &&
             kernel.kind !== 'startUsingRemoteKernelSpec'
         ) {
-            const result = await this.kernelDependencyService.installMissingDependencies(
+            const result = await this.kernelDependencyService.installMissingDependencies({
                 resource,
-                kernel,
+                kernelConnection: kernel,
                 ui,
-                cancelToken,
-                true,
+                token: cancelToken,
+                ignoreCache: true,
                 cannotChangeKernels
-            );
+            });
             switch (result) {
                 case KernelInterpreterDependencyResponse.cancel:
                 case KernelInterpreterDependencyResponse.selectDifferentKernel:
@@ -144,18 +145,9 @@ export class JupyterKernelService implements IJupyterKernelService {
      * - display_name = Display name of the interpreter.
      * - metadata.interpreter = Interpreter information (useful in finding a kernel that matches a given interpreter)
      * - env = Will have environment variables of the activated environment.
-     *
-     * @param {PythonEnvironment} interpreter
-     * @param {boolean} [disableUI]
-     * @param {CancellationToken} [cancelToken]
-     * @returns {Promise<IJupyterKernelSpec>}
-     * @memberof KernelService
      */
-    // eslint-disable-next-line
-    // eslint-disable-next-line complexity
-    @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
+    @capturePerfTelemetry(Telemetry.RegisterInterpreterAsKernel)
     @traceDecoratorError('Failed to register an interpreter as a kernel')
-    // eslint-disable-next-line
     private async registerKernel(
         kernel: LocalKernelConnectionMetadata,
         cancelToken: CancellationToken
@@ -206,8 +198,15 @@ export class JupyterKernelService implements IJupyterKernelService {
         try {
             await this.fs.writeFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
         } catch (ex) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
+            const name = kernel.kernelSpec.name;
+            const language = kernel.kernelSpec.language;
+            sendTelemetryEvent(
+                Telemetry.FailedToUpdateKernelSpec,
+                undefined,
+                { name, language, failed: true },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ex as any
+            );
             throw ex;
         }
         if (cancelToken.isCancellationRequested) {
@@ -229,7 +228,6 @@ export class JupyterKernelService implements IJupyterKernelService {
             );
         }
 
-        sendTelemetryEvent(Telemetry.RegisterAndUseInterpreterAsKernel);
         return kernelSpecFilePath.fsPath;
     }
     private async updateKernelEnvironment(
@@ -290,14 +288,17 @@ export class JupyterKernelService implements IJupyterKernelService {
             specModel = cleanEnvironment(specModel);
 
             // Update the kernel.json with our new stuff.
+            const uri = Uri.file(kernelSpecFilePath);
             try {
-                await this.fs.writeFile(Uri.file(kernelSpecFilePath), JSON.stringify(specModel, undefined, 2));
+                await this.fs.writeFile(uri, JSON.stringify(specModel, undefined, 2));
+                traceVerbose(`Updated kernel spec with environment variables for ${getDisplayPath(uri)}`);
             } catch (ex) {
                 if (Cancellation.isCanceled(cancelToken)) {
                     return;
                 }
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
+                sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any);
+                traceError(`Failed to update kernel spec with environment variables for ${getDisplayPath(uri)}`, ex);
                 throw ex;
             }
 

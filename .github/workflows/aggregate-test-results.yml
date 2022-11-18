@@ -1,0 +1,36 @@
+name: Aggregate Test Results
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # daily at 2 am
+  workflow_dispatch:
+    inputs:
+      collection_date:
+        description: 'Which day to collect test results from. Format yyyy-mm-dd. If empty, the previous day is used.'
+        type: string
+        required: false
+
+jobs:
+  getTestResults:
+    name: Get Test Results
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: setup python
+        uses: actions/setup-python@v4
+
+      - name: Install Python libs
+        run: python -m pip install requests
+
+      - name: Aggregate yesterdays test results
+        run: python ./pythonFiles/aggregateTestResults.py ${{ secrets.GITHUB_TOKEN }} ${{ inputs.collection_date }}
+
+      - name: Upload test result files
+        uses: actions/upload-artifact@v3
+        with:
+          name: testResults-${{ inputs.collection_date }}
+          path: AggTestResults-*.json
+          retention-days: 60

@@ -4,10 +4,10 @@
 'use strict';
 
 import type { KernelMessage } from '@jupyterlab/services';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
-import { traceVerbose, traceError, traceInfo } from '../../../../platform/logging';
+import { traceVerbose, traceError } from '../../../../platform/logging';
 import { Identifiers, WIDGET_MIMETYPE } from '../../../../platform/common/constants';
 import { IDisposable } from '../../../../platform/common/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
@@ -103,9 +103,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     public receiveMessage(message: IPyWidgetMessage): void {
         switch (message.message) {
-            case IPyWidgetMessages.IPyWidgets_logMessage:
-                traceInfo(`Widget Message: ${message.payload}`);
+            case IPyWidgetMessages.IPyWidgets_logMessage: {
+                const payload: IInteractiveWindowMapping[IPyWidgetMessages.IPyWidgets_logMessage] = message.payload;
+                if (payload.category === 'error') {
+                    traceError(`Widget Error: ${payload.message}`);
+                } else {
+                    traceVerbose(`Widget Message: ${payload.message}`);
+                }
                 break;
+            }
             case IPyWidgetMessages.IPyWidgets_Ready:
                 this.sendKernelOptions();
                 this.initialize();
@@ -489,7 +495,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     private sendOverheadTelemetry() {
-        sendTelemetryEvent(Telemetry.IPyWidgetOverhead, 0, {
+        sendTelemetryEvent(Telemetry.IPyWidgetOverhead, {
             totalOverheadInMs: this.totalWaitTime,
             numberOfMessagesWaitedOn: this.totalWaitedMessages,
             averageWaitTime: this.totalWaitTime / this.totalWaitedMessages,

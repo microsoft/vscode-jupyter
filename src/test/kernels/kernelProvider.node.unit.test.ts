@@ -3,8 +3,9 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { EventEmitter, NotebookController, NotebookDocument, Uri } from 'vscode';
+import { EventEmitter, NotebookCellExecutionStateChangeEvent, NotebookController, NotebookDocument, Uri } from 'vscode';
 import { CellOutputDisplayIdTracker } from '../../kernels/execution/cellDisplayIdTracker';
+import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { KernelProvider, ThirdPartyKernelProvider } from '../../kernels/kernelProvider.node';
 import {
     IThirdPartyKernelProvider,
@@ -17,14 +18,12 @@ import { IApplicationShell, IVSCodeNotebook } from '../../platform/common/applic
 import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import {
     IConfigurationService,
     IDisposable,
     IExtensionContext,
     IWatchableJupyterSettings
 } from '../../platform/common/types';
-import { IStatusProvider } from '../../platform/progress/types';
 import { createEventHandler } from '../common.node';
 import { mockedVSCodeNamespaces } from '../vscode-mock';
 
@@ -36,10 +35,8 @@ suite('KernelProvider Node', () => {
     let notebookProvider: INotebookProvider;
     let configService: IConfigurationService;
     let appShell: IApplicationShell;
-    let outputTracker: CellOutputDisplayIdTracker;
     let vscNotebook: IVSCodeNotebook;
-    let statusProvider: IStatusProvider;
-    let pythonExecFactory: IPythonExecutionFactory;
+    let jupyterServerUriStorage: IJupyterServerUriStorage;
     let context: IExtensionContext;
     let onDidCloseNotebookDocument: EventEmitter<NotebookDocument>;
     const sampleUri1 = Uri.file('sample1.ipynb');
@@ -70,12 +67,15 @@ suite('KernelProvider Node', () => {
         notebookProvider = mock<INotebookProvider>();
         configService = mock<IConfigurationService>();
         appShell = mock<IApplicationShell>();
-        outputTracker = mock<CellOutputDisplayIdTracker>();
         vscNotebook = mock<IVSCodeNotebook>();
-        statusProvider = mock<IStatusProvider>();
+        jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
         context = mock<IExtensionContext>();
-        pythonExecFactory = mock<IPythonExecutionFactory>();
         const configSettings = mock<IWatchableJupyterSettings>();
+        const onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
+        disposables.push(onDidChangeNotebookCellExecutionState);
+        when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
+            onDidChangeNotebookCellExecutionState.event
+        );
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(configService.getSettings(anything())).thenReturn(instance(configSettings));
         when(vscNotebook.notebookDocuments).thenReturn([
@@ -90,11 +90,9 @@ suite('KernelProvider Node', () => {
             instance(notebookProvider),
             instance(configService),
             instance(appShell),
-            instance(outputTracker),
             instance(vscNotebook),
-            instance(pythonExecFactory),
-            instance(statusProvider),
             instance(context),
+            instance(jupyterServerUriStorage),
             [],
             []
         );
@@ -105,12 +103,12 @@ suite('KernelProvider Node', () => {
             instance(configService),
             instance(appShell),
             instance(vscNotebook),
-            instance(statusProvider),
             []
         );
     });
     teardown(async () => {
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
+        CellOutputDisplayIdTracker.dispose();
         disposeAllDisposables(disposables);
         await asyncDisposables.dispose();
     });
@@ -202,12 +200,12 @@ suite('KernelProvider Node', () => {
         };
 
         // Dispose the first kernel
-        const kernel = kernelProvider.getOrCreate(sampleNotebook1, options);
+        const kernel = kernelProvider.getOrCreate(instance(sampleNotebook1), options);
         await kernel.dispose();
 
         assert.isTrue(kernel.disposed, 'Kernel should be disposed');
         assert.isUndefined(kernelProvider.get(sampleUri1), 'Should not return an instance as kernel was disposed');
-        const newKernel = kernelProvider.getOrCreate(sampleNotebook1, options);
+        const newKernel = kernelProvider.getOrCreate(instance(sampleNotebook1), options);
         asyncDisposables.push(newKernel);
         assert.notEqual(kernel, newKernel, 'Should return a different instance');
     });

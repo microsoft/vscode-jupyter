@@ -8,7 +8,7 @@ import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../platform/co
 import { noop } from '../../platform/common/utils/misc';
 import { LiveRemoteKernelConnectionMetadata } from '../types';
 import { computeServerId } from './jupyterUtils';
-import { IJupyterServerUriStorage, ILiveRemoteKernelConnectionUsageTracker } from './types';
+import { IJupyterServerUriEntry, IJupyterServerUriStorage, ILiveRemoteKernelConnectionUsageTracker } from './types';
 
 export const mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources = 'removeKernelUrisAndSessionsUsedByResources';
 
@@ -87,9 +87,9 @@ export class LiveRemoteKernelConnectionUsageTracker
             )
             .then(noop, noop);
     }
-    private onDidRemoveUris(uris: string[]) {
-        uris.forEach((uri) => {
-            computeServerId(uri)
+    private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
+        uriEntries.forEach((uriEntry) => {
+            computeServerId(uriEntry.uri)
                 .then((serverId) => {
                     delete this.usedRemoteKernelServerIdsAndSessions[serverId];
                     this.memento

@@ -8,13 +8,10 @@ import { registerTypes as registerApiTypes } from './api/serviceRegistry.node';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.node';
 import { registerTypes as registerTerminalTypes } from './terminals/serviceRegistry.node';
 import { DataScienceStartupTime } from './common/constants';
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
-import { PreReleaseChecker } from './common/prereleaseChecker.node';
+import { IExtensionSyncActivationService } from './activation/types';
 import { IConfigurationService, IDataScienceCommandListener } from './common/types';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { ProgressReporter } from './progress/progressReporter';
-import { StatusProvider } from './progress/statusProvider';
-import { IStatusProvider } from './progress/types';
 import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
 import {
@@ -36,7 +33,6 @@ import { IInterpreterPackages, IReservedPythonNamedProvider } from './interprete
 import { ReservedNamedProvider } from './interpreter/reservedNamedProvider.node';
 import { InterpreterPackages } from './interpreter/interpreterPackages.node';
 import { WorkspaceInterpreterTracker } from './interpreter/workspaceInterpreterTracker';
-import { InterpreterCountTracker } from './interpreter/interpreterCountTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
@@ -54,15 +50,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     // Root platform types
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
 
-    serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelProgressReporter
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        PreReleaseChecker
     );
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, OutputCommandListener);
 
@@ -73,9 +64,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         WorkspaceInterpreterTracker
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        InterpreterCountTracker
     );
 }

@@ -6,9 +6,9 @@
 
 /** DO NOT USE VSCODE in this file. It's loaded outside of an extension */
 
-import * as getFreePort from 'get-port';
+import getFreePort from 'get-port';
 import * as tcpPortUsed from 'tcp-port-used';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as child_process from 'child_process';
@@ -19,7 +19,6 @@ import { Observable } from 'rxjs-compat/Observable';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 
-import * as iconv from 'iconv-lite';
 import { sleep } from '../core';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { noop } from '../../platform/common/utils/misc';
@@ -35,9 +34,8 @@ function getPythonPath(): string {
 }
 
 class BufferDecoder {
-    public decode(buffers: Buffer[], encoding: string = 'utf-8'): string {
-        encoding = iconv.encodingExists(encoding) ? encoding : 'utf-8';
-        return iconv.decode(Buffer.concat(buffers), encoding);
+    public decode(buffers: Buffer[]): string {
+        return Buffer.concat(buffers).toString('utf-8');
     }
 }
 
@@ -301,7 +299,6 @@ export class JupyterServer {
         args: string[],
         options: child_process.SpawnOptions = {}
     ): ObservableExecutionResult<string> {
-        const encoding = 'utf8';
         const proc = child_process.spawn(file, args, options);
         let procExited = false;
         traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);
@@ -326,7 +323,7 @@ export class JupyterServer {
             };
 
             const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-                const out = this.decoder.decode([data], encoding);
+                const out = this.decoder.decode([data]);
                 subscriber.next({ source, out: out });
             };
 

@@ -35,7 +35,7 @@ import {
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
-import { captureTelemetry } from '../../telemetry';
+import { capturePerfTelemetry, captureUsageTelemetry } from '../../telemetry';
 import {
     Commands,
     CommandSource,
@@ -48,24 +48,24 @@ import { IInteractiveWindowProvider } from '../types';
 import * as urlPath from '../../platform/vscode-path/resources';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { chainWithPendingUpdates } from '../../kernels/execution/notebookUpdater';
 import { ExportFormat, IExportDialog, IFileConverter } from '../../notebooks/export/types';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
-import { traceError, traceInfo } from '../../platform/logging';
+import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
 import { generateCellsFromDocument } from '../editor-integration/cellFactory';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { INotebookExporter, IJupyterExecution } from '../../kernels/jupyter/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IControllerPreferredService } from '../../notebooks/controllers/types';
-import { IStatusProvider } from '../../platform/progress/types';
+import { StatusProvider } from './statusProvider';
 
 /**
  * Class that registers command handlers for interactive window commands.
  */
 @injectable()
 export class CommandRegistry implements IDisposable, IExtensionSingleActivationService {
+    private readonly statusProvider: StatusProvider;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookExporter) @optional() private jupyterExporter: INotebookExporter | undefined,
@@ -91,9 +91,9 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         @inject(IExportDialog) private exportDialog: IExportDialog,
         @inject(IClipboard) private clipboard: IClipboard,
         @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook,
-        @inject(IControllerPreferredService) private controllerPreferredService: IControllerPreferredService,
-        @inject(IStatusProvider) private statusProvider: IStatusProvider
+        @inject(IControllerPreferredService) private controllerPreferredService: IControllerPreferredService
     ) {
+        this.statusProvider = new StatusProvider(applicationShell);
         if (!this.workspace.isTrusted) {
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
@@ -199,7 +199,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         );
         this.registerCommand(Commands.ScrollToCell, (file: Uri, id: string) => this.scrollToCell(file, id));
         this.registerCommand(Commands.InteractiveClearAll, this.clearAllCellsInInteractiveWindow);
-        this.registerCommand(Commands.InteractiveRemoveCell, this.removeCellInInteractiveWindow);
         this.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow);
         this.commandManager.registerCommand(Commands.InteractiveCopyCell, this.copyCellInInteractiveWindow);
     }
@@ -418,7 +417,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.DebugStepOver)
+    @captureUsageTelemetry(Telemetry.DebugStepOver)
     private async debugStepOver(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession) {
@@ -426,7 +425,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.DebugStop)
+    @captureUsageTelemetry(Telemetry.DebugStop)
     private async debugStop(uri: Uri): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession && this.interactiveWindowProvider) {
@@ -435,6 +434,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
             if (iw && iw.notebookDocument) {
                 const kernel = this.kernelProvider.get(iw.notebookDocument);
                 if (kernel) {
+                    traceVerbose(`Interrupt kernel due to debug stop of IW ${uri.toString()}`);
                     // If we have a matching iw, then stop current execution
                     await kernel.interrupt();
                 }
@@ -444,7 +444,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.DebugContinue)
+    @captureUsageTelemetry(Telemetry.DebugContinue)
     private async debugContinue(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession) {
@@ -452,7 +452,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.AddCellBelow)
+    @capturePerfTelemetry(Telemetry.AddCellBelow)
     private async addCellBelow(): Promise<void> {
         await this.getCurrentCodeWatcher()?.addEmptyCellToBottom();
     }
@@ -627,7 +627,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         return result;
     }
 
-    @captureTelemetry(Telemetry.ExportPythonFileInteractive, undefined, false)
+    @captureUsageTelemetry(Telemetry.ExportPythonFileInteractive)
     private async exportFile(file: Uri): Promise<void> {
         const filePath = getFilePath(file);
         if (filePath && filePath.length > 0 && this.jupyterExporter) {
@@ -667,7 +667,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.ExportPythonFileAndOutputInteractive, undefined, false)
+    @captureUsageTelemetry(Telemetry.ExportPythonFileAndOutputInteractive)
     private async exportFileAndOutput(file: Uri): Promise<Uri | undefined> {
         const filePath = getFilePath(file);
         if (
@@ -764,7 +764,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.CreateNewInteractive, undefined, false)
+    @captureUsageTelemetry(Telemetry.CreateNewInteractive)
     private async createNewInteractiveWindow(connection?: KernelConnectionMetadata): Promise<void> {
         await this.interactiveWindowProvider?.getOrCreate(undefined, connection);
     }
@@ -779,7 +779,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
     }
 
-    @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)
+    @captureUsageTelemetry(Telemetry.ImportNotebook, { scope: 'command' })
     private async importNotebook(): Promise<void> {
         const filtersKey = DataScience.importDialogFilter();
         const filtersObject: { [name: string]: string[] } = {};
@@ -802,7 +802,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.ImportNotebook, { scope: 'file' }, false)
+    @captureUsageTelemetry(Telemetry.ImportNotebook, { scope: 'file' })
     private async importNotebookOnFile(file: Uri): Promise<void> {
         const filepath = getFilePath(file);
         if (filepath && filepath.length > 0) {
@@ -852,24 +852,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         const nbEdit = NotebookEdit.deleteCells(new NotebookRange(0, document.cellCount));
         edit.set(document.uri, [nbEdit]);
         await workspace.applyEdit(edit);
-    }
-
-    private async removeCellInInteractiveWindow(context?: NotebookCell) {
-        const interactiveWindow = this.interactiveWindowProvider.getActiveOrAssociatedInteractiveWindow();
-        const ranges =
-            context === undefined
-                ? interactiveWindow?.notebookEditor?.selections
-                : [new NotebookRange(context.index, context.index + 1)];
-        const document = context === undefined ? interactiveWindow?.notebookEditor?.notebook : context.notebook;
-
-        if (ranges !== undefined && document !== undefined) {
-            await chainWithPendingUpdates(document, (edit) => {
-                ranges.forEach((range) => {
-                    const nbEdit = NotebookEdit.deleteCells(range);
-                    edit.set(document.uri, [nbEdit]);
-                });
-            });
-        }
     }
 
     private async goToCodeInInteractiveWindow(context?: NotebookCell) {

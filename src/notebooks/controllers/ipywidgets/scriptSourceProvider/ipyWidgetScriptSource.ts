@@ -21,6 +21,7 @@ import { noop } from '../../../../platform/common/utils/misc';
 import { createDeferred, Deferred } from '../../../../platform/common/utils/async';
 import { ScriptUriConverter } from './scriptUriConverter';
 import { ResourceMap } from '../../../../platform/vscode-path/map';
+import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 
 /**
  * Handles messages from the kernel related to setting up widgets.
@@ -58,7 +59,8 @@ export class IPyWidgetScriptSource {
         private readonly configurationSettings: IConfigurationService,
         private readonly httpClient: IHttpClient,
         private readonly sourceProviderFactory: IWidgetScriptSourceProviderFactory,
-        isWebExtension: boolean
+        isWebExtension: boolean,
+        private readonly cdnScriptProvider: CDNWidgetScriptSourceProvider
     ) {
         this.uriConverter = new ScriptUriConverter(isWebExtension, (resource) => {
             if (!this.uriTranslationRequests.has(resource))
@@ -98,6 +100,7 @@ export class IPyWidgetScriptSource {
             }
         } else if (message === IPyWidgetMessages.IPyWidgets_Ready) {
             this.sendBaseUrl();
+            this.sendWidgetScriptSources().ignoreErrors();
         } else if (message === IPyWidgetMessages.IPyWidgets_IsOnline) {
             const isOnline = (payload as { isOnline: boolean }).isOnline;
             this.isWebViewOnline.resolve(isOnline);
@@ -131,7 +134,8 @@ export class IPyWidgetScriptSource {
             this.configurationSettings,
             this.httpClient,
             this.sourceProviderFactory,
-            this.isWebViewOnline.promise
+            this.isWebViewOnline.promise,
+            this.cdnScriptProvider
         );
         this.kernel.onDisposed(() => this.dispose());
         this.handlePendingRequests();
@@ -159,6 +163,37 @@ export class IPyWidgetScriptSource {
             })
             .catch((ex) => traceError(`Failed to get baseUrl`, ex));
     }
+    /**
+     * Outputs like HTML and JavaScript can have references to widget scripts as well,
+     * hence we need to eagerly load these scripts.
+     */
+    private async sendWidgetScriptSources() {
+        if (!this.scriptProvider) {
+            return;
+        }
+        if (this.allWidgetScriptsSent) {
+            return;
+        }
+        // Ensure we send all of the widget script sources found in the `<python env>/share/jupyter/nbextensions` folder.
+        try {
+            const sources = await this.scriptProvider.getWidgetScriptSources();
+            sources.forEach((widgetSource) => {
+                // If we have a widget source from CDN, never overwrite that.
+                if (this.widgetSources.get(widgetSource.moduleName)?.source !== 'cdn') {
+                    this.widgetSources.set(widgetSource.moduleName, widgetSource);
+                }
+                // Send to UI (even if there's an error) instead of hanging while waiting for a response.
+                this.postEmitter.fire({
+                    message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
+                    payload: widgetSource
+                });
+            });
+        } catch (ex) {
+            traceWarning(`Failed to fetch script sources`, ex);
+        } finally {
+            this.allWidgetScriptsSent = true;
+        }
+    }
     private async onRequestWidgetScript(payload: { moduleName: string; moduleVersion: string; requestId: string }) {
         const { moduleName, moduleVersion, requestId } = payload;
 
@@ -170,22 +205,8 @@ export class IPyWidgetScriptSource {
         // Ensure we send all of the widget script sources found in the `<python env>/share/jupyter/nbextensions` folder.
         if (this.scriptProvider && !this.allWidgetScriptsSent) {
             try {
-                const sources = await this.scriptProvider.getWidgetScriptSources();
-                sources.forEach((widgetSource) => {
-                    // If we have a widget source from CDN, never overwrite that.
-                    if (this.widgetSources.get(widgetSource.moduleName)?.source !== 'cdn') {
-                        this.widgetSources.set(widgetSource.moduleName, widgetSource);
-                    }
-                    // Send to UI (even if there's an error) instead of hanging while waiting for a response.
-                    this.postEmitter.fire({
-                        message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
-                        payload: widgetSource
-                    });
-                });
-            } catch (ex) {
-                traceWarning(`Failed to fetch script sources`, ex);
+                await this.sendWidgetScriptSources();
             } finally {
-                this.allWidgetScriptsSent = true;
                 this.sendWidgetSource(moduleName, moduleVersion, requestId).catch(
                     traceError.bind(undefined, 'Failed to send widget sources upon ready')
                 );

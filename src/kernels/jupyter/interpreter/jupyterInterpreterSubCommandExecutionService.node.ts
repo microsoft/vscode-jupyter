@@ -21,7 +21,6 @@ import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { Product } from '../../installer/types';
 import { JupyterPaths } from '../../raw/finder/jupyterPaths.node';
@@ -85,7 +84,6 @@ export class JupyterInterpreterSubCommandExecutionService
             if (!interpreter) {
                 // Unlikely scenario, user hasn't selected python, python extension will fall over.
                 // Get user to select something.
-                sendTelemetryEvent(Telemetry.SelectJupyterInterpreterMessageDisplayed);
                 return DataScience.selectJupyterInterpreter();
             }
         }

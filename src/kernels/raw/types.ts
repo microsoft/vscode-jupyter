@@ -7,9 +7,7 @@ import { CancellationToken, Event } from 'vscode';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import {
     IKernelConnectionSession,
-    INotebookProviderConnection,
     KernelConnectionMetadata,
-    LocalKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../types';
@@ -38,7 +36,8 @@ export interface IKernelConnection {
     kernel_name?: string;
 }
 
-export interface IKernelProcess extends IDisposable {
+export interface IKernelProcess extends IAsyncDisposable {
+    readonly pid?: number;
     readonly connection: Readonly<IKernelConnection>;
     readonly kernelConnectionMetadata: Readonly<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
     /**
@@ -57,22 +56,6 @@ export interface IKernelProcess extends IDisposable {
     interrupt(): Promise<void>;
 }
 
-export const ILocalKernelFinder = Symbol('ILocalKernelFinder');
-export interface ILocalKernelFinder {
-    /**
-     * Finds all kernel specs including Python.
-     */
-    listKernels(resource: Resource, cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
-}
-
-export const IRemoteKernelFinder = Symbol('IRemoteKernelFinder');
-export interface IRemoteKernelFinder {
-    listKernels(
-        resource: Resource,
-        connInfo: INotebookProviderConnection | undefined,
-        cancelToken?: CancellationToken
-    ): Promise<KernelConnectionMetadata[]>;
-}
 /**
  * The daemon responsible for the Python Kernel.
  */

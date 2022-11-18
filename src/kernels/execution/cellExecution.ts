@@ -8,7 +8,6 @@ import {
     NotebookCell,
     NotebookCellExecution,
     workspace,
-    NotebookController,
     NotebookCellOutput,
     NotebookCellExecutionState,
     Event,
@@ -20,25 +19,30 @@ import { CellExecutionCreator } from './cellExecutionCreator';
 import { analyzeKernelErrors, createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { BaseError } from '../../platform/errors/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { noop } from '../../platform/common/utils/misc';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { activeNotebookCellExecution, CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
-import { IKernelConnectionSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import {
+    IKernelConnectionSession,
+    IKernelController,
+    KernelConnectionMetadata,
+    NotebookCellRunState
+} from '../../kernels/types';
 import { NotebookCellStateTracker, traceCellMessage } from './helpers';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 /**
  * Factory for CellExecution objects.
  */
 export class CellExecutionFactory {
     constructor(
-        private readonly controller: NotebookController,
+        private readonly controller: IKernelController,
         private readonly requestListener: CellExecutionMessageHandlerService
     ) {}
 
@@ -64,10 +68,8 @@ export class CellExecution implements IDisposable {
     public get preExecute(): Event<NotebookCell> {
         return this._preExecuteEmitter.event;
     }
-    private static sentExecuteCellTelemetry?: boolean;
 
     private stopWatch = new StopWatch();
-    private stopWatchForTelemetry = new StopWatch();
 
     private readonly _result = createDeferred<NotebookCellRunState>();
 
@@ -78,6 +80,7 @@ export class CellExecution implements IDisposable {
     private endTime?: number;
     private execution?: NotebookCellExecution;
     private cancelHandled = false;
+    private disposed?: boolean;
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     private readonly disposables: IDisposable[] = [];
     private _preExecuteEmitter = new EventEmitter<NotebookCell>();
@@ -86,7 +89,7 @@ export class CellExecution implements IDisposable {
         public readonly cell: NotebookCell,
         private readonly codeOverride: string | undefined,
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
-        private readonly controller: NotebookController,
+        private readonly controller: IKernelController,
         private readonly requestListener: CellExecutionMessageHandlerService
     ) {
         workspace.onDidCloseTextDocument(
@@ -94,6 +97,7 @@ export class CellExecution implements IDisposable {
                 // If the cell is deleted, then dispose the request object.
                 // No point keeping it alive, just chewing resources.
                 if (e === this.cell.document) {
+                    traceVerbose(`Disposing request as the cell was deleted ${getDisplayPath(this.cell.notebook.uri)}`);
                     try {
                         this.request?.dispose(); // NOSONAR
                     } catch (e) {
@@ -131,7 +135,7 @@ export class CellExecution implements IDisposable {
         cell: NotebookCell,
         code: string | undefined,
         metadata: Readonly<KernelConnectionMetadata>,
-        controller: NotebookController,
+        controller: IKernelController,
         requestListener: CellExecutionMessageHandlerService
     ) {
         return new CellExecution(cell, code, metadata, controller, requestListener);
@@ -209,14 +213,16 @@ export class CellExecution implements IDisposable {
      * Or when execution has been cancelled.
      */
     public dispose() {
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
         traceCellMessage(this.cell, 'Execution disposed');
         disposeAllDisposables(this.disposables);
-        this.cellExecutionHandler?.dispose();
     }
     private completedWithErrors(error: Partial<Error>) {
         traceWarning(`Cell completed with errors`, error);
         traceCellMessage(this.cell, 'Completed with errors');
-        this.sendPerceivedCellExecute();
 
         traceCellMessage(this.cell, 'Update with error state & output');
         let errorMessage: string | undefined;
@@ -249,7 +255,6 @@ export class CellExecution implements IDisposable {
     }
     private completedSuccessfully() {
         traceCellMessage(this.cell, 'Completed successfully');
-        this.sendPerceivedCellExecute();
         // If we requested a cancellation, then assume it did not even run.
         // If it did, then we'd get an interrupt error in the output.
         let runState = this.isEmptyCodeCell ? NotebookCellRunState.Idle : NotebookCellRunState.Success;
@@ -296,15 +301,6 @@ export class CellExecution implements IDisposable {
         this._result.resolve(NotebookCellRunState.Idle);
     }
 
-    private sendPerceivedCellExecute() {
-        const props = { notebook: true };
-        if (!CellExecution.sentExecuteCellTelemetry) {
-            CellExecution.sentExecuteCellTelemetry = true;
-            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatchForTelemetry.elapsedTime, props);
-        } else {
-            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, this.stopWatchForTelemetry.elapsedTime, props);
-        }
-    }
     private canExecuteCell() {
         // Raw cells cannot be executed.
         if (isPythonKernelConnection(this.kernelConnection) && this.cell.document.languageId === 'raw') {

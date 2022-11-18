@@ -3,8 +3,7 @@
 
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
-import { sha256 } from 'hash.js';
-import * as nock from 'nock';
+import nock from 'nock';
 import * as path from '../../../platform/vscode-path/path';
 import { Readable } from 'stream';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
@@ -24,6 +23,7 @@ import { HttpClient } from '../../../platform/common/net/httpClient';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
+import { computeHash } from '../../../platform/common/crypto';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
 const sanitize = require('sanitize-filename');
@@ -32,7 +32,7 @@ const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('DataScience - ipywidget - CDN', () => {
+suite('ipywidget - CDN', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let configService: IConfigurationService;
     let settings: JupyterSettings;
@@ -64,8 +64,8 @@ suite('DataScience - ipywidget - CDN', () => {
         return readable;
     }
 
-    function generateScriptName(moduleName: string, moduleVersion: string) {
-        const hash = sanitize(sha256().update(`${moduleName}${moduleVersion}`).digest('hex'));
+    async function generateScriptName(moduleName: string, moduleVersion: string) {
+        const hash = sanitize(await computeHash(`${moduleName}${moduleVersion}`, 'SHA-256'));
         return Uri.file(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts', hash, 'index.js')).toString();
     }
     test('Prompt to use CDN', async () => {
@@ -280,9 +280,9 @@ suite('DataScience - ipywidget - CDN', () => {
                     const moduleVersion = '1';
                     let baseUrl = '';
                     let scriptUri = '';
-                    setup(() => {
+                    setup(async () => {
                         baseUrl = cdn === 'unpkg.com' ? unpgkUrl : jsdelivrUrl;
-                        scriptUri = generateScriptName(moduleName, moduleVersion);
+                        scriptUri = await generateScriptName(moduleName, moduleVersion);
                     });
                     teardown(() => {
                         scriptSourceProvider.dispose();

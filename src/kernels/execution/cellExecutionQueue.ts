@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
-import { traceInfo, traceError } from '../../platform/logging';
+import { traceInfo, traceError, traceVerbose } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from './helpers';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
 import { IKernelConnectionSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import { Resource } from '../../platform/common/types';
 
 /**
  * A queue responsible for execution of cells.
@@ -18,6 +19,7 @@ export class CellExecutionQueue implements Disposable {
     private cancelledOrCompletedWithErrors = false;
     private startedRunningCells = false;
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
+    private readonly _onPostExecute = new EventEmitter<NotebookCell>();
     private disposables: Disposable[] = [];
     private lastCellExecution?: CellExecution;
     /**
@@ -39,7 +41,8 @@ export class CellExecutionQueue implements Disposable {
     constructor(
         private readonly session: Promise<IKernelConnectionSession>,
         private readonly executionFactory: CellExecutionFactory,
-        readonly metadata: Readonly<KernelConnectionMetadata>
+        readonly metadata: Readonly<KernelConnectionMetadata>,
+        readonly resourceUri: Resource
     ) {}
 
     public dispose() {
@@ -50,6 +53,11 @@ export class CellExecutionQueue implements Disposable {
     public get onPreExecute() {
         return this._onPreExecute.event;
     }
+
+    public get onPostExecute() {
+        return this._onPostExecute.event;
+    }
+
     /**
      * Queue the cell for execution & start processing it immediately.
      */
@@ -79,7 +87,7 @@ export class CellExecutionQueue implements Disposable {
      */
     public async cancel(forced?: boolean): Promise<void> {
         this.cancelledOrCompletedWithErrors = true;
-        traceInfo('Cancel pending cells');
+        traceVerbose('Cancel pending cells');
         await Promise.all(this.queueOfCellsToExecute.map((item) => item.cancel(forced)));
         this.lastCellExecution?.dispose();
         this.queueOfCellsToExecute.splice(0, this.queueOfCellsToExecute.length);
@@ -154,6 +162,8 @@ export class CellExecutionQueue implements Disposable {
                 if (index >= 0) {
                     this.queueOfCellsToExecute.splice(index, 1);
                 }
+
+                this._onPostExecute.fire(cellToExecute.cell);
             }
 
             // If notebook was closed or a cell has failed the get out.

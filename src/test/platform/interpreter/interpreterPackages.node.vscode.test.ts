@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
-
 import { assert } from 'chai';
 import { workspace } from 'vscode';
 import { isWeb } from '../../../platform/common/utils/misc';
@@ -12,7 +9,7 @@ import { startJupyterServer } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 
-suite('DataScience - Interpreter Packages', () => {
+suite('Interpreter Packages @python', () => {
     let packages: IInterpreterPackages;
     suiteSetup(async function () {
         if (IS_REMOTE_NATIVE_TEST() || isWeb()) {

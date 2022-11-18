@@ -58,6 +58,8 @@ export namespace Common {
     export const canceled = () => localize('Common.canceled', 'Canceled');
     export const cancel = () => localize('Common.cancel', 'Cancel');
     export const ok = () => localize('Common.ok', 'Ok');
+    export const refresh = () => localize('Common.refresh', 'Refresh');
+    export const refreshing = () => localize('Common.refreshing', 'Refreshing...');
     export const download = () => localize('Common.download', 'Download');
     export const gotIt = () => localize('Common.gotIt', 'Got it!');
     export const install = () => localize('Common.install', 'Install');
@@ -545,6 +547,11 @@ export namespace DataScience {
             },
             "The kernel '{0}' died. Click [here](https://aka.ms/vscodeJupyterKernelCrash) for more info. View Jupyter [log](command:jupyter.viewOutput) for further details."
         );
+    export const failedToStartAnUntrustedKernelSpec = () =>
+        localize(
+            'DataScience.failedToStartAnUntrustedKernelSpec',
+            "The kernel '{0}' was not started as it is located in an insecure location '{1}'.  \nClick [here](https://aka.ms/JupyterTrustedKernelPaths) for further details, optionally update the setting [jupyter.kernels.trusted](command:workbench.action.openSettings?[\"jupyter.kernels.trusted\"]) to trust the kernel."
+        );
     export const kernelDiedWithoutErrorAndAutoRestarting = () =>
         localize(
             {
@@ -638,6 +645,8 @@ export namespace DataScience {
             'DataScience.jupyterSelectUserAndPasswordTitle',
             'Enter your user name and password to connect to Jupyter Hub'
         );
+    export const jupyterRenameServer = () =>
+        localize('DataScience.jupyterRenameServer', 'Change Server Display Name (Leave Blank To Use URI)');
     export const jupyterSelectUserPrompt = () =>
         localize('DataScience.jupyterSelectUserPrompt', 'Enter your user name');
     export const jupyterSelectPasswordPrompt = () =>
@@ -677,7 +686,12 @@ export namespace DataScience {
     export const remoteJupyterConnectionFailedWithoutServerWithErrorWeb = () =>
         localize(
             'DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb',
-            'Connection failure. Verify the server is running and reachable from a browser. ({0}). See https://aka.ms/vscjremoteweb for more information.'
+            'Connection failure. Verify the server is running and reachable from a browser. ({0}). When connecting from vscode.dev Jupyter servers must be started with specific options to connect. See [here](https://aka.ms/vscjremoteweb) for more information.'
+        );
+    export const remoteJupyterConnectionFailedWebExtension = () =>
+        localize(
+            'DataScience.remoteJupyterConnectionFailedWebExtension',
+            'When connecting from vscode.dev Jupyter servers must be started with specific options to connect. See [here](https://aka.ms/vscjremoteweb) for more information.'
         );
     export const removeRemoteJupyterConnectionButtonText = () =>
         localize('DataScience.removeRemoteJupyterConnectionButtonText', 'Forget Connection');
@@ -797,6 +811,10 @@ export namespace DataScience {
             { key: 'jupyter.kernel.filter.placeholder', comment: ['{Locked="kernel"}', '{Locked="kernels"}'] },
             'Choose the kernels that are available in the kernel picker.'
         );
+    export const recommendedKernelCategoryInQuickPick = () => localize('jupyter.kernel.recommended', 'Recommended');
+    export const createPythonEnvironmentInQuickPick = () =>
+        localize('jupyter.kernel.createPythonEnvironment', 'Create Python Environment');
+
     export const selectDifferentJupyterInterpreter = () =>
         localize('DataScience.selectDifferentJupyterInterpreter', 'Change Interpreter');
     export const localJupyterServer = () => localize('DataScience.localJupyterServer', 'local');
@@ -1170,8 +1188,6 @@ export namespace DataScience {
             "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1."
         );
 
-    export const kernelStarted = () =>
-        localize({ key: 'DataScience.kernelStarted', comment: ['{Locked="kernel"}'] }, 'Started kernel {0}.');
     export const runByLine = () => localize('DataScience.runByLine', 'Run by line (F10)');
     export const step = () => localize('DataScience.step', 'Run next line (F10)');
     export const stopRunByLine = () => localize('DataScience.stopRunByLine', 'Stop');
@@ -1232,17 +1248,21 @@ export namespace DataScience {
     export const noNotebookToDebug = () =>
         localize('DataScience.noNotebookToDebug', 'No active notebook document to debug.');
     export const cantStartDebugging = () => localize('DataScience.cantStartDebugging', "Can't start debugging.");
+    export const restartNotSupported = () =>
+        localize('DataScience.restartNotSupported', 'Restarting is not supported in the interactive window.');
     export const importingIpynb = () => localize('DataScience.importingIpynb', 'Importing notebook file');
     export const exportingToFormat = () => localize('DataScience.exportingToFormat', 'Exporting to {0}');
     export const kernelCategoryForJupyterSession = () =>
-        localize('jupyter.kernel.category.jupyterSession', '(Remote) Jupyter Session');
+        localize('jupyter.kernel.category.jupyterSession', '({0}) Jupyter Session');
     export const kernelPrefixForRemote = () => localize('DataScience.kernelPrefixForRemote', '(Remote)');
+    export const kernelDefaultRemoteDisplayName = () =>
+        localize('DataScience.kernelDefaultRemoteDisplayName', 'Remote');
     export const kernelCategoryForJupyterKernel = () =>
         localize({ key: 'jupyter.kernel.category.jupyterKernel', comment: ['{Locked="Kernel"}'] }, 'Jupyter Kernel');
     export const kernelCategoryForRemoteJupyterKernel = () =>
         localize(
             { key: 'jupyter.kernel.category.jupyterRemoteKernel', comment: ['{Locked="kernel"}'] },
-            '(Remote) Jupyter Kernel'
+            '({0}) Jupyter Kernel'
         );
     export const kernelCategoryForConda = () => localize('jupyter.kernel.category.conda', 'Conda Env');
     export const kernelCategoryForPoetry = () =>
@@ -1348,16 +1368,6 @@ export namespace DataScience {
         localize('DataScience.activatingEnvironment', "Activating Python Environment '{0}'");
 
     export const cellAtFormat = () => localize('DataScience.cellAtFormat', '{0} Cell {1}');
-    export const usingNonPrereleaseYes = () => localize('DataScience.usingNonPrereleaseYes', 'Yes');
-    export const usingNonPrereleaseNo = () => localize('DataScience.usingNonPrereleaseNo', 'No');
-    export const usingNonPrereleaseNoAndDontAskAgain = () =>
-        localize('DataScience.usingNonPrereleaseNoAndDontAskAgain', `Don't Ask Again`);
-
-    export const usingNonPrerelease = () =>
-        localize(
-            'DataScience.usingNonPrerelease',
-            `The 'prerelease' version of the Jupyter Extension is recommended when running on VS Code insiders. Would you like to switch?`
-        );
 
     export const jupyterServerConsoleOutputChannel = () =>
         localize('DataScience.jupyterServerConsoleOutputChannel', `Jupyter Server Console`);
@@ -1368,7 +1378,6 @@ export namespace DataScience {
         localize('DataScience.webNotSupported', `Operation not supported in web version of Jupyter Extension.`);
     export const validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps = () =>
         localize('DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps', 'Has to be http(s)');
-    export const pickLocalKernelTitle = () => localize('DataScience.pickLocalKernelTitle', `Select a Local Kernel`);
     export const pickLocalKernelPlaceholder = () =>
         localize('DataScience.pickLocalKernelPlaceholder', `type to filter`);
     export const pickRemoteKernelTitle = () => localize('DataScience.pickRemoteKernelTitle', `Select a Remote Kernel`);
@@ -1412,6 +1421,28 @@ export namespace DataScience {
             { key: 'DataScience.failedToInstallPandas', comment: ['{Locked="Pandas"}'] },
             'Failed to install Pandas to use the Data Viewer.'
         );
+    export const localKernelSpecs = () => localize('DataScience.localKernelSpecs', 'Local Kernel Specs');
+    export const pickLocalKernelSpecTitle = () =>
+        localize('DataScience.pickLocalKernelSpecTitle', `Select a Local Kernel spec`);
+
+    export const localPythonEnvironments = () =>
+        localize('DataScience.localPythonEnvironments', 'Local Python Environments');
+    export const pickLocalKernelPythonEnvTitle = () =>
+        localize('DataScience.pickLocalKernelPythonEnvTitle', `Select a Local Python Environment`);
+    export const UserJupyterServerUrlProviderDisplayName = () =>
+        localize('DataScience.UserJupyterServerUrlProviderDisplayName', 'Existing Jupyter Server');
+    export const UserJupyterServerUrlProviderDetail = () =>
+        localize('DataScience.UserJupyterServerUrlProviderDetail', 'Connect to an existing Jupyter Server');
+    export const UserJupyterServerUrlAlreadyExistError = () =>
+        localize('DataScience.UserJupyterServerUrlAlreadyExistError', 'A Jupyter Server with this URL already exists');
+    export const universalRemoteKernelFinderDisplayName = () =>
+        localize('DataScience.universalRemoteKernelFinderDisplayName', 'Remote - {0}');
+    export const remoteKernelFinderDisplayName = () =>
+        localize('DataScience.remoteKernelFinderDisplayName', 'Current Remote');
+    export const kernelPickerSelectSourceTitle = () =>
+        localize('DataScience.kernelPickerSelectSourceTitle', 'Select Another Jupyter Kernel...');
+    export const kernelPickerSelectKernelTitle = () =>
+        localize('DataScience.kernelPickerSelectKernelTitle', 'Select Kernel');
 }
 
 export namespace Deprecated {

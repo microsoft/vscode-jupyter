@@ -25,8 +25,10 @@ import {
     IJupyterConnection,
     ISessionWithSocket,
     KernelConnectionMetadata,
-    LiveKernelModel
-} from '../../../platform/../kernels/types';
+    LiveKernelModel,
+    LiveRemoteKernelConnectionMetadata,
+    LocalKernelSpecConnectionMetadata
+} from '../../../kernels/types';
 import { MockOutputChannel } from '../../mockClasses';
 import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService.node';
 import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
@@ -39,7 +41,7 @@ import { Signal } from '@lumino/signaling';
 import { JupyterInvalidKernelError } from '../../../kernels/errors/jupyterInvalidKernelError';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('DataScience - JupyterSession', () => {
+suite('JupyterSession', () => {
     type IKernelChangedArgs = IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>;
     let jupyterSession: JupyterSession;
     let connection: IJupyterConnection;
@@ -92,16 +94,15 @@ suite('DataScience - JupyterSession', () => {
     };
     function createJupyterSession(resource: Resource = undefined) {
         connection = mock<IJupyterConnection>();
-        mockKernelSpec = {
+        mockKernelSpec = LocalKernelSpecConnectionMetadata.create({
             id: 'xyz',
-            kind: 'startUsingLocalKernelSpec',
             kernelSpec: {
                 argv: [],
                 display_name: '',
                 name: '',
                 executable: ''
             }
-        };
+        });
         session = mock<ISessionWithSocket>();
         kernel = mock<Kernel.IKernelConnection>();
         when(session.kernel).thenReturn(instance(kernel));
@@ -209,11 +210,12 @@ suite('DataScience - JupyterSession', () => {
                 when(connection.localLaunch).thenReturn(false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
-                when(session.kernelConnectionMetadata).thenReturn({
-                    id: '',
-                    kind: 'startUsingLocalKernelSpec',
-                    kernelSpec: {} as any
-                });
+                when(session.kernelConnectionMetadata).thenReturn(
+                    LocalKernelSpecConnectionMetadata.create({
+                        id: '',
+                        kernelSpec: {} as any
+                    })
+                );
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
@@ -233,13 +235,14 @@ suite('DataScience - JupyterSession', () => {
                 when(connection.localLaunch).thenReturn(false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
-                when(session.kernelConnectionMetadata).thenReturn({
-                    id: '',
-                    kind: 'connectToLiveRemoteKernel',
-                    kernelModel: {} as any,
-                    baseUrl: '',
-                    serverId: ''
-                });
+                when(session.kernelConnectionMetadata).thenReturn(
+                    LiveRemoteKernelConnectionMetadata.create({
+                        id: '',
+                        kernelModel: {} as any,
+                        baseUrl: '',
+                        serverId: ''
+                    })
+                );
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
@@ -259,11 +262,12 @@ suite('DataScience - JupyterSession', () => {
                 when(connection.localLaunch).thenReturn(false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
-                when(session.kernelConnectionMetadata).thenReturn({
-                    id: '',
-                    kind: 'startUsingLocalKernelSpec',
-                    kernelSpec: {} as any
-                });
+                when(session.kernelConnectionMetadata).thenReturn(
+                    LocalKernelSpecConnectionMetadata.create({
+                        id: '',
+                        kernelSpec: {} as any
+                    })
+                );
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
@@ -283,13 +287,14 @@ suite('DataScience - JupyterSession', () => {
                 when(connection.localLaunch).thenReturn(false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
-                when(session.kernelConnectionMetadata).thenReturn({
-                    id: '',
-                    kind: 'connectToLiveRemoteKernel',
-                    kernelModel: {} as any,
-                    baseUrl: '',
-                    serverId: ''
-                });
+                when(session.kernelConnectionMetadata).thenReturn(
+                    LiveRemoteKernelConnectionMetadata.create({
+                        id: '',
+                        kernelModel: {} as any,
+                        baseUrl: '',
+                        serverId: ''
+                    })
+                );
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 

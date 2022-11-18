@@ -19,10 +19,7 @@ import {
 } from '../../../../platform/common/types';
 import { createDeferred, sleep } from '../../../../platform/common/utils/async';
 import { DataScience } from '../../../../platform/common/utils/localize';
-import { StopWatch } from '../../../../platform/common/utils/stopWatch';
 import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError';
-import { sendKernelTelemetryEvent } from '../../../telemetry/sendKernelTelemetryEvent';
-import { Telemetry } from '../../../../telemetry';
 import {
     KernelConnectionMetadata,
     isLocalConnection,
@@ -125,7 +122,6 @@ export class HostJupyterServer implements INotebookServer {
             this.throwIfDisposedOrCancelled(cancelToken);
 
             if (session) {
-                traceInfo(`Finished connecting kernel ${kernelConnection.kind}:${kernelConnection.id}`);
                 sessionPromise.resolve(session);
             } else {
                 sessionPromise.reject(this.getDisposedError());
@@ -171,33 +167,19 @@ export class HostJupyterServer implements INotebookServer {
                 throw new RemoteJupyterServerConnectionError(kernelConnection.baseUrl, kernelConnection.serverId, ex);
             }
         }
-        const stopWatch = new StopWatch();
         // Create a session and return it.
-        try {
-            const session = await this.createNotebookInstance(
-                resource,
-                this.sessionManager,
-                kernelConnection,
-                cancelToken,
-                ui,
-                creator
-            );
-            this.throwIfDisposedOrCancelled(cancelToken);
-            const baseUrl = this.connection?.baseUrl || '';
-            this.logRemoteOutput(DataScience.createdNewNotebook().format(baseUrl));
-            sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime);
-            return session;
-        } catch (ex) {
-            sendKernelTelemetryEvent(
-                resource,
-                Telemetry.JupyterCreatingNotebook,
-                stopWatch.elapsedTime,
-                undefined,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ex as any
-            );
-            throw ex;
-        }
+        const session = await this.createNotebookInstance(
+            resource,
+            this.sessionManager,
+            kernelConnection,
+            cancelToken,
+            ui,
+            creator
+        );
+        this.throwIfDisposedOrCancelled(cancelToken);
+        const baseUrl = this.connection?.baseUrl || '';
+        this.logRemoteOutput(DataScience.createdNewNotebook().format(baseUrl));
+        return session;
     }
 
     private async shutdown(): Promise<void> {

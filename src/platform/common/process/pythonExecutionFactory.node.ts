@@ -5,17 +5,15 @@ import { inject, injectable } from 'inversify';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IServiceContainer } from '../../ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../telemetry/constants';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IWorkspaceService } from '../application/types';
-import { ignoreLogging, traceDecoratorVerbose, traceError, traceInfo } from '../../logging';
+import { traceDecoratorVerbose, traceError, traceInfo } from '../../logging';
 import { getDisplayPath } from '../platform/fs-paths';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../types';
 import { ProcessService } from './proc.node';
 import { PythonDaemonFactory } from './pythonDaemonFactory.node';
 import { PythonDaemonExecutionServicePool } from './pythonDaemonPool.node';
-import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment.node';
+import { createCondaEnv, createPythonEnv } from './pythonEnvironment.node';
 import { createPythonProcessService } from './pythonProcess.node';
 import {
     DaemonExecutionFactoryCreationOptions,
@@ -62,13 +60,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
 
-        return createPythonService(
-            options.interpreter,
-            processService,
-            this.fileSystem,
-            undefined,
-            options.interpreter.envType === EnvironmentType.WindowsStore
-        );
+        return createPythonService(options.interpreter, processService, this.fileSystem, undefined);
     }
 
     @traceDecoratorVerbose('Create daemon', TraceOptions.BeforeCall | TraceOptions.Arguments)
@@ -160,7 +152,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
     @traceDecoratorVerbose('Create activated Env', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async createActivatedEnvironment(
-        @ignoreLogging() options: ExecutionFactoryCreateWithEnvironmentOptions
+        options: ExecutionFactoryCreateWithEnvironmentOptions
     ): Promise<IPythonExecutionService> {
         // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.
         if (!this.workspace.isTrusted) {
@@ -172,7 +164,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             options.allowEnvironmentFetchExceptions
         );
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
-        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
         if (!hasEnvVars) {
             return this.create({
                 resource: options.resource,
@@ -197,22 +188,16 @@ function createPythonService(
             name: string;
             path: string;
         }
-    ],
-    isWindowsStore?: boolean
+    ]
 ): IPythonExecutionService {
     let env = createPythonEnv(interpreter, procService, fs);
     if (conda) {
         const [condaPath, condaInfo] = conda;
         env = createCondaEnv(condaPath, condaInfo, interpreter, procService, fs);
-    } else if (isWindowsStore) {
-        env = createWindowsStoreEnv(interpreter, procService);
     }
     const procs = createPythonProcessService(procService, env);
     return {
-        getInterpreterInformation: () => env.getInterpreterInformation(),
-        getExecutablePath: () => env.getExecutablePath().then((p) => p.fsPath),
         isModuleInstalled: (m) => env.isModuleInstalled(m),
-        getExecutionInfo: (a) => env.getExecutionInfo(a),
         execObservable: (a, o) => procs.execObservable(a, o),
         execModuleObservable: (m, a, o) => procs.execModuleObservable(m, a, o),
         exec: (a, o) => procs.exec(a, o),

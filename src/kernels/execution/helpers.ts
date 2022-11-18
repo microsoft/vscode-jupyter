@@ -10,11 +10,10 @@ import {
     NotebookCell,
     NotebookCellData,
     NotebookCellKind,
-    NotebookCellExecutionState,
-    NotebookController
+    NotebookCellExecutionState
 } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-import { KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import fastDeepEqual = require('fast-deep-equal');
@@ -27,7 +26,7 @@ import { getInterpreterHash } from '../../platform/pythonEnvironments/info/inter
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { CellExecutionCreator } from './cellExecutionCreator';
-import { KernelConnectionMetadata } from '../types';
+import { IKernelController, KernelConnectionMetadata } from '../types';
 import {
     isPythonKernelConnection,
     getInterpreterFromKernelConnectionMetadata,
@@ -567,7 +566,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             const outputType: nbformat.OutputType =
                 <nbformat.OutputType>customMetadata?.outputType || (isStream ? 'stream' : 'display_data');
             sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
-                isErrorOutput: outputType === 'error'
+                outputType
             });
 
             let unknownOutput: nbformat.IUnrecognizedOutput | nbformat.IDisplayData | nbformat.IStream;
@@ -631,19 +630,16 @@ export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutp
 }
 
 export function getTextOutputValue(output: NotebookCellOutput): string {
-    const item = output?.items?.find(
-        (opit) =>
-            opit.mime === CellOutputMimeTypes.stdout ||
-            opit.mime === CellOutputMimeTypes.stderr ||
-            opit.mime === 'text/plain' ||
-            opit.mime === 'text/markdown'
-    );
+    const items =
+        output?.items?.filter(
+            (opit) =>
+                opit.mime === CellOutputMimeTypes.stdout ||
+                opit.mime === CellOutputMimeTypes.stderr ||
+                opit.mime === 'text/plain' ||
+                opit.mime === 'text/markdown'
+        ) || [];
 
-    if (item) {
-        const value = convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array);
-        return Array.isArray(value) ? value.join('') : value;
-    }
-    return '';
+    return items.map((item) => convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array)).join('');
 }
 export function getTextOutputValues(cell: NotebookCell): string {
     return cell.outputs.map(getTextOutputValue).join('');
@@ -657,7 +653,7 @@ export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
 }
 
 // eslint-disable-next-line complexity
-export function updateNotebookMetadata(
+export async function updateNotebookMetadata(
     metadata?: nbformat.INotebookMetadata,
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
@@ -741,7 +737,7 @@ export function updateNotebookMetadata(
                 break;
             case 'registeredByNewVersionOfExtForCustomKernelSpec': {
                 const originalNameFromOriginalSpecFile = kernelSpec.metadata?.vscode?.originalSpecFile
-                    ? path.basename(path.dirname(kernelSpec.metadata?.vscode?.originalSpecFile))
+                    ? path.basename(path.dirname(kernelSpec.metadata.vscode.originalSpecFile))
                     : undefined;
 
                 name = originalNameFromOriginalSpecFile || kernelSpec.name;
@@ -757,7 +753,7 @@ export function updateNotebookMetadata(
         // since name might be python3 in both scenarios and they might have the same python version so the
         // check above with language info would not see them as changed.
         const interpreter = getInterpreterFromKernelConnectionMetadata(kernelConnection);
-        const interpreterHash = interpreter?.uri ? getInterpreterHash({ uri: interpreter?.uri }) : undefined;
+        const interpreterHash = interpreter?.uri ? await getInterpreterHash({ uri: interpreter?.uri }) : undefined;
         const metadataInterpreter: undefined | { hash?: string } =
             'interpreter' in metadata // In the past we'd store interpreter.hash directly under metadata, but now we store it under metadata.vscode.
                 ? (metadata.interpreter as undefined | { hash?: string })
@@ -782,7 +778,7 @@ export function updateNotebookMetadata(
                 // then in ours they cannot go back to jupyter as `python<hash>` is not necessarily a valid kernel in jupter.
                 metadata.vscode = {
                     interpreter: {
-                        hash: getInterpreterHash(kernelConnection.interpreter)
+                        hash: await getInterpreterHash(kernelConnection.interpreter)
                     }
                 };
                 if ('interpreter' in metadata) {
@@ -792,7 +788,7 @@ export function updateNotebookMetadata(
         }
     } else if (kernelSpecOrModel && !metadata.kernelspec) {
         const originalNameFromOriginalSpecFile = kernelSpecOrModel.metadata?.vscode?.originalSpecFile
-            ? path.basename(path.dirname(kernelSpecOrModel.metadata?.vscode?.originalSpecFile))
+            ? path.basename(path.dirname(kernelSpecOrModel.metadata.vscode.originalSpecFile))
             : undefined;
         // Add a new spec in this case
         metadata.kernelspec = {
@@ -810,7 +806,7 @@ export function updateNotebookMetadata(
         changed = true;
     } else if (kernelSpecOrModel && metadata.kernelspec) {
         const originalNameFromOriginalSpecFile = kernelSpecOrModel.metadata?.vscode?.originalSpecFile
-            ? path.basename(path.dirname(kernelSpecOrModel.metadata?.vscode?.originalSpecFile))
+            ? path.basename(path.dirname(kernelSpecOrModel.metadata.vscode.originalSpecFile))
             : undefined;
         // Spec exists, just update name and display_name
         const name = originalNameFromOriginalSpecFile || kernelSpecOrModel.name || kernelSpecOrModel.display_name || '';
@@ -845,7 +841,7 @@ export function updateNotebookMetadata(
 
 export async function endCellAndDisplayErrorsInCell(
     cell: NotebookCell,
-    controller: NotebookController,
+    controller: IKernelController,
     errorMessage: string,
     isCancelled: boolean
 ) {

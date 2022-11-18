@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
-
 import { Uri } from 'vscode';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
@@ -12,12 +9,12 @@ import { traceError, traceInfoIfCI, traceWarning } from '../../../../platform/lo
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { IKernel, isLocalConnection } from '../../../../kernels/types';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
-import * as stripComments from 'strip-comments';
+import stripComments from 'strip-comments';
 import { IIPyWidgetScriptManager } from '../types';
 import { StopWatch } from '../../../../platform/common/utils/stopWatch';
 import { isCI } from '../../../../platform/common/constants';
 
-export function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderName: string, contents: string) {
+export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderName: string, contents: string) {
     // Look for `require.config(` or `window["require"].config` or `window['requirejs'].config`
     const patternsToLookFor = [
         'require.config({',
@@ -31,7 +28,7 @@ export function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderNa
         '["requirejs"]["config"]({',
         "['requirejs']['config']({"
     ];
-    const widgetFolderNameHash = getTelemetrySafeHashedString(widgetFolderName);
+    const widgetFolderNameHash = await getTelemetrySafeHashedString(widgetFolderName);
     let indexOfRequireConfig = 0;
     let patternUsedToRegisterRequireConfig: string | undefined;
     while (indexOfRequireConfig <= 0 && patternsToLookFor.length) {
@@ -106,11 +103,14 @@ export function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderNa
         });
         return;
     }
-    sendTelemetryEvent(Telemetry.IPyWidgetExtensionJsInfo, undefined, {
-        widgetFolderNameHash,
-        patternUsedToRegisterRequireConfig,
-        requireEntryPointCount: Object.keys(requireConfig).length
-    });
+    sendTelemetryEvent(
+        Telemetry.IPyWidgetExtensionJsInfo,
+        { requireEntryPointCount: Object.keys(requireConfig).length },
+        {
+            widgetFolderNameHash,
+            patternUsedToRegisterRequireConfig
+        }
+    );
 
     return requireConfig;
 }
@@ -198,9 +198,13 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
                 )}`
             );
         }
-        sendTelemetryEvent(Telemetry.DiscoverIPyWidgetNamesPerf, stopWatch.elapsedTime, {
-            type: isLocalConnection(this.kernel.kernelConnectionMetadata) ? 'local' : 'remote'
-        });
+        sendTelemetryEvent(
+            Telemetry.DiscoverIPyWidgetNamesPerf,
+            { duration: stopWatch.elapsedTime },
+            {
+                type: isLocalConnection(this.kernel.kernelConnectionMetadata) ? 'local' : 'remote'
+            }
+        );
         return config && Object.keys(config).length ? config : undefined;
     }
 }

@@ -5,7 +5,7 @@
 
 /* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
-import * as assert from 'assert';
+import assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from '../platform/vscode-path/path';
 import * as tmp from 'tmp';
@@ -18,7 +18,7 @@ import {
     IS_REMOTE_NATIVE_TEST,
     IS_SMOKE_TEST
 } from './constants.node';
-import { noop } from './core';
+import { noop, sleep } from './core';
 import { isCI } from '../platform/common/constants';
 import { IWorkspaceService } from '../platform/common/application/types';
 import { generateScreenShotFileName, initializeCommonApi } from './common';
@@ -319,7 +319,12 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
     if (!isCI) {
         return;
     }
-    const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, generateScreenShotFileName(contextOrFileName));
+    fs.ensureDirSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'logs'));
+    const filename = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'logs',
+        await generateScreenShotFileName(contextOrFileName)
+    );
     try {
         const screenshot = require('screenshot-desktop');
         await screenshot({ filename });
@@ -351,7 +356,15 @@ export function initializeCommonNodeApi() {
                     ? await JupyterServer.instance.startJupyterWithCert()
                     : await JupyterServer.instance.startJupyterWithToken();
                 console.info(`Jupyter started and listening at ${uriString}`);
-                return commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
+                try {
+                    await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
+                } catch (ex) {
+                    console.error('Failed to select jupyter server, retry in 1s', ex);
+                }
+                // Todo: Fix in debt week, we need to retry, some changes have caused the first connection attempt to fail on CI.
+                // Possible we're trying to connect before the server is ready.
+                await sleep(5_000);
+                await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
             } else {
                 console.info(`Jupyter not started and set to local`); // This is the default
             }

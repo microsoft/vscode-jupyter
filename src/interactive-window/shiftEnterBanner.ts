@@ -10,7 +10,7 @@ import { Telemetry } from '../platform/common/constants';
 import '../platform/common/extensions';
 import { IJupyterExtensionBanner, IPersistentStateFactory, IConfigurationService } from '../platform/common/types';
 import * as localize from '../platform/common/utils/localize';
-import { sendTelemetryEvent, captureTelemetry } from '../telemetry';
+import { sendTelemetryEvent, captureUsageTelemetry } from '../telemetry';
 
 export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';
 
@@ -92,7 +92,7 @@ export class InteractiveShiftEnterBanner implements IJupyterExtensionBanner {
         );
     }
 
-    @captureTelemetry(Telemetry.DisableInteractiveShiftEnter)
+    @captureUsageTelemetry(Telemetry.DisableInteractiveShiftEnter)
     public async disableInteractiveShiftEnter(): Promise<void> {
         await this.configuration.updateSetting(
             'sendSelectionToInteractiveWindow',
@@ -103,7 +103,7 @@ export class InteractiveShiftEnterBanner implements IJupyterExtensionBanner {
         await this.disableBanner();
     }
 
-    @captureTelemetry(Telemetry.EnableInteractiveShiftEnter)
+    @captureUsageTelemetry(Telemetry.EnableInteractiveShiftEnter)
     public async enableInteractiveShiftEnter(): Promise<void> {
         await this.configuration.updateSetting(
             'sendSelectionToInteractiveWindow',

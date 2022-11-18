@@ -22,7 +22,7 @@ import { JupyterConnectionWaiter } from '../../../kernels/jupyter/launcher/jupyt
 import { JupyterServerInfo } from '../../../kernels/jupyter/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('DataScience - JupyterConnection', () => {
+suite('JupyterConnection', () => {
     let observableOutput: Subject<Output<string>>;
     let launchResult: ObservableExecutionResult<string>;
     let getServerInfoStub: sinon.SinonStub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>;

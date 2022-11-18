@@ -6,12 +6,12 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionContext, IHttpClient } from '../types';
-import { getHashString } from './fileUtils';
 import { IFileSystem, TemporaryFileUri } from './types';
 import * as uriPath from '../../vscode-path/resources';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { isFileNotFoundError } from './errors';
 import { traceError } from '../../logging';
+import { computeHash } from '../crypto';
 
 export const ENCODING = 'utf8';
 
@@ -125,6 +125,6 @@ export class FileSystem implements IFileSystem {
         // The reason for lstat rather than stat is not clear...
         const stat = await this.stat(filename);
         const data = `${stat.ctime}-${stat.mtime}`;
-        return getHashString(data);
+        return computeHash(data, 'SHA-512');
     }
 }

@@ -30,6 +30,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['workbench.action.showCommands']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];
+    ['workbench.action.debug.restart']: [];
     ['workbench.action.debug.stop']: [];
     ['workbench.action.reloadWindow']: [];
     ['workbench.action.closeActiveEditor']: [];
@@ -58,7 +59,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.OpenVariableView]: [];
     [DSCommands.OpenOutlineView]: [];
     [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri } }];
-    [DSCommands.InteractiveRemoveCell]: [NotebookCell];
     [DSCommands.InteractiveGoToCode]: [NotebookCell];
     [DSCommands.InteractiveCopyCell]: [NotebookCell];
     [DSCommands.InteractiveExportAsNotebook]: [{ notebookEditor: { notebookUri: Uri } }];
@@ -138,7 +138,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['notebook.cell.expandCellInput']: [
         { ranges: { start: number; end: number }[]; document?: Uri; autoReveal?: boolean }
     ];
-    [DSCommands.NotebookEditorInterruptKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined | Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];
@@ -195,16 +194,12 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
         NotebookDocument | undefined
     ];
     [DSCommands.SelectNativeJupyterUriFromToolBar]: [];
-    [DSCommands.DebugNotebook]: [];
     [DSCommands.RunByLine]: [NotebookCell];
     [DSCommands.RunAndDebugCell]: [NotebookCell];
     [DSCommands.RunByLineNext]: [NotebookCell];
-    [DSCommands.RunByLineStop]: [];
+    [DSCommands.RunByLineStop]: [NotebookCell];
     [DSCommands.ReplayPylanceLog]: [Uri];
     [DSCommands.ReplayPylanceLogStep]: [];
     [DSCommands.InstallPythonExtensionViaKernelPicker]: [];
     [DSCommands.InstallPythonViaKernelPicker]: [];
-    [DSCommands.SwitchToLocalKernels]: [];
-    [DSCommands.SwitchToRemoteKernels]: [];
-    [DSCommands.SwitchToAnotherRemoteKernels]: [];
 }

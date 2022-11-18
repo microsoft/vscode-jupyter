@@ -12,6 +12,7 @@ import { activateExtension, initializePython } from '../initialize.node';
 import { PerformanceTracker } from './performanceTracker';
 
 suite('Initial Notebook Cell Execution Perf Test', function () {
+    this.timeout(120_000);
     let tracker: PerformanceTracker;
     setup(function () {
         sinon.restore();
@@ -24,7 +25,8 @@ suite('Initial Notebook Cell Execution Perf Test', function () {
             await captureScreenShot(this);
         }
     });
-    test('Initial Notebook Cell Execution Perf Test', async function () {
+    test.skip('Initial Notebook Cell Execution Perf Test', async function () {
+        // See https://github.com/microsoft/vscode-jupyter/issues/11303
         const disposables: IDisposable[] = [];
         sinon.restore();
         await initializePython();

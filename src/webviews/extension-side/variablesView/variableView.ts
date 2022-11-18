@@ -5,7 +5,7 @@
 import '../../../platform/common/extensions';
 import { Uri, WebviewView as vscodeWebviewView } from 'vscode';
 import { joinPath } from '../../../platform/vscode-path/resources';
-import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
 import { InteractiveWindowMessages, IShowDataViewer } from '../../../messageTypes';
@@ -70,7 +70,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         );
 
         // Sign up if the active variable view notebook is changed, restarted or updated
-        this.notebookWatcher.onDidExecuteActiveNotebook(this.activeNotebookExecuted, this, this.disposables);
+        this.notebookWatcher.onDidFinishExecutingActiveNotebook(this.activeNotebookExecuted, this, this.disposables);
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
         this.variables.refreshRequired(this.sendRefreshMessage, this, this.disposables);
@@ -79,7 +79,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
 
-    @captureTelemetry(Telemetry.NativeVariableViewLoaded)
+    @capturePerfTelemetry(Telemetry.NativeVariableViewLoaded)
     public async load(codeWebview: vscodeWebviewView) {
         await super.loadWebview(Uri.file(process.cwd()), codeWebview).catch(traceError);
 
@@ -184,7 +184,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             const response = await this.variables.getVariables(args, activeNotebook);
 
             this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
-            sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, {
+            sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, {
                 variableCount: response.totalCount
             });
         } else {

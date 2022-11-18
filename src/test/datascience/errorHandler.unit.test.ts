@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 'use strict';
-import * as dedent from 'dedent';
+import dedent from 'dedent';
 import { assert } from 'chai';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
@@ -16,8 +16,9 @@ import {
     IKernelDependencyService,
     KernelConnectionMetadata,
     KernelInterpreterDependencyResponse,
+    PythonKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
-} from '../../platform/../kernels/types';
+} from '../../kernels/types';
 import { PythonEnvironment, EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { DataScienceErrorHandler } from '../../kernels/errors/kernelErrorHandler';
@@ -28,6 +29,7 @@ import { KernelDiedError } from '../../kernels/errors/kernelDiedError';
 import {
     IJupyterInterpreterDependencyManager,
     IJupyterServerUriStorage,
+    IJupyterUriProviderRegistration,
     JupyterInterpreterDependencyResponse
 } from '../../kernels/jupyter/types';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
@@ -39,7 +41,7 @@ import { RemoteJupyterServerUriProviderError } from '../../kernels/errors/remote
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { DataScienceErrorHandlerNode } from '../../kernels/errors/kernelErrorHandler.node';
 
-suite('DataScience Error Handler Unit Tests', () => {
+suite('Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
     let dataScienceErrorHandler: DataScienceErrorHandler;
     let dependencyManager: IJupyterInterpreterDependencyManager;
@@ -49,12 +51,14 @@ suite('DataScience Error Handler Unit Tests', () => {
     let jupyterInterpreterService: JupyterInterpreterService;
     let kernelDependencyInstaller: IKernelDependencyService;
     let uriStorage: IJupyterServerUriStorage;
+    let jupyterUriProviderRegistration: IJupyterUriProviderRegistration;
     let cmdManager: ICommandManager;
     let extensions: IExtensions;
     let reservedPythonNames: IReservedPythonNamedProvider;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
         uri: Uri.file('Some Path'),
+        id: Uri.file('Some Path').fsPath,
         sysPrefix: ''
     };
 
@@ -67,6 +71,7 @@ suite('DataScience Error Handler Unit Tests', () => {
         uriStorage = mock<IJupyterServerUriStorage>();
         cmdManager = mock<ICommandManager>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
+        jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         extensions = mock<IExtensions>();
         extensions = mock<IExtensions>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
@@ -87,6 +92,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(cmdManager),
             false,
             instance(extensions),
+            instance(jupyterUriProviderRegistration),
             instance(reservedPythonNames)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
@@ -142,11 +148,11 @@ suite('DataScience Error Handler Unit Tests', () => {
             when(applicationShell.showErrorMessage(anything(), Common.learnMore())).thenResolve(
                 Common.learnMore() as any
             );
-            kernelConnection = {
+            kernelConnection = PythonKernelConnectionMetadata.create({
                 id: '',
-                kind: 'startUsingPythonInterpreter',
                 interpreter: {
                     uri: Uri.file('Hello There'),
+                    id: Uri.file('Hello There').fsPath,
                     sysPrefix: 'Something else',
                     displayName: 'Hello (Some Path)'
                 },
@@ -156,7 +162,7 @@ suite('DataScience Error Handler Unit Tests', () => {
                     name: '',
                     executable: ''
                 }
-            };
+            });
         });
         const stdErrorMessages = {
             userOverridingRandomPyFile_Unix: dedent`
@@ -778,7 +784,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             const uri = 'http://hello:1234/jupyter';
             const serverId = await computeServerId(uri);
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
-            const connection: RemoteKernelSpecConnectionMetadata = {
+            const connection = RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'http://hello:1234/',
                 id: '1',
                 kernelSpec: {
@@ -787,9 +793,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                kind: 'startUsingRemoteKernelSpec',
                 serverId
-            };
+            });
             when(uriStorage.getSavedUriList()).thenResolve([]);
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
@@ -819,7 +824,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             const uri = generateUriFromRemoteProvider('1', 'a');
             const serverId = await computeServerId(uri);
             const error = new RemoteJupyterServerUriProviderError('1', 'a', new Error('invalid handle'), serverId);
-            const connection: RemoteKernelSpecConnectionMetadata = {
+            const connection = RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'http://hello:1234/',
                 id: '1',
                 kernelSpec: {
@@ -828,9 +833,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                kind: 'startUsingRemoteKernelSpec',
                 serverId
-            };
+            });
             when(uriStorage.getSavedUriList()).thenResolve([{ time: 1, uri, serverId, displayName: 'Hello Server' }]);
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
@@ -860,7 +864,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             const uri = 'http://hello:1234/jupyter';
             const serverId = await computeServerId(uri);
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
-            const connection: RemoteKernelSpecConnectionMetadata = {
+            const connection = RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'http://hello:1234/',
                 id: '1',
                 kernelSpec: {
@@ -869,9 +873,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: '' // Send nothing for argv[0]
                 },
-                kind: 'startUsingRemoteKernelSpec',
                 serverId
-            };
+            });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve(DataScience.removeRemoteJupyterConnectionButtonText() as any);
@@ -896,7 +899,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             const uri = 'http://hello:1234/jupyter';
             const serverId = await computeServerId(uri);
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
-            const connection: RemoteKernelSpecConnectionMetadata = {
+            const connection = RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'http://hello:1234/',
                 id: '1',
                 kernelSpec: {
@@ -905,9 +908,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                kind: 'startUsingRemoteKernelSpec',
                 serverId
-            };
+            });
             when(uriStorage.getSavedUriList()).thenResolve([]);
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
@@ -928,7 +930,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             const uri = 'http://hello:1234/jupyter';
             const serverId = await computeServerId(uri);
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
-            const connection: RemoteKernelSpecConnectionMetadata = {
+            const connection = RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'http://hello:1234/',
                 id: '1',
                 kernelSpec: {
@@ -937,9 +939,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                kind: 'startUsingRemoteKernelSpec',
                 serverId
-            };
+            });
             when(uriStorage.getSavedUriList()).thenResolve([]);
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())

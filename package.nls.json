@@ -35,6 +35,7 @@
     },
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.media.altText": "Image representing our documentation page and mailing list resources.",
     "jupyter.command.dataScience.clearCache.title": "Clear Cache",
+    "jupyter.command.dataScience.clearUserProviderJupyterServerCache.title": "Clear User Jupyter Server Cache",
     "jupyter.command.jupyter.replayPylanceLog.title": "Replay Pylance Log",
     "jupyter.command.jupyter.replayPylanceLogStep.title": "Step Pylance Log",
     "jupyter.command.jupyter.exportAsPythonScript.title": "Export to Python Script",
@@ -102,14 +103,17 @@
         "message": "Choose the kernels that are available in the kernel picker.",
         "comment": ["{Locked='kernel'}"]
     },
-    "jupyter.kernel.category.jupyterSession": "(Remote) Jupyter Session",
+    "jupyter.kernel.category.jupyterSession": "({0}) Jupyter Session",
     "jupyter.kernel.category.jupyterKernel": {
         "message": "Jupyter Kernel",
         "comment": ["{Locked='Kernel'}"]
     },
     "jupyter.kernel.category.jupyterRemoteKernel": {
-        "message": "(Remote) Jupyter Kernel",
+        "message": "({0}) Jupyter Kernel",
         "comment": ["{Locked='Kernel'}"]
+    },
+    "DataScience.kernelDefaultRemoteDisplayName": {
+        "message": "Remote"
     },
     "jupyter.kernel.category.conda": "Conda Env",
     "jupyter.kernel.category.poetry": {
@@ -120,6 +124,8 @@
     "jupyter.kernel.category.pyenv": "PyEnv Env",
     "jupyter.kernel.category.global": "Global Env",
     "jupyter.kernel.category.virtual": "Virtual Env",
+    "jupyter.kernel.recommended": "Recommended",
+    "jupyter.kernel.createPythonEnvironment": "Create Python Environment",
     "jupyter.command.jupyter.viewLanguageServerOutput.title": "Show Language Server Output",
     "jupyter.command.jupyter.selectAndRunTestMethod.title": "Run Test Method ...",
     "jupyter.command.jupyter.selectAndDebugTestMethod.title": "Debug Test Method ...",
@@ -186,7 +192,7 @@
         "message": "Import Jupyter Notebook",
         "comment": ["{Locked='Notebook'}"]
     },
-    "jupyter.command.jupyter.importnotebookfile.title": "Convert to Python Script",
+    "jupyter.command.jupyter.importnotebookfile.title": "Import Notebook to Script",
     "jupyter.command.jupyter.exportoutputasnotebook.title": {
         "message": "Export Interactive Window as Jupyter Notebook",
         "comment": ["{Locked='Notebook'}"]
@@ -342,6 +348,13 @@
         "message": "Behavior of the Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
         "comment": ["{Locked='perFile'}", "{Locked=\"'single'\"}", "{Locked=\"'multiple'\"}"]
     },
+    "jupyter.configuration.jupyter.pythonCellFolding.description": {
+        "message": "Enable folding regions for code cells in Python files. This setting requires a reload of VS Code."
+    },
+    "jupyter.configuration.jupyter.interactiveWindowViewColumn.description": {
+        "message": "Where to open an Interactive Window that is not associated with a python file. 'beside' will open the interactive window to the right of the active editor. 'active' will open the interactive window in place of the active editor. 'secondGroup' will open the interactive window in the second editor group.",
+        "comment": ["{Locked='beside'}", "{Locked=\"'active'\"}", "{Locked=\"'secondGroup'\"}"]
+    },
     "jupyter.configuration.jupyter.magicCommandsAsComments.description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
     "jupyter.configuration.jupyter.pythonExportMethod.description": {
         "message": "The method to use when exporting a notebook to a Python file. 'direct' will copy over the code directly as is. 'commentMagics' will comment out lines starting with line magics (%), cell magics (%%), and shell commands(!). 'nbconvert' will install nbconvert and use that for the conversion which can translate iPython syntax into Python syntax.",
@@ -351,10 +364,9 @@
         "message": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
         "comment": ["{Locked='%load_ext autoreload\\n%autoreload 2'}"]
     },
-    "jupyter.configuration.jupyter.debugJustMyCode.description": "When debugging, debug just my code.",
+    "jupyter.configuration.jupyter.debugJustMyCode.description": "When debugging, only step through user-written code. Disable this to allow stepping into library code.",
     "jupyter.configuration.jupyter.showOutlineButtonInNotebookToolbar.description": "Show the Outline button in the Jupyter notebook toolbar.",
     "jupyter.configuration.jupyter.newCellOnRunLast.description": "Append a new empty cell to an interactive window file on running the currently last cell.",
-    "jupyter.configuration.jupyter.pylanceHandlesNotebooks.description": "Determines if Pylance manages notebook concat doc creation.",
     "jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.description": "Characters which trigger auto completion on a python jupyter kernel.",
     "jupyter.configuration.jupyter.logKernelOutputSeparately.description": "Creates separate output panels for kernels/jupyter server console output",
     "jupyter.configuration.jupyter.excludeUserSitePackages.description": {
@@ -362,7 +374,11 @@
         "comment": ["{Locked='PYTHONNOUSERSITE'}", "{Locked='PYTHONPATH'}"]
     },
     "jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription": "Enables Jedi support for extended IntelliSense completions in running Jupyter kernels (see this [setting](https://ipython.readthedocs.io/en/stable/config/options/terminal.html?highlight=use_jedi#configtrait-Completer.use_jedi)). This can greatly impact notebook cell execution performance. Use with caution.",
-    "jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.markdownDescription": "Show only one type of kernel in the kernel picker. This prevents local kernels and remote kernels from being shown at the same time in the kernel picker.",
+    "jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.markdownDescription": "Show only one type of kernel in the kernel picker. This prevents local kernels and remote kernels from being shown at the same time in the kernel picker. Takes precedence over kernelPickerType if specified.",
+    "jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.deprecationMessage": "This setting has been deprecated in favor of experimental.kernelPickerType.",
+    "jupyter.configuration.jupyter.experimental.kernelPickerType.description": "Choose the type of kernel picker to use.",
+    "jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.stable": "The current stable kernel picker.",
+    "jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.insiders": "Insiders is the new experimental version in development.",
     "Pylance.proposePylanceMessage": "Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.",
     "Pylance.tryItNow": "Try it now",
     "Pylance.remindMeLater": "Remind me later",
@@ -507,6 +523,8 @@
     "Common.ok": "Ok",
     "Common.install": "Install",
     "Common.learnMore": "Learn more",
+    "Common.refresh": "Refresh",
+    "Common.refreshing": "Refreshing...",
     "Common.reportThisIssue": "Report this issue",
     "CommonSurvey.remindMeLaterLabel": "Remind me later",
     "CommonSurvey.yesLabel": "Yes, take survey now",
@@ -572,7 +590,6 @@
     },
     "DataScience.executingCodeFailure": "Executing code failed : {0}",
     "DataScience.inputWatermark": "Type code here and press shift-enter to run",
-    "DataScience.deleteButtonTooltip": "Remove cell",
     "DataScience.gotoCodeButtonTooltip": "Go to code",
     "DataScience.copyBackToSourceButtonTooltip": "Paste code into file",
     "DataScience.copyToClipboardButtonTooltip": "Copy source to clipboard",
@@ -589,13 +606,15 @@
     "DataScience.jupyterSelectUserAndPasswordTitle": "Enter your user name and password to connect to Jupyter Hub",
     "DataScience.jupyterSelectUserPrompt": "Enter your user name",
     "DataScience.jupyterSelectPasswordPrompt": "Enter your password",
+    "DataScience.jupyterRenameServer": "Change Server Display Name (Leave Blank To Use URI)",
     "DataScience.removeRemoteJupyterServerEntryInQuickPick": "Remove",
     "DataScience.jupyterNotebookFailure": "Jupyter notebook failed to launch. \r\n{0}",
     "DataScience.remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid": "The remote Jupyter Server contributed by the extension '{0}' is no longer available.",
     "DataScience.remoteJupyterConnectionFailedWithServer": "Failed to connect to the remote Jupyter Server '{0}'. Verify the server is running and reachable.",
     "DataScience.remoteJupyterConnectionFailedWithServerWithError": "Failed to connect to the remote Jupyter Server '{0}'. Verify the server is running and reachable. ({1}).",
     "DataScience.remoteJupyterConnectionFailedWithoutServerWithError": "Connection failure. Verify the server is running and reachable. ({0}).",
-    "DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb": "Connection failure. Verify the server is running and reachable from a browser. ({0}). See 'https://aka.ms/vscjremoteweb' for more information.",
+    "DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb": "Connection failure. Verify the server is running and reachable from a browser. ({0}). When connecting from vscode.dev Jupyter servers must be started with specific options to connect. See [here](https://aka.ms/vscjremoteweb) for more information.",
+    "DataScience.remoteJupyterConnectionFailedWebExtension": "When connecting from vscode.dev Jupyter servers must be started with specific options to connect. See [here](https://aka.ms/vscjremoteweb) for more information.",
     "DataScience.jupyterNotebookRemoteConnectFailedWeb": "Failed to connect to remote Jupyter server.\r\nCheck that the Jupyter Server URI can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.",
     "DataScience.jupyterNotebookRemoteConnectSelfCertsFailed": "Failed to connect to remote Jupyter notebook.\r\nSpecified server is using self signed certs. Enable Allow Unauthorized Remote Connection setting to connect anyways\r\n{0}\r\n{1}",
     "DataScience.changeJupyterRemoteConnection": "Change Jupyter Server connection.",
@@ -835,6 +854,8 @@
         "message": "Failed to interrupt the Kernel.",
         "comment": ["{Locked='Kernel'}"]
     },
+    "DataScience.failedToStartAnUntrustedKernelSpec": "The kernel '{0}' was not started as it is located in an insecure location '{1}'.  \nClick [here](https://aka.ms/JupyterTrustedKernelPaths) for further details, optionally update the setting [jupyter.kernels.trusted](command:workbench.action.openSettings?[\"jupyter.kernels.trusted\"]) to trust the kernel.",
+    "jupyter.configuration.jupyter.kernels.trusted.markdownDescription": "Enter fully qualified paths to Kernel specification files that are to be trusted. E.g. 'C:\\Program Data\\Jupyter\\kernels\\python3\\kernel.json'.  \n**Note**: Kernels can execute code with user privileges. Click [here](https://aka.ms/JupyterTrustedKernelPaths) for further details.",
     "DataScience.kernelDied": {
         "message": "The kernel died. View Jupyter [log](command:jupyter.viewOutput) for further details. \nError: {0}...",
         "comment": ["{Locked='command:jupyter.viewOutput'}"]
@@ -967,10 +988,6 @@
         "comment": ["{Locked='kernel'}"]
     },
     "DataScience.qgridWidgetScriptVersionCompatibilityWarning": "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1.",
-    "DataScience.kernelStarted": {
-        "message": "Started kernel {0}",
-        "comment": ["{Locked='kernel'}"]
-    },
     "DataScience.kernelStarting": {
         "message": "_Connecting to kernel..._",
         "comment": ["{Locked='kernel'}"]
@@ -1075,7 +1092,6 @@
     "DataScience.defaultNotebookName": "default",
     "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targeting the language '{1}'",
     "DataScience.interactiveClearAllCells": "Clear All",
-    "DataScience.interactiveRemoveCell": "Remove Cell",
     "DataScience.interactiveGoToCode": "Go to code",
     "DataScience.kernelWasNotStarted": {
         "message": "Kernel was not started. A kernel session is needed to start debugging.",
@@ -1091,10 +1107,6 @@
     "DataScience.exportingToFormat": "Exporting to {0}.",
     "DataScience.matplotlibWidgetInsteadOfOther": "'%matplotlib widget' or '%matplotlib inline' works best in VS Code notebooks.",
     "DataScience.matplotlibWidgetCodeActionTitle": "More information",
-    "DataScience.usingNonPrereleaseYes": "Yes",
-    "DataScience.usingNonPrereleaseNo": "No",
-    "DataScience.usingNonPrereleaseNoAndDontAskAgain": "Don't ask again",
-    "DataScience.usingNonPrerelease": "The 'prerelease' version of the Jupyter Extension is recommended when running on VS Code Insiders. Would you like to switch?",
     "DataScience.cellAtFormat": "{0} Cell {1}'",
     "DataScience.jupyterServerConsoleOutputChannel": "Jupyter Server Console",
     "DataScience.kernelConsoleOutputChannel": {
@@ -1111,9 +1123,7 @@
     "DataScience.outputSizeExceedLimit": "Output exceeds the <a href={0}>size limit</a>. Open the full output data <a href={1}>in a text editor</a>",
     "DataScience.installPythonTitle": "Install Python",
     "DataScience.installPythonExtensionViaKernelPickerTitle": "Install Python Extension",
-    "DataScience.switchToLocalKernelsTitle": "Connect to Local Kernels",
-    "DataScience.switchToRemoteKernelsTitle": "Connect to a Jupyter Server",
-    "DataScience.switchToAnotherRemoteKernelsTitle": "Connect to Another Jupyter Server",
+    "DataScience.pickDocumentKernelSourceTitle": "Select Another Jupyter Kernel...",
     "DataScience.failedToInstallPythonExtension": "Failed to install the Python Extension.",
     "DataScience.kernelPrefixForRemote": "(Remote)",
     "DataScience.pythonFileOverridesPythonPackage": "This file could potentially override an existing Python package and interfere with kernel execution, consider renaming it.",
@@ -1124,5 +1134,17 @@
     "DataScience.filesPossiblyOverridingPythonModulesMayHavePreventedKernelFromStarting": "Some of the following files found in the working directory may have prevented the Kernel from starting. Consider renaming them.",
     "DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed": "File(s): {0} might need to be renamed.",
     "jupyter.configuration.jupyter.diagnostics.reservedPythonNames.enabled.markdownDescription": "Whether to show warnings about Python file names that could potentially [override Python packages](https://aka.ms/JupyterKernelStartFailureOverrideReservedName).",
-    "jupyter.configuration.jupyter.diagnostics.reservedPythonNames.exclude.markdownDescription": "Configure [glob patterns](https://code.visualstudio.com/docs/editor/codebasics#_advanced-search-options) for excluding files and folders from from being warned about [overriding Python packages](https://aka.ms/JupyterKernelStartFailureOverrideReservedName)."
+    "jupyter.configuration.jupyter.diagnostics.reservedPythonNames.exclude.markdownDescription": "Configure [glob patterns](https://code.visualstudio.com/docs/editor/codebasics#_advanced-search-options) for excluding files and folders from from being warned about [overriding Python packages](https://aka.ms/JupyterKernelStartFailureOverrideReservedName).",
+    "DataScience.localKernelFinderDisplayName": "Local Kernels",
+    "DataScience.localKernelSpecs": "Local Kernel Specs",
+    "DataScience.pickLocalKernelSpecTitle": "Select a Local Kernel spec",
+    "DataScience.localPythonEnvironments": "Local Python Environments",
+    "DataScience.pickLocalKernelPythonEnvTitle": "Select a Local Python Environment",
+    "DataScience.universalRemoteKernelFinderDisplayName": "Remote - {0}",
+    "DataScience.remoteKernelFinderDisplayName": "Current Remote",
+    "DataScience.kernelPickerSelectSourceTitle": "Select Another Jupyter Kernel...",
+    "DataScience.kernelPickerSelectKernelTitle": "Select Kernel",
+    "DataScience.UserJupyterServerUrlProviderDisplayName": "Existing Jupyter Server",
+    "DataScience.UserJupyterServerUrlProviderDetail": "Connect to an existing Jupyter Server",
+    "DataScience.UserJupyterServerUrlAlreadyExistError": "A Jupyter Server with the same URL already exists."
 }

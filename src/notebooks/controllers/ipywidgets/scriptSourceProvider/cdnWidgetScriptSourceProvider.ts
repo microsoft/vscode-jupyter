@@ -3,11 +3,18 @@
 
 'use strict';
 
+import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Memento } from 'vscode';
 import { IApplicationShell } from '../../../../platform/common/application/types';
 import { Telemetry } from '../../../../platform/common/constants';
-import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../../../platform/common/types';
-import { createDeferred, Deferred } from '../../../../platform/common/utils/async';
+import {
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    IHttpClient,
+    IMemento,
+    WidgetCDNs
+} from '../../../../platform/common/types';
+import { createDeferred, createDeferredFromPromise, Deferred } from '../../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { noop } from '../../../../platform/common/utils/misc';
 import { traceError, traceInfo, traceVerbose } from '../../../../platform/logging';
@@ -67,8 +74,10 @@ function getCDNPrefix(cdn?: WidgetCDNs): string | undefined {
  * Given an widget module name & version, this will attempt to find the Url on a CDN.
  * We'll need to stick to the order of preference prescribed by the user.
  */
+@injectable()
 export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
     private cache = new Map<string, Promise<WidgetScriptSource>>();
+    private isOnCDNCache = new Map<string, Promise<boolean>>();
     private readonly notifiedUserAboutWidgetScriptNotFound = new Set<string>();
     private get cdnProviders(): readonly WidgetCDNs[] {
         const settings = this.configurationSettings.getSettings(undefined);
@@ -76,13 +85,45 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     }
     private configurationPromise?: Deferred<void>;
     constructor(
-        private readonly appShell: IApplicationShell,
-        private readonly globalMemento: Memento,
-        private readonly configurationSettings: IConfigurationService,
-        private readonly httpClient: IHttpClient
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService,
+        @inject(IHttpClient) private readonly httpClient: IHttpClient
     ) {}
     public dispose() {
         this.cache.clear();
+    }
+    /**
+     * Whether the module is available on the CDN.
+     */
+    public async isOnCDN(moduleName: string): Promise<boolean> {
+        const key = `MODULE_VERSION_ON_CDN_${moduleName}`;
+        if (this.isOnCDNCache.has(key)) {
+            return this.isOnCDNCache.get(key)!;
+        }
+        if (this.globalMemento.get<boolean>(key, false)) {
+            return true;
+        }
+        const promise = (async () => {
+            const unpkgPromise = createDeferredFromPromise(this.httpClient.exists(`${unpgkUrl}${moduleName}`));
+            const jsDeliverPromise = createDeferredFromPromise(this.httpClient.exists(`${jsdelivrUrl}${moduleName}`));
+            await Promise.race([unpkgPromise.promise, jsDeliverPromise.promise]);
+            if (unpkgPromise.value || jsDeliverPromise.value) {
+                return true;
+            }
+            await Promise.all([unpkgPromise.promise, jsDeliverPromise.promise]);
+            return unpkgPromise.value || jsDeliverPromise.value ? true : false;
+        })();
+        // Keep this in cache.
+        promise
+            .then((exists) => {
+                if (exists) {
+                    return this.globalMemento.update(key, true);
+                }
+            })
+            .then(noop, noop);
+        this.isOnCDNCache.set(key, promise);
+        return promise;
     }
     public async getWidgetScriptSource(
         moduleName: string,

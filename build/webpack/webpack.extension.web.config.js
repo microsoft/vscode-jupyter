@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 'use strict';
 
@@ -7,6 +7,7 @@ const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const webpack = require('webpack');
 const constants = require('../constants');
 const CleanTerminalPlugin = require('clean-terminal-webpack-plugin');
+const common = require('./common');
 
 const devEntry = {
     extension: './src/extension.web.ts'
@@ -89,6 +90,7 @@ const config = {
     },
     externals: ['vscode', 'commonjs', 'electron'], // Don't bundle these
     plugins: [
+        ...common.getDefaultPlugins('web'),
         // Work around for Buffer is undefined:
         new webpack.ProvidePlugin({
             Buffer: ['buffer', 'Buffer']
@@ -101,7 +103,15 @@ const config = {
             BROWSER: JSON.stringify(true),
             process: {
                 platform: JSON.stringify('web')
-            }
+            },
+            IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: JSON.stringify(
+                typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
+                    ? process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION
+                    : 'true'
+            ),
+            VSC_JUPYTER_CI_TEST_GREP: JSON.stringify(
+                typeof process.env.VSC_JUPYTER_CI_TEST_GREP === 'string' ? process.env.VSC_JUPYTER_CI_TEST_GREP : ''
+            )
         }),
         new CleanTerminalPlugin(),
         new webpack.IgnorePlugin({
@@ -131,6 +141,7 @@ const config = {
             stream: require.resolve('stream-browserify'),
             os: require.resolve('os-browserify'),
             path: require.resolve('path-browserify'),
+            crypto: require.resolve(path.join(constants.ExtensionRootDir, 'src/platform/msrCrypto/msrCrypto.js')),
             fs: false
         }
     },

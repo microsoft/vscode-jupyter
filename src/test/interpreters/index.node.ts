@@ -54,6 +54,7 @@ export async function getInterpreterInfo(pythonPath: Uri | undefined): Promise<P
             const json: PythonEnvInfo = JSON.parse(result.stdout.trim());
             const rawVersion = `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}`;
             return {
+                id: json.exe,
                 uri: Uri.file(json.exe),
                 displayName: `Python${rawVersion}`,
                 version: parsePythonVersion(rawVersion),
@@ -89,7 +90,7 @@ export async function getActivatedEnvVariables(pythonPath: Uri): Promise<NodeJS.
             shell: defaultShell
         });
         if (result.stderr && result.stderr.length) {
-            traceError(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
+            traceError(`Failed to get env vars for shell ${defaultShell} with ${argv} stderr: ${result.stderr}`);
             return;
         }
         try {
@@ -98,7 +99,7 @@ export async function getActivatedEnvVariables(pythonPath: Uri): Promise<NodeJS.
             const output = result.stdout;
             return JSON.parse(output.substring(output.indexOf(separator) + separator.length).trim());
         } catch (ex) {
-            traceError(`Failed to parse interpreter information for ${argv}`, ex);
+            traceError(`Failed to get env vars for shell ${defaultShell} with ${argv}`, ex);
         }
     })();
     envVariables.set(key, promise);

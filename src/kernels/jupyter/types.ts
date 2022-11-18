@@ -24,9 +24,11 @@ import {
     IKernelSocket,
     KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
-    IKernelConnectionSession
+    IKernelConnectionSession,
+    RemoteKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
+import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -209,6 +211,8 @@ export interface IJupyterUriProvider {
      * Should be a unique string (like a guid)
      */
     readonly id: string;
+    readonly displayName?: string;
+    readonly detail?: string;
     onDidChangeHandles?: Event<void>;
     getQuickPickEntryItems?(): QuickPickItem[];
     handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
@@ -220,6 +224,10 @@ export interface IJupyterUriProvider {
      * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
      */
     getHandles?(): Promise<JupyterServerUriHandle[]>;
+    /**
+     * Users request to remove a handle.
+     */
+    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
 }
 
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
@@ -227,20 +235,51 @@ export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegist
 export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
     getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
+    getProvider(id: string): Promise<IJupyterUriProvider | undefined>;
     registerProvider(picker: IJupyterUriProvider): void;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
 
+/**
+ * Entry into our list of saved servers
+ */
+export interface IJupyterServerUriEntry {
+    /**
+     * Uri of the server to connect to
+     */
+    uri: string;
+    /**
+     * Unique ID using a hash of the full uri
+     */
+    serverId: string;
+    /**
+     * The most recent time that we connected to this server
+     */
+    time: number;
+    /**
+     * An optional display name to show for this server as opposed to just the Uri
+     */
+    displayName?: string;
+    /**
+     * Whether the server is validated by its provider or not
+     */
+    isValidated?: boolean;
+}
+
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
+    isLocalLaunch: boolean;
+    onDidChangeConnectionType: Event<void>;
     readonly currentServerId: string | undefined;
     readonly onDidChangeUri: Event<void>;
-    readonly onDidRemoveUris: Event<string[]>;
+    readonly onDidRemoveUris: Event<IJupyterServerUriEntry[]>;
+    readonly onDidAddUri: Event<IJupyterServerUriEntry>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
-    getSavedUriList(): Promise<{ uri: string; serverId: string; time: number; displayName?: string }[]>;
+    getSavedUriList(): Promise<IJupyterServerUriEntry[]>;
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
-    getRemoteUri(): Promise<string | undefined>;
+    getRemoteUri(): Promise<IJupyterServerUriEntry | undefined>;
+    getUriForServer(id: string): Promise<IJupyterServerUriEntry | undefined>;
     setUriToLocal(): Promise<void>;
     setUriToRemote(uri: string, displayName: string): Promise<void>;
     setUriToNone(): Promise<void>;
@@ -327,9 +366,7 @@ export interface IJupyterRemoteCachedKernelValidator {
     isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean>;
 }
 
-export const IServerConnectionType = Symbol('IServerConnectionType');
-
-export interface IServerConnectionType {
-    isLocalLaunch: boolean;
-    onDidChange: Event<void>;
+export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {
+    kind: ContributedKernelFinderKind.Remote;
+    serverUri: IJupyterServerUriEntry;
 }

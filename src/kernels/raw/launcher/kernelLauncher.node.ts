@@ -9,12 +9,12 @@ import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
-import { traceInfo, traceWarning } from '../../../platform/logging';
+import { traceDecoratorVerbose, traceInfo, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../platform/common/process/types.node';
@@ -34,8 +34,12 @@ import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { isTestExecution } from '../../../platform/common/constants';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { noop } from '../../../platform/common/utils/misc';
-import { sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
+import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
+import { IPlatformService } from '../../../platform/common/platform/types';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { TraceOptions } from '../../../platform/logging/types';
+import { getResourceType } from '../../../platform/common/utils';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -60,7 +64,8 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
-        @inject(PythonKernelInterruptDaemon) private readonly pythonKernelInterruptDaemon: PythonKernelInterruptDaemon
+        @inject(PythonKernelInterruptDaemon) private readonly pythonKernelInterruptDaemon: PythonKernelInterruptDaemon,
+        @inject(IPlatformService) private readonly platformService: IPlatformService
     ) {}
 
     public static async cleanupStartPort() {
@@ -103,6 +108,7 @@ export class KernelLauncher implements IKernelLauncher {
         }
     }
 
+    @traceDecoratorVerbose('Kernel Launcher. launch', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async launch(
         kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         timeout: number,
@@ -110,18 +116,23 @@ export class KernelLauncher implements IKernelLauncher {
         workingDirectory: string,
         cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
+        const stopWatch = new StopWatch();
         const promise = (async () => {
             this.logIPyKernelPath(resource, kernelConnectionMetadata, cancelToken).catch(noop);
 
             // Should be available now, wait with a timeout
             return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
         })();
-        sendKernelTelemetryWhenDone(
-            resource,
-            Telemetry.KernelLauncherPerf,
-            promise,
-            false /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
-        );
+        promise
+            .then(() =>
+                /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
+                sendTelemetryEvent(
+                    Telemetry.KernelLauncherPerf,
+                    { duration: stopWatch.elapsedTime },
+                    { resourceType: getResourceType(resource) }
+                )
+            )
+            .ignoreErrors();
         return promise;
     }
 
@@ -162,9 +173,10 @@ export class KernelLauncher implements IKernelLauncher {
                 .map((s) => s.trim())
                 .filter((s) => s.length > 0);
             if (outputs.length === 2) {
-                traceInfo(`ipykernel version ${outputs[0]} for ${displayInterpreterPath}`);
                 traceInfo(
-                    `ipykernel location ${getDisplayPathFromLocalFile(outputs[1])} for ${displayInterpreterPath}`
+                    `ipykernel version & path ${outputs[0]}, ${getDisplayPathFromLocalFile(
+                        outputs[1]
+                    )} for ${displayInterpreterPath}`
                 );
             } else {
                 traceInfo(`ipykernel version & path ${output.stdout.trim()} for ${displayInterpreterPath}`);
@@ -213,7 +225,8 @@ export class KernelLauncher implements IKernelLauncher {
             outputChannel,
             jupyterSettings,
             this.jupyterPaths,
-            this.pythonKernelInterruptDaemon
+            this.pythonKernelInterruptDaemon,
+            this.platformService
         );
 
         try {
@@ -222,17 +235,21 @@ export class KernelLauncher implements IKernelLauncher {
                 createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' })
             ]);
         } catch (ex) {
-            kernelProcess.dispose();
+            await kernelProcess.dispose();
             Cancellation.throwIfCanceled(cancelToken);
             throw ex;
         }
 
         const disposable = kernelProcess.exited(
             ({ exitCode, reason }) => {
-                sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-                    exitCode,
-                    exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
-                });
+                sendKernelTelemetryEvent(
+                    resource,
+                    Telemetry.RawKernelSessionKernelProcessExited,
+                    exitCode ? { exitCode } : undefined,
+                    {
+                        exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
+                    }
+                );
                 KernelLauncher._usedPorts.delete(connection.control_port);
                 KernelLauncher._usedPorts.delete(connection.hb_port);
                 KernelLauncher._usedPorts.delete(connection.iopub_port);
@@ -276,10 +293,7 @@ export class KernelLauncher implements IKernelLauncher {
         const startPort = await KernelLauncher.startPortPromise;
 
         // Then get the next set starting at that point
-        const ports = await KernelLauncher.findNextFreePort(startPort);
-        traceInfo(`Kernel launching with ports ${ports.toString()}. Start port is ${startPort}`);
-
-        return ports;
+        return KernelLauncher.findNextFreePort(startPort);
     }
 
     private async getKernelConnection(

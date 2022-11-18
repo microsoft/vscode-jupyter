@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /**
@@ -7,11 +7,11 @@
  * We don't need dom, as the extension does nothing with the dom (dom = HTML entities and the like).
  */
 /* eslint-disable @typescript-eslint/naming-convention */
-interface EventTarget { }
-interface NodeList { }
-interface HTMLCollection { }
-interface XMLHttpRequest { }
-interface Event { }
-interface MessageEvent { }
-interface CloseEvent { }
-interface WebSocket { }
+interface EventTarget {}
+interface NodeList {}
+interface HTMLCollection {}
+interface XMLHttpRequest {}
+interface Event {}
+interface MessageEvent {}
+interface CloseEvent {}
+interface WebSocket {}

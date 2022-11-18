@@ -23,8 +23,9 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
 
     let showNoInstallersMessage: sinon.SinonStub<any>;
     const interpreter: PythonEnvironment = {
-        envType: EnvironmentType.Global,
+        envType: EnvironmentType.Unknown,
         uri: Uri.file('foobar'),
+        id: Uri.file('foobar').fsPath,
         sysPrefix: '0'
     };
     let installChannelManager: InstallationChannelManager;
@@ -93,8 +94,9 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
 suite('InstallationChannelManager - getInstallationChannels()', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     const interpreter: PythonEnvironment = {
-        envType: EnvironmentType.Global,
+        envType: EnvironmentType.Unknown,
         uri: Uri.file('foobar'),
+        id: Uri.file('foobar').fsPath,
         sysPrefix: '0'
     };
 
@@ -163,6 +165,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
         const activeInterpreter = {
             envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: ''
         };
         appShell
@@ -178,6 +181,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
         const activeInterpreter = {
             envType: EnvironmentType.Pipenv,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: ''
         };
         appShell
@@ -218,6 +222,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
                 const activeInterpreter = {
                     envType: interpreterType,
                     uri: Uri.file('foobar'),
+                    id: Uri.file('foobar').fsPath,
                     sysPrefix: ''
                 };
                 const platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -246,6 +251,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
         const activeInterpreter = {
             envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: ''
         };
         const platformService = TypeMoq.Mock.ofType<IPlatformService>();

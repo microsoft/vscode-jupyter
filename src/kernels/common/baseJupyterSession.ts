@@ -40,8 +40,6 @@ import { getResourceType } from '../../platform/common/utils';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 import { isTestExecution } from '../../platform/common/constants';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function suppressShutdownErrors(realKernel: any) {
@@ -82,7 +80,7 @@ export function suppressShutdownErrors(realKernel: any) {
 export class JupyterSessionStartError extends WrappedError {
     constructor(originalException: Error) {
         super(originalException.message, originalException);
-        sendTelemetryEvent(Telemetry.StartSessionFailedJupyter, undefined, undefined, originalException, true);
+        sendTelemetryEvent(Telemetry.StartSessionFailedJupyter, undefined, undefined, originalException);
     }
 }
 
@@ -203,11 +201,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     }
     public async restart(): Promise<void> {
         if (this.session?.isRemoteSession && this.session.kernel) {
-            const stopWatch = new StopWatch();
             await this.session.kernel.restart();
-            sendKernelTelemetryEvent(this.resource, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
-                startTimeOnly: true
-            });
             this.setSession(this.session, true);
             return;
         }
@@ -345,7 +339,9 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 disposables.push(progress);
             }
             try {
-                traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+                traceVerbose(
+                    `Waiting for ${timeout}ms idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`
+                );
 
                 // When our kernel connects and gets a status message it triggers the ready promise
                 const kernelStatus = createDeferred<string>();
@@ -387,7 +383,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                     throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
                 }
 
-                traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+                traceVerbose(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
                 if (typeof result === 'string' && result.toString() == 'idle') {
                     return;
@@ -398,6 +394,9 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 // If we throw an exception, make sure to shutdown the session as it's not usable anymore
                 this.shutdownSession(session, this.statusHandler, isRestartSession).ignoreErrors();
                 throw new JupyterWaitForIdleError(this.kernelConnectionMetadata);
+            } catch (ex) {
+                traceInfoIfCI(`Error waiting for idle`, ex);
+                throw ex;
             } finally {
                 disposeAllDisposables(disposables);
             }
@@ -508,7 +507,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
         this._isDisposed = true;
         if (this.session) {
             try {
-                traceVerbose('Shutdown session - current session');
+                traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
                 await this.shutdownSession(this.session, this.statusHandler, false, shutdownEvenIfRemote);
                 traceVerbose('Shutdown session - get restart session');
                 if (this.restartSessionPromise) {
@@ -577,6 +576,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     }
 
     private onKernelConnectionStatusHandler(_: unknown, kernelConnection: Kernel.ConnectionStatus) {
+        traceInfoIfCI(`Server Kernel Status = ${kernelConnection}`);
         if (kernelConnection === 'disconnected') {
             const status = this.getServerStatus();
             this.onStatusChangedEvent.fire(status);

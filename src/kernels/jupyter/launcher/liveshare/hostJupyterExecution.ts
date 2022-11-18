@@ -4,7 +4,7 @@
 'use strict';
 import '../../../../platform/common/extensions';
 
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
 import { JupyterExecutionBase } from '../jupyterExecution';

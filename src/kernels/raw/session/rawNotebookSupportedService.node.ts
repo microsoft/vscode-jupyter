@@ -5,7 +5,6 @@
 import { inject, injectable } from 'inversify';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { IRawNotebookSupportedService } from '../types';
 
 // This class check to see if we have everything in place to support a raw kernel launch on the machine
@@ -40,11 +39,9 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
         try {
             require('zeromq');
             traceInfo(`ZMQ install verified.`);
-            sendTelemetryEvent(Telemetry.ZMQSupported);
             this._isSupported = true;
         } catch (e) {
             traceError(`Exception while attempting zmq :`, e);
-            sendTelemetryEvent(Telemetry.ZMQNotSupported);
             this._isSupported = false;
         }
 

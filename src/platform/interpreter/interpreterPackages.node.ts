@@ -12,9 +12,10 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 import { getComparisonKey } from '../vscode-path/resources';
 import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../telemetry/helpers';
 import { IWorkspaceService } from '../common/application/types';
-import { traceError, traceWarning } from '../logging';
+import { traceDecoratorVerbose, traceError, traceWarning } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths.node';
 import { IInterpreterPackages } from './types';
+import { TraceOptions } from '../logging/types';
 
 const interestedPackages = new Set(
     [
@@ -82,7 +83,7 @@ export class InterpreterPackages implements IInterpreterPackages {
             return Promise.resolve(undefined);
         }
         const packages = await this.getPackageVersions(interpreter);
-        const telemetrySafeString = getTelemetrySafeHashedString(packageName.toLocaleLowerCase());
+        const telemetrySafeString = await getTelemetrySafeHashedString(packageName.toLocaleLowerCase());
         if (!packages.has(telemetrySafeString)) {
             return;
         }
@@ -161,7 +162,7 @@ export class InterpreterPackages implements IInterpreterPackages {
             return;
         }
 
-        const promise = this.getPackageInformation(interpreter);
+        const promise = this.getPackageInformation({ interpreter });
         promise.finally(() => {
             // If this promise was resolved, then remove it from the pending list.
             // But cache for at least 5m (this is used only to diagnose failures in kernels).
@@ -175,7 +176,12 @@ export class InterpreterPackages implements IInterpreterPackages {
         });
         this.pendingInterpreterInformation.set(key, promise);
     }
-    private async getPackageInformation(interpreter: PythonEnvironment) {
+
+    @traceDecoratorVerbose(
+        'interpreterPackages getPackageInformation',
+        TraceOptions.BeforeCall | TraceOptions.Arguments
+    )
+    private async getPackageInformation({ interpreter }: { interpreter: PythonEnvironment }) {
         const service = await this.executionFactory.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,
             interpreter
@@ -185,25 +191,29 @@ export class InterpreterPackages implements IInterpreterPackages {
         const output = await service.execModule('pip', ['list'], { throwOnStdErr: false, mergeStdOutErr: true });
         const packageAndVersions = new Map<string, string>();
         // Add defaults.
-        interestedPackages.forEach((item) => {
-            packageAndVersions.set(getTelemetrySafeHashedString(item), notInstalled);
-        });
-        output.stdout
-            .split('\n')
-            .map((line) => line.trim().toLowerCase())
-            .filter((line) => line.length > 0)
-            .forEach((line) => {
-                const parts = line.split(' ').filter((item) => item.trim().length);
-                if (parts.length < 2) {
-                    return;
-                }
-                const [packageName, rawVersion] = parts;
-                if (!interestedPackages.has(packageName.toLowerCase().trim())) {
-                    return;
-                }
-                const version = getTelemetrySafeVersion(rawVersion);
-                packageAndVersions.set(getTelemetrySafeHashedString(packageName), version || '');
-            });
+        await Promise.all(
+            Array.from(interestedPackages).map(async (item) => {
+                packageAndVersions.set(await getTelemetrySafeHashedString(item), notInstalled);
+            })
+        );
+        await Promise.all(
+            output.stdout
+                .split('\n')
+                .map((line) => line.trim().toLowerCase())
+                .filter((line) => line.length > 0)
+                .map(async (line) => {
+                    const parts = line.split(' ').filter((item) => item.trim().length);
+                    if (parts.length < 2) {
+                        return;
+                    }
+                    const [packageName, rawVersion] = parts;
+                    if (!interestedPackages.has(packageName.toLowerCase().trim())) {
+                        return;
+                    }
+                    const version = getTelemetrySafeVersion(rawVersion);
+                    packageAndVersions.set(await getTelemetrySafeHashedString(packageName), version || '');
+                })
+        );
         const key = getComparisonKey(interpreter.uri);
         let deferred = this.interpreterInformation.get(key);
         if (!deferred) {

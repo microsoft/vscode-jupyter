@@ -15,7 +15,7 @@ import * as sinon from 'sinon';
 import { kernelGetPandasVersion } from '../../../webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation';
 import { pandasMinimumVersionSupportedByVariableViewer } from '../../../webviews/extension-side/dataviewer/constants';
 
-suite('DataScience - DataViewerDependencyService (IKernel, Web)', () => {
+suite('DataViewerDependencyService (IKernel, Web)', () => {
     let dependencyService: DataViewerDependencyService;
     let appShell: IApplicationShell;
     let kernel: IKernel;

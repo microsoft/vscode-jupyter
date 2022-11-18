@@ -75,7 +75,7 @@ export class KernelFilterService implements IDisposable {
         const itemsToHide = hiddenKernels
             .map((item) => {
                 const filter = this.translateConnectionToFilter(item);
-                if (!filter || duplicates.has(filter?.path)) {
+                if (!filter || duplicates.has(filter.path)) {
                     return;
                 }
                 duplicates.add(filter.path);

@@ -5,7 +5,6 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { IServiceManager } from '../../platform/ioc/types';
 import { DataScienceErrorHandlerWeb } from '../errors/kernelErrorHandler.web';
 import { IDataScienceErrorHandler } from '../errors/types';
-import { IRemoteKernelFinder } from '../raw/types';
 import { INotebookProvider } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
 import { CommandRegistry } from './commands/commandRegistry';
@@ -22,7 +21,6 @@ import { NotebookProvider } from './launcher/notebookProvider';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
-import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterServerSelector } from './serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.web';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.web';
@@ -40,14 +38,13 @@ import {
     IJupyterRequestCreator,
     INotebookServerFactory,
     ILiveRemoteKernelConnectionUsageTracker,
-    IJupyterRemoteCachedKernelValidator,
-    IServerConnectionType
+    IJupyterRemoteCachedKernelValidator
 } from './types';
+import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker';
+import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
-
-    serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution);
     serviceManager.add<INotebookServerFactory>(INotebookServerFactory, HostJupyterServerFactory);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
@@ -62,7 +59,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterUriProviderRegistration
     );
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
-    serviceManager.addBinding(IJupyterServerUriStorage, IServerConnectionType);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
@@ -85,4 +81,12 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterRemoteCachedKernelValidator
     );
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandlerWeb);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        CellOutputMimeTypeTracker
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        RemoteKernelFinderController
+    );
 }

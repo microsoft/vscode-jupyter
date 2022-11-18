@@ -25,9 +25,8 @@ import {
 } from './application/types';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { CryptoUtils } from './crypto';
-import { CryptoUtilsNode } from './crypto.node';
 import { ExperimentService } from './experiments/service';
-import { FeatureDeprecationManager } from './featureDeprecationManager';
+import { FeatureManager } from './featureManager';
 import { BrowserService } from './net/browser';
 import { HttpClient } from './net/httpClient';
 import { PersistentStateFactory } from './persistentState';
@@ -39,7 +38,7 @@ import {
     IBrowserService,
     ICryptoUtils,
     IExtensions,
-    IFeatureDeprecationManager,
+    IFeaturesManager,
     IPersistentStateFactory,
     IsWindows
 } from './types';
@@ -69,14 +68,13 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILanguageService>(ILanguageService, LanguageService);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
-    serviceManager.addSingleton<CryptoUtils>(CryptoUtils, CryptoUtils);
-    serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtilsNode);
+    serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
     serviceManager.addSingleton<IDataFrameScriptGenerator>(IDataFrameScriptGenerator, DataFrameScriptGenerator);
     serviceManager.addSingleton<IVariableScriptGenerator>(IVariableScriptGenerator, VariableScriptGenerator);
 
-    serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
+    serviceManager.addSingleton<IFeaturesManager>(IFeaturesManager, FeatureManager);
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);

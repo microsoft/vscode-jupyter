@@ -1,5 +1,258 @@
 # Changelog
 
+## 2022.10.110 (2 November 2022)
+
+### Enhancements
+
+1. If a display name is specified for a remote jupyte server display that name instead of (Remote) in the kernel picker.
+   ([#11381](https://github.com/Microsoft/vscode-jupyter/issues/11381))
+1. Display an error message (with instructions to resolve the issue) in the cell output when attempting to run a cell against a kernel from an untrusted location.
+   ([#11622](https://github.com/Microsoft/vscode-jupyter/issues/11622))
+1. Make insiders kernel picker now a two step selection process that picks a source and a controller.
+   ([#11642](https://github.com/Microsoft/vscode-jupyter/issues/11642))
+1. Update kernel source command to use newly available NotebookDocument context from kernel picker command source.
+   ([#11759](https://github.com/Microsoft/vscode-jupyter/issues/11759))
+
+### Fixes
+
+1. Outputs containing Plotly plots generated with the `notebook` renderer are now displayed even after re-opening this notebook in a new install of VS Code.
+   ([#6404](https://github.com/Microsoft/vscode-jupyter/issues/6404))
+1. Restore the command to import a notebook from the explorer context menu.
+   ([#9252](https://github.com/Microsoft/vscode-jupyter/issues/9252))
+1. Optimize the way stream outputs are handled, to support large output streams without crashing VS Code.
+   ([#11031](https://github.com/Microsoft/vscode-jupyter/issues/11031))
+1. Fully remove message asking users to try out pre-release Jupyter if they are on Insiders.
+   ([#11477](https://github.com/Microsoft/vscode-jupyter/issues/11477))
+1. Ensure kernel messages are handled by a cell even after cell execution completes.
+   ([#11526](https://github.com/Microsoft/vscode-jupyter/issues/11526))
+1. A restored Interactive Window will be re-used for code cells from the same python file.
+   ([#11574](https://github.com/Microsoft/vscode-jupyter/issues/11574))
+1. In the insiders kernel picker, don't prepopulate the server display name field with the URI.
+   ([#11643](https://github.com/Microsoft/vscode-jupyter/issues/11643))
+1. Update the "Install Python" kernel command to use the python api directly and remove controller loaded context.
+   ([#11647](https://github.com/Microsoft/vscode-jupyter/issues/11647))
+
+### Code Health
+
+1. Adopt the new Python Extension API used to enumerate Python environments, resulting in improvements such as faster listing of Kernels in the Kernel Picker.
+   ([#7583](https://github.com/Microsoft/vscode-jupyter/issues/7583))
+1. Reduce the amount of work done for each code lens creation to help performance.
+   ([#11433](https://github.com/Microsoft/vscode-jupyter/issues/11433))
+1. Ship renderer preload scripts in the [Notebook Renderer Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter-renderers).
+   ([#11671](https://github.com/Microsoft/vscode-jupyter/issues/11671))
+1. Initialize the environment variable `PYDEVD_IPYTHON_COMPATIBLE_DEBUGGING` at the point of spawning the Python kernel.
+   ([#11682](https://github.com/Microsoft/vscode-jupyter/issues/11682))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+## 2022.9.120 (11 October 2022)
+### Enhancements
+1. Display an error message (with instructions to resolve the issue) in the cell output when attempting to run a cell against a kernel from an untrusted location.
+   ([#11622](https://github.com/Microsoft/vscode-jupyter/issues/11622))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+## 2022.9.110 (11 October 2022)
+### Fixes
+1. Fixed vulnerability described in [CVE-2022-41083](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2022-41083)
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+
+## 2022.9.110 (11 October 2022)
+### Fixes
+1. Fixed vulnerability described in [CVE-2022-41083](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2022-41083)
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+
+## 2022.9.100 (4 October 2022)
+
+### Enhancements
+
+1. Add code folding regions for `# %%` cells within python files.
+   ([#1527](https://github.com/Microsoft/vscode-jupyter/issues/1527))
+2. Deleting a cell in the interactive window is now an undo-able operation.
+   ([#7756](https://github.com/Microsoft/vscode-jupyter/issues/7756))
+3. Add cell tag and slideshow editing support.
+   ([#1121](https://github.com/microsoft/vscode-jupyter/issues/1121))
+
+### Fixes
+
+1. The cell scrolled to will be selected after using the go to cell code lens.
+   ([#7687](https://github.com/Microsoft/vscode-jupyter/issues/7687))
+1. Make sure the "Install Python" and "Install Python Extension" commands only show up after we have loaded our controllers.
+   ([#10960](https://github.com/Microsoft/vscode-jupyter/issues/10960))
+1. Ensure the cache of kernels is not updated when kernel discovery ends midway.
+   ([#11240](https://github.com/Microsoft/vscode-jupyter/issues/11240))
+1. Don't show unclickable links when failing to connect to a jupyter server in the web extension.
+   ([#11285](https://github.com/Microsoft/vscode-jupyter/issues/11285))
+
+### Code Health
+
+1. Removed delayed scrolling reveal in the interactive window now that core does auto-scrolling.
+   ([#7686](https://github.com/Microsoft/vscode-jupyter/issues/7686))
+1. Ignore errors when disposing a kernel.
+   ([#11304](https://github.com/Microsoft/vscode-jupyter/issues/11304))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+## 2022.8.100 (30 August 2022)
+
+### Fixes
+
+1. Display a prompt when Python environment used to start Jupyter cannot, providing the user with the ability to select a Python Environment.
+   ([#1110](https://github.com/Microsoft/vscode-jupyter/issues/1110))
+1. Start and maintain a single Python process for interrupting Python kernels (one process per session).
+   ([#9909](https://github.com/Microsoft/vscode-jupyter/issues/9909))
+1. Don't save an incorrect server password in our cached password list, and keep displaying the server input prompt after a failed password attempt.
+   ([#10300](https://github.com/Microsoft/vscode-jupyter/issues/10300))
+1. Pass `--user` flag when installing dependencies into a `Global` Python environment such as the one installed from Windows Store.
+   ([#10478](https://github.com/Microsoft/vscode-jupyter/issues/10478))
+1. Handle situations when the connection to a remote Kernel is lost after executing a cell.
+   This also fixes the issue [Unable to interrupt a kernel when the remote kernel connection is lost #9828](https://github.com/microsoft/vscode-jupyter/issues/9828).
+   ([#10568](https://github.com/Microsoft/vscode-jupyter/issues/10568))
+1. Ensure cells in Interactive Window are executed in correct order when executing from both code lenses and the input box.
+   ([#10671](https://github.com/Microsoft/vscode-jupyter/issues/10671))
+1. Do not append/prepend path values unnecessarily.
+   ([#10906](https://github.com/Microsoft/vscode-jupyter/issues/10906))
+1. Ensure user variables overriding `builtins` do not break the dataframe viewer.
+   ([#10941](https://github.com/Microsoft/vscode-jupyter/issues/10941))
+1. Remove duplicate `Cancel` button from modal dialog for interrupting kernels.
+   ([#10999](https://github.com/Microsoft/vscode-jupyter/issues/10999))
+1. Kill all of the child processes spawned by a local kernel when the kernel is shutdown.
+   ([#11018](https://github.com/Microsoft/vscode-jupyter/issues/11018))
+1. Initialize the environment variable `PYDEVD_IPYTHON_COMPATIBLE_DEBUGGING` for the `Python` debugger when debugging `Interactive Window` and `Notebooks`.
+   This also addresses the following issues [10600](https://github.com/microsoft/vscode-jupyter/issues/10600), [10106](https://github.com/microsoft/vscode-jupyter/issues/10106)
+   ([#11033](https://github.com/Microsoft/vscode-jupyter/issues/11033))
+1. Ensure users can connect to `Azure ML Jupyter Server`.
+   ([#11084](https://github.com/Microsoft/vscode-jupyter/issues/11084))
+
+### Code Health
+
+1. Stop creating hidden terminals to look for Jupyter Notebook application.
+   ([#10935](https://github.com/Microsoft/vscode-jupyter/issues/10935))
+1. Fix the test "Export a basic notebook document with nbconvert" CI failure.
+   ([#11190](https://github.com/Microsoft/vscode-jupyter/issues/11190))
+1. Fix the macOS smoke test which is failing every time on CI.
+   ([#11193](https://github.com/Microsoft/vscode-jupyter/issues/11193))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+
+## 2022.7.110 (12 Aug 2022)
+
+### Fixes
+
+1. Ensure users can connect to `Azure ML Jupyter Server`. ([#11084](https://github.com/Microsoft/vscode-jupyter/issues/11084))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 ## 2022.7.100 (3 Aug 2022)
 
 ### Enhancements

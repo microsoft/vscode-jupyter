@@ -24,7 +24,6 @@ export function swallowExceptions(cb: Function) {
         // Ignore errors.
     }
 }
-
 /**
  * Like `Readonly<>`, but recursive.
  *
@@ -38,6 +37,20 @@ type DeepReadonlyObject<T> = {
     readonly [P in NonFunctionPropertyNames<T>]: DeepReadonly<T[P]>;
 };
 type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
+
+/**
+ * Converts a union type to intersection
+ * Courtesy of https://stackoverflow.com/questions/50374908/transform-union-type-to-intersection-type
+ *
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
+export type PickType<T, Value> = {
+    [P in keyof T as T[P] extends Value ? P : never]: T[P];
+};
+export type ExcludeType<T, Value> = {
+    [P in keyof T as T[P] extends Value ? never : P]: T[P];
+};
 
 // Information about a traced function/method call.
 export type TraceInfo =
@@ -126,4 +139,25 @@ export function isNotebookCell(documentOrUri: TextDocument | Uri): boolean {
 
 export function isWeb() {
     return process.platform.toString() === 'web'; // Webpack is modifying this to force this to happen
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function jsonStringifyUriReplacer(_key: string, value: any) {
+    if (isUri(value)) {
+        return value.toString();
+    }
+    return value;
+}
+/**
+ * Compares contents of two objects that could contains Uris.
+ * Returns `true` if both are the same, `false` otherwise.
+ */
+export function areObjectsWithUrisTheSame(obj1?: unknown, obj2?: unknown) {
+    if (obj1 === obj2) {
+        return true;
+    }
+    if (obj1 && !obj2) {
+        return false;
+    }
+    return JSON.stringify(obj1, jsonStringifyUriReplacer) === JSON.stringify(obj2, jsonStringifyUriReplacer);
 }

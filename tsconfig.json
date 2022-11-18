@@ -24,6 +24,7 @@
         "removeComments": true,
         "useUnknownInCatchVariables": false,
         "strictPropertyInitialization": false,
+        "esModuleInterop": true,
         "allowJs": true,
         "types": ["@types/vscode-notebook-renderer/preload", "webpack-env"]
     },

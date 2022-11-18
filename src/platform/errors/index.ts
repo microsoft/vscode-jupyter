@@ -9,7 +9,7 @@ import { getLastFrameFromPythonTraceback } from './errorUtils';
 import { getErrorCategory, TelemetryErrorProperties, BaseError, WrappedError } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProperties>, error: Error) {
+export async function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProperties>, error: Error) {
     props.failed = true;
     // Don't blow away what we already have.
     props.failureCategory = props.failureCategory || getErrorCategory(error);
@@ -41,9 +41,11 @@ export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProp
     if (!info) {
         return;
     }
-    props.pythonErrorFile = props.pythonErrorFile || getTelemetrySafeHashedString(info.fileName);
-    props.pythonErrorFolder = props.pythonErrorFolder || getTelemetrySafeHashedString(info.folderName);
-    props.pythonErrorPackage = props.pythonErrorPackage || getTelemetrySafeHashedString(info.packageName);
+    [props.pythonErrorFile, props.pythonErrorFolder, props.pythonErrorPackage] = await Promise.all([
+        Promise.resolve(props.pythonErrorFile || getTelemetrySafeHashedString(info.fileName)),
+        Promise.resolve(props.pythonErrorFolder || getTelemetrySafeHashedString(info.folderName)),
+        Promise.resolve(props.pythonErrorPackage || getTelemetrySafeHashedString(info.packageName))
+    ]);
 }
 
 function parseStack(ex: Error) {

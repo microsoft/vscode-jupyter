@@ -6,7 +6,7 @@ import '../../../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 
-import { captureTelemetry } from '../../../telemetry';
+import { capturePerfTelemetry } from '../../../telemetry';
 import { IDataViewer, IDataViewerDataProvider, IDataViewerFactory } from './types';
 import debounce = require('lodash/debounce');
 import { ICommandManager } from '../../../platform/common/application/types';
@@ -40,7 +40,7 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
         }
     }
 
-    @captureTelemetry(Telemetry.StartShowDataViewer)
+    @capturePerfTelemetry(Telemetry.StartShowDataViewer)
     public async create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer> {
         let result: IDataViewer | undefined;
 

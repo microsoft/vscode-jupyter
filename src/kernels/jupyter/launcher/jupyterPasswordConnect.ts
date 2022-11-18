@@ -8,12 +8,14 @@ import { IApplicationShell } from '../../../platform/common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
-import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { traceInfo } from '../../../platform/logging';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import {
     IJupyterPasswordConnect,
     IJupyterPasswordConnectInfo,
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
+    IJupyterServerUriEntry,
     IJupyterServerUriStorage
 } from '../types';
 
@@ -39,7 +41,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
     }
 
-    @captureTelemetry(Telemetry.GetPasswordAttempt)
     public getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
         if (!url || url.length < 1) {
             return Promise.resolve(undefined);
@@ -51,7 +52,15 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         // See if we already have this data. Don't need to ask for a password more than once. (This can happen in remote when listing kernels)
         let result = this.savedConnectInfo.get(newUrl);
         if (!result) {
-            result = this.getNonCachedPasswordConnectionInfo(newUrl);
+            result = this.getNonCachedPasswordConnectionInfo(newUrl).then((value) => {
+                // If we fail to get a valid password connect info, don't save the value
+                traceInfo(`Password for ${newUrl} was invalid.`);
+                if (!value) {
+                    this.savedConnectInfo.delete(newUrl);
+                }
+
+                return value;
+            });
             this.savedConnectInfo.set(newUrl, result);
         }
 
@@ -481,9 +490,9 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     }
 
     // When URIs are removed from the server list also remove them from
-    private onDidRemoveUris(uris: string[]) {
-        uris.forEach((uri) => {
-            const newUrl = addTrailingSlash(uri);
+    private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
+        uriEntries.forEach((uriEntry) => {
+            const newUrl = addTrailingSlash(uriEntry.uri);
             this.savedConnectInfo.delete(newUrl);
         });
     }

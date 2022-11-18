@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 const fs = require('fs-extra');
@@ -10,19 +10,22 @@ const dedent = require('dedent');
 const { EventEmitter } = require('events');
 const colors = require('colors');
 const core = require('@actions/core');
-const hashjs = require('hash.js');
 const glob = require('glob');
 const { ExtensionRootDir } = require('./constants');
+const { computeHash } = require('../src/platform/msrCrypto/hash');
 
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
-const webTestSummaryJsonFile = path.join(__dirname, '..', 'testresults.json');
-const webTestSummaryNb = path.join(__dirname, '..', 'testresults.ipynb');
+const webTestSummaryJsonFile = path.join(__dirname, '..', 'logs', 'testresults.json');
+const webTestSummaryNb = path.join(__dirname, '..', 'logs', 'testresults.ipynb');
+const failedWebTestSummaryNb = path.join(__dirname, '..', 'logs', 'failedtestresults.ipynb');
 const progress = [];
+const logsDir = path.join(ExtensionRootDir, 'logs');
 
 async function captureScreenShot(name, res) {
+    const screenshot = require('screenshot-desktop');
+    fs.ensureDirSync(logsDir);
+    const filename = path.join(logsDir, name);
     try {
-        const screenshot = require('screenshot-desktop');
-        const filename = path.join(ExtensionRootDir, name);
         await screenshot({ filename });
         console.info(`Screenshot captured into ${filename}`);
     } catch (ex) {
@@ -84,6 +87,7 @@ exports.startReportServer = async function () {
             resolve({
                 dispose: async () => {
                     console.error(`Disposing test server`);
+                    fs.ensureDirSync(path.dirname(webTestSummaryJsonFile));
                     fs.writeFileSync(webTestSummaryJsonFile, JSON.stringify(progress));
                     server.close();
                 }
@@ -92,13 +96,90 @@ exports.startReportServer = async function () {
     });
 };
 
-exports.dumpTestSummary = () => {
+async function addCell(cells, output, failed, executionCount) {
+    const stackFrames = failed ? (output.err.stack || '').split(/\r?\n/) : [];
+    const line1 = stackFrames.shift() || '';
+    const fullTestNameHash = (await computeHash(output.fullTitle() || '', 'SHA-256')).substring(0, 10);
+    const fileNamePrefix = `${output.title}_${fullTestNameHash}`.replace(/[\W]+/g, '_');
+    const assertionError = failed
+        ? [
+              {
+                  ename: '',
+                  evalue: '',
+                  output_type: 'error',
+                  traceback: [`${colors.red(line1)}\n`, stackFrames.join('\n')]
+              }
+          ]
+        : [];
+    const consoleOutputs = (output.consoleOutput || [])
+        .map((item) => {
+            const time = item.time ? new Date(item.time) : '';
+            const timeStr = time ? `${time.toLocaleTimeString()}.${time.getMilliseconds()}` : '';
+            const colorizedTime = timeStr ? `${colors.blue(timeStr)}: ` : '';
+            switch (item.category) {
+                case 'warn':
+                    return `${colorizedTime}${colors.yellow(item.output)}`;
+                case 'error':
+                    return `${colorizedTime}${colors.red(item.output)}`;
+                default:
+                    return `${colorizedTime}${item.output}`;
+            }
+        })
+        .map((item) => `${item}\n`);
+    const consoleOutput = {
+        name: 'stdout',
+        output_type: 'stream',
+        text: consoleOutputs
+    };
+    // Look for a screenshot file with the above prefix & attach that to the cell outputs.
+    const screenshots = (
+        await Promise.all(
+            glob.sync(`${fileNamePrefix}*-screenshot.png`, { cwd: logsDir }).map((file) => {
+                file = path.join(logsDir, file);
+                try {
+                    const blob = fs.readFileSync(file);
+                    const contents = Buffer.from(blob).toString('base64');
+                    return {
+                        data: {
+                            'image/png': contents
+                        },
+                        metadata: {},
+                        output_type: 'display_data'
+                    };
+                } catch (ex) {
+                    console.error(`Failed to read screenshot file ${file} at stage ${stage}`, ex);
+                }
+            })
+        )
+    ).filter((item) => !!item);
+    // Add a markdown cell so we can see this in the outline.
+    cells.push({
+        cell_type: 'markdown',
+        metadata: {
+            collapsed: true
+        },
+        // Add some color so its easy to find this in the outline.
+        source: `### ${failed ? '❌' : '✅'} ${output.title}`,
+        execution_count: executionCount
+    });
+    cells.push({
+        cell_type: 'code',
+        metadata: {
+            collapsed: true
+        },
+        source: `#${output.title}`,
+        execution_count: executionCount,
+        outputs: [...assertionError, consoleOutput, ...screenshots]
+    });
+}
+exports.dumpTestSummary = async () => {
     try {
         const summary = JSON.parse(fs.readFileSync(webTestSummaryJsonFile).toString());
         const runner = new EventEmitter();
         runner.stats = {};
         const reportWriter = new mocha.reporters.Spec(runner, { color: true });
         reportWriter.failures = [];
+        const failedCells = [];
         const cells = [];
         let indent = 0;
         let executionCount = 0;
@@ -106,7 +187,7 @@ exports.dumpTestSummary = () => {
         let passedCount = 0;
         mocha.reporters.Base.useColors = true;
         colors.enable();
-        summary.forEach((output) => {
+        for (let output of summary) {
             output = JSON.parse(JSON.stringify(output));
             // mocha expects test objects to have a method `slow, fullTitle, titlePath`.
             ['slow', 'fullTitle', 'titlePath', 'isPending', 'currentRetry'].forEach((fnName) => {
@@ -130,20 +211,33 @@ exports.dumpTestSummary = () => {
             switch (output.event) {
                 case 'pass': {
                     passedCount++;
+                    executionCount++;
+                    await addCell(cells, output, false, executionCount);
                     break;
                 }
                 case 'suite': {
-                    indent += 1;
-                    const indentString = '#'.repeat(indent);
-                    cells.push({
-                        cell_type: 'markdown',
-                        metadata: {
-                            collapsed: true
-                        },
-                        source: dedent`
+                    if (output.title) {
+                        indent += 1;
+                        const indentString = '#'.repeat(indent);
+                        failedCells.push({
+                            cell_type: 'markdown',
+                            metadata: {
+                                collapsed: true
+                            },
+                            source: dedent`
                                 ${indentString} ${output.title}
                                 `
-                    });
+                        });
+                        cells.push({
+                            cell_type: 'markdown',
+                            metadata: {
+                                collapsed: true
+                            },
+                            source: dedent`
+                                ${indentString} ${output.title}
+                                `
+                        });
+                    }
                     break;
                 }
                 case 'suite end': {
@@ -155,83 +249,29 @@ exports.dumpTestSummary = () => {
                     break;
                 }
                 case 'fail': {
-                    const stackFrames = (output.err.stack || '').split(/\r?\n/);
-                    const line1 = stackFrames.shift() || '';
-                    const fullTestNameHash = hashjs
-                        .sha256()
-                        .update(output.fullTitle() || '')
-                        .digest('hex')
-                        .substring(0, 10);
-                    const fileNamePrefix = `${output.title}_${fullTestNameHash}`.replace(/[\W]+/g, '_');
-                    const assertionError = {
-                        ename: '',
-                        evalue: '',
-                        output_type: 'error',
-                        traceback: [`${colors.red(line1)}\n`, stackFrames.join('\n')]
-                    };
-                    const consoleOutputs = (output.consoleOutput || [])
-                        .map((item) => {
-                            const time = item.time ? new Date(item.time) : '';
-                            const timeStr = time ? `${time.toLocaleTimeString()}.${time.getMilliseconds()}` : '';
-                            const colorizedTime = timeStr ? `${colors.blue(timeStr)}: ` : '';
-                            switch (item.category) {
-                                case 'warn':
-                                    return `${colorizedTime}${colors.yellow(item.output)}`;
-                                case 'error':
-                                    return `${colorizedTime}${colors.red(item.output)}`;
-                                default:
-                                    return `${colorizedTime}${item.output}`;
-                                    break;
-                            }
-                        })
-                        .map((item) => `${item}\n`);
-                    const consoleOutput = {
-                        name: 'stdout',
-                        output_type: 'stream',
-                        text: consoleOutputs
-                    };
-                    // Look for a screenshot file with the above prefix & attach that to the cell outputs.
-                    console.error(`Looking for screenshot file ${fileNamePrefix}*-screenshot.png`);
-                    const screenshots = glob
-                        .sync(`${fileNamePrefix}*-screenshot.png`, { cwd: ExtensionRootDir })
-                        .map((file) => {
-                            console.error(`Found screenshot file ${file}`);
-                            const contents = Buffer.from(fs.readFileSync(path.join(ExtensionRootDir, file))).toString(
-                                'base64'
-                            );
-                            return {
-                                data: {
-                                    'image/png': contents
-                                },
-                                metadata: {},
-                                output_type: 'display_data'
-                            };
-                        });
-                    cells.push({
-                        cell_type: 'code',
-                        metadata: {
-                            collapsed: true
-                        },
-                        source: `#${output.title}`,
-                        execution_count: ++executionCount,
-                        outputs: [assertionError, consoleOutput, ...screenshots]
-                    });
+                    executionCount++;
+                    await addCell(failedCells, output, true, executionCount);
+                    await addCell(cells, output, true, executionCount);
                     break;
                 }
             }
-        });
+        }
 
         if (reportWriter.failures.length) {
             core.setFailed(`${reportWriter.failures.length} tests failed.`);
-        } else if (passedCount < 3) {
+        } else if (passedCount < 1) {
+            // Temporarily reduced to 1 since #11917 disabled tests
             // the non-python suite only has 4 tests passing currently, so that's the highest bar we can use.
             core.setFailed('Not enough tests were run - are too many being skipped?');
         }
 
         // Write output into an ipynb file with the failures & corresponding console output & screenshot.
-        if (cells.length) {
-            fs.writeFileSync(webTestSummaryNb, JSON.stringify({ cells: cells }));
+        if (failedCells.length) {
+            fs.writeFileSync(failedWebTestSummaryNb, JSON.stringify({ cells: failedCells }));
+            console.info(`Created failed test summary notebook file ${failedWebTestSummaryNb}`);
         }
+        fs.writeFileSync(webTestSummaryNb, JSON.stringify({ cells: cells }));
+        console.info(`Created test summary notebook file ${webTestSummaryNb}`);
     } catch (ex) {
         core.error('Failed to print test summary');
         core.setFailed(ex);

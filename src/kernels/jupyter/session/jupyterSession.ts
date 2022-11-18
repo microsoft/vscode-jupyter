@@ -3,7 +3,7 @@
 
 'use strict';
 import type { Contents, ContentsManager, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
@@ -13,7 +13,7 @@ import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
-import { captureTelemetry, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
 import { getNameOfKernelConnection } from '../../helpers';
 import {
@@ -29,8 +29,6 @@ import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyte
 import { CancellationError, Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop } from '../../../platform/common/utils/misc';
-import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 
 // function is
 export class JupyterSession extends BaseJupyterSession implements IJupyterKernelConnectionSession {
@@ -60,7 +58,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         return true;
     }
 
-    @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
+    @capturePerfTelemetry(Telemetry.WaitForIdleJupyter)
     public waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         // Wait for idle on this session
         return this.waitForIdleOnSession(this.session, timeout, token);
@@ -158,12 +156,8 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
             traceVerbose(
                 `JupyterSession.createNewKernelSession ${tryCount}, id is ${this.kernelConnectionMetadata?.id}`
             );
-            const stopWatch = new StopWatch();
             result = await this.createSession({ token: cancelToken, ui });
             await this.waitForIdleOnSession(result, this.idleTimeout, cancelToken);
-            sendKernelTelemetryEvent(this.resource, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
-                startTimeOnly: true
-            });
             return result;
         } catch (exc) {
             traceInfo(`Error waiting for restart session: ${exc}`);

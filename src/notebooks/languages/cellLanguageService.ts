@@ -61,7 +61,7 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
             // Assume user has a kernel for `go` & VS Code doesn't know about `go` language, & we initailize `supportedLanguages` to [go]
             // In such cases VS Code will not allow execution of this cell (because `supportedLanguages` by definition limits execution to languages defined).
             if (language && VSCodeKnownNotebookLanguages.includes(language.toLowerCase())) {
-                return [language];
+                return [language, 'raw'];
             }
             // Support all languages
             return [];

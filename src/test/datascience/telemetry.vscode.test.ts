@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as vscode from 'vscode';
 import TelemetryReporter, {
     RawTelemetryEventProperties,
     TelemetryEventMeasurements,
@@ -15,20 +14,14 @@ import { traceInfo } from '../../platform/logging';
 import { getTelemetryReporter, setTelemetryReporter } from '../../telemetry';
 import { captureScreenShot } from '../common.node';
 import { initialize } from '../initialize.node';
-import {
-    closeNotebooksAndCleanUpAfterTests,
-    createEmptyPythonNotebook,
-    insertCodeCell,
-    runCell,
-    waitForTextOutput
-} from './notebook/helper';
+import { closeNotebooksAndCleanUpAfterTests, createEmptyPythonNotebook } from './notebook/helper';
 import { IDisposable } from '../../platform/common/types';
 import { startJupyterServer } from './notebook/helper.node';
 import { runNewPythonFile, waitForLastCellToComplete } from './helpers.node';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('Telemetry validation', function () {
+suite('Telemetry validation @iw', function () {
     const disposables: IDisposable[] = [];
     let eventsSent: Set<string> = new Set<string>();
     let originalTelemetryReporter: TelemetryReporter | undefined;
@@ -77,7 +70,7 @@ suite('Telemetry validation', function () {
             _properties?: TelemetryEventProperties,
             _measurements?: TelemetryEventMeasurements
         ): void {
-            eventsSent.add('ERROR');
+            //
         },
         sendDangerousTelemetryException: function (
             _error: Error,
@@ -85,7 +78,7 @@ suite('Telemetry validation', function () {
             _measurements?: TelemetryEventMeasurements,
             _sanitize?: boolean
         ): void {
-            eventsSent.add('ERROR');
+            //
         },
         dispose: async function (): Promise<any> {
             // Do nothing for dispose
@@ -140,21 +133,6 @@ suite('Telemetry validation', function () {
         setTestExecution(true);
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
-    test('Execute cell using VSCode Kernel', async () => {
-        await insertCodeCell('print("123412341234")', { index: 0 });
-        const cell = vscode.window.activeNotebookEditor?.notebook.cellAt(0)!;
-        await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
-
-        // Check for expected events
-        const assertEvent = (event: string) => {
-            assert.ok(eventsSent.has(event), `Events missing ${event}`);
-        };
-
-        // Right now this is the guaranteed list. Might want to expand this.
-        assertEvent(Telemetry.ExecuteCell);
-        assertEvent(Telemetry.OpenNotebookAll);
-        assertEvent(Telemetry.NotebookStart);
-    });
     test('Run interactive window', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
@@ -171,7 +149,6 @@ suite('Telemetry validation', function () {
 
         // Right now this is the guaranteed list. Might want to expand this.
         assertEvent(Telemetry.RunFileInteractive);
-        assertEvent(Telemetry.ExecuteCellPerceivedWarm);
         assertEvent(Telemetry.SwitchKernel);
     });
 });

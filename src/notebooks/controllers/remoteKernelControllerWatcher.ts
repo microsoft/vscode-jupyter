@@ -34,6 +34,9 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
     private async addProviderHandlers() {
         const providers = await this.providerRegistry.getProviders();
         providers.forEach((provider) => {
+            // clear out any old handlers
+            this.onProviderHandlesChanged(provider).catch(noop);
+
             if (provider.onDidChangeHandles && !this.handledProviders.has(provider)) {
                 provider.onDidChangeHandles(this.onProviderHandlesChanged.bind(this, provider), this, this.disposables);
             }
@@ -63,6 +66,8 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 if (!handles.includes(info.handle)) {
                     // Looks like the 3rd party provider has updated its handles and this server is no longer available.
                     await this.uriStorage.removeUri(item.uri);
+                } else if (!item.isValidated && item.serverId === this.uriStorage.currentServerId) {
+                    await this.uriStorage.setUriToRemote(item.uri, item.displayName ?? item.uri).catch(noop);
                 }
             })
         );

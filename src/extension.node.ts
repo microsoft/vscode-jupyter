@@ -12,14 +12,20 @@ if ((Reflect as any).metadata === undefined) {
 }
 
 // Initialize the logger first.
-require('./platform/logging');
+import './platform/logging';
 
 //===============================================
 // We start tracking the extension's startup time at this point.  The
 // locations at which we record various Intervals are marked below in
 // the same way as this.
 
-const durations: Record<string, number> = {};
+const durations = {
+    totalActivateTime: 0,
+    codeLoadingTime: 0,
+    startActivateTime: 0,
+    endActivateTime: 0,
+    workspaceFolderCount: 0
+};
 import { StopWatch } from './platform/common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
@@ -54,7 +60,7 @@ import {
     IDisposableRegistry,
     IExperimentService,
     IExtensionContext,
-    IFeatureDeprecationManager,
+    IFeaturesManager,
     IMemento,
     IOutputChannel,
     IsCodeSpace,
@@ -83,10 +89,8 @@ import {
     STANDARD_OUTPUT_CHANNEL
 } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths';
-import { IFileSystemNode } from './platform/common/platform/types.node';
 import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
-import { setExtensionInstallTelemetryProperties } from './platform/telemetry/extensionInstallTelemetry.node';
 import { Container } from 'inversify/lib/container/container';
 import { ServiceContainer } from './platform/ioc/container';
 import { ServiceManager } from './platform/ioc/serviceManager';
@@ -96,6 +100,7 @@ import { FileLogger } from './platform/logging/fileLogger.node';
 import { createWriteStream } from 'fs-extra';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 import { IInterpreterPackages } from './platform/interpreter/types';
+import { homedir } from 'os';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -129,7 +134,6 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // Disable this, as we don't want Python extension or any other extensions that depend on this to fall over.
         // Return a dummy object, to ensure other extension do not fall over.
         return {
-            createBlankNotebook: () => Promise.resolve(),
             ready: Promise.resolve(),
             registerPythonApi: noop,
             registerRemoteServerProvider: noop,
@@ -160,7 +164,10 @@ export function deactivate(): Thenable<void> {
 async function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
-    startupDurations: Record<string, number>
+    startupDurations: {
+        startActivateTime: number;
+        endActivateTime: number;
+    }
 ): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
     const activationDeferred = createDeferred<void>();
     try {
@@ -202,7 +209,7 @@ function displayProgress(promise: Promise<any>) {
 /////////////////////////////
 // error handling
 
-async function handleError(ex: Error, startupDurations: Record<string, number>) {
+async function handleError(ex: Error, startupDurations: typeof durations) {
     notifyUser(Common.handleExtensionActivationError());
     // Possible logger hasn't initialized either.
     console.error('extension activation failed', ex);
@@ -313,7 +320,7 @@ async function activateLegacy(
     commands.executeCommand('setContext', 'jupyter.webExtension', false).then(noop, noop);
 
     // Set the logger home dir (we can compute this in a node app)
-    setHomeDirectory(require('untildify')('~') || '');
+    setHomeDirectory(homedir());
 
     // Setup the console logger if asked to
     addConsoleLogger();
@@ -327,10 +334,6 @@ async function activateLegacy(
     registerInteractiveTypes(serviceManager);
     registerStandaloneTypes(context, serviceManager, isDevMode);
     registerWebviewTypes(serviceManager);
-
-    // We need to setup this property before any telemetry is sent
-    const fs = serviceManager.get<IFileSystemNode>(IFileSystemNode);
-    await setExtensionInstallTelemetryProperties(fs);
 
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync
@@ -361,9 +364,9 @@ async function activateLegacy(
     manager.activateSync();
     const activationPromise = manager.activate();
 
-    const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
-    deprecationMgr.initialize();
-    context.subscriptions.push(deprecationMgr);
+    const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
+    featureManager.initialize();
+    context.subscriptions.push(featureManager);
 
     return activationPromise;
 }

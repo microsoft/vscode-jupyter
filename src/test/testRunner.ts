@@ -6,8 +6,8 @@
 // Most of the source is in node_modules/vscode/lib/testrunner.js
 
 'use strict';
-import * as glob from 'glob';
-import * as Mocha from 'mocha';
+import glob from 'glob';
+import Mocha from 'mocha';
 import * as path from '../platform/vscode-path/path';
 import { IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME } from './constants.node';
 import { noop } from './core';
@@ -48,7 +48,7 @@ export function configure(setupOptions: SetupOptions): void {
 }
 
 export async function run(): Promise<void> {
-    const testsRoot = path.join(__dirname);
+    const testsRoot = path.join(__dirname, '..');
     // Enable source map support.
     require('source-map-support').install();
 

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -11,12 +11,12 @@ suite('Dummy1a', () => {
 // import '../../platform/common/extensions.node';
 
 // import type * as nbformat from '@jupyterlab/nbformat';
-// import * as assert from 'assert';
+// import assert from 'assert';
 // import { mount, ReactWrapper } from 'enzyme';
 // import * as sinon from 'sinon';
 // import { parse } from 'node-html-parser';
 // import * as React from 'react';
-// import * as uuid from 'uuid/v4';
+// import uuid from 'uuid/v4';
 // import { Disposable } from 'vscode';
 // const telemetry = require('../../telemetry/index');
 // import { Identifiers, Telemetry } from '../../platform/datascience/constants';
@@ -50,7 +50,7 @@ suite('Dummy1a', () => {
 // }
 
 // // import { asyncDump } from '../common/asyncDump';
-// suite('DataScience DataViewer tests', () => {
+// suite('DataViewer tests', () => {
 //     const disposables: Disposable[] = [];
 //     let dataViewerFactory: IDataViewerFactory;
 //     let jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory;

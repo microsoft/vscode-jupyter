@@ -7,7 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { Identifiers } from '../../platform/common/constants';
-import { captureTelemetry, Telemetry } from '../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../telemetry';
 import { IKernel } from '../types';
 import {
     IJupyterVariables,
@@ -40,7 +40,7 @@ export class JupyterVariables implements IJupyterVariables {
     }
 
     // IJupyterVariables implementation
-    @captureTelemetry(Telemetry.VariableExplorerFetchTime, undefined, true)
+    @capturePerfTelemetry(Telemetry.VariableExplorerFetchTime)
     public async getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse> {
         return this.variableHandler.getVariables(request, kernel);
     }

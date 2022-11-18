@@ -3,6 +3,11 @@
 -   Python 3.7 and higher
 -   run `python3 -m pip install --user -r news/requirements.txt`
 
+# Get the build green (Early in endgame week)
+
+- [ ] Ensure that any CI test failures have issues assigned to that area's owner.
+- [ ] Drive the build to green by fixing/disabling tests or pinging area owners to do so.
+
 # Move open issues (Tuesday of VS Code endgame week, XXX XX)
 
 - [ ] Ask the team to move all open issues to next milestone or remove milestone and put back in triage. This allows endgame champ to have a better understanding of done state.

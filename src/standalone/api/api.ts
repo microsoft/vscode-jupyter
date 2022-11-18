@@ -12,7 +12,6 @@ import {
     IJupyterUriProviderRegistration,
     JupyterServerUriHandle
 } from '../../kernels/jupyter/types';
-import { INotebookEditorProvider } from '../../notebooks/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './extension';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
@@ -20,7 +19,7 @@ import { isTestExecution } from '../../platform/common/constants';
 import { IExtensionContext } from '../../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
-import { IControllerPreferredService } from '../../notebooks/controllers/types';
+import { IControllerPreferredService, IControllerRegistration } from '../../notebooks/controllers/types';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -52,10 +51,6 @@ export interface IExtensionApi {
     registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
     registerPythonApi(pythonApi: PythonApi): void;
     /**
-     * Creates a blank notebook and defaults the empty cell to the language provided.
-     */
-    createBlankNotebook(options: { defaultCellLanguage: string }): Promise<void>;
-    /**
      * Gets the service that provides access to kernels.
      * Returns `undefined` if the calling extension is not allowed to access this API. This could
      * happen either when user doesn't allow this or the extension doesn't allow this.
@@ -75,6 +70,26 @@ export interface IExtensionApi {
      * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
      */
     addRemoteJupyterServer(providerId: string, handle: JupyterServerUriHandle): Promise<void>;
+}
+
+function waitForNotebookControllersCreationForServer(
+    serverId: string,
+    controllerRegistration: IControllerRegistration
+) {
+    return new Promise<void>((resolve) => {
+        controllerRegistration.onChanged((e) => {
+            for (let controller of e.added) {
+                if (
+                    controller.connection.kind === 'connectToLiveRemoteKernel' ||
+                    controller.connection.kind === 'startUsingRemoteKernelSpec'
+                ) {
+                    if (controller.connection.serverId === serverId) {
+                        resolve();
+                    }
+                }
+            }
+        });
+    });
 }
 
 export function buildApi(
@@ -107,10 +122,6 @@ export function buildApi(
             const container = serviceContainer.get<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration);
             container.registerProvider(picker);
         },
-        createBlankNotebook: async (options: { defaultCellLanguage: string }): Promise<void> => {
-            const service = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-            await service.createNew(options);
-        },
         getKernelService: async () => {
             const kernelServiceFactory =
                 serviceContainer.get<IExportedKernelServiceFactory>(IExportedKernelServiceFactory);
@@ -122,19 +133,67 @@ export function buildApi(
             notebook: NotebookDocument
         ) => {
             const controllers = serviceContainer.get<IControllerPreferredService>(IControllerPreferredService);
+            const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
             const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
             const uri = generateUriFromRemoteProvider(providerId, handle);
-            await connection.updateServerUri(uri);
             const serverId = await computeServerId(uri);
-            const { controller } = await controllers.computePreferred(notebook, serverId);
-            return controller?.controller;
+
+            if (
+                controllerRegistration.all.find(
+                    (metadata) =>
+                        (metadata.kind === 'connectToLiveRemoteKernel' ||
+                            metadata.kind === 'startUsingRemoteKernelSpec') &&
+                        metadata.serverId === serverId
+                ) !== undefined
+            ) {
+                // initial kernel detection finished already
+                await connection.updateServerUri(uri);
+                const { controller } = await controllers.computePreferred(notebook, serverId);
+                return controller?.controller;
+            } else {
+                // initial kernel detection didn't finish yet, wait for the first set of kernels to be registered
+                const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
+                    serverId,
+                    controllerRegistration
+                );
+
+                await connection.updateServerUri(uri);
+                await controllerCreatedPromise;
+                const { controller } = await controllers.computePreferred(notebook, serverId);
+                return controller?.controller;
+            }
         },
         addRemoteJupyterServer: async (providerId: string, handle: JupyterServerUriHandle) => {
-            const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
-            const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-            const uri = generateUriFromRemoteProvider(providerId, handle);
-            await connection.updateServerUri(uri);
-            await selector.setJupyterURIToRemote(uri);
+            await new Promise<void>(async (resolve) => {
+                const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
+                const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
+                const uri = generateUriFromRemoteProvider(providerId, handle);
+                const serverId = await computeServerId(uri);
+
+                const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+                const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
+                    serverId,
+                    controllerRegistration
+                );
+
+                await connection.updateServerUri(uri);
+                await selector.setJupyterURIToRemote(uri);
+
+                if (
+                    controllerRegistration.all.find(
+                        (metadata) =>
+                            (metadata.kind === 'connectToLiveRemoteKernel' ||
+                                metadata.kind === 'startUsingRemoteKernelSpec') &&
+                            metadata.serverId === serverId
+                    ) === undefined
+                ) {
+                    resolve();
+                    return;
+                } else {
+                    await controllerCreatedPromise;
+                    resolve();
+                }
+            });
         }
     };
 

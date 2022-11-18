@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2022.8.100",
+    "version": "2022.11.100",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -9,7 +9,9 @@
     },
     "extensionPack": [
         "ms-toolsai.jupyter-keymap",
-        "ms-toolsai.jupyter-renderers"
+        "ms-toolsai.jupyter-renderers",
+        "ms-toolsai.vscode-jupyter-slideshow",
+        "ms-toolsai.vscode-jupyter-cell-tags"
     ],
     "license": "MIT",
     "homepage": "https://github.com/Microsoft/vscode-jupyter",
@@ -27,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.70.0-insider"
+        "vscode": "^1.73.0"
     },
     "keywords": [
         "jupyter",
@@ -255,24 +257,27 @@
             },
             {
                 "command": "jupyter.runByLine",
-                "key": "f10",
-                "when": "resource not in jupyter.notebookeditor.debugDocuments"
+                "key": "f10"
             },
             {
                 "command": "jupyter.runByLineNext",
-                "key": "f10",
-                "when": "notebookCellResource in jupyter.notebookeditor.runByLineCells"
+                "key": "f10"
             },
             {
                 "command": "jupyter.runByLineStop",
-                "key": "ctrl+enter",
-                "when": "notebookCellResource in jupyter.notebookeditor.runByLineCells"
+                "key": "ctrl+enter"
             }
         ],
         "commands": [
             {
                 "command": "dataScience.ClearCache",
                 "title": "%jupyter.command.dataScience.clearCache.title%",
+                "category": "Jupyter (Dev)",
+                "enablement": "jupyter.development"
+            },
+            {
+                "command": "dataScience.ClearUserProviderJupyterServerCache",
+                "title": "%jupyter.command.dataScience.clearUserProviderJupyterServerCache.title%",
                 "category": "Jupyter (Dev)",
                 "enablement": "jupyter.development"
             },
@@ -290,13 +295,6 @@
                 "enablement": "jupyter.development && notebookType == jupyter-notebook && isWorkspaceTrusted && jupyter.replayLogLoaded && !jupyter.webExtension"
             },
             {
-                "command": "jupyter.debugNotebook",
-                "title": "%jupyter.command.jupyter.debug.title%",
-                "icon": "$(bug)",
-                "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && resource not in jupyter.notebookeditor.runByLineDocuments"
-            },
-            {
                 "command": "jupyter.filterKernels",
                 "title": "%jupyter.command.jupyter.filterKernels.title%",
                 "category": "Jupyter",
@@ -307,13 +305,14 @@
                 "title": "%jupyter.command.jupyter.runByLine.title%",
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && resource not in jupyter.notebookeditor.debugDocuments"
+                "enablement": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments || !notebookKernel && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.runAndDebugCell",
                 "title": "%jupyter.command.jupyter.debugCell.title%",
                 "icon": "$(debug-alt-small)",
-                "category": "Jupyter"
+                "category": "Jupyter",
+                "enablement": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments || !notebookKernel && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.runByLineNext",
@@ -327,7 +326,7 @@
                 "title": "%jupyter.command.jupyter.runByLineStop.title%",
                 "icon": "$(debug-continue-small)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && notebookCellResource in jupyter.notebookeditor.runByLineCells"
+                "enablement": "notebookCellResource in jupyter.notebookeditor.runByLineCells"
             },
             {
                 "command": "jupyter.viewOutput",
@@ -580,12 +579,6 @@
                 "enablement": "isWorkspaceTrusted"
             },
             {
-                "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
-            },
-            {
                 "command": "jupyter.selectjupytercommandline",
                 "title": "%jupyter.command.jupyter.selectjupytercommandline.title%",
                 "category": "Jupyter",
@@ -654,17 +647,6 @@
                     "dark": "resources/dark/restart-kernel.svg"
                 },
                 "enablement": "isWorkspaceTrusted && jupyter.interactive.canRestartNotebookKernel"
-            },
-            {
-                "command": "jupyter.notebookeditor.interruptkernel",
-                "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
-                "category": "Notebook",
-                "icon": {
-                    "light": "resources/light/interrupt.svg",
-                    "dark": "resources/dark/interrupt.svg"
-                },
-                "enablement": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
             },
             {
                 "command": "jupyter.notebookeditor.restartkernel",
@@ -798,12 +780,6 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.interactive.removeCell",
-                "title": "%DataScience.interactiveRemoveCell%",
-                "icon": "$(close)",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.interactive.goToCode",
                 "title": "%DataScience.interactiveGoToCode%",
                 "icon": "$(go-to-file)",
@@ -846,18 +822,6 @@
             {
                 "command": "jupyter.installPythonViaKernelPicker",
                 "title": "%DataScience.installPythonTitle%"
-            },
-            {
-                "command": "jupyter.switchToLocalKernels",
-                "title": "%DataScience.switchToLocalKernelsTitle%"
-            },
-            {
-                "command": "jupyter.switchToRemoteKernels",
-                "title": "%DataScience.switchToRemoteKernelsTitle%"
-            },
-            {
-                "command": "jupyter.switchToAnotherRemoteKernels",
-                "title": "%DataScience.switchToAnotherRemoteKernelsTitle%"
             }
         ],
         "menus": {
@@ -898,7 +862,7 @@
                     "when": "editorFocus && editorLangId == python && !notebookEditorFocused && isWorkspaceTrusted"
                 },
                 {
-                    "when": "editorFocus && editorLangId == python && resourceLangId == jupyter && !notebookEditorFocused && isWorkspaceTrusted",
+                    "when": "editorFocus && editorLangId == python && resourceExtname == .ipynb && !notebookEditorFocused && isWorkspaceTrusted",
                     "command": "jupyter.importnotebook",
                     "group": "Jupyter3@1"
                 },
@@ -919,12 +883,6 @@
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "group": "navigation@1",
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canrestartNotebookkernel && config.notebook.globalToolbar != true"
-                },
-                {
-                    "command": "jupyter.notebookeditor.interruptkernel",
-                    "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                    "group": "overflow@1",
-                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel && config.notebook.globalToolbar != true"
                 },
                 {
                     "command": "jupyter.openVariableView",
@@ -958,11 +916,6 @@
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.kernel.isjupyter"
                 },
                 {
-                    "command": "jupyter.notebookeditor.interruptkernel",
-                    "group": "navigation/execute@2",
-                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.kernel.isjupyter"
-                },
-                {
                     "command": "jupyter.openVariableView",
                     "group": "navigation@1",
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.ispythonnotebook && jupyter.kernel.isjupyter"
@@ -986,29 +939,29 @@
             "notebook/cell/title": [
                 {
                     "command": "jupyter.runByLine",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.runByLineDocuments",
+                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.runByLineDocuments || !notebookKernel && notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted",
                     "group": "inline/cell@0"
                 },
                 {
                     "command": "jupyter.runByLineNext",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && notebookCellResource in jupyter.notebookeditor.runByLineCells",
+                    "when": "notebookCellResource in jupyter.notebookeditor.runByLineCells",
                     "group": "inline/cell@0"
                 },
                 {
                     "command": "jupyter.runByLineStop",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && notebookCellResource in jupyter.notebookeditor.runByLineCells && notebookCellToolbarLocation == left",
+                    "when": "notebookCellResource in jupyter.notebookeditor.runByLineCells && notebookCellToolbarLocation == left",
                     "group": "inline/cell@1"
                 },
                 {
                     "command": "jupyter.runByLineStop",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && notebookCellResource in jupyter.notebookeditor.runByLineCells && notebookCellToolbarLocation == right",
+                    "when": "notebookCellResource in jupyter.notebookeditor.runByLineCells && notebookCellToolbarLocation == right",
                     "group": "inline/cell@0"
                 }
             ],
             "notebook/cell/execute": [
                 {
                     "command": "jupyter.runAndDebugCell",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments"
+                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments || !notebookKernel && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted"
                 }
             ],
             "notebook/kernelSource": [
@@ -1019,18 +972,6 @@
                 {
                     "command": "jupyter.installPythonViaKernelPicker",
                     "when": "jupyter.showInstallPythonCommand"
-                },
-                {
-                    "command": "jupyter.switchToLocalKernels",
-                    "when": "jupyter.showingRemoteNotWeb"
-                },
-                {
-                    "command": "jupyter.switchToRemoteKernels",
-                    "when": "jupyter.showingLocalOrWebEmpty"
-                },
-                {
-                    "command": "jupyter.switchToAnotherRemoteKernels",
-                    "when": "jupyter.showingRemoteKernels"
                 }
             ],
             "interactive/toolbar": [
@@ -1085,11 +1026,6 @@
                     "command": "jupyter.interactive.goToCode",
                     "group": "inline@1",
                     "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
-                },
-                {
-                    "command": "jupyter.interactive.removeCell",
-                    "group": "inline@2",
-                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 }
             ],
             "explorer/context": [
@@ -1099,7 +1035,7 @@
                     "group": "Jupyter2"
                 },
                 {
-                    "when": "resourceLangId == jupyter && isWorkspaceTrusted",
+                    "when": "resourceExtname == .ipynb && isWorkspaceTrusted",
                     "command": "jupyter.importnotebookfile",
                     "group": "Jupyter"
                 }
@@ -1114,41 +1050,9 @@
                     "when": "false"
                 },
                 {
-                    "command": "jupyter.switchToLocalKernels",
-                    "when": "false"
-                },
-                {
-                    "command": "jupyter.switchToRemoteKernels",
-                    "when": "false"
-                },
-                {
-                    "command": "jupyter.switchToAnotherRemoteKernels",
-                    "when": "false"
-                },
-                {
                     "command": "jupyter.replayPylanceLog",
                     "title": "%jupyter.commandPalette.jupyter.replayPylanceLog.title%",
                     "when": "jupyter.development && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.debugNotebook",
-                    "title": "%jupyter.command.jupyter.debug.title%",
-                    "when": "false"
-                },
-                {
-                    "command": "jupyter.runByLine",
-                    "title": "%jupyter.command.jupyter.runByLine.title%",
-                    "when": "resource not in jupyter.notebookeditor.debugDocuments"
-                },
-                {
-                    "command": "jupyter.runByLineNext",
-                    "title": "%jupyter.command.jupyter.runByLineNext.title%",
-                    "when": "resource in jupyter.notebookeditor.runByLineDocuments"
-                },
-                {
-                    "command": "jupyter.runByLineStop",
-                    "title": "%jupyter.command.jupyter.runByLineStop.title%",
-                    "when": "resource in jupyter.notebookeditor.runByLineDocuments"
                 },
                 {
                     "command": "jupyter.interactive.copyCell",
@@ -1382,12 +1286,6 @@
                     "when": "jupyter.havenativecells && jupyter.isnativeactive && isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.notebookeditor.interruptkernel",
-                    "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                    "category": "Notebook",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
-                },
-                {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "category": "Notebook",
@@ -1549,10 +1447,6 @@
                     "when": "false"
                 },
                 {
-                    "command": "jupyter.interactive.removeCell",
-                    "when": "activeEditor == 'workbench.editor.interactive' && isWorkspaceTrusted"
-                },
-                {
                     "command": "jupyter.interactive.clearAllCells",
                     "when": "activeEditor == 'workbench.editor.interactive' && isWorkspaceTrusted"
                 }
@@ -1577,7 +1471,7 @@
                 },
                 "jupyter.showVariableViewWhenDebugging": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "%jupyter.configuration.jupyter.showVariableViewWhenDebugging.description%",
                     "scope": "application"
                 },
@@ -1952,6 +1846,15 @@
                         ]
                     ]
                 },
+                "jupyter.kernels.trusted": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [],
+                    "markdownDescription": "%jupyter.configuration.jupyter.kernels.trusted.markdownDescription%",
+                    "scope": "machine"
+                },
                 "jupyter.interactiveWindowMode": {
                     "type": "string",
                     "enum": [
@@ -1962,6 +1865,23 @@
                     "scope": "resource",
                     "description": "%jupyter.configuration.jupyter.interactiveWindowMode.description%",
                     "default": "multiple"
+                },
+                "jupyter.pythonCellFolding": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "%jupyter.configuration.jupyter.pythonCellFolding.description%",
+                    "scope": "resource"
+                },
+                "jupyter.interactiveWindowViewColumn": {
+                    "type": "string",
+                    "enum": [
+                        "beside",
+                        "active",
+                        "secondGroup"
+                    ],
+                    "scope": "resource",
+                    "description": "%jupyter.configuration.jupyter.interactiveWindowViewColumn.description%",
+                    "default": "secondGroup"
                 },
                 "jupyter.magicCommandsAsComments": {
                     "type": "boolean",
@@ -2004,12 +1924,6 @@
                     "description": "%jupyter.configuration.jupyter.newCellOnRunLast.description%",
                     "scope": "resource"
                 },
-                "jupyter.pylanceHandlesNotebooks": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%jupyter.configuration.jupyter.pylanceHandlesNotebooks.description%",
-                    "scope": "machine"
-                },
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",
                     "default": ".%'\"",
@@ -2038,10 +1952,25 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.markdownDescription%",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.deprecationMessage%",
                     "scope": "application",
                     "tags": [
                         "experimental"
                     ]
+                },
+                "jupyter.experimental.kernelPickerType": {
+                    "type": "string",
+                    "enum": [
+                        "Stable",
+                        "Insiders"
+                    ],
+                    "scope": "resource",
+                    "description": "%jupyter.configuration.jupyter.experimental.kernelPickerType.description%",
+                    "enumDescriptions": [
+                        "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.stable%",
+                        "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.insiders%"
+                    ],
+                    "default": "Stable"
                 }
             }
         },
@@ -2101,7 +2030,8 @@
                 {
                     "type": "webview",
                     "id": "jupyterViewVariables",
-                    "name": "Variables"
+                    "name": "Variables",
+                    "when": "jupyter.hasNativeNotebookOrInteractiveWindowOpen"
                 }
             ]
         },
@@ -2121,8 +2051,6 @@
     },
     "enabledApiProposals": [
         "notebookControllerKind",
-        "notebookWorkspaceEdit",
-        "notebookDebugOptions",
         "notebookDeprecated",
         "notebookMessaging",
         "notebookMime",
@@ -2130,12 +2058,14 @@
         "portsAttributes",
         "quickPickSortByLabel",
         "notebookKernelSource",
-        "interactiveWindow"
+        "interactiveWindow",
+        "notebookControllerAffinityHidden"
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
         "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
-        "prePublishBundleNLS": "cross-env BUILD_WITH_VSCODE_NLS=true gulp prePublishBundle",
+        "prePublishBundleStable": "cross-env BUILD_WITH_VSCODE_NLS=true IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=false gulp prePublishBundle",
+        "prePublishBundlePreRelease": "cross-env BUILD_WITH_VSCODE_NLS=true IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION=true gulp prePublishBundle",
         "prePublishNonBundle": "gulp clean && gulp prePublishNonBundle",
         "createNycFolder": "gulp createNycFolder",
         "validateTranslationFiles": "gulp validateTranslationFiles",
@@ -2166,14 +2096,14 @@
         "testNativeNotebooksInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
         "testNativeNotebooksInVSCodeWithoutTestSuffix": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
         "pretestNativeNotebooksWithoutPythonInVSCode": "cross-env VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders node ./out/test/datascience/dsTestSetup.js",
-        "testNativeNotebooksWithoutPythonInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true VSC_JUPYTER_CI_TEST_GREP=non-python-kernel VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
+        "testNativeNotebooksWithoutPythonInVSCode": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true VSC_JUPYTER_CI_TEST_GREP=@nonPython VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT=true node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
         "testNativeNotebooksAndWebviews": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_JUPYTER_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=*.vscode.test,*.vscode.common.test VSC_JUPYTER_FORCE_LOGGING=1 VSC_JUPYTER_CI_TEST_GREP=webview-test VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE=true node ./out/test/testBootstrap.node.js ./out/test/standardTest.node.js",
         "testWebExtension": "node ./build/launchWebTest.js",
         "launchWebExtension": "node ./build/launchWeb.js",
         "testPerformance": "node ./out/test/perfTest.node.js",
         "testSmoke": "node ./out/test/testBootstrap.node.js ./out/test/smokeTest.node.js",
         "testSmokeLogged": "cross-env VSC_JUPYTER_FORCE_LOGGING=true VSC_JUPYTER_LOG_FILE=smoke-test.log node --no-force-async-hooks-checks ./out/test/testBootstrap.node.js ./out/test/smokeTest.node.js",
-        "lint": "eslint -c .eslintrc.js --ext .ts src",
+        "lint": "eslint -c .eslintrc.js --ext .ts --ext .tsx src",
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "clean": "gulp clean",
         "updateBuildNumber": "gulp updateBuildNumber",
@@ -2184,7 +2114,7 @@
         "openInBrowser": "vscode-test-web --extensionDevelopmentPath=. ./src/test/datascience",
         "startJupyterServer": "node build/preDebugWebTest.js",
         "stopJupyterServer": "node build/postDebugWebTest.js",
-        "validateTelemetryMD": "gulp validateTelemetryMD",
+        "validateTelemetry": "gulp validateTelemetry",
         "verifyUnhandledErrors": "gulp verifyUnhandledErrors",
         "printTestResults": "gulp printTestResults",
         "setup-precommit-hook": "husky install"
@@ -2202,14 +2132,12 @@
         "@nteract/messaging": "^7.0.0",
         "@vscode/extension-telemetry": "^0.6.2",
         "@vscode/jupyter-ipywidgets": "^1.0.9",
-        "@vscode/jupyter-lsp-middleware": "^0.2.49",
+        "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "ajv-keywords": "^3.5.2",
         "ansi-to-html": "^0.6.7",
-        "arch": "^2.1.0",
         "bootstrap": "^4.3.1",
         "bootstrap-less": "^3.3.8",
         "cross-fetch": "^3.1.5",
-        "crypto": "^1.0.1",
         "decompress-response": "^4.2.0",
         "encoding": "^0.1.13",
         "fast-deep-equal": "^2.0.1",
@@ -2217,19 +2145,16 @@
         "format-util": "^1.0.5",
         "fs-extra": "^4.0.3",
         "glob": "^7.1.2",
-        "hash.js": "^1.1.7",
-        "iconv-lite": "^0.4.21",
-        "image-size": "^1.0.0",
         "inversify": "^5.0.1",
         "isomorphic-ws": "^4.0.1",
         "jquery": "^3.6.0",
         "jsonc-parser": "^2.0.3",
         "lodash": "^4.17.21",
         "marked": "^4.0.10",
-        "named-js-regexp": "^1.3.3",
         "node-fetch": "^2.6.7",
         "node-stream-zip": "^1.6.0",
         "pdfkit": "^0.13.0",
+        "pidtree": "^0.6.0",
         "portfinder": "^1.0.25",
         "re-resizable": "~6.5.5",
         "react": "^16.5.2",
@@ -2242,7 +2167,6 @@
         "redux": "^4.0.4",
         "redux-logger": "^3.0.6",
         "reflect-metadata": "^0.1.12",
-        "requirejs": "^2.3.6",
         "rxjs": "^6.5.4",
         "rxjs-compat": "^6.5.4",
         "safe-buffer": "^5.2.1",
@@ -2262,8 +2186,6 @@
         "tmp": "^0.0.29",
         "uint64be": "^1.0.1",
         "underscore": "^1.12.1",
-        "unicode": "^10.0.0",
-        "untildify": "^3.0.2",
         "url-parse": "^1.5.10",
         "uuid": "^3.3.2",
         "vscode-debugprotocol": "^1.41.0",
@@ -2277,7 +2199,7 @@
         "zeromq": "^6.0.0-beta.6"
     },
     "devDependencies": {
-        "@actions/core": "^1.2.6",
+        "@actions/core": "^1.9.1",
         "@actions/github": "^4.0.0",
         "@actions/glob": "^0.3.0",
         "@babel/cli": "^7.15.4",
@@ -2309,8 +2231,8 @@
         "@types/get-port": "^3.2.0",
         "@types/glob": "^5.0.35",
         "@types/html-webpack-plugin": "^3.2.0",
-        "@types/iconv-lite": "^0.0.1",
         "@types/jsdom": "^16.2.13",
+        "@types/json2csv": "^5.0.3",
         "@types/loadable__component": "^5.10.0",
         "@types/loader-utils": "^1.1.3",
         "@types/lodash": "^4.14.104",
@@ -2336,8 +2258,7 @@
         "@types/strip-comments": "^2.0.1",
         "@types/tcp-port-used": "^1.0.0",
         "@types/temp": "^0.8.32",
-        "@types/tmp": "0.0.33",
-        "@types/untildify": "^3.0.0",
+        "@types/tmp": "^0.2.3",
         "@types/url-parse": "^1.4.8",
         "@types/uuid": "^3.4.3",
         "@types/uuid-to-hex": "^1.1.0",
@@ -2349,8 +2270,8 @@
         "@typescript-eslint/eslint-plugin": "^5.13.0",
         "@typescript-eslint/eslint-plugin-tslint": "^5.13.0",
         "@typescript-eslint/parser": "^5.13.0",
-        "@vscode/test-electron": "^1.6.1",
-        "@vscode/test-web": "^0.0.24",
+        "@vscode/test-electron": "^2.2.0",
+        "@vscode/test-web": "^0.0.29",
         "acorn": "^6.4.1",
         "babel-polyfill": "^6.26.0",
         "bufferutil": "^4.0.6",
@@ -2402,6 +2323,7 @@
         "html-webpack-plugin": "^5.5.0",
         "husky": "^7.0.0",
         "jsdom": "^20.0.0",
+        "json2csv": "^5.0.7",
         "jsonschema": "^1.4.1",
         "keyv": "^4.1.0",
         "less": "^3.9.0",
@@ -2479,6 +2401,7 @@
         "jquery-ui@<1.13.2": "1.13.2",
         "@jupyterlab/coreutils": {
             "url-parse": "$url-parse"
-        }
+        },
+        "d3-color": "3.1.0"
     }
 }

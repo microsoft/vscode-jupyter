@@ -36,6 +36,8 @@ test.ipynb
 travis*.log
 tsconfig*.json
 tsfmt.json
+TELEMETRY.csv
+TELEMETRY.md
 .eslintrc.js
 typings.json
 vsc-extension-quickstart.md
@@ -74,6 +76,7 @@ i18n/**
 news/**
 node_modules/**
 obj/**
+logs/**
 out/**/*.stats.json
 out/**/*.analyzer.html
 out/coverconfig.json

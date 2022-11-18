@@ -17,6 +17,7 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../../types';
 import { Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { trackKernelResourceInformation } from '../../telemetry/helper';
 
 /**
  * Class used to fetch environment variables for a kernel.
@@ -74,6 +75,10 @@ export class KernelEnvironmentVariablesService {
                       })
                 : undefined
         ]);
+        await trackKernelResourceInformation(resource, {
+            capturedEnvVars: Object.keys(interpreterEnv || {}).length > 0
+        });
+
         if (!interpreterEnv && Object.keys(customEnvVars || {}).length === 0) {
             traceInfo('No custom variables nor do we have a conda environment');
         }
@@ -135,7 +140,9 @@ export class KernelEnvironmentVariablesService {
             traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter?.uri)}`);
             mergedVars.PYTHONNOUSERSITE = 'True';
         }
-
+        if (isPythonKernel) {
+            mergedVars.PYDEVD_IPYTHON_COMPATIBLE_DEBUGGING = '1';
+        }
         return mergedVars;
     }
 }

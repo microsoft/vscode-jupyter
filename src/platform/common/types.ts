@@ -102,20 +102,20 @@ export interface IJupyterSettings {
     readonly jupyterCommandLineArguments: string[];
     readonly widgetScriptSources: WidgetCDNs[];
     readonly interactiveWindowMode: InteractiveWindowMode;
+    readonly pythonCellFolding: boolean;
+    readonly interactiveWindowViewColumn: InteractiveWindowViewColumn;
     readonly disableZMQSupport: boolean;
     readonly forceIPyKernelDebugger?: boolean;
     readonly disablePythonDaemon: boolean;
     readonly variableTooltipFields: IVariableTooltipFields;
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;
-    readonly pylanceHandlesNotebooks?: boolean;
-    readonly pylanceLspNotebooksEnabled?: boolean;
     readonly pythonCompletionTriggerCharacters?: string;
     readonly logKernelOutputSeparately: boolean;
     readonly poetryPath: string;
     readonly excludeUserSitePackages: boolean;
     readonly enableExtendedKernelCompletions: boolean;
-    readonly showOnlyOneTypeOfKernel: boolean;
+    readonly kernelPickerType: KernelPickerType;
 }
 
 export interface IVariableTooltipFields {
@@ -157,6 +157,10 @@ export interface IVariableQuery {
 }
 
 export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
+
+export type InteractiveWindowViewColumn = 'beside' | 'active' | 'secondGroup';
+
+export type KernelPickerType = 'Stable' | 'Insiders';
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 
@@ -263,9 +267,15 @@ export type DeprecatedFeatureInfo = {
     setting?: DeprecatedSettingAndValue;
 };
 
-export const IFeatureDeprecationManager = Symbol('IFeatureDeprecationManager');
+export interface IFeatureSet {
+    readonly kernelPickerType: KernelPickerType;
+}
 
-export interface IFeatureDeprecationManager extends Disposable {
+export const IFeaturesManager = Symbol('IFeaturesManager');
+
+export interface IFeaturesManager extends Disposable {
+    readonly features: IFeatureSet;
+    readonly onDidChangeFeatures: Event<void>;
     initialize(): void;
     registerDeprecation(deprecatedInfo: DeprecatedFeatureInfo): void;
 }
@@ -278,14 +288,6 @@ export interface IAsyncDisposable {
 }
 
 /**
- * Stores hash formats
- */
-export interface IHashFormat {
-    number: number; // If hash format is a number
-    string: string; // If hash format is a string
-}
-
-/**
  * Interface used to implement cryptography tools
  */
 export const ICryptoUtils = Symbol('ICryptoUtils');
@@ -294,14 +296,9 @@ export interface ICryptoUtils {
      * Creates hash using the data and encoding specified
      * @returns hash as number, or string
      * @param data The string to hash
-     * @param hashFormat Return format of the hash, number or string
-     * @param [algorithm]
+     * @param [algorithm] Defaults to SHA-256
      */
-    createHash<E extends keyof IHashFormat>(
-        data: string,
-        hashFormat: E,
-        algorithm?: 'SHA512' | 'SHA256' | 'FNV'
-    ): IHashFormat[E];
+    createHash(data: string, algorithm?: 'SHA-512' | 'SHA-256'): Promise<string>;
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');

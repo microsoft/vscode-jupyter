@@ -4,26 +4,23 @@
 'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, multiInject, optional } from 'inversify';
-import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
-import { PYTHON_FILE_ANY_SCHEME, PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import '../../platform/common/extensions';
 import {
     IConfigurationService,
     IDataScienceCommandListener,
     IDisposable,
-    IDisposableRegistry,
-    IExtensionContext
+    IDisposableRegistry
 } from '../../platform/common/types';
 import { debounceAsync, swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EditorContexts, Telemetry } from '../../platform/common/constants';
+import { EditorContexts } from '../../platform/common/constants';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
+import { sendTelemetryEvent } from '../../telemetry';
 
 /**
  * Singleton class that activate a bunch of random things that didn't fit anywhere else.
@@ -37,10 +34,6 @@ export class GlobalActivation implements IExtensionSingleActivationService {
     constructor(
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IExtensionContext) private extensionContext: IExtensionContext,
-        @inject(IDataScienceCodeLensProvider)
-        @optional()
-        private dataScienceCodeLensProvider: IDataScienceCodeLensProvider | undefined,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
@@ -56,12 +49,6 @@ export class GlobalActivation implements IExtensionSingleActivationService {
     }
 
     public async activate(): Promise<void> {
-        if (this.dataScienceCodeLensProvider) {
-            this.extensionContext.subscriptions.push(
-                vscode.languages.registerCodeLensProvider([PYTHON_FILE_ANY_SCHEME], this.dataScienceCodeLensProvider)
-            );
-        }
-
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();
         this.changeHandler = this.configuration.getSettings(undefined).onDidChange(this.onSettingsChanged.bind(this));
@@ -125,14 +112,21 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         const settings = this.configuration.getSettings() as any;
 
         // Translate all of the 'string' based settings into known values or not.
-        const pythonConfig = this.workspace.getConfiguration('jupyter');
-        if (pythonConfig) {
+        const jupyterConfig = this.workspace.getConfiguration('jupyter');
+        if (jupyterConfig) {
             const keys = Object.keys(settings);
             const resultSettings: JSONObject = {};
             for (const k of keys) {
                 const currentValue = settings[k];
+                // We don't have properties starting with '_'
+                if (k.startsWith('_')) {
+                    continue;
+                }
+                if (typeof currentValue === 'function') {
+                    continue;
+                }
                 if (typeof currentValue === 'string' && k !== 'interactiveWindowMode') {
-                    const inspectResult = pythonConfig.inspect<string>(`${k}`);
+                    const inspectResult = jupyterConfig.inspect<string>(`${k}`);
                     if (inspectResult && inspectResult.defaultValue !== currentValue) {
                         resultSettings[k] = 'non-default';
                     } else {
@@ -142,7 +136,10 @@ export class GlobalActivation implements IExtensionSingleActivationService {
                     resultSettings[k] = currentValue;
                 }
             }
-            sendTelemetryEvent(Telemetry.DataScienceSettings, 0, resultSettings);
+
+            sendTelemetryEvent(Telemetry.DataScienceSettings, undefined, {
+                settingsJson: JSON.stringify(resultSettings)
+            });
         }
     }
 }

@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 'use strict';
-import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
-import { IApplicationEnvironment } from '../platform/common/application/types';
-import { Identifiers, JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { Identifiers, isPreReleaseVersion } from '../platform/common/constants';
 
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
@@ -14,17 +12,21 @@ import { IRawNotebookSupportedService } from './raw/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.web';
 import { injectable } from 'inversify';
-import { IKernelFinder, IKernelProvider, IThirdPartyKernelProvider } from './types';
+import { IKernelFinder, IKernelProvider, IStartupCodeProvider, IThirdPartyKernelProvider } from './types';
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.web';
-import { KernelFinder } from './kernelFinder.web';
+import { KernelFinder } from './kernelFinder';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelVariables } from './variables/kernelVariables';
 import { JupyterVariables } from './variables/jupyterVariables';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
-import { KernelAutoReConnectFailedMonitor } from './kernelAutoReConnectFailedMonitor';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
+import { DebugStartupCodeProvider } from './debuggerStartupCodeProvider';
+import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.web';
+import { ITrustedKernelPaths } from './raw/finder/types';
+import { KernelStatusProvider } from './kernelStatusProvider';
+import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarmer';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -36,15 +38,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IRawNotebookSupportedService,
         RawNotebookSupportedService
     );
-    const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
-    const packageJson: { engines: { vscode: string } } | undefined =
-        vscode.extensions.getExtension(JVSC_EXTENSION_ID)?.packageJSON;
-    const isInsiderVersion = packageJson?.engines?.vscode?.toLowerCase()?.endsWith('insider');
-    setSharedProperty('isInsiderExtension', isVSCInsiders && isInsiderVersion ? 'true' : 'false');
+    setSharedProperty('isInsiderExtension', isPreReleaseVersion());
 
-    // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
-    // This is temporary, and once we ship native editor this needs to be removed.
-    setSharedProperty('ds_notebookeditor', 'native');
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(
         'isPythonExtensionInstalled',
@@ -62,15 +57,17 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        KernelAutoReConnectFailedMonitor
-    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelAutoReconnectMonitor
     );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelCompletionsPreWarmer
+    );
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
+    serviceManager.addSingleton<ITrustedKernelPaths>(ITrustedKernelPaths, TrustedKernelPaths);
     serviceManager.addSingleton<IThirdPartyKernelProvider>(IThirdPartyKernelProvider, ThirdPartyKernelProvider);
     serviceManager.addSingleton<PreferredRemoteKernelIdProvider>(
         PreferredRemoteKernelIdProvider,
@@ -81,5 +78,9 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
 
-    serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        CellOutputDisplayIdTracker
+    );
+    serviceManager.addSingleton<IStartupCodeProvider>(IStartupCodeProvider, DebugStartupCodeProvider);
 }

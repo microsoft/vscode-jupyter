@@ -8,6 +8,7 @@
 /* eslint-disable  */
 import { relative } from 'path';
 import * as vscode from 'vscode';
+import { SnippetTextEdit } from 'vscode';
 import { vscMockHtmlContent } from './htmlContent';
 import { vscMockStrings } from './strings';
 import { vscUri } from './uri';
@@ -168,6 +169,11 @@ export namespace vscMockExtHostedTypes {
          * A controller is preferred for a notebook.
          */
         Preferred = 2
+    }
+    export enum NotebookControllerAffinity2 {
+        Default = 1,
+        Preferred = 2,
+        Hidden = -1
     }
 
     export enum NotebookRunState {
@@ -803,7 +809,23 @@ export namespace vscMockExtHostedTypes {
             return this._textEdits.has(uri.toString());
         }
 
-        set(uri: vscUri.URI, edits: TextEdit[]): void {
+        set(uri: vscode.Uri, edits: NotebookEdit[]): void;
+        set(uri: vscode.Uri, edits: [NotebookEdit, vscode.WorkspaceEditEntryMetadata][]): void;
+        set(uri: vscode.Uri, edits: (TextEdit | SnippetTextEdit)[]): void;
+        set(uri: vscode.Uri, edits: [TextEdit | SnippetTextEdit, vscode.WorkspaceEditEntryMetadata][]): void;
+        set(
+            uri: vscUri.URI,
+            edits:
+                | null
+                | undefined
+                | (
+                      | TextEdit
+                      | SnippetTextEdit
+                      | NotebookEdit
+                      | [NotebookEdit, vscode.WorkspaceEditEntryMetadata]
+                      | [TextEdit | SnippetTextEdit, vscode.WorkspaceEditEntryMetadata]
+                  )[]
+        ): void {
             let data = this._textEdits.get(uri.toString());
             if (!data) {
                 data = { seq: this._seqPool++, uri, edits: [] };
@@ -813,7 +835,7 @@ export namespace vscMockExtHostedTypes {
                 // @ts-ignore
                 data.edits = undefined;
             } else {
-                data.edits = edits.slice(0);
+                //data.edits = edits.slice(0);
             }
         }
 
@@ -2355,7 +2377,10 @@ export namespace vscMockExtHostedTypes {
         static readonly Back: vscode.QuickInputButton = {} as any;
     }
     export class NotebookRendererScript {
-        constructor(public uri: vscode.Uri, public provides: string | string[] = []) {}
+        public readonly provides: string[];
+        constructor(public uri: vscode.Uri, provides: string | string[] = []) {
+            this.provides = typeof provides === 'string' ? [provides] : provides;
+        }
     }
     export class FileDecoration {
         badge?: string;
@@ -2368,5 +2393,146 @@ export namespace vscMockExtHostedTypes {
             this.tooltip = tooltip;
             this.color = color;
         }
+    }
+    // https://github.com/microsoft/vscode/issues/115616 @alexr00
+
+    export enum PortAutoForwardAction {
+        Notify = 1,
+        OpenBrowser = 2,
+        OpenPreview = 3,
+        Silent = 4,
+        Ignore = 5,
+        OpenBrowserOnce = 6
+    }
+
+    export class PortAttributes {
+        /**
+         * The port number associated with this this set of attributes.
+         */
+        port: number;
+
+        /**
+         * The action to be taken when this port is detected for auto forwarding.
+         */
+        autoForwardAction: PortAutoForwardAction;
+
+        /**
+         * Creates a new PortAttributes object
+         * @param port the port number
+         * @param autoForwardAction the action to take when this port is detected
+         */
+        constructor(port: number, autoForwardAction: PortAutoForwardAction) {
+            this.port = port;
+            this.autoForwardAction = autoForwardAction;
+        }
+    }
+
+    /**
+     * A notebook range represents an ordered pair of two cell indices.
+     * It is guaranteed that start is less than or equal to end.
+     */
+    export class NotebookRange {
+        /**
+         * `true` if `start` and `end` are equal.
+         */
+        get isEmpty(): boolean {
+            return this.start === this.end;
+        }
+
+        /**
+         * Create a new notebook range. If `start` is not
+         * before or equal to `end`, the values will be swapped.
+         *
+         * @param start start index
+         * @param end end index.
+         */
+        constructor(public readonly start: number, public readonly end: number) {}
+
+        /**
+         * Derive a new range for this range.
+         *
+         * @param change An object that describes a change to this range.
+         * @return A range that reflects the given change. Will return `this` range if the change
+         * is not changing anything.
+         */
+        with(change: { start?: number; end?: number }): NotebookRange {
+            return new NotebookRange(change.start || 0, change.end || 0);
+        }
+    }
+    export class NotebookEdit {
+        /**
+         * Utility to create a edit that replaces cells in a notebook.
+         *
+         * @param range The range of cells to replace
+         * @param newCells The new notebook cells.
+         */
+        static replaceCells(range: NotebookRange, newCells: vscode.NotebookCellData[]): NotebookEdit {
+            return new NotebookEdit(range, newCells);
+        }
+
+        /**
+         * Utility to create an edit that replaces cells in a notebook.
+         *
+         * @param index The index to insert cells at.
+         * @param newCells The new notebook cells.
+         */
+        static insertCells(index: number, newCells: vscode.NotebookCellData[]): NotebookEdit {
+            return new NotebookEdit(new NotebookRange(index, index), newCells);
+        }
+
+        /**
+         * Utility to create an edit that deletes cells in a notebook.
+         *
+         * @param range The range of cells to delete.
+         */
+        static deleteCells(range: NotebookRange): NotebookEdit {
+            return new NotebookEdit(range, []);
+        }
+
+        /**
+         * Utility to create an edit that update a cell's metadata.
+         *
+         * @param index The index of the cell to update.
+         * @param newCellMetadata The new metadata for the cell.
+         */
+        static updateCellMetadata(index: number, _newCellMetadata: { [key: string]: any }): NotebookEdit {
+            return new NotebookEdit(new NotebookRange(index, index), []);
+        }
+
+        /**
+         * Utility to create an edit that updates the notebook's metadata.
+         *
+         * @param newNotebookMetadata The new metadata for the notebook.
+         */
+        static updateNotebookMetadata(_newNotebookMetadata: { [key: string]: any }): NotebookEdit {
+            return new NotebookEdit(new NotebookRange(0, 0), []);
+        }
+
+        /**
+         * Optional new metadata for the cells.
+         */
+        newCellMetadata?: { [key: string]: any };
+
+        /**
+         * Optional new metadata for the notebook.
+         */
+        newNotebookMetadata?: { [key: string]: any };
+
+        constructor(public readonly range: NotebookRange, public readonly newCells: vscode.NotebookCellData[]) {}
+    }
+
+    /**
+     * The kind of {@link QuickPickItem quick pick item}.
+     */
+    export enum QuickPickItemKind {
+        /**
+         * When a {@link QuickPickItem} has a kind of {@link Separator}, the item is just a visual separator and does not represent a real item.
+         * The only property that applies is {@link QuickPickItem.label label }. All other properties on {@link QuickPickItem} will be ignored and have no effect.
+         */
+        Separator = -1,
+        /**
+         * The default {@link QuickPickItem.kind} is an item that can be selected in the quick pick.
+         */
+        Default = 0
     }
 }

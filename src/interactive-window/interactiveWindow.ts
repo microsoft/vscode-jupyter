@@ -10,7 +10,6 @@ import {
     NotebookCellData,
     NotebookCellKind,
     NotebookDocument,
-    NotebookEditorRevealType,
     NotebookRange,
     Uri,
     Range,
@@ -20,19 +19,21 @@ import {
     Disposable,
     window,
     NotebookController,
-    NotebookEdit
+    NotebookEdit,
+    NotebookEditorRevealType
 } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
-import { traceError, traceInfoIfCI } from '../platform/logging';
+import { traceError, traceInfoIfCI, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 
 import { IConfigurationService, InteractiveWindowMode, IsWebExtension, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
 import {
     IKernel,
+    IKernelProvider,
     isLocalConnection,
     KernelAction,
     KernelConnectionMetadata,
@@ -56,7 +57,11 @@ import {
     InteractiveTab
 } from './types';
 import { generateInteractiveCode, isInteractiveInputTab } from './helpers';
-import { IControllerSelection, IVSCodeNotebookController } from '../notebooks/controllers/types';
+import {
+    IControllerRegistration,
+    IControllerSelection,
+    IVSCodeNotebookController
+} from '../notebooks/controllers/types';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { getInteractiveCellMetadata } from './helpers';
 import { KernelConnector } from '../notebooks/controllers/kernelConnector';
@@ -72,6 +77,8 @@ import { updateNotebookMetadata } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
+import { KernelController } from '../kernels/kernelController';
+import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
@@ -91,16 +98,18 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return this._submitters;
     }
     public get notebookDocument(): NotebookDocument {
-        return this.notebookEditor.notebook;
+        return this.notebookEditor?.notebook;
     }
     public get kernelConnectionMetadata(): KernelConnectionMetadata | undefined {
         return this.currentKernelInfo.metadata;
     }
+    private initialized = false;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent = new EventEmitter<void>();
     private _submitters: Uri[] = [];
     private fileInKernel: Uri | undefined;
     private cellMatcher: CellMatcher;
+    private pendingCellAdd: Promise<void> | undefined;
 
     private internalDisposables: Disposable[] = [];
     private kernelDisposables: Disposable[] = [];
@@ -110,17 +119,12 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         controller?: NotebookController;
         metadata?: KernelConnectionMetadata;
     } = {};
-    private pendingNotebookScrolls: NotebookRange[] = [];
-
-    private _notebookEditor!: NotebookEditor;
+    private _notebookEditor: NotebookEditor;
     public get notebookEditor(): NotebookEditor {
         return this._notebookEditor;
     }
 
-    private _notebookUri: Uri;
-    public get notebookUri(): Uri {
-        return this._notebookUri;
-    }
+    public readonly notebookUri: Uri;
 
     private readonly documentManager: IDocumentManager;
     private readonly fs: IFileSystem;
@@ -136,12 +140,14 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private readonly debuggingManager: IInteractiveWindowDebuggingManager;
     private readonly isWebExtension: boolean;
     private readonly commandManager: ICommandManager;
+    private readonly controllerRegistration: IControllerRegistration;
+    private readonly kernelProvider: IKernelProvider;
     constructor(
         private readonly serviceContainer: IServiceContainer,
         private _owner: Resource,
         public mode: InteractiveWindowMode,
-        private preferredController: IVSCodeNotebookController | undefined,
-        private readonly notebookEditorOrTab: NotebookEditor | InteractiveTab,
+        preferredController: IVSCodeNotebookController | undefined,
+        notebookEditorOrTab: NotebookEditor | InteractiveTab,
         public readonly inputUri: Uri
     ) {
         this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
@@ -157,98 +163,136 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
         this.codeGeneratorFactory = this.serviceContainer.get<ICodeGeneratorFactory>(ICodeGeneratorFactory);
         this.storageFactory = this.serviceContainer.get<IGeneratedCodeStorageFactory>(IGeneratedCodeStorageFactory);
+        this.kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
         this.debuggingManager = this.serviceContainer.get<IInteractiveWindowDebuggingManager>(
             IInteractiveWindowDebuggingManager
         );
         this.isWebExtension = this.serviceContainer.get<boolean>(IsWebExtension);
-        this._notebookUri = isInteractiveInputTab(notebookEditorOrTab)
+        this.controllerRegistration = this.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        this.notebookUri = isInteractiveInputTab(notebookEditorOrTab)
             ? notebookEditorOrTab.input.uri
             : notebookEditorOrTab.notebook.uri;
+
         if (!isInteractiveInputTab(notebookEditorOrTab)) {
             this._notebookEditor = notebookEditorOrTab;
+        }
+
+        if (preferredController) {
+            this.currentKernelInfo = {
+                controller: preferredController.controller,
+                metadata: preferredController.connection
+            };
         }
 
         // Set our owner and first submitter
         if (this._owner) {
             this._submitters.push(this._owner);
         }
-    }
 
-    public start() {
         window.onDidChangeActiveNotebookEditor((e) => {
             if (e === this.notebookEditor) {
                 this._onDidChangeViewState.fire();
             }
         }, this.internalDisposables);
         workspace.onDidCloseNotebookDocument((notebookDocument) => {
-            if (notebookDocument === this.notebookDocument) {
+            if (notebookDocument.uri.toString() === this.notebookUri.toString()) {
                 this.closedEvent.fire();
             }
         }, this.internalDisposables);
 
-        this.cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
         if (window.activeNotebookEditor === this.notebookEditor) {
             this._onDidChangeViewState.fire();
         }
 
         this.listenForControllerSelection();
-        if (this.preferredController) {
-            // Also start connecting to our kernel but don't wait for it to finish
-            this.startKernel(this.preferredController.controller, this.preferredController.connection).ignoreErrors();
-        } else if (this.isWebExtension) {
-            this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
-        }
 
-        // Create the code generator right away to start watching the notebook
-        this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
+        this.cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
+        if (this.notebookDocument) {
+            this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
+        }
     }
 
-    public async restore(preferredController: IVSCodeNotebookController | undefined) {
-        if (preferredController) {
-            this.preferredController = preferredController;
-        }
-        if (!this.notebookEditor) {
-            if (isInteractiveInputTab(this.notebookEditorOrTab)) {
-                const document = await workspace.openNotebookDocument(this.notebookEditorOrTab.input.uri);
-                const editor = await window.showNotebookDocument(document, {
-                    viewColumn: this.notebookEditorOrTab.group.viewColumn
+    public async ensureInitialized() {
+        if (!this._notebookEditor) {
+            let currentTab: InteractiveTab | undefined;
+            window.tabGroups.all.find((group) => {
+                group.tabs.find((tab) => {
+                    if (isInteractiveInputTab(tab) && tab.input.uri.toString() == this.notebookUri.toString()) {
+                        currentTab = tab;
+                    }
                 });
-                this._notebookEditor = editor;
-            } else {
-                this._notebookEditor = this.notebookEditorOrTab;
+            });
+
+            const document = await workspace.openNotebookDocument(this.notebookUri);
+            this._notebookEditor = await window.showNotebookDocument(document, {
+                preserveFocus: true,
+                viewColumn: currentTab?.group.viewColumn
+            });
+
+            this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
+        }
+
+        if (this.currentKernelInfo) {
+            this.startKernel().ignoreErrors();
+        } else {
+            traceWarning('No controller selected for Interactive Window');
+            if (this.isWebExtension) {
+                this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
             }
         }
-
-        this.start();
+        this.initialized = true;
     }
 
-    private async startKernel(
-        controller: NotebookController | undefined = this.currentKernelInfo.controller,
-        metadata: KernelConnectionMetadata | undefined = this.currentKernelInfo.metadata
-    ): Promise<IKernel> {
+    /**
+     * Inform the controller that a cell is being added and it should wait before adding any others to the execution queue.
+     * @param cellAddedPromise - Promise that resolves when the cell execution has been queued
+     */
+    private setPendingCellAdd(cellAddedPromise: Promise<void>) {
+        if (this.kernelConnectionMetadata) {
+            this.pendingCellAdd = cellAddedPromise;
+            const controller = this.controllerRegistration.get(this.kernelConnectionMetadata, 'interactive');
+            controller?.setPendingCellAddition(this.notebookDocument, cellAddedPromise);
+        }
+    }
+
+    private async startKernel(): Promise<IKernel> {
+        if (this.currentKernelInfo.kernel) {
+            return this.currentKernelInfo.kernel.promise;
+        }
+
+        const controller = this.currentKernelInfo.controller;
+        const metadata = this.currentKernelInfo.metadata;
         if (!controller || !metadata) {
             // This cannot happen, but we need to make typescript happy.
             throw new Error('Controller not selected');
         }
-        if (this.currentKernelInfo.kernel) {
-            return this.currentKernelInfo.kernel.promise;
-        }
+
         const kernelPromise = createDeferred<IKernel>();
         kernelPromise.promise.catch(noop);
-        this.currentKernelInfo = { controller, metadata, kernel: kernelPromise };
+        this.currentKernelInfo.kernel = kernelPromise;
 
         const sysInfoCell = this.insertSysInfoMessage(metadata, SysInfoReason.Start);
         try {
             // Try creating a kernel
-            initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, metadata);
+            await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, metadata);
 
             const onStartKernel = (action: KernelAction, k: IKernel) => {
                 if (action !== 'start' && action !== 'restart') {
                     return;
                 }
                 // Id may be different if the user switched controllers
-                this.currentKernelInfo.controller = k.controller;
+                traceInfoIfCI(
+                    `Looking for controller ${k.controller.id} in ${this.controllerRegistration.all
+                        .map((item) => `${item.kind}:${item.id}`)
+                        .join(', ')}`
+                );
+                const found = this.controllerRegistration.registered.find((item) => item.id === k.controller.id);
+                if (!found) {
+                    throw Error(`Controller ${k.controller.id} not found or not yet created`);
+                }
+                this.currentKernelInfo.controller = found.controller;
                 this.currentKernelInfo.metadata = k.kernelConnectionMetadata;
+                !!this.pendingCellAdd && this.setPendingCellAdd(this.pendingCellAdd);
                 this.updateSysInfoMessage(
                     this.getSysInfoMessage(k.kernelConnectionMetadata, SysInfoReason.Start),
                     false,
@@ -266,19 +310,29 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 'jupyterExtension',
                 onStartKernel
             );
-            this.currentKernelInfo.controller = kernel.controller;
+
+            traceInfoIfCI(
+                `Looking for controller ${kernel.controller.id} in ${this.controllerRegistration.all
+                    .map((item) => `${item.kind}:${item.id}`)
+                    .join(', ')}`
+            );
+            const found = this.controllerRegistration.registered.find((item) => item.id === kernel.controller.id);
+            if (!found) {
+                throw Error(`Controller ${kernel.controller.id} not found or not yet created`);
+            }
+
+            this.currentKernelInfo.controller = found.controller;
             this.currentKernelInfo.metadata = kernel.kernelConnectionMetadata;
 
-            const kernelEventHookForRestart = async (ev: 'willRestart' | 'willInterrupt') => {
-                if (ev === 'willRestart' && this.notebookDocument && this.currentKernelInfo.metadata) {
+            const kernelEventHookForRestart = async () => {
+                if (this.notebookDocument && this.currentKernelInfo.metadata) {
                     this._insertSysInfoPromise = undefined;
                     // If we're about to restart, insert a 'restarting' message as it happens
                     this.insertSysInfoMessage(this.currentKernelInfo.metadata, SysInfoReason.Restart).then(noop, noop);
                 }
             };
             // Hook pre interrupt so we can stick in a message
-            kernel.addEventHook(kernelEventHookForRestart);
-            this.kernelDisposables.push(new Disposable(() => kernel.removeEventHook(kernelEventHookForRestart)));
+            this.kernelDisposables.push(kernel.addHook('willRestart', kernelEventHookForRestart));
 
             // When restart finishes, rerun our initialization code
             kernel.onRestarted(
@@ -324,13 +378,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private getSysInfoMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
-        const kernelName = kernelMetadata.interpreter?.displayName;
+        const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
         return reason === SysInfoReason.Restart
-            ? kernelName
-                ? DataScience.restartingKernelCustomHeader().format(kernelName)
+            ? displayName
+                ? DataScience.restartingKernelCustomHeader().format(displayName)
                 : DataScience.restartingKernelHeader()
-            : kernelName
-            ? DataScience.startingNewKernelCustomHeader().format(kernelName)
+            : displayName
+            ? DataScience.startingNewKernelCustomHeader().format(displayName)
             : DataScience.startingNewKernelHeader();
     }
 
@@ -427,14 +481,21 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // Ensure we hear about any controller changes so we can update our cached promises
         this.notebookControllerSelection.onControllerSelected(
             (e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) => {
-                if (e.notebook !== this.notebookEditor.notebook) {
+                if (e.notebook.uri.toString() !== this.notebookUri.toString()) {
                     return;
                 }
 
                 // Clear cached kernel when the selected controller for this document changes
                 if (e.controller.id !== this.currentKernelInfo.controller?.id) {
                     this.disconnectKernel();
-                    this.startKernel(e.controller.controller, e.controller.connection).ignoreErrors();
+                    this.currentKernelInfo = {
+                        controller: e.controller.controller,
+                        metadata: e.controller.connection
+                    };
+                    // don't start the kernel if the IW has only been restored from a previous session
+                    if (this.initialized) {
+                        this.startKernel().ignoreErrors();
+                    }
                 }
             },
             this,
@@ -472,7 +533,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             edit.set(this.notebookDocument.uri, [nbEdit]);
             await workspace.applyEdit(edit);
         } else {
-            const execution = CellExecutionCreator.getOrCreate(notebookCell, controller.controller);
+            const execution = CellExecutionCreator.getOrCreate(
+                notebookCell,
+                new KernelController(controller.controller)
+            );
             if (!execution.started) {
                 execution.start(notebookCell.executionSummary?.timing?.startTime);
             }
@@ -558,33 +622,39 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
         // Multiple cells that have split our code.
         const promises = cells.map((c) => {
+            const deferred = createDeferred<void>();
+            this.setPendingCellAdd(deferred.promise);
             // Add the cell first. We don't need to wait for this part as we want to add them
             // as quickly as possible
             const notebookCellPromise = this.addNotebookCell(c, fileUri, line);
 
             // Queue up execution
             const promise = this.createExecutionPromise(notebookCellPromise, isDebug);
-            promise.catch((ex) => {
-                // If execution fails due to a failure in another cell, then log that error against the cell.
-                if (ex instanceof InteractiveCellResultError) {
-                    notebookCellPromise
-                        .then((cell) => {
-                            if (ex.cell !== cell) {
-                                this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell).then(noop, noop);
-                            }
-                        })
-                        .catch(noop);
-                } else {
-                    notebookCellPromise
-                        .then((cell) =>
-                            // If our cell result was a failure show an error
-                            this.errorHandler
-                                .getErrorMessageForDisplayInCell(ex, 'execution', this.owningResource)
-                                .then((message) => this.addErrorMessage(message, cell))
-                        )
-                        .catch(noop);
-                }
-            });
+            promise
+                .catch((ex) => {
+                    // If execution fails due to a failure in another cell, then log that error against the cell.
+                    if (ex instanceof InteractiveCellResultError) {
+                        notebookCellPromise
+                            .then((cell) => {
+                                if (ex.cell !== cell) {
+                                    this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell).then(noop, noop);
+                                }
+                            })
+                            .catch(noop);
+                    } else {
+                        notebookCellPromise
+                            .then((cell) =>
+                                // If our cell result was a failure show an error
+                                this.errorHandler
+                                    .getErrorMessageForDisplayInCell(ex, 'execution', this.owningResource)
+                                    .then((message) => this.addErrorMessage(message, cell))
+                            )
+                            .catch(noop);
+                    }
+                })
+                .finally(() => {
+                    deferred?.resolve();
+                });
             return promise;
         });
 
@@ -631,8 +701,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             }
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             const iwCellMetadata = getInteractiveCellMetadata(cell);
+            const execution = this.kernelProvider.getKernelExecution(kernel!);
             success =
-                (await kernel!.executeCell(cell, iwCellMetadata?.generatedCode?.code)) !== NotebookCellRunState.Error;
+                (await execution.executeCell(cell, iwCellMetadata?.generatedCode?.code)) !== NotebookCellRunState.Error;
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell.finished');
         } finally {
             await detachKernel();
@@ -688,20 +759,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             .getCells()
             .find((cell) => getInteractiveCellMetadata(cell)?.id === id);
         if (matchingCell) {
-            this.revealCell(matchingCell);
-        }
-    }
-
-    private revealCell(notebookCell: NotebookCell) {
-        const notebookRange = new NotebookRange(notebookCell.index, notebookCell.index + 1);
-        this.pendingNotebookScrolls.push(notebookRange);
-        // This will always try to reveal the whole cell--input + output combined
-        setTimeout(() => {
+            const notebookRange = new NotebookRange(matchingCell.index, matchingCell.index + 1);
             this.notebookEditor.revealRange(notebookRange, NotebookEditorRevealType.Default);
-
-            // No longer pending
-            this.pendingNotebookScrolls.shift();
-        }, 200); // Rendering output is async so the output is not guaranteed to immediately exist
+            this.notebookEditor.selection = notebookRange;
+        }
     }
 
     public async hasCell(id: string): Promise<boolean> {
@@ -722,15 +783,16 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private async setFileInKernel(file: Uri, kernel: IKernel): Promise<void> {
         // If in perFile mode, set only once
         const path = getFilePath(file);
+        const execution = this.kernelProvider.getKernelExecution(kernel!);
         if (this.mode === 'perFile' && !this.fileInKernel) {
             traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             this.fileInKernel = file;
-            await kernel.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
+            await execution.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
         } else if ((!this.fileInKernel || !this.fs.arePathsSame(this.fileInKernel, file)) && this.mode !== 'perFile') {
             traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
-            await kernel.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
+            await execution.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
         } else {
             traceInfoIfCI(
                 `Not Initializing __file__ in setFileInKernel with ${path} for mode ${this.mode} currently ${this.fileInKernel}`
@@ -750,7 +812,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    @chainable()
     private async addNotebookCell(code: string, file: Uri, line: number): Promise<NotebookCell> {
         const notebookDocument = this.notebookEditor.notebook;
 
@@ -787,7 +848,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             const nbEdit = NotebookEdit.insertCells(notebookDocument.cellCount, [notebookCellData]);
             edit.set(notebookDocument.uri, [nbEdit]);
         });
-        return notebookDocument.cellAt(notebookDocument.cellCount - 1);
+        const newCellIndex = notebookDocument.cellCount - 1;
+        this.notebookEditor.selection = new NotebookRange(newCellIndex, newCellIndex + 1);
+        return notebookDocument.cellAt(newCellIndex);
     }
     private async generateCodeAndAddMetadata(cell: NotebookCell, isDebug: boolean, kernel: IKernel) {
         const metadata = getInteractiveCellMetadata(cell);
@@ -798,7 +861,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             !isLocalConnection(kernel.kernelConnectionMetadata) ||
             this.configuration.getSettings(undefined).forceIPyKernelDebugger;
 
-        const generatedCode = this.codeGeneratorFactory
+        const generatedCode = await this.codeGeneratorFactory
             .getOrCreate(this.notebookDocument)
             .generateCode(metadata, cell.index, isDebug, forceIPyKernelDebugger);
 
@@ -833,7 +896,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
         if (kernel) {
-            updateNotebookMetadata(metadata, kernel.kernelConnectionMetadata);
+            await updateNotebookMetadata(metadata, kernel.kernelConnectionMetadata);
         }
 
         let defaultFileName;

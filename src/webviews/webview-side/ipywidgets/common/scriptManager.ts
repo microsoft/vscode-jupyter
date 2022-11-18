@@ -3,13 +3,13 @@
 
 'use strict';
 
-import * as fastDeepEqual from 'fast-deep-equal';
+import fastDeepEqual from 'fast-deep-equal';
 import { EventEmitter } from 'events';
 import { PostOffice } from '../../react-common/postOffice';
 import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatibleWidgetHandler';
 import { registerScripts, undefineModule } from '../common/requirejsRegistry';
 import { ScriptLoader } from './types';
-import { logMessage } from '../../react-common/logger';
+import { logErrorMessage, logMessage } from '../../react-common/logger';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
 import { SharedMessages, IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../messageTypes';
 import { IJupyterExtraSettings } from '../../../../platform/webviews/types';
@@ -57,7 +57,7 @@ export class ScriptManager extends EventEmitter {
                     isOnline
                 });
             })
-            .catch((ex) => logMessage(`Failed to check if online ${ex.toString()}`));
+            .catch((ex) => logErrorMessage(`Failed to check if online ${ex.toString()}`));
 
         postOffice.addHandler({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -7,16 +7,17 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
 import { Identifiers, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { Experiments } from '../../platform/common/experiments/groups';
-import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
+import { traceVerbose } from '../../platform/logging';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
-import { IKernel, IKernelConnectionSession } from '../types';
+import { IKernel, IKernelConnectionSession, IKernelProvider } from '../types';
 import {
     IJupyterVariable,
     IJupyterVariables,
-    IKernelVariableRequester,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse
+    IJupyterVariablesResponse,
+    IKernelVariableRequester
 } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -62,7 +63,8 @@ export class KernelVariables implements IJupyterVariables {
         @inject(IKernelVariableRequester)
         @named(Identifiers.PYTHON_VARIABLES_REQUESTER)
         pythonVariableRequester: IKernelVariableRequester,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
+        @inject(IKernelProvider) private kernelProvider: IKernelProvider
     ) {
         this.variableRequesters.set(PYTHON_LANGUAGE, pythonVariableRequester);
     }
@@ -175,14 +177,17 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
         let list = this.cachedVariables.get(kernel.uri.toString());
+        const hasExecutingCells = this.kernelProvider.getKernelExecution(kernel).pendingCells.length > 0;
+        const execution = this.kernelProvider.getKernelExecution(kernel);
         if (
             !list ||
-            list.currentExecutionCount !== request.executionCount ||
-            list.currentExecutionCount !== kernel.executionCount
+            (!hasExecutingCells &&
+                (list.currentExecutionCount !== request.executionCount ||
+                    list.currentExecutionCount !== execution.executionCount))
         ) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
-                currentExecutionCount: kernel.executionCount,
+                currentExecutionCount: execution.executionCount,
                 variables: (await this.getVariableNamesAndTypesFromKernel(kernel)).map((v) => {
                     return {
                         name: v.name,
@@ -203,7 +208,7 @@ export class KernelVariables implements IJupyterVariables {
             : [];
 
         const result: IJupyterVariablesResponse = {
-            executionCount: kernel.executionCount,
+            executionCount: execution.executionCount,
             pageStartIndex: -1,
             pageResponse: [],
             totalCount: 0,
@@ -233,19 +238,19 @@ export class KernelVariables implements IJupyterVariables {
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
             for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
+                if (exclusionList && exclusionList.indexOf(list.variables[i].type) >= 0) {
+                    // Remove from the list before fetching the full value
+                    list.variables.splice(i, 1);
+                    continue;
+                }
+
                 const fullVariable = list.variables[i].value
                     ? list.variables[i]
                     : await this.getVariableValueFromKernel(list.variables[i], kernel);
 
-                // See if this is excluded or not.
-                if (exclusionList && exclusionList.indexOf(fullVariable.type) >= 0) {
-                    // Not part of our actual list. Remove from the real list too
-                    list.variables.splice(i, 1);
-                } else {
-                    list.variables[i] = fullVariable;
-                    result.pageResponse.push(fullVariable);
-                    i += 1;
-                }
+                list.variables[i] = fullVariable;
+                result.pageResponse.push(fullVariable);
+                i += 1;
             }
 
             // Save in our cache
@@ -339,32 +344,29 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<IJupyterVariable> {
         let result = { ...targetVariable };
         if (!kernel.disposed && kernel.session) {
+            traceVerbose(`Inspecting '${targetVariable.name}'`);
             const output = await this.inspect(kernel.session, targetVariable.name, 0, token);
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const text = (output as any)['text/plain'].toString();
+                const text = (output as any)['text/plain'].toString() as string;
+                traceVerbose(`Inspected '${targetVariable.name}' and got ${text.length} characters`);
 
                 // Parse into bits
                 const type = TypeRegex.exec(text);
-                const value = ValueRegex.exec(text);
-                const stringForm = StringFormRegex.exec(text);
-                const docString = DocStringRegex.exec(text);
                 const count = CountRegex.exec(text);
                 const shape = ShapeRegex.exec(text);
                 if (type) {
                     result.type = type[1];
                 }
-                if (value) {
-                    result.value = value[1];
-                } else if (stringForm) {
-                    result.value = stringForm[1];
-                } else if (docString) {
-                    result.value = docString[1];
-                } else {
-                    result.value = '';
-                }
+
+                // Take the first regex that returns a value
+                result.value = [ValueRegex, StringFormRegex, DocStringRegex].reduce(
+                    (value, regex) => value || regex.exec(text)?.[1] || '',
+                    ''
+                );
+
                 if (count) {
                     result.count = parseInt(count[1], 10);
                 }

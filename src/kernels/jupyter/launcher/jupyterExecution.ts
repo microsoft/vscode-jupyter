@@ -3,7 +3,7 @@
 
 'use strict';
 import * as urlPath from '../../../platform/vscode-path/resources';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { Cancellation } from '../../../platform/common/cancellation';
@@ -14,7 +14,7 @@ import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCerts
 import { JupyterWaitForIdleError } from '../../errors/jupyterWaitForIdleError';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, captureTelemetry, Telemetry } from '../../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { expandWorkingDir } from '../jupyterUtils';
 import { IJupyterConnection } from '../../types';
 import {
@@ -127,10 +127,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Create a server tha  t we will then attempt to connect to.
                     result = await this.notebookServerFactory.createNotebookServer(connection);
                     traceInfo(`Connection complete server`);
-
-                    sendTelemetryEvent(
-                        options.localJupyter ? Telemetry.ConnectLocalJupyter : Telemetry.ConnectRemoteJupyter
-                    );
                     return result;
                 } catch (err) {
                     lastTryError = err;
@@ -155,7 +151,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                         // Something else went wrong
                         if (!options.localJupyter) {
-                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err, true);
+                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err);
 
                             // Check for the self signed certs error specifically
                             if (JupyterSelfCertsError.isSelfCertsError(err)) {
@@ -168,7 +164,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 throw new RemoteJupyterServerConnectionError(connection.baseUrl, options.serverId, err);
                             }
                         } else {
-                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err, true);
+                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err);
                             throw new LocalJupyterServerConnectionError(err);
                         }
                     } else {
@@ -218,8 +214,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    // eslint-disable-next-line
-    @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(
         resource: Resource,
         useDefaultConfig: boolean,

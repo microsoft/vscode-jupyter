@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
-
 'use strict';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
@@ -13,7 +10,7 @@ import { captureScreenShot, IExtensionTestApi } from './common.node';
 
 import * as ts from 'typescript';
 import * as fs from 'fs-extra';
-import * as glob from 'glob';
+import glob from 'glob';
 import * as path from '../platform/vscode-path/path';
 
 import { initialize } from './initialize.node';
@@ -96,9 +93,9 @@ async function getInjectableClasses(fileNames: string[], options: ts.CompilerOpt
             return;
         }
 
-        if (ts.isClassDeclaration(node) && node.decorators) {
+        if (ts.isClassDeclaration(node) && node.modifiers) {
             // See if it has the 'injectable' decorator or not
-            if (node.decorators.find((d) => d.getText(sourceFile).includes('injectable'))) {
+            if (node.modifiers.find((d) => d.getText(sourceFile).includes('injectable'))) {
                 classes.add(node.name?.escapedText.toString().trim() || '');
             }
         } else if (ts.isModuleDeclaration(node)) {
@@ -133,7 +130,7 @@ async function getSourceFiles() {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - Verify serviceRegistry is correct', function () {
+suite('Verify serviceRegistry is correct', function () {
     let api: IExtensionTestApi;
     setup(async function () {
         try {
@@ -149,7 +146,7 @@ suite('DataScience - Verify serviceRegistry is correct', function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    test('Verify all classes with inject on them are in the container', async () => {
+    test('Verify all classes with inject on them are in the container @mandatory', async () => {
         assert.ok(
             api.serviceContainer,
             `Service container not created. Extension should fail to activate. See inversify output`

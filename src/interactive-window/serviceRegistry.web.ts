@@ -26,6 +26,8 @@ import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
 import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
 import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startupCodeProvider';
+import { PythonCellFoldingProvider } from './editor-integration/pythonCellFoldingProvider';
+import { CodeLensProviderActivator } from './editor-integration/codelensProviderActivator';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
@@ -35,6 +37,14 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(
         IDataScienceCodeLensProvider,
         DataScienceCodeLensProvider
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        CodeLensProviderActivator
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PythonCellFoldingProvider
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
     serviceManager.addSingleton<IExtensionSyncActivationService>(

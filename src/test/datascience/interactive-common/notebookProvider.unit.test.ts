@@ -1,13 +1,13 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../../../platform/../kernels/types';
+import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../../../kernels/types';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { DisplayOptions } from '../../../kernels/displayOptions';
-import { IJupyterNotebookProvider, IServerConnectionType } from '../../../kernels/jupyter/types';
+import { IJupyterNotebookProvider, IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { IRawNotebookProvider } from '../../../kernels/raw/types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -17,7 +17,7 @@ function Uri(filename: string): vscode.Uri {
 }
 
 /* eslint-disable  */
-suite('DataScience - NotebookProvider', () => {
+suite('NotebookProvider', () => {
     let notebookProvider: NotebookProvider;
     let jupyterNotebookProvider: IJupyterNotebookProvider;
     let rawNotebookProvider: IRawNotebookProvider;
@@ -31,17 +31,17 @@ suite('DataScience - NotebookProvider', () => {
         when(rawNotebookProvider.isSupported).thenReturn(false);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-        const connectionType = mock<IServerConnectionType>();
-        when(connectionType.isLocalLaunch).thenReturn(true);
+        const uriStorage = mock<IJupyterServerUriStorage>();
+        when(uriStorage.isLocalLaunch).thenReturn(true);
         const onDidChangeEvent = new vscode.EventEmitter<void>();
         disposables.push(onDidChangeEvent);
-        when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
+        when(uriStorage.onDidChangeConnectionType).thenReturn(onDidChangeEvent.event);
 
         notebookProvider = new NotebookProvider(
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),
             instance(extensionChecker),
-            instance(connectionType)
+            instance(uriStorage)
         );
     });
     teardown(() => disposeAllDisposables(disposables));

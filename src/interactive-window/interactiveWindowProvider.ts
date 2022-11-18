@@ -30,7 +30,6 @@ import {
     Resource,
     WORKSPACE_MEMENTO
 } from '../platform/common/types';
-import { chainable } from '../platform/common/utils/decorators';
 import * as localize from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { IServiceContainer } from '../platform/ioc/types';
@@ -49,6 +48,7 @@ import { getInteractiveWindowTitle } from './identity';
 import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import {
+    IConnectionTracker,
     IControllerDefaultService,
     IControllerRegistration,
     IVSCodeNotebookController
@@ -86,7 +86,7 @@ export class InteractiveWindowProvider
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
-    private pendingCreations: Promise<void>[] = [];
+    private pendingCreations: Promise<void> | undefined;
     private _windows: InteractiveWindow[] = [];
 
     constructor(
@@ -101,7 +101,8 @@ export class InteractiveWindowProvider
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IControllerDefaultService) private readonly controllerDefaultService: IControllerDefaultService,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
+        @inject(IConnectionTracker) private readonly connectionTracker: IConnectionTracker
     ) {
         asyncRegistry.push(this);
 
@@ -125,50 +126,53 @@ export class InteractiveWindowProvider
                 return;
             }
 
+            const tab = interactiveWindowMapping.get(iw.uriString);
+
+            if (!tab) {
+                return;
+            }
+
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 iw.owner !== undefined ? Uri.from(iw.owner) : undefined,
                 iw.mode,
                 undefined,
-                interactiveWindowMapping.get(iw.uriString)!,
+                tab,
                 Uri.parse(iw.inputBoxUriString)
             );
             this._windows.push(result);
+
+            const handler = result.closed(this.onInteractiveWindowClosed.bind(this, result));
+            this.disposables.push(result);
+            this.disposables.push(handler);
+            this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
         });
 
         this._updateWindowCache();
     }
 
-    @chainable()
     public async getOrCreate(resource: Resource, connection?: KernelConnectionMetadata): Promise<IInteractiveWindow> {
         if (!this.workspaceService.isTrusted) {
             // This should not happen, but if it does, then just throw an error.
             // The commands the like should be disabled.
-            throw new Error('Worksapce not trusted');
+            throw new Error('Workspace not trusted');
         }
         // Ask for a configuration change if appropriate
         const mode = await this.getInteractiveMode(resource);
 
-        // See if we already have a match
-        if (this.pendingCreations.length) {
-            // Possible its still in the process of getting created, hence wait on the creations to complete.
-            // But ignore errors.
-            const promises = Promise.all(this.pendingCreations.map((item) => item.catch(noop)));
-            await promises.catch(noop);
+        // Ensure we wait for a previous creation to finish.
+        if (this.pendingCreations) {
+            await this.pendingCreations.catch(noop);
         }
+
+        // See if we already have a match
         let result = this.getExisting(resource, mode, connection) as IInteractiveWindow;
         if (!result) {
             // No match. Create a new item.
             result = await this.create(resource, mode, connection);
-            // start the kernel
-            result.start();
-        } else {
-            const preferredController = connection
-                ? this.controllerRegistration.get(connection, InteractiveWindowView)
-                : await this.controllerDefaultService.computeDefaultController(resource, InteractiveWindowView);
-
-            await result.restore(preferredController);
         }
+
+        await result.ensureInitialized();
 
         return result;
     }
@@ -186,26 +190,28 @@ export class InteractiveWindowProvider
         return noop();
     }
 
-    // Note to future devs: this function must be synchronous. Do not await on anything before calling
-    // the interactive window ctor and adding the interactive window to the provider's list of known windows.
-    // Otherwise we risk a race condition where e.g. multiple run cell requests come in quick and we end up
-    // instantiating multiples.
     private async create(resource: Resource, mode: InteractiveWindowMode, connection?: KernelConnectionMetadata) {
+        // track when a creation is pending, so consumers can wait before checking for an existing one.
         const creationInProgress = createDeferred<void>();
         // Ensure we don't end up calling this method multiple times when creating an IW for the same resource.
-        this.pendingCreations.push(creationInProgress.promise);
+        this.pendingCreations = creationInProgress.promise;
         try {
-            traceInfo(`Starting interactive window for resource '${getDisplayPath(resource)}'`);
-
-            // Set it as soon as we create it. The .ctor for the interactive window
-            // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
             // Find our preferred controller
             const preferredController = connection
                 ? this.controllerRegistration.get(connection, InteractiveWindowView)
                 : await this.controllerDefaultService.computeDefaultController(resource, InteractiveWindowView);
 
+            traceInfo(
+                `Starting interactive window for resource '${getDisplayPath(resource)}' with controller '${
+                    preferredController?.id
+                }'`
+            );
+
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
             const [inputUri, editor] = await this.createEditor(preferredController, resource, mode, commandManager);
+            if (preferredController) {
+                await this.connectionTracker.trackSelection(editor.notebook, preferredController.connection);
+            }
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 resource,
@@ -231,7 +237,6 @@ export class InteractiveWindowProvider
             return result;
         } finally {
             creationInProgress.resolve();
-            this.pendingCreations = this.pendingCreations.filter((item) => item !== creationInProgress.promise);
         }
     }
     private async createEditor(
@@ -242,10 +247,11 @@ export class InteractiveWindowProvider
     ): Promise<[Uri, NotebookEditor]> {
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
         const hasOwningFile = resource !== undefined;
+        let viewColumn = this.getInteractiveViewColumn(resource);
         const { inputUri, notebookEditor } = (await commandManager.executeCommand(
             'interactive.open',
             // Keep focus on the owning file if there is one
-            { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
+            { viewColumn: viewColumn, preserveFocus: hasOwningFile },
             undefined,
             controllerId,
             resource && mode === 'perFile' ? getInteractiveWindowTitle(resource) : undefined
@@ -256,6 +262,21 @@ export class InteractiveWindowProvider
             throw new Error('Failed to request creation of interactive window from VS Code.');
         }
         return [inputUri, notebookEditor];
+    }
+
+    private getInteractiveViewColumn(resource: Resource): ViewColumn {
+        if (resource) {
+            return ViewColumn.Beside;
+        }
+
+        const setting = this.configService.getSettings(resource).interactiveWindowViewColumn;
+        if (setting === 'secondGroup') {
+            return ViewColumn.One;
+        } else if (setting === 'active') {
+            return ViewColumn.Active;
+        }
+
+        return ViewColumn.Beside;
     }
 
     private async getInteractiveMode(resource: Resource): Promise<InteractiveWindowMode> {

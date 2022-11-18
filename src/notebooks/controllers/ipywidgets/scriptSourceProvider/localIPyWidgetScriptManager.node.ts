@@ -71,7 +71,7 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
             if (!this.sourceNbExtensionsPath) {
                 return;
             }
-            const kernelHash = getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
+            const kernelHash = await getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
             const baseUrl = Uri.joinPath(this.context.extensionUri, 'tmp', 'scripts', kernelHash, 'jupyter');
 
             const targetNbExtensions = Uri.joinPath(baseUrl, 'nbextensions');
@@ -97,7 +97,7 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
             LocalIPyWidgetScriptManager.nbExtensionsCopiedKernelConnectionList.add(
                 this.kernel.kernelConnectionMetadata.id
             );
-            sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, stopWatch.elapsedTime);
+            sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, { duration: stopWatch.elapsedTime });
             return baseUrl;
         } catch (ex) {
             sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, undefined, undefined, ex);

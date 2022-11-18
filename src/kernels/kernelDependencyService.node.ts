@@ -7,20 +7,13 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
-import {
-    traceInfo,
-    traceError,
-    traceInfoIfCI,
-    traceDecoratorVerbose,
-    ignoreLogging,
-    logValue
-} from '../platform/logging';
+import { traceInfo, traceError, traceInfoIfCI, traceDecoratorVerbose, logValue } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource, IDisplayOptions } from '../platform/common/types';
 import { DataScience, Common } from '../platform/common/utils/localize';
 import { IServiceContainer } from '../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, Telemetry } from '../telemetry';
+import { Telemetry } from '../telemetry';
 import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
 import { isModulePresentInEnvironmentCache, trackPackageInstalledIntoInterpreter } from './installer/productInstaller';
 import { ProductNames } from './installer/productNames';
@@ -32,6 +25,7 @@ import { KernelProgressReporter } from '../platform/progress/kernelProgressRepor
 import { IRawNotebookSupportedService } from './raw/types';
 import { getComparisonKey } from '../platform/vscode-path/resources';
 import { isModulePresentInEnvironment } from './installer/productInstaller.node';
+import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -53,14 +47,23 @@ export class KernelDependencyService implements IKernelDependencyService {
      * If user opts not to install they can opt to select another interpreter.
      */
     @traceDecoratorVerbose('Install Missing Dependencies')
-    public async installMissingDependencies(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        ui: IDisplayOptions,
-        @ignoreLogging() token: CancellationToken,
-        ignoreCache?: boolean,
-        cannotChangeKernels?: boolean
-    ): Promise<KernelInterpreterDependencyResponse> {
+    public async installMissingDependencies({
+        resource,
+        kernelConnection,
+        ui,
+        token,
+        ignoreCache,
+        cannotChangeKernels,
+        installWithoutPrompting
+    }: {
+        resource: Resource;
+        kernelConnection: KernelConnectionMetadata;
+        ui: IDisplayOptions;
+        token: CancellationToken;
+        ignoreCache?: boolean;
+        cannotChangeKernels?: boolean;
+        installWithoutPrompting?: boolean;
+    }): Promise<KernelInterpreterDependencyResponse> {
         traceInfo(
             `installMissingDependencies ${
                 kernelConnection.interpreter?.uri ? getDisplayPath(kernelConnection.interpreter?.uri) : ''
@@ -73,16 +76,29 @@ export class KernelDependencyService implements IKernelDependencyService {
         ) {
             return KernelInterpreterDependencyResponse.ok;
         }
-        const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
-            resource,
-            DataScience.validatingKernelDependencies(),
-            () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
-        );
-        if (alreadyInstalled) {
-            return KernelInterpreterDependencyResponse.ok;
-        }
-        if (token?.isCancellationRequested) {
-            return KernelInterpreterDependencyResponse.cancel;
+
+        const checkForPackages = async () => {
+            const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
+                resource,
+                DataScience.validatingKernelDependencies(),
+                () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
+            );
+            if (alreadyInstalled) {
+                return KernelInterpreterDependencyResponse.ok;
+            }
+            if (token?.isCancellationRequested) {
+                return KernelInterpreterDependencyResponse.cancel;
+            }
+        };
+
+        if (!installWithoutPrompting) {
+            const result = await checkForPackages();
+            if (
+                result === KernelInterpreterDependencyResponse.ok ||
+                result === KernelInterpreterDependencyResponse.cancel
+            ) {
+                return result;
+            }
         }
 
         // Cache the install run
@@ -98,14 +114,25 @@ export class KernelDependencyService implements IKernelDependencyService {
             promise = KernelProgressReporter.wrapAndReportProgress(
                 resource,
                 DataScience.installingMissingDependencies(),
-                () =>
-                    this.runInstaller(
+                async () => {
+                    if (installWithoutPrompting) {
+                        const result = await checkForPackages();
+                        if (
+                            result === KernelInterpreterDependencyResponse.ok ||
+                            result === KernelInterpreterDependencyResponse.cancel
+                        ) {
+                            return result;
+                        }
+                    }
+                    return this.runInstaller(
                         resource,
                         kernelConnection.interpreter!,
                         ui,
                         cancelTokenSource,
-                        cannotChangeKernels
-                    )
+                        cannotChangeKernels,
+                        installWithoutPrompting
+                    );
+                }
             );
             promise
                 .finally(() => {
@@ -155,7 +182,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             // The reason is even if ipykernel isn't available, the kernel will still be started (i.e. the process is started),
             // However Jupyter doesn't notify a failure to start.
             this.rawSupport.isSupported &&
-            isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, kernelConnection.interpreter)
+            (await isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, kernelConnection.interpreter))
         ) {
             traceInfo(
                 `IPyKernel found previously in this environment ${getDisplayPath(kernelConnection.interpreter.uri)}`
@@ -185,7 +212,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         interpreter: PythonEnvironment,
         ui: IDisplayOptions,
         cancelTokenSource: CancellationTokenSource,
-        cannotChangeKernels?: boolean
+        cannotChangeKernels?: boolean,
+        installWithoutPrompting?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfoIfCI(
             `Run Installer for ${getDisplayPath(resource)} ui.disableUI=${
@@ -215,8 +243,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         );
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');
         const resourceType = resource ? getResourceType(resource) : undefined;
-        const resourceHash = resource ? getTelemetrySafeHashedString(resource.toString()) : undefined;
-        sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+        const resourceHash = resource ? await getTelemetrySafeHashedString(resource.toString()) : undefined;
+        sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
             action: 'displayed',
             moduleName: productNameForTelemetry,
             resourceType,
@@ -242,8 +270,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         options.push(moreInfoOption);
 
         try {
-            if (!this.isCodeSpace) {
-                sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+            if (!this.isCodeSpace || !installWithoutPrompting) {
+                sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'prompted',
                     moduleName: productNameForTelemetry,
                     resourceType,
@@ -254,15 +282,16 @@ export class KernelDependencyService implements IKernelDependencyService {
             traceInfoIfCI(`Prompting user for install (this.isCodeSpace=${this.isCodeSpace}).`);
             let selection;
             do {
-                selection = this.isCodeSpace
-                    ? installOption
-                    : await Promise.race([
-                          this.appShell.showInformationMessage(message, { modal: true }, ...options),
-                          promptCancellationPromise
-                      ]);
+                selection =
+                    this.isCodeSpace || installWithoutPrompting
+                        ? installOption
+                        : await Promise.race([
+                              this.appShell.showInformationMessage(message, { modal: true }, ...options),
+                              promptCancellationPromise
+                          ]);
 
                 if (selection === moreInfoOption) {
-                    sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                    sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                         action: 'moreInfo',
                         moduleName: productNameForTelemetry,
                         resourceType,
@@ -277,7 +306,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 // "More Info" isn't a full valid response here, so reprompt after showing it
             } while (selection === moreInfoOption);
             if (cancelTokenSource.token.isCancellationRequested) {
-                sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'dismissed',
                     moduleName: productNameForTelemetry,
                     resourceType,
@@ -287,7 +316,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 return KernelInterpreterDependencyResponse.cancel;
             }
             if (selection === selectKernelOption) {
-                sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'differentKernel',
                     moduleName: productNameForTelemetry,
                     resourceType,
@@ -296,7 +325,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
             } else if (selection === installOption) {
-                sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'install',
                     moduleName: productNameForTelemetry,
                     resourceType,
@@ -320,7 +349,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     cancellationPromise
                 ]);
                 if (response === InstallerResponse.Installed) {
-                    sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                    sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                         action: 'installed',
                         moduleName: productNameForTelemetry,
                         resourceType,
@@ -329,7 +358,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     });
                     return KernelInterpreterDependencyResponse.ok;
                 } else if (response === InstallerResponse.Ignore) {
-                    sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                    sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                         action: 'failed',
                         moduleName: productNameForTelemetry,
                         resourceType,
@@ -339,7 +368,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
                 }
             }
-            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+            sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                 action: 'dismissed',
                 moduleName: productNameForTelemetry,
                 resourceType,
@@ -349,7 +378,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             return KernelInterpreterDependencyResponse.cancel;
         } catch (ex) {
             traceError(`Failed to install ${productNameForTelemetry}`, ex);
-            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+            sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                 action: 'error',
                 moduleName: productNameForTelemetry,
                 resourceType,

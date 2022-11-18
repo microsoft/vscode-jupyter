@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import './mainPanel.css';
 
@@ -16,7 +17,7 @@ import '../react-common/codicon/codicon.css';
 import '../react-common/seti/seti.less';
 import { SliceControl } from './sliceControl';
 import debounce from 'lodash/debounce';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 
 import { initializeIcons } from '@fluentui/react';
 import { SharedMessages } from '../../../messageTypes';

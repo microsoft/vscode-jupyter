@@ -16,8 +16,8 @@ const { setupCoverage } = require('./coverage.node');
 const nyc = setupCoverage();
 
 import * as fs from 'fs-extra';
-import * as glob from 'glob';
-import * as Mocha from 'mocha';
+import glob from 'glob';
+import Mocha from 'mocha';
 import * as path from '../platform/vscode-path/path';
 import * as v8 from 'v8';
 import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants.node';
@@ -62,7 +62,11 @@ process.on('unhandledRejection', (ex: any, _a) => {
     // eslint-disable-next-line no-console
     const msg = `Unhandled Promise Rejection with the message ${message.join(', ')}`;
 
-    if (msg.includes('Error: custom request failed')) {
+    if (
+        msg.includes('Error: custom request failed') ||
+        msg.includes('ms-python.python') || // We don't care about unhanded promise rejections from the Python extension.
+        msg.includes('ms-python.isort') // We don't care about unhanded promise rejections from the Python related extensions.
+    ) {
         // Some error from VS Code, we can ignore this.
         return;
     }
@@ -162,7 +166,7 @@ export async function run(): Promise<void> {
     v8.setFlagsFromString('--expose_gc');
     const options = configure();
     const mocha = new Mocha(options);
-    const testsRoot = path.join(__dirname);
+    const testsRoot = path.join(__dirname, '..');
     // Enable source map support.
     require('source-map-support').install();
 
@@ -208,6 +212,8 @@ export async function run(): Promise<void> {
 
     // Setup test files that need to be run.
     testFiles.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
+    console.log(`Running tests with options ${JSON.stringify(options, undefined, 4)}`);
+    console.log(`Tests included ${testFiles.join(',')}`);
 
     // for performance tests, extension activation is part of the test run
     if (!IS_PERF_TEST()) {

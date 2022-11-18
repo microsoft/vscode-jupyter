@@ -3,7 +3,7 @@
 
 import * as path from '../../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
-import * as glob from 'glob';
+import glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
@@ -35,7 +35,7 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
     ): Promise<TemporaryFile> {
         const suffix = typeof options === 'string' ? options : options.fileExtension;
         const prefix = options && typeof options === 'object' ? options.prefix : undefined;
-        const opts: tmp.Options = {
+        const opts: tmp.FileOptions = {
             postfix: suffix,
             prefix
         };
