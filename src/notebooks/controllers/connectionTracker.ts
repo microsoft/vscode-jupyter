@@ -12,7 +12,6 @@ import { swallowExceptions } from '../../platform/common/utils/decorators';
 import {
     IControllerRegistration,
     IKernelRankingHelper,
-    IConnectionMru,
     IConnectionTracker,
     IVSCodeNotebookControllerUpdateEvent
 } from './types';
@@ -26,7 +25,6 @@ export class ConnectionTracker implements IExtensionSyncActivationService, IConn
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IKernelRankingHelper) private readonly kernelRankingHelper: IKernelRankingHelper,
-        @inject(IConnectionMru) private readonly notebookConnectionMru: IConnectionMru,
         @inject(IFeaturesManager) featuresManager: IFeaturesManager
     ) {
         this.kernelPickerType = featuresManager.features.kernelPickerType;
@@ -58,7 +56,6 @@ export class ConnectionTracker implements IExtensionSyncActivationService, IConn
             // Ensure this controller is visible for this document.
             controller.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity2.Preferred);
         }
-        await this.notebookConnectionMru.add(notebook, connection);
     }
 
     /**
@@ -106,18 +103,12 @@ export class ConnectionTracker implements IExtensionSyncActivationService, IConn
         if (!controller) {
             return;
         }
-        const [exactMatch, usedPreviously] = await Promise.all([
-            this.kernelRankingHelper.isExactMatch(notebook.uri, controller.connection, getNotebookMetadata(notebook)),
-            this.notebookConnectionMru.exists(notebook, controller.connection)
-        ]);
-        const usedInThisSession = Array.from(
-            this.documentSourceMapping.get(notebook) || new Set<KernelConnectionMetadata>()
-        ).find((item) => item.id === connection.id);
+        const exactMatch = await this.kernelRankingHelper.isExactMatch(
+            notebook.uri,
+            controller.connection,
+            getNotebookMetadata(notebook)
+        );
 
-        if (!exactMatch && !usedPreviously && !usedInThisSession) {
-            controller.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity2.Hidden);
-            return;
-        }
         if (exactMatch) {
             controller.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity2.Preferred);
         } else {

@@ -11,7 +11,6 @@ import { TestNotebookDocument } from '../../test/datascience/notebook/executionH
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 import { ConnectionTracker } from './connectionTracker';
 import {
-    IConnectionMru,
     IControllerRegistration,
     IKernelRankingHelper,
     IVSCodeNotebookController,
@@ -20,7 +19,6 @@ import {
 
 suite('Connection Tracker', () => {
     let tracker: ConnectionTracker;
-    let mru: IConnectionMru;
     const disposables: IDisposable[] = [];
     let rankingHelper: IKernelRankingHelper;
     let controllerRegistrations: IControllerRegistration;
@@ -33,7 +31,6 @@ suite('Connection Tracker', () => {
     setup(() => {
         rankingHelper = mock<IKernelRankingHelper>();
         controllerRegistrations = mock<IControllerRegistration>();
-        mru = mock<IConnectionMru>();
         notebook = new TestNotebookDocument();
         onDidOpenNotebookDocument = new EventEmitter<NotebookDocument>();
         onChanged = new EventEmitter<IVSCodeNotebookControllerUpdateEvent>();
@@ -52,7 +49,6 @@ suite('Connection Tracker', () => {
             disposables,
             instance(controllerRegistrations),
             instance(rankingHelper),
-            instance(mru),
             instance(featureManager)
         );
         tracker.activate();
@@ -60,24 +56,6 @@ suite('Connection Tracker', () => {
         disposables.push(new Disposable(() => clock.uninstall()));
     });
     teardown(() => disposeAllDisposables(disposables));
-    test('Update Mru upon selection of a connection', async () => {
-        when(mru.add(anything(), anything())).thenResolve();
-        const connection = LocalKernelSpecConnectionMetadata.create({
-            id: '1',
-            kernelSpec: {
-                argv: [],
-                display_name: '',
-                language: 'python',
-                name: '1',
-                executable: ''
-            }
-        });
-
-        await tracker.trackSelection(notebook, connection);
-
-        verify(mru.add(notebook, connection)).once();
-    });
-
     test('Upon creating a controller, ensure it is hidden for notebooks that do not use it', async () => {
         const connection = LocalKernelSpecConnectionMetadata.create({
             id: '1',
@@ -92,13 +70,11 @@ suite('Connection Tracker', () => {
         when(ourController.connection).thenReturn(connection);
         when(rankingHelper.isExactMatch(anything(), anything(), anything())).thenResolve(false);
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([notebook]);
-        when(mru.exists(notebook, connection)).thenResolve(false);
         when(controllerRegistrations.get(anything(), notebook.notebookType as any)).thenReturn(instance(ourController));
 
         onChanged.fire({ added: [ourController], removed: [] });
         await clock.runAllAsync();
 
-        verify(mru.exists(anything(), anything())).once();
         verify(controller.updateNotebookAffinity(notebook, NotebookControllerAffinity2.Hidden)).once();
     });
     test('Upon opening a notebook, ensure controllers that are not used by this notebook are hidden', async () => {
@@ -115,14 +91,12 @@ suite('Connection Tracker', () => {
         when(ourController.connection).thenReturn(connection);
         when(rankingHelper.isExactMatch(anything(), anything(), anything())).thenResolve(false);
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([notebook]);
-        when(mru.exists(notebook, connection)).thenResolve(false);
         when(controllerRegistrations.get(anything(), notebook.notebookType as any)).thenReturn(instance(ourController));
         when(controllerRegistrations.registered).thenReturn([instance(ourController)]);
 
         onDidOpenNotebookDocument.fire(notebook);
         await clock.runAllAsync();
 
-        verify(mru.exists(anything(), anything())).once();
         verify(controller.updateNotebookAffinity(notebook, NotebookControllerAffinity2.Hidden)).once();
     });
     test('Upon opening a notebook, ensure controllers that are used by this notebook are displayed', async () => {
@@ -139,14 +113,12 @@ suite('Connection Tracker', () => {
         when(ourController.connection).thenReturn(connection);
         when(rankingHelper.isExactMatch(anything(), anything(), anything())).thenResolve(false);
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([notebook]);
-        when(mru.exists(notebook, connection)).thenResolve(true);
         when(controllerRegistrations.get(anything(), notebook.notebookType as any)).thenReturn(instance(ourController));
         when(controllerRegistrations.registered).thenReturn([instance(ourController)]);
 
         onDidOpenNotebookDocument.fire(notebook);
         await clock.runAllAsync();
 
-        verify(mru.exists(anything(), anything())).once();
         verify(controller.updateNotebookAffinity(notebook, NotebookControllerAffinity2.Default)).once();
     });
     test('Upon opening a notebook, ensure controllers that match exactly are set as preferred', async () => {
@@ -163,14 +135,12 @@ suite('Connection Tracker', () => {
         when(ourController.connection).thenReturn(connection);
         when(rankingHelper.isExactMatch(anything(), anything(), anything())).thenResolve(true);
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([notebook]);
-        when(mru.exists(notebook, connection)).thenResolve(true);
         when(controllerRegistrations.get(anything(), notebook.notebookType as any)).thenReturn(instance(ourController));
         when(controllerRegistrations.registered).thenReturn([instance(ourController)]);
 
         onDidOpenNotebookDocument.fire(notebook);
         await clock.runAllAsync();
 
-        verify(mru.exists(anything(), anything())).once();
         verify(controller.updateNotebookAffinity(notebook, NotebookControllerAffinity2.Preferred)).once();
     });
 });
