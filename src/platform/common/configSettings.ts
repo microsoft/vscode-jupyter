@@ -24,7 +24,6 @@ import {
     IVariableQuery,
     IVariableTooltipFields,
     IWatchableJupyterSettings,
-    KernelPickerType,
     LoggingLevelSettingType,
     Resource,
     WidgetCDNs
@@ -109,7 +108,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public poetryPath: string = '';
     public excludeUserSitePackages: boolean = false;
     public enableExtendedKernelCompletions: boolean = false;
-    public kernelPickerType: KernelPickerType = 'Stable';
 
     public variableTooltipFields: IVariableTooltipFields = {
         python: {
@@ -230,11 +228,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
                   optInto: [],
                   optOutFrom: []
               };
-
-        const kernelPickerType = jupyterConfig.get<KernelPickerType>('experimental.kernelPickerType');
-        if (kernelPickerType) {
-            this.kernelPickerType = kernelPickerType;
-        }
 
         // The rest are all the same.
         const replacer = (k: string, config: WorkspaceConfiguration) => {

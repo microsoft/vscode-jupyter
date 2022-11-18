@@ -374,11 +374,6 @@
         "comment": ["{Locked='PYTHONNOUSERSITE'}", "{Locked='PYTHONPATH'}"]
     },
     "jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription": "Enables Jedi support for extended IntelliSense completions in running Jupyter kernels (see this [setting](https://ipython.readthedocs.io/en/stable/config/options/terminal.html?highlight=use_jedi#configtrait-Completer.use_jedi)). This can greatly impact notebook cell execution performance. Use with caution.",
-    "jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.markdownDescription": "Show only one type of kernel in the kernel picker. This prevents local kernels and remote kernels from being shown at the same time in the kernel picker. Takes precedence over kernelPickerType if specified.",
-    "jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.deprecationMessage": "This setting has been deprecated in favor of experimental.kernelPickerType.",
-    "jupyter.configuration.jupyter.experimental.kernelPickerType.description": "Choose the type of kernel picker to use.",
-    "jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.stable": "The current stable kernel picker.",
-    "jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.insiders": "Insiders is the new experimental version in development.",
     "Pylance.proposePylanceMessage": "Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.",
     "Pylance.tryItNow": "Try it now",
     "Pylance.remindMeLater": "Remind me later",
