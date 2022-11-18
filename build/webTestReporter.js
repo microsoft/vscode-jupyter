@@ -268,7 +268,8 @@ exports.dumpTestSummary = async () => {
 
         if (reportWriter.failures.length) {
             core.setFailed(`${reportWriter.failures.length} tests failed.`);
-        } else if (passedCount < 3) {
+        } else if (passedCount < 1) {
+            // Temporarily reduced to 1 since #11917 disabled tests
             // the non-python suite only has 4 tests passing currently, so that's the highest bar we can use.
             core.setFailed('Not enough tests were run - are too many being skipped?');
         }

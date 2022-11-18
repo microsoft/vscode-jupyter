@@ -10,7 +10,7 @@ import {
     ICommandManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { IDisposable, IDisposableRegistry, IFeaturesManager } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { Commands } from '../../platform/common/constants';
 import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
@@ -25,7 +25,7 @@ import { IControllerSelection } from './types';
  */
 @injectable()
 export class RemoteSwitcher implements IExtensionSingleActivationService {
-    private readonly disposables: IDisposable[] = [];
+    private disposables: IDisposable[] = [];
     constructor(
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
@@ -34,7 +34,8 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection
+        @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection,
+        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
     ) {
         this.disposableRegistry.push(this);
     }
@@ -43,6 +44,20 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         this.disposables.forEach((item) => item.dispose());
     }
     public async activate(): Promise<void> {
+        const updatePerFeature = () => {
+            if (this.featuresManager.features.kernelPickerType === 'Insiders') {
+                this.disposables.forEach((item) => item.dispose());
+                this.disposables = [];
+            } else {
+                this._registerStatusBar();
+            }
+        };
+
+        this.disposableRegistry.push(this.featuresManager.onDidChangeFeatures(() => updatePerFeature()));
+        updatePerFeature();
+    }
+
+    private _registerStatusBar() {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SelectNativeJupyterUriFromToolBar, this.onToolBarCommand, this)
         );

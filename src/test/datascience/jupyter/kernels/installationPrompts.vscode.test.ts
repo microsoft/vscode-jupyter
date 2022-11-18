@@ -275,7 +275,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
             'No errors in cell (third time)'
         );
     });
-    test('Ensure ipykernel install prompt is displayed every time you try to run a cell in an Interactive Window and you can switch kernels', async function () {
+    test.skip('Ensure ipykernel install prompt is displayed every time you try to run a cell in an Interactive Window and you can switch kernels', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
@@ -478,7 +478,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         ]);
     });
 
-    test('Get a single prompt when running all cells in a .py file without ipykernel and errors in all cells', async () => {
+    test.skip('Get a single prompt when running all cells in a .py file without ipykernel and errors in all cells', async () => {
         // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).
         const prompt = await hijackPrompt(
             'showInformationMessage',

@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { EventEmitter, NotebookController, NotebookDocument, Uri } from 'vscode';
+import { EventEmitter, NotebookCellExecutionStateChangeEvent, NotebookController, NotebookDocument, Uri } from 'vscode';
 import { CellOutputDisplayIdTracker } from '../../kernels/execution/cellDisplayIdTracker';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { KernelProvider, ThirdPartyKernelProvider } from '../../kernels/kernelProvider.node';
@@ -71,6 +71,11 @@ suite('KernelProvider Node', () => {
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
         context = mock<IExtensionContext>();
         const configSettings = mock<IWatchableJupyterSettings>();
+        const onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
+        disposables.push(onDidChangeNotebookCellExecutionState);
+        when(mockedVSCodeNamespaces.notebooks.onDidChangeNotebookCellExecutionState).thenReturn(
+            onDidChangeNotebookCellExecutionState.event
+        );
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(configService.getSettings(anything())).thenReturn(instance(configSettings));
         when(vscNotebook.notebookDocuments).thenReturn([

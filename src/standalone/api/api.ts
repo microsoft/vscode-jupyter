@@ -179,8 +179,20 @@ export function buildApi(
                 await connection.updateServerUri(uri);
                 await selector.setJupyterURIToRemote(uri);
 
-                await controllerCreatedPromise;
-                resolve();
+                if (
+                    controllerRegistration.all.find(
+                        (metadata) =>
+                            (metadata.kind === 'connectToLiveRemoteKernel' ||
+                                metadata.kind === 'startUsingRemoteKernelSpec') &&
+                            metadata.serverId === serverId
+                    ) === undefined
+                ) {
+                    resolve();
+                    return;
+                } else {
+                    await controllerCreatedPromise;
+                    resolve();
+                }
             });
         }
     };

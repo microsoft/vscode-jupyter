@@ -13,6 +13,11 @@ import { IKernelFinder, KernelConnectionMetadata } from './types';
  */
 @injectable()
 export class KernelFinder implements IKernelFinder {
+    private readonly _onDidChangeRegistrations = new EventEmitter<{
+        added: IContributedKernelFinder[];
+        removed: IContributedKernelFinder[];
+    }>();
+    onDidChangeRegistrations = this._onDidChangeRegistrations.event;
     private _finders: IContributedKernelFinder<KernelConnectionMetadata>[] = [];
     private connectionFinderMapping: Map<string, IContributedKernelFinder> = new Map<
         string,
@@ -37,6 +42,7 @@ export class KernelFinder implements IKernelFinder {
     }
     constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {
         disposables.push(this._onDidChangeStatus);
+        disposables.push(this._onDidChangeRegistrations);
     }
 
     public registerKernelFinder(finder: IContributedKernelFinder<KernelConnectionMetadata>): IDisposable {
@@ -47,6 +53,7 @@ export class KernelFinder implements IKernelFinder {
 
         // Registering a new kernel finder should notify of possible kernel changes
         this._onDidChangeKernels.fire();
+        this._onDidChangeRegistrations.fire({ added: [finder], removed: [] });
         // Register a disposable so kernel finders can remove themselves from the list if they are disposed
         return {
             dispose: () => {
@@ -59,6 +66,7 @@ export class KernelFinder implements IKernelFinder {
 
                 // Notify that kernels have changed
                 this._onDidChangeKernels.fire();
+                this._onDidChangeRegistrations.fire({ added: [], removed: [finder] });
             }
         };
     }

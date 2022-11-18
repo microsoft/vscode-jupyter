@@ -21,7 +21,6 @@ import {
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterSessionManager } from '../session/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../session/jupyterSessionManagerFactory';
 import { ActiveKernelIdList, PreferredRemoteKernelIdProvider } from '../preferredRemoteKernelIdProvider';
@@ -51,7 +50,6 @@ suite(`Remote Kernel Finder`, () => {
     let memento: Memento;
     let jupyterSessionManager: IJupyterSessionManager;
     const dummyEvent = new EventEmitter<number>();
-    let interpreterService: IInterpreterService;
     let cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator;
     let kernelsChanged: TestEventHandler<void>;
     const connInfo: IJupyterConnection = {
@@ -133,7 +131,6 @@ suite(`Remote Kernel Finder`, () => {
         jupyterSessionManager = mock(JupyterSessionManager);
         const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
         when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
-        interpreterService = mock<IInterpreterService>();
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         const notebookProvider = mock(NotebookProvider);
@@ -170,7 +167,6 @@ suite(`Remote Kernel Finder`, () => {
             'Local Kernels',
             RemoteKernelSpecsCacheKey,
             instance(jupyterSessionManagerFactory),
-            instance(interpreterService),
             instance(extensionChecker),
             instance(notebookProvider),
             instance(memento),
@@ -179,7 +175,6 @@ suite(`Remote Kernel Finder`, () => {
             kernelFinder,
             instance(kernelProvider),
             instance(extensions),
-            false,
             serverEntry
         );
         remoteKernelFinder.activate().then(noop, noop);

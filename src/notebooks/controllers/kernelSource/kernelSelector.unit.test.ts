@@ -4,11 +4,10 @@
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import {
     CancellationTokenSource,
     Disposable,
-    Event,
     EventEmitter,
     NotebookDocument,
     QuickInputButton,
@@ -25,11 +24,10 @@ import {
 } from '../../../kernels/types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable } from '../../../platform/common/types';
+import { IDisposable, ReadWrite } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import {
-    IMultiStepInput,
     IQuickPickParameters,
     MultiStepInputQuickPicResponseType
 } from '../../../platform/common/utils/multiStepInput';
@@ -41,8 +39,8 @@ import {
     ConnectionDisplayDataProvider,
     getKernelConnectionCategorySync
 } from '../connectionDisplayData';
-import { isKernelPickItem, KernelSelector } from './kernelSelector';
-import { ConnectionQuickPickItem, MultiStepResult } from './types';
+import { CreateAndSelectItemFromQuickPick, isKernelPickItem, KernelSelector } from './kernelSelector';
+import { ConnectionQuickPickItem, IQuickPickKernelItemProvider } from './types';
 
 suite('Kernel Selector', () => {
     let kernelSelector: KernelSelector;
@@ -55,18 +53,10 @@ suite('Kernel Selector', () => {
     let notebook: NotebookDocument;
     let displayDataProvider: ConnectionDisplayDataProvider;
     let pythonChecker: IPythonExtensionChecker;
-    let provider: {
-        onDidChange: Event<void>;
-        kernels: KernelConnectionMetadata[];
-        onDidChangeStatus: Event<void>;
-        onDidChangeRecommended: Event<void>;
-        status: 'discovering' | 'idle';
-        refresh: () => Promise<void>;
-        recommended: KernelConnectionMetadata | undefined;
-    };
+    let provider: ReadWrite<IQuickPickKernelItemProvider>;
     let kernelFinder: IContributedKernelFinder<KernelConnectionMetadata>;
-    let state: MultiStepResult;
-    let multiStep: IMultiStepInput<MultiStepResult>;
+    let quickPickFactory: CreateAndSelectItemFromQuickPick;
+    let quickPickCreated: boolean | undefined;
     let selectionPromise: Deferred<
         MultiStepInputQuickPicResponseType<
             QuickPickItem | ConnectionQuickPickItem,
@@ -75,7 +65,7 @@ suite('Kernel Selector', () => {
     >;
     let onDidTriggerQuickPickButton: EventEmitter<QuickInputButton>;
     let quickPick: QuickPick<QuickPickItem | ConnectionQuickPickItem>;
-    let options: Parameters<typeof multiStep['showLazyLoadQuickPick']>[0];
+    let options: Parameters<CreateAndSelectItemFromQuickPick>[0];
 
     let localPythonKernelSpec = LocalKernelSpecConnectionMetadata.create({
         id: 'localPythonKernelSpec',
@@ -114,7 +104,8 @@ suite('Kernel Selector', () => {
             sysPrefix: '',
             uri: Uri.file('venv'),
             displayName: 'Venv',
-            envType: EnvironmentType.Venv
+            envType: EnvironmentType.Venv,
+            version: { major: 3, minor: 8, patch: 0, raw: '3.8.0' }
         },
         kernelSpec: {
             argv: [],
@@ -148,7 +139,8 @@ suite('Kernel Selector', () => {
             sysPrefix: '',
             uri: Uri.file('sys'),
             displayName: 'Global',
-            envType: EnvironmentType.Unknown
+            envType: EnvironmentType.Unknown,
+            version: { major: 3, minor: 11, patch: 0, raw: '3.11.0' }
         },
         kernelSpec: {
             argv: [],
@@ -186,8 +178,6 @@ suite('Kernel Selector', () => {
         disposables.push(onDidChangeRecommended);
         disposables.push(onDidTriggerQuickPickButton);
 
-        multiStep = mock<IMultiStepInput<MultiStepResult>>();
-
         quickPick = {
             title: '',
             activeItems: [],
@@ -210,13 +200,10 @@ suite('Kernel Selector', () => {
             value: '',
             totalSteps: undefined
         } as any;
-        state = {
-            disposables,
-            notebook: instance(notebook),
-            source: instance(kernelFinder)
-        };
 
         provider = {
+            title: '',
+            kind: ContributedKernelFinderKind.LocalKernelSpec,
             onDidChange: onDidChangeProvider.event,
             kernels: [],
             onDidChangeStatus: onDidChangeProviderStatus.event,
@@ -242,20 +229,18 @@ suite('Kernel Selector', () => {
             };
         });
         when(pythonChecker.isPythonExtensionInstalled).thenReturn(true);
-
-        when(multiStep.showLazyLoadQuickPick(anything())).thenCall((opts) => {
+        quickPickFactory = (opts) => {
+            quickPickCreated = true;
             options = opts;
             quickPick.items = options.items;
             quickPick.title = options.title;
-            quickPick.placeholder = options.placeholder;
-            (quickPick as any).activeItems = options.activeItem ? [options.activeItem] : [];
             (quickPick as any).buttons = options.buttons;
 
             return {
                 quickPick,
                 selection: selectionPromise.promise
             };
-        });
+        };
 
         kernelSelector = new KernelSelector(instance(notebook), provider, cancellation.token);
         disposables.push(kernelSelector);
@@ -285,30 +270,31 @@ suite('Kernel Selector', () => {
         when(kernelFinder.displayName).thenReturn('Kernel Finder');
         selectionPromise.resolve();
 
-        const kernelConnection = await kernelSelector.selectKernel(instance(multiStep), state);
+        const kernelConnection = await kernelSelector.selectKernel(quickPickFactory);
         await clock.runAllAsync();
 
         assert.isUndefined(kernelConnection);
-        verify(multiStep.showLazyLoadQuickPick(anything())).once();
+        assert.isTrue(quickPickCreated);
     });
     test('Nothing is selected if cancelled', async () => {
         when(kernelFinder.displayName).thenReturn('Kernel Finder');
 
-        const kernelConnectionPromise = kernelSelector.selectKernel(instance(multiStep), state);
+        const kernelConnectionPromise = kernelSelector.selectKernel(quickPickFactory);
         cancellation.cancel();
         selectionPromise.resolve({ connection: localPythonKernelSpec, label: '' });
         await clock.runAllAsync();
 
         assert.isUndefined(await kernelConnectionPromise);
-        verify(multiStep.showLazyLoadQuickPick(anything())).once();
+        assert.isTrue(quickPickCreated);
     });
     test('Display quick pick with Local kernel Specs', async () => {
         provider.kernels = [localPythonKernelSpec, localJavaKernelSpec, localJuliaKernelSpec];
+        provider.kind = ContributedKernelFinderKind.LocalKernelSpec;
         when(kernelFinder.displayName).thenReturn('Kernel Finder');
-        when(kernelFinder.kind).thenReturn(ContributedKernelFinderKind.LocalKernelSpec);
+        when(kernelFinder.kind).thenReturn(provider.kind);
         selectionPromise.resolve();
 
-        const kernelConnection = await kernelSelector.selectKernel(instance(multiStep), state);
+        const kernelConnection = await kernelSelector.selectKernel(quickPickFactory);
         await clock.runAllAsync();
 
         assert.isUndefined(kernelConnection);
@@ -320,15 +306,20 @@ suite('Kernel Selector', () => {
     });
     test('Display quick pick with Local Python Kernels', async () => {
         provider.kernels = [venvPythonKernel, condaKernel];
+        provider.kind = ContributedKernelFinderKind.LocalPythonEnvironment;
         when(kernelFinder.displayName).thenReturn('Kernel Finder');
-        when(kernelFinder.kind).thenReturn(ContributedKernelFinderKind.LocalPythonEnvironment);
+        when(kernelFinder.kind).thenReturn(provider.kind);
         selectionPromise.resolve();
 
-        const kernelConnection = await kernelSelector.selectKernel(instance(multiStep), state);
+        const kernelConnection = await kernelSelector.selectKernel(quickPickFactory);
         await clock.runAllAsync();
 
         assert.isUndefined(kernelConnection);
-        assert.strictEqual(options.items.length, 5);
+        assert.strictEqual(
+            options.items.length,
+            5,
+            `Expected 5 items, Found ${options.items.map((item) => item.label)}`
+        );
 
         const nonConnectionItems = options.items.filter((item) => !isKernelPickItem(item));
         assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
@@ -340,10 +331,11 @@ suite('Kernel Selector', () => {
     });
     test('Dynamically update quick pick and update busy indicator', async () => {
         provider.kernels = [venvPythonKernel];
+        provider.kind = ContributedKernelFinderKind.LocalPythonEnvironment;
         when(kernelFinder.displayName).thenReturn('Kernel Finder');
-        when(kernelFinder.kind).thenReturn(ContributedKernelFinderKind.LocalPythonEnvironment);
+        when(kernelFinder.kind).thenReturn(provider.kind);
 
-        kernelSelector.selectKernel(instance(multiStep), state).catch(noop);
+        kernelSelector.selectKernel(quickPickFactory).catch(noop);
         onDidChangeProvider.fire();
         await clock.runAllAsync();
 
@@ -386,6 +378,79 @@ suite('Kernel Selector', () => {
         verifyExistenceOfConnectionsInQuickPick(
             quickPick.items.filter((item) => isKernelPickItem(item)) as ConnectionQuickPickItem[],
             provider.kernels
+        );
+
+        // Remove an item
+        provider.status = 'idle';
+        provider.kernels = [sysPythonKernel];
+        onDidChangeProvider.fire();
+        onDidChangeProviderStatus.fire();
+        await clock.runAllAsync();
+
+        nonConnectionItems = quickPick.items.filter((item) => !isKernelPickItem(item));
+        assert.strictEqual(nonConnectionItems.length, 2);
+        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
+        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForGlobal());
+        verifyExistenceOfConnectionsInQuickPick(
+            quickPick.items.filter((item) => isKernelPickItem(item)) as ConnectionQuickPickItem[],
+            provider.kernels
+        );
+    });
+    test('Update labels in quick pick when the label (display name of kernel spec or python version) of a connection changes', async () => {
+        provider.kernels = [venvPythonKernel, condaKernel, sysPythonKernel];
+        provider.kind = ContributedKernelFinderKind.LocalPythonEnvironment;
+        when(kernelFinder.displayName).thenReturn('Kernel Finder');
+        when(kernelFinder.kind).thenReturn(provider.kind);
+        when(kernelFinder.kernels).thenReturn(provider.kernels);
+
+        kernelSelector.selectKernel(quickPickFactory).catch(noop);
+        onDidChangeProvider.fire();
+        await clock.runAllAsync();
+
+        const displayNameOfConda = getDisplayNameOrNameOfKernelConnection(condaKernel);
+        const displayNameOfVenv = getDisplayNameOrNameOfKernelConnection(venvPythonKernel);
+        const displayNameOfSys = getDisplayNameOrNameOfKernelConnection(sysPythonKernel);
+        assert.strictEqual(
+            quickPick.items.find((item) => isKernelPickItem(item) && item.connection.id === condaKernel.id)?.label,
+            displayNameOfConda
+        );
+        assert.strictEqual(
+            quickPick.items.find((item) => isKernelPickItem(item) && item.connection.id === venvPythonKernel.id)?.label,
+            displayNameOfVenv
+        );
+        assert.strictEqual(
+            quickPick.items.find((item) => isKernelPickItem(item) && item.connection.id === sysPythonKernel.id)?.label,
+            displayNameOfSys
+        );
+
+        // Update the version of Conda & sys
+        condaKernel.interpreter.version = { major: 4, minor: 5, patch: 6, raw: '4.5.6' };
+        sysPythonKernel.interpreter.version = { major: 4, minor: 5, patch: 6, raw: '4.5.6' };
+        const newDisplayNameOfConda = getDisplayNameOrNameOfKernelConnection(condaKernel);
+        const newDisplayNameOfVenv = getDisplayNameOrNameOfKernelConnection(venvPythonKernel);
+        const newDisplayNameOfSys = getDisplayNameOrNameOfKernelConnection(sysPythonKernel);
+
+        // Verify the labels will be different.
+        assert.notStrictEqual(displayNameOfConda, newDisplayNameOfConda);
+        assert.notStrictEqual(displayNameOfSys, newDisplayNameOfSys);
+        // Verify venv still has the same display name.
+        assert.strictEqual(displayNameOfVenv, newDisplayNameOfVenv);
+
+        // Trigger a change
+        onDidChangeProvider.fire();
+
+        //Verify the labels have been updated to reflect the new version.
+        assert.strictEqual(
+            quickPick.items.find((item) => isKernelPickItem(item) && item.connection.id === condaKernel.id)?.label,
+            newDisplayNameOfConda
+        );
+        assert.strictEqual(
+            quickPick.items.find((item) => isKernelPickItem(item) && item.connection.id === venvPythonKernel.id)?.label,
+            displayNameOfVenv
+        );
+        assert.strictEqual(
+            quickPick.items.find((item) => isKernelPickItem(item) && item.connection.id === sysPythonKernel.id)?.label,
+            newDisplayNameOfSys
         );
     });
 });

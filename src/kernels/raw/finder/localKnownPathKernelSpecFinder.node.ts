@@ -71,7 +71,7 @@ export class LocalKnownPathKernelSpecFinder
         this._onDidChangeKernels.dispose();
     }
     public async refresh() {
-        this.kernelSpecFinder.clearCache();
+        this.clearCache();
         await this.refreshData();
     }
     private async refreshData() {

@@ -7,7 +7,7 @@ import { ITracebackFormatter } from '../kernels/types';
 import { IJupyterVariables } from '../kernels/variables/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { Identifiers } from '../platform/common/constants';
-import { IDataScienceCommandListener, IFeaturesManager } from '../platform/common/types';
+import { IDataScienceCommandListener } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { InstallPythonControllerCommands } from './controllers/commands/installPythonControllerCommands';
 import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
@@ -53,7 +53,6 @@ import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 import { JupyterServerSelectorCommand } from './serverSelectorCommand';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
 import { INotebookCompletionProvider, INotebookEditorProvider } from './types';
-import { PickDocumentKernelSourceCommand } from './controllers/commands/pickDocumentKernelSourceCommand';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     registerControllerTypes(serviceManager, isDevMode);
@@ -148,12 +147,4 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
     serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
     serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
-
-    const featureManager = serviceManager.get<IFeaturesManager>(IFeaturesManager);
-    if (featureManager.features.kernelPickerType === 'Insiders') {
-        serviceManager.addSingleton<IExtensionSingleActivationService>(
-            IExtensionSingleActivationService,
-            PickDocumentKernelSourceCommand
-        );
-    }
 }

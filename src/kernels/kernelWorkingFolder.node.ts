@@ -11,8 +11,7 @@ import { IConfigurationService, Resource } from '../platform/common/types';
 import { isLocalHostConnection, isPythonKernelConnection } from './helpers';
 import { expandWorkingDir } from './jupyter/jupyterUtils';
 import { IKernel, isLocalConnection } from './types';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const untildify = require('untildify');
+import { untildify } from '../platform/common/platform/fileUtils.node';
 
 @injectable()
 export class KernelWorkingFolder {

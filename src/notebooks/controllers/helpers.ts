@@ -6,6 +6,7 @@
 import { createInterpreterKernelSpec, getKernelId } from '../../kernels/helpers';
 import { PythonKernelConnectionMetadata } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Resource } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceInfoIfCI } from '../../platform/logging';
@@ -32,7 +33,11 @@ export async function createActiveInterpreterController(
         const controllers = registration.addOrUpdate(metadata, [viewType]);
         const controller = controllers[0]; // Should only create one because only one view type
         registration.trackActiveInterpreterControllers(controllers);
-        traceInfoIfCI(`Controller ${controller.connection.kind}:${controller.id} created for ${viewType}`);
+        traceInfoIfCI(
+            `Active Interpreter Controller ${controller.connection.kind}:${
+                controller.id
+            } created for View ${viewType} with resource ${getDisplayPath(resource)}`
+        );
         return controller;
     }
 }

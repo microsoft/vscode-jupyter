@@ -29,7 +29,7 @@ import { removeOldCachedItems } from '../../common/commonFinder';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 
-type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: Uri };
+export type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: Uri };
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
 export const oldKernelsSpecFolderName = '__old_vscode_kernelspecs';
 
@@ -247,7 +247,10 @@ export abstract class LocalKernelSpecFinderBase<
         this.kernelSpecFinder = new LocalKernelSpecFinder(fs, globalState);
         disposables.push(this.kernelSpecFinder);
     }
-
+    public clearCache() {
+        this.kernelSpecCache.clear();
+        this.kernelSpecFinder.clearCache();
+    }
     public abstract dispose(): void | undefined;
     /**
      * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.

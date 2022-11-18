@@ -619,27 +619,12 @@ async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
           );
     return waitForCondition(
         () =>
-            kernelFinder.kernels.find((item) => {
-                if (
-                    interpreter &&
-                    item.kind === 'startUsingRemoteKernelSpec' &&
-                    item.kernelSpec.language === PYTHON_LANGUAGE &&
-                    item.interpreter &&
-                    areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
-                ) {
-                    return true;
-                } else if (
-                    !interpreter &&
-                    item.kind === 'startUsingRemoteKernelSpec' &&
-                    item.kernelSpec.language === PYTHON_LANGUAGE
-                ) {
-                    return true;
-                }
-                return false;
-            }) as RemoteKernelSpecConnectionMetadata,
+            kernelFinder.kernels.find(
+                (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === PYTHON_LANGUAGE
+            ) as RemoteKernelSpecConnectionMetadata,
         defaultNotebookTestTimeout,
         () =>
-            `Kernel Connection pointing to active interpreter not found.1, active intepreter ${getDisplayPath(
+            `Kernel Connection pointing to active interpreter not found.1, active interpreter ${getDisplayPath(
                 interpreter?.uri
             )} for kernels ${kernelFinder.kernels
                 .map((item) => `${item.id}=> ${item.kind} (${getDisplayPath(item.interpreter?.uri)})`)

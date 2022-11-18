@@ -47,7 +47,7 @@ env:
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install pre-release in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
   VSC_JUPYTER_LOG_KERNEL_OUTPUT: true
-  DOTNET_VERSION: 6.0.x
+  DOTNET_VERSION: 7.0.x
 
 jobs:
   # Make sure to cancel previous runs on a push
@@ -337,6 +337,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Generate Tag Variable
+        run:
+          echo "TAGSVAR=${{ matrix.tags }}}" >> $GITHUB_ENV
+
+      - name: Generate Friendly Variable
+        run:
+          # Generate a file friendly tag name for the test run (used for the artifacts)
+          echo "TAGS_NAME=${TAGSVAR//[^a-zA-Z]/_}" >> $GITHUB_ENV
 
       - name: Use Python ${{matrix.pythonVersion}}
         uses: actions/setup-python@v4
@@ -666,7 +674,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}
+          name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
@@ -678,7 +686,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}
+          name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}
           path: './logs/*'
           retention-days: 60
 

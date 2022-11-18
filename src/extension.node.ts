@@ -100,6 +100,7 @@ import { FileLogger } from './platform/logging/fileLogger.node';
 import { createWriteStream } from 'fs-extra';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 import { IInterpreterPackages } from './platform/interpreter/types';
+import { homedir } from 'os';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -319,7 +320,7 @@ async function activateLegacy(
     commands.executeCommand('setContext', 'jupyter.webExtension', false).then(noop, noop);
 
     // Set the logger home dir (we can compute this in a node app)
-    setHomeDirectory(require('untildify')('~') || '');
+    setHomeDirectory(homedir());
 
     // Setup the console logger if asked to
     addConsoleLogger();

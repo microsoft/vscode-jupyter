@@ -5,11 +5,11 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import { commands, ConfigurationTarget, Uri, window } from 'vscode';
+import { commands, Uri, window } from 'vscode';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { ProcessService } from '../../../platform/common/process/proc.node';
-import { IConfigurationService, IDisposable } from '../../../platform/common/types';
+import { IDisposable } from '../../../platform/common/types';
 import { IKernelProvider } from '../../../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { getNormalizedInterpreterPath } from '../../../platform/pythonEnvironments/info/interpreter';
@@ -68,7 +68,6 @@ suite('Kernel Selection @kernelPicker', function () {
     let activeInterpreterSearchString = '';
     let vscodeNotebook: IVSCodeNotebook;
     let serverUriStorage: IJupyterServerUriStorage;
-    let configurationService: IConfigurationService;
     let jupyterServerUri: string | undefined;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
     /*
@@ -93,7 +92,6 @@ suite('Kernel Selection @kernelPicker', function () {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         serverUriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
-        configurationService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
 
         if (!pythonChecker.isPythonExtensionInstalled) {
             return this.skip();
@@ -162,12 +160,6 @@ suite('Kernel Selection @kernelPicker', function () {
 
     setup(async function () {
         console.log(`Start test ${this.currentTest?.title}`);
-        await configurationService.updateSetting(
-            'showOnlyOneTypeOfKernel',
-            false,
-            undefined,
-            ConfigurationTarget.Global
-        );
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getNewApi();
         const env = await pythonApi?.environments.resolveEnvironment(venvNoKernelPythonPath.fsPath);
         // Don't use same file (due to dirty handling, we might save in dirty.)
@@ -181,12 +173,6 @@ suite('Kernel Selection @kernelPicker', function () {
     });
     teardown(async function () {
         console.log(`End test ${this.currentTest?.title}`);
-        await configurationService.updateSetting(
-            'showOnlyOneTypeOfKernel',
-            false,
-            undefined,
-            ConfigurationTarget.Global
-        );
         await closeNotebooksAndCleanUpAfterTests(disposables);
         console.log(`End test completed ${this.currentTest?.title}`);
         if (jupyterServerUri) {

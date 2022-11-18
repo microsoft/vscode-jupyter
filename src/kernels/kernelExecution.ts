@@ -33,6 +33,8 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
     private _visibleExecutionCount = 0;
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     public readonly onPreExecute = this._onPreExecute.event;
+    private readonly _onPostExecute = new EventEmitter<NotebookCell>();
+    public readonly onPostExecute = this._onPostExecute.event;
     private readonly documentExecutions = new WeakMap<NotebookDocument, CellExecutionQueue>();
     private readonly executionFactory: CellExecutionFactory;
 
@@ -179,6 +181,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             this.disposables
         );
         newCellExecutionQueue.onPreExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
+        newCellExecutionQueue.onPostExecute((c) => this._onPostExecute.fire(c), this, this.disposables);
         this.documentExecutions.set(document, newCellExecutionQueue);
         return newCellExecutionQueue;
     }

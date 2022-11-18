@@ -19,6 +19,7 @@ export class CellExecutionQueue implements Disposable {
     private cancelledOrCompletedWithErrors = false;
     private startedRunningCells = false;
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
+    private readonly _onPostExecute = new EventEmitter<NotebookCell>();
     private disposables: Disposable[] = [];
     private lastCellExecution?: CellExecution;
     /**
@@ -52,6 +53,11 @@ export class CellExecutionQueue implements Disposable {
     public get onPreExecute() {
         return this._onPreExecute.event;
     }
+
+    public get onPostExecute() {
+        return this._onPostExecute.event;
+    }
+
     /**
      * Queue the cell for execution & start processing it immediately.
      */
@@ -156,6 +162,8 @@ export class CellExecutionQueue implements Disposable {
                 if (index >= 0) {
                     this.queueOfCellsToExecute.splice(index, 1);
                 }
+
+                this._onPostExecute.fire(cellToExecute.cell);
             }
 
             // If notebook was closed or a cell has failed the get out.
