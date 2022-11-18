@@ -195,9 +195,3 @@ export interface INotebookKernelSourceSelector {
         providerId: string
     ): Promise<RemoteKernelConnectionMetadata | undefined>;
 }
-
-// Track what kernel source is selected for each open notebook document and persist that data
-export const IConnectionTracker = Symbol('IConnectionTracker');
-export interface IConnectionTracker {
-    trackSelection(notebook: vscode.NotebookDocument, connection: KernelConnectionMetadata): void;
-}

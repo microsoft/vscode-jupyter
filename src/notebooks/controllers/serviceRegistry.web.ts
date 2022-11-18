@@ -17,14 +17,12 @@ import {
     IControllerRegistration,
     IControllerSelection,
     IKernelRankingHelper,
-    INotebookKernelSourceSelector,
-    IConnectionTracker
+    INotebookKernelSourceSelector
 } from './types';
 import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.web';
 import { KernelRankingHelper } from './kernelRanking/kernelRankingHelper';
 import { IFeaturesManager } from '../../platform/common/types';
 import { NotebookKernelSourceSelector } from './kernelSource/notebookKernelSourceSelector';
-import { ConnectionTracker } from './connectionTracker';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { KernelSourceCommandHandler } from './kernelSource/kernelSourceCommandHandler';
 
@@ -50,8 +48,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
             NotebookKernelSourceSelector
         );
     }
-    serviceManager.addSingleton<IConnectionTracker>(IConnectionTracker, ConnectionTracker);
-    serviceManager.addBinding(IConnectionTracker, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelSourceCommandHandler
