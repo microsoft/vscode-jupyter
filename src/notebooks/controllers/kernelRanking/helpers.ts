@@ -341,6 +341,38 @@ export function compareKernels(
         } else if (b === activeInterpreterConnection) {
             return -1;
         } else {
+            // Give preference to Python 3 over 2.7
+            if (a.interpreter && !b.interpreter) {
+                return 1;
+            }
+            if (!a.interpreter && b.interpreter) {
+                return -1;
+            }
+            const aSysVersion = a.interpreter?.sysPrefix || '';
+            const aVersion =
+                a.interpreter?.version?.major ||
+                (aSysVersion.length && !isNaN(parseInt(aSysVersion.substring(0)))
+                    ? parseInt(aSysVersion.substring(0))
+                    : 0);
+            const bSysVersion = a.interpreter?.sysPrefix || '';
+            const bVersion =
+                a.interpreter?.version?.major ||
+                (bSysVersion.length && !isNaN(parseInt(bSysVersion.substring(0)))
+                    ? parseInt(bSysVersion.substring(0))
+                    : 0);
+            if (aVersion !== bVersion) {
+                return aVersion > bVersion ? 1 : -1;
+            }
+            // Always give preference to launching with Python Interpreter
+            if (a.kind === b.kind) {
+                return 0;
+            }
+            if (a.kind === 'startUsingPythonInterpreter' && b.kind === 'startUsingLocalKernelSpec') {
+                return 1;
+            }
+            if (a.kind === 'startUsingLocalKernelSpec' && b.kind === 'startUsingPythonInterpreter') {
+                return -1;
+            }
             return 0;
         }
     }

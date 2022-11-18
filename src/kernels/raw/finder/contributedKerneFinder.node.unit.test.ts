@@ -32,7 +32,13 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
 import { CancellationTokenSource, EventEmitter, Memento, Uri } from 'vscode';
-import { IDisposable, IExtensionContext, IExtensions, IFeaturesManager } from '../../../platform/common/types';
+import {
+    IDisposable,
+    IExtensionContext,
+    IExtensions,
+    IFeaturesManager,
+    KernelPickerType
+} from '../../../platform/common/types';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import {
@@ -66,11 +72,11 @@ import { takeTopRankKernel } from '../../../notebooks/controllers/kernelRanking/
 import { ITrustedKernelPaths } from './types';
 
 [false, true].forEach((isWindows) => {
-    [false, true].forEach((newKernelPicker) => {
+    (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
         suite(
-            `Contributed Local Kernel Spec Finder ${isWindows ? 'Windows' : 'Unix'} (${
-                newKernelPicker ? 'new Kernel Picker' : ''
-            })`,
+            `Contributed Local Kernel Spec Finder ${
+                isWindows ? 'Windows' : 'Unix'
+            } (Kernel Picker ${kernelPickerType})`,
             () => {
                 let kernelFinder: KernelFinder;
                 let interpreterService: IInterpreterService;
@@ -268,7 +274,7 @@ import { ITrustedKernelPaths } from './types';
                     const trustedKernels = mock<ITrustedKernelPaths>();
                     when(trustedKernels.isTrusted(anything())).thenReturn(true);
                     const featuresManager = mock<IFeaturesManager>();
-                    when(featuresManager.features).thenReturn({ kernelPickerType: 'Stable' });
+                    when(featuresManager.features).thenReturn({ kernelPickerType });
                     localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
                         instance(interpreterService),
                         instance(fs),
@@ -771,7 +777,16 @@ import { ITrustedKernelPaths } from './types';
                     actualKernels.sort((a, b) => a.id.localeCompare(b.id));
                     expectedKernels.sort((a, b) => a.id.localeCompare(b.id));
                     try {
-                        assert.deepEqual(actualKernels, expectedKernels, 'Incorrect kernels');
+                        const expectedKernelMap = new Map(expectedKernels.map((item) => [item.id, item]));
+                        actualKernels.forEach((actualKernel) => {
+                            const expectedKernel = expectedKernelMap.get(actualKernel.id);
+                            if (!expectedKernel) {
+                                assert.fail(`Kernel not found ${actualKernel.kind};${actualKernel.id}`);
+                            }
+                            if (expectedKernel) {
+                                assert.deepEqual(actualKernel, expectedKernel);
+                            }
+                        });
                     } catch (ex) {
                         // Compare them one by one for better errors.
                         actualKernels.forEach((actual, index) => {
@@ -1434,6 +1449,7 @@ import { ITrustedKernelPaths } from './types';
                                 const nbUri = Uri.file('test.ipynb');
                                 let kernel: KernelConnectionMetadata | undefined;
                                 await changeEventFired.assertFiredAtLeast(2, 1000).catch(noop);
+
                                 // Try an empty python Notebook without any kernelspec in metadata.
                                 const rankedKernels = await kernelRankHelper.rankKernels(
                                     nbUri,
@@ -1840,7 +1856,7 @@ import { ITrustedKernelPaths } from './types';
                                 );
                                 assert.isUndefined(kernel, 'Should not return a kernel');
                             }
-                            test('Can match based on notebook metadata', async () => testMatchingNotebookMetadata());
+                            test('Can match based on notebook metadata', testMatchingNotebookMetadata);
                             test('Return active interpreter for interactive window', async function () {
                                 if (!activePythonEnv) {
                                     return this.skip();

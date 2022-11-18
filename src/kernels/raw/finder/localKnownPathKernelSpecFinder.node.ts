@@ -42,13 +42,13 @@ export class LocalKnownPathKernelSpecFinder
     constructor(
         @inject(IFileSystemNode) fs: IFileSystemNode,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
+        @inject(JupyterPaths) jupyterPaths: JupyterPaths,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(IMemento) @named(GLOBAL_MEMENTO) memento: Memento,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IApplicationEnvironment) env: IApplicationEnvironment
     ) {
-        super(fs, workspaceService, extensionChecker, memento, disposables, env);
+        super(fs, workspaceService, extensionChecker, memento, disposables, env, jupyterPaths);
     }
     activate(): void {
         const cancellation = new CancellationTokenSource();
@@ -124,36 +124,30 @@ export class LocalKnownPathKernelSpecFinder
         let results: IJupyterKernelSpec[] = [];
 
         // Find all the possible places to look for this resource
-        const [paths, globalKernelPath] = await Promise.all([
-            this.jupyterPaths.getKernelSpecRootPaths(cancelToken),
-            this.jupyterPaths.getKernelSpecRootPath()
-        ]);
+        const paths = await this.jupyterPaths.getKernelSpecRootPaths(cancelToken);
         if (cancelToken.isCancellationRequested) {
             return [];
         }
-        const searchResults = await this.kernelSpecFinder.findKernelSpecsInPaths(paths, cancelToken);
+        const searchResults = await Promise.all(
+            paths.map((kernelPath) => this.kernelSpecFinder.findKernelSpecsInPaths(kernelPath, cancelToken))
+        );
         if (cancelToken.isCancellationRequested) {
             return [];
         }
         await Promise.all(
-            searchResults.map(async (resultPath) => {
+            searchResults.flat().map(async (kernelSpecFile) => {
                 try {
                     if (cancelToken.isCancellationRequested) {
                         return;
                     }
                     // Add these into our path cache to speed up later finds
-                    const kernelSpec = await this.kernelSpecFinder.getKernelSpec(
-                        resultPath.kernelSpecFile,
-                        cancelToken,
-                        resultPath.interpreter,
-                        globalKernelPath
-                    );
+                    const kernelSpec = await this.kernelSpecFinder.loadKernelSpec(kernelSpecFile, cancelToken);
                     if (kernelSpec) {
                         sendKernelSpecTelemetry(kernelSpec, 'local');
                         results.push(kernelSpec);
                     }
                 } catch (ex) {
-                    traceError(`Failed to load kernelSpec for ${resultPath.kernelSpecFile}`, ex);
+                    traceError(`Failed to load kernelSpec for ${kernelSpecFile}`, ex);
                 }
             })
         );

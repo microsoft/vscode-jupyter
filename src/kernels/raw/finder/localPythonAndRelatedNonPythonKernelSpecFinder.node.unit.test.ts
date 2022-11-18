@@ -16,16 +16,17 @@ import {
     LocalPythonKernelsCacheKey
 } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { ITrustedKernelPaths } from './types';
-import { JupyterPaths } from './jupyterPaths.node';
+import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { assert } from 'chai';
 import { createEventHandler } from '../../../test/common';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { KernelSpecFileWithContainingInterpreter, LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
+import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../platform/common/utils/misc';
 import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
+import { ResourceMap } from '../../../platform/vscode-path/map';
 
 (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
     suite(`Local Python and related kernels (Kernel Picker = ${kernelPickerType})`, async () => {
@@ -44,12 +45,12 @@ import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
         let onDidChangeKernelsFromKnownLocations: EventEmitter<void>;
         let onDidChangeInterpreters: EventEmitter<void>;
         let tempDirForKernelSpecs = Uri.file('/tmp');
-        let findKernelSpecsInPathsReturnValue: KernelSpecFileWithContainingInterpreter[] = [];
+        let findKernelSpecsInPathsReturnValue = new ResourceMap<Uri[]>();
         const pythonKernelSpec = PythonKernelConnectionMetadata.create({
             id: 'python',
             interpreter: {
                 id: 'python',
-                sysPrefix: '',
+                sysPrefix: 'home/python',
                 uri: Uri.file('python')
             },
             kernelSpec: {
@@ -61,7 +62,7 @@ import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
         });
         const condaInterpreter: PythonEnvironment = {
             id: 'conda',
-            sysPrefix: '',
+            sysPrefix: 'home/conda',
             uri: Uri.file('conda')
         };
         let condaKernel: PythonKernelConnectionMetadata;
@@ -104,8 +105,8 @@ import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
             disposables.push(onDidChangeKernelsFromKnownLocations);
             disposables.push(onDidChangeInterpreters);
 
-            findKernelSpecsInPathsReturnValue = [];
-
+            findKernelSpecsInPathsReturnValue.clear();
+            when(trustedKernels.isTrusted(anything())).thenReturn(true);
             when(globalState.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
             when(globalState.update(anything(), anything())).thenResolve();
             when(interpreterService.onDidChangeInterpreters).thenReturn(onDidChangeInterpreters.event);
@@ -155,11 +156,11 @@ import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
             );
 
             const findStub = sinon.stub(LocalKernelSpecFinder.prototype, 'findKernelSpecsInPaths');
-            findStub.callsFake(async () => findKernelSpecsInPathsReturnValue);
+            findStub.callsFake(async (searchPath) => findKernelSpecsInPathsReturnValue.get(searchPath) || []);
             disposables.push(new Disposable(() => findStub.restore()));
 
-            const loadKernelSpecStub = sinon.stub(LocalKernelSpecFinder.prototype, 'getKernelSpec');
-            loadKernelSpecStub.callsFake(async (file, _, interpreter, __) => {
+            const loadKernelSpecStub = sinon.stub(LocalKernelSpecFinder.prototype, 'loadKernelSpec');
+            loadKernelSpecStub.callsFake(async (file, _, interpreter) => {
                 return {
                     specFile: file.fsPath,
                     argv: ['bin/python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
@@ -236,16 +237,14 @@ import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
             when(jupyterPaths.getKernelSpecRootPaths(anything())).thenResolve([]);
             when(jupyterPaths.getKernelSpecRootPath()).thenResolve(Uri.file('root'));
             when(kernelSpecsFromKnownLocations.kernels).thenReturn([]);
-            findKernelSpecsInPathsReturnValue = [
-                {
-                    kernelSpecFile: Uri.file('pythonSpecFile'),
-                    interpreter: pythonKernelSpec.interpreter
-                },
-                {
-                    kernelSpecFile: Uri.file('condaSpecFile'),
-                    interpreter: condaKernel.interpreter
-                }
-            ];
+            findKernelSpecsInPathsReturnValue.set(
+                Uri.joinPath(Uri.file(pythonKernelSpec.interpreter.sysPrefix!), baseKernelPath),
+                [Uri.file('pythonSpecFile')]
+            );
+            findKernelSpecsInPathsReturnValue.set(
+                Uri.joinPath(Uri.file(condaKernel.interpreter.sysPrefix!), baseKernelPath),
+                [Uri.file('condaKernel')]
+            );
             when(interpreterService.getInterpreterDetails(anything())).thenResolve(undefined);
 
             await clock.runAllAsync();
