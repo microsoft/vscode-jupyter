@@ -142,7 +142,6 @@ export class JupyterConnectionWaiter implements IDisposable {
     }
 
     private getJupyterURLFromString(data: string) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const urlMatch = urlMatcher.exec(data);
         const groups = urlMatch?.groups;
         if (!this.startPromise.completed && groups && (groups.LOCAL || groups.IP)) {
@@ -172,7 +171,6 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private extractConnectionInformation = (data: string) => {
         this.output(data);
 
