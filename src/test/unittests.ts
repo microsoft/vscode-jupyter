@@ -18,10 +18,7 @@ if (os.platform() === 'win32') {
     });
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
-}
+import 'reflect-metadata';
 
 setTestExecution(true);
 setUnitTestExecution(true);

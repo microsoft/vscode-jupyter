@@ -6,11 +6,8 @@ const webpack = require('webpack');
 const copyWebpackPlugin = require('copy-webpack-plugin');
 const removeFilesWebpackPlugin = require('remove-files-webpack-plugin');
 const path = require('path');
-const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const constants = require('../constants');
 const common = require('./common');
-// tslint:disable-next-line:no-var-requires no-require-imports
-const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.node.json');
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
@@ -18,7 +15,7 @@ const config = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: './src/extension.node.ts'
+        extension: './out/extension.node.js'
     },
     devtool: 'source-map',
     node: {
@@ -36,7 +33,7 @@ const config = {
                 ]
             },
             {
-                test: /\.ts$/,
+                test: /\.js$/,
                 use: [
                     ...(process.env.BUILD_WITH_VSCODE_NLS
                         ? [
@@ -50,15 +47,6 @@ const config = {
                         : []),
                     {
                         loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
-                    }
-                ]
-            },
-            {
-                test: /\.ts$/,
-                exclude: /node_modules/,
-                use: [
-                    {
-                        loader: 'ts-loader'
                     }
                 ]
             },
@@ -108,7 +96,8 @@ const config = {
         './node_modules/@vscode/jupyter-ipywidgets',
         ...existingModulesInOutDir,
         '@opentelemetry/tracing',
-        'applicationinsights-native-metrics'
+        'applicationinsights-native-metrics',
+        './node_modules/pdfkit/js/pdfkit.standalone'
     ], // Don't bundle these
     plugins: [
         ...common.getDefaultPlugins('extension'),
@@ -131,10 +120,10 @@ const config = {
         // ZMQ requires prebuilds to be in our node_modules directory. So recreate the ZMQ structure.
         // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
         // so at runtime we pick up the original structure.
-        new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromq.js'], log: false } }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.js' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
+        // new removeFilesWebpackPlugin({ after: { include: ['./dist/node_modules/zeromq.js'], log: false } }),
+        // new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.js' }] }),
+        // new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
+        // new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/node-gyp-build/**/*' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/@vscode/jupyter-ipywidgets/dist/*.js' }] }),
         new webpack.IgnorePlugin({
@@ -156,16 +145,15 @@ const config = {
             // into the right destination).
             pdfkit: path.resolve(__dirname, 'pdfkit.js')
         },
-        extensions: ['.ts', '.js'],
-        plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })],
+        extensions: ['.js'],
         fallback: {
             util: require.resolve('util/')
         }
     },
     output: {
         filename: '[name].node.js',
-        path: path.resolve(constants.ExtensionRootDir, 'out'),
-        libraryTarget: 'commonjs2',
+        path: path.resolve(constants.ExtensionRootDir, 'dist'),
+        libraryTarget: 'commonjs',
         devtoolModuleFilenameTemplate: '../../[resource-path]'
     }
 };

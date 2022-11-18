@@ -6,7 +6,7 @@ const glob = require('glob');
 const path = require('path');
 const webpack_bundle_analyzer = require('webpack-bundle-analyzer');
 const constants = require('../constants');
-exports.nodeModulesToExternalize = ['pdfkit/js/pdfkit.standalone', 'crypto-js', 'fontkit', 'png-js', 'zeromq'];
+exports.nodeModulesToExternalize = ['pdfkit/js/pdfkit.standalone', 'crypto-js', 'fontkit', 'png-js' /*, 'zeromq'*/];
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {
     const plugins = [];
@@ -26,7 +26,7 @@ function getDefaultPlugins(name) {
 }
 exports.getDefaultPlugins = getDefaultPlugins;
 function getListOfExistingModulesInOutDir() {
-    const outDir = path.join(constants.ExtensionRootDir, 'out');
+    const outDir = path.join(constants.ExtensionRootDir, 'dist');
     const files = glob.sync('**/*.js', { sync: true, cwd: outDir });
     return files.map((filePath) => `./${filePath.slice(0, -3)}`);
 }

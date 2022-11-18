@@ -78,8 +78,8 @@
         "onWebviewPanel:jupyter-variables",
         "onWebviewPanel:jupyter"
     ],
-    "main": "./out/extension.node.js",
-    "browser": "./out/extension.web.bundle.js",
+    "main": "./dist/extension.node.js",
+    "browser": "./dist/extension.web.bundle.js",
     "capabilities": {
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {
@@ -2353,9 +2353,9 @@
         "uuid-to-hex": "^1.1.1",
         "vscode-dts": "^0.3.2",
         "vscode-nls-dev": "^4.0.0",
-        "webpack": "^5.68.0",
+        "webpack": "^5.75.0",
         "webpack-bundle-analyzer": "^4.5.0",
-        "webpack-cli": "^4.9.2",
+        "webpack-cli": "^4.10.0",
         "why-is-node-running": "^2.0.3",
         "xml-js": "^1.6.11",
         "yargs": "^17.3.1",

@@ -8,7 +8,7 @@ import { inject, injectable } from 'inversify';
 
 import { capturePerfTelemetry } from '../../../telemetry';
 import { IDataViewer, IDataViewerDataProvider, IDataViewerFactory } from './types';
-import debounce = require('lodash/debounce');
+import debounce from 'lodash/debounce';
 import { ICommandManager } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../../platform/common/types';

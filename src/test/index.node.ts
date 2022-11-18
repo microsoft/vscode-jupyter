@@ -5,11 +5,10 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any */
 // Always place at the top, to ensure other modules are imported first.
-require('./common/exitCIAfterTestReporter');
+import './common/exitCIAfterTestReporter';
 
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
-}
+import 'reflect-metadata';
+
 // Always place at top, must be done before we import any of the files from src/client folder.
 // We need to ensure nyc gets a change to setup necessary hooks before files are loaded.
 const { setupCoverage } = require('./coverage.node');

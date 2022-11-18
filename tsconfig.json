@@ -4,7 +4,8 @@
         "paths": {
             "*": ["types/*"]
         },
-        "module": "commonjs",
+        "module": "esnext",
+        "moduleResolution": "node",
         "target": "es2020",
         "outDir": "out",
         "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"],
@@ -40,6 +41,7 @@
         "src/smoke",
         "src/test/datascience/extensionapi",
         "build",
+        "dist",
         "out",
         "ipywidgets",
         "tmp",

@@ -80,19 +80,19 @@ function getPlugins(bundle) {
                 ...[
                     new HtmlWebpackPlugin({
                         template: 'src/webviews/webview-side/plot/index.html',
-                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                        indexUrl: `${constants.ExtensionRootDir}/dist/1`,
                         chunks: ['commons', 'plotViewer'],
                         filename: 'index.plotViewer.html'
                     }),
                     new HtmlWebpackPlugin({
                         template: 'src/webviews/webview-side/data-explorer/index.html',
-                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                        indexUrl: `${constants.ExtensionRootDir}/dist/1`,
                         chunks: ['commons', 'dataExplorer'],
                         filename: 'index.dataExplorer.html'
                     }),
                     new HtmlWebpackPlugin({
                         template: 'src/webviews/webview-side/variable-view/index.html',
-                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                        indexUrl: `${constants.ExtensionRootDir}/dist/1`,
                         chunks: ['commons', 'variableView'],
                         filename: 'index.variableView.html'
                     })
@@ -129,7 +129,7 @@ function buildConfiguration(bundle) {
                 {
                     from: 'node_modules/font-awesome/**/*',
                     context: './',
-                    to: path.join(constants.ExtensionRootDir, 'out', 'fontAwesome')
+                    to: path.join(constants.ExtensionRootDir, 'dist', 'fontAwesome')
                 },
                 {
                     from: path.join(
@@ -139,7 +139,7 @@ function buildConfiguration(bundle) {
                         'controllers',
                         'fontAwesomeLoader.js'
                     ),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'fontAwesome')
+                    to: path.join(constants.ExtensionRootDir, 'dist', 'fontAwesome')
                 }
             ]
         );
@@ -165,7 +165,7 @@ function buildConfiguration(bundle) {
             outputModule: true
         },
         output: {
-            path: path.join(constants.ExtensionRootDir, 'out', 'webviews/webview-side', bundleFolder),
+            path: path.join(constants.ExtensionRootDir, 'dist', 'webviews/webview-side', bundleFolder),
             filename: '[name].js',
             library: {
                 type: 'module'

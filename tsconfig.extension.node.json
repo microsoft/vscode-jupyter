@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
         "baseUrl": ".",
-        "module": "commonjs",
+        "module": "esnext",
+        "moduleResolution": "node",
         "target": "es2020",
         "outDir": "out",
         "lib": ["es6", "es2018", "ES2019", "ES2020"],

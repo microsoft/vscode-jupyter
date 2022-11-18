@@ -3,17 +3,16 @@
 'use strict';
 
 const path = require('path');
-const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const webpack = require('webpack');
 const constants = require('../constants');
 const CleanTerminalPlugin = require('clean-terminal-webpack-plugin');
 const common = require('./common');
 
 const devEntry = {
-    extension: './src/extension.web.ts'
+    extension: './out/extension.web.js'
 };
 const testEntry = {
-    extension: './src/test/web/index.ts' // source of the web extension test runner
+    extension: './out/test/web/index.js' // source of the web extension test runner
 };
 
 // When running web tests, the entry point for the tests and extension are the same.
@@ -33,18 +32,6 @@ const config = {
     },
     module: {
         rules: [
-            {
-                test: /\.ts$/,
-                exclude: /node_modules/,
-                use: [
-                    {
-                        loader: 'ts-loader',
-                        options: {
-                            configFile: 'tsconfig.extension.web.json'
-                        }
-                    }
-                ]
-            },
             {
                 test: /vscode_datascience_helpers.*\.py/,
                 exclude: /node_modules/,
@@ -123,11 +110,8 @@ const config = {
         })
     ],
     resolve: {
-        extensions: ['.ts', '.js'],
+        extensions: ['.js'],
         mainFields: ['browser', 'module', 'main'], // look for `browser` entry point in imported node modules
-        plugins: [
-            new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName, logLevel: 'INFO' })
-        ],
         alias: {
             // provides alternate implementation for node module and source files
             fs: './fs-empty.js'
@@ -147,7 +131,7 @@ const config = {
     },
     output: {
         filename: '[name].web.bundle.js',
-        path: path.resolve(constants.ExtensionRootDir, 'out'),
+        path: path.resolve(constants.ExtensionRootDir, 'dist'),
         libraryTarget: 'commonjs2',
         devtoolModuleFilenameTemplate: '../[resource-path]'
     },

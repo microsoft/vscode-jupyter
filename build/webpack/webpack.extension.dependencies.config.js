@@ -69,7 +69,7 @@ const config = {
             }
         ]
     },
-    externals: ['vscode', 'commonjs'],
+    externals: ['vscode', 'commonjs', 'pdfkit.js'],
     plugins: [...common.getDefaultPlugins('dependencies')],
     resolve: {
         alias: {
@@ -82,7 +82,7 @@ const config = {
     },
     output: {
         filename: '[name].js',
-        path: path.resolve(constants.ExtensionRootDir, 'out'),
+        path: path.resolve(constants.ExtensionRootDir, 'dist'),
         libraryTarget: 'commonjs2',
         devtoolModuleFilenameTemplate: '../../[resource-path]'
     }

@@ -80,7 +80,7 @@ export async function saveSvgToPdf(svg: string, fs: IFileSystemNode, file: Uri) 
     const SVGtoPDF = require('svg-to-pdfkit');
     const deferred = createDeferred<void>();
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfkit = require('pdfkit/js/pdfkit.standalone') as typeof import('pdfkit');
+    const pdfkit = require('pdfkit') as typeof import('pdfkit');
     const doc = new pdfkit();
     const ws = fs.createLocalWriteStream(file.fsPath);
     traceInfo(`Writing pdf to ${file.fsPath}`);
