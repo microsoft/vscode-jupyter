@@ -11,10 +11,8 @@ import {
     IDisposableRegistry,
     IExtensions,
     IFeaturesManager,
-    IMemento,
-    IsWebExtension
+    IMemento
 } from '../../../platform/common/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import {
     IJupyterSessionManagerFactory,
     IJupyterServerUriStorage,
@@ -42,7 +40,6 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
 
     constructor(
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        private interpreterService: IInterpreterService,
         private extensionChecker: IPythonExtensionChecker,
         private readonly notebookProvider: INotebookProvider,
         private readonly serverUriStorage: IJupyterServerUriStorage,
@@ -52,8 +49,7 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
         private readonly kernelFinder: KernelFinder,
         private readonly disposables: IDisposableRegistry,
         private readonly kernelProvider: IKernelProvider,
-        private readonly extensions: IExtensions,
-        private isWebExtension: boolean
+        private readonly extensions: IExtensions
     ) {}
 
     async activate(): Promise<void> {
@@ -82,7 +78,6 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
                 ),
                 `${RemoteKernelSpecsCacheKey}-${serverUri.serverId}`,
                 this.jupyterSessionManagerFactory,
-                this.interpreterService,
                 this.extensionChecker,
                 this.notebookProvider,
                 this.globalState,
@@ -91,7 +86,6 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
                 this.kernelFinder,
                 this.kernelProvider,
                 this.extensions,
-                this.isWebExtension,
                 serverUri
             );
             this.disposables.push(finder);
@@ -120,7 +114,6 @@ class SingleServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
     private _activeServerFinder: { entry: IJupyterServerUriEntry; finder: RemoteKernelFinder } | undefined;
     constructor(
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        private interpreterService: IInterpreterService,
         private extensionChecker: IPythonExtensionChecker,
         private readonly notebookProvider: INotebookProvider,
         private readonly serverUriStorage: IJupyterServerUriStorage,
@@ -130,8 +123,7 @@ class SingleServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
         private readonly kernelFinder: KernelFinder,
         private readonly disposables: IDisposableRegistry,
         private readonly kernelProvider: IKernelProvider,
-        private readonly extensions: IExtensions,
-        private isWebExtension: boolean
+        private readonly extensions: IExtensions
     ) {}
 
     async activate(): Promise<void> {
@@ -172,7 +164,6 @@ class SingleServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
             localize.DataScience.remoteKernelFinderDisplayName(),
             RemoteKernelSpecsCacheKey,
             this.jupyterSessionManagerFactory,
-            this.interpreterService,
             this.extensionChecker,
             this.notebookProvider,
             this.globalState,
@@ -181,7 +172,6 @@ class SingleServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
             this.kernelFinder,
             this.kernelProvider,
             this.extensions,
-            this.isWebExtension,
             uri
         );
 
@@ -206,7 +196,6 @@ export class RemoteKernelFinderController implements IExtensionSingleActivationS
     constructor(
         @inject(IJupyterSessionManagerFactory)
         private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
@@ -218,7 +207,6 @@ export class RemoteKernelFinderController implements IExtensionSingleActivationS
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
     ) {
         this._strategy = this.getStrategy();
@@ -229,7 +217,6 @@ export class RemoteKernelFinderController implements IExtensionSingleActivationS
         if (this.featuresManager.features.kernelPickerType === 'Insiders') {
             return new MultiServerStrategy(
                 this.jupyterSessionManagerFactory,
-                this.interpreterService,
                 this.extensionChecker,
                 this.notebookProvider,
                 this.serverUriStorage,
@@ -239,13 +226,11 @@ export class RemoteKernelFinderController implements IExtensionSingleActivationS
                 this.kernelFinder,
                 this.disposables,
                 this.kernelProvider,
-                this.extensions,
-                this.isWebExtension
+                this.extensions
             );
         } else {
             return new SingleServerStrategy(
                 this.jupyterSessionManagerFactory,
-                this.interpreterService,
                 this.extensionChecker,
                 this.notebookProvider,
                 this.serverUriStorage,
@@ -255,8 +240,7 @@ export class RemoteKernelFinderController implements IExtensionSingleActivationS
                 this.kernelFinder,
                 this.disposables,
                 this.kernelProvider,
-                this.extensions,
-                this.isWebExtension
+                this.extensions
             );
         }
     }
