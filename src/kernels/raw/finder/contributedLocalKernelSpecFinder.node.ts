@@ -5,11 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
-import { IKernelFinder, LocalKernelSpecConnectionMetadata } from '../../types';
+import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { traceInfo, traceDecoratorError, traceError } from '../../../platform/logging';
-import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
+import { IDisposableRegistry, IExtensions, IFeaturesManager } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { KernelFinder } from '../../kernelFinder';
@@ -28,7 +28,7 @@ import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
 export class ContributedLocalKernelSpecFinder
-    implements IContributedKernelFinder<LocalKernelSpecConnectionMetadata>, IExtensionSyncActivationService
+    implements IContributedKernelFinder<LocalKernelConnectionMetadata>, IExtensionSyncActivationService
 {
     private _status: 'discovering' | 'idle' = 'idle';
     public get status() {
@@ -54,7 +54,7 @@ export class ContributedLocalKernelSpecFinder
 
     private wasPythonInstalledWhenFetchingControllers = false;
 
-    private cache: LocalKernelSpecConnectionMetadata[] = [];
+    private cache: LocalKernelConnectionMetadata[] = [];
 
     constructor(
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
@@ -64,7 +64,8 @@ export class ContributedLocalKernelSpecFinder
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IExtensions) private readonly extensions: IExtensions
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
     ) {
         kernelFinder.registerKernelFinder(this);
         this.disposables.push(this._onDidChangeStatus);
@@ -145,7 +146,7 @@ export class ContributedLocalKernelSpecFinder
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localKernelSpec' })
     private async updateCache() {
         try {
-            let kernels: LocalKernelSpecConnectionMetadata[] = [];
+            let kernels: LocalKernelConnectionMetadata[] = [];
             // Exclude python kernel specs (we'll get that from the pythonKernelFinder)
             const kernelSpecs = this.nonPythonKernelFinder.kernels.filter((item) => {
                 if (this.extensionChecker.isPythonExtensionInstalled) {
@@ -159,7 +160,7 @@ export class ContributedLocalKernelSpecFinder
                     (item.kind === 'startUsingPythonInterpreter' &&
                         // Also include kernel Specs that are in a non-global directory.
                         getKernelRegistrationInfo(item.kernelSpec) === 'registeredByNewVersionOfExtForCustomKernelSpec')
-            ) as LocalKernelSpecConnectionMetadata[];
+            ) as LocalKernelConnectionMetadata[];
             kernels = kernels.concat(kernelSpecs).concat(kernelSpecsFromPythonKernelFinder);
             await this.writeToCache(kernels);
         } catch (ex) {
@@ -167,10 +168,31 @@ export class ContributedLocalKernelSpecFinder
         }
     }
 
-    public get kernels(): LocalKernelSpecConnectionMetadata[] {
-        return this.cache;
+    public get kernels(): LocalKernelConnectionMetadata[] {
+        if (this.featureManager.features.kernelPickerType === 'Insiders') {
+            const loadedKernelSpecFiles = new Set<string>();
+            const kernels: LocalKernelConnectionMetadata[] = [];
+            // If we have a global kernel spec returned by Python kernel finder,
+            // give that preference over the same kernel found using local kernel spec finder.
+            // This is because the python kernel finder would have more information about the kernel (such as the matching python env).
+            this.pythonKernelFinder.kernels.forEach((connection) => {
+                if (connection.kernelSpec.specFile) {
+                    loadedKernelSpecFiles.add(connection.kernelSpec.specFile);
+                }
+                kernels.push(connection);
+            });
+            this.cache.forEach((connection) => {
+                if (connection.kernelSpec.specFile && loadedKernelSpecFiles.has(connection.kernelSpec.specFile)) {
+                    return;
+                }
+                kernels.push(connection);
+            });
+            return kernels;
+        } else {
+            return this.cache;
+        }
     }
-    private filterKernels(kernels: LocalKernelSpecConnectionMetadata[]) {
+    private filterKernels(kernels: LocalKernelConnectionMetadata[]) {
         return kernels.filter(({ kernelSpec }) => {
             if (!kernelSpec) {
                 return true;
@@ -185,7 +207,7 @@ export class ContributedLocalKernelSpecFinder
         });
     }
 
-    private async writeToCache(values: LocalKernelSpecConnectionMetadata[]) {
+    private async writeToCache(values: LocalKernelConnectionMetadata[]) {
         try {
             const oldValues = this.cache;
             const uniqueIds = new Set<string>();

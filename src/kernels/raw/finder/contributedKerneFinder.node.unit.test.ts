@@ -270,11 +270,11 @@ import { ITrustedKernelPaths } from './types';
                     when(uriStorage.onDidChangeConnectionType).thenReturn(onDidChangeEvent.event);
 
                     const extensions = mock<IExtensions>();
-                    kernelFinder = new KernelFinder([]);
                     const trustedKernels = mock<ITrustedKernelPaths>();
                     when(trustedKernels.isTrusted(anything())).thenReturn(true);
                     const featuresManager = mock<IFeaturesManager>();
                     when(featuresManager.features).thenReturn({ kernelPickerType });
+                    kernelFinder = new KernelFinder(disposables, instance(featuresManager));
                     localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
                         instance(interpreterService),
                         instance(fs),
@@ -295,7 +295,8 @@ import { ITrustedKernelPaths } from './types';
                         [],
                         instance(extensionChecker),
                         instance(interpreterService),
-                        instance(extensions)
+                        instance(extensions),
+                        instance(featuresManager)
                     );
                     const pythonEnvKernelFinder = new ContributedLocalPythonEnvFinder(
                         localPythonAndRelatedKernelFinder,

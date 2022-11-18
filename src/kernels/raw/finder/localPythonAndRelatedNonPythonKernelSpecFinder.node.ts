@@ -282,7 +282,13 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         this.listKernelsFirstTimeFromMemento(LocalPythonKernelsCacheKey)
             .then((kernels) => {
                 if (this._cachedKernels.length === 0 && kernels.length) {
-                    this._cachedKernels = kernels;
+                    // Its possible we have already started discovering via Python API,
+                    // Hence don't override what we have.
+                    // Give preference to what is already in the cache.
+                    const alreadyDiscovered = new Set(this._cachedKernels.map((item) => item.id));
+                    this._cachedKernels = this._cachedKernels.concat(
+                        kernels.filter((item) => !alreadyDiscovered.has(item.id))
+                    );
                     this._kernelsFromCache = kernels.slice();
                     this._onDidChangeKernels.fire();
                 }
