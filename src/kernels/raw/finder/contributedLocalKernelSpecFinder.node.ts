@@ -176,10 +176,14 @@ export class ContributedLocalKernelSpecFinder
             // give that preference over the same kernel found using local kernel spec finder.
             // This is because the python kernel finder would have more information about the kernel (such as the matching python env).
             this.pythonKernelFinder.kernels.forEach((connection) => {
-                if (connection.kernelSpec.specFile) {
+                const kernelSpecKind = getKernelRegistrationInfo(connection.kernelSpec);
+                if (
+                    connection.kernelSpec.specFile &&
+                    kernelSpecKind === 'registeredByNewVersionOfExtForCustomKernelSpec'
+                ) {
                     loadedKernelSpecFiles.add(connection.kernelSpec.specFile);
+                    kernels.push(connection);
                 }
-                kernels.push(connection);
             });
             this.cache.forEach((connection) => {
                 if (connection.kernelSpec.specFile && loadedKernelSpecFiles.has(connection.kernelSpec.specFile)) {
