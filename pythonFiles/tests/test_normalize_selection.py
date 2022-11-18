@@ -17,9 +17,9 @@ class TestNormalizationScript(object):
         assert ret == 'print("this is a test")\n'
 
     def test_basicNormalization_syntaxerror(self):
-        src = 'if True:'
+        src = "if True:"
         ret = normalizeSelection.normalize_lines(src)
-        assert ret == 'if True:\n\n'
+        assert ret == "if True:\n\n"
 
     def test_commentsGone(self):
         src = textwrap.dedent(
@@ -54,12 +54,10 @@ class TestNormalizationScript(object):
         assert ret == expectedResult
 
     def test_dedent(self):
-        src = (
-            """\
+        src = """\
             def show_something():
                 print("Something")
             """
-        )
         expectedResult = textwrap.dedent(
             """\
             def show_something():
@@ -173,4 +171,3 @@ class TestNormalizationScript(object):
         )
         ret = normalizeSelection.normalize_lines(src)
         assert ret == expectedResult
-
