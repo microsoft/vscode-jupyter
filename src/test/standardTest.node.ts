@@ -63,17 +63,27 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
     }
     console.info(`Installing Python Extension ${PythonExtension} to ${extensionsDir}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
-    spawnSync(cliPath, ['--install-extension', PythonExtension, '--pre-release'], {
-        encoding: 'utf-8',
-        stdio: 'inherit'
-    });
+    spawnSync(
+        cliPath,
+        ['--install-extension', PythonExtension, '--pre-release'].concat(
+            extensionsDir ? ['--extensions-dir', extensionsDir] : []
+        ),
+        {
+            encoding: 'utf-8',
+            stdio: 'inherit'
+        }
+    );
 
     // Make sure pylance is there too as we'll use it for intellisense tests
     console.info(`Installing Pylance Extension to ${extensionsDir}`);
-    spawnSync(cliPath, ['--install-extension', PylanceExtension], {
-        encoding: 'utf-8',
-        stdio: 'inherit'
-    });
+    spawnSync(
+        cliPath,
+        ['--install-extension', PylanceExtension].concat(extensionsDir ? ['--extensions-dir', extensionsDir] : []),
+        {
+            encoding: 'utf-8',
+            stdio: 'inherit'
+        }
+    );
 }
 
 async function createSettings(): Promise<string> {
@@ -142,7 +152,7 @@ async function start() {
             .concat(['--skip-release-notes'])
             .concat(['--enable-proposed-api'])
             .concat(['--timeout', '5000'])
-            // .concat(extensionsDir ? ['--extensions-dir', extensionsDir] : [])
+            .concat(extensionsDir ? ['--extensions-dir', extensionsDir] : [])
             .concat(['--user-data-dir', userDataDirectory]),
         // .concat(['--verbose']), // Too much logging from VS Code, enable this to see what's going on in VSC.
         version: channel,
