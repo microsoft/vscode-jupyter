@@ -29,18 +29,8 @@
         "../vscode.*"
     ],
     "exclude": [
-        "node_modules",
-        ".vscode-test",
-        ".vscode test",
-        "src/test/datascience/extensionapi",
-        "build",
-        "out",
-        "tmp",
-        ".nyc_output",
-        ".git",
-        "src/*.node.ts",
-        "src/**/*.node.ts",
-        ".vscode-test-web",
-        "gulpfile.js"
+        "test/datascience/extensionapi",
+        "*.node.ts",
+        "**/*.node.ts"
     ]
 }

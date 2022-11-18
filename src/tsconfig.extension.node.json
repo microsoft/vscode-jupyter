@@ -12,14 +12,7 @@
         "./**/*"
     ],
     "exclude": [
-        "node_modules",
-        ".vscode-test",
-        ".vscode test",
-        "src/webviews/webview-side",
-        "build",
-        "src/test",
-        "src/*.web.ts",
-        "src/**/*.web.ts",
-        "gulpfile.js"
+        "webviews/webview-side",
+        "**/*.web.ts"
     ]
 }

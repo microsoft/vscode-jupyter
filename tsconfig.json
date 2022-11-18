@@ -29,21 +29,12 @@
         "./vscode.*"
     ],
     "exclude": [
-        ".vscode-test",
-        ".vscode test",
         "src/server/node_modules",
         "src/node_modules",
         "src/server/src/typings",
         "src/typings",
         "src/ipywidgets",
         "src/smoke",
-        "src/test/datascience/extensionapi",
-        "build",
-        "out",
-        "ipywidgets",
-        "tmp",
-        ".nyc_output",
-        ".git",
-        "gulpfile.js"
+        "src/test/datascience/extensionapi"
     ]
 }
