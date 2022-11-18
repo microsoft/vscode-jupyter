@@ -47,7 +47,7 @@ env:
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install pre-release in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
   VSC_JUPYTER_LOG_KERNEL_OUTPUT: true
-  DOTNET_VERSION: 6.0.x
+  DOTNET_VERSION: 7.0.x
 
 jobs:
   # Make sure to cancel previous runs on a push
