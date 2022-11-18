@@ -552,7 +552,7 @@ jobs:
       - name: Install .NET Interactive
         if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
         shell: bash -l {0}
-        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive --version 1.0.355307
 
       - name: Install .NET Kernel
         if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
