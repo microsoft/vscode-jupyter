@@ -1,32 +1,13 @@
 {
+    "extends": "./tsconfig.base.json",
     "compilerOptions": {
-        "baseUrl": ".",
-        "paths": {
-            "*": ["types/*"]
-        },
-        "module": "commonjs",
-        "target": "es2020",
         "outDir": "out",
         "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"],
-        "jsx": "react",
-        "sourceMap": true,
         "rootDir": "src",
-        "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": true,
-        "strict": true,
-        "noImplicitAny": true,
-        "noImplicitThis": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noImplicitOverride": true,
-        "noFallthroughCasesInSwitch": true,
-        "resolveJsonModule": true,
-        "removeComments": true,
-        "useUnknownInCatchVariables": false,
-        "strictPropertyInitialization": false,
-        "esModuleInterop": true,
-        "allowJs": true,
-        "types": ["@types/vscode-notebook-renderer/preload", "webpack-env"]
+        "types": ["@types/vscode-notebook-renderer/preload", "webpack-env"],
+
+        // TODO: This should be removed eventually
+        "allowJs": true
     },
     "exclude": [
         "node_modules",
