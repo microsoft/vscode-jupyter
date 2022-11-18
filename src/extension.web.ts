@@ -3,13 +3,7 @@
 
 'use strict';
 
-/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
-
-// This line should always be right on top.
-/* eslint-disable @typescript-eslint/no-explicit-any */
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
-}
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 
 // Polly fill for webworkers in safari,
 // The scripts load in chrome because chrome supports offScreenCanvas which in turn supports requestAnimationFrame,
