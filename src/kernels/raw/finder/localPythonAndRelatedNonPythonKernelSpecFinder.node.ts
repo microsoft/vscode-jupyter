@@ -50,6 +50,8 @@ type InterpreterId = string;
 
 export class InterpreterKernelSpecFinderHelper {
     private readonly discoveredKernelSpecFiles = new Set<string>();
+    private readonly kernelsPerInterpreter = new Map<string, Promise<IJupyterKernelSpec[]>>();
+    private readonly interpreterKeyMapping = new Map<string, string>();
     constructor(
         private readonly jupyterPaths: JupyterPaths,
         private readonly kernelSpecFinder: LocalKernelSpecFinder,
@@ -58,6 +60,7 @@ export class InterpreterKernelSpecFinderHelper {
         private readonly trustedKernels: ITrustedKernelPaths
     ) {}
     public clear() {
+        this.kernelsPerInterpreter.clear();
         this.discoveredKernelSpecFiles.clear();
     }
 
@@ -149,6 +152,43 @@ export class InterpreterKernelSpecFinderHelper {
         interpreter: PythonEnvironment,
         cancelToken: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
+        const key = JSON.stringify(interpreter);
+        const oldKey = this.interpreterKeyMapping.get(interpreter.id);
+        if (oldKey !== key) {
+            // Delete the old promise, interpreter details have changed.
+            this.kernelsPerInterpreter.delete(key);
+        }
+        this.interpreterKeyMapping.set(interpreter.id, key);
+        // Interpreters can get discovered one after the other, and we might end up cancelling the previous discovery of an interpreter as a result fo changes to the interpreter.
+        // However if the interpreter that was being discovered doesn't change, then we can keep that cache around.
+        // Hence where possible cache the discovery results (to reduce I/O).
+        if (!this.kernelsPerInterpreter.has(key)) {
+            const promise = this.findKernelSpecsInInterpreterImpl(interpreter, cancelToken);
+            promise
+                .then((result) => {
+                    if (Array.isArray(result) && result.length === 0) {
+                        // Even if cancellation token is cancelled, we can keep this cache as we've discovered some items.
+                        return;
+                    }
+                    // If the previous discovery was cancelled, then clear the cache for the interpreter.
+                    if (cancelToken.isCancellationRequested && this.kernelsPerInterpreter.get(key) === promise) {
+                        this.kernelsPerInterpreter.delete(key);
+                    }
+                })
+                .catch(() => {
+                    // If previous discovery failed, then do not cache a failure.
+                    if (this.kernelsPerInterpreter.get(key) === promise) {
+                        this.kernelsPerInterpreter.delete(key);
+                    }
+                });
+            this.kernelsPerInterpreter.set(key, promise);
+        }
+        return this.kernelsPerInterpreter.get(key)!;
+    }
+    public async findKernelSpecsInInterpreterImpl(
+        interpreter: PythonEnvironment,
+        cancelToken: CancellationToken
+    ): Promise<IJupyterKernelSpec[]> {
         traceInfoIfCI(
             `Finding kernel specs for ${interpreter.id} interpreters: ${interpreter.displayName} => ${interpreter.uri}`
         );
@@ -168,6 +208,10 @@ export class InterpreterKernelSpecFinderHelper {
         }
 
         const kernelSpecs = await this.kernelSpecFinder.findKernelSpecsInPaths(kernelSearchPath, cancelToken);
+        if (cancelToken.isCancellationRequested) {
+            return [];
+        }
+
         let results: IJupyterKernelSpec[] = [];
         await Promise.all(
             kernelSpecs.map(async (kernelSpecFile) => {
@@ -189,6 +233,9 @@ export class InterpreterKernelSpecFinderHelper {
                 }
             })
         );
+        if (cancelToken.isCancellationRequested) {
+            return [];
+        }
 
         // Filter out duplicates. This can happen when
         // 1) Conda installs kernel
