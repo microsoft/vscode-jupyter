@@ -343,6 +343,7 @@ jobs:
 
       - name: Generate Friendly Variable
         run:
+          # Generate a file friendly tag name for the test run (used for the artifacts)
           echo "TAGS_NAME=${TAGSVAR//[^a-zA-Z]/}" >> $GITHUB_ENV
 
       - name: Use Python ${{matrix.pythonVersion}}
