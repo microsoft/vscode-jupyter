@@ -16,10 +16,6 @@
             "webpack-env"
         ],
         "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"],
-
-        // Strictness
-        // TODO: This should be removed eventually
-        "allowJs": true
     },
     "include": [
         "./src/**/*",

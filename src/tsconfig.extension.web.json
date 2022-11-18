@@ -16,10 +16,7 @@
             // "vscode-notebook-renderer",
             "webpack-env"
         ],
-        "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"],
-
-        // TODO: This should be removed eventually
-        "allowJs": true
+        "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"]
     },
     "include": [
         "./**/*",
