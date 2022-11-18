@@ -81,7 +81,6 @@ suite('Jupyter Server URI Selector', () => {
         when(configService.updateSetting(anything(), anything(), anything(), anything())).thenResolve();
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(configService.getSettings()).thenReturn(instance(settings));
-        when(settings.kernelPickerType).thenReturn('Stable');
         onDidChangeSettings = sinon.stub();
         when(settings.onDidChange).thenReturn(onDidChangeSettings);
         const memento = new MockMemento();

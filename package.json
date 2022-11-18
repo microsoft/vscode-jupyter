@@ -1947,30 +1947,6 @@
                     "default": false,
                     "markdownDescription": "%jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription%",
                     "scope": "machine"
-                },
-                "jupyter.showOnlyOneTypeOfKernel": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "%jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.markdownDescription%",
-                    "deprecationMessage": "%jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.deprecationMessage%",
-                    "scope": "application",
-                    "tags": [
-                        "experimental"
-                    ]
-                },
-                "jupyter.experimental.kernelPickerType": {
-                    "type": "string",
-                    "enum": [
-                        "Stable",
-                        "Insiders"
-                    ],
-                    "scope": "resource",
-                    "description": "%jupyter.configuration.jupyter.experimental.kernelPickerType.description%",
-                    "enumDescriptions": [
-                        "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.stable%",
-                        "%jupyter.configuration.jupyter.experimental.kernelPickerType.items.enumDescriptions.insiders%"
-                    ],
-                    "default": "Stable"
                 }
             }
         },
