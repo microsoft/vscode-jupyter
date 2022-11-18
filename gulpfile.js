@@ -23,6 +23,7 @@ const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS ==
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 const { dumpTestSummary } = require('./build/webTestReporter');
 const { Validator } = require('jsonschema');
+const { stripVTControlCharacters } = require('util');
 
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
@@ -285,14 +286,14 @@ async function buildWebPack(webpackConfigName, args, env) {
         .filter((item) => item.length > 0);
     // Remember to perform a case insensitive search.
     const warnings = stdOutLines
-        .filter((item) => item.startsWith('WARNING in '))
+        .filter((item) => stripVTControlCharacters(item).startsWith('WARNING in '))
         .filter(
             (item) =>
                 allowedWarnings.findIndex((allowedWarning) =>
-                    item.toLowerCase().startsWith(allowedWarning.toLowerCase())
+                    stripVTControlCharacters(item).toLowerCase().startsWith(allowedWarning.toLowerCase())
                 ) == -1
         );
-    const errors = stdOutLines.some((item) => item.startsWith('ERROR in'));
+    const errors = stdOutLines.some((item) => stripVTControlCharacters(item).startsWith('ERROR in'));
     if (errors) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
