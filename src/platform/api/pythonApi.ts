@@ -212,7 +212,12 @@ export class PythonApiProvider implements IPythonApiProvider {
         if (activated) {
             this.didActivatePython.fire();
         }
-        pythonExtension.exports.jupyter.registerHooks();
+        if (!pythonExtension.exports?.jupyter) {
+            traceError(`Python extension is not exporting the jupyter API`);
+            this.api.reject(new Error('Python extension is not exporting the jupyter API'));
+        } else {
+            pythonExtension.exports.jupyter.registerHooks();
+        }
         this._pythonExtensionHooked.resolve();
     }
 }

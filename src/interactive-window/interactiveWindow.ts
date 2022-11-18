@@ -281,9 +281,16 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                     return;
                 }
                 // Id may be different if the user switched controllers
-                this.currentKernelInfo.controller = this.controllerRegistration.registered.find(
-                    (item) => item.id === k.controller.id
-                )!.controller;
+                traceInfoIfCI(
+                    `Looking for controller ${k.controller.id} in ${this.controllerRegistration.all
+                        .map((item) => `${item.kind}:${item.id}`)
+                        .join(', ')}`
+                );
+                const found = this.controllerRegistration.registered.find((item) => item.id === k.controller.id);
+                if (!found) {
+                    throw Error(`Controller ${k.controller.id} not found or not yet created`);
+                }
+                this.currentKernelInfo.controller = found.controller;
                 this.currentKernelInfo.metadata = k.kernelConnectionMetadata;
                 !!this.pendingCellAdd && this.setPendingCellAdd(this.pendingCellAdd);
                 this.updateSysInfoMessage(
@@ -303,9 +310,18 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 'jupyterExtension',
                 onStartKernel
             );
-            this.currentKernelInfo.controller = this.controllerRegistration.registered.find(
-                (item) => item.id === kernel.controller.id
-            )!.controller;
+
+            traceInfoIfCI(
+                `Looking for controller ${kernel.controller.id} in ${this.controllerRegistration.all
+                    .map((item) => `${item.kind}:${item.id}`)
+                    .join(', ')}`
+            );
+            const found = this.controllerRegistration.registered.find((item) => item.id === kernel.controller.id);
+            if (!found) {
+                throw Error(`Controller ${kernel.controller.id} not found or not yet created`);
+            }
+
+            this.currentKernelInfo.controller = found.controller;
             this.currentKernelInfo.metadata = kernel.kernelConnectionMetadata;
 
             const kernelEventHookForRestart = async () => {

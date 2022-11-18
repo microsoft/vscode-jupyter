@@ -62,7 +62,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     registerIntellisenseTypes(serviceManager, isDevMode);
 
     // Dev Tools
-    registerDevToolTypes(context, serviceManager, isDevMode);
+    registerDevToolTypes(context, isDevMode);
 
     const featureManager = serviceManager.get<IFeaturesManager>(IFeaturesManager);
     if (featureManager.features.kernelPickerType === 'Insiders') {

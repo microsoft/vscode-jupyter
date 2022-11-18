@@ -30,15 +30,6 @@ export class PreferredKernelConnectionService {
     public dispose() {
         disposeAllDisposables(this.disposables);
     }
-    public async findExactRemoteKernelConnection(
-        notebook: NotebookDocument,
-        cancelToken: CancellationToken
-    ): Promise<RemoteKernelConnectionMetadata | undefined> {
-        const kernelFinder = ServiceContainer.instance
-            .get<IKernelFinder>(IKernelFinder)
-            .registered.find((item) => item.kind === ContributedKernelFinderKind.Remote)!;
-        return this.findPreferredRemoteKernelConnectionImpl(notebook, kernelFinder, cancelToken, true);
-    }
     public async findPreferredRemoteKernelConnection(
         notebook: NotebookDocument,
         kernelFinder: IContributedKernelFinder<KernelConnectionMetadata>,
@@ -105,18 +96,6 @@ export class PreferredKernelConnectionService {
         }
         return this.findPreferredKernelSpecConnection(notebook, kernelFinder, cancelToken, findExactMatch!) as Promise<
             RemoteKernelConnectionMetadata | undefined
-        >;
-    }
-    public async findExactLocalKernelSpecConnection(
-        notebook: NotebookDocument,
-        cancelToken: CancellationToken
-    ): Promise<LocalKernelSpecConnectionMetadata | undefined> {
-        const kernelFinder = ServiceContainer.instance
-            .get<IKernelFinder>(IKernelFinder)
-            .registered.find((item) => item.kind === ContributedKernelFinderKind.LocalKernelSpec)!;
-
-        return this.findPreferredKernelSpecConnection(notebook, kernelFinder, cancelToken, true) as Promise<
-            LocalKernelSpecConnectionMetadata | undefined
         >;
     }
     public async findPreferredLocalKernelSpecConnection(
@@ -202,16 +181,6 @@ export class PreferredKernelConnectionService {
                     this.disposables
                 )
         ).finally(() => disposeAllDisposables(disposables));
-    }
-    public async findExactPythonKernelConnection(
-        notebook: NotebookDocument,
-        cancelToken: CancellationToken
-    ): Promise<PythonKernelConnectionMetadata | undefined> {
-        const kernelFinder = ServiceContainer.instance
-            .get<IKernelFinder>(IKernelFinder)
-            .registered.find((item) => item.kind === ContributedKernelFinderKind.LocalPythonEnvironment)!;
-
-        return this.findPreferredPythonKernelConnectionImpl(notebook, kernelFinder, cancelToken, true);
     }
     public async findPreferredPythonKernelConnection(
         notebook: NotebookDocument,

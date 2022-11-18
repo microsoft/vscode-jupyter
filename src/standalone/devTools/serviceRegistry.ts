@@ -4,9 +4,8 @@
 'use strict';
 
 import { IExtensionContext } from '../../platform/common/types';
-import { IServiceManager } from '../../platform/ioc/types';
 import { addClearCacheCommand } from './clearCache';
 
-export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
-    addClearCacheCommand(context, isDevMode, serviceManager);
+export function registerTypes(context: IExtensionContext, isDevMode: boolean) {
+    addClearCacheCommand(context, isDevMode);
 }

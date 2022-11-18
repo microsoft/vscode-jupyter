@@ -7,7 +7,6 @@ import {
     CancellationToken,
     CancellationTokenSource,
     Disposable,
-    Event,
     NotebookDocument,
     QuickInputButton,
     QuickPick,
@@ -22,12 +21,11 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
-import { IMultiStepInput, IQuickPickParameters } from '../../../platform/common/utils/multiStepInput';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { ConnectionDisplayDataProvider } from '../connectionDisplayData';
 import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator';
 import { IControllerSelection } from '../types';
-import { ConnectionQuickPickItem, MultiStepResult } from './types';
+import { ConnectionQuickPickItem, IQuickPickKernelItemProvider } from './types';
 
 export function isKernelPickItem(item: ConnectionQuickPickItem | QuickPickItem): item is ConnectionQuickPickItem {
     return 'connection' in item;
@@ -54,6 +52,16 @@ function updateKernelQuickPickWithNewItems<T extends ConnectionQuickPickItem | Q
     quickPick.activeItems = activeItems;
 }
 
+export type CreateAndSelectItemFromQuickPick = (options: {
+    title: string;
+    items: (ConnectionQuickPickItem | QuickPickItem)[];
+    buttons: QuickInputButton[];
+    onDidTriggerButton: (e: QuickInputButton) => void;
+}) => {
+    quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>;
+    selection: Promise<ConnectionQuickPickItem | QuickPickItem>;
+};
+
 export class KernelSelector implements IDisposable {
     private disposables: IDisposable[] = [];
     private readonly displayDataProvider: ConnectionDisplayDataProvider;
@@ -65,15 +73,7 @@ export class KernelSelector implements IDisposable {
     private readonly trackedKernelIds = new Set<string>();
     constructor(
         private readonly notebook: NotebookDocument,
-        private readonly provider: {
-            readonly onDidChange: Event<void>;
-            readonly kernels: KernelConnectionMetadata[];
-            onDidChangeStatus: Event<void>;
-            onDidChangeRecommended: Event<void>;
-            status: 'discovering' | 'idle';
-            refresh: () => Promise<void>;
-            recommended: KernelConnectionMetadata | undefined;
-        },
+        private readonly provider: IQuickPickKernelItemProvider,
         private readonly token: CancellationToken
     ) {
         this.displayDataProvider =
@@ -84,8 +84,7 @@ export class KernelSelector implements IDisposable {
         disposeAllDisposables(this.disposables);
     }
     public async selectKernel(
-        multiStep: IMultiStepInput<MultiStepResult>,
-        state: MultiStepResult
+        quickPickFactory: CreateAndSelectItemFromQuickPick
     ): Promise<KernelConnectionMetadata | undefined> {
         if (this.token.isCancellationRequested) {
             return;
@@ -134,24 +133,16 @@ export class KernelSelector implements IDisposable {
         let createPythonQuickPickItem: QuickPickItem | undefined;
         if (
             this.extensionChecker.isPythonExtensionInstalled &&
-            state.source?.kind === ContributedKernelFinderKind.LocalPythonEnvironment
+            this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
         ) {
             createPythonQuickPickItem = {
                 label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`
             };
             this.createPythonItems.push(createPythonQuickPickItem);
         }
-        const { quickPick, selection } = multiStep.showLazyLoadQuickPick<
-            ConnectionQuickPickItem | QuickPickItem,
-            IQuickPickParameters<ConnectionQuickPickItem | QuickPickItem>
-        >({
-            title:
-                DataScience.kernelPickerSelectKernelTitle() + (state.source ? ` from ${state.source.displayName}` : ''),
+        const { quickPick, selection } = quickPickFactory({
+            title: this.provider.title,
             items: this.createPythonItems.concat(this.quickPickItems),
-            matchOnDescription: true,
-            matchOnDetail: true,
-            placeholder: '',
-            activeItem: undefined,
             buttons: [refreshButton],
             onDidTriggerButton: async (e) => {
                 if (e === refreshButton) {
@@ -184,9 +175,9 @@ export class KernelSelector implements IDisposable {
         );
 
         this.updateRecommended(quickPick);
-        this.updateQuickPickItems(quickPick, state);
+        this.updateQuickPickItems(quickPick);
         this.provider.onDidChangeRecommended(() => this.updateRecommended(quickPick), this, this.disposables);
-        this.provider.onDidChange(() => this.updateQuickPickItems(quickPick, state), this, state.disposables);
+        this.provider.onDidChange(() => this.updateQuickPickItems(quickPick), this, this.disposables);
 
         const result = await selection;
         if (this.token.isCancellationRequested) {
@@ -212,49 +203,20 @@ export class KernelSelector implements IDisposable {
             return result.connection;
         }
     }
-    private updateQuickPickItems(
-        quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>,
-        state: MultiStepResult
-    ) {
-        quickPick.title =
-            DataScience.kernelPickerSelectKernelTitle() + (state.source ? ` from ${state.source.displayName}` : '');
-        const allIds = new Set<string>();
+    private updateQuickPickItems(quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>) {
+        quickPick.title = this.provider.title;
         const newQuickPickItems = this.provider.kernels
-            .filter((item) => {
-                allIds.add(item.id);
-                if (!this.trackedKernelIds.has(item.id)) {
-                    this.trackedKernelIds.add(item.id);
+            .filter((kernel) => {
+                if (!this.trackedKernelIds.has(kernel.id)) {
+                    this.trackedKernelIds.add(kernel.id);
                     return true;
                 }
                 return false;
             })
             .map((item) => this.connectionToQuickPick(item));
-        const removedIds = Array.from(this.trackedKernelIds).filter((id) => !allIds.has(id));
-        if (removedIds.length) {
-            const itemsRemoved: (ConnectionQuickPickItem | QuickPickItem)[] = [];
-            this.categories.forEach((items, category) => {
-                items.forEach((item) => {
-                    if (removedIds.includes(item.connection.id)) {
-                        items.delete(item);
-                        itemsRemoved.push(item);
-                    }
-                });
-                if (!items.size) {
-                    itemsRemoved.push(category);
-                    this.categories.delete(category);
-                }
-            });
-            updateKernelQuickPickWithNewItems(
-                quickPick,
-                this.createPythonItems
-                    .concat(this.recommendedItems)
-                    .concat(this.quickPickItems.filter((item) => !itemsRemoved.includes(item))),
-                this.recommendedItems[1]
-            );
-        }
-        if (!newQuickPickItems.length) {
-            return;
-        }
+
+        this.updateQuickPickWithLatestConnection(quickPick);
+        this.removeMissingKernels(quickPick);
         groupBy(newQuickPickItems, (a, b) =>
             compareIgnoreCase(
                 this.displayDataProvider.getDisplayData(a.connection).category || 'z',
@@ -314,19 +276,46 @@ export class KernelSelector implements IDisposable {
             );
         });
     }
+
+    private removeMissingKernels(quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>) {
+        const kernels = new Map<string, KernelConnectionMetadata>(
+            this.provider.kernels.map((kernel) => [kernel.id, kernel])
+        );
+        const removedIds = Array.from(this.trackedKernelIds).filter((id) => !kernels.has(id));
+        if (removedIds.length) {
+            const itemsRemoved: (ConnectionQuickPickItem | QuickPickItem)[] = [];
+            this.categories.forEach((items, category) => {
+                items.forEach((item) => {
+                    if (removedIds.includes(item.connection.id)) {
+                        items.delete(item);
+                        itemsRemoved.push(item);
+                    }
+                });
+                if (!items.size) {
+                    itemsRemoved.push(category);
+                    this.categories.delete(category);
+                }
+            });
+            updateKernelQuickPickWithNewItems(
+                quickPick,
+                this.createPythonItems
+                    .concat(this.recommendedItems)
+                    .concat(this.quickPickItems.filter((item) => !itemsRemoved.includes(item))),
+                this.recommendedItems[1]
+            );
+        }
+    }
     private updateRecommended(quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>) {
         if (!this.provider.recommended) {
             return;
         }
-        console.error('Adding recommended');
         if (!this.recommendedItems.length) {
             this.recommendedItems.push(<QuickPickItem>{
                 label: DataScience.recommendedKernelCategoryInQuickPick(),
                 kind: QuickPickItemKind.Separator
             });
         }
-        const recommendedItem = this.connectionToQuickPick(this.provider.recommended);
-        recommendedItem.label = `$(star-full) ${recommendedItem.label}`;
+        const recommendedItem = this.connectionToQuickPick(this.provider.recommended, true);
         if (this.recommendedItems.length === 2) {
             this.recommendedItems[1] = recommendedItem;
         } else {
@@ -338,11 +327,42 @@ export class KernelSelector implements IDisposable {
             this.recommendedItems[1]
         );
     }
+    /**
+     * Possible the labels have changed, hence update the quick pick labels.
+     * E.g. we got more information about an interpreter or a display name of a kernelSpec has changed.
+     *
+     * Similarly its possible the user updated the kernelSpec args or the like and we need to update the quick pick to have the latest connection object.
+     */
+    private updateQuickPickWithLatestConnection(quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>) {
+        const kernels = new Map<string, KernelConnectionMetadata>(
+            this.provider.kernels.map((kernel) => [kernel.id, kernel])
+        );
+        this.recommendedItems.concat(this.quickPickItems).forEach((item) => {
+            if (!isKernelPickItem(item) || !kernels.has(item.connection.id)) {
+                return;
+            }
+            const kernel = kernels.get(item.connection.id);
+            if (!kernel) {
+                return;
+            }
+            item.label = this.connectionToQuickPick(kernel, item.isRecommended).label;
+            item.connection = kernel; // Possible some other information since then has changed, hence keep the connection up to date.
+        });
+        updateKernelQuickPickWithNewItems(
+            quickPick,
+            this.createPythonItems.concat(this.recommendedItems).concat(this.quickPickItems),
+            this.recommendedItems[1]
+        );
+    }
 
-    private connectionToQuickPick(connection: KernelConnectionMetadata): ConnectionQuickPickItem {
+    private connectionToQuickPick(
+        connection: KernelConnectionMetadata,
+        recommended: boolean = false
+    ): ConnectionQuickPickItem {
         const displayData = this.displayDataProvider.getDisplayData(connection);
         return {
-            label: displayData.label,
+            label: `${recommended ? '$(star-full) ' : ''}${displayData.label}`,
+            isRecommended: recommended,
             detail: displayData.detail,
             description: displayData.description,
             connection: connection

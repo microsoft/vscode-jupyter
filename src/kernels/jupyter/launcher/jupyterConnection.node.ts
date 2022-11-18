@@ -22,9 +22,7 @@ import { getJupyterConnectionDisplayName } from './helpers';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
-const namedRegexp = require('named-js-regexp');
-const urlMatcher = namedRegexp(RegExpValues.UrlPatternRegEx);
+const urlMatcher = new RegExp(RegExpValues.UrlPatternRegEx);
 
 /**
  * When starting a local jupyter server, this object waits for the server to come up.
@@ -124,8 +122,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     }
 
     // From a list of jupyter server infos try to find the matching jupyter that we launched
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
+    private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: string) {
         if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
             const matchInfo = serverInfos.find((info) => {
                 return arePathsSame(getFilePath(this.notebookDir), getFilePath(Uri.file(info.notebook_dir)));
@@ -144,19 +141,14 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private getJupyterURLFromString(data: any) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const urlMatch = urlMatcher.exec(data) as any;
-        const groups = urlMatch.groups() as RegExpValues.IUrlPatternGroupType;
-        if (urlMatch && !this.startPromise.completed && groups && (groups.LOCAL || groups.IP)) {
+    private getJupyterURLFromString(data: string) {
+        const urlMatch = urlMatcher.exec(data);
+        const groups = urlMatch?.groups;
+        if (!this.startPromise.completed && groups && (groups.LOCAL || groups.IP)) {
             // Rebuild the URI from our group hits
             const host = groups.LOCAL ? groups.LOCAL : groups.IP;
             const uriString = `${groups.PREFIX}${host}${groups.REST}`;
 
-            // URL is not being found for some reason. Pull it in forcefully
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const URL = require('url').URL;
             let url: URL;
             try {
                 url = new URL(uriString);
@@ -179,8 +171,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private extractConnectionInformation = (data: any) => {
+    private extractConnectionInformation = (data: string) => {
         this.output(data);
 
         const httpMatch = RegExpValues.HttpPattern.exec(data);

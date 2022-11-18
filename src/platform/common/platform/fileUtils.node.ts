@@ -8,6 +8,8 @@ import { IConfigurationService } from '../types';
 import { IServiceContainer } from '../../ioc/types';
 import { normCasePath } from './fileUtils';
 export { arePathsSame } from './fileUtils';
+import { untildify as untilidfyCommon } from '../utils/platform';
+import { homedir } from 'os';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -39,8 +41,7 @@ export function readFileSync(filePath: string): string {
     return fsapi.readFileSync(filePath, 'utf-8');
 }
 
-// eslint-disable-next-line global-require
-export const untildify: (value: string) => string = require('untildify');
+export const untildify: (value: string) => string = (value) => untilidfyCommon(value, homedir());
 
 /**
  * Returns true if given file path exists within the given parent directory, false otherwise.

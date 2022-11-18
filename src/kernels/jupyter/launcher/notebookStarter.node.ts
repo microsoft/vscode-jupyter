@@ -4,7 +4,6 @@
 'use strict';
 
 import * as cp from 'child_process';
-import * as url from 'url';
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
@@ -153,7 +152,7 @@ export class NotebookStarter implements INotebookStarter {
             }
 
             try {
-                const port = parseInt(url.parse(connection.baseUrl).port || '0', 10);
+                const port = parseInt(new URL(connection.baseUrl).port || '0', 10);
                 if (port && !isNaN(port)) {
                     if (launchResult.proc) {
                         launchResult.proc.on('exit', () => NotebookStarter._usedPorts.delete(port));
