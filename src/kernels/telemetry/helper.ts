@@ -58,7 +58,17 @@ export async function trackKernelResourceInformation(
         {
             resourceType: getResourceType(resource),
             resourceHash: resource ? await getTelemetrySafeHashedString(resource.toString()) : undefined,
-            kernelSessionId: await getTelemetrySafeHashedString(Date.now().toString())
+            kernelSessionId: await getTelemetrySafeHashedString(Date.now().toString()),
+            capturedEnvVars: undefined,
+            userExecutedCell: undefined,
+            disableUI: undefined,
+            kernelLanguage: undefined,
+            kernelId: undefined,
+            isUsingActiveInterpreter: undefined,
+            pythonEnvironmentType: undefined,
+            pythonEnvironmentPath: undefined,
+            pythonEnvironmentVersion: undefined,
+            kernelConnectionType: undefined
         },
         { previouslySelectedKernelConnectionId: '' }
     ];
@@ -116,9 +126,10 @@ export async function trackKernelResourceInformation(
                 interpreter
             );
             currentData.pythonEnvironmentType = interpreter.envType;
-            currentData.pythonEnvironmentPath = await getTelemetrySafeHashedString(
+            // TODO: This cast should be removed when the compute hash types are fixed
+            currentData.pythonEnvironmentPath = (await getTelemetrySafeHashedString(
                 getFilePath(getNormalizedInterpreterPath(interpreter.uri))
-            );
+            )) as string;
             pythonEnvironmentsByHash.set(currentData.pythonEnvironmentPath, interpreter);
             if (interpreter.version) {
                 const { major, minor, patch } = interpreter.version;
