@@ -244,7 +244,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         >({
             items: items,
             placeholder: '',
-            title: `Select a Jupyter Server from ${provider.displayName ?? provider.id}`,
+            title: 'Select a Jupyter Server',
             supportBackInFirstStep: true,
             onDidTriggerItemButton: async (e) => {
                 if ('type' in e.item && e.item.type === KernelFinderEntityQuickPickType.KernelFinder) {
@@ -268,8 +268,16 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 case KernelFinderEntityQuickPickType.KernelFinder:
                     return this.selectKernelFromKernelFinder.bind(this, selectedSource.kernelFinderInfo, token);
                 case KernelFinderEntityQuickPickType.UriProviderQuickPick:
-                    return this.selectRemoteServerFromRemoteKernelFinder(selectedSource, state, token);
-
+                    try {
+                        const ret = await this.selectRemoteServerFromRemoteKernelFinder(selectedSource, state, token);
+                        return ret;
+                    } catch (ex) {
+                        if (ex === InputFlowAction.back) {
+                            return this.getRemoteServersFromProvider(provider, token, multiStep, state);
+                        } else {
+                            throw ex;
+                        }
+                    }
                 default:
                     break;
             }
