@@ -126,10 +126,9 @@ export async function trackKernelResourceInformation(
                 interpreter
             );
             currentData.pythonEnvironmentType = interpreter.envType;
-            // TODO: This cast should be removed when the compute hash types are fixed
-            currentData.pythonEnvironmentPath = (await getTelemetrySafeHashedString(
+            currentData.pythonEnvironmentPath = await getTelemetrySafeHashedString(
                 getFilePath(getNormalizedInterpreterPath(interpreter.uri))
-            )) as string;
+            );
             pythonEnvironmentsByHash.set(currentData.pythonEnvironmentPath, interpreter);
             if (interpreter.version) {
                 const { major, minor, patch } = interpreter.version;
