@@ -63,29 +63,29 @@ async function installPythonExtension(vscodeExecutablePath: string, platform: Do
     }
 
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
-    console.log(`launching vscode to warm up: ${cliPath}`);
-    const vscodeProc = spawn(cliPath, [], {
-        stdio: 'inherit'
-    });
+    // console.log(`launching vscode to warm up: ${cliPath}`);
+    // const vscodeProc = spawn(cliPath, [], {
+    //     stdio: 'inherit'
+    // });
 
-    console.log(`waiting`);
-    await new Promise((resolve) => setTimeout(resolve, 4000));
-    console.log(`done waiting`);
-    vscodeProc.kill('SIGKILL');
-    vscodeProc.kill('SIGTERM');
-    vscodeProc.on('exit', () => console.log(`vscode exited`));
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log(`done waiting2`);
+    // console.log(`waiting`);
+    // await new Promise((resolve) => setTimeout(resolve, 4000));
+    // console.log(`done waiting`);
+    // vscodeProc.kill('SIGKILL');
+    // vscodeProc.kill('SIGTERM');
+    // vscodeProc.on('exit', () => console.log(`vscode exited`));
+    // await new Promise((resolve) => setTimeout(resolve, 2000));
+    // console.log(`done waiting2`);
 
     console.info(`Installing Python Extension ${PythonExtension}`);
-    spawnSync(cliPath, ['--install-extension', PythonExtension, '--pre-release', '--log', 'trace'], {
+    spawnSync(cliPath, ['--install-extension', PythonExtension, '--pre-release', '--log', 'trace', '--disable-telemetry'], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
 
     // Make sure pylance is there too as we'll use it for intellisense tests
     console.info(`Installing Pylance Extension`);
-    spawnSync(cliPath, ['--install-extension', PylanceExtension, '--log', 'trace'], {
+    spawnSync(cliPath, ['--install-extension', PylanceExtension, '--log', 'trace', '--disable-telemetry'], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
