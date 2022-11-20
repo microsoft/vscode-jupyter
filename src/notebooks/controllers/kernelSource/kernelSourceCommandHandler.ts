@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { inject, injectable } from 'inversify';
 import { commands, NotebookDocument, notebooks, window } from 'vscode';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
@@ -39,12 +38,12 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                         {
                             label: DataScience.localKernelSpecs(),
                             detail: DataScience.pickLocalKernelSpecTitle(),
-                            command: 'jupyter.kernel.selectLocalKernelSpec' as any
+                            command: 'jupyter.kernel.selectLocalKernelSpec'
                         },
                         {
                             label: DataScience.localPythonEnvironments(),
                             detail: DataScience.pickLocalKernelPythonEnvTitle(),
-                            command: 'jupyter.kernel.selectLocalPythonEnvironment' as any
+                            command: 'jupyter.kernel.selectLocalPythonEnvironment'
                         }
                     ];
                 }
@@ -57,12 +56,12 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                         {
                             label: DataScience.localKernelSpecs(),
                             detail: DataScience.pickLocalKernelSpecTitle(),
-                            command: 'jupyter.kernel.selectLocalKernelSpec' as any
+                            command: 'jupyter.kernel.selectLocalKernelSpec'
                         },
                         {
                             label: DataScience.localPythonEnvironments(),
                             detail: DataScience.pickLocalKernelPythonEnvTitle(),
-                            command: 'jupyter.kernel.selectLocalPythonEnvironment' as any
+                            command: 'jupyter.kernel.selectLocalPythonEnvironment'
                         }
                     ];
                 }
