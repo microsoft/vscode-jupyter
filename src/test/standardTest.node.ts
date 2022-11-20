@@ -64,13 +64,14 @@ async function installPythonExtension(vscodeExecutablePath: string, platform: Do
 
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
     console.log(`launching vscode to warm up: ${cliPath}`);
-    spawn(cliPath, ['--log', 'trace'], {
+    const vscodeProc = spawn(cliPath, [], {
         stdio: 'inherit'
     });
 
     console.log(`waiting`);
     await new Promise((resolve) => setTimeout(resolve, 4000));
     console.log(`done waiting`);
+    vscodeProc.kill('SIGKILL');
 
     console.info(`Installing Python Extension ${PythonExtension}`);
     spawnSync(cliPath, ['--install-extension', PythonExtension, '--pre-release', '--log', 'trace'], {
@@ -135,7 +136,7 @@ async function start() {
             .concat(['--skip-release-notes'])
             .concat(['--enable-proposed-api'])
             .concat(['--timeout', '5000'])
-            .concat(['--log', 'trace'])
+            // .concat(['--log', 'trace'])
             .concat(['--user-data-dir', userDataDirectory]),
         // .concat(['--verbose']), // Too much logging from VS Code, enable this to see what's going on in VSC.
         version: channel,
