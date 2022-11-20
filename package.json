@@ -2127,7 +2127,7 @@
         "jsonc-parser": "^2.0.3",
         "lodash": "^4.17.21",
         "marked": "^4.0.10",
-        "node-fetch": "^3.3.0",
+        "node-fetch": "^2.6.7",
         "node-stream-zip": "^1.6.0",
         "pdfkit": "^0.13.0",
         "pidtree": "^0.6.0",
