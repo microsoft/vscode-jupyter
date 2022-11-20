@@ -63,14 +63,19 @@ async function installPythonExtension(vscodeExecutablePath: string, platform: Do
     }
     console.info(`Installing Python Extension ${PythonExtension}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
-    spawnSync(cliPath, ['--install-extension', PythonExtension, '--pre-release'], {
+    spawnSync(cliPath, ['--install-extension', PythonExtension, '--pre-release', '--log', 'trace'], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
 
     // Make sure pylance is there too as we'll use it for intellisense tests
     console.info(`Installing Pylance Extension`);
-    spawnSync(cliPath, ['--install-extension', PylanceExtension], {
+    spawnSync(cliPath, ['--install-extension', PylanceExtension, '--log', 'trace'], {
+        encoding: 'utf-8',
+        stdio: 'inherit'
+    });
+
+    spawnSync('ls', ['-laR', '~/.vscode-insiders/extensions'], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
@@ -120,6 +125,7 @@ async function start() {
             .concat(['--skip-release-notes'])
             .concat(['--enable-proposed-api'])
             .concat(['--timeout', '5000'])
+            .concat(['--log', 'trace'])
             .concat(['--user-data-dir', userDataDirectory]),
         // .concat(['--verbose']), // Too much logging from VS Code, enable this to see what's going on in VSC.
         version: channel,
