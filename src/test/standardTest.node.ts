@@ -72,6 +72,10 @@ async function installPythonExtension(vscodeExecutablePath: string, platform: Do
     await new Promise((resolve) => setTimeout(resolve, 4000));
     console.log(`done waiting`);
     vscodeProc.kill('SIGKILL');
+    vscodeProc.kill('SIGTERM');
+    vscodeProc.on('exit', () => console.log(`vscode exited`));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    console.log(`done waiting2`);
 
     console.info(`Installing Python Extension ${PythonExtension}`);
     spawnSync(cliPath, ['--install-extension', PythonExtension, '--pre-release', '--log', 'trace'], {
@@ -86,7 +90,7 @@ async function installPythonExtension(vscodeExecutablePath: string, platform: Do
         stdio: 'inherit'
     });
 
-    spawnSync('ls', ['-laR', '/home/runner/.vscode-insiders/extensions'], {
+    spawnSync('ls', ['-la', '/home/runner/.vscode-insiders/extensions'], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
