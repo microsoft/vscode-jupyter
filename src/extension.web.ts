@@ -11,13 +11,10 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
-// Polly fill for webworkers in safari,
-// The scripts load in chrome because chrome supports offScreenCanvas which in turn supports requestAnimationFrame,
-// & requestAnimationFrame is the preferred approach and setImmediate is the fallback.
-// As requestAnimationFrame is supported in chrome webworkers there's no need for a fallback to setImmediate.
-// https://github.com/microsoft/vscode-jupyter/issues/10621
-// Note: requestAnimationFrame is required in `@jupyterlab/services/lib/kernel/future.js` while ext host runs in webworker (running extension in web).
+// requestAnimationFrame is required in `@jupyterlab/services/lib/kernel/future.js` while ext host runs in webworker (running extension in web).
 // & if `requestAnimationFrame` isn't available, then `setImmediate` is used as a fallback.
+// However safari doesn't support `requestAnimationFrame` in webworkers (whilst Chrome does).
+// Hence we need to add `setImmediate` as a fallback for safari.
 require('setimmediate');
 
 // Initialize the logger first.
