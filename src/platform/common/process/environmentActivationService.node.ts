@@ -220,6 +220,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
+        resource = resource
+            ? resource
+            : this.workspace.workspaceFolders?.length
+            ? this.workspace.workspaceFolders[0].uri
+            : undefined;
         const stopWatch = new StopWatch();
         // We'll need this later.
         this.envVarsService.getEnvironmentVariables(resource, 'RunPythonCode').catch(noop);

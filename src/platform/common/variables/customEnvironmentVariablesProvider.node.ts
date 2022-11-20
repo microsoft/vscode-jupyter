@@ -49,6 +49,12 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         resource: Resource,
         purpose: 'RunPythonCode' | 'RunNonPythonCode'
     ): Promise<EnvironmentVariables> {
+        resource = resource
+            ? resource
+            : this.workspaceService.workspaceFolders?.length
+            ? this.workspaceService.workspaceFolders[0].uri
+            : undefined;
+
         if (purpose === 'RunPythonCode') {
             // No need to cache for Python code, as we get these env vars from Python extension.
             return this._getEnvironmentVariables(resource, purpose);
@@ -70,6 +76,11 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         resource: Resource,
         purpose: 'RunPythonCode' | 'RunNonPythonCode'
     ): Promise<EnvironmentVariables | undefined> {
+        resource = resource
+            ? resource
+            : this.workspaceService.workspaceFolders?.length
+            ? this.workspaceService.workspaceFolders[0].uri
+            : undefined;
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
         if (!workspaceFolderUri) {
             traceInfoIfCI(`No workspace folder found for ${resource ? resource.fsPath : '<No Resource>'}`);
