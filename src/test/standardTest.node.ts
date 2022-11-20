@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { spawnSync } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import * as path from '../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
@@ -61,8 +61,15 @@ async function installPythonExtension(vscodeExecutablePath: string, platform: Do
         console.info('Python Extension not required');
         return;
     }
-    console.info(`Installing Python Extension ${PythonExtension}`);
+
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
+    spawn(cliPath, {
+        stdio: 'inherit'
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 4000));
+
+    console.info(`Installing Python Extension ${PythonExtension}`);
     spawnSync(cliPath, ['--install-extension', PythonExtension, '--pre-release', '--log', 'trace'], {
         encoding: 'utf-8',
         stdio: 'inherit'
