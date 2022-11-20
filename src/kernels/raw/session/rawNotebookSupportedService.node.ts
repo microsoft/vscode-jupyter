@@ -3,7 +3,7 @@
 
 'use strict';
 import { inject, injectable } from 'inversify';
-import { traceInfo, traceError, traceWarning } from '../../../platform/logging';
+import { traceInfo, traceWarning } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IRawNotebookSupportedService } from '../types';
 
