@@ -75,7 +75,7 @@ async function installPythonExtension(vscodeExecutablePath: string, platform: Do
         stdio: 'inherit'
     });
 
-    spawnSync('ls', ['-laR', '~/.vscode-insiders/extensions'], {
+    spawnSync('ls', ['-laR', '/home/runner/.vscode-insiders/extensions'], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
