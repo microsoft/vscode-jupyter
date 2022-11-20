@@ -64,7 +64,7 @@ type Message =
           parent?: ParentTest;
           isPending: boolean;
           duration?: number;
-          state: 'failed' | 'passed' | undefined;
+          state: 'pending' | 'failed' | 'passed' | undefined;
           consoleOutput: { category?: 'warn' | 'error'; output: string; time: number }[];
       }
     | {
@@ -75,7 +75,7 @@ type Message =
           slow: number;
           isPending: boolean;
           duration?: number;
-          state: 'failed' | 'passed' | undefined;
+          state: 'pending' | 'failed' | 'passed' | undefined;
           parent?: ParentTest;
       }
     | {
@@ -86,7 +86,7 @@ type Message =
           slow: number;
           isPending: boolean;
           duration?: number;
-          state: 'failed' | 'passed' | undefined;
+          state: 'pending' | 'failed' | 'passed' | undefined;
           parent?: ParentTest;
       };
 let currentPromise = Promise.resolve();
