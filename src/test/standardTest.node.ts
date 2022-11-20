@@ -63,11 +63,14 @@ async function installPythonExtension(vscodeExecutablePath: string, platform: Do
     }
 
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
-    spawn(cliPath, {
+    console.log(`launching vscode to warm up: ${cliPath}`);
+    spawn(cliPath, ['--log', 'trace'], {
         stdio: 'inherit'
     });
 
+    console.log(`waiting`);
     await new Promise((resolve) => setTimeout(resolve, 4000));
+    console.log(`done waiting`);
 
     console.info(`Installing Python Extension ${PythonExtension}`);
     spawnSync(cliPath, ['--install-extension', PythonExtension, '--pre-release', '--log', 'trace'], {
