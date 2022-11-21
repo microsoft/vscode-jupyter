@@ -1,50 +1,36 @@
 {
+    "extends": "./tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": ".",
+        "rootDir": "src",
+        "outDir": "out",
+
+        // Types
         "paths": {
             "*": ["types/*"]
         },
-        "module": "commonjs",
-        "target": "es2020",
-        "outDir": "out",
+        "typeRoots": [
+            "./node_modules/@types",
+        ],
+        "types": [
+            "webpack-env"
+        ],
         "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"],
-        "jsx": "react",
-        "sourceMap": true,
-        "rootDir": "src",
-        "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": true,
-        "strict": true,
-        "noImplicitAny": true,
-        "noImplicitThis": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noImplicitOverride": true,
-        "noFallthroughCasesInSwitch": true,
-        "resolveJsonModule": true,
-        "removeComments": true,
-        "useUnknownInCatchVariables": false,
-        "strictPropertyInitialization": false,
-        "esModuleInterop": true,
-        "allowJs": true,
-        "types": ["@types/vscode-notebook-renderer/preload", "webpack-env"]
     },
+    "include": [
+        "./src/**/*",
+
+        // Include all types outside the type roots manually
+        "./types/slickgrid",
+        "./vscode.*"
+    ],
     "exclude": [
-        "node_modules",
-        ".vscode-test",
-        ".vscode test",
         "src/server/node_modules",
         "src/node_modules",
         "src/server/src/typings",
         "src/typings",
         "src/ipywidgets",
         "src/smoke",
-        "src/test/datascience/extensionapi",
-        "build",
-        "out",
-        "ipywidgets",
-        "tmp",
-        ".nyc_output",
-        ".git",
-        "gulpfile.js"
+        "src/test/datascience/extensionapi"
     ]
 }

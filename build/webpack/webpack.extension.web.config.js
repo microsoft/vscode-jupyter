@@ -21,7 +21,7 @@ const testEntry = {
 const entry = process.env.VSC_TEST_BUNDLE === 'true' ? testEntry : devEntry;
 
 // tslint:disable-next-line:no-var-requires no-require-imports
-const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.web.json');
+const configFileName = path.join(constants.ExtensionRootDir, 'src/tsconfig.extension.web.json');
 const config = {
     mode: process.env.VSC_TEST_BUNDLE ? 'development' : 'none',
     target: 'webworker',
@@ -40,7 +40,7 @@ const config = {
                     {
                         loader: 'ts-loader',
                         options: {
-                            configFile: 'tsconfig.extension.web.json'
+                            configFile: 'src/tsconfig.extension.web.json'
                         }
                     }
                 ]

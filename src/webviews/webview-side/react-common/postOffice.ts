@@ -32,6 +32,9 @@ interface IMessageApi {
     dispose(): void;
 }
 
+declare var onDidReceiveKernelMessage: KernelMessagingApi['onDidReceiveKernelMessage'];
+declare var postKernelMessage: KernelMessagingApi['postKernelMessage'];
+
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
 // Provides support for messaging when using the vscode webview messaging api
