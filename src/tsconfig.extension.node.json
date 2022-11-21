@@ -20,6 +20,7 @@
         "../vscode.*"
     ],
     "exclude": [
+        "src/test",
         "webviews/webview-side",
         "**/*.web.ts"
     ]
