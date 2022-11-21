@@ -282,7 +282,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 }
                 // Id may be different if the user switched controllers
                 traceInfoIfCI(
-                    `Looking for controller ${k.controller.id} in ${this.controllerRegistration.all
+                    `(onStart) Looking for controller ${k.controller.id} in ${this.controllerRegistration.all
                         .map((item) => `${item.kind}:${item.id}`)
                         .join(', ')}`
                 );
