@@ -9,9 +9,9 @@ import type { NotebookDocument, Uri, Event } from 'vscode';
 import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
-import { computeHash } from '../platform/msrCrypto/hash';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { isPromise } from '../platform/common/utils/async';
+import { computeHash } from '../platform/common/crypto';
 
 export interface IExtensionTestApi extends IExtensionApi {
     serviceContainer: IServiceContainer;
