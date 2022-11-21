@@ -321,13 +321,12 @@ suite('Kernel Execution @kernelCore', function () {
             'Cell did not get cleared'
         );
         await kernel.interrupt();
-        if (getOSType() === OSType.Windows) {
+        if (getOSType() == OSType.Windows) {
             // Interrupting a cell on Windows is flaky. there isn't much we can do about it.
             await kernel.interrupt().catch(noop);
             await kernel.interrupt().catch(noop);
-        }
-        // No need to test interrupt on windows, its flaky.
-        if (getOSType() !== OSType.Windows) {
+            await waitForCellExecutionToComplete(cell).catch(noop);
+        } else {
             await waitForExecutionCompletedWithErrors(cell);
             // Verify that it hasn't got added (even after interrupting).
             assertNotHasTextOutputInVSCode(cell, 'Start', 0, false);
