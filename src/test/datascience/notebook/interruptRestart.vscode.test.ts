@@ -46,7 +46,7 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
     let kernelExecution: INotebookKernelExecution;
     const suiteDisposables: IDisposable[] = [];
     suiteSetup(async function () {
-        traceInfo(`Start Suite Test`);
+        traceInfo(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
         api = await initialize();
         await startJupyterServer();
         await closeNotebooksAndCleanUpAfterTests();
@@ -55,12 +55,15 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         notebook = new TestNotebookDocument();
         const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         const metadata = await getDefaultKernelConnection();
-
+        traceInfo(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore metadata ${metadata.id}`);
         const controller = createKernelController();
+        traceInfo(`Controller created`);
         kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
+        traceInfo(`Kernel created`);
         await kernel.start();
+        traceInfo(`Kernel started`);
         kernelExecution = kernelProvider.getKernelExecution(kernel);
-        traceInfo(`Start Suite Test Complete`);
+        traceInfo(`Start Suite Test Complete Restart/Interrupt/Cancel/Errors @kernelCore`);
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);

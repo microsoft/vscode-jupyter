@@ -3,9 +3,9 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
-import { IDisposable, IDisposableRegistry } from '../platform/common/types';
+import { IDisposable, IDisposableRegistry, IFeaturesManager } from '../platform/common/types';
 import { traceInfoIfCI } from '../platform/logging';
-import { IContributedKernelFinder } from './internalTypes';
+import { ContributedKernelFinderKind, IContributedKernelFinder } from './internalTypes';
 import { IKernelFinder, KernelConnectionMetadata } from './types';
 
 /**
@@ -40,7 +40,10 @@ export class KernelFinder implements IKernelFinder {
     public get onDidChangeStatus(): Event<void> {
         return this._onDidChangeStatus.event;
     }
-    constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {
+    constructor(
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
+    ) {
         disposables.push(this._onDidChangeStatus);
         disposables.push(this._onDidChangeRegistrations);
     }
@@ -76,8 +79,51 @@ export class KernelFinder implements IKernelFinder {
 
         // List kernels might be called after finders or connections are removed so just clear out and regenerate
         this.connectionFinderMapping.clear();
+        let finders: IContributedKernelFinder<KernelConnectionMetadata>[] = [];
+        if (this.featureManager.features.kernelPickerType === 'Insiders') {
+            const loadedKernelSpecFiles = new Set<string>();
+            // If we have a global kernel spec returned by Python kernel finder,
+            // give that preference over the same kernel found using local kernel spec finder.
+            // This is because the python kernel finder would have more information about the kernel (such as the matching python env).
+            this._finders
+                .filter((finder) => finder.kind === ContributedKernelFinderKind.LocalPythonEnvironment)
+                .forEach((finder) => {
+                    // Add our connection => finder mapping
+                    finder.kernels.forEach((connection) => {
+                        if (
+                            (connection.kind === 'startUsingLocalKernelSpec' ||
+                                connection.kind === 'startUsingPythonInterpreter') &&
+                            connection.kernelSpec.specFile
+                        ) {
+                            loadedKernelSpecFiles.add(connection.kernelSpec.specFile);
+                        }
+                        kernels.push(connection);
+                        this.connectionFinderMapping.set(connection.id, finder);
+                    });
+                });
+            this._finders
+                .filter((finder) => finder.kind === ContributedKernelFinderKind.LocalKernelSpec)
+                .forEach((finder) => {
+                    // Add our connection => finder mapping
+                    finder.kernels.forEach((connection) => {
+                        if (
+                            (connection.kind === 'startUsingLocalKernelSpec' ||
+                                connection.kind === 'startUsingPythonInterpreter') &&
+                            connection.kernelSpec.specFile &&
+                            loadedKernelSpecFiles.has(connection.kernelSpec.specFile)
+                        ) {
+                            return;
+                        }
+                        kernels.push(connection);
+                        this.connectionFinderMapping.set(connection.id, finder);
+                    });
+                });
 
-        for (const finder of this._finders) {
+            finders = this._finders.filter((finder) => finder.kind === ContributedKernelFinderKind.Remote);
+        } else {
+            finders = this._finders;
+        }
+        for (const finder of finders) {
             const contributedKernels = finder.kernels;
 
             // Add our connection => finder mapping

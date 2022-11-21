@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { inject, injectable } from 'inversify';
 import { commands, NotebookDocument, notebooks, window } from 'vscode';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry, IFeaturesManager } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -32,18 +32,36 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
             return;
         }
         this.disposables.push(
-            notebooks.registerKernelSourceActionProvider('jupyter-notebook', {
+            notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
                 provideNotebookKernelSourceActions: () => {
                     return [
                         {
                             label: DataScience.localKernelSpecs(),
                             detail: DataScience.pickLocalKernelSpecTitle(),
-                            command: 'jupyter.kernel.selectLocalKernelSpec' as any
+                            command: 'jupyter.kernel.selectLocalKernelSpec'
                         },
                         {
                             label: DataScience.localPythonEnvironments(),
                             detail: DataScience.pickLocalKernelPythonEnvTitle(),
-                            command: 'jupyter.kernel.selectLocalPythonEnvironment' as any
+                            command: 'jupyter.kernel.selectLocalPythonEnvironment'
+                        }
+                    ];
+                }
+            })
+        );
+        this.disposables.push(
+            notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
+                provideNotebookKernelSourceActions: () => {
+                    return [
+                        {
+                            label: DataScience.localKernelSpecs(),
+                            detail: DataScience.pickLocalKernelSpecTitle(),
+                            command: 'jupyter.kernel.selectLocalKernelSpec'
+                        },
+                        {
+                            label: DataScience.localPythonEnvironments(),
+                            detail: DataScience.pickLocalKernelPythonEnvTitle(),
+                            command: 'jupyter.kernel.selectLocalPythonEnvironment'
                         }
                     ];
                 }
@@ -85,7 +103,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     if (this.providerMappings.has(provider.id)) {
                         return;
                     }
-                    const providerItem = notebooks.registerKernelSourceActionProvider('jupyter-notebook', {
+                    const providerItemNb = notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
                         provideNotebookKernelSourceActions: () => {
                             return [
                                 {
@@ -102,8 +120,26 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                             ];
                         }
                     });
-                    this.disposables.push(providerItem);
-                    this.providerMappings.set(provider.id, [providerItem]);
+                    const providerItemIW = notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
+                        provideNotebookKernelSourceActions: () => {
+                            return [
+                                {
+                                    label: provider.displayName ?? provider.id,
+                                    detail:
+                                        provider.detail ??
+                                        `Connect to Jupyter servers from ${provider.displayName ?? provider.id}`,
+                                    command: {
+                                        command: 'jupyter.kernel.selectJupyterServerKernel',
+                                        arguments: [provider.id],
+                                        title: provider.displayName ?? provider.id
+                                    }
+                                }
+                            ];
+                        }
+                    });
+                    this.disposables.push(providerItemNb);
+                    this.disposables.push(providerItemIW);
+                    this.providerMappings.set(provider.id, [providerItemNb, providerItemIW]);
                 });
                 this.providerMappings.forEach((disposables, providerId) => {
                     if (!existingItems.has(providerId)) {
