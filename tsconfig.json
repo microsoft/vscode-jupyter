@@ -4,8 +4,11 @@
         "baseUrl": ".",
         "rootDir": "src",
         "outDir": "out",
+        // "module": "es2020",
+        // "moduleResolution": "node",
 
         // Types
+        "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"],
         "paths": {
             "*": ["types/*"]
         },
@@ -15,7 +18,6 @@
         "types": [
             "webpack-env"
         ],
-        "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"],
     },
     "include": [
         "./src/**/*",

@@ -281,19 +281,19 @@ async function buildWebPack(webpackConfigName, args, env) {
         env
     );
     const stdOutLines = stdOut
-        .split(os.EOL)
-        .map((item) => item.trim())
+        .split('\n')
+        .map((item) => stripVTControlCharacters(item).trim())
         .filter((item) => item.length > 0);
     // Remember to perform a case insensitive search.
     const warnings = stdOutLines
-        .filter((item) => stripVTControlCharacters(item).startsWith('WARNING in '))
+        .filter((item) => item.startsWith('WARNING in '))
         .filter(
             (item) =>
                 allowedWarnings.findIndex((allowedWarning) =>
-                    stripVTControlCharacters(item).toLowerCase().startsWith(allowedWarning.toLowerCase())
+                    item.toLowerCase().startsWith(allowedWarning.toLowerCase())
                 ) == -1
         );
-    const errors = stdOutLines.some((item) => stripVTControlCharacters(item).startsWith('ERROR in'));
+    const errors = stdOutLines.some((item) => item.startsWith('ERROR in'));
     if (errors) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }

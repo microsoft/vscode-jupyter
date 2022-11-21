@@ -15,8 +15,8 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import type { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
-import fastDeepEqual = require('fast-deep-equal');
+import cloneDeep from 'lodash/cloneDeep';
+import fastDeepEqual from 'fast-deep-equal';
 import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';

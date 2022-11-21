@@ -58,7 +58,10 @@ const config = {
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: 'ts-loader'
+                        loader: 'ts-loader',
+                        options: {
+                            configFile: 'src/tsconfig.extension.node.json'
+                        }
                     }
                 ]
             },
@@ -165,7 +168,7 @@ const config = {
     output: {
         filename: '[name].node.js',
         path: path.resolve(constants.ExtensionRootDir, 'out'),
-        libraryTarget: 'commonjs2',
+        libraryTarget: 'commonjs',
         devtoolModuleFilenameTemplate: '../../[resource-path]'
     }
 };

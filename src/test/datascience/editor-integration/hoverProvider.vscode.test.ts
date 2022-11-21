@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import cloneDeep = require('lodash/cloneDeep');
+import cloneDeep from 'lodash/cloneDeep';
 import * as sinon from 'sinon';
 import * as path from '../../../platform/vscode-path/path';
 import * as vscode from 'vscode';

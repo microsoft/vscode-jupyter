@@ -3,7 +3,7 @@
 
 import { inject, injectable, named } from 'inversify';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
-import cloneDeep = require('lodash/cloneDeep');
+import cloneDeep from 'lodash/cloneDeep';
 import { Memento, Uri } from 'vscode';
 import { traceInfo, traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
