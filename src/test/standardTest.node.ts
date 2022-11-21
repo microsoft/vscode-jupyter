@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { spawn, spawnSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import * as path from '../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
@@ -78,10 +78,14 @@ async function installPythonExtension(vscodeExecutablePath: string, platform: Do
     // console.log(`done waiting2`);
 
     console.info(`Installing Python Extension ${PythonExtension}`);
-    spawnSync(cliPath, ['--install-extension', PythonExtension, '--pre-release', '--log', 'trace', '--disable-telemetry'], {
-        encoding: 'utf-8',
-        stdio: 'inherit'
-    });
+    spawnSync(
+        cliPath,
+        ['--install-extension', PythonExtension, '--pre-release', '--log', 'trace', '--disable-telemetry'],
+        {
+            encoding: 'utf-8',
+            stdio: 'inherit'
+        }
+    );
 
     // Make sure pylance is there too as we'll use it for intellisense tests
     console.info(`Installing Pylance Extension`);
