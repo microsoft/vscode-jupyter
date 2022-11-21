@@ -162,72 +162,6 @@ suite('Preferred Kernel Connection', () => {
         disposables.push(preferredService);
     });
     teardown(() => disposeAllDisposables(disposables));
-    suite('Live Remote Kernels (exact match)', () => {
-        test('No exact match for notebook when there is live kernel associated with the notebook but the live kernel no longer exists', async () => {
-            when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
-                remoteLiveKernelConnection2.id
-            );
-            when(remoteKernelFinder.status).thenReturn('idle');
-            when(remoteKernelFinder.kernels).thenReturn([]);
-
-            const exactKernel = await preferredService.findExactRemoteKernelConnection(notebook, cancellation.token);
-
-            assert.isUndefined(exactKernel);
-        });
-        test('No exact match for notebook when there is live kernel associated with the notebook but the live kernel no longer exists, even if we have a matching kernelSpec', async () => {
-            when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
-                remoteLiveKernelConnection2.id
-            );
-            when(remoteKernelFinder.status).thenReturn('idle');
-            when(remoteKernelFinder.kernels).thenReturn([remoteJavaKernelSpec]);
-            notebookMetadata.kernelspec!.name = remoteJavaKernelSpec.kernelSpec.name;
-
-            const exactKernel = await preferredService.findExactRemoteKernelConnection(notebook, cancellation.token);
-
-            assert.isUndefined(exactKernel);
-        });
-        test('Find exact match for notebook when there is live kernel associated with the notebook', async () => {
-            when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
-                remoteLiveKernelConnection2.id
-            );
-            when(remoteKernelFinder.status).thenReturn('idle');
-            when(remoteKernelFinder.kernels).thenReturn([remoteLiveKernelConnection1, remoteLiveKernelConnection2]);
-
-            const exactKernel = await preferredService.findExactRemoteKernelConnection(notebook, cancellation.token);
-
-            assert.strictEqual(exactKernel, remoteLiveKernelConnection2);
-        });
-        test('Find exact match for notebook when there is live kernel associated with the notebook and finding kernels takes a while', async () => {
-            when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
-                remoteLiveKernelConnection2.id
-            );
-            when(remoteKernelFinder.status).thenReturn('discovering');
-            when(remoteKernelFinder.kernels).thenReturn([remoteLiveKernelConnection1]);
-
-            const promise = preferredService.findExactRemoteKernelConnection(notebook, cancellation.token);
-
-            // Ensure we now find the kernel.
-            when(remoteKernelFinder.kernels).thenReturn([remoteLiveKernelConnection1, remoteLiveKernelConnection2]);
-            onDidChangeRemoteKernels.fire();
-
-            assert.strictEqual(await promise, remoteLiveKernelConnection2);
-        });
-        test('Do not find an exact match for notebook when there is live kernel associated with the notebook and we do not find a matching kernel even after waiting for kernels finding to finish', async () => {
-            when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
-                remoteLiveKernelConnection2.id
-            );
-            when(remoteKernelFinder.status).thenReturn('discovering');
-            when(remoteKernelFinder.kernels).thenReturn([remoteLiveKernelConnection1]);
-
-            const promise = preferredService.findExactRemoteKernelConnection(notebook, cancellation.token);
-
-            // Ensure we now find the kernel.
-            when(remoteKernelFinder.status).thenReturn('idle');
-            onDidChangeRemoteKernels.fire();
-
-            assert.isUndefined(await promise);
-        });
-    });
     suite('Live Remote Kernels (preferred match)', () => {
         test('Find preferred kernel spec if there is no exact match for the live kernel connection (match kernel spec name)', async () => {
             when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
@@ -260,45 +194,6 @@ suite('Preferred Kernel Connection', () => {
             );
 
             assert.strictEqual(preferredKernel, remoteJavaKernelSpec);
-        });
-        test('No kernel matches from remotes', async () => {
-            when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
-                remoteLiveKernelConnection2.id
-            );
-            when(remoteKernelFinder.status).thenReturn('idle');
-            when(remoteKernelFinder.kernels).thenReturn([remoteLiveKernelConnection1, remoteJavaKernelSpec]);
-
-            const exactKernel = await preferredService.findExactRemoteKernelConnection(notebook, cancellation.token);
-
-            assert.isUndefined(exactKernel);
-        });
-    });
-    suite('Local Kernel Specs (exact match)', () => {
-        test('No exact match for notebook when there are no kernels', async () => {
-            when(localKernelSpecFinder.status).thenReturn('idle');
-            when(localKernelSpecFinder.kernels).thenReturn([]);
-
-            const exactKernel = await preferredService.findExactLocalKernelSpecConnection(notebook, cancellation.token);
-
-            assert.isUndefined(exactKernel);
-        });
-        test('No exact match for notebook when kernel spec name does not match (even if language matches)', async () => {
-            when(localKernelSpecFinder.status).thenReturn('idle');
-            when(localKernelSpecFinder.kernels).thenReturn([localJavaKernelSpec]);
-            notebookMetadata.language_info!.name = localJavaKernelSpec.kernelSpec.language!;
-
-            const exactKernel = await preferredService.findExactLocalKernelSpecConnection(notebook, cancellation.token);
-
-            assert.isUndefined(exactKernel);
-        });
-        test('Find exact match for notebook when kernel spec name matches', async () => {
-            when(localKernelSpecFinder.status).thenReturn('idle');
-            when(localKernelSpecFinder.kernels).thenReturn([localJavaKernelSpec]);
-            notebookMetadata.kernelspec!.name = localJavaKernelSpec.kernelSpec.name;
-
-            const exactKernel = await preferredService.findExactLocalKernelSpecConnection(notebook, cancellation.token);
-
-            assert.strictEqual(exactKernel, localJavaKernelSpec);
         });
     });
     suite('Local Kernel Specs (preferred match)', () => {
@@ -353,55 +248,6 @@ suite('Preferred Kernel Connection', () => {
             assert.strictEqual(preferredKernel, localJavaKernelSpec);
         });
     });
-    suite('Local Python Env (exact match)', () => {
-        test('No exact match for notebook when there are no kernels', async () => {
-            when(localPythonEnvFinder.status).thenReturn('idle');
-            when(localPythonEnvFinder.kernels).thenReturn([]);
-
-            const exactKernel = await preferredService.findExactPythonKernelConnection(notebook, cancellation.token);
-
-            assert.isUndefined(exactKernel);
-        });
-        test('No exact match for notebook when interpreter hash does not match', async () => {
-            when(localPythonEnvFinder.status).thenReturn('idle');
-            when(localPythonEnvFinder.kernels).thenReturn([venvPythonKernel, condaPythonKernel]);
-            notebookMetadata.vscode = { interpreter: { hash: 'xyz' } };
-
-            const exactKernel = await preferredService.findExactPythonKernelConnection(notebook, cancellation.token);
-
-            assert.isUndefined(exactKernel);
-        });
-        test('Find exact match for notebook when we find an exact matching interpreter', async () => {
-            when(localPythonEnvFinder.status).thenReturn('idle');
-            when(localPythonEnvFinder.kernels).thenReturn([venvPythonKernel, condaPythonKernel]);
-            const condaInterpreterHash = '#Conda Interpreter Hash';
-            when(interpreterService.getInterpreterHash(condaPythonKernel.interpreter.id)).thenReturn(
-                condaInterpreterHash
-            );
-            notebookMetadata.vscode = { interpreter: { hash: condaInterpreterHash } };
-
-            const exactKernel = await preferredService.findExactPythonKernelConnection(notebook, cancellation.token);
-
-            assert.strictEqual(exactKernel, condaPythonKernel);
-        });
-        test('Find exact match for notebook when the matching interpreter is discovered a little later', async () => {
-            when(localPythonEnvFinder.status).thenReturn('discovering');
-            when(localPythonEnvFinder.kernels).thenReturn([venvPythonKernel]);
-            const condaInterpreterHash = '#Conda Interpreter Hash';
-            when(interpreterService.getInterpreterHash(condaPythonKernel.interpreter.id)).thenReturn(
-                condaInterpreterHash
-            );
-            notebookMetadata.vscode = { interpreter: { hash: condaInterpreterHash } };
-
-            const promise = preferredService.findExactPythonKernelConnection(notebook, cancellation.token);
-
-            // We discovery the conda env a little later.
-            when(localPythonEnvFinder.kernels).thenReturn([venvPythonKernel, condaPythonKernel]);
-            onDidChangePythonKernels.fire();
-
-            assert.strictEqual(await promise, condaPythonKernel);
-        });
-    });
     suite('Local Python Env (preferred match)', () => {
         test('No matches for notebook when there are no kernels', async () => {
             when(localPythonEnvFinder.status).thenReturn('idle');
@@ -427,25 +273,6 @@ suite('Preferred Kernel Connection', () => {
             );
 
             assert.strictEqual(preferredKernel, condaPythonKernel);
-        });
-        test('Match active interpreter after completion of python interpreter discovery', async () => {
-            when(localPythonEnvFinder.status).thenReturn('discovering');
-            when(localPythonEnvFinder.kernels).thenReturn([venvPythonKernel]);
-            const condaInterpreterHash = '#Conda Interpreter Hash';
-            when(interpreterService.getInterpreterHash(condaPythonKernel.interpreter.id)).thenReturn(
-                condaInterpreterHash
-            );
-            notebookMetadata.vscode = { interpreter: { hash: condaInterpreterHash } };
-
-            const promise = preferredService.findExactPythonKernelConnection(notebook, cancellation.token);
-
-            // We discovery the conda env a little later.
-            when(interpreterService.getActiveInterpreter(anything())).thenResolve(condaPythonKernel.interpreter);
-            when(localPythonEnvFinder.kernels).thenReturn([venvPythonKernel, condaPythonKernel]);
-            when(localPythonEnvFinder.status).thenReturn('idle');
-            onDidChangePythonKernels.fire();
-
-            assert.strictEqual(await promise, condaPythonKernel);
         });
     });
 });

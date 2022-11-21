@@ -9,6 +9,7 @@ import {
     CancellationToken,
     CancellationTokenSource,
     EventEmitter,
+    NotebookControllerAffinity,
     NotebookDocument,
     QuickPickItem,
     QuickPickItemKind,
@@ -43,7 +44,8 @@ import {
     MultiStepInput
 } from '../../../platform/common/utils/multiStepInput';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { IControllerRegistration, INotebookKernelSourceSelector, IConnectionTracker } from '../types';
+import { traceWarning } from '../../../platform/logging';
+import { IControllerRegistration, INotebookKernelSourceSelector } from '../types';
 import { CreateAndSelectItemFromQuickPick, KernelSelector } from './kernelSelector';
 import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
 import { ConnectionQuickPickItem, IQuickPickKernelItemProvider, MultiStepResult } from './types';
@@ -73,7 +75,6 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
     private localDisposables: IDisposable[] = [];
     private cancellationTokenSource: CancellationTokenSource | undefined;
     constructor(
-        @inject(IConnectionTracker) private readonly connectionTracker: IConnectionTracker,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
@@ -385,9 +386,11 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             notebook.notebookType as typeof JupyterNotebookView | typeof InteractiveWindowView
         ]);
         if (!Array.isArray(controllers) || controllers.length === 0) {
+            traceWarning(`No controller created for selected kernel connection ${connection.kind}:${connection.id}`);
             return;
         }
-        // First apply the kernel filter to this document
-        this.connectionTracker.trackSelection(notebook, connection);
+        controllers
+            .find((item) => item.viewType === notebook.notebookType)
+            ?.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity.Preferred);
     }
 }

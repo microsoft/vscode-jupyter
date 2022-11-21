@@ -3,8 +3,8 @@
 
 'use strict';
 
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Memento, Uri } from 'vscode';
-import { getKernelId, getLanguageInKernelSpec } from '../../helpers';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Memento } from 'vscode';
+import { getKernelId } from '../../helpers';
 import {
     BaseKernelConnectionMetadata,
     IJupyterKernelSpec,
@@ -17,7 +17,6 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
 import { IDisposable, IExtensions } from '../../../platform/common/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import {
     IJupyterSessionManagerFactory,
@@ -30,7 +29,6 @@ import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
 import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { computeServerId } from '../jupyterUtils';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { DisplayOptions } from '../../displayOptions';
 import { isArray } from '../../../platform/common/utils/sysTypes';
@@ -85,7 +83,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         readonly displayName: string,
         readonly cacheKey: string,
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        private interpreterService: IInterpreterService,
         private extensionChecker: IPythonExtensionChecker,
         private readonly notebookProvider: INotebookProvider,
         private readonly globalState: Memento,
@@ -94,7 +91,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         kernelFinder: KernelFinder,
         private readonly kernelProvider: IKernelProvider,
         private readonly extensions: IExtensions,
-        private isWebExtension: boolean,
         readonly serverUri: IJupyterServerUriEntry
     ) {
         // When we register, add a disposable to clean ourselves up from the main kernel finder list
@@ -340,7 +336,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                     specs.map(async (s) => {
                         await sendKernelSpecTelemetry(s, 'remote');
                         const kernel = RemoteKernelSpecConnectionMetadata.create({
-                            interpreter: await this.getInterpreter(s, connInfo.baseUrl),
                             kernelSpec: s,
                             id: getKernelId(s, undefined, serverId),
                             baseUrl: connInfo.baseUrl,
@@ -393,24 +388,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             }
         }
         return [];
-    }
-
-    private async getInterpreter(spec: IJupyterKernelSpec, baseUrl: string) {
-        const parsed = new URL(baseUrl);
-        if (
-            (parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1') &&
-            this.extensionChecker.isPythonExtensionInstalled &&
-            !this.isWebExtension &&
-            getLanguageInKernelSpec(spec) === PYTHON_LANGUAGE
-        ) {
-            // Interpreter is possible. Same machine as VS code
-            try {
-                traceInfoIfCI(`Getting interpreter details for localhost remote kernel: ${spec.name}`);
-                return await this.interpreterService.getInterpreterDetails(Uri.file(spec.argv[0]));
-            } catch (ex) {
-                traceError(`Failure getting interpreter details for remote kernel: `, ex);
-            }
-        }
     }
 
     private async writeToCache(values: RemoteKernelConnectionMetadata[]) {

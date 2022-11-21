@@ -115,7 +115,6 @@ export interface IJupyterSettings {
     readonly poetryPath: string;
     readonly excludeUserSitePackages: boolean;
     readonly enableExtendedKernelCompletions: boolean;
-    readonly kernelPickerType: KernelPickerType;
 }
 
 export interface IVariableTooltipFields {

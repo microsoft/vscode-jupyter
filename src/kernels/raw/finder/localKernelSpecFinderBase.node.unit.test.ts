@@ -9,6 +9,7 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable } from '../../../platform/common/types';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { IJupyterKernelSpec } from '../../types';
+import { JupyterPaths } from './jupyterPaths.node';
 import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
 
 suite('Local Kernel Spec Finder', () => {
@@ -22,7 +23,9 @@ suite('Local Kernel Spec Finder', () => {
         globalState = mock<Memento>();
         cancellation = new CancellationTokenSource();
         disposables.push(cancellation);
-        finder = new LocalKernelSpecFinder(instance(fs), instance(globalState));
+        const jupyterPaths = mock<JupyterPaths>();
+        when(jupyterPaths.getKernelSpecRootPath()).thenResolve();
+        finder = new LocalKernelSpecFinder(instance(fs), instance(globalState), instance(jupyterPaths));
         disposables.push(finder);
     });
     teardown(() => disposeAllDisposables(disposables));
@@ -42,7 +45,7 @@ suite('Local Kernel Spec Finder', () => {
         when(fs.readFile(uriEquals(uri))).thenResolve(JSON.stringify(kernelSpec));
         when(fs.readFile(uriEquals(uri))).thenResolve(JSON.stringify(kernelSpec));
 
-        const loadedSpec = await finder.getKernelSpec(uri, cancellation.token);
+        const loadedSpec = await finder.loadKernelSpec(uri, cancellation.token);
 
         const keys = Object.keys(kernelSpec);
         Object.keys(loadedSpec!)
@@ -65,16 +68,16 @@ suite('Local Kernel Spec Finder', () => {
         const uri = Uri.file('path/to/kernel.json');
         when(fs.readFile(uriEquals(uri))).thenResolve(JSON.stringify(kernelSpec));
 
-        await finder.getKernelSpec(uri, cancellation.token);
-        await finder.getKernelSpec(uri, cancellation.token);
-        await finder.getKernelSpec(uri, cancellation.token);
+        await finder.loadKernelSpec(uri, cancellation.token);
+        await finder.loadKernelSpec(uri, cancellation.token);
+        await finder.loadKernelSpec(uri, cancellation.token);
 
         verify(fs.readFile(uriEquals(uri))).once();
 
         finder.clearCache();
 
-        await finder.getKernelSpec(uri, cancellation.token);
-        await finder.getKernelSpec(uri, cancellation.token);
+        await finder.loadKernelSpec(uri, cancellation.token);
+        await finder.loadKernelSpec(uri, cancellation.token);
 
         verify(fs.readFile(uriEquals(uri))).twice();
     });
