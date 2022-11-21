@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// This line should always be right on top.
-/* eslint-disable @typescript-eslint/no-explicit-any */
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
-}
+// reflect-metadata is needed by inversify, this must come before any inversify references
+import 'reflect-metadata';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as ts from 'typescript';
 import * as fs from 'fs-extra';

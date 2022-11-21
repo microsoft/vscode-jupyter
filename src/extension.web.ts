@@ -3,19 +3,14 @@
 
 'use strict';
 
-/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
-
-// This line should always be right on top.
-/* eslint-disable @typescript-eslint/no-explicit-any */
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
-}
+// reflect-metadata is needed by inversify, this must come before any inversify references
+import 'reflect-metadata';
 
 // requestAnimationFrame is required in `@jupyterlab/services/lib/kernel/future.js` while ext host runs in webworker (running extension in web).
 // & if `requestAnimationFrame` isn't available, then `setImmediate` is used as a fallback.
 // However safari doesn't support `requestAnimationFrame` in webworkers (whilst Chrome does).
 // Hence we need to add `setImmediate` as a fallback for safari.
-require('setimmediate');
+import 'setimmediate';
 
 // Initialize the logger first.
 import './platform/logging';

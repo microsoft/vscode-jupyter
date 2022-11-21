@@ -3,13 +3,11 @@
 
 'use strict';
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any */
-// Always place at the top, to ensure other modules are imported first.
-require('./common/exitCIAfterTestReporter');
+// Custom mocha reporter
+import './common/exitCIAfterTestReporter';
+// reflect-metadata is needed by inversify, this must come before any inversify references
+import 'reflect-metadata';
 
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
-}
 // Always place at top, must be done before we import any of the files from src/client folder.
 // We need to ensure nyc gets a change to setup necessary hooks before files are loaded.
 const { setupCoverage } = require('./coverage.node');
@@ -45,7 +43,7 @@ type SetupOptions = Mocha.MochaOptions & {
     exit: boolean;
 };
 
-process.on('unhandledRejection', (ex: any, _a) => {
+process.on('unhandledRejection', (ex: Error, _a) => {
     if (typeof ex === 'object' && ex && ex.name === 'Canceled' && ex instanceof Error) {
         // We don't care about unhandled `Cancellation` errors.
         // When we shutdown tests some of these cancellations (cancelling starting of Kernels, etc) bubble upto VS Code.
