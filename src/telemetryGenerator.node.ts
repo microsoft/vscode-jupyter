@@ -611,12 +611,15 @@ function isNodeExported(node: ts.Node): boolean {
     );
 }
 
+function getTsCompilerOptionsJson(): any {
+    const tsconfigPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tsconfig.json');
+    const jsonContent = ts.parseConfigFileTextToJson(tsconfigPath, fs.readFileSync(tsconfigPath, 'utf8'));
+    return ts.convertCompilerOptionsFromJson(jsonContent.config.compilerOptions, '');
+}
+
 /** Generate documentation for all classes in a set of .ts files */
 function generateDocumentationForCommonTypes(fileNames: string[]): void {
-    const configFile = ts.convertCompilerOptionsFromJson(
-        JSON.parse(fs.readFileSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tsconfig.json'), 'utf8')),
-        ''
-    );
+    const configFile = getTsCompilerOptionsJson();
     const program = ts.createProgram(fileNames, configFile.options);
     const typeChecker = program!.getTypeChecker();
 
@@ -653,10 +656,7 @@ function generateDocumentationForCommonTypes(fileNames: string[]): void {
 }
 
 function generateDocumentation(fileNames: string[]): void {
-    const configFile = ts.convertCompilerOptionsFromJson(
-        JSON.parse(fs.readFileSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tsconfig.json'), 'utf8')),
-        ''
-    );
+    const configFile = getTsCompilerOptionsJson();
     const host = new TypeScriptLanguageServiceHost(fileNames, configFile.options);
     const languageService = ts.createLanguageService(host, undefined, ts.LanguageServiceMode.Semantic);
     const program = languageService.getProgram()!;
