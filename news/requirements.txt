@@ -7,18 +7,14 @@
 attrs==19.3.0
     # via pytest
 docopt==0.6.2
-    # via -r requirements.in
-exceptiongroup==1.0.0
-    # via pytest
+    # via -r news/requirements.in
 iniconfig==1.0.1
     # via pytest
-packaging==20.8
+packaging==21.3
     # via pytest
 pluggy==0.13.1
     # via pytest
 pyparsing==2.4.5
     # via packaging
 pytest==7.2.0
-    # via -r requirements.in
-tomli==2.0.1
-    # via pytest
+    # via -r news/requirements.in
