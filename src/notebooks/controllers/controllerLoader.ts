@@ -118,20 +118,20 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
             traceInfoIfCI(
                 `Kernels found in kernel finder include ${connections
                     .map((c) => `${c.kind}:${c.id}`)
-                    .join('\n')} and currently registered controllers include ${this.registration.registered
+                    .join('\n')} \n and currently registered controllers include ${this.registration.registered
                     .map((c) => `${c.connection.kind}:${c.connection.id}`)
                     .join('\n')}`
             );
             // Look for any controllers that we have disposed (no longer found when fetching)
             const disposedControllers = Array.from(this.registration.registered).filter((controller) => {
-                const connectionIsNoLongerValid = !connections.some((connection) => {
+                const connectionIsStillValid = connections.some((connection) => {
                     return connection.id === controller.connection.id;
                 });
 
                 // Never remove remote kernels that don't exist.
                 // Always leave them there for user to select, and if the connection is not available/not valid,
                 // then notify the user and remove them.
-                if (connectionIsNoLongerValid && controller.connection.kind === 'connectToLiveRemoteKernel') {
+                if (!connectionIsStillValid && controller.connection.kind === 'connectToLiveRemoteKernel') {
                     return true;
                 }
 
@@ -139,11 +139,15 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                 if (!this.registration.canControllerBeDisposed(controller)) {
                     return false;
                 }
-                return connectionIsNoLongerValid;
+                if (!connectionIsStillValid) {
+                    traceInfoIfCI(`Controller ${controller.id} is no longer valid Kernel connection`);
+                }
+                return !connectionIsStillValid;
             });
 
             // If we have any out of date connections, dispose of them
             disposedControllers.forEach((controller) => {
+                traceInfoIfCI(`Disposing old controller ${controller.connection.id}`);
                 controller.dispose(); // This should remove it from the registered list
             });
         })();
@@ -151,17 +155,11 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         // Set that we have loaded controllers
         this.controllersPromise = this.controllersPromise || Promise.resolve();
     }
-    private createNotebookControllers(
-        kernelConnections: KernelConnectionMetadata[],
-        viewTypes: (typeof InteractiveWindowView | typeof JupyterNotebookView)[] = [
-            JupyterNotebookView,
-            InteractiveWindowView
-        ]
-    ) {
+    private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]) {
         traceVerbose(`Creating ${kernelConnections?.length} controllers`);
 
         try {
-            this.registration.batchAdd(kernelConnections, viewTypes);
+            this.registration.batchAdd(kernelConnections, [JupyterNotebookView, InteractiveWindowView]);
         } catch (ex) {
             if (!isCancellationError(ex, true)) {
                 // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.

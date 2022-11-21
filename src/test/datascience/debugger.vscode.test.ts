@@ -8,10 +8,12 @@ import * as os from 'os';
 import * as sinon from 'sinon';
 import { debug } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { IControllerDefaultService } from '../../notebooks/controllers/types';
 import { IDebuggingManager, INotebookDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
 import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { Commands } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
+import { isWeb } from '../../platform/common/utils/misc';
 import { traceInfo } from '../../platform/logging';
 import * as path from '../../platform/vscode-path/path';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
@@ -68,6 +70,11 @@ suite('Run By Line @debugger', function () {
 
         // Create an editor to use for our tests
         await createEmptyPythonNotebook(disposables);
+        if (!isWeb() && !IS_REMOTE_NATIVE_TEST()) {
+            await api.serviceContainer
+                .get<IControllerDefaultService>(IControllerDefaultService)
+                .computeDefaultController(undefined, 'interactive');
+        }
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
