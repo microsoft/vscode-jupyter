@@ -2093,7 +2093,9 @@
         "validateTelemetry": "gulp validateTelemetry",
         "verifyUnhandledErrors": "gulp verifyUnhandledErrors",
         "printTestResults": "gulp printTestResults",
-        "setup-precommit-hook": "husky install"
+        "setup-precommit-hook": "husky install",
+        "webpack-analyze:node": "npx webpack --json --config build/webpack/webpack.extension.node.config.js > out/stats-node.json && yarn webpack-bundle-analyzer out/stats-node.json",
+        "webpack-analyze:web": "npx webpack --json --config build/webpack/webpack.extension.web.config.js > out/stats-web.json && yarn webpack-bundle-analyzer out/stats-web.json"
     },
     "dependencies": {
         "@enonic/fnv-plus": "^1.3.0",
