@@ -22,7 +22,7 @@ py4j
 bqplot
 K3D
 ipyleaflet
-jinja2==3.0.3 # https://github.com/microsoft/vscode-jupyter/issues/9468#issuecomment-1078468039
+jinja2==3.1.2 # https://github.com/microsoft/vscode-jupyter/issues/9468#issuecomment-1078468039
 matplotlib
 ipympl
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
