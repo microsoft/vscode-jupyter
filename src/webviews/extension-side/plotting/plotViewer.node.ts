@@ -76,8 +76,7 @@ export class PlotViewer extends PlotViewerBase {
 export async function saveSvgToPdf(svg: string, fs: IFileSystemNode, file: Uri) {
     traceInfo('Attempting pdf write...');
     // Import here since pdfkit is so huge.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const SVGtoPDF = require('svg-to-pdfkit');
+    const SVGtoPDF = (await import('svg-to-pdfkit')).default;
     const deferred = createDeferred<void>();
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pdfkit = require('pdfkit/js/pdfkit.standalone') as typeof import('pdfkit');

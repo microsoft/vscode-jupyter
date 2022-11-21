@@ -2234,6 +2234,7 @@
         "@types/sinonjs__fake-timers": "^6.0.1",
         "@types/stack-trace": "0.0.29",
         "@types/strip-comments": "^2.0.1",
+        "@types/svg-to-pdfkit": "^0.1.0",
         "@types/tcp-port-used": "^1.0.0",
         "@types/temp": "^0.8.32",
         "@types/tmp": "^0.2.3",
