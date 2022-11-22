@@ -257,6 +257,7 @@ export class ControllerRegistration implements IControllerRegistration {
     }
 
     private onDidChangeUri() {
+        // This logic only applies to old kernel picker which supports local vs remote, not both and not multiple remotes.
         if (this.featuresManager.features.kernelPickerType === 'Stable') {
             // Our list of metadata could be out of date. Remove old ones that don't match the uri
             if (this.serverUriStorage.currentServerId) {
