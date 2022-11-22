@@ -755,6 +755,8 @@ jobs:
       - name: Run desktop smoke tests
         env:
           DISPLAY: 10
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSmokeLogged
