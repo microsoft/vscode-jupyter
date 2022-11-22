@@ -101,7 +101,7 @@ suite('URI Picker', () => {
         const registration = await createRegistration(['1']);
         const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
-        const quickPick = pickers[0].getQuickPickEntryItems!();
+        const quickPick = await pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
         const handle = await pickers[0].handleQuickPick!(quickPick[0], false);
         assert.ok(handle, 'Handle not set');
@@ -114,7 +114,7 @@ suite('URI Picker', () => {
         const registration = await createRegistration(['1']);
         const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
-        const quickPick = pickers[0].getQuickPickEntryItems!();
+        const quickPick = await pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
         const handle = await pickers[0].handleQuickPick!(quickPick[0], true);
         assert.equal(handle, 'back', 'Should be sending back');
@@ -123,7 +123,7 @@ suite('URI Picker', () => {
         const registration = await createRegistration(['1']);
         const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
-        const quickPick = pickers[0].getQuickPickEntryItems!();
+        const quickPick = await pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
         try {
             await registration.getJupyterServerUri('1', 'foobar');
