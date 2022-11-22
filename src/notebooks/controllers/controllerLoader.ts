@@ -85,12 +85,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                     this.interpreters,
                     this.registration
                 ).catch(noop);
-                createActiveInterpreterController(
-                    InteractiveWindowView,
-                    document.uri,
-                    this.interpreters,
-                    this.registration
-                ).catch(noop);
             }
         }
     }
@@ -107,12 +101,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                 if (this.serverUriStorage.isLocalLaunch && !useNewKernelPicker) {
                     await createActiveInterpreterController(
                         JupyterNotebookView,
-                        undefined,
-                        this.interpreters,
-                        this.registration
-                    );
-                    await createActiveInterpreterController(
-                        InteractiveWindowView,
                         undefined,
                         this.interpreters,
                         this.registration
