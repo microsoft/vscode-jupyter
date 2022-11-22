@@ -161,31 +161,6 @@ suite('Remote Kernel Execution', function () {
                 )}`
         );
     });
-
-    test('Remote kernels are removed when switching to local @kernelPicker', async function () {
-        await controllerLoader.loaded;
-        assert.ok(async () => {
-            const controllers = controllerRegistration.registered;
-            return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
-        }, 'Should have at least one remote kernel Spec');
-
-        // After resetting connection to local only, then remove all remote connections.
-        await jupyterServerSelector.setJupyterURIToLocal();
-        traceInfoIfCI('Waiting for remote kernels to be removed');
-
-        await waitForCondition(
-            async () => {
-                const controllers = controllerRegistration.registered;
-                return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
-            },
-            defaultNotebookTestTimeout,
-            () =>
-                `Should not have any remote controllers, existing ${controllerRegistration.registered
-                    .map((item) => `${item.controller.kind}:${item.connection.kind}:${item.controller.id}`)
-                    .join(', ')}`
-        );
-    });
-
     test('Local Kernel state is not lost when connecting to remote @kernelPicker', async function () {
         await controllerLoader.loaded;
 
