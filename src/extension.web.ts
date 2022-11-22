@@ -11,7 +11,9 @@ import './platform/ioc/reflectMetadata';
 // which are not available in a worker in Safari.
 declare var self: {};
 if (typeof requestAnimationFrame === 'undefined' && typeof setImmediate === 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (self as any).setImmediate = (cb: (...args: any[]) => any) => setTimeout(cb);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (self as any).clearImmediate = (id: any) => clearTimeout(id);
 }
 
