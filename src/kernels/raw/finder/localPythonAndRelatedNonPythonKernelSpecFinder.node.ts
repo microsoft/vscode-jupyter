@@ -265,7 +265,9 @@ export class InterpreterKernelSpecFinderHelper {
         });
 
         traceInfoIfCI(
-            `Finding kernel specs unique results: ${uniqueKernelSpecs.map((u) => u.interpreterPath!).join('\n')}`
+            `Finding kernel specs for interpreter ${getDisplayPath(interpreter.uri)} unique results: ${uniqueKernelSpecs
+                .map((u) => u.interpreterPath!)
+                .join('\n')}`
         );
 
         return uniqueKernelSpecs;
@@ -318,6 +320,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         );
         interpreterService.onDidChangeInterpreters(
             () => {
+                traceVerbose(`refreshData after detecting changes to interpreters`);
                 this.refreshCancellation?.cancel();
                 this.refreshData().catch(noop);
             },
@@ -576,6 +579,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
         interpreter: PythonEnvironment,
         cancelToken: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
+        traceVerbose(`Listing Python kernels for Interpreter ${getDisplayPath(interpreter.uri)}`);
         // First find the on disk kernel specs and interpreters
         const activeInterpreterInAWorkspacePromise = Promise.all(
             (this.workspaceService.workspaceFolders || []).map((folder) =>
