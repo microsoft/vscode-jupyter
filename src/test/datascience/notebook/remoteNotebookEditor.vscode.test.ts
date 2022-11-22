@@ -181,7 +181,7 @@ suite('Remote Kernel Execution', function () {
             defaultNotebookTestTimeout,
             () =>
                 `Should not have any remote controllers, existing ${controllerRegistration.registered
-                    .map((item) => `${item.controller.kind}:${item.controller.id}`)
+                    .map((item) => `${item.controller.kind}:${item.connection.kind}:${item.controller.id}`)
                     .join(', ')}`
         );
     });
