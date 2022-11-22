@@ -102,7 +102,11 @@ suite(`Interactive window execution @iw`, async function () {
             const activeInterpreter = await interpreterService.getActiveInterpreter();
             assert.ok(
                 areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
-                `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)}`
+                `Controller does not match active interpreter for ${getDisplayPath(
+                    notebookDocument?.uri
+                )}, active interpreter is ${getDisplayPath(activeInterpreter?.uri)} and controller is ${
+                    controller?.id
+                } with interpreter ${getDisplayPath(controller?.connection?.interpreter?.uri)}`
             );
         }
 
@@ -143,7 +147,11 @@ suite(`Interactive window execution @iw`, async function () {
             const activeInterpreter = await interpreterService.getActiveInterpreter();
             assert.ok(
                 areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
-                `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)}`
+                `Controller does not match active interpreter for ${getDisplayPath(
+                    notebookDocument?.uri
+                )}, active interpreter is ${getDisplayPath(activeInterpreter?.uri)} and controller is ${
+                    controller?.id
+                } with interpreter ${getDisplayPath(controller?.connection?.interpreter?.uri)}`
             );
         }
         async function verifyCells() {
