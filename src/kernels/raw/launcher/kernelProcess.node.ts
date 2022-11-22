@@ -273,7 +273,7 @@ export class KernelProcess implements IKernelProcess {
             if (deferred.rejected) {
                 await deferred.promise;
             }
-            const tcpPortUsed = require('tcp-port-used') as typeof import('tcp-port-used');
+            const tcpPortUsed = (await import('tcp-port-used')).default;
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
             // Wait for shell & iopub to be used (iopub is where we get a response & this is similar to what Jupyter does today).
             // Kernel must be connected to bo Shell & IoPub channels for kernel communication to work.
