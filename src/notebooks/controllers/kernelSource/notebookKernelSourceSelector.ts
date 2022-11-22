@@ -223,16 +223,18 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 items.push({ label: 'More', kind: QuickPickItemKind.Separator });
             }
 
-            const newProviderItems: KernelProviderItemsQuickPickItem[] = provider.getQuickPickEntryItems().map((i) => {
-                return {
-                    ...i,
-                    provider: provider,
-                    type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
-                    description: undefined,
-                    originalItem: i,
-                    detail: provider.displayName
-                };
-            });
+            const newProviderItems: KernelProviderItemsQuickPickItem[] = (await provider.getQuickPickEntryItems()).map(
+                (i) => {
+                    return {
+                        ...i,
+                        provider: provider,
+                        type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
+                        description: undefined,
+                        originalItem: i,
+                        detail: provider.displayName
+                    };
+                }
+            );
             items.push(...newProviderItems);
         }
 
