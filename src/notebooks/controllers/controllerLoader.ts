@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { isPythonNotebook } from '../../kernels/helpers';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { IKernelFinder, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernelFinder, isLocalConnection, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
@@ -128,6 +128,20 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                     return connection.id === controller.connection.id;
                 });
 
+                if (this.featuresManager.features.kernelPickerType !== 'Insiders') {
+                    if (this.serverUriStorage.isLocalLaunch && isRemoteConnection(controller.connection)) {
+                        traceVerbose(
+                            `Remote Controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}' is no longer a valid as we are not connected to a remote server.`
+                        );
+                        return true;
+                    }
+                    if (!this.serverUriStorage.isLocalLaunch && isLocalConnection(controller.connection)) {
+                        traceVerbose(
+                            `Local Controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}' is no longer a valid as we are connected to a remote server.`
+                        );
+                        return true;
+                    }
+                }
                 // Never remove remote kernels that don't exist.
                 // Always leave them there for user to select, and if the connection is not available/not valid,
                 // then notify the user and remove them.
@@ -140,14 +154,18 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                     return false;
                 }
                 if (!connectionIsStillValid) {
-                    traceInfoIfCI(`Controller ${controller.id} is no longer valid Kernel connection`);
+                    traceVerbose(
+                        `Controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}' is no longer a valid`
+                    );
                 }
                 return !connectionIsStillValid;
             });
 
             // If we have any out of date connections, dispose of them
             disposedControllers.forEach((controller) => {
-                traceInfoIfCI(`Disposing old controller ${controller.connection.id}`);
+                traceVerbose(
+                    `Disposing old controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}'`
+                );
                 controller.dispose(); // This should remove it from the registered list
             });
         })();

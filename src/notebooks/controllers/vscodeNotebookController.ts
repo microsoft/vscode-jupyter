@@ -201,6 +201,11 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
         this.notebookApi.onDidCloseNotebookDocument(
             (n) => {
+                traceInfoIfCI(
+                    `Remove associated notebook ${getDisplayPath(n.uri)} from controller ${this.connection.kind}:${
+                        this.id
+                    } for ${this.viewType}`
+                );
                 this.associatedDocuments.delete(n);
             },
             this,

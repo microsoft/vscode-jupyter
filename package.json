@@ -2150,7 +2150,6 @@
         "safe-buffer": "^5.2.1",
         "sanitize-filename": "^1.6.3",
         "semver": "^5.5.0",
-        "setimmediate": "^1.0.5",
         "slickgrid": "^2.4.17",
         "source-map": "^0.7.3",
         "stack-trace": "0.0.10",

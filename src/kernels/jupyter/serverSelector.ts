@@ -399,15 +399,15 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         let providerItems: ISelectUriQuickPickItem[] = [];
         const providers = await this.extraUriProviders.getProviders();
         if (providers) {
-            providers.forEach((p) => {
-                if (!p.getQuickPickEntryItems) {
-                    return;
+            for (const p of providers) {
+                if (p.getQuickPickEntryItems && p.handleQuickPick) {
+                    const items = await p.getQuickPickEntryItems();
+                    const newProviderItems = items.map((i) => {
+                        return { ...i, newChoice: false, provider: p };
+                    });
+                    providerItems = providerItems.concat(newProviderItems);
                 }
-                const newProviderItems = p.getQuickPickEntryItems().map((i) => {
-                    return { ...i, newChoice: false, provider: p };
-                });
-                providerItems = providerItems.concat(newProviderItems);
-            });
+            }
         }
 
         // Always have 'local' and 'add new'
@@ -688,15 +688,15 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         let providerItems: ISelectUriQuickPickItem[] = [];
         const providers = await this.extraUriProviders.getProviders();
         if (providers) {
-            providers.forEach((p) => {
-                if (!p.getQuickPickEntryItems) {
-                    return;
+            for (const p of providers) {
+                if (p.getQuickPickEntryItems && p.handleQuickPick) {
+                    const items = await p.getQuickPickEntryItems();
+                    const newProviderItems = items.map((i) => {
+                        return { ...i, newChoice: false, provider: p };
+                    });
+                    providerItems = providerItems.concat(newProviderItems);
                 }
-                const newProviderItems = p.getQuickPickEntryItems().map((i) => {
-                    return { ...i, newChoice: false, provider: p };
-                });
-                providerItems = providerItems.concat(newProviderItems);
-            });
+            }
         }
 
         // Always have 'local' and 'add new'
