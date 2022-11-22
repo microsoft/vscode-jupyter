@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 // reflect-metadata is needed by inversify, this must come before any inversify references
-import 'reflect-metadata';
+import '../platform/ioc/reflectMetadata';
 
 // Must always be on top to setup expected env.
 process.env.VSC_JUPYTER_SMOKE_TEST = '1';

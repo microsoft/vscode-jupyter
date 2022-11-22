@@ -4,7 +4,7 @@
 'use strict';
 
 // reflect-metadata is needed by inversify, this must come before any inversify references
-import 'reflect-metadata';
+import '../platform/ioc/reflectMetadata';
 
 // Not sure why but on windows, if you execute a process from the System32 directory, it will just crash Node.
 // Not throw an exception, just make node exit.

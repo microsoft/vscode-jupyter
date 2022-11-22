@@ -5,8 +5,9 @@
 
 // Custom mocha reporter
 import './common/exitCIAfterTestReporter';
+
 // reflect-metadata is needed by inversify, this must come before any inversify references
-import 'reflect-metadata';
+import '../platform/ioc/reflectMetadata';
 
 // Always place at top, must be done before we import any of the files from src/client folder.
 // We need to ensure nyc gets a change to setup necessary hooks before files are loaded.
