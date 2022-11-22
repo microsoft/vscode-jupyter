@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
-import { IDisposable, IDisposableRegistry, IFeaturesManager } from '../platform/common/types';
+import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { traceInfoIfCI } from '../platform/logging';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from './internalTypes';
 import { IKernelFinder, KernelConnectionMetadata } from './types';
@@ -40,10 +40,7 @@ export class KernelFinder implements IKernelFinder {
     public get onDidChangeStatus(): Event<void> {
         return this._onDidChangeStatus.event;
     }
-    constructor(
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
-    ) {
+    constructor(@inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry) {
         disposables.push(this._onDidChangeStatus);
         disposables.push(this._onDidChangeRegistrations);
     }

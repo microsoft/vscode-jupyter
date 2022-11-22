@@ -87,8 +87,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAnd
                 disposables,
                 instance(extensionChecker),
                 instance(interpreterService),
-                instance(extensions),
-                instance(featureManager)
+                instance(extensions)
             );
 
             clock = fakeTimers.install();

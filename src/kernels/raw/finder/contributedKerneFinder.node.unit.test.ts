@@ -274,7 +274,7 @@ import { ITrustedKernelPaths } from './types';
                     when(trustedKernels.isTrusted(anything())).thenReturn(true);
                     const featuresManager = mock<IFeaturesManager>();
                     when(featuresManager.features).thenReturn({ kernelPickerType });
-                    kernelFinder = new KernelFinder(disposables, instance(featuresManager));
+                    kernelFinder = new KernelFinder(disposables);
                     localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
                         instance(interpreterService),
                         instance(fs),
@@ -295,8 +295,7 @@ import { ITrustedKernelPaths } from './types';
                         [],
                         instance(extensionChecker),
                         instance(interpreterService),
-                        instance(extensions),
-                        instance(featuresManager)
+                        instance(extensions)
                     );
                     const pythonEnvKernelFinder = new ContributedLocalPythonEnvFinder(
                         localPythonAndRelatedKernelFinder,

@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { isPythonNotebook } from '../../kernels/helpers';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { IKernelFinder, isLocalConnection, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernelFinder, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
