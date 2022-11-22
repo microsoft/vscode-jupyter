@@ -7,19 +7,17 @@ import { IDisposable } from '../../platform/common/types';
 import {
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
-    startJupyterServer,
-    waitForTextOutput
+    startJupyterServer
 } from '../datascience/notebook/helper.node';
 import { initialize } from '../initialize.node';
 import * as sinon from 'sinon';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, waitForCondition } from '../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
-import { Disposable, workspace } from 'vscode';
 import { executeSilently } from '../../kernels/helpers';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { createKernelController, TestNotebookDocument } from '../datascience/notebook/executionHelper';
-import { IKernel, INotebookKernelExecution, IKernelProvider, IKernelFinder } from '../../kernels/types';
+import { IKernelProvider, IKernelFinder } from '../../kernels/types';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
 import { KernelConnectionMetadata } from '../../standalone/api/extension';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
@@ -29,8 +27,6 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     let notebook: TestNotebookDocument;
-    let kernel: IKernel;
-    let kernelExecution: INotebookKernelExecution;
     suiteSetup(async function () {
         traceInfo('Suite Setup 3rd Party Kernel Service API');
         this.timeout(120_000);
@@ -54,7 +50,7 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const interpreter = await interpreterService.getActiveInterpreter();
         if (!interpreter) {
-            assert.fail('Active Interpreter is undefined.0');
+            throw new Error('Active Interpreter is undefined.0');
         }
         const metadata = await waitForCondition(
             () =>
@@ -71,9 +67,9 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
         );
 
         const controller = createKernelController();
-        kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
-        // await kernel.start();
-        kernelExecution = kernelProvider.getKernelExecution(kernel);
+        const kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
+        kernelProvider.getKernelExecution(kernel);
+
         sinon.restore();
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
@@ -91,37 +87,6 @@ suite('3rd Party Kernel Service API @kernelCore', function () {
         const specs = await kernelService!.getKernelSpecifications();
         assert.isAtLeast(specs.length, 1);
     });
-
-    test('Access Kernels', async () => {
-        const kernelService = await api.getKernelService();
-        const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
-
-        const notebooks = sinon.stub(workspace, 'notebookDocuments');
-        disposables.push(new Disposable(() => notebooks.restore()));
-        notebooks.get(() => [notebook]);
-
-        const cell = await notebook.appendCodeCell('print("123412341234")');
-        await Promise.all([kernelExecution.executeCell(cell), waitForTextOutput(cell, '123412341234')]);
-
-        await onDidChangeKernels.assertFiredExactly(1, 10_000);
-
-        const kernels = kernelService?.getActiveKernels();
-        assert.isAtLeast(kernels!.length, 1);
-        assert.strictEqual(
-            kernels![0].uri!.toString(),
-            notebook.uri.toString(),
-            'Kernel notebook is not the active notebook'
-        );
-
-        assert.isObject(kernels![0].metadata, 'Kernel Connection is undefined');
-        const kernel = kernelService?.getKernel(notebook!.uri);
-        assert.strictEqual(kernels![0].metadata, kernel!.metadata, 'Kernel Connection not same for the document');
-
-        await closeNotebooksAndCleanUpAfterTests(disposables);
-
-        await onDidChangeKernels.assertFiredExactly(2, 10_000);
-    });
-
     test('Start Kernel', async function () {
         const kernelService = await api.getKernelService();
         const interpreterService = await api.serviceContainer.get<IInterpreterService>(IInterpreterService);
