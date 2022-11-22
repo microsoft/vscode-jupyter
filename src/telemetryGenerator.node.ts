@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 // reflect-metadata is needed by inversify, this must come before any inversify references
-import 'reflect-metadata';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+if ((Reflect as any).metadata === undefined) {
+    require('reflect-metadata');
+}
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as ts from 'typescript';

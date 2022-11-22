@@ -4,7 +4,10 @@
 'use strict';
 
 // reflect-metadata is needed by inversify, this must come before any inversify references
-import 'reflect-metadata';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+if ((Reflect as any).metadata === undefined) {
+    require('reflect-metadata');
+}
 
 // requestAnimationFrame is required in `@jupyterlab/services/lib/kernel/future.js` while ext host runs in webworker (running extension in web).
 // & if `requestAnimationFrame` isn't available, then `setImmediate` is used as a fallback.
