@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { NotebookCellExecutionState } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { traceInfo } from '../../../platform/logging';
+import { traceError, traceInfo } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IKernel, IKernelProvider, INotebookKernelExecution } from '../../../kernels/types';
@@ -27,6 +27,7 @@ import {
 } from './helper.node';
 import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../kernels/execution/helpers';
 import { TestNotebookDocument, createKernelController } from './executionHelper';
+import { captureScreenShot } from '../../common';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*
@@ -46,21 +47,30 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
     let kernelExecution: INotebookKernelExecution;
     const suiteDisposables: IDisposable[] = [];
     suiteSetup(async function () {
-        traceInfo(`Start Suite Test`);
-        api = await initialize();
-        await startJupyterServer();
-        await closeNotebooksAndCleanUpAfterTests();
-        dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
-        oldAskForRestart = dsSettings.askForKernelRestart;
-        notebook = new TestNotebookDocument();
-        const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        const metadata = await getDefaultKernelConnection();
-
-        const controller = createKernelController();
-        kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
-        await kernel.start();
-        kernelExecution = kernelProvider.getKernelExecution(kernel);
-        traceInfo(`Start Suite Test Complete`);
+        try {
+            traceInfo(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
+            api = await initialize();
+            await startJupyterServer();
+            await closeNotebooksAndCleanUpAfterTests();
+            dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
+            oldAskForRestart = dsSettings.askForKernelRestart;
+            notebook = new TestNotebookDocument();
+            const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+            const metadata = await getDefaultKernelConnection();
+            traceInfo(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore metadata ${metadata.id}`);
+            const controller = createKernelController();
+            traceInfo(`Controller created`);
+            kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
+            traceInfo(`Kernel created`);
+            await kernel.start();
+            traceInfo(`Kernel started`);
+            kernelExecution = kernelProvider.getKernelExecution(kernel);
+            traceInfo(`Start Suite Test Complete Restart/Interrupt/Cancel/Errors @kernelCore`);
+        } catch (ex) {
+            traceError('Suite Setup (failed) - Test Restart/Interrupt/Cancel/Errors @kernelCore', ex);
+            await captureScreenShot('execution-suite');
+            throw ex;
+        }
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);

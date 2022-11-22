@@ -5,8 +5,6 @@
 
 // Helper functions for dealing with kernels and kernelspecs
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
 import * as path from '../platform/vscode-path/path';
 import * as uriPath from '../platform/vscode-path/resources';
 import * as nbformat from '@jupyterlab/nbformat';
@@ -574,7 +572,7 @@ export function areKernelConnectionsEqual(
 }
 // Check if a name is a default python kernel name and pull the version
 export function detectDefaultKernelName(name: string) {
-    const regEx = NamedRegexp('python\\s*(?<version>(\\d+))', 'g');
+    const regEx = new RegExp('python\\s*(?<version>(\\d+))', 'g');
     return regEx.exec(name.toLowerCase());
 }
 

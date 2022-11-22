@@ -31,8 +31,6 @@ const SCRIPTS_DIR = _SCRIPTS_DIR;
 // ignored scripts:
 //  * install_debugpy.py  (used only for extension development)
 
-export * as testing_tools from './testing_tools.node';
-
 //============================
 // interpreterInfo.py
 

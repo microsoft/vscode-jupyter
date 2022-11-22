@@ -214,7 +214,7 @@ export interface IJupyterUriProvider {
     readonly displayName?: string;
     readonly detail?: string;
     onDidChangeHandles?: Event<void>;
-    getQuickPickEntryItems?(): QuickPickItem[];
+    getQuickPickEntryItems?(): Promise<QuickPickItem[]> | QuickPickItem[];
     handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
     /**
      * Given the handle, returns the Jupyter Server information.

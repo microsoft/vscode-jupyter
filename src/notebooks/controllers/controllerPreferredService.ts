@@ -15,7 +15,7 @@ import {
 import { getKernelConnectionLanguage, getLanguageInNotebookMetadata, isPythonNotebook } from '../../kernels/helpers';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
-import { KernelConnectionMetadata } from '../../kernels/types';
+import { isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
@@ -292,7 +292,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             }
 
             // See if the preferred connection is in our registered controllers, add the sufix for the interactive scenario
-            let targetController;
+            let targetController: IVSCodeNotebookController | undefined;
             if (preferredConnection) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 targetController = this.registration.get(preferredConnection, document.notebookType as any);
@@ -342,10 +342,35 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     .get(document)
                     ?.controller.updateNotebookAffinity(document, NotebookControllerAffinity.Default);
             }
+
+            if (preferredConnection && !targetController && isLocalConnection(preferredConnection)) {
+                // Sometimes on CI we find that we have a preferred connection and the controller doesn't exist.
+                // Create the controller if it doesn't exist.
+                // This is debt, and should not happen.
+                const controller = this.registration.addOrUpdate(preferredConnection, [
+                    document.notebookType as typeof JupyterNotebookView | typeof InteractiveWindowView
+                ]);
+                traceInfoIfCI(
+                    `Controller for preferred connection ${preferredConnection.kind}${
+                        preferredConnection.id
+                    } for notebook ${getDisplayPath(document.uri)} does not yet exist, creating this now`
+                );
+                if (controller.length === 1) {
+                    targetController = controller[0];
+                } else {
+                    traceError(
+                        `Failed to create the controller for preferred connection ${preferredConnection.kind}${
+                            preferredConnection.id
+                        } for notebook ${getDisplayPath(document.uri)}`
+                    );
+                }
+            }
             traceInfoIfCI(
                 `TargetController found ID: ${preferredConnection?.id} type ${
                     preferredConnection?.kind
-                } for document ${getDisplayPath(document.uri)}`
+                } for document ${getDisplayPath(document.uri)} & associated controller id ${
+                    targetController?.connection?.kind
+                }:${targetController?.id}`
             );
 
             return { preferredConnection, controller: targetController };

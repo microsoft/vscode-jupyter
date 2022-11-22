@@ -25,7 +25,7 @@ import {
     IFeaturesManager
 } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { traceError, traceVerbose } from '../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData';
@@ -94,12 +94,15 @@ export class ControllerRegistration implements IControllerRegistration {
             this.changeEmitter.fire({ added: addedList, removed: [] });
         }
     }
-    private activeInterpreterControllers = new WeakSet<IVSCodeNotebookController>();
+    private activeInterpreterKernelConnectionId = new Set<string>();
     trackActiveInterpreterControllers(controllers: IVSCodeNotebookController[]) {
-        controllers.forEach((controller) => this.activeInterpreterControllers.add(controller));
+        controllers.forEach((controller) => this.activeInterpreterKernelConnectionId.add(controller.connection.id));
     }
     public canControllerBeDisposed(controller: IVSCodeNotebookController) {
-        return !this.activeInterpreterControllers.has(controller) || !this.isControllerAttachedToADocument(controller);
+        return (
+            !this.activeInterpreterKernelConnectionId.has(controller.connection.id) &&
+            !this.isControllerAttachedToADocument(controller)
+        );
     }
     addOrUpdate(
         metadata: KernelConnectionMetadata,
@@ -115,6 +118,7 @@ export class ControllerRegistration implements IControllerRegistration {
     ): { added: IVSCodeNotebookController[]; existing: IVSCodeNotebookController[] } {
         const added: IVSCodeNotebookController[] = [];
         const existing: IVSCodeNotebookController[] = [];
+        traceInfoIfCI(`Create Controller for ${metadata.kind} and id '${metadata.id}' for view ${types.join(', ')}`);
         try {
             // Create notebook selector
             types
@@ -138,11 +142,17 @@ export class ControllerRegistration implements IControllerRegistration {
 
                         // Add to results so that callers can find
                         existing.push(controller);
+
+                        traceInfoIfCI(
+                            `Found existing controller '${controller.id}', not creating a new one just updating it`
+                        );
                         return false;
                     } else if (this.isFiltered(metadata)) {
                         // Filter out those in our kernel filter
+                        traceInfoIfCI(`Existing controller '${id}' will be excluded as it is filtered`);
                         return false;
                     }
+                    traceInfoIfCI(`Existing controller not found for '${id}', hence creating a new one`);
                     return true;
                 })
                 .forEach(([id, viewType]) => {
@@ -167,6 +177,9 @@ export class ControllerRegistration implements IControllerRegistration {
                     );
                     controller.onDidDispose(
                         () => {
+                            traceInfoIfCI(
+                                `Deleting controller '${controller.id}' associated with view ${viewType} from registration as it was disposed`
+                            );
                             this.registeredControllers.delete(controller.id);
                             // Note to self, registered metadatas survive disposal.
                             // This is so we don't have to recompute them when we switch back
@@ -244,16 +257,18 @@ export class ControllerRegistration implements IControllerRegistration {
     }
 
     private onDidChangeUri() {
-        // Our list of metadata could be out of date. Remove old ones that don't match the uri
-        if (this.serverUriStorage.currentServerId) {
-            [...this.registeredMetadatas.keys()].forEach((k) => {
-                const m = this.registeredMetadatas.get(k);
-                if (m && isRemoteConnection(m) && this.serverUriStorage.currentServerId !== m.serverId) {
-                    this.registeredMetadatas.delete(k);
-                }
-            });
+        // This logic only applies to old kernel picker which supports local vs remote, not both and not multiple remotes.
+        if (this.featuresManager.features.kernelPickerType === 'Stable') {
+            // Our list of metadata could be out of date. Remove old ones that don't match the uri
+            if (this.serverUriStorage.currentServerId) {
+                [...this.registeredMetadatas.keys()].forEach((k) => {
+                    const m = this.registeredMetadatas.get(k);
+                    if (m && isRemoteConnection(m) && this.serverUriStorage.currentServerId !== m.serverId) {
+                        this.registeredMetadatas.delete(k);
+                    }
+                });
+            }
         }
-
         // Update the list of controllers
         this.onDidChangeFilter();
     }

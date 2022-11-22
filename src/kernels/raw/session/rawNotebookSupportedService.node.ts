@@ -3,7 +3,7 @@
 
 'use strict';
 import { inject, injectable } from 'inversify';
-import { traceInfo, traceError } from '../../../platform/logging';
+import { traceInfo, traceWarning } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IRawNotebookSupportedService } from '../types';
 
@@ -41,7 +41,7 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
             traceInfo(`ZMQ install verified.`);
             this._isSupported = true;
         } catch (e) {
-            traceError(`Exception while attempting zmq :`, e);
+            traceWarning(`Exception while attempting zmq :`, e);
             this._isSupported = false;
         }
 

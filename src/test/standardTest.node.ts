@@ -29,7 +29,7 @@ function requiresPythonExtensionToBeInstalled() {
 }
 
 const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
-    ? '3fb8e8feb1c93a490feb2c2259713d4c8f0e0058'
+    ? 'insiders'
     : 'stable';
 
 function computePlatform() {
@@ -63,17 +63,32 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
     }
     console.info(`Installing Python Extension ${PythonExtension} to ${extensionsDir}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
-    spawnSync(cliPath, ['--install-extension', PythonExtension, '--pre-release', '--extensions-dir', extensionsDir], {
-        encoding: 'utf-8',
-        stdio: 'inherit'
-    });
+    spawnSync(
+        cliPath,
+        [
+            '--install-extension',
+            PythonExtension,
+            '--pre-release',
+            '--extensions-dir',
+            extensionsDir,
+            '--disable-telemetry'
+        ],
+        {
+            encoding: 'utf-8',
+            stdio: 'inherit'
+        }
+    );
 
     // Make sure pylance is there too as we'll use it for intellisense tests
     console.info(`Installing Pylance Extension to ${extensionsDir}`);
-    spawnSync(cliPath, ['--install-extension', PylanceExtension, '--extensions-dir', extensionsDir], {
-        encoding: 'utf-8',
-        stdio: 'inherit'
-    });
+    spawnSync(
+        cliPath,
+        ['--install-extension', PylanceExtension, '--extensions-dir', extensionsDir, '--disable-telemetry'],
+        {
+            encoding: 'utf-8',
+            stdio: 'inherit'
+        }
+    );
 }
 
 async function createSettings(): Promise<string> {

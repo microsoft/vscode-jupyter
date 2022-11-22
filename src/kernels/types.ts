@@ -399,6 +399,7 @@ export interface INotebookKernelExecution {
      */
     readonly executionCount: number;
     readonly onPreExecute: Event<NotebookCell>;
+    readonly onPostExecute: Event<NotebookCell>;
     /**
      * Cells that are still being executed (or pending).
      */
@@ -833,6 +834,7 @@ export interface IKernelFinder {
      * Return basic info on all currently registered kernel finders
      */
     registered: IContributedKernelFinder[];
+    onDidChangeRegistrations: Event<{ added: IContributedKernelFinder[]; removed: IContributedKernelFinder[] }>;
 }
 
 export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';

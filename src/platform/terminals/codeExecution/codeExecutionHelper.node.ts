@@ -31,12 +31,17 @@ export class CodeExecutionHelper extends CodeExecutionHelperBase {
 
     public override async normalizeLines(code: string, resource?: Uri): Promise<string> {
         try {
-            if (code.trim().length === 0) {
+            const codeTrimmed = code.trim();
+            if (codeTrimmed.length === 0) {
                 return '';
             }
             // On windows cr is not handled well by python when passing in/out via stdin/stdout.
             // So just remove cr from the input.
             code = code.replace(new RegExp('\\r', 'g'), '');
+            if (codeTrimmed.indexOf('\n') === -1) {
+                // the input is a single line, maybe indented, without terminator
+                return codeTrimmed + '\n';
+            }
 
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
             const processService = await this.processServiceFactory.create(resource);

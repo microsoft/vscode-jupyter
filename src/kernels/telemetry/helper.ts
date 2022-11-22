@@ -58,7 +58,17 @@ export async function trackKernelResourceInformation(
         {
             resourceType: getResourceType(resource),
             resourceHash: resource ? await getTelemetrySafeHashedString(resource.toString()) : undefined,
-            kernelSessionId: await getTelemetrySafeHashedString(Date.now().toString())
+            kernelSessionId: await getTelemetrySafeHashedString(Date.now().toString()),
+            capturedEnvVars: undefined,
+            userExecutedCell: undefined,
+            disableUI: undefined,
+            kernelLanguage: undefined,
+            kernelId: undefined,
+            isUsingActiveInterpreter: undefined,
+            pythonEnvironmentType: undefined,
+            pythonEnvironmentPath: undefined,
+            pythonEnvironmentVersion: undefined,
+            kernelConnectionType: undefined
         },
         { previouslySelectedKernelConnectionId: '' }
     ];

@@ -181,7 +181,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 
         const displayData = this.displayDataProvider.getDisplayData(this.connection);
         traceVerbose(
-            `Creating notebook controller for ${kernelConnection.kind} (id=${kernelConnection.id}) with name '${displayData.label}'`
+            `Creating notebook controller for ${kernelConnection.kind} & view ${_viewType} (id='${kernelConnection.id}') with name '${displayData.label}'`
         );
         this.controller = this.notebookApi.createNotebookController(
             id,
@@ -201,6 +201,11 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
         this.notebookApi.onDidCloseNotebookDocument(
             (n) => {
+                traceInfoIfCI(
+                    `Remove associated notebook ${getDisplayPath(n.uri)} from controller ${this.connection.kind}:${
+                        this.id
+                    } for ${this.viewType}`
+                );
                 this.associatedDocuments.delete(n);
             },
             this,

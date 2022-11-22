@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { IKernelFinder, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
-import { traceDecoratorError, traceError } from '../../../platform/logging';
+import { traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
@@ -95,7 +95,14 @@ export class ContributedLocalPythonEnvFinder
         updateCombinedStatus();
         this.pythonKernelFinder.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
         this.interpreters.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
-        this.interpreters.onDidChangeInterpreters(async () => this.loadData().then(noop, noop), this, this.disposables);
+        this.interpreters.onDidChangeInterpreters(
+            async () => {
+                traceVerbose(`loadData after detecting changes to interpreters`);
+                this.loadData().then(noop, noop);
+            },
+            this,
+            this.disposables
+        );
         this.extensions.onDidChange(
             () => {
                 // If we just installed the Python extension and we fetched the controllers, then fetch it again.

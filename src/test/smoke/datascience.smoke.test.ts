@@ -70,7 +70,7 @@ suite('Smoke Tests', () => {
     //     console.log('Step4');
     // }).timeout(timeoutForCellToRun);
 
-    test('Run Cell in native editor', async function () {
+    test('Run Cell in Notebook', async function () {
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
@@ -93,7 +93,7 @@ suite('Smoke Tests', () => {
         // Unfortunately there's no way to know for sure it has completely loaded.
         await sleep(15_000);
 
-        await vscode.commands.executeCommand<void>('jupyter.runallcells');
+        await vscode.commands.executeCommand<void>('notebook.execute');
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
 

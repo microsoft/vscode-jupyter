@@ -29,7 +29,7 @@ package-lock.json
 packageExtension.cmd
 pvsc-dev-ext.py
 pvsc.code-workspace
-PYTHON_INTERACTIVE_TROUBLESHOOTING.md
+INTERACTIVE_TROUBLESHOOTING.md
 requirements.in
 sprint-planning.github-issues
 test.ipynb
@@ -117,3 +117,5 @@ types/**
 test-results*
 *.zip
 !**/*nls.*.json
+*.d.ts
+debugpy_logging.cmd

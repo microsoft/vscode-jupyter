@@ -3,11 +3,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import * as sinon from 'sinon';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { Disposable, EventEmitter, NotebookControllerAffinity, NotebookDocument, Uri } from 'vscode';
+import { EventEmitter, NotebookControllerAffinity, NotebookDocument, Uri } from 'vscode';
 import { IJupyterServerUriStorage } from '../../../../kernels/jupyter/types';
 import {
     KernelConnectionMetadata,
@@ -27,7 +26,6 @@ import { IPythonExtensionChecker } from '../../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { JupyterNotebookView, InteractiveWindowView, PYTHON_LANGUAGE } from '../../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
-import { KernelPickerType } from '../../../../platform/common/kernelPickerType';
 import { IDisposable } from '../../../../platform/common/types';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 
@@ -60,8 +58,6 @@ suite('Preferred Controller', () => {
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(vscNotebook.notebookDocuments).thenReturn([]);
         when(selection.getSelected(anything())).thenReturn(undefined);
-        const stub = sinon.stub(KernelPickerType, 'useNewKernelPicker').get(() => false);
-        disposables.push(new Disposable(() => stub.restore()));
         preferredControllerService = new ControllerPreferredService(
             instance(controllerRegistrations),
             instance(controllerLoader),

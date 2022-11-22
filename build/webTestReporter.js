@@ -12,7 +12,7 @@ const colors = require('colors');
 const core = require('@actions/core');
 const glob = require('glob');
 const { ExtensionRootDir } = require('./constants');
-const { computeHash } = require('../src/platform/msrCrypto/hash');
+const { webcrypto } = require('node:crypto');
 
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
 const webTestSummaryJsonFile = path.join(__dirname, '..', 'logs', 'testresults.json');
@@ -99,6 +99,15 @@ exports.startReportServer = async function () {
 async function addCell(cells, output, failed, executionCount) {
     const stackFrames = failed ? (output.err.stack || '').split(/\r?\n/) : [];
     const line1 = stackFrames.shift() || '';
+
+    async function computeHash(data, algorithm) {
+        const inputBuffer = new TextEncoder().encode(data);
+        const hashBuffer = await webcrypto.subtle.digest({ name: algorithm }, inputBuffer);
+
+        // Turn into hash string (got this logic from https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest)
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    }
     const fullTestNameHash = (await computeHash(output.fullTitle() || '', 'SHA-256')).substring(0, 10);
     const fileNamePrefix = `${output.title}_${fullTestNameHash}`.replace(/[\W]+/g, '_');
     const assertionError = failed
@@ -259,7 +268,8 @@ exports.dumpTestSummary = async () => {
 
         if (reportWriter.failures.length) {
             core.setFailed(`${reportWriter.failures.length} tests failed.`);
-        } else if (passedCount < 3) {
+        } else if (passedCount < 1) {
+            // Temporarily reduced to 1 since #11917 disabled tests
             // the non-python suite only has 4 tests passing currently, so that's the highest bar we can use.
             // core.setFailed('Not enough tests were run - are too many being skipped?');
         }
