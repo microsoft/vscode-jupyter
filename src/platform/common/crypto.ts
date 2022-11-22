@@ -16,23 +16,9 @@ export class CryptoUtils implements ICryptoUtils {
 const computedHashes: Record<string, string> = {};
 let stopStoringHashes = false;
 
-let cryptoProvider: Crypto;
-declare var importScripts: unknown;
-// Web
-if (typeof window === 'object') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    cryptoProvider = (window as any).crypto;
-}
-// Web worker
-else if (typeof importScripts === 'function') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    cryptoProvider = (importScripts as any).crypto;
-}
-// Node
-else {
-    // eslint-disable-next-line local-rules/node-imports
-    cryptoProvider = require('node:crypto').webcrypto;
-}
+let cryptoProvider: Crypto =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, local-rules/node-imports
+    typeof window === 'object' ? (window as any).crypto : require('node:crypto').webcrypto;
 
 /**
  * Computes a hash for a give string and returns hash as a hex value.
