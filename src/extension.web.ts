@@ -11,11 +11,14 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
-// requestAnimationFrame is required in `@jupyterlab/services/lib/kernel/future.js` while ext host runs in webworker (running extension in web).
-// & if `requestAnimationFrame` isn't available, then `setImmediate` is used as a fallback.
-// However safari doesn't support `requestAnimationFrame` in webworkers (whilst Chrome does).
-// Hence we need to add `setImmediate` as a fallback for safari.
-require('setimmediate');
+// Naive polyfill for setImmediate as it is required by @jupyterlab/services/lib/kernel/future.js
+// when running in a web worker as it selects either requestAnimationFrame or setImmediate, both of
+// which are not available in a worker in Safari.
+declare var self: {};
+if (typeof requestAnimationFrame === 'undefined' && typeof setImmediate === 'undefined') {
+    (self as any).setImmediate = (cb: (...args: any[]) => any) => setTimeout(cb);
+    (self as any).clearImmediate = (id: any) => clearTimeout(id);
+}
 
 // Initialize the logger first.
 import './platform/logging';
