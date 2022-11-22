@@ -23,7 +23,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { Common } from '../../../platform/common/utils/localize';
-import { traceError, traceInfo } from '../../../platform/logging';
+import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
@@ -93,15 +93,21 @@ suite('Kernel Execution @kernelCore', function () {
                     .getConfiguration('python', workspace.workspaceFolders![0].uri)
                     .update('envFile', '${workspaceFolder}/.env');
             }
+            traceVerbose('Before starting Jupyter');
             await startJupyterServer();
+            traceVerbose('After starting Jupyter');
             sinon.restore();
             notebook = new TestNotebookDocument(templateNbPath);
             const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+            traceVerbose('Before creating kernel connection');
             const metadata = await getDefaultKernelConnection();
+            traceVerbose('After creating kernel connection');
 
             const controller = createKernelController();
             kernel = kernelProvider.getOrCreate(notebook, { metadata, resourceUri: notebook.uri, controller });
+            traceVerbose('Before starting kernel');
             await kernel.start();
+            traceVerbose('After starting kernel');
             kernelExecution = kernelProvider.getKernelExecution(kernel);
             traceInfo('Suite Setup (completed)');
         } catch (e) {

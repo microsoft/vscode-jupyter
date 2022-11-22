@@ -68,13 +68,14 @@ suite('Run By Line @debugger', function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
 
-        // Create an editor to use for our tests
-        await createEmptyPythonNotebook(disposables);
         if (!isWeb() && !IS_REMOTE_NATIVE_TEST()) {
             await api.serviceContainer
                 .get<IControllerDefaultService>(IControllerDefaultService)
-                .computeDefaultController(undefined, 'interactive');
+                .computeDefaultController(undefined, 'jupyter-notebook');
         }
+
+        // Create an editor to use for our tests
+        await createEmptyPythonNotebook(disposables);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
