@@ -18,7 +18,7 @@ import { IKernelFinder } from './types';
  */
 @injectable()
 export class KernelRefreshIndicator implements IExtensionSyncActivationService {
-    private refreshedOnceBefore?: boolean;
+    private refreshedOnceBefore: boolean = false;
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
