@@ -206,27 +206,27 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
             if (gdprEntryOfCurrentlyComputingTelemetryEventName) {
                 if (
                     'properties' in gdprEntryOfCurrentlyComputingTelemetryEventName[1] &&
-                    name in (gdprEntryOfCurrentlyComputingTelemetryEventName[1].properties as any)
+                    name in gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties']
                 ) {
                     // Some times we share the properties of two events,
                     // When updating the values, we don't want to be overwriting the values of the other event.
                     gdprEntry = JSON.parse(
-                        JSON.stringify((gdprEntryOfCurrentlyComputingTelemetryEventName[1].properties as any)[name])
+                        JSON.stringify(gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'][name])
                     ) as IPropertyDataNonMeasurement;
-                    (gdprEntryOfCurrentlyComputingTelemetryEventName[1].properties as any)[name] = gdprEntry as any;
+                    (gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'] as any)[name] = gdprEntry as any;
                 }
                 if (
                     'measures' in gdprEntryOfCurrentlyComputingTelemetryEventName[1] &&
-                    name in gdprEntryOfCurrentlyComputingTelemetryEventName[1].measures
+                    name in gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures']
                 ) {
                     // Some times we share the properties of two events,
                     // When updating the values, we don't want to be overwriting the values of the other event.
                     gdprEntry = JSON.parse(
-                        JSON.stringify((gdprEntryOfCurrentlyComputingTelemetryEventName[1].measures as any)[name])
+                        JSON.stringify((gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'] as any)[name])
                     ) as IPropertyDataNonMeasurement;
                     // All measures must be marked as isMeasurement=true
                     (gdprEntry as any).isMeasurement = true;
-                    (gdprEntryOfCurrentlyComputingTelemetryEventName[1].measures as any)[name] = gdprEntry as any;
+                    (gdprEntryOfCurrentlyComputingTelemetryEventName[1]['measures'] as any)[name] = gdprEntry as any;
                 }
                 if (gdprEntry) {
                     const comment = (descriptions || []).join(' ').split(/\r?\n/).join();
@@ -944,9 +944,8 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
         const header = [`//${item.constantName}`, `/* ${gdpr}`, `   "${item.name}" : {`];
         const footer = ['   }', ' */', '', ''];
         const properties: Record<string, IPropertyDataNonMeasurement> =
-            'properties' in item.gdpr ? (item.gdpr.properties as any) : {};
-        const measures: Record<string, IPropertyDataMeasurement> =
-            'measures' in item.gdpr ? (item.gdpr.measures as any) : {};
+            'properties' in item.gdpr ? item.gdpr['properties'] : {};
+        const measures: Record<string, IPropertyDataMeasurement> = 'measures' in item.gdpr ? item.gdpr['measures'] : {};
         const entries: string[] = [];
         Object.keys(properties).forEach((key) => {
             if (key in CommonProperties) {
