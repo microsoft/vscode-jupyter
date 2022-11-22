@@ -257,16 +257,17 @@ export class ControllerRegistration implements IControllerRegistration {
     }
 
     private onDidChangeUri() {
-        // Our list of metadata could be out of date. Remove old ones that don't match the uri
-        if (this.serverUriStorage.currentServerId) {
-            [...this.registeredMetadatas.keys()].forEach((k) => {
-                const m = this.registeredMetadatas.get(k);
-                if (m && isRemoteConnection(m) && this.serverUriStorage.currentServerId !== m.serverId) {
-                    this.registeredMetadatas.delete(k);
-                }
-            });
+        if (this.featuresManager.features.kernelPickerType === 'Stable') {
+            // Our list of metadata could be out of date. Remove old ones that don't match the uri
+            if (this.serverUriStorage.currentServerId) {
+                [...this.registeredMetadatas.keys()].forEach((k) => {
+                    const m = this.registeredMetadatas.get(k);
+                    if (m && isRemoteConnection(m) && this.serverUriStorage.currentServerId !== m.serverId) {
+                        this.registeredMetadatas.delete(k);
+                    }
+                });
+            }
         }
-
         // Update the list of controllers
         this.onDidChangeFilter();
     }
