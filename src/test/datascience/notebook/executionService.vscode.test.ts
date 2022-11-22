@@ -129,20 +129,6 @@ suite('Kernel Execution @kernelCore', function () {
         await kernelExecution.executeCell(cell);
 
         assert.isAtLeast(cell.executionSummary?.executionOrder || 0, 1);
-        assert.strictEqual(
-            cell.outputs.length,
-            1,
-            `Cell should have one output, but has ${cell.outputs.length}, ${cell.outputs
-                .map((item) => `Cell Output items => ${item.items.map((oi) => oi.mime).join('')}`)
-                .join(', ')}`
-        );
-        assert.strictEqual(
-            cell.outputs[0].items.length,
-            1,
-            `First output should one output item, but has ${cell.outputs[0].items.length}, ${cell.outputs[0].items
-                .map((oi) => oi.mime)
-                .join(', ')}`
-        );
         assert.strictEqual(Buffer.from(cell.outputs[0].items[0].data).toString().trim(), '123412341234');
         assert.isTrue(cell.executionSummary?.success);
     });

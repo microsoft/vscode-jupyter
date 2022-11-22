@@ -100,7 +100,7 @@ export class ControllerRegistration implements IControllerRegistration {
     }
     public canControllerBeDisposed(controller: IVSCodeNotebookController) {
         return (
-            !this.activeInterpreterKernelConnectionId.has(controller.connection.id) ||
+            !this.activeInterpreterKernelConnectionId.has(controller.connection.id) &&
             !this.isControllerAttachedToADocument(controller)
         );
     }
