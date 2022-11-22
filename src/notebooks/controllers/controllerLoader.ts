@@ -85,6 +85,12 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                     this.interpreters,
                     this.registration
                 ).catch(noop);
+                createActiveInterpreterController(
+                    InteractiveWindowView,
+                    document.uri,
+                    this.interpreters,
+                    this.registration
+                ).catch(noop);
             }
         }
     }
@@ -101,6 +107,12 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                 if (this.serverUriStorage.isLocalLaunch && !useNewKernelPicker) {
                     await createActiveInterpreterController(
                         JupyterNotebookView,
+                        undefined,
+                        this.interpreters,
+                        this.registration
+                    );
+                    await createActiveInterpreterController(
+                        InteractiveWindowView,
                         undefined,
                         this.interpreters,
                         this.registration
@@ -140,14 +152,18 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                     return false;
                 }
                 if (!connectionIsStillValid) {
-                    traceInfoIfCI(`Controller ${controller.id} is no longer valid Kernel connection`);
+                    traceInfoIfCI(
+                        `Controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}' is no longer a valid`
+                    );
                 }
                 return !connectionIsStillValid;
             });
 
             // If we have any out of date connections, dispose of them
             disposedControllers.forEach((controller) => {
-                traceInfoIfCI(`Disposing old controller ${controller.connection.id}`);
+                traceInfoIfCI(
+                    `Disposing old controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}'`
+                );
                 controller.dispose(); // This should remove it from the registered list
             });
         })();
