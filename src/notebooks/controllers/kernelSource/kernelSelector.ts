@@ -69,7 +69,6 @@ export class KernelSelector implements IDisposable {
     private readonly createPythonItems: (ConnectionQuickPickItem | QuickPickItem)[] = [];
     private readonly categories = new Map<QuickPickItem, Set<ConnectionQuickPickItem>>();
     private quickPickItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
-    private readonly trackedKernelIds = new Set<string>();
     constructor(
         private readonly notebook: NotebookDocument,
         private readonly provider: IQuickPickKernelItemProvider,
