@@ -57,7 +57,7 @@ export class PythonEnvKernelConnectionCreator {
             kernelConnection,
             ui: new DisplayOptions(false),
             token: cancelToken,
-            ignoreCache: false,
+            ignoreCache: true,
             cannotChangeKernels: true,
             installWithoutPrompting: true
         });
