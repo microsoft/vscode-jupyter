@@ -4,7 +4,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
-import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../kernels/internalTypes';
+import { IContributedKernelFinder } from '../../kernels/internalTypes';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
