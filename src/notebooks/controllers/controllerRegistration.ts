@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
@@ -78,7 +78,8 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(ConnectionDisplayDataProvider) private readonly displayDataProvider: ConnectionDisplayDataProvider,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
     ) {
         this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChangeConnectionType(this.onDidChangeFilter, this, this.disposables);
@@ -97,6 +98,20 @@ export class ControllerRegistration implements IControllerRegistration {
     }
     private async deleteControllerAssociatedWithPythonEnvsNotLongerValid() {
         await this.interpreterService.refreshInterpreters();
+        await new Promise<void>((resolve) => {
+            if (this.kernelFinder.status === 'idle') {
+                return resolve();
+            }
+            this.kernelFinder.onDidChangeStatus(
+                () => {
+                    if (this.kernelFinder.status === 'idle') {
+                        return resolve();
+                    }
+                },
+                this,
+                this.disposables
+            );
+        });
         // Now that we've discovered all interpreters, we can remove any controllers that are associated with interpreters that no longer exist
         // E.g. its possible a user creates a virtual env and its selected as a active kernel for active interpreter
         // & subsequently the user deletes the virtual env.
