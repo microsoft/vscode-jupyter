@@ -131,6 +131,9 @@ const config = {
         alias: {
             // provides alternate implementation for node module and source files
             fs: './fs-empty.js'
+        },
+        fallback: {
+            os: require.resolve('os-browserify')
         }
     },
     output: {
