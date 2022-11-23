@@ -4,6 +4,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
+import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../kernels/internalTypes';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
@@ -95,6 +96,12 @@ export class ControllerRegistration implements IControllerRegistration {
             this,
             this.disposables
         );
+        this.kernelFinder.registered.forEach((finder) => this.monitorDeletionOfConnections(finder));
+        this.kernelFinder.onDidChangeRegistrations(
+            (e) => e.added.forEach((finder) => this.monitorDeletionOfConnections(finder)),
+            this,
+            this.disposables
+        );
     }
     private async deleteControllerAssociatedWithPythonEnvsNotLongerValid() {
         await this.interpreterService.refreshInterpreters();
@@ -132,15 +139,34 @@ export class ControllerRegistration implements IControllerRegistration {
                 }
             }
         });
-
-        this.registered.forEach(controller =>{
-            if (controller.connection.kind ==='startUsingPythonInterpreter' && !validInterpreters.has( controller.connection.interpreter.id)){
-                traceVerbose(
-                    `Deleting controller ${controller.id} as it is associated with an interpreter ${controller.connection.interpreter.id} that no longer exists, valid interpreters are ${validInterpreters}`
-                );
-                controller.dispose();
+    }
+    private async monitorDeletionOfConnections(finder: IContributedKernelFinder) {
+        if (finder.kind === ContributedKernelFinderKind.Remote) {
+            // TODO: Check with Peng whether removal of remotes can be treated the same way as other kernels.
+            // What happens when a remote is removed, would the kernels disappear as well?
+            // If yes, then should'nt the controllers be removed as well (here)?
+            return;
+        }
+        const eventHandler = finder.onDidChangeKernels(
+            ({ removed: connections }) => {
+                const deletedConnections = new Set((connections || []).map((item) => item.id));
+                this.registered
+                    .filter((item) => deletedConnections.has(item.connection.id))
+                    .forEach((controller) => {
+                        traceVerbose(
+                            `Deleting controller ${controller.id} as it is associated with a connection that has been deleted ${controller.connection.kind}:${controller.id}`
+                        );
+                        controller.dispose();
+                    });
+            },
+            this,
+            this.disposables
+        );
+        this.kernelFinder.onDidChangeRegistrations((e) => {
+            if (e.removed.includes(finder)) {
+                eventHandler.dispose();
             }
-        })
+        });
     }
     batchAdd(metadatas: KernelConnectionMetadata[], types: ('jupyter-notebook' | 'interactive')[]) {
         const addedList: IVSCodeNotebookController[] = [];

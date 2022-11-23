@@ -329,11 +329,37 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
             extensionChecker,
             trustedKernels
         );
+        this.disposables.push(this._onDidChangeKernels);
         interpreterService.onDidChangeInterpreters(
             () => {
                 traceVerbose(`refreshData after detecting changes to interpreters`);
                 this.refreshCancellation?.cancel();
                 this.refreshData().catch(noop);
+            },
+            this,
+            this.disposables
+        );
+        interpreterService.onDidRemoveInterpreter(
+            (e) => {
+                traceVerbose(`Interpreter removed ${e.id}`);
+                const deletedKernels: LocalKernelConnectionMetadata[] = [];
+                this._kernels.forEach((k) => {
+                    if (k.interpreter?.id === e.id) {
+                        traceVerbose(
+                            `Interpreter ${e.id} deleted, hence deleting corresponding kernel ${k.kind}:'${k.id}`
+                        );
+                        deletedKernels.push(k);
+                        this._kernels.delete(k.id);
+                    }
+                });
+                if (deletedKernels.length) {
+                    traceVerbose(
+                        `Local Python connection deleted ${deletedKernels.map(
+                            (item) => `${item.kind}:'${item.id}: (interpreter id=${item.interpreter?.id})'`
+                        )}`
+                    );
+                    this.updateCache().catch(noop);
+                }
             },
             this,
             this.disposables
@@ -437,7 +463,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                 const kernelConnectionsFoundOnlyInCache = this._kernelsFromCache.filter(
                     (item) => !this._kernelsExcludingCachedItems.has(item.id)
                 );
-                let updateCache = kernelConnectionsFoundOnlyInCache.length > 0;
+                const deletedKernels: LocalKernelConnectionMetadata[] = [];
                 if (kernelConnectionsFoundOnlyInCache.length) {
                     traceWarning(
                         `Kernels ${kernelConnectionsFoundOnlyInCache
@@ -450,6 +476,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                     );
                     kernelConnectionsFoundOnlyInCache.forEach((item) => {
                         this._kernels.delete(item.id);
+                        deletedKernels.push(item);
                     });
                 }
 
@@ -471,11 +498,16 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                     );
                     kernelsThatPointToInvalidValidInterpreters.forEach((item) => {
                         this._kernels.delete(item.id);
+                        deletedKernels.push(item);
                     });
-                    updateCache = true;
                 }
 
-                if (updateCache) {
+                if (deletedKernels.length) {
+                    traceVerbose(
+                        `Local Python connection deleted ${deletedKernels.map(
+                            (item) => `${item.kind}:'${item.id}: (interpreter id=${item.interpreter?.id})'`
+                        )}`
+                    );
                     await this.updateCache();
                 }
             }

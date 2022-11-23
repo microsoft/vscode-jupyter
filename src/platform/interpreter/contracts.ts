@@ -22,6 +22,7 @@ export interface IInterpreterService {
     waitForAllInterpretersToLoad(): Promise<void>;
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreters: Event<void>;
+    onDidRemoveInterpreter: Event<{ id: string }>;
     refreshInterpreters(forceRefresh?: boolean): Promise<void>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
     /**
