@@ -308,11 +308,13 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPython
                     const localKernelSpecFinder = new ContributedLocalKernelSpecFinder(
                         nonPythonKernelSpecFinder,
                         localPythonAndRelatedKernelFinder,
+                        localPythonAndRelatedKernelFinderOld,
                         kernelFinder,
                         [],
                         instance(extensionChecker),
                         instance(interpreterService),
-                        instance(extensions)
+                        instance(extensions),
+                        instance(featuresManager)
                     );
                     const pythonEnvKernelFinder = new ContributedLocalPythonEnvFinder(
                         localPythonAndRelatedKernelFinder,
@@ -329,6 +331,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPython
                     pythonEnvKernelFinder.activate();
                     nonPythonKernelSpecFinder.activate();
                     localPythonAndRelatedKernelFinder.activate();
+                    localPythonAndRelatedKernelFinderOld.activate();
 
                     kernelRankHelper = new KernelRankingHelper(instance(preferredRemote));
                 }
