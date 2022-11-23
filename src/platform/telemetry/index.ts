@@ -24,17 +24,15 @@ export const waitBeforeSending = 'waitBeforeSending';
  * Checks whether telemetry is supported.
  * Its possible this function gets called within Debug Adapter, vscode isn't available in there.
  * Within DA, there's a completely different way to send telemetry.
- * @returns {boolean}
  */
-function isTelemetrySupported(): boolean {
+async function isTelemetrySupported(): Promise<boolean> {
     try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const vsc = require('vscode');
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        // const reporter = require('@vscode/extension-telemetry');
-        // return vsc !== undefined && reporter !== undefined;
-        // TODO: Fix
-        return vsc !== undefined;
+        if (vsc === undefined) {
+            return false;
+        }
+        return (await getTelemetryReporter()) !== undefined;
     } catch {
         return false;
     }
@@ -150,29 +148,36 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         : undefined | { [waitBeforeSending]?: Promise<void> } | (undefined | { [waitBeforeSending]?: Promise<void> }),
     ex?: Error
 ) {
-    if (!isTelemetrySupported() || isTestExecution()) {
+    if (isTestExecution()) {
         return;
     }
-    // If stuff is already queued, then queue the rest.
-    // Queue telemetry for now only in insiders.
-    if (isPromise(properties?.waitBeforeSending) || queuedTelemetry.length) {
-        queuedTelemetry.push({
-            eventName: eventName as string,
-            measures: measures as unknown as Record<string, number> | undefined,
-            properties,
-            ex,
-            queueEverythingUntilCompleted: properties?.waitBeforeSending
-        });
-        sendNextTelemetryItem();
-    } else {
-        sendTelemetryEventInternal(
-            eventName as any,
-            // Because of exactOptionalPropertyTypes we have to cast.
-            measures as unknown as Record<string, number> | undefined,
-            properties,
-            ex
-        );
-    }
+    isTelemetrySupported()
+        .then((isSupported) => {
+            if (!isSupported) {
+                return;
+            }
+            // If stuff is already queued, then queue the rest.
+            // Queue telemetry for now only in insiders.
+            if (isPromise(properties?.waitBeforeSending) || queuedTelemetry.length) {
+                queuedTelemetry.push({
+                    eventName: eventName as string,
+                    measures: measures as unknown as Record<string, number> | undefined,
+                    properties,
+                    ex,
+                    queueEverythingUntilCompleted: properties?.waitBeforeSending
+                });
+                sendNextTelemetryItem();
+            } else {
+                sendTelemetryEventInternal(
+                    eventName as any,
+                    // Because of exactOptionalPropertyTypes we have to cast.
+                    measures as unknown as Record<string, number> | undefined,
+                    properties,
+                    ex
+                );
+            }
+        })
+        .ignoreErrors();
 }
 
 function sendNextTelemetryItem(): void {
