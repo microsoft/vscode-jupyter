@@ -115,6 +115,7 @@ export class ControllerRegistration implements IControllerRegistration {
         // Now that we've discovered all interpreters, we can remove any controllers that are associated with interpreters that no longer exist
         // E.g. its possible a user creates a virtual env and its selected as a active kernel for active interpreter
         // & subsequently the user deletes the virtual env.
+        const validInterpreters = new Set(this.interpreterService.environments.map((i) => i.id));
         this.activeInterpreterKernelConnectionId.forEach((interpreterId, connectionId) => {
             if (interpreterId) {
                 return;
@@ -125,12 +126,21 @@ export class ControllerRegistration implements IControllerRegistration {
                 const controller = this.registeredControllers.get(connectionId);
                 if (controller && this.canControllerBeDisposed(controller)) {
                     traceVerbose(
-                        `Deleting controller ${controller.id} as it is associated with an interpreter ${interpreterId} that no longer exists`
+                        `Deleting controller ${controller.id} as it is associated with an interpreter ${interpreterId} that no longer exists, valid interpreters are ${validInterpreters}`
                     );
                     controller.dispose();
                 }
             }
         });
+
+        this.registered.forEach(controller =>{
+            if (controller.connection.kind ==='startUsingPythonInterpreter' && !validInterpreters.has( controller.connection.interpreter.id)){
+                traceVerbose(
+                    `Deleting controller ${controller.id} as it is associated with an interpreter ${controller.connection.interpreter.id} that no longer exists, valid interpreters are ${validInterpreters}`
+                );
+                controller.dispose();
+            }
+        })
     }
     batchAdd(metadatas: KernelConnectionMetadata[], types: ('jupyter-notebook' | 'interactive')[]) {
         const addedList: IVSCodeNotebookController[] = [];
