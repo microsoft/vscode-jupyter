@@ -131,7 +131,7 @@ export class ControllerRegistration implements IControllerRegistration {
                 // This means the interpreter no longer exists, hence remove the controller mapping.
                 this.activeInterpreterKernelConnectionId.delete(connectionId);
                 const controller = this.registeredControllers.get(connectionId);
-                if (controller && this.canControllerBeDisposed(controller)) {
+                if (controller) {
                     traceVerbose(
                         `Deleting controller ${controller.id} as it is associated with an interpreter ${interpreterId} that no longer exists, valid interpreters are ${validInterpreters}`
                     );
