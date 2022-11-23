@@ -126,9 +126,11 @@ import { ITrustedKernelPaths } from './types';
                     onDidChangeInterpreter = new EventEmitter<void>();
                     onDidChangeInterpreters = new EventEmitter<void>();
                     onDidChangeInterpreterStatus = new EventEmitter<void>();
+                    onDidDeleteInterpreter = new EventEmitter<{ id: string }>();
                     disposables.push(onDidChangeInterpreter);
                     disposables.push(onDidChangeInterpreters);
                     disposables.push(onDidChangeInterpreterStatus);
+                    disposables.push(onDidDeleteInterpreter);
                     // Ensure the active Interpreter is in the list of interpreters.
                     if (activeInterpreter) {
                         testData.interpreters = testData.interpreters || [];

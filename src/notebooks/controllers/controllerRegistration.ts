@@ -141,12 +141,6 @@ export class ControllerRegistration implements IControllerRegistration {
         });
     }
     private async monitorDeletionOfConnections(finder: IContributedKernelFinder) {
-        if (finder.kind === ContributedKernelFinderKind.Remote) {
-            // TODO: Check with Peng whether removal of remotes can be treated the same way as other kernels.
-            // What happens when a remote is removed, would the kernels disappear as well?
-            // If yes, then should'nt the controllers be removed as well (here)?
-            return;
-        }
         const eventHandler = finder.onDidChangeKernels(
             ({ removed: connections }) => {
                 const deletedConnections = new Set((connections || []).map((item) => item.id));
