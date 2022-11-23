@@ -24,7 +24,6 @@ import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { ConnectionDisplayDataProvider } from '../connectionDisplayData';
 import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator';
-import { IControllerSelection } from '../types';
 import { ConnectionQuickPickItem, IQuickPickKernelItemProvider } from './types';
 
 export function isKernelPickItem(item: ConnectionQuickPickItem | QuickPickItem): item is ConnectionQuickPickItem {
@@ -185,19 +184,13 @@ export class KernelSelector implements IDisposable {
         }
 
         if (createPythonQuickPickItem && result === createPythonQuickPickItem) {
-            const creator = new PythonEnvKernelConnectionCreator();
-            this.disposables.push(creator);
             const cancellationToken = new CancellationTokenSource();
+            this.disposables.push(new Disposable(() => cancellationToken.cancel()));
             this.disposables.push(cancellationToken);
-            const controllerSelection = ServiceContainer.instance.get<IControllerSelection>(IControllerSelection);
-            // If user selects another controller for this notebook, then stop waiting for the environment to be created.
-            controllerSelection.onControllerSelected(
-                (e) => e.notebook === this.notebook && cancellationToken.cancel(),
-                this,
-                this.disposables
-            );
 
-            return creator.createPythonEnvFromKernelPicker(this.notebook, cancellationToken.token);
+            const creator = new PythonEnvKernelConnectionCreator(this.notebook, cancellationToken.token);
+            this.disposables.push(creator);
+            return creator.createPythonEnvFromKernelPicker();
         }
         if (result && 'connection' in result) {
             return result.connection;
