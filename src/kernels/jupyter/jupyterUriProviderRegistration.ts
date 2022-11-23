@@ -4,7 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import { EventEmitter, Memento } from 'vscode';
 
-import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../platform/common/types';
+import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IExtensions, IMemento } from '../../platform/common/types';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import * as localize from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
@@ -27,13 +27,13 @@ const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_O
 export class JupyterUriProviderRegistration implements IJupyterUriProviderRegistration {
     private readonly _onProvidersChanged = new EventEmitter<void>();
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
-    private providers = new Map<string, Promise<IJupyterUriProvider>>();
+    private providers = new Map<string, [Promise<JupyterUriProviderWrapper>, IDisposable[]]>();
     private providerExtensionMapping = new Map<string, string>();
     public readonly onDidChangeProviders = this._onProvidersChanged.event;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {
         disposables.push(this._onProvidersChanged);
@@ -43,27 +43,36 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         await this.checkOtherExtensions();
 
         // Other extensions should have registered in their activate callback
-        return Promise.all([...this.providers.values()]);
+        return Promise.all([...this.providers.values()].map((p) => p[0]));
     }
 
     public async getProvider(id: string): Promise<IJupyterUriProvider | undefined> {
         await this.checkOtherExtensions();
 
-        return this.providers.get(id);
+        return this.providers.get(id)?.[0];
     }
 
-    public async registerProvider(provider: IJupyterUriProvider) {
+    public registerProvider(provider: IJupyterUriProvider) {
         if (!this.providers.has(provider.id)) {
-            this.providers.set(provider.id, this.createProvider(provider));
+            const localDisposables: IDisposable[] = [];
+            this.providers.set(provider.id, [this.createProvider(provider, localDisposables), localDisposables]);
         } else {
             throw new Error(`IJupyterUriProvider already exists with id ${provider.id}`);
         }
         this._onProvidersChanged.fire();
+
+        return {
+            dispose: () => {
+                this.providers.get(provider.id)?.[1].forEach((d) => d.dispose());
+                this.providers.delete(provider.id);
+                this._onProvidersChanged.fire();
+            }
+        };
     }
     public async getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
         await this.checkOtherExtensions();
 
-        const providerPromise = this.providers.get(id);
+        const providerPromise = this.providers.get(id)?.[0];
         if (providerPromise) {
             const provider = await providerPromise;
             if (provider.getHandles) {
@@ -99,10 +108,13 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         await Promise.all(list);
     }
 
-    private async createProvider(provider: IJupyterUriProvider): Promise<IJupyterUriProvider> {
+    private async createProvider(
+        provider: IJupyterUriProvider,
+        localDisposables: IDisposable[]
+    ): Promise<JupyterUriProviderWrapper> {
         const info = await this.extensions.determineExtensionFromCallStack();
         this.updateRegistrationInfo(provider.id, info.extensionId).catch(noop);
-        return new JupyterUriProviderWrapper(provider, info.extensionId, this.disposables);
+        return new JupyterUriProviderWrapper(provider, info.extensionId, localDisposables);
     }
     @swallowExceptions()
     private async updateRegistrationInfo(providerId: string, extensionId: string): Promise<void> {

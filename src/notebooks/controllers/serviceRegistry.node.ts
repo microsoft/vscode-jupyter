@@ -21,7 +21,6 @@ import {
 } from './types';
 import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.node';
 import { KernelRankingHelper } from './kernelRanking/kernelRankingHelper';
-import { IFeaturesManager } from '../../platform/common/types';
 import { NotebookKernelSourceSelector } from './kernelSource/notebookKernelSourceSelector';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { KernelSourceCommandHandler } from './kernelSource/kernelSourceCommandHandler';
@@ -39,15 +38,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         ConnectionDisplayDataProvider,
         ConnectionDisplayDataProvider
     );
-
-    // Register our kernel source selectors only on the Insiders picker type
-    const featureManager = serviceManager.get<IFeaturesManager>(IFeaturesManager);
-    if (featureManager.features.kernelPickerType === 'Insiders') {
-        serviceManager.addSingleton<INotebookKernelSourceSelector>(
-            INotebookKernelSourceSelector,
-            NotebookKernelSourceSelector
-        );
-    }
+    serviceManager.addSingleton<INotebookKernelSourceSelector>(
+        INotebookKernelSourceSelector,
+        NotebookKernelSourceSelector
+    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelSourceCommandHandler

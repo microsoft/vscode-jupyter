@@ -26,6 +26,7 @@ import {
     IConfigurationService,
     IDisposable,
     IDisposableRegistry,
+    IFeaturesManager,
     IMemento,
     IsWebExtension
 } from '../../platform/common/types';
@@ -44,7 +45,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     onDidChangeHandles: Event<void> = this._onDidChangeHandles.event;
     private _servers: { handle: string; uri: string; serverInfo: IJupyterServerUri }[] = [];
     private _cachedServerInfoInitialized: Promise<void> | undefined;
-
+    private _localDisposables: Disposable[] = [];
     constructor(
         @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IJupyterUriProviderRegistration)
@@ -55,14 +56,31 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {}
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
+    ) {
+        this.disposables.push(this);
+    }
 
     activate() {
-        this.uriProviderRegistration.registerProvider(this);
+        const updatePerFeature = () => {
+            if (this.featuresManager.features.kernelPickerType === 'Insiders') {
+                this._activateProvider();
+            } else {
+                this._localDisposables.forEach((d) => d.dispose());
+                this._localDisposables = [];
+            }
+        };
+
+        this.disposables.push(this.featuresManager.onDidChangeFeatures(() => updatePerFeature()));
+        updatePerFeature();
+    }
+
+    private _activateProvider() {
+        this._localDisposables.push(this.uriProviderRegistration.registerProvider(this));
         this._servers = [];
 
-        this.disposables.push(
+        this._localDisposables.push(
             commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
                 await this.encryptedStorage.store(
                     Settings.JupyterServerRemoteLaunchService,
@@ -288,6 +306,6 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     }
 
     dispose(): void {
-        return;
+        this._localDisposables.forEach((d) => d.dispose());
     }
 }
