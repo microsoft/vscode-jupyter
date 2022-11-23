@@ -4,6 +4,8 @@
 'use strict';
 
 import { CancellationError, CancellationToken, CancellationTokenSource } from 'vscode';
+import { disposeAllDisposables } from './helpers';
+import { IDisposable } from './types';
 import { createDeferred } from './utils/async';
 import { Common } from './utils/localize';
 
@@ -68,6 +70,7 @@ export function createPromiseFromCancellation<T>(
  */
 export function wrapCancellationTokens(...tokens: CancellationToken[]) {
     const wrappedCancellationToken = new CancellationTokenSource();
+    const disposables: IDisposable[] = [];
     for (const token of tokens) {
         if (!token) {
             continue;
@@ -75,9 +78,13 @@ export function wrapCancellationTokens(...tokens: CancellationToken[]) {
         if (token.isCancellationRequested) {
             wrappedCancellationToken.cancel();
         }
-        token.onCancellationRequested(() => wrappedCancellationToken.cancel());
+        token.onCancellationRequested(() => wrappedCancellationToken.cancel(), undefined, disposables);
     }
-
+    const oldDispose = wrappedCancellationToken.dispose.bind(wrappedCancellationToken);
+    wrappedCancellationToken.dispose = () => {
+        oldDispose();
+        disposeAllDisposables(disposables);
+    };
     return wrappedCancellationToken;
 }
 
