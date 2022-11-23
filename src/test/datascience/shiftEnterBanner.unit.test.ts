@@ -48,7 +48,7 @@ suite('Interactive Shift Enter Banner', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         config = typemoq.Mock.ofType<IConfigurationService>();
         rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
     });
 
     teardown(() => {
