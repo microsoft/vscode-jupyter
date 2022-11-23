@@ -166,14 +166,6 @@ suite('Remote Kernel Execution', function () {
 
         // After resetting connection to local only, verify all remote connections are no longer available.
         await jupyterServerSelector.setJupyterURIToLocal();
-        await waitForCondition(
-            async () => {
-                const controllers = controllerRegistration.registered;
-                return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
-            },
-            defaultNotebookTestTimeout,
-            'Should not have any remote controllers'
-        );
 
         const activeInterpreter = await interpreterService.getActiveInterpreter();
         traceInfoIfCI(`active interpreter ${activeInterpreter?.uri.path}`);
@@ -188,7 +180,7 @@ suite('Remote Kernel Execution', function () {
         const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
         await runCell(cell1);
 
-        // Now that we don't have any remote kernels, connect to a remote jupyter server.
+        // Now connect to a remote jupyter server.
         await startJupyterServer();
 
         // Verify we have a remote kernel spec.

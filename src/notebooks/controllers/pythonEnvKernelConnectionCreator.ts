@@ -15,7 +15,7 @@ import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../platform/ioc/container';
-import { traceWarning } from '../../platform/logging';
+import { traceVerbose, traceWarning } from '../../platform/logging';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
 type CreateEnvironmentResult = {
@@ -37,15 +37,20 @@ export class PythonEnvKernelConnectionCreator {
         let env: PythonEnvironment | undefined;
 
         env = await this.createPythonEnvironment(cancelToken);
-        if (!env || cancelToken.isCancellationRequested) {
+        if (cancelToken.isCancellationRequested || !env) {
             return;
         }
+        traceVerbose(`Python Environment created ${env.id}`);
 
         const kernelConnection = await this.waitForPythonKernel(env, cancelToken);
-        if (!kernelConnection || cancelToken.isCancellationRequested) {
+        if (cancelToken.isCancellationRequested) {
             return;
         }
-
+        if (!kernelConnection) {
+            traceVerbose(`Python Environment ${env.id} not found as a kernel`);
+            return;
+        }
+        traceVerbose(`Python Environment ${env.id} found as a kernel ${kernelConnection.kind}:${kernelConnection.id}`);
         const dependencyService = ServiceContainer.instance.get<IKernelDependencyService>(IKernelDependencyService);
         const result = await dependencyService.installMissingDependencies({
             resource: notebook.uri,
@@ -133,7 +138,7 @@ export class PythonEnvKernelConnectionCreator {
             );
             return;
         }
-
+        traceVerbose(`Python Environment created ${path}`);
         const interpreterService = ServiceContainer.instance.get<IInterpreterService>(IInterpreterService);
         return interpreterService.getInterpreterDetails({ path }).then((env) => {
             if (cancelToken.isCancellationRequested) {
