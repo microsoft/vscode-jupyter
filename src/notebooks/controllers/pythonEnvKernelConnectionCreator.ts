@@ -184,6 +184,7 @@ export class PythonEnvKernelConnectionCreator {
             this.createdEnvId = env?.id;
             return env;
         } finally {
+            cancellation.cancel();
             cancellation.dispose();
         }
     }
