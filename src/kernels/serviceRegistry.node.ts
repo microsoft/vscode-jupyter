@@ -52,6 +52,7 @@ import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarme
 import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
 import { ContributedLocalPythonEnvFinder } from './raw/finder/contributedLocalPythonEnvFinder.node';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
@@ -96,6 +97,13 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         LocalPythonAndRelatedNonPythonKernelSpecFinder
     );
     serviceManager.addBinding(LocalPythonAndRelatedNonPythonKernelSpecFinder, IExtensionSyncActivationService);
+
+    serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinderOld>(
+        LocalPythonAndRelatedNonPythonKernelSpecFinderOld,
+        LocalPythonAndRelatedNonPythonKernelSpecFinderOld
+    );
+    serviceManager.addBinding(LocalPythonAndRelatedNonPythonKernelSpecFinderOld, IExtensionSyncActivationService);
+
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,

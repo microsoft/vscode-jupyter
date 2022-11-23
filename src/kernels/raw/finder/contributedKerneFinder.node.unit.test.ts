@@ -70,6 +70,7 @@ import { ContributedLocalKernelSpecFinder } from './contributedLocalKernelSpecFi
 import { ContributedLocalPythonEnvFinder } from './contributedLocalPythonEnvFinder.node';
 import { takeTopRankKernel } from '../../../notebooks/controllers/kernelRanking/kernelRankingHelper.unit.test';
 import { ITrustedKernelPaths } from './types';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 
 [false, true].forEach((isWindows) => {
     (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
@@ -96,7 +97,6 @@ import { ITrustedKernelPaths } from './types';
                 let onDidChangeInterpreter: EventEmitter<void>;
                 let onDidChangeInterpreterStatus: EventEmitter<void>;
                 let changeEventFired: TestEventHandler<void>;
-                let localPythonAndRelatedKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
                 type TestData = {
                     interpreters?: (
                         | PythonEnvironment
@@ -279,7 +279,20 @@ import { ITrustedKernelPaths } from './types';
                     const featuresManager = mock<IFeaturesManager>();
                     when(featuresManager.features).thenReturn({ kernelPickerType });
                     kernelFinder = new KernelFinder(disposables);
-                    localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+                    const localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+                        instance(interpreterService),
+                        instance(fs),
+                        instance(workspaceService),
+                        jupyterPaths,
+                        instance(extensionChecker),
+                        nonPythonKernelSpecFinder,
+                        instance(memento),
+                        disposables,
+                        instance(env),
+                        instance(trustedKernels),
+                        instance(featuresManager)
+                    );
+                    const localPythonAndRelatedKernelFinderOld = new LocalPythonAndRelatedNonPythonKernelSpecFinderOld(
                         instance(interpreterService),
                         instance(fs),
                         instance(workspaceService),
@@ -303,11 +316,13 @@ import { ITrustedKernelPaths } from './types';
                     );
                     const pythonEnvKernelFinder = new ContributedLocalPythonEnvFinder(
                         localPythonAndRelatedKernelFinder,
+                        localPythonAndRelatedKernelFinderOld,
                         kernelFinder,
                         [],
                         instance(extensionChecker),
                         instance(interpreterService),
-                        instance(extensions)
+                        instance(extensions),
+                        instance(featuresManager)
                     );
                     changeEventFired = createEventHandler(kernelFinder, 'onDidChangeKernels', disposables);
                     localKernelSpecFinder.activate();
