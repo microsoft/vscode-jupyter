@@ -11,10 +11,7 @@ import { IDisposable, IFeaturesManager, KernelPickerType } from '../../../platfo
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import {
-    LocalPythonAndRelatedNonPythonKernelSpecFinder,
-    LocalPythonKernelsCacheKey
-} from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { ITrustedKernelPaths } from './types';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
@@ -29,6 +26,7 @@ import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
 import { ResourceMap } from '../../../platform/vscode-path/map';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
 import { uriEquals } from '../../../test/datascience/helpers';
+import { LocalPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 
 (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
     suite(`Local Python and related kernels (Kernel Picker = ${kernelPickerType})`, async () => {
