@@ -69,7 +69,7 @@ export class ContributedLocalKernelSpecFinder
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
         @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinderNew: LocalPythonAndRelatedNonPythonKernelSpecFinder,
-        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
+        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinderOld)
         private readonly pythonKernelFinderOld: LocalPythonAndRelatedNonPythonKernelSpecFinderOld,
         @inject(IKernelFinder) kernelFinder: KernelFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
