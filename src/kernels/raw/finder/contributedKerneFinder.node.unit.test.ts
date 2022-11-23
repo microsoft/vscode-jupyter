@@ -92,6 +92,7 @@ import { ITrustedKernelPaths } from './types';
                 let kernelRankHelper: IKernelRankingHelper;
                 let cancelToken: CancellationTokenSource;
                 let onDidChangeInterpreters: EventEmitter<void>;
+                let onDidDeleteInterpreter: EventEmitter<{ id: string }>;
                 let onDidChangeInterpreter: EventEmitter<void>;
                 let onDidChangeInterpreterStatus: EventEmitter<void>;
                 let changeEventFired: TestEventHandler<void>;
@@ -125,9 +126,11 @@ import { ITrustedKernelPaths } from './types';
                     onDidChangeInterpreter = new EventEmitter<void>();
                     onDidChangeInterpreters = new EventEmitter<void>();
                     onDidChangeInterpreterStatus = new EventEmitter<void>();
+                    onDidDeleteInterpreter = new EventEmitter<{ id: string }>();
                     disposables.push(onDidChangeInterpreter);
                     disposables.push(onDidChangeInterpreters);
                     disposables.push(onDidChangeInterpreterStatus);
+                    disposables.push(onDidDeleteInterpreter);
                     // Ensure the active Interpreter is in the list of interpreters.
                     if (activeInterpreter) {
                         testData.interpreters = testData.interpreters || [];
@@ -145,6 +148,7 @@ import { ITrustedKernelPaths } from './types';
                     testData.interpreters = Array.from(distinctInterpreters);
                     when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
                     when(interpreterService.onDidChangeInterpreters).thenReturn(onDidChangeInterpreters.event);
+                    when(interpreterService.onDidRemoveInterpreter).thenReturn(onDidDeleteInterpreter.event);
                     when(interpreterService.onDidChangeStatus).thenReturn(onDidChangeInterpreterStatus.event);
                     when(interpreterService.resolvedEnvironments).thenReturn(Array.from(distinctInterpreters));
                     when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);

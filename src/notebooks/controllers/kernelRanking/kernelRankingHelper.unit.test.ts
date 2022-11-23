@@ -103,8 +103,10 @@ import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
                 onDidChangeInterpreter = new EventEmitter<void>();
                 onDidChangeInterpreters = new EventEmitter<void>();
                 const onDidChangeInterpreterStatus = new EventEmitter<void>();
+                const onDidRemoveInterpreter = new EventEmitter<{ id: string }>();
                 disposables.push(onDidChangeInterpreter);
                 disposables.push(onDidChangeInterpreters);
+                disposables.push(onDidRemoveInterpreter);
                 disposables.push(onDidChangeInterpreterStatus);
                 when(remoteKernelFinder.listKernelsFromConnection(anything())).thenResolve([]);
                 // Ensure the active Interpreter is in the list of interpreters.
@@ -123,6 +125,7 @@ import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
                 when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
                 when(interpreterService.onDidChangeInterpreters).thenReturn(onDidChangeInterpreters.event);
                 when(interpreterService.onDidChangeStatus).thenReturn(onDidChangeInterpreterStatus.event);
+                when(interpreterService.onDidRemoveInterpreter).thenReturn(onDidRemoveInterpreter.event);
                 when(interpreterService.resolvedEnvironments).thenReturn(Array.from(distinctInterpreters));
                 when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
                 when(interpreterService.getInterpreterDetails(anything())).thenResolve();

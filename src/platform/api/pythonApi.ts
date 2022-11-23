@@ -336,6 +336,8 @@ export class InterpreterSelector implements IInterpreterSelector {
 export class InterpreterService implements IInterpreterService {
     private readonly didChangeInterpreter = new EventEmitter<void>();
     private readonly didChangeInterpreters = new EventEmitter<void>();
+    private readonly _onDidRemoveInterpreter = new EventEmitter<{ id: string }>();
+    public onDidRemoveInterpreter = this._onDidRemoveInterpreter.event;
     private eventHandlerAdded?: boolean;
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
     private apiPromise: Promise<ProposedExtensionAPI | undefined> | undefined;
@@ -652,6 +654,7 @@ export class InterpreterService implements IInterpreterService {
         // This promise only improves the discovery of kernels, even without this things work,
         // but with this things work better as the kernel discovery knows that Python refresh has finished.
         this.refreshPromises.push(promise.then(() => sleep(1_000)));
+        return promise;
     }
     private async getInterpretersImpl(
         cancelToken: CancellationToken,
@@ -744,7 +747,7 @@ export class InterpreterService implements IInterpreterService {
         // Get latest interpreter list in the background.
         if (this.extensionChecker.isPythonExtensionActive) {
             this.builtListOfInterpretersAtLeastOnce = true;
-            this.populateCachedListOfInterpreters();
+            this.populateCachedListOfInterpreters().catch(noop);
         }
         this.extensionChecker.onPythonExtensionInstallationStatusChanged(
             (e) => {
@@ -752,7 +755,7 @@ export class InterpreterService implements IInterpreterService {
                     return;
                 }
                 if (this.extensionChecker.isPythonExtensionActive) {
-                    this.populateCachedListOfInterpreters();
+                    this.populateCachedListOfInterpreters().catch(noop);
                 }
             },
             this,
@@ -787,7 +790,13 @@ export class InterpreterService implements IInterpreterService {
                             }
                             traceVerbose(`Detected change in Python environments via Python API`);
                             this.interpreterListCachePromise = undefined;
-                            this.populateCachedListOfInterpreters();
+                            this.populateCachedListOfInterpreters().finally(() => {
+                                if (e.type === 'remove') {
+                                    this.triggerEventIfAllowed(this.didChangeInterpreter);
+                                    this.triggerEventIfAllowed(this.didChangeInterpreters);
+                                    this._onDidRemoveInterpreter.fire({ id: e.env.id });
+                                }
+                            });
                         },
                         this,
                         this.disposables

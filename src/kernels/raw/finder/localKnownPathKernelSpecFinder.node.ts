@@ -11,7 +11,7 @@ import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
-import { traceError } from '../../../platform/logging';
+import { traceError, traceVerbose } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
@@ -31,7 +31,7 @@ export class LocalKnownPathKernelSpecFinder
     extends LocalKernelSpecFinderBase<LocalKernelSpecConnectionMetadata>
     implements IExtensionSyncActivationService
 {
-    private _cachedKernels: LocalKernelSpecConnectionMetadata[] = [];
+    private readonly _cachedKernels = new Map<string, LocalKernelSpecConnectionMetadata>();
     private readonly _onDidChangeKernels = new EventEmitter<void>();
     /**
      * TODO: We can monitor the known kernel spec folders and files for changes and trigger the change event.
@@ -54,8 +54,8 @@ export class LocalKnownPathKernelSpecFinder
         const cancellation = new CancellationTokenSource();
         this.listKernelsFirstTimeFromMemento(LocalKernelSpecsCacheKey)
             .then((kernels) => {
-                if (this._cachedKernels.length === 0 && kernels.length) {
-                    this._cachedKernels = kernels;
+                if (this._cachedKernels.size === 0 && kernels.length) {
+                    kernels.forEach((k) => this._cachedKernels.set(k.id, k));
                     this._onDidChangeKernels.fire();
                 }
             })
@@ -65,7 +65,7 @@ export class LocalKnownPathKernelSpecFinder
             .finally(() => cancellation.dispose());
     }
     public get kernels(): LocalKernelSpecConnectionMetadata[] {
-        return this._cachedKernels;
+        return Array.from(this._cachedKernels.values());
     }
     public dispose(): void | undefined {
         this._onDidChangeKernels.dispose();
@@ -91,7 +91,7 @@ export class LocalKnownPathKernelSpecFinder
             // First find the on disk kernel specs and interpreters
             const kernelSpecs = await this.findKernelSpecs(cancelToken);
 
-            const mappedKernelSpecs = kernelSpecs.map((k) =>
+            const newKernelSpecs = kernelSpecs.map((k) =>
                 LocalKernelSpecConnectionMetadata.create({
                     kernelSpec: k,
                     interpreter: undefined,
@@ -101,21 +101,33 @@ export class LocalKnownPathKernelSpecFinder
             if (cancelToken.isCancellationRequested) {
                 return [];
             }
-            const oldKernels = this._cachedKernels;
-            this._cachedKernels = mappedKernelSpecs;
+            const oldSortedKernels = Array.from(this._cachedKernels.values()).sort((a, b) => a.id.localeCompare(b.id));
+            const newSortedKernels = newKernelSpecs.sort((a, b) => a.id.localeCompare(b.id));
+            const newKernelIds = new Set(newKernelSpecs.map((k) => k.id));
+            const deletedKernels = oldSortedKernels.filter((k) => !newKernelIds.has(k.id));
+
+            // Add/update the kernels.
+            newKernelSpecs.forEach((k) => this._cachedKernels.set(k.id, k));
 
             // Trigger a change event if we have different kernels.
-            oldKernels.sort();
-            mappedKernelSpecs.sort();
             if (
-                oldKernels.length !== mappedKernelSpecs.length ||
-                JSON.stringify(oldKernels) !== JSON.stringify(mappedKernelSpecs)
+                oldSortedKernels.length !== newSortedKernels.length ||
+                deletedKernels.length ||
+                JSON.stringify(oldSortedKernels) !== JSON.stringify(newSortedKernels)
             ) {
                 this._onDidChangeKernels.fire();
-                this.writeToMementoCache(this._cachedKernels, LocalKernelSpecsCacheKey).ignoreErrors();
+                this.writeToMementoCache(
+                    Array.from(this._cachedKernels.values()),
+                    LocalKernelSpecsCacheKey
+                ).ignoreErrors();
             }
             this._onDidChangeKernels.fire();
-            return mappedKernelSpecs;
+            if (deletedKernels.length) {
+                traceVerbose(
+                    `Local kernel spec connection deleted ${deletedKernels.map((item) => `${item.kind}:'${item.id}'`)}`
+                );
+            }
+            return newKernelSpecs;
         });
         this.promiseMonitor.push(promise);
         return promise;

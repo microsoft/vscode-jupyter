@@ -69,7 +69,6 @@ export class KernelSelector implements IDisposable {
     private readonly createPythonItems: (ConnectionQuickPickItem | QuickPickItem)[] = [];
     private readonly categories = new Map<QuickPickItem, Set<ConnectionQuickPickItem>>();
     private quickPickItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
-    private readonly trackedKernelIds = new Set<string>();
     constructor(
         private readonly notebook: NotebookDocument,
         private readonly provider: IQuickPickKernelItemProvider,
@@ -198,10 +197,15 @@ export class KernelSelector implements IDisposable {
     }
     private updateQuickPickItems(quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>) {
         quickPick.title = this.provider.title;
+        const currentConnections = new Set(
+            quickPick.items
+                .filter((item) => isKernelPickItem(item))
+                .map((item) => item as ConnectionQuickPickItem)
+                .map((item) => item.connection.id)
+        );
         const newQuickPickItems = this.provider.kernels
             .filter((kernel) => {
-                if (!this.trackedKernelIds.has(kernel.id)) {
-                    this.trackedKernelIds.add(kernel.id);
+                if (!currentConnections.has(kernel.id)) {
                     return true;
                 }
                 return false;
@@ -271,10 +275,14 @@ export class KernelSelector implements IDisposable {
     }
 
     private removeMissingKernels(quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>) {
+        const currentConnections = quickPick.items
+            .filter((item) => isKernelPickItem(item))
+            .map((item) => item as ConnectionQuickPickItem)
+            .map((item) => item.connection.id);
         const kernels = new Map<string, KernelConnectionMetadata>(
             this.provider.kernels.map((kernel) => [kernel.id, kernel])
         );
-        const removedIds = Array.from(this.trackedKernelIds).filter((id) => !kernels.has(id));
+        const removedIds = currentConnections.filter((id) => !kernels.has(id));
         if (removedIds.length) {
             const itemsRemoved: (ConnectionQuickPickItem | QuickPickItem)[] = [];
             this.categories.forEach((items, category) => {
