@@ -376,13 +376,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
                     this,
                     this.disposables
                 );
-                // if (this.featuresManager.features.kernelPickerType === 'Stable') {
-                this.interpreterService.onDidChangeInterpreter(
-                    () => this.refreshData().catch(noop),
-                    this,
-                    this.disposables
-                );
-                // }
             });
     }
     public get kernels(): LocalKernelConnectionMetadata[] {

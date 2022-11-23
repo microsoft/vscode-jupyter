@@ -9,7 +9,7 @@ import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { traceInfo, traceDecoratorError, traceError } from '../../../platform/logging';
-import { IDisposableRegistry, IExtensions, IFeaturesManager } from '../../../platform/common/types';
+import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { KernelFinder } from '../../kernelFinder';
@@ -64,8 +64,7 @@ export class ContributedLocalKernelSpecFinder
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         kernelFinder.registerKernelFinder(this);
         this.disposables.push(this._onDidChangeStatus);
@@ -169,32 +168,25 @@ export class ContributedLocalKernelSpecFinder
     }
 
     public get kernels(): LocalKernelConnectionMetadata[] {
-        if (this.featureManager.features.kernelPickerType === 'Insiders') {
-            const loadedKernelSpecFiles = new Set<string>();
-            const kernels: LocalKernelConnectionMetadata[] = [];
-            // If we have a global kernel spec returned by Python kernel finder,
-            // give that preference over the same kernel found using local kernel spec finder.
-            // This is because the python kernel finder would have more information about the kernel (such as the matching python env).
-            this.pythonKernelFinder.kernels.forEach((connection) => {
-                const kernelSpecKind = getKernelRegistrationInfo(connection.kernelSpec);
-                if (
-                    connection.kernelSpec.specFile &&
-                    kernelSpecKind === 'registeredByNewVersionOfExtForCustomKernelSpec'
-                ) {
-                    loadedKernelSpecFiles.add(connection.kernelSpec.specFile);
-                    kernels.push(connection);
-                }
-            });
-            this.cache.forEach((connection) => {
-                if (connection.kernelSpec.specFile && loadedKernelSpecFiles.has(connection.kernelSpec.specFile)) {
-                    return;
-                }
+        const loadedKernelSpecFiles = new Set<string>();
+        const kernels: LocalKernelConnectionMetadata[] = [];
+        // If we have a global kernel spec returned by Python kernel finder,
+        // give that preference over the same kernel found using local kernel spec finder.
+        // This is because the python kernel finder would have more information about the kernel (such as the matching python env).
+        this.pythonKernelFinder.kernels.forEach((connection) => {
+            const kernelSpecKind = getKernelRegistrationInfo(connection.kernelSpec);
+            if (connection.kernelSpec.specFile && kernelSpecKind === 'registeredByNewVersionOfExtForCustomKernelSpec') {
+                loadedKernelSpecFiles.add(connection.kernelSpec.specFile);
                 kernels.push(connection);
-            });
-            return kernels;
-        } else {
-            return this.cache;
-        }
+            }
+        });
+        this.cache.forEach((connection) => {
+            if (connection.kernelSpec.specFile && loadedKernelSpecFiles.has(connection.kernelSpec.specFile)) {
+                return;
+            }
+            kernels.push(connection);
+        });
+        return kernels;
     }
     private filterKernels(kernels: LocalKernelConnectionMetadata[]) {
         return kernels.filter(({ kernelSpec }) => {
