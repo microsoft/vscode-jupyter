@@ -190,6 +190,8 @@ export abstract class LocalKernelSpecFinderBase<
     T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
 > implements IDisposable
 {
+    protected readonly disposables: IDisposable[] = [];
+
     private _status: 'discovering' | 'idle' = 'idle';
     public get status() {
         return this._status;
@@ -225,12 +227,12 @@ export abstract class LocalKernelSpecFinderBase<
         protected readonly jupyterPaths: JupyterPaths
     ) {
         disposables.push(this);
-        disposables.push(this.promiseMonitor);
+        this.disposables.push(this.promiseMonitor);
         this.promiseMonitor.onStateChange(() => {
             this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering';
         });
         this.kernelSpecFinder = new LocalKernelSpecFinder(fs, globalState, jupyterPaths);
-        disposables.push(this.kernelSpecFinder);
+        this.disposables.push(this.kernelSpecFinder);
     }
     public clearCache() {
         this.kernelSpecCache.clear();

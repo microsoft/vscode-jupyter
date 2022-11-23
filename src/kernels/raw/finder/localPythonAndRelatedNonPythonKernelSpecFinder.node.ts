@@ -19,13 +19,7 @@ import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/co
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import {
-    IMemento,
-    GLOBAL_MEMENTO,
-    IDisposable,
-    IDisposableRegistry,
-    IFeaturesManager
-} from '../../../platform/common/types';
+import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry, IFeaturesManager } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
@@ -65,7 +59,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder
      * This does not exclude any of the cached kernels from the previous sesion.
      */
     private _kernelsExcludingCachedItems = new Map<string, LocalKernelConnectionMetadata>();
-    private readonly disposables: IDisposable[] = [];
     private readonly _onDidChangeKernels = new EventEmitter<void>();
     public readonly onDidChangeKernels = this._onDidChangeKernels.event;
     private _kernelsFromCache: LocalKernelConnectionMetadata[] = [];
