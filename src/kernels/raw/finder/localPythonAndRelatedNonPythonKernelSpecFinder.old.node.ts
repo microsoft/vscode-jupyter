@@ -19,7 +19,13 @@ import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/co
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IMemento, GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IFeaturesManager } from '../../../platform/common/types';
+import {
+    IMemento,
+    GLOBAL_MEMENTO,
+    IDisposable,
+    IDisposableRegistry,
+    IFeaturesManager
+} from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
