@@ -15,13 +15,16 @@ import { LocalKernelSpecConnectionMetadata } from '../../types';
 import { ContributedLocalKernelSpecFinder } from './contributedLocalKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 
 (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
     suite(`Contributed Local Kernel Spec Finder (Kernel Picker ${kernelPickerType})`, () => {
         let finder: ContributedLocalKernelSpecFinder;
         const disposables: IDisposable[] = [];
         let nonPythonKernelFinder: LocalKnownPathKernelSpecFinder;
-        let pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
+        let pythonKernelFinder:
+            | LocalPythonAndRelatedNonPythonKernelSpecFinder
+            | LocalPythonAndRelatedNonPythonKernelSpecFinderOld;
         let kernelFinder: KernelFinder;
         let extensionChecker: IPythonExtensionChecker;
         let interpreterService: IInterpreterService;
@@ -54,7 +57,9 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAnd
         });
         setup(() => {
             nonPythonKernelFinder = mock<LocalKnownPathKernelSpecFinder>();
-            pythonKernelFinder = mock<LocalPythonAndRelatedNonPythonKernelSpecFinder>();
+            pythonKernelFinder = mock<
+                LocalPythonAndRelatedNonPythonKernelSpecFinder | LocalPythonAndRelatedNonPythonKernelSpecFinderOld
+            >();
             kernelFinder = mock<KernelFinder>();
             extensionChecker = mock<IPythonExtensionChecker>();
             interpreterService = mock<IInterpreterService>();
@@ -82,12 +87,14 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAnd
             when(featureManager.features).thenReturn({ kernelPickerType });
             finder = new ContributedLocalKernelSpecFinder(
                 instance(nonPythonKernelFinder),
-                instance(pythonKernelFinder),
+                instance(pythonKernelFinder) as LocalPythonAndRelatedNonPythonKernelSpecFinder,
+                instance(pythonKernelFinder) as LocalPythonAndRelatedNonPythonKernelSpecFinderOld,
                 instance(kernelFinder),
                 disposables,
                 instance(extensionChecker),
                 instance(interpreterService),
-                instance(extensions)
+                instance(extensions),
+                instance(featureManager)
             );
 
             clock = fakeTimers.install();

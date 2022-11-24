@@ -8,7 +8,7 @@ import { EventEmitter } from 'vscode';
 import { IKernelFinder, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
-import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
+import { IDisposableRegistry, IExtensions, IFeaturesManager } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { KernelFinder } from '../../kernelFinder';
@@ -20,6 +20,7 @@ import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../int
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getKernelRegistrationInfo } from '../../helpers';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -56,15 +57,22 @@ export class ContributedLocalPythonEnvFinder
     private wasPythonInstalledWhenFetchingControllers = false;
 
     private cache: PythonKernelConnectionMetadata[] = [];
-
+    private get pythonKernelFinder() {
+        return this.featuresManager.features.kernelPickerType === 'Insiders'
+            ? this.pythonKernelFinderNew
+            : this.pythonKernelFinderOld;
+    }
     constructor(
         @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
-        private readonly pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder,
+        private readonly pythonKernelFinderNew: LocalPythonAndRelatedNonPythonKernelSpecFinder,
+        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinderOld)
+        private readonly pythonKernelFinderOld: LocalPythonAndRelatedNonPythonKernelSpecFinderOld,
         @inject(IKernelFinder) kernelFinder: KernelFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IExtensions) private readonly extensions: IExtensions
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
     ) {
         kernelFinder.registerKernelFinder(this);
         this.disposables.push(this.promiseMonitor);

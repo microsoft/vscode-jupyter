@@ -52,6 +52,7 @@ import { KernelRankingHelper } from '../../../notebooks/controllers/kernelRankin
 import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernelFinder';
 import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 
 [false, true].forEach((isWindows) => {
     (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
@@ -72,7 +73,6 @@ import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
             let cancelToken: CancellationTokenSource;
             let onDidChangeInterpreters: EventEmitter<void>;
             let onDidChangeInterpreter: EventEmitter<void>;
-            let localPythonAndRelatedKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
             type TestData = {
                 interpreters?: (
                     | PythonEnvironment
@@ -255,7 +255,20 @@ import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
                 when(featuresManager.features).thenReturn({ kernelPickerType });
                 kernelFinder = new KernelFinder([]);
 
-                localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+                const localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+                    instance(interpreterService),
+                    instance(fs),
+                    instance(workspaceService),
+                    jupyterPaths,
+                    instance(extensionChecker),
+                    nonPythonKernelSpecFinder,
+                    instance(memento),
+                    disposables,
+                    instance(env),
+                    instance(trustedKernels),
+                    instance(featuresManager)
+                );
+                const localPythonAndRelatedKernelFinderOld = new LocalPythonAndRelatedNonPythonKernelSpecFinderOld(
                     instance(interpreterService),
                     instance(fs),
                     instance(workspaceService),
@@ -271,15 +284,18 @@ import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
                 localKernelFinder = new ContributedLocalKernelSpecFinder(
                     nonPythonKernelSpecFinder,
                     localPythonAndRelatedKernelFinder,
+                    localPythonAndRelatedKernelFinderOld,
                     kernelFinder,
                     [],
                     instance(extensionChecker),
                     instance(interpreterService),
-                    instance(extensions)
+                    instance(extensions),
+                    instance(featuresManager)
                 );
                 localKernelFinder.activate();
                 nonPythonKernelSpecFinder.activate();
                 localPythonAndRelatedKernelFinder.activate();
+                localPythonAndRelatedKernelFinderOld.activate();
 
                 kernelRankHelper = new KernelRankingHelper(instance(preferredRemote));
             }
