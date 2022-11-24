@@ -51,7 +51,7 @@ suite('Quick Pick Kernel Item Provider', () => {
                         when(finder.displayName).thenReturn('Remote Server');
                         break;
                 }
-                when(finder.displayName).thenReturn();
+                when(finder.displayName).thenReturn('x');
                 when(finder.kernels).thenReturn([]);
                 when(finder.refresh()).thenResolve();
                 when(finder.status).thenReturn('idle');
@@ -71,17 +71,28 @@ suite('Quick Pick Kernel Item Provider', () => {
             test('Verify title and status', async () => {
                 createProvider();
 
-                assert.strictEqual(provider.kind, provider.kind);
+                assert.strictEqual(provider.kind, kind);
                 assert.strictEqual(provider.status, 'idle');
                 assert.deepEqual(provider.kernels, []);
                 assert.isUndefined(provider.recommended);
 
                 await clock.runAllAsync();
 
-                assert.strictEqual(
-                    provider.title,
-                    `${DataScience.kernelPickerSelectKernelTitle()} from ${instance(finder).displayName}`
-                );
+                let expectedTitle = '';
+                switch (kind) {
+                    case ContributedKernelFinderKind.LocalKernelSpec:
+                        expectedTitle = DataScience.kernelPickerSelectLocalKernelSpecTitle();
+                        break;
+                    case ContributedKernelFinderKind.LocalPythonEnvironment:
+                        expectedTitle = DataScience.kernelPickerSelectPythonEnvironmentTitle();
+                        break;
+                    default:
+                        expectedTitle = DataScience.kernelPickerSelectKernelFromRemoteTitle().format(
+                            instance(finder).displayName
+                        );
+                        break;
+                }
+                assert.strictEqual(provider.title, expectedTitle);
             });
             test('Verify status change and kernels listing', async () => {
                 when(finder.status).thenReturn('discovering');
