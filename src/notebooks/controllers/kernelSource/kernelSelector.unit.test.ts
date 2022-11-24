@@ -268,7 +268,7 @@ suite('Kernel Selector', () => {
     }
     test('Quick Pick is displayed', async () => {
         when(kernelFinder.displayName).thenReturn('Kernel Finder');
-        selectionPromise.resolve();
+        selectionPromise.resolve({ label: '' });
 
         const kernelConnection = await kernelSelector.selectKernel(quickPickFactory);
         await clock.runAllAsync();
@@ -292,7 +292,7 @@ suite('Kernel Selector', () => {
         provider.kind = ContributedKernelFinderKind.LocalKernelSpec;
         when(kernelFinder.displayName).thenReturn('Kernel Finder');
         when(kernelFinder.kind).thenReturn(provider.kind);
-        selectionPromise.resolve();
+        selectionPromise.resolve({ label: '' });
 
         const kernelConnection = await kernelSelector.selectKernel(quickPickFactory);
         await clock.runAllAsync();
@@ -309,7 +309,7 @@ suite('Kernel Selector', () => {
         provider.kind = ContributedKernelFinderKind.LocalPythonEnvironment;
         when(kernelFinder.displayName).thenReturn('Kernel Finder');
         when(kernelFinder.kind).thenReturn(provider.kind);
-        selectionPromise.resolve();
+        selectionPromise.resolve({ label: '' });
 
         const kernelConnection = await kernelSelector.selectKernel(quickPickFactory);
         await clock.runAllAsync();
