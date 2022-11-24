@@ -75,6 +75,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper
                   );
         this.kernelFinder.onDidChangeKernels(() => this._onDidChangeKernels.fire(), this, this.finderDisposables);
         this.kernelFinder.onDidChangeStatus(() => this._onDidChangeStatus.fire(), this, this.finderDisposables);
+        this.kernelFinder.activate();
         this.finderDisposables.push(this.kernelFinder);
     }
     public dispose() {
