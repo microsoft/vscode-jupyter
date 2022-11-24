@@ -381,7 +381,11 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             });
             return { quickPick, selection: selection as Promise<ConnectionQuickPickItem | QuickPickItem> };
         };
-        state.connection = await selector.selectKernel(quickPickFactory);
+        const selection = await selector.selectKernel(quickPickFactory);
+        if (selection) {
+            state.connection = selection.connection;
+            state.source = selection.finder;
+        }
     }
     private async onKernelConnectionSelected(notebook: NotebookDocument, connection: KernelConnectionMetadata) {
         const controllers = this.controllerRegistration.addOrUpdate(connection, [

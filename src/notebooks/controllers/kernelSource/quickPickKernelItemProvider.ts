@@ -11,8 +11,9 @@ import { isPromise } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { traceError } from '../../../platform/logging';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
+import { IQuickPickKernelItemProvider } from './types';
 
-export class QuickPickKernelItemProvider {
+export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider {
     private readonly _onDidRefresh = new EventEmitter<void>();
     onDidRefresh = this._onDidRefresh.event;
     title: string;
@@ -29,6 +30,10 @@ export class QuickPickKernelItemProvider {
     recommended: KernelConnectionMetadata | undefined;
     private readonly disposables: IDisposable[] = [];
     private refreshInvoked?: boolean;
+    private _finder: IContributedKernelFinder | undefined
+    public get finder(): IContributedKernelFinder | undefined {
+        return this._finder;
+    }
     constructor(
         private readonly notebook: NotebookDocument,
         kind: ContributedKernelFinderKind,
@@ -52,6 +57,7 @@ export class QuickPickKernelItemProvider {
         disposeAllDisposables(this.disposables);
     }
     private setupFinder(finder: IContributedKernelFinder) {
+        this._finder = finder;
         this.refresh = async () => finder.refresh();
         if (this.status !== finder.status && !this.refreshInvoked) {
             this.status = finder.status;

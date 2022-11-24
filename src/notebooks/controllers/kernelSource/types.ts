@@ -28,4 +28,5 @@ export interface IQuickPickKernelItemProvider {
     status: 'discovering' | 'idle';
     refresh: () => Promise<void>;
     recommended: KernelConnectionMetadata | undefined;
+    finder?: IContributedKernelFinder;
 }
