@@ -310,6 +310,8 @@ export class KernelSelector implements IDisposable {
 
         this.updateQuickPickWithLatestConnection(quickPick);
         this.removeMissingKernels(quickPick);
+        this.updateRecommended(quickPick);
+
         groupBy(newQuickPickItems, (a, b) =>
             compareIgnoreCase(
                 this.displayDataProvider.getDisplayData(a.connection).category || 'z',
@@ -414,6 +416,7 @@ export class KernelSelector implements IDisposable {
     }
     private updateRecommended(quickPick: QuickPick<CompoundQuickPickItem>) {
         if (!this.provider.recommended) {
+            this.recommendedItems.length = 0;
             return;
         }
         if (!this.recommendedItems.length) {
