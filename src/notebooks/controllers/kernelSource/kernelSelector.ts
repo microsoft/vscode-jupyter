@@ -4,6 +4,7 @@
 'use strict';
 
 import {
+    CancellationError,
     CancellationToken,
     CancellationTokenSource,
     commands,
