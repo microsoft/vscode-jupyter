@@ -301,8 +301,7 @@ import { ServiceContainer } from '../../../platform/ioc/container';
                                 instance(memento),
                                 disposables,
                                 instance(env),
-                                instance(trustedKernels),
-                                instance(featuresManager)
+                                instance(trustedKernels)
                             )
                     );
                     when(
@@ -321,8 +320,7 @@ import { ServiceContainer } from '../../../platform/ioc/container';
                                 instance(memento),
                                 disposables,
                                 instance(env),
-                                instance(trustedKernels),
-                                instance(featuresManager)
+                                instance(trustedKernels)
                             )
                     );
                     const pythonKernelFinderWrapper = new LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper(

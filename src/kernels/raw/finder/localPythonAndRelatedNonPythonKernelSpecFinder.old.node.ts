@@ -19,7 +19,7 @@ import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/co
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry, IFeaturesManager } from '../../../platform/common/types';
+import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
@@ -67,13 +67,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderOld extends LocalKern
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IApplicationEnvironment) env: IApplicationEnvironment,
-        @inject(ITrustedKernelPaths) trustedKernels: ITrustedKernelPaths,
-        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
+        @inject(ITrustedKernelPaths) trustedKernels: ITrustedKernelPaths
     ) {
         super(fs, workspaceService, extensionChecker, globalState, disposables, env, jupyterPaths);
-        if (this.featuresManager.features.kernelPickerType !== 'Stable') {
-            return;
-        }
         this.interpreterKernelSpecFinder = new InterpreterKernelSpecFinderHelper(
             jupyterPaths,
             this.kernelSpecFinder,
@@ -118,9 +114,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderOld extends LocalKern
         );
     }
     public activate() {
-        if (this.featuresManager.features.kernelPickerType !== 'Stable') {
-            return;
-        }
         this.listKernelsFirstTimeFromMemento(LocalPythonKernelsCacheKey)
             .then((kernels) => {
                 if (kernels.length) {
