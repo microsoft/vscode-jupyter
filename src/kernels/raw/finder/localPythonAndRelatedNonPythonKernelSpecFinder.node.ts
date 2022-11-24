@@ -24,7 +24,6 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ITrustedKernelPaths } from './types';
 import {
     InterpreterKernelSpecFinderHelper,
@@ -43,10 +42,7 @@ type InterpreterId = string;
  *     - This will return any non-python kernels that are registered in Python environments (e.g. Java kernels within a conda environment)
  */
 @injectable()
-export class LocalPythonAndRelatedNonPythonKernelSpecFinder
-    extends LocalKernelSpecFinderBase<LocalKernelConnectionMetadata>
-    implements IExtensionSyncActivationService
-{
+export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelSpecFinderBase<LocalKernelConnectionMetadata> {
     /**
      * List of all kernels.
      * When opening a new instance of VS Code we load the cache from previous session,
