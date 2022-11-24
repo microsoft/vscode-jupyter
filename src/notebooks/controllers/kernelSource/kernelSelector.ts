@@ -190,7 +190,7 @@ export class KernelSelector implements IDisposable {
                 this.provider.onDidChange(
                     () => {
                         // If we discovered python envs, then hide the install python item.
-                        if (this.provider.kernels.length > 0 && this.createPythonItems.length === 0) {
+                        if (this.provider.kernels.length > 0) {
                             this.installPythonItems.length = 0;
                         }
                     },
