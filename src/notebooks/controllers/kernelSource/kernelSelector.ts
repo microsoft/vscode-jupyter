@@ -89,7 +89,7 @@ export class KernelSelector implements IDisposable {
             ServiceContainer.instance.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider);
         this.extensionChecker = ServiceContainer.instance.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         this.createPythonEnvQuickPickItem = {
-            label: DataScience.createPythonEnvironmentInQuickPick(),
+            label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`,
             command: this.onCreatePythonEnvironment.bind(this)
         };
         this.installPythonItem = {
