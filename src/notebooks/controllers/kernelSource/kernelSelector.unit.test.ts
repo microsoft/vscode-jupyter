@@ -273,7 +273,7 @@ suite('Kernel Selector', () => {
         const kernelConnection = await kernelSelector.selectKernel(quickPickFactory);
         await clock.runAllAsync();
 
-        assert.isUndefined(kernelConnection?.connection);
+        assert.isUndefined(kernelConnection?.selection);
         assert.isTrue(quickPickCreated);
     });
     test('Nothing is selected if cancelled', async () => {
@@ -284,7 +284,7 @@ suite('Kernel Selector', () => {
         selectionPromise.resolve({ connection: localPythonKernelSpec, label: '' });
         await clock.runAllAsync();
 
-        assert.isUndefined((await kernelConnectionPromise)?.connection);
+        assert.isUndefined((await kernelConnectionPromise)?.selection);
         assert.isTrue(quickPickCreated);
     });
     test('Display quick pick with Local kernel Specs', async () => {
@@ -297,7 +297,7 @@ suite('Kernel Selector', () => {
         const kernelConnection = await kernelSelector.selectKernel(quickPickFactory);
         await clock.runAllAsync();
 
-        assert.isUndefined(kernelConnection?.connection);
+        assert.isUndefined(kernelConnection?.selection);
         assert.strictEqual(options.items.length, 4);
         assert.strictEqual(options.items[0].label, DataScience.kernelCategoryForJupyterKernel());
 
@@ -314,7 +314,7 @@ suite('Kernel Selector', () => {
         const kernelConnection = await kernelSelector.selectKernel(quickPickFactory);
         await clock.runAllAsync();
 
-        assert.isUndefined(kernelConnection?.connection);
+        assert.isUndefined(kernelConnection?.selection);
         assert.strictEqual(
             options.items.length,
             5,

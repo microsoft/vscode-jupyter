@@ -4,7 +4,6 @@
 'use strict';
 
 import {
-    CancellationError,
     CancellationToken,
     CancellationTokenSource,
     commands,
@@ -32,7 +31,7 @@ type CompoundQuickPickItem = CommandQuickPickItem | ConnectionQuickPickItem | Qu
 export function isKernelPickItem(item: CompoundQuickPickItem): item is ConnectionQuickPickItem {
     return 'connection' in item;
 }
-export function isCommandQuickPickItem(item: CompoundQuickPickItem): item is ConnectionQuickPickItem {
+export function isCommandQuickPickItem(item: CompoundQuickPickItem): item is CommandQuickPickItem {
     return 'command' in item;
 }
 function updateKernelQuickPickWithNewItems<T extends CompoundQuickPickItem>(
@@ -67,6 +66,14 @@ export type CreateAndSelectItemFromQuickPick = (options: {
     selection: Promise<CompoundQuickPickItem>;
 };
 
+/**
+ * Used to indicate the fact that the quick pick workflow
+ * has been successfully completed.
+ * Do not use `CancellationError` as that indicates the user stopped the workflow.
+ * & VS Code will re-display the quick pick, & that's not something we want as the user has taken an action.
+ */
+class SomeOtherActionError extends Error {}
+
 export class KernelSelector implements IDisposable {
     private disposables: IDisposable[] = [];
     private readonly displayDataProvider: ConnectionDisplayDataProvider;
@@ -96,14 +103,14 @@ export class KernelSelector implements IDisposable {
             label: DataScience.installPythonTitle(),
             command: async () => {
                 commands.executeCommand(Commands.InstallPythonViaKernelPicker).then(noop, noop);
-                throw new CancellationError();
+                throw new SomeOtherActionError();
             }
         };
         this.installPythonExtension = {
             label: DataScience.installPythonExtensionViaKernelPickerTitle(),
             command: async () => {
                 commands.executeCommand(Commands.InstallPythonExtensionViaKernelPicker).then(noop, noop);
-                throw new CancellationError();
+                throw new SomeOtherActionError();
             }
         };
     }
@@ -112,7 +119,11 @@ export class KernelSelector implements IDisposable {
     }
     public async selectKernel(
         quickPickFactory: CreateAndSelectItemFromQuickPick
-    ): Promise<{ finder: IContributedKernelFinder; connection: KernelConnectionMetadata } | undefined> {
+    ): Promise<
+        | { selection: 'controller'; finder: IContributedKernelFinder; connection: KernelConnectionMetadata }
+        | { selection: 'userPerformedSomeOtherAction' }
+        | undefined
+    > {
         if (this.token.isCancellationRequested) {
             return;
         }
@@ -250,11 +261,21 @@ export class KernelSelector implements IDisposable {
             return;
         }
 
-        if (result === this.createPythonEnvQuickPickItem) {
-            return this.createPythonEnvQuickPickItem.command();
+        if (isCommandQuickPickItem(result)) {
+            try {
+                const connection = await result.command();
+                return connection
+                    ? { selection: 'controller', finder: this.provider.finder!, connection: connection }
+                    : undefined;
+            } catch (ex) {
+                if (ex instanceof SomeOtherActionError) {
+                    return { selection: 'userPerformedSomeOtherAction' };
+                }
+                throw ex;
+            }
         }
         if (result && 'connection' in result) {
-            return { finder: this.provider.finder!, connection: result.connection };
+            return { selection: 'controller', finder: this.provider.finder!, connection: result.connection };
         }
     }
     private onCreatePythonEnvironment() {
@@ -374,7 +395,9 @@ export class KernelSelector implements IDisposable {
             });
             updateKernelQuickPickWithNewItems(
                 quickPick,
-                this.createPythonItems
+                this.installPythonItems
+                    .concat(this.installPythonExtItems)
+                    .concat(this.createPythonItems)
                     .concat(this.recommendedItems)
                     .concat(this.quickPickItems.filter((item) => !itemsRemoved.includes(item))),
                 this.recommendedItems[1]
@@ -399,7 +422,11 @@ export class KernelSelector implements IDisposable {
         }
         updateKernelQuickPickWithNewItems(
             quickPick,
-            this.createPythonItems.concat(this.recommendedItems).concat(this.quickPickItems),
+            this.installPythonItems
+                .concat(this.installPythonExtItems)
+                .concat(this.createPythonItems)
+                .concat(this.recommendedItems)
+                .concat(this.quickPickItems),
             this.recommendedItems[1]
         );
     }
@@ -426,7 +453,11 @@ export class KernelSelector implements IDisposable {
         });
         updateKernelQuickPickWithNewItems(
             quickPick,
-            this.createPythonItems.concat(this.recommendedItems).concat(this.quickPickItems),
+            this.installPythonItems
+                .concat(this.installPythonExtItems)
+                .concat(this.createPythonItems)
+                .concat(this.recommendedItems)
+                .concat(this.quickPickItems),
             this.recommendedItems[1]
         );
     }
