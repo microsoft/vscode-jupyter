@@ -363,17 +363,28 @@ export class KernelSelector implements IDisposable {
                 this.quickPickItems.splice(newIndex, 0, newCategory, ...items);
                 this.categories.set(newCategory, new Set(items));
             }
-            updateKernelQuickPickWithNewItems(
-                quickPick,
-                this.installPythonItems
-                    .concat(this.installPythonExtItems)
-                    .concat(this.createPythonItems)
-                    .concat(this.recommendedItems)
-                    .concat(this.quickPickItems)
-            );
+            this.rebuildQuickPickItems(quickPick);
         });
     }
-
+    private rebuildQuickPickItems(quickPick: QuickPick<CompoundQuickPickItem>) {
+        const recommendedItem = this.recommendedItems.find((item) => isKernelPickItem(item));
+        const recommendedConnections = new Set(
+            this.recommendedItems.filter(isKernelPickItem).map((item) => item.connection.id)
+        );
+        updateKernelQuickPickWithNewItems(
+            quickPick,
+            this.installPythonItems
+                .concat(this.installPythonExtItems)
+                .concat(this.createPythonItems)
+                .concat(this.recommendedItems)
+                .concat(
+                    this.quickPickItems.filter(
+                        (item) => !isKernelPickItem(item) || !recommendedConnections.has(item.connection.id)
+                    )
+                ),
+            recommendedItem
+        );
+    }
     private removeMissingKernels(quickPick: QuickPick<CompoundQuickPickItem>) {
         const currentConnections = quickPick.items
             .filter((item) => isKernelPickItem(item))
@@ -397,15 +408,8 @@ export class KernelSelector implements IDisposable {
                     this.categories.delete(category);
                 }
             });
-            updateKernelQuickPickWithNewItems(
-                quickPick,
-                this.installPythonItems
-                    .concat(this.installPythonExtItems)
-                    .concat(this.createPythonItems)
-                    .concat(this.recommendedItems)
-                    .concat(this.quickPickItems.filter((item) => !itemsRemoved.includes(item))),
-                this.recommendedItems[1]
-            );
+            this.quickPickItems = this.quickPickItems.filter((item) => !itemsRemoved.includes(item));
+            this.rebuildQuickPickItems(quickPick);
         }
     }
     private updateRecommended(quickPick: QuickPick<CompoundQuickPickItem>) {
@@ -424,15 +428,7 @@ export class KernelSelector implements IDisposable {
         } else {
             this.recommendedItems.push(recommendedItem);
         }
-        updateKernelQuickPickWithNewItems(
-            quickPick,
-            this.installPythonItems
-                .concat(this.installPythonExtItems)
-                .concat(this.createPythonItems)
-                .concat(this.recommendedItems)
-                .concat(this.quickPickItems),
-            this.recommendedItems[1]
-        );
+        this.rebuildQuickPickItems(quickPick);
     }
     /**
      * Possible the labels have changed, hence update the quick pick labels.
@@ -455,15 +451,7 @@ export class KernelSelector implements IDisposable {
             item.label = this.connectionToQuickPick(kernel, item.isRecommended).label;
             item.connection = kernel; // Possible some other information since then has changed, hence keep the connection up to date.
         });
-        updateKernelQuickPickWithNewItems(
-            quickPick,
-            this.installPythonItems
-                .concat(this.installPythonExtItems)
-                .concat(this.createPythonItems)
-                .concat(this.recommendedItems)
-                .concat(this.quickPickItems),
-            this.recommendedItems[1]
-        );
+        this.rebuildQuickPickItems(quickPick);
     }
 
     private connectionToQuickPick(
