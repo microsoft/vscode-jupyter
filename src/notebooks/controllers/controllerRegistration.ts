@@ -318,13 +318,11 @@ export class ControllerRegistration implements IControllerRegistration {
     }
 
     private isFiltered(metadata: KernelConnectionMetadata): boolean {
+        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
+            return false;
+        }
         const userFiltered = this.kernelFilter.isKernelHidden(metadata);
         const urlFiltered = isRemoteConnection(metadata) && this.serverUriStorage.currentServerId !== metadata.serverId;
-
-        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
-            // In the 'Insiders' experiment remove the url filters as we want to register everything.
-            return userFiltered;
-        }
 
         return userFiltered || urlFiltered;
     }

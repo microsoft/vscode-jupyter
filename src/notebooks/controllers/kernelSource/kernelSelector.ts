@@ -14,7 +14,7 @@ import {
     QuickPickItemKind,
     ThemeIcon
 } from 'vscode';
-import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
+import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -83,7 +83,7 @@ export class KernelSelector implements IDisposable {
     }
     public async selectKernel(
         quickPickFactory: CreateAndSelectItemFromQuickPick
-    ): Promise<KernelConnectionMetadata | undefined> {
+    ): Promise<{ finder: IContributedKernelFinder; connection: KernelConnectionMetadata } | undefined> {
         if (this.token.isCancellationRequested) {
             return;
         }
@@ -189,10 +189,11 @@ export class KernelSelector implements IDisposable {
 
             const creator = new PythonEnvKernelConnectionCreator(this.notebook, cancellationToken.token);
             this.disposables.push(creator);
-            return creator.createPythonEnvFromKernelPicker();
+            const connection = await creator.createPythonEnvFromKernelPicker();
+            return connection ? { finder: this.provider.finder!, connection } : undefined;
         }
         if (result && 'connection' in result) {
-            return result.connection;
+            return { finder: this.provider.finder!, connection: result.connection };
         }
     }
     private updateQuickPickItems(quickPick: QuickPick<ConnectionQuickPickItem | QuickPickItem>) {
