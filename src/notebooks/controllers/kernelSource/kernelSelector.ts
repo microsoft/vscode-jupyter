@@ -371,17 +371,17 @@ export class KernelSelector implements IDisposable {
         const recommendedConnections = new Set(
             this.recommendedItems.filter(isKernelPickItem).map((item) => item.connection.id)
         );
+        // Ensure the recommended items isn't duplicated in the list.
+        const connections = this.quickPickItems.filter(
+            (item) => !isKernelPickItem(item) || !recommendedConnections.has(item.connection.id)
+        );
         updateKernelQuickPickWithNewItems(
             quickPick,
             this.installPythonItems
                 .concat(this.installPythonExtItems)
                 .concat(this.createPythonItems)
                 .concat(this.recommendedItems)
-                .concat(
-                    this.quickPickItems.filter(
-                        (item) => !isKernelPickItem(item) || !recommendedConnections.has(item.connection.id)
-                    )
-                ),
+                .concat(connections),
             recommendedItem
         );
     }
