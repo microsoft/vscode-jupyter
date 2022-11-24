@@ -11,7 +11,6 @@ import { registerInstallerTypes } from './installer/serviceRegistry.node';
 import { KernelDependencyService } from './kernelDependencyService.node';
 import { JupyterPaths } from './raw/finder/jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './raw/finder/localKnownPathKernelSpecFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { KernelEnvironmentVariablesService } from './raw/launcher/kernelEnvVarsService.node';
 import { KernelLauncher } from './raw/launcher/kernelLauncher.node';
@@ -52,7 +51,7 @@ import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarme
 import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
 import { ContributedLocalPythonEnvFinder } from './raw/finder/contributedLocalPythonEnvFinder.node';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
@@ -92,17 +91,12 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         LocalKnownPathKernelSpecFinder
     );
     serviceManager.addBinding(LocalKnownPathKernelSpecFinder, IExtensionSyncActivationService);
-    serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinder>(
-        LocalPythonAndRelatedNonPythonKernelSpecFinder,
-        LocalPythonAndRelatedNonPythonKernelSpecFinder
-    );
-    serviceManager.addBinding(LocalPythonAndRelatedNonPythonKernelSpecFinder, IExtensionSyncActivationService);
 
-    serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinderOld>(
-        LocalPythonAndRelatedNonPythonKernelSpecFinderOld,
-        LocalPythonAndRelatedNonPythonKernelSpecFinderOld
+    serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper>(
+        LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper,
+        LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper
     );
-    serviceManager.addBinding(LocalPythonAndRelatedNonPythonKernelSpecFinderOld, IExtensionSyncActivationService);
+    serviceManager.addBinding(LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper, IExtensionSyncActivationService);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(

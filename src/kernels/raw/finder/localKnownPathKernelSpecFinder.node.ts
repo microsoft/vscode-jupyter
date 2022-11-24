@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, CancellationTokenSource, EventEmitter, Memento } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
 import { getKernelId } from '../../../kernels/helpers';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
@@ -32,13 +32,6 @@ export class LocalKnownPathKernelSpecFinder
     implements IExtensionSyncActivationService
 {
     private readonly _cachedKernels = new Map<string, LocalKernelSpecConnectionMetadata>();
-    private readonly _onDidChangeKernels = new EventEmitter<void>();
-    /**
-     * TODO: We can monitor the known kernel spec folders and files for changes and trigger the change event.
-     * Lets discuss with VS Code core if there are known perf issues.
-     * If there are, then there's no need to monitor these folders/files for now.
-     */
-    public readonly onDidChangeKernels = this._onDidChangeKernels.event;
     constructor(
         @inject(IFileSystemNode) fs: IFileSystemNode,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,

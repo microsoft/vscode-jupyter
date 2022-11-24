@@ -11,17 +11,18 @@ import { IDisposable, IExtensions, IFeaturesManager } from '../../../platform/co
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { createEventHandler } from '../../../test/common';
 import { KernelFinder } from '../../kernelFinder';
-import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../types';
+import {
+    LocalKernelConnectionMetadata,
+    LocalKernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../../types';
 import { ContributedLocalPythonEnvFinder } from './contributedLocalPythonEnvFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
+import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 
 suite('Contributed Python Kernel Finder', () => {
     let finder: ContributedLocalPythonEnvFinder;
     const disposables: IDisposable[] = [];
-    let pythonKernelFinder:
-        | LocalPythonAndRelatedNonPythonKernelSpecFinder
-        | LocalPythonAndRelatedNonPythonKernelSpecFinderOld;
+    let pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>;
     let kernelFinder: KernelFinder;
     let extensionChecker: IPythonExtensionChecker;
     let interpreterService: IInterpreterService;
@@ -71,9 +72,7 @@ suite('Contributed Python Kernel Finder', () => {
         }
     });
     setup(() => {
-        pythonKernelFinder = mock<
-            LocalPythonAndRelatedNonPythonKernelSpecFinder | LocalPythonAndRelatedNonPythonKernelSpecFinderOld
-        >();
+        pythonKernelFinder = mock<ILocalKernelFinder<LocalKernelConnectionMetadata>>();
         kernelFinder = mock<KernelFinder>();
         extensionChecker = mock<IPythonExtensionChecker>();
         interpreterService = mock<IInterpreterService>();
@@ -98,14 +97,12 @@ suite('Contributed Python Kernel Finder', () => {
         const featuresManager = mock<IFeaturesManager>();
         when(featuresManager.features).thenReturn({ kernelPickerType: 'Insiders' });
         finder = new ContributedLocalPythonEnvFinder(
-            instance(pythonKernelFinder) as LocalPythonAndRelatedNonPythonKernelSpecFinder,
-            instance(pythonKernelFinder) as LocalPythonAndRelatedNonPythonKernelSpecFinderOld,
+            instance(pythonKernelFinder),
             instance(kernelFinder),
             disposables,
             instance(extensionChecker),
             instance(interpreterService),
-            instance(extensions),
-            instance(featuresManager)
+            instance(extensions)
         );
 
         clock = fakeTimers.install();

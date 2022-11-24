@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, CancellationTokenSource, EventEmitter, Memento } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
 import { getKernelRegistrationInfo } from '../../../kernels/helpers';
 import {
     isLocalConnection,
@@ -57,8 +57,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderOld
      * This does not exclude any of the cached kernels from the previous sesion.
      */
     private _kernelsExcludingCachedItems = new Map<string, LocalKernelConnectionMetadata>();
-    private readonly _onDidChangeKernels = new EventEmitter<void>();
-    public readonly onDidChangeKernels = this._onDidChangeKernels.event;
     private _kernelsFromCache: LocalKernelConnectionMetadata[] = [];
 
     private readonly interpreterKernelSpecFinder: InterpreterKernelSpecFinderHelper;
