@@ -30,7 +30,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
     recommended: KernelConnectionMetadata | undefined;
     private readonly disposables: IDisposable[] = [];
     private refreshInvoked?: boolean;
-    private _finder: IContributedKernelFinder | undefined
+    private _finder: IContributedKernelFinder | undefined;
     public get finder(): IContributedKernelFinder | undefined {
         return this._finder;
     }
