@@ -5,17 +5,20 @@
 
 import { Event, NotebookDocument, QuickPickItem } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
-import { KernelConnectionMetadata } from '../../../kernels/types';
+import { KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { IDisposable } from '../../../platform/common/types';
 export interface ConnectionQuickPickItem extends QuickPickItem {
     connection: KernelConnectionMetadata;
     isRecommended?: boolean;
 }
+export interface CommandQuickPickItem extends QuickPickItem {
+    command: () => Promise<PythonKernelConnectionMetadata | undefined>;
+}
 
 export type MultiStepResult = {
     notebook: NotebookDocument;
     source?: IContributedKernelFinder;
-    connection?: KernelConnectionMetadata;
+    selection?: { type: 'connection'; connection: KernelConnectionMetadata } | { type: 'userPerformedSomeOtherAction' };
     disposables: IDisposable[];
 };
 export interface IQuickPickKernelItemProvider {

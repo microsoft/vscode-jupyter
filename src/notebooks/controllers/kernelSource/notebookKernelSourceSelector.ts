@@ -111,7 +111,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 ),
                 state
             );
-            if (result === InputFlowAction.cancel) {
+            if (result === InputFlowAction.cancel || state.selection?.type === 'userPerformedSomeOtherAction') {
                 throw new CancellationError();
             }
             if (this.cancellationTokenSource.token.isCancellationRequested) {
@@ -120,9 +120,9 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             }
 
             // If we got both parts of the equation, then perform the kernel source and kernel switch
-            if (state.source && state.connection) {
-                await this.onKernelConnectionSelected(notebook, state.connection);
-                return state.connection as LocalKernelConnectionMetadata;
+            if (state.source && state.selection?.type === 'connection') {
+                await this.onKernelConnectionSelected(notebook, state.selection.connection);
+                return state.selection.connection as LocalKernelConnectionMetadata;
             }
         } finally {
             disposeAllDisposables(state.disposables);
@@ -154,7 +154,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 this.getRemoteServersFromProvider.bind(this, provider, this.cancellationTokenSource.token),
                 state
             );
-            if (result === InputFlowAction.cancel) {
+            if (result === InputFlowAction.cancel || state.selection?.type === 'userPerformedSomeOtherAction') {
                 throw new CancellationError();
             }
 
@@ -164,9 +164,9 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             }
 
             // If we got both parts of the equation, then perform the kernel source and kernel switch
-            if (state.source && state.connection) {
-                await this.onKernelConnectionSelected(notebook, state.connection);
-                return state.connection as RemoteKernelConnectionMetadata;
+            if (state.source && state.selection?.type === 'connection') {
+                await this.onKernelConnectionSelected(notebook, state.selection.connection);
+                return state.selection.connection as RemoteKernelConnectionMetadata;
             }
         } finally {
             disposeAllDisposables(state.disposables);
@@ -381,10 +381,12 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             });
             return { quickPick, selection: selection as Promise<ConnectionQuickPickItem | QuickPickItem> };
         };
-        const selection = await selector.selectKernel(quickPickFactory);
-        if (selection) {
-            state.connection = selection.connection;
-            state.source = selection.finder;
+        const result = await selector.selectKernel(quickPickFactory);
+        if (result?.selection === 'controller') {
+            state.source = result.finder;
+            state.selection = { type: 'connection', connection: result.connection };
+        } else if (result?.selection === 'userPerformedSomeOtherAction') {
+            state.selection = { type: 'userPerformedSomeOtherAction' };
         }
     }
     private async onKernelConnectionSelected(notebook: NotebookDocument, connection: KernelConnectionMetadata) {

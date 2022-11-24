@@ -1449,6 +1449,9 @@ export namespace DataScience {
         localize('DataScience.kernelPickerSelectPythonEnvironmentTitle', 'Select a Local Python Environment');
     export const kernelPickerSelectKernelFromRemoteTitle = () =>
         localize('DataScience.kernelPickerSelectKernelFromRemoteTitle', 'Select a Kernel from {0}');
+    export const installPythonExtensionViaKernelPickerTitle = () =>
+        localize('DataScience.installPythonExtensionViaKernelPickerTitle', 'Install Python Extension');
+    export const installPythonTitle = () => localize('DataScience.installPythonTitle', 'Install Python');
 }
 
 export namespace Deprecated {
