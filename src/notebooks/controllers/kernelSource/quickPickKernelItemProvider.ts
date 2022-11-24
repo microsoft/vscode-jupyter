@@ -60,8 +60,17 @@ export class QuickPickKernelItemProvider {
         if (this.refreshInvoked) {
             finder.refresh().catch((ex) => traceError(`Failed to refresh finder for ${this.title}`, ex));
         }
-
-        this.title = `${DataScience.kernelPickerSelectKernelTitle()} from ${finder.displayName}`;
+        switch (finder.kind) {
+            case ContributedKernelFinderKind.LocalKernelSpec:
+                this.title = DataScience.kernelPickerSelectLocalKernelSpecTitle();
+                break;
+            case ContributedKernelFinderKind.LocalPythonEnvironment:
+                this.title = DataScience.kernelPickerSelectPythonEnvironmentTitle();
+                break;
+            default:
+                this.title = DataScience.kernelPickerSelectKernelFromRemoteTitle().format(finder.displayName);
+                break;
+        }
         finder.onDidChangeKernels(
             () => {
                 this.kernels.length = 0;
