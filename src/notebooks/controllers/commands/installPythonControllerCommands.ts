@@ -162,11 +162,6 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
 
-            if (!(await this.shouldInstallExtensionPrompt())) {
-                // Check with the user before we move forward, if they don't want the install, just bail
-                return;
-            }
-
             // Now start to indicate that we are performing the install and locating kernels
             const reporter = this.progressReporter.createProgressIndicator(DataScience.installingPythonExtension());
             try {
@@ -201,43 +196,5 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
                 reporter.dispose();
             }
         }
-    }
-
-    // We don't always want to show our modal warning for installing the python extension
-    // this function will choose if this should be shown, and return true if the install should
-    // proceed and false otherwise
-    private async shouldInstallExtensionPrompt(): Promise<boolean> {
-        // We want to show the dialog if the active document is running, in this case, the command
-        // was triggered from the run button and we want to warn the user what we are doing
-        if (this.isActiveNotebookDocumentRunning()) {
-            // First present a simple modal dialog to indicate what we are about to do
-            const selection = await this.appShell.showInformationMessage(
-                DataScience.pythonExtensionRequiredToRunNotebook(),
-                { modal: true },
-                Common.install()
-            );
-            if (selection === Common.install()) {
-                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
-                return true;
-            } else {
-                // If they don't want to install, just bail out at this point
-                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
-                return false;
-            }
-        }
-
-        // If the active notebook is not running, this command was triggered selecting from the kernel picker
-        // in this case, they clicked on "Install Python Extension" so no need for a modal to warn them
-        return true;
-    }
-
-    // Check if any cells of the active notebook are in pending or executing state
-    private isActiveNotebookDocumentRunning(): boolean {
-        if (window.activeNotebookEditor) {
-            return window.activeNotebookEditor.notebook.getCells().some((cell) => {
-                return this.executingCells.has(cell);
-            });
-        }
-        return false;
     }
 }

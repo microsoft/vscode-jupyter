@@ -102,14 +102,18 @@ export class KernelSelector implements IDisposable {
         this.installPythonItem = {
             label: DataScience.installPythonTitle(),
             command: async () => {
-                commands.executeCommand(Commands.InstallPythonViaKernelPicker).then(noop, noop);
+                // Timeout as we want the quick pick to close before we start this process.
+                setTimeout(() => commands.executeCommand(Commands.InstallPythonViaKernelPicker).then(noop, noop));
                 throw new SomeOtherActionError();
             }
         };
         this.installPythonExtension = {
             label: DataScience.installPythonExtensionViaKernelPickerTitle(),
             command: async () => {
-                commands.executeCommand(Commands.InstallPythonExtensionViaKernelPicker).then(noop, noop);
+                // Timeout as we want the quick pick to close before we start this process.
+                setTimeout(() =>
+                    commands.executeCommand(Commands.InstallPythonExtensionViaKernelPicker).then(noop, noop)
+                );
                 throw new SomeOtherActionError();
             }
         };
