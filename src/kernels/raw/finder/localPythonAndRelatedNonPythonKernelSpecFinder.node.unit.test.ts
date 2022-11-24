@@ -209,8 +209,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPython
                     instance(globalState),
                     disposables,
                     instance(env),
-                    instance(trustedKernels),
-                    instance(featuresManager)
+                    instance(trustedKernels)
                 );
             } else {
                 finder = new LocalPythonAndRelatedNonPythonKernelSpecFinderOld(
@@ -223,8 +222,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPython
                     instance(globalState),
                     disposables,
                     instance(env),
-                    instance(trustedKernels),
-                    instance(featuresManager)
+                    instance(trustedKernels)
                 );
             }
 

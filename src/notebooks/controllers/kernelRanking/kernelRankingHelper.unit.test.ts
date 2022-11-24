@@ -23,7 +23,7 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
-import { CancellationTokenSource, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationTokenSource, Disposable, EventEmitter, Memento, Uri } from 'vscode';
 import {
     IDisposable,
     IExtensionContext,
@@ -53,6 +53,8 @@ import { IKernelRankingHelper } from '../../../notebooks/controllers/types';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/finder/remoteKernelFinder';
 import { ITrustedKernelPaths } from '../../../kernels/raw/finder/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
+import { ServiceContainer } from '../../../platform/ioc/container';
 
 [false, true].forEach((isWindows) => {
     (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
@@ -255,47 +257,63 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from '../../../kern
                 when(featuresManager.features).thenReturn({ kernelPickerType });
                 kernelFinder = new KernelFinder([]);
 
-                const localPythonAndRelatedKernelFinder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
-                    instance(interpreterService),
-                    instance(fs),
-                    instance(workspaceService),
-                    jupyterPaths,
-                    instance(extensionChecker),
-                    nonPythonKernelSpecFinder,
-                    instance(memento),
-                    disposables,
-                    instance(env),
-                    instance(trustedKernels),
-                    instance(featuresManager)
+                const serviceContainer = mock<ServiceContainer>();
+                const iocStub = sinon.stub(ServiceContainer, 'instance').get(() => instance(serviceContainer));
+                disposables.push(new Disposable(() => iocStub.restore()));
+                when(
+                    serviceContainer.get<LocalPythonAndRelatedNonPythonKernelSpecFinder>(
+                        LocalPythonAndRelatedNonPythonKernelSpecFinder
+                    )
+                ).thenCall(
+                    () =>
+                        new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+                            instance(interpreterService),
+                            instance(fs),
+                            instance(workspaceService),
+                            jupyterPaths,
+                            instance(extensionChecker),
+                            nonPythonKernelSpecFinder,
+                            instance(memento),
+                            disposables,
+                            instance(env),
+                            instance(trustedKernels)
+                        )
                 );
-                const localPythonAndRelatedKernelFinderOld = new LocalPythonAndRelatedNonPythonKernelSpecFinderOld(
-                    instance(interpreterService),
-                    instance(fs),
-                    instance(workspaceService),
-                    jupyterPaths,
-                    instance(extensionChecker),
-                    nonPythonKernelSpecFinder,
-                    instance(memento),
+                when(
+                    serviceContainer.get<LocalPythonAndRelatedNonPythonKernelSpecFinderOld>(
+                        LocalPythonAndRelatedNonPythonKernelSpecFinderOld
+                    )
+                ).thenCall(
+                    () =>
+                        new LocalPythonAndRelatedNonPythonKernelSpecFinderOld(
+                            instance(interpreterService),
+                            instance(fs),
+                            instance(workspaceService),
+                            jupyterPaths,
+                            instance(extensionChecker),
+                            nonPythonKernelSpecFinder,
+                            instance(memento),
+                            disposables,
+                            instance(env),
+                            instance(trustedKernels)
+                        )
+                );
+                const pythonKernelFinderWrapper = new LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper(
                     disposables,
-                    instance(env),
-                    instance(trustedKernels),
                     instance(featuresManager)
                 );
                 localKernelFinder = new ContributedLocalKernelSpecFinder(
                     nonPythonKernelSpecFinder,
-                    localPythonAndRelatedKernelFinder,
-                    localPythonAndRelatedKernelFinderOld,
+                    pythonKernelFinderWrapper,
                     kernelFinder,
                     [],
                     instance(extensionChecker),
                     instance(interpreterService),
-                    instance(extensions),
-                    instance(featuresManager)
+                    instance(extensions)
                 );
                 localKernelFinder.activate();
                 nonPythonKernelSpecFinder.activate();
-                localPythonAndRelatedKernelFinder.activate();
-                localPythonAndRelatedKernelFinderOld.activate();
+                pythonKernelFinderWrapper.activate();
 
                 kernelRankHelper = new KernelRankingHelper(instance(preferredRemote));
             }
