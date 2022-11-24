@@ -51,6 +51,20 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         this.registration.onChanged(() => this.refreshedEmitter.fire(), this, this.disposables);
 
         this.loadControllers();
+        let previousKernelPickerType = this.featuresManager.features.kernelPickerType;
+        this.featuresManager.onDidChangeFeatures(
+            () => {
+                if (previousKernelPickerType === this.featuresManager.features.kernelPickerType) {
+                    return;
+                }
+                previousKernelPickerType = this.featuresManager.features.kernelPickerType;
+                // With the old kernel picker some controllers can get disposed.
+                // Hence to be on the safe side, when switching between the old and new kernel picker, reload the controllers.
+                this.loadControllers();
+            },
+            this,
+            this.disposables
+        );
     }
     private loadControllers() {
         this.loadControllersImpl().ignoreErrors();
