@@ -17,7 +17,6 @@ import { IDisposable } from '../../platform/common/types';
 import { isWeb } from '../../platform/common/utils/misc';
 import { traceInfo } from '../../platform/logging';
 import * as path from '../../platform/vscode-path/path';
-import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
 import { noop, sleep } from '../core';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
@@ -34,9 +33,6 @@ import {
     runCell,
     waitForStoppedEvent
 } from './notebook/helper.node';
-import { ITestWebviewHost } from './testInterfaces';
-import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
-import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
 
 const N = 20;
 
@@ -79,7 +75,6 @@ suite.only('Run By Line @debugger', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
-    let variableViewProvider: ITestVariableViewProvider;
     let vscodeNotebook: IVSCodeNotebook;
     let debuggingManager: IDebuggingManager;
     this.timeout(120_000);
@@ -96,9 +91,6 @@ suite.only('Run By Line @debugger', function () {
         await prewarmNotebooks();
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
-        const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
         debuggingManager = api.serviceContainer.get<IDebuggingManager>(INotebookDebuggingManager);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         traceInfo(`Start Test Suite (completed)`);
@@ -205,15 +197,15 @@ suite.only('Run By Line @debugger', function () {
         assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
         traceInfo(`Got past first stop event`);
 
-        const coreVariableView = await variableViewProvider.activeVariableView;
-        const variableView = coreVariableView as unknown as ITestWebviewHost;
+        // const coreVariableView = await variableViewProvider.activeVariableView;
+        // const variableView = coreVariableView as unknown as ITestWebviewHost;
 
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!);
         traceInfo(`Got past second stop event`);
 
-        const expectedVariables = [{ name: 'a', type: 'int', length: '', value: '1' }];
-        await waitForVariablesToMatch(expectedVariables, variableView);
+        // const expectedVariables = [{ name: 'a', type: 'int', length: '', value: '1' }];
+        // await waitForVariablesToMatch(expectedVariables, variableView);
 
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForCondition(
@@ -299,7 +291,7 @@ suite.only('Run By Line @debugger', function () {
         assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
         assert.equal(stack.stackFrames[0].line, 1, 'Stopped at the wrong line');
     });
-    
+
     testN('Does not stop in other cell', N, async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
         const cell0 = await insertCodeCell('def foo():\n    print(1)');
