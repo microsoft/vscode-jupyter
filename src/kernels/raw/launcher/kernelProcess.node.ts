@@ -548,10 +548,17 @@ export class KernelProcess implements IKernelProcess {
             // On windows, in order to support interrupt, we have to set an environment variable pointing to a WIN32 event handle
             if (os.platform() === 'win32') {
                 env = env || process.env;
-                const handle = await this.getWin32InterruptHandle();
+                try {
+                    const handle = await this.getWin32InterruptHandle();
 
-                // See the code ProcessPollingWindows inside of ipykernel for it listening to this event handle.
-                env.JPY_INTERRUPT_EVENT = `${handle}`;
+                    // See the code ProcessPollingWindows inside of ipykernel for it listening to this event handle.
+                    env.JPY_INTERRUPT_EVENT = `${handle}`;
+                } catch (ex) {
+                    traceError(
+                        `Failed to get interrupt handle kernel id ${this._kernelConnectionMetadata.id} for interpreter ${this._kernelConnectionMetadata.interpreter.id}`,
+                        ex
+                    );
+                }
             }
 
             // The kernelspec argv could be something like [python, main.py, --something, --something-else, -f,{connection_file}]

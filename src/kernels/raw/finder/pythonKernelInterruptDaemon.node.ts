@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { traceError, traceVerbose, traceWarning } from '../../../platform/logging';
+import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
 import { IPythonExecutionFactory, ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { inject, injectable } from 'inversify';
@@ -12,6 +12,7 @@ import { IAsyncDisposable, IDisposableRegistry, IExtensionContext, Resource } fr
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { Disposable, Uri } from 'vscode';
 import { EOL } from 'os';
+import { TraceOptions } from '../../../platform/logging/types';
 function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
     // Give preference to globally installed python environments.
     // The assumption is that users are more likely to uninstall/delete local python environments
@@ -68,7 +69,11 @@ export class PythonKernelInterruptDaemon {
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
-    public async createInterrupter(pythonEnvironment: PythonEnvironment, resource: Resource): Promise<Interrupter> {
+    @traceDecoratorVerbose('Create interrupt daemon', TraceOptions.Arguments)
+    public async createInterrupter(
+        @logValue<PythonEnvironment>('id') pythonEnvironment: PythonEnvironment,
+        resource: Resource
+    ): Promise<Interrupter> {
         const interruptHandle = (await this.sendCommand(
             { command: 'INITIALIZE_INTERRUPT' },
             pythonEnvironment,
@@ -153,6 +158,7 @@ export class PythonKernelInterruptDaemon {
             this.disposableRegistry.push(new Disposable(() => subscription.unsubscribe()));
             return proc;
         })();
+        promise.catch((ex) => traceError(`Failed to start interrupt daemon for (${pythonEnvironment.id})`, ex));
         this.startupPromise = promise;
         return promise;
     }
