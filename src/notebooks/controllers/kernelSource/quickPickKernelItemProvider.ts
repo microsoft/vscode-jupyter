@@ -127,6 +127,10 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         cancelToken: CancellationToken
     ) {
         const computePreferred = () => {
+            // Check if the preferred kernel is in the list of kernels
+            if (this.recommended && !this.kernels.find((k) => k.id === this.recommended?.id)) {
+                this.recommended = undefined;
+            }
             if (this.recommended) {
                 return;
             }

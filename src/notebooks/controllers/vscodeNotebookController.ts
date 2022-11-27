@@ -441,7 +441,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                     this.context.extensionUri,
                     'node_modules',
                     '@vscode',
-                    'jupyter-ipywidgets',
+                    'jupyter-ipywidgets7',
                     'dist',
                     'ipywidgets.js'
                 )
@@ -454,7 +454,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                     'out',
                     'node_modules',
                     '@vscode',
-                    'jupyter-ipywidgets',
+                    'jupyter-ipywidgets7',
                     'dist',
                     'ipywidgets.js'
                 )
