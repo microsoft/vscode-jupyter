@@ -18,7 +18,11 @@ export interface IContributedKernelFinder<T extends KernelConnectionMetadata = K
     id: string;
     displayName: string;
     kind: ContributedKernelFinderKind;
-    onDidChangeKernels: Event<void>;
+    onDidChangeKernels: Event<{
+        added?: T[];
+        updated?: T[];
+        removed?: T[];
+    }>;
     kernels: T[];
     refresh(): Promise<void>;
 }

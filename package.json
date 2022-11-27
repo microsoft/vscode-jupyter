@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.73.0"
+        "vscode": "^1.74.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -2107,7 +2107,7 @@
         "@lumino/widgets": "^1.28.0",
         "@nteract/messaging": "^7.0.0",
         "@vscode/extension-telemetry": "^0.6.2",
-        "@vscode/jupyter-ipywidgets": "^1.0.9",
+        "@vscode/jupyter-ipywidgets7": "^1.0.1",
         "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "ajv-keywords": "^3.5.2",
         "ansi-to-html": "^0.6.7",
@@ -2148,7 +2148,6 @@
         "safe-buffer": "^5.2.1",
         "sanitize-filename": "^1.6.3",
         "semver": "^5.5.0",
-        "setimmediate": "^1.0.5",
         "slickgrid": "^2.4.17",
         "source-map": "^0.7.3",
         "stack-trace": "0.0.10",

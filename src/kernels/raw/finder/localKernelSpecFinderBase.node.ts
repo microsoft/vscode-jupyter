@@ -5,7 +5,7 @@
 
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
-import { CancellationToken, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -182,14 +182,22 @@ export class LocalKernelSpecFinder implements IDisposable {
         return promise;
     }
 }
-
+export interface ILocalKernelFinder<T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata> {
+    readonly status: 'discovering' | 'idle';
+    onDidChangeStatus: Event<void>;
+    onDidChangeKernels: Event<void>;
+    refresh(): Promise<void>;
+    readonly kernels: T[];
+}
 /**
  * Base class for searching for local kernels that are based on a kernel spec file.
  */
 export abstract class LocalKernelSpecFinderBase<
     T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
-> implements IDisposable
+> implements IDisposable, ILocalKernelFinder<T>
 {
+    protected readonly disposables: IDisposable[] = [];
+
     private _status: 'discovering' | 'idle' = 'idle';
     public get status() {
         return this._status;
@@ -204,7 +212,8 @@ export abstract class LocalKernelSpecFinderBase<
     protected readonly promiseMonitor = new PromiseMonitor();
     private readonly _onDidChangeStatus = new EventEmitter<void>();
     public readonly onDidChangeStatus = this._onDidChangeStatus.event;
-
+    protected readonly _onDidChangeKernels = new EventEmitter<void>();
+    public readonly onDidChangeKernels = this._onDidChangeKernels.event;
     // Store our results when listing all possible kernelspecs for a resource
     private kernelSpecCache = new Map<
         string,
@@ -225,18 +234,20 @@ export abstract class LocalKernelSpecFinderBase<
         protected readonly jupyterPaths: JupyterPaths
     ) {
         disposables.push(this);
-        disposables.push(this.promiseMonitor);
+        this.disposables.push(this.promiseMonitor);
         this.promiseMonitor.onStateChange(() => {
             this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering';
         });
         this.kernelSpecFinder = new LocalKernelSpecFinder(fs, globalState, jupyterPaths);
-        disposables.push(this.kernelSpecFinder);
+        this.disposables.push(this.kernelSpecFinder);
     }
     public clearCache() {
         this.kernelSpecCache.clear();
         this.kernelSpecFinder.clearCache();
     }
     public abstract dispose(): void | undefined;
+    abstract refresh(): Promise<void>;
+    abstract get kernels(): T[];
     /**
      * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.
      * If for instance first Python Extension isn't installed, then we call this again, after installing it, then the cache will be blown away

@@ -99,7 +99,7 @@ export class TestNotebookDocument implements NotebookDocument {
         return this.cells.length;
     }
     constructor(
-        public readonly uri: Uri = Uri.file('untitled.ipynb'),
+        public readonly uri: Uri = Uri.file(`untitled${Date.now()}.ipynb`),
         public readonly notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView = JupyterNotebookView,
         public metadata = { custom: {} },
         public isUntitled = true,

@@ -4,9 +4,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
-import { IKernelFinder, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { EventEmitter } from 'vscode';
+import { IKernelFinder, LocalKernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
@@ -20,6 +19,8 @@ import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../int
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getKernelRegistrationInfo } from '../../helpers';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from './localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
+import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -46,16 +47,19 @@ export class ContributedLocalPythonEnvFinder
     id: string = ContributedKernelFinderKind.LocalPythonEnvironment;
     displayName: string = localize.DataScience.localPythonEnvironments();
 
-    private _onDidChangeKernels = new EventEmitter<void>();
-    onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
+    private _onDidChangeKernels = new EventEmitter<{
+        added?: PythonKernelConnectionMetadata[];
+        updated?: PythonKernelConnectionMetadata[];
+        removed?: PythonKernelConnectionMetadata[];
+    }>();
+    onDidChangeKernels = this._onDidChangeKernels.event;
 
     private wasPythonInstalledWhenFetchingControllers = false;
 
     private cache: PythonKernelConnectionMetadata[] = [];
-
     constructor(
-        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
-        private readonly pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder,
+        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper)
+        private readonly pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>,
         @inject(IKernelFinder) kernelFinder: KernelFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
@@ -150,27 +154,44 @@ export class ContributedLocalPythonEnvFinder
             traceError('Exception Saving loaded kernels', ex);
         }
     }
-
     public get kernels(): PythonKernelConnectionMetadata[] {
         return this.cache;
     }
     private async writeToCache(values: PythonKernelConnectionMetadata[]) {
         try {
-            const oldValues = this.cache;
             const uniqueIds = new Set<string>();
-            const uniqueKernels = values.filter((item) => {
+            values = values.filter((item) => {
                 if (uniqueIds.has(item.id)) {
                     return false;
                 }
                 uniqueIds.add(item.id);
                 return true;
             });
-            this.cache = uniqueKernels;
-            if (oldValues.length === this.cache.length && areObjectsWithUrisTheSame(oldValues, this.cache)) {
-                return;
-            }
 
-            this._onDidChangeKernels.fire();
+            const oldValues = this.cache;
+            const oldKernels = new Map(oldValues.map((item) => [item.id, item]));
+            const newKernelIds = new Set(values.map((item) => item.id));
+            const added = values.filter((k) => !oldKernels.has(k.id));
+            const updated = values.filter(
+                (k) => oldKernels.has(k.id) && !areObjectsWithUrisTheSame(k, oldKernels.get(k.id))
+            );
+            const removed = oldValues.filter((k) => !newKernelIds.has(k.id));
+
+            this.cache = values;
+            if (added.length || updated.length || removed.length) {
+                this._onDidChangeKernels.fire({ added, updated, removed });
+            }
+            traceVerbose(
+                `Updating cache with Python kernels ${values
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}\n, Added = ${added
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}\n, Updated = ${updated
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}\n, Removed = ${removed
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}`
+            );
         } catch (ex) {
             traceError('LocalKernelFinder: Failed to write to cache', ex);
         }

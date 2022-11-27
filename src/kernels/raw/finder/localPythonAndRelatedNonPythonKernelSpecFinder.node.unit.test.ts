@@ -11,10 +11,7 @@ import { IDisposable, IFeaturesManager, KernelPickerType } from '../../../platfo
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import {
-    LocalPythonAndRelatedNonPythonKernelSpecFinder,
-    LocalPythonKernelsCacheKey
-} from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { ITrustedKernelPaths } from './types';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
@@ -29,10 +26,12 @@ import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
 import { ResourceMap } from '../../../platform/vscode-path/map';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
 import { uriEquals } from '../../../test/datascience/helpers';
+import { LocalPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 
 (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
     suite(`Local Python and related kernels (Kernel Picker = ${kernelPickerType})`, async () => {
-        let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
+        let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder | LocalPythonAndRelatedNonPythonKernelSpecFinderOld;
         let interpreterService: IInterpreterService;
         let fs: IFileSystemNode;
         let workspaceService: IWorkspaceService;
@@ -199,19 +198,33 @@ import { uriEquals } from '../../../test/datascience/helpers';
 
             disposables.push(new Disposable(() => clock.uninstall()));
 
-            finder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
-                instance(interpreterService),
-                instance(fs),
-                instance(workspaceService),
-                instance(jupyterPaths),
-                instance(extensionChecker),
-                instance(kernelSpecsFromKnownLocations),
-                instance(globalState),
-                disposables,
-                instance(env),
-                instance(trustedKernels),
-                instance(featuresManager)
-            );
+            if (kernelPickerType === 'Insiders') {
+                finder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+                    instance(interpreterService),
+                    instance(fs),
+                    instance(workspaceService),
+                    instance(jupyterPaths),
+                    instance(extensionChecker),
+                    instance(kernelSpecsFromKnownLocations),
+                    instance(globalState),
+                    disposables,
+                    instance(env),
+                    instance(trustedKernels)
+                );
+            } else {
+                finder = new LocalPythonAndRelatedNonPythonKernelSpecFinderOld(
+                    instance(interpreterService),
+                    instance(fs),
+                    instance(workspaceService),
+                    instance(jupyterPaths),
+                    instance(extensionChecker),
+                    instance(kernelSpecsFromKnownLocations),
+                    instance(globalState),
+                    disposables,
+                    instance(env),
+                    instance(trustedKernels)
+                );
+            }
 
             const findStub = sinon.stub(LocalKernelSpecFinder.prototype, 'findKernelSpecsInPaths');
             findStub.callsFake(async (searchPath) => findKernelSpecsInPathsReturnValue.get(searchPath) || []);

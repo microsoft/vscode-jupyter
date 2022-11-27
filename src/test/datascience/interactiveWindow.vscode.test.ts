@@ -177,7 +177,7 @@ suite(`Interactive window Execution @iw`, async function () {
                 areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
                 `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)} - active: ${
                     activeInterpreter?.uri
-                } controller: ${controller?.connection.interpreter?.uri}`
+                } controller: ${getDisplayPath(controller?.connection?.interpreter?.uri)}`
             );
 
             // Now switch the active interpreter to the other path

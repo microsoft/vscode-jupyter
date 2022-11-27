@@ -160,7 +160,7 @@ import { takeTopRankKernel } from '../../../notebooks/controllers/kernelRanking/
             const extensions = mock<IExtensions>();
             const featureManager = mock<IFeaturesManager>();
             when(featureManager.features).thenReturn({ kernelPickerType });
-            kernelFinder = new KernelFinder(disposables, instance(featureManager));
+            kernelFinder = new KernelFinder(disposables);
             kernelsChanged = createEventHandler(kernelFinder, 'onDidChangeKernels');
             disposables.push(kernelsChanged);
             kernelRankHelper = new KernelRankingHelper(preferredRemoteKernelIdProvider);

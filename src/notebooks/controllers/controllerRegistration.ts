@@ -4,9 +4,10 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
+import { IContributedKernelFinder } from '../../kernels/internalTypes';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
@@ -24,6 +25,7 @@ import {
     IBrowserService,
     IFeaturesManager
 } from '../../platform/common/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
@@ -76,12 +78,89 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(ConnectionDisplayDataProvider) private readonly displayDataProvider: ConnectionDisplayDataProvider
+        @inject(ConnectionDisplayDataProvider) private readonly displayDataProvider: ConnectionDisplayDataProvider,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
     ) {
         this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChangeConnectionType(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
+        this.interpreterService.onDidChangeInterpreter(
+            this.deleteControllerAssociatedWithPythonEnvsNotLongerValid,
+            this,
+            this.disposables
+        );
+        this.interpreterService.onDidChangeInterpreters(
+            this.deleteControllerAssociatedWithPythonEnvsNotLongerValid,
+            this,
+            this.disposables
+        );
+        this.kernelFinder.registered.forEach((finder) => this.monitorDeletionOfConnections(finder));
+        this.kernelFinder.onDidChangeRegistrations(
+            (e) => e.added.forEach((finder) => this.monitorDeletionOfConnections(finder)),
+            this,
+            this.disposables
+        );
+    }
+    private async deleteControllerAssociatedWithPythonEnvsNotLongerValid() {
+        await this.interpreterService.refreshInterpreters();
+        await new Promise<void>((resolve) => {
+            if (this.kernelFinder.status === 'idle') {
+                return resolve();
+            }
+            this.kernelFinder.onDidChangeStatus(
+                () => {
+                    if (this.kernelFinder.status === 'idle') {
+                        return resolve();
+                    }
+                },
+                this,
+                this.disposables
+            );
+        });
+        // Now that we've discovered all interpreters, we can remove any controllers that are associated with interpreters that no longer exist
+        // E.g. its possible a user creates a virtual env and its selected as a active kernel for active interpreter
+        // & subsequently the user deletes the virtual env.
+        const validInterpreters = new Set(this.interpreterService.environments.map((i) => i.id));
+        this.activeInterpreterKernelConnectionId.forEach((interpreterId, connectionId) => {
+            if (interpreterId) {
+                return;
+            }
+            if (!this.interpreterService.environments.find((i) => i.id === interpreterId)) {
+                // This means the interpreter no longer exists, hence remove the controller mapping.
+                this.activeInterpreterKernelConnectionId.delete(connectionId);
+                const controller = this.registeredControllers.get(connectionId);
+                if (controller) {
+                    traceVerbose(
+                        `Deleting controller ${controller.id} as it is associated with an interpreter ${interpreterId} that no longer exists, valid interpreters are ${validInterpreters}`
+                    );
+                    controller.dispose();
+                }
+            }
+        });
+    }
+    private async monitorDeletionOfConnections(finder: IContributedKernelFinder) {
+        const eventHandler = finder.onDidChangeKernels(
+            ({ removed: connections }) => {
+                const deletedConnections = new Set((connections || []).map((item) => item.id));
+                this.registered
+                    .filter((item) => deletedConnections.has(item.connection.id))
+                    .forEach((controller) => {
+                        traceVerbose(
+                            `Deleting controller ${controller.id} as it is associated with a connection that has been deleted ${controller.connection.kind}:${controller.id}`
+                        );
+                        controller.dispose();
+                    });
+            },
+            this,
+            this.disposables
+        );
+        this.kernelFinder.onDidChangeRegistrations((e) => {
+            if (e.removed.includes(finder)) {
+                eventHandler.dispose();
+            }
+        });
     }
     batchAdd(metadatas: KernelConnectionMetadata[], types: ('jupyter-notebook' | 'interactive')[]) {
         const addedList: IVSCodeNotebookController[] = [];
@@ -94,9 +173,14 @@ export class ControllerRegistration implements IControllerRegistration {
             this.changeEmitter.fire({ added: addedList, removed: [] });
         }
     }
-    private activeInterpreterKernelConnectionId = new Set<string>();
+    private activeInterpreterKernelConnectionId = new Map<string, string>();
     trackActiveInterpreterControllers(controllers: IVSCodeNotebookController[]) {
-        controllers.forEach((controller) => this.activeInterpreterKernelConnectionId.add(controller.connection.id));
+        controllers.forEach((controller) =>
+            this.activeInterpreterKernelConnectionId.set(
+                controller.connection.id,
+                controller.connection.interpreter?.id || ''
+            )
+        );
     }
     public canControllerBeDisposed(controller: IVSCodeNotebookController) {
         return (
@@ -192,7 +276,7 @@ export class ControllerRegistration implements IControllerRegistration {
                         if (
                             !e.selected &&
                             this.isFiltered(controller.connection) &&
-                            !this.canControllerBeDisposed(controller)
+                            this.canControllerBeDisposed(controller)
                         ) {
                             // This item was selected but is no longer allowed in the kernel list. Remove it
                             traceVerbose(`Removing controller ${controller.id} from kernel list`);
@@ -234,13 +318,11 @@ export class ControllerRegistration implements IControllerRegistration {
     }
 
     private isFiltered(metadata: KernelConnectionMetadata): boolean {
+        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
+            return false;
+        }
         const userFiltered = this.kernelFilter.isKernelHidden(metadata);
         const urlFiltered = isRemoteConnection(metadata) && this.serverUriStorage.currentServerId !== metadata.serverId;
-
-        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
-            // In the 'Insiders' experiment remove the url filters as we want to register everything.
-            return userFiltered;
-        }
 
         return userFiltered || urlFiltered;
     }
@@ -302,7 +384,7 @@ export class ControllerRegistration implements IControllerRegistration {
             // TODO: Don't hide controllers that are already associated with a notebook.
             // If we have a notebook opened and its using a kernel.
             // Else we end up killing the execution as well.
-            if (this.isFiltered(item.connection) && !this.isControllerAttachedToADocument(item)) {
+            if (this.isFiltered(item.connection) && this.canControllerBeDisposed(item)) {
                 item.dispose();
             }
         });

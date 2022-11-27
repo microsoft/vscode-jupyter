@@ -1139,6 +1139,9 @@
     "DataScience.remoteKernelFinderDisplayName": "Current Remote",
     "DataScience.kernelPickerSelectSourceTitle": "Select Another Jupyter Kernel...",
     "DataScience.kernelPickerSelectKernelTitle": "Select Kernel",
+    "DataScience.kernelPickerSelectLocalKernelSpecTitle": "Select a Local Kernel Spec",
+    "DataScience.kernelPickerSelectPythonEnvironmentTitle": "Select a Local Python Environment",
+    "DataScience.kernelPickerSelectKernelFromRemoteTitle": "Select a Kernel from {0}",
     "DataScience.UserJupyterServerUrlProviderDisplayName": "Existing Jupyter Server",
     "DataScience.UserJupyterServerUrlProviderDetail": "Connect to an existing Jupyter Server",
     "DataScience.UserJupyterServerUrlAlreadyExistError": "A Jupyter Server with the same URL already exists."

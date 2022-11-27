@@ -4,12 +4,11 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
+import { EventEmitter } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { traceInfo, traceDecoratorError, traceError } from '../../../platform/logging';
-import { IDisposableRegistry, IExtensions, IFeaturesManager } from '../../../platform/common/types';
+import { traceInfo, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
+import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { KernelFinder } from '../../kernelFinder';
@@ -22,6 +21,8 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getKernelRegistrationInfo } from '../../helpers';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from './localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
+import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -49,23 +50,25 @@ export class ContributedLocalKernelSpecFinder
     id: string = ContributedKernelFinderKind.LocalKernelSpec;
     displayName: string = DataScience.localKernelSpecs();
 
-    private _onDidChangeKernels = new EventEmitter<void>();
-    onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
+    private _onDidChangeKernels = new EventEmitter<{
+        added?: LocalKernelConnectionMetadata[];
+        updated?: LocalKernelConnectionMetadata[];
+        removed?: LocalKernelConnectionMetadata[];
+    }>();
+    onDidChangeKernels = this._onDidChangeKernels.event;
 
     private wasPythonInstalledWhenFetchingControllers = false;
 
     private cache: LocalKernelConnectionMetadata[] = [];
-
     constructor(
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
-        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
-        private readonly pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder,
+        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper)
+        private readonly pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>,
         @inject(IKernelFinder) kernelFinder: KernelFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         kernelFinder.registerKernelFinder(this);
         this.disposables.push(this._onDidChangeStatus);
@@ -167,34 +170,26 @@ export class ContributedLocalKernelSpecFinder
             traceError('Exception Saving loaded kernels', ex);
         }
     }
-
     public get kernels(): LocalKernelConnectionMetadata[] {
-        if (this.featureManager.features.kernelPickerType === 'Insiders') {
-            const loadedKernelSpecFiles = new Set<string>();
-            const kernels: LocalKernelConnectionMetadata[] = [];
-            // If we have a global kernel spec returned by Python kernel finder,
-            // give that preference over the same kernel found using local kernel spec finder.
-            // This is because the python kernel finder would have more information about the kernel (such as the matching python env).
-            this.pythonKernelFinder.kernels.forEach((connection) => {
-                const kernelSpecKind = getKernelRegistrationInfo(connection.kernelSpec);
-                if (
-                    connection.kernelSpec.specFile &&
-                    kernelSpecKind === 'registeredByNewVersionOfExtForCustomKernelSpec'
-                ) {
-                    loadedKernelSpecFiles.add(connection.kernelSpec.specFile);
-                    kernels.push(connection);
-                }
-            });
-            this.cache.forEach((connection) => {
-                if (connection.kernelSpec.specFile && loadedKernelSpecFiles.has(connection.kernelSpec.specFile)) {
-                    return;
-                }
+        const loadedKernelSpecFiles = new Set<string>();
+        const kernels: LocalKernelConnectionMetadata[] = [];
+        // If we have a global kernel spec returned by Python kernel finder,
+        // give that preference over the same kernel found using local kernel spec finder.
+        // This is because the python kernel finder would have more information about the kernel (such as the matching python env).
+        this.pythonKernelFinder.kernels.forEach((connection) => {
+            const kernelSpecKind = getKernelRegistrationInfo(connection.kernelSpec);
+            if (connection.kernelSpec.specFile && kernelSpecKind === 'registeredByNewVersionOfExtForCustomKernelSpec') {
+                loadedKernelSpecFiles.add(connection.kernelSpec.specFile);
                 kernels.push(connection);
-            });
-            return kernels;
-        } else {
-            return this.cache;
-        }
+            }
+        });
+        this.cache.forEach((connection) => {
+            if (connection.kernelSpec.specFile && loadedKernelSpecFiles.has(connection.kernelSpec.specFile)) {
+                return;
+            }
+            kernels.push(connection);
+        });
+        return kernels;
     }
     private filterKernels(kernels: LocalKernelConnectionMetadata[]) {
         return kernels.filter(({ kernelSpec }) => {
@@ -213,21 +208,42 @@ export class ContributedLocalKernelSpecFinder
 
     private async writeToCache(values: LocalKernelConnectionMetadata[]) {
         try {
-            const oldValues = this.cache;
             const uniqueIds = new Set<string>();
-            const uniqueKernels = values.filter((item) => {
-                if (uniqueIds.has(item.id)) {
-                    return false;
-                }
-                uniqueIds.add(item.id);
-                return true;
-            });
-            this.cache = this.filterKernels(uniqueKernels);
-            if (oldValues.length === this.cache.length && areObjectsWithUrisTheSame(oldValues, this.cache)) {
-                return;
+            values = this.filterKernels(
+                values.filter((item) => {
+                    if (uniqueIds.has(item.id)) {
+                        return false;
+                    }
+                    uniqueIds.add(item.id);
+                    return true;
+                })
+            );
+
+            const oldValues = this.cache;
+            const oldKernels = new Map(oldValues.map((item) => [item.id, item]));
+            const kernels = new Map(values.map((item) => [item.id, item]));
+            const added = values.filter((k) => !oldKernels.has(k.id));
+            const updated = values.filter(
+                (k) => oldKernels.has(k.id) && !areObjectsWithUrisTheSame(k, oldKernels.get(k.id))
+            );
+            const removed = oldValues.filter((k) => !kernels.has(k.id));
+
+            this.cache = values;
+            if (added.length || updated.length || removed.length) {
+                this._onDidChangeKernels.fire({ added, updated, removed });
             }
 
-            this._onDidChangeKernels.fire();
+            traceVerbose(
+                `Updating cache with Local kernels ${values
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}\n, Added = ${added
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}\n, Updated = ${updated
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}\n, Removed = ${removed
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}`
+            );
         } catch (ex) {
             traceError('LocalKernelFinder: Failed to write to cache', ex);
         }

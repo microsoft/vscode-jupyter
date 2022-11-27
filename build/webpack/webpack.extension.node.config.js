@@ -105,7 +105,7 @@ const config = {
         'commonjs',
         'electron',
         './node_modules/zeromq',
-        './node_modules/@vscode/jupyter-ipywidgets',
+        './node_modules/@vscode/jupyter-ipywidgets7',
         ...existingModulesInOutDir,
         '@opentelemetry/tracing',
         'applicationinsights-native-metrics'
@@ -136,7 +136,7 @@ const config = {
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/node-gyp-build/**/*' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/@vscode/jupyter-ipywidgets/dist/*.js' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/@vscode/jupyter-ipywidgets7/dist/*.js' }] }),
         new webpack.IgnorePlugin({
             resourceRegExp: /^\.\/locale$/,
             contextRegExp: /moment$/
