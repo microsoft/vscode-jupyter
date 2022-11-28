@@ -82,23 +82,21 @@ const renderedWidgets = new Map<string, { container: HTMLElement; widget?: { dis
  * This will be exposed as a public method on window for renderer to render output.
  */
 let stackOfWidgetsRenderStatusByOutputId: { outputId: string; container: HTMLElement; success?: boolean }[] = [];
-export function renderOutput(
+export async function renderOutput(
     outputItem: OutputItem,
+    model: nbformat.IMimeBundle & {
+        model_id: string;
+        version_major: number;
+        /**
+         * This property is only used & added in tests.
+         */
+        _vsc_test_cellIndex?: number;
+    },
     element: HTMLElement,
     logger: (message: string, category?: 'info' | 'error') => void
 ) {
     try {
         stackOfWidgetsRenderStatusByOutputId.push({ outputId: outputItem.id, container: element });
-        const output = convertVSCodeOutputToExecuteResultOrDisplayData(outputItem);
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const model = output.data['application/vnd.jupyter.widget-view+json'] as any;
-        if (!model) {
-            logger(`Error: Model not found to render output ${outputItem.id}`, 'error');
-            // eslint-disable-next-line no-console
-            return console.error('Nothing to render');
-        }
-        /* eslint-disable no-console */
         renderIPyWidget(outputItem.id, model, element, logger);
     } catch (ex) {
         logger(`Error: render output ${outputItem.id} failed ${ex.toString()}`, 'error');
@@ -229,21 +227,6 @@ function initialize(context?: KernelMessagingApi) {
         console.error('Exception initializing WidgetManager', ex);
         logErrorMessage(`Error: Exception initializing WidgetManager, ${ex.toString()}`);
     }
-}
-
-function convertVSCodeOutputToExecuteResultOrDisplayData(
-    outputItem: OutputItem
-): nbformat.IExecuteResult | nbformat.IDisplayData {
-    return {
-        data: {
-            [outputItem.mime]: outputItem.mime.toLowerCase().includes('json') ? outputItem.json() : outputItem.text()
-        },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: (outputItem.metadata as any) || {},
-        execution_count: null,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        output_type: (outputItem.metadata as any)?.outputType || 'execute_result'
-    };
 }
 
 // Create our window exports
