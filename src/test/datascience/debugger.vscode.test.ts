@@ -34,7 +34,7 @@ import {
     waitForStoppedEvent
 } from './notebook/helper.node';
 
-const N = 200;
+const N = 100;
 
 function processDebugpyLogs(testName: string, _state?: 'passed' | 'failed'): Promise<void> {
     // eslint-disable-next-line local-rules/dont-use-process
