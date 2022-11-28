@@ -236,7 +236,8 @@ suite('Run By Line @debugger', function () {
         assert.equal(stack2.stackFrames[0].line, 4, 'Stopped at the wrong line');
     });
 
-    test('Restart while debugging', async function () {
+    test.skip('Restart while debugging', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/12188
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
 
