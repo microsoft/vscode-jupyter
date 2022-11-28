@@ -153,6 +153,7 @@ export class PythonKernelInterruptDaemon {
             this.disposableRegistry.push(new Disposable(() => subscription.unsubscribe()));
             return proc;
         })();
+        promise.catch((ex) => traceError(`Failed to start interrupt daemon for (${pythonEnvironment.id})`, ex));
         this.startupPromise = promise;
         return promise;
     }
