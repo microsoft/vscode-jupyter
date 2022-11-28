@@ -404,7 +404,8 @@ ${actualCode}
         await waitForTextOutput(notebookDocument!.cellAt(1), '1', 0, false);
     });
 
-    test('Error stack traces have correct line hrefs with mix of cell sources', async function () {
+    test.skip('Error stack traces have correct line hrefs with mix of cell sources', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/12189
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('interactiveWindowMode', 'single');
 
@@ -436,7 +437,8 @@ ${actualCode}
         assert.equal(hrefs?.length, 4, '4 hrefs not found in traceback');
     });
 
-    test('Raising an exception from within a function has a stack trace', async function () {
+    test.skip('Raising an exception from within a function has a stack trace', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/12190
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '# %%\ndef raiser():\n  raise Exception("error")\n# %%\nraiser()',
