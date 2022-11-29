@@ -109,7 +109,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
                 // Python extension is installed, let's wait for interpreters to be detected
                 if (this.interpreterService.environments.length === 0) {
-                    await this.interpreterService.waitForAllInterpretersToLoad();
+                    await this.interpreterService.refreshInterpreters();
                 }
 
                 if (this.interpreterService.environments.length === 0) {

@@ -120,10 +120,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                         this.registration
                     );
                 }
-
-                // Wait for all interpreters to be loaded,
-                // This reduces flickering (changing controllers from one to another).
-                await this.interpreters.waitForAllInterpretersToLoad();
             }
             const connections = this.kernelFinder.kernels;
             traceVerbose(`Found ${connections.length} cached controllers`);

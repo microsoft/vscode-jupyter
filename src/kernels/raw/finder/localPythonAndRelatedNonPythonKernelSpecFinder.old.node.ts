@@ -172,8 +172,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderOld extends LocalKern
             if (forcePythonInterpreterRefresh) {
                 await this.interpreterService.refreshInterpreters(true);
             }
-            // Don't refresh until we've actually waited for interpreters to load
-            await this.interpreterService.waitForAllInterpretersToLoad();
 
             await this.listKernelsImplementation(cancelToken.token).catch((ex) =>
                 traceError('Failure in listKernelsImplementation', ex)

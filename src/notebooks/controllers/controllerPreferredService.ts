@@ -13,9 +13,10 @@ import {
     workspace
 } from 'vscode';
 import { getKernelConnectionLanguage, getLanguageInNotebookMetadata, isPythonNotebook } from '../../kernels/helpers';
+import { ContributedKernelFinderKind } from '../../kernels/internalTypes';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
-import { isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernelFinder, isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
@@ -27,7 +28,7 @@ import {
 } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { IDisposable, IDisposableRegistry, Resource } from '../../platform/common/types';
+import { IDisposable, IDisposableRegistry, IsWebExtension, Resource } from '../../platform/common/types';
 import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -75,7 +76,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper,
-        @inject(IControllerSelection) private readonly selection: IControllerSelection
+        @inject(IControllerSelection) private readonly selection: IControllerSelection,
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {
         disposables.push(this);
     }
@@ -97,6 +100,16 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             this.registration.onChanged(
                 ({ added }) =>
                     added.length
+                        ? this.notebook.notebookDocuments.map((nb) => this.onDidOpenNotebookDocument(nb))
+                        : undefined,
+                this
+            )
+        );
+
+        this.disposables.add(
+            this.kernelFinder.onDidChangeStatus(
+                () =>
+                    this.kernelFinder.status === 'idle'
                         ? this.notebook.notebookDocuments.map((nb) => this.onDidOpenNotebookDocument(nb))
                         : undefined,
                 this
@@ -473,6 +486,33 @@ export class ControllerPreferredService implements IControllerPreferredService, 
 
             // Are we an exact match based on metadata hash / name / ect...?
             const isExactMatch = await this.kernelRankHelper.isExactMatch(uri, potentialMatch, notebookMetadata);
+            if (cancelToken.isCancellationRequested) {
+                return;
+            }
+            if (!notebookMetadata || isPythonNotebook(notebookMetadata)) {
+                // If we're looking for local kernel connections then wait for all interpreters have been loaded
+                // & then fallback to the old approach of providing a best match.
+                // We wait for all kernels to be discovered so that we can provide a good preferred kernel
+                // instead of providing any kernel.
+                // E.g. assume we have discovered one kernel, & we don't have an exact match,
+                // then we fallback to the first found.
+                // Later we find another, and this code runs again and we find that the new kernel is a better match
+                // now we change the preferred to the new kernel
+                // I.e. it could change a number of times, to avoid this we should wait for all kernels to be discovered
+                // when we provide a fallback (when we don't have an exact match).
+                if (!isExactMatch && this.extensionChecker.isPythonExtensionActive && !this.isWebExtension) {
+                    await this.interpreters.refreshInterpreters();
+                    // We don't really care too much about remotes, we know those are very slow to fetch kernels.
+                    if (
+                        this.kernelFinder.registered.some(
+                            (f) => f.kind !== ContributedKernelFinderKind.Remote && f.status !== 'idle'
+                        )
+                    ) {
+                        // We're still searching for kernels, hence don't provide a preferred kernel.
+                        return;
+                    }
+                }
+            }
             if (cancelToken.isCancellationRequested) {
                 return;
             }
