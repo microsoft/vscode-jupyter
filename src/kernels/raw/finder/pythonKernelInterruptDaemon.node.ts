@@ -12,6 +12,7 @@ import { IAsyncDisposable, IDisposableRegistry, IExtensionContext, Resource } fr
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { Disposable, Uri } from 'vscode';
 import { EOL } from 'os';
+import { swallowExceptions } from '../../../platform/common/utils/misc';
 function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
     // Give preference to globally installed python environments.
     // The assumption is that users are more likely to uninstall/delete local python environments
@@ -69,6 +70,17 @@ export class PythonKernelInterruptDaemon {
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
     public async createInterrupter(pythonEnvironment: PythonEnvironment, resource: Resource): Promise<Interrupter> {
+        try {
+            return await this.createInterrupterImpl(pythonEnvironment, resource);
+        } catch (ex) {
+            traceError(`Failed to create interrupter, trying again`, ex);
+            return this.createInterrupterImpl(pythonEnvironment, resource);
+        }
+    }
+    private async createInterrupterImpl(
+        pythonEnvironment: PythonEnvironment,
+        resource: Resource
+    ): Promise<Interrupter> {
         const interruptHandle = (await this.sendCommand(
             { command: 'INITIALIZE_INTERRUPT' },
             pythonEnvironment,
@@ -151,6 +163,7 @@ export class PythonKernelInterruptDaemon {
                 }
             });
             this.disposableRegistry.push(new Disposable(() => subscription.unsubscribe()));
+            this.disposableRegistry.push(new Disposable(() => swallowExceptions(() => proc.proc?.kill())));
             return proc;
         })();
         promise.catch((ex) => traceError(`Failed to start interrupt daemon for (${pythonEnvironment.id})`, ex));
