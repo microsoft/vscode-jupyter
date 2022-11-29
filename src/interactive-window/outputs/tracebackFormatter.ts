@@ -72,7 +72,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
         let executionCount: number | undefined;
         let location: string | undefined;
         const inputMatch = /^Input.*?\[.*32mIn\s+\[(\d+).*?0;36m(.*?)\n.*/.exec(traceFrame);
-        const cellMatch = /^Cell.*?\[.*32mIn\s+\[(\d+)\], (.*).\[0m\n/.exec(traceFrame);
+        const cellMatch = /^Cell.*?\[.*32mIn\s*\[(\d+)\], (.*).\[0m\n/.exec(traceFrame);
 
         if (inputMatch && inputMatch.length > 1) {
             executionCount = parseInt(inputMatch[1]);
