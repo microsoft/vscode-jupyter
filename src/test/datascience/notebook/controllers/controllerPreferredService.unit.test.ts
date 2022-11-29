@@ -9,7 +9,6 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, NotebookControllerAffinity, NotebookDocument, Uri } from 'vscode';
 import { IJupyterServerUriStorage } from '../../../../kernels/jupyter/types';
 import {
-    IKernelFinder,
     KernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
@@ -59,8 +58,6 @@ suite('Preferred Controller', () => {
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(vscNotebook.notebookDocuments).thenReturn([]);
         when(selection.getSelected(anything())).thenReturn(undefined);
-        const finder = mock<IKernelFinder>();
-        when(finder.registered).thenReturn([]);
         when(interpreters.refreshInterpreters()).thenResolve();
         preferredControllerService = new ControllerPreferredService(
             instance(controllerRegistrations),
@@ -73,7 +70,6 @@ suite('Preferred Controller', () => {
             instance(uriStorage),
             instance(kernelRankHelper),
             instance(selection),
-            instance(finder),
             false
         );
     });
