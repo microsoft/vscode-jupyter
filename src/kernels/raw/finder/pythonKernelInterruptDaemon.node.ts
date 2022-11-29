@@ -69,6 +69,14 @@ export class PythonKernelInterruptDaemon {
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
     public async createInterrupter(pythonEnvironment: PythonEnvironment, resource: Resource): Promise<Interrupter> {
+        try{
+            return await this.createInterrupterImpl(pythonEnvironment, resource);
+        } catch(ex){
+            traceError(`Failed to create interrupter, trying again`, ex);
+            return this.createInterrupterImpl(pythonEnvironment, resource);
+        }
+    }
+    private async createInterrupterImpl(pythonEnvironment: PythonEnvironment, resource: Resource): Promise<Interrupter> {
         const interruptHandle = (await this.sendCommand(
             { command: 'INITIALIZE_INTERRUPT' },
             pythonEnvironment,
