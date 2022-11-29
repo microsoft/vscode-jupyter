@@ -50,8 +50,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper
     onDidChangeStatus = this._onDidChangeStatus.event;
     private readonly _onDidChangeKernels = new EventEmitter<void>();
     onDidChangeKernels = this._onDidChangeKernels.event;
-    refresh(): Promise<void> {
-        throw new Error('Method not implemented.');
+    async refresh(): Promise<void> {
+        if (this.kernelFinder) {
+            return this.kernelFinder.refresh();
+        }
     }
     public activate() {
         this.initializeFinder();
