@@ -3,11 +3,11 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { KernelMessagingApi, PostOffice } from '../../react-common/postOffice';
-import { WidgetManager } from '../common/manager';
-import { ScriptManager } from '../common/scriptManager';
 import { OutputItem } from 'vscode-notebook-renderer';
 import { SharedMessages, IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../messageTypes';
 import { logErrorMessage, logMessage } from '../../react-common/logger';
+import { WidgetManager } from './manager';
+import { ScriptManager } from './scriptManager';
 
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;

@@ -6,8 +6,6 @@
 import fastDeepEqual from 'fast-deep-equal';
 import { EventEmitter } from 'events';
 import { PostOffice } from '../../react-common/postOffice';
-import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatibleWidgetHandler';
-import { registerScripts, undefineModule } from '../common/requirejsRegistry';
 import { ScriptLoader } from './types';
 import { logErrorMessage, logMessage } from '../../react-common/logger';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
@@ -18,6 +16,8 @@ import { noop } from '../../../../platform/common/utils/misc';
 import { IDisposable } from '../../../../platform/common/types';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
 import { WidgetScriptSource } from '../../../../notebooks/controllers/ipywidgets/types';
+import { warnAboutWidgetVersionsThatAreNotSupported } from './incompatibleWidgetHandler';
+import { registerScripts, undefineModule } from './requirejsRegistry';
 
 export class ScriptManager extends EventEmitter {
     public readonly widgetsRegisteredInRequireJs = new Set<string>();
