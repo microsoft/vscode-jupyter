@@ -11,17 +11,9 @@
 -   [ ] Create new release branch with format `release/release-YYYY.MM.100`.
     -   [ ] Prepare a PR to this branch with the following changes...
     -   [ ] Remove the `-insiders` from the vscode engine version. Run `npm install` to update this value in `package-lock.json`.
-    -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-jupyter/blob/main/CHANGELOG.md)
-        -   If needed, install news deps by running `python3 -m pip install --user -r news/requirements.txt`
-        -   [ ] Run [`news`](https://github.com/Microsoft/vscode-jupyter/tree/main/news) (`python news --final --update CHANGELOG.md | code-insiders -`)
-        -   [ ] Update the date at the top to when the release is planned.
-        -   [ ] Copy over the "Thanks" section from the previous release into the "Thanks" section for the new release
-        -   [ ] Make sure the "Thanks" section is up-to-date (e.g. compare to versions in [`requirements.txt`](https://github.com/microsoft/vscode-jupyter/blob/main/requirements.txt))
-        -   [ ] Touch up news entries (e.g. add missing periods)
-        -   [ ] Check the Markdown rendering to make sure everything looks good
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
 -   [ ] Create a PR to `main` with the following changes... (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
-    -   [ ] Merge the changes from release (Changelog, delete news, ThirdPartyNotices) into `main` branch
+    -   [ ] Merge the changes from release (ThirdPartyNotices) into `main` branch
     -   [ ] At this point, the vscode engine version should also be the same as in the release branch- will be bumped when the next release happens
     -   [ ] Bump the version number to the next monthly ("YYYY.M.100") version number (e.g. if the latest is `2022.2.100`, bump it to `2022.3.100`).
         -   [ ] Run `npm install` to update `package-lock.json`
@@ -49,9 +41,8 @@
 -   [ ] Approve the `Publish` stage
 -   [ ] Check if the release was automatically published here, https://github.com/microsoft/vscode-jupyter/releases - If not, publish manually: (This has been required since the move to az pipelines)
     -   [ ] Add a new release at https://github.com/microsoft/vscode-jupyter/releases
-        -   Tag is version number
-        -   Branch is release branch
-        -   Copy contents of release branch changelog into the release (just copy the markdown)
+        - Tag is version number
+        - Branch is release branch
     -   [ ] Publish
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
 
