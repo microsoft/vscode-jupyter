@@ -8,18 +8,24 @@ import { SharedMessages, IInteractiveWindowMapping, InteractiveWindowMessages } 
 import { logErrorMessage, logMessage } from '../../react-common/logger';
 import { WidgetManager } from './manager';
 import { ScriptManager } from './scriptManager';
+import { IJupyterLabWidgetManagerCtor } from './types';
 
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
     private readonly scriptManager: ScriptManager;
     private widgetsCanLoadFromCDN: boolean = false;
-    constructor(private postOffice: PostOffice) {
+    constructor(private postOffice: PostOffice, JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor) {
         this.scriptManager = new ScriptManager(postOffice);
         this.scriptManager.onWidgetLoadError(this.handleLoadError.bind(this));
         this.scriptManager.onWidgetLoadSuccess(this.handleLoadSuccess.bind(this));
         this.scriptManager.onWidgetVersionNotSupported(this.handleUnsupportedWidgetVersion.bind(this));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.widgetManager = new WidgetManager(undefined as any, postOffice, this.scriptManager.getScriptLoader());
+        this.widgetManager = new WidgetManager(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            undefined as any,
+            postOffice,
+            this.scriptManager.getScriptLoader(),
+            JupyterLabWidgetManager
+        );
 
         postOffice.addHandler({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -215,11 +221,12 @@ async function createWidgetView(
     }
 }
 
-function initialize(context?: KernelMessagingApi) {
+let capturedContext: KernelMessagingApi;
+function initialize(JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor) {
     try {
         // Setup the widget manager
-        const postOffice = new PostOffice(context);
-        const mgr = new WidgetManagerComponent(postOffice);
+        const postOffice = new PostOffice(capturedContext);
+        const mgr = new WidgetManagerComponent(postOffice, JupyterLabWidgetManager);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any)._mgr = mgr;
     } catch (ex) {
@@ -236,21 +243,27 @@ function initialize(context?: KernelMessagingApi) {
     disposeOutput
 };
 
-let capturedContext: KernelMessagingApi | undefined;
 // To ensure we initialize after the other scripts, wait for them.
-function attemptInitialize(context?: KernelMessagingApi) {
-    capturedContext = capturedContext || context;
+function attemptInitialize(context: KernelMessagingApi) {
     logMessage(`Attempt Initialize IpyWidgets kernel.js : ${JSON.stringify(context)}`);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).vscIPyWidgets) {
         logMessage('IPyWidget kernel initializing...');
-        initialize(capturedContext);
+        // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
+        if (!JupyterLabWidgetManager) {
+            throw new Error('JupyterLabWidgetManager not defined. Please include/check ipywidgets.js file');
+        }
+        initialize(JupyterLabWidgetManager);
     } else {
         setTimeout(attemptInitialize, 100);
     }
 }
 
 // Has to be this form for VS code to load it correctly
-export function activate(context?: KernelMessagingApi) {
+export function activate(context: KernelMessagingApi) {
+    capturedContext = context;
     return attemptInitialize(context);
 }
