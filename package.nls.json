@@ -1131,9 +1131,9 @@
     "jupyter.configuration.jupyter.diagnostics.reservedPythonNames.enabled.markdownDescription": "Whether to show warnings about Python file names that could potentially [override Python packages](https://aka.ms/JupyterKernelStartFailureOverrideReservedName).",
     "jupyter.configuration.jupyter.diagnostics.reservedPythonNames.exclude.markdownDescription": "Configure [glob patterns](https://code.visualstudio.com/docs/editor/codebasics#_advanced-search-options) for excluding files and folders from from being warned about [overriding Python packages](https://aka.ms/JupyterKernelStartFailureOverrideReservedName).",
     "DataScience.localKernelFinderDisplayName": "Local Kernels",
-    "DataScience.localKernelSpecs": "Local Kernel Specs",
+    "DataScience.localKernelSpecs": "Local Kernel Specs...",
     "DataScience.pickLocalKernelSpecTitle": "Select a Local Kernel spec",
-    "DataScience.localPythonEnvironments": "Local Python Environments",
+    "DataScience.localPythonEnvironments": "Local Python Environments...",
     "DataScience.pickLocalKernelPythonEnvTitle": "Select a Local Python Environment",
     "DataScience.universalRemoteKernelFinderDisplayName": "Remote - {0}",
     "DataScience.remoteKernelFinderDisplayName": "Current Remote",
@@ -1142,7 +1142,7 @@
     "DataScience.kernelPickerSelectLocalKernelSpecTitle": "Select a Local Kernel Spec",
     "DataScience.kernelPickerSelectPythonEnvironmentTitle": "Select a Local Python Environment",
     "DataScience.kernelPickerSelectKernelFromRemoteTitle": "Select a Kernel from {0}",
-    "DataScience.UserJupyterServerUrlProviderDisplayName": "Existing Jupyter Server",
+    "DataScience.UserJupyterServerUrlProviderDisplayName": "Existing Jupyter Server...",
     "DataScience.UserJupyterServerUrlProviderDetail": "Connect to an existing Jupyter Server",
     "DataScience.UserJupyterServerUrlAlreadyExistError": "A Jupyter Server with the same URL already exists."
 }
