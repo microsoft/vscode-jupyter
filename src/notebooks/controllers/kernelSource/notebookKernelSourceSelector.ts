@@ -377,7 +377,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 matchOnDescription: true,
                 matchOnDetail: true,
                 supportBackInFirstStep: true,
-                activeItem: undefined
+                activeItem: undefined,
+                ignoreFocusOut: false
             });
             return { quickPick, selection: selection as Promise<ConnectionQuickPickItem | QuickPickItem> };
         };
