@@ -19,7 +19,7 @@ import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/co
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
+import { IMemento, IDisposableRegistry, WORKSPACE_MEMENTO } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
@@ -64,12 +64,12 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderOld extends LocalKern
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(LocalKnownPathKernelSpecFinder)
         private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) memento: Memento,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IApplicationEnvironment) env: IApplicationEnvironment,
         @inject(ITrustedKernelPaths) trustedKernels: ITrustedKernelPaths
     ) {
-        super(fs, workspaceService, extensionChecker, globalState, disposables, env, jupyterPaths);
+        super(fs, workspaceService, extensionChecker, memento, disposables, env, jupyterPaths);
         this.interpreterKernelSpecFinder = new InterpreterKernelSpecFinderHelper(
             jupyterPaths,
             this.kernelSpecFinder,
