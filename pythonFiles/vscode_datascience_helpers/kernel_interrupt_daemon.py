@@ -336,9 +336,9 @@ def main():
             elif line.startswith("INTERRUPT:"):
                 interrupter.interrupt(int(line.split(":")[2]))
                 print(f"INTERRUPT:{int(line.split(':')[1])}")
-            elif line.startswith("KILL_INTERRUPT:"):
+            elif line.startswith("DISPOSE_INTERRUPT_HANDLE:"):
                 interrupter.close_interrupt_handle(int(line.split(":")[2]))
-                print(f"KILL_INTERRUPT:{int(line.split(':')[1])}")
+                print(f"DISPOSE_INTERRUPT_HANDLE:{int(line.split(':')[1])}")
             else:
                 logging.warning("Unknown command: %s", line)
         except:
