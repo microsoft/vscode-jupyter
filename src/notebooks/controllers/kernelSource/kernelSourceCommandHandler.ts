@@ -2,17 +2,18 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { commands, NotebookDocument, notebooks, window } from 'vscode';
+import { commands, NotebookControllerAffinity, NotebookDocument, notebooks, window } from 'vscode';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry, IFeaturesManager } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { traceError } from '../../../platform/logging';
-import { INotebookKernelSourceSelector } from '../types';
+import { traceError, traceWarning } from '../../../platform/logging';
+import { IControllerRegistration, INotebookKernelSourceSelector } from '../types';
 
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
@@ -20,7 +21,8 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
     private readonly providerMappings = new Map<string, IDisposable[]>();
     constructor(
         @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration
     ) {
         disposables.push(this);
     }
@@ -172,7 +174,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         }
         const selector = ServiceContainer.instance.get<INotebookKernelSourceSelector>(INotebookKernelSourceSelector);
         const kernel = await selector.selectLocalKernel(notebook, kind);
-        return kernel?.id;
+        return kernel ? this.getSelectedController(notebook, kernel)?.id : undefined;
     }
     private async onSelectRemoteKernel(providerId: string, notebook?: NotebookDocument) {
         notebook = notebook || window.activeNotebookEditor?.notebook;
@@ -181,6 +183,19 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         }
         const selector = ServiceContainer.instance.get<INotebookKernelSourceSelector>(INotebookKernelSourceSelector);
         const kernel = await selector.selectRemoteKernel(notebook, providerId);
-        return kernel?.id;
+        return kernel ? this.getSelectedController(notebook, kernel)?.id : undefined;
+    }
+    private getSelectedController(notebook: NotebookDocument, kernel: KernelConnectionMetadata) {
+        const controllers = this.controllerRegistration.addOrUpdate(kernel, [
+            notebook.notebookType as typeof JupyterNotebookView | typeof InteractiveWindowView
+        ]);
+        if (!Array.isArray(controllers) || controllers.length === 0) {
+            traceWarning(`No controller created for selected kernel connection ${kernel.kind}:${kernel.id}`);
+            return;
+        }
+        controllers
+            .find((item) => item.viewType === notebook.notebookType)
+            ?.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity.Preferred);
+        return controllers[0].controller;
     }
 }
