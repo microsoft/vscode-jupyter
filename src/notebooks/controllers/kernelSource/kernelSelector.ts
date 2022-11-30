@@ -300,14 +300,21 @@ export class KernelSelector implements IDisposable {
                 .map((item) => item.connection.id)
         );
         const newQuickPickItems = this.provider.kernels
-            .filter((kernel) => {
-                if (!currentConnections.has(kernel.id)) {
-                    return true;
-                }
-                return false;
-            })
+            .filter((kernel) => !currentConnections.has(kernel.id))
             .map((item) => this.connectionToQuickPick(item));
 
+        if (
+            this.extensionChecker.isPythonExtensionInstalled &&
+            this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
+        ) {
+            this.installPythonExtItems.length = 0;
+        }
+        if (
+            this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment &&
+            this.provider.kernels.some((k) => k.kind === 'startUsingPythonInterpreter')
+        ) {
+            this.installPythonItems.length = 0;
+        }
         this.updateQuickPickWithLatestConnection(quickPick);
         this.removeMissingKernels(quickPick);
         this.updateRecommended(quickPick);
@@ -365,8 +372,8 @@ export class KernelSelector implements IDisposable {
                 this.quickPickItems.splice(newIndex, 0, newCategory, ...items);
                 this.categories.set(newCategory, new Set(items));
             }
-            this.rebuildQuickPickItems(quickPick);
         });
+        this.rebuildQuickPickItems(quickPick);
     }
     private rebuildQuickPickItems(quickPick: QuickPick<CompoundQuickPickItem>) {
         const recommendedItem = this.recommendedItems.find((item) => isKernelPickItem(item));
