@@ -54,6 +54,10 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     supportBackInFirstStep?: boolean;
     onDidTriggerItemButton?(e: QuickPickItemButtonEvent<T>): void;
     onDidChangeItems?: Event<T[]>;
+    /**
+     * Whether to close the quick pick when the user clicks outside the quickpick.
+     */
+    ignoreFocusOut?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -141,7 +145,8 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         onDidTriggerItemButton,
         onDidTriggerButton,
         supportBackInFirstStep,
-        onDidChangeItems
+        onDidChangeItems,
+        ignoreFocusOut
     }: P): { quickPick: QuickPick<T>; selection: Promise<MultiStepInputQuickPicResponseType<T, P>> } {
         const disposables: Disposable[] = [];
         const deferred = createDeferred<MultiStepInputQuickPicResponseType<T, P>>();
@@ -150,7 +155,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         input.step = step;
         input.totalSteps = totalSteps;
         input.placeholder = placeholder;
-        input.ignoreFocusOut = true;
+        input.ignoreFocusOut = ignoreFocusOut ?? true;
         input.items = items;
         if (stopBusy) {
             input.busy = startBusy ?? false;
