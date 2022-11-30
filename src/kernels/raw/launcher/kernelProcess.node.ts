@@ -553,6 +553,9 @@ export class KernelProcess implements IKernelProcess {
 
                     // See the code ProcessPollingWindows inside of ipykernel for it listening to this event handle.
                     env.JPY_INTERRUPT_EVENT = `${handle}`;
+                    traceInfoIfCI(
+                        `Got interrupt handle kernel id ${handle} for interpreter ${this._kernelConnectionMetadata.interpreter.id}`
+                    );
                 } catch (ex) {
                     traceError(
                         `Failed to get interrupt handle kernel id ${this._kernelConnectionMetadata.id} for interpreter ${this._kernelConnectionMetadata.interpreter.id}`,

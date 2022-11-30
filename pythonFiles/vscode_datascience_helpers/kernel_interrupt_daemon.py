@@ -3,6 +3,7 @@
 
 
 import argparse
+import atexit
 import sys
 import os
 import logging
@@ -326,24 +327,41 @@ def main():
     if sys.platform == "win32" and args.ppid == 0:
         return
 
+    print("DAEMON_STARTED:")  # Part of the handshake with the parent process.
     interrupter = PythonKernelInterrupter(args.ppid)
+
+    def handle_command(command, id, line):
+        try:
+            if command == "INITIALIZE_INTERRUPT":
+                handle = interrupter.initialize_interrupt()
+                print(f"INITIALIZE_INTERRUPT:{id}:{handle}")
+            elif command == "INTERRUPT":
+                interrupter.interrupt(int(line.split(":")[2]))
+                print(f"INTERRUPT:{id}")
+            elif command == "DISPOSE_INTERRUPT_HANDLE":
+                interrupter.close_interrupt_handle(int(line.split(":")[2]))
+                print(f"DISPOSE_INTERRUPT_HANDLE:{id}")
+            else:
+                logging.warning("Unknown command: '%s' for line '%s'", command, line)
+        except:
+            # Do not change the format of this message (used in parent process).
+            logging.exception(f"ERROR: handling command :{command}:{id}")
+
     for line in sys.stdin:
         try:
             line = line.strip()
-            if line.startswith("INITIALIZE_INTERRUPT:"):
-                handle = interrupter.initialize_interrupt()
-                print(f"INITIALIZE_INTERRUPT:{int(line.split(':')[1])}:{handle}")
-            elif line.startswith("INTERRUPT:"):
-                interrupter.interrupt(int(line.split(":")[2]))
-                print(f"INTERRUPT:{int(line.split(':')[1])}")
-            elif line.startswith("DISPOSE_INTERRUPT_HANDLE:"):
-                interrupter.close_interrupt_handle(int(line.split(":")[2]))
-                print(f"DISPOSE_INTERRUPT_HANDLE:{int(line.split(':')[1])}")
-            else:
-                logging.warning("Unknown command: %s", line)
+            handle_command(line.split(":")[0], int(line.split(":")[1]), line)
         except:
             logging.exception(f"Error in line {line}")
 
+
+def send_exit_message():
+    # Added for logging to see if this process dies.
+    # We can remove this later if there are no more flaky test failures.
+    print("INTERRUPTER process exiting")
+
+
+atexit.register(send_exit_message)
 
 if __name__ == "__main__":
     main()
