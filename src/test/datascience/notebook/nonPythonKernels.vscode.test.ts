@@ -33,7 +33,7 @@ import { IKernelProvider } from '../../../kernels/types';
 import { noop } from '../../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('Non-Python Kernel @nonPython ', async function () {
+suite('Non-Python Kernel ', async function () {
     const juliaNb = Uri.file(
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleJulia.ipynb')
     );
@@ -98,7 +98,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
         verifyPromptWasNotDisplayed();
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
-    test('Automatically pick java kernel when opening a Java Notebook', async function () {
+    test('Automatically pick java kernel when opening a Java Notebook @nonPython', async function () {
         this.timeout(60_000); // Can be slow to start Julia kernel on CI.
 
         const notebook = await TestNotebookDocument.openFile(testJavaNb);
@@ -119,7 +119,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
             500
         );
     });
-    test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
+    test('Automatically pick julia kernel when opening a Julia Notebook @nonPython', async () => {
         const notebook = await TestNotebookDocument.openFile(testJuliaNb);
         await waitForCondition(
             async () => {
@@ -172,8 +172,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
             500
         );
     });
-    test('Bogus test', noop);
-    test('Can run a Julia notebook', async function () {
+    test('Can run a Julia notebook @nonPython', async function () {
         const notebook = await TestNotebookDocument.openFile(testJuliaNb);
         const metadata = await waitForCondition(
             async () => {
