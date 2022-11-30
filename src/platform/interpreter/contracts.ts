@@ -19,7 +19,6 @@ export interface IInterpreterService {
      * After the token is cancelled, detection will resume and pending events will be triggered.
      */
     pauseInterpreterDetection(cancelToken: CancellationToken): void;
-    waitForAllInterpretersToLoad(): Promise<void>;
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreters: Event<void>;
     onDidRemoveInterpreter: Event<{ id: string }>;

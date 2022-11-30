@@ -435,9 +435,6 @@ export class InterpreterService implements IInterpreterService {
             this.disposables
         );
     }
-    public async waitForAllInterpretersToLoad(): Promise<void> {
-        await this.getInterpreters();
-    }
     public async refreshInterpreters(forceRefresh: boolean = false) {
         const promise = (async () => {
             const api = await this.getApi();

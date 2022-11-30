@@ -27,7 +27,7 @@ import {
 } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { IDisposable, IDisposableRegistry, Resource } from '../../platform/common/types';
+import { IDisposable, IDisposableRegistry, IsWebExtension, Resource } from '../../platform/common/types';
 import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -75,7 +75,8 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper,
-        @inject(IControllerSelection) private readonly selection: IControllerSelection
+        @inject(IControllerSelection) private readonly selection: IControllerSelection,
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {
         disposables.push(this);
     }
@@ -473,6 +474,27 @@ export class ControllerPreferredService implements IControllerPreferredService, 
 
             // Are we an exact match based on metadata hash / name / ect...?
             const isExactMatch = await this.kernelRankHelper.isExactMatch(uri, potentialMatch, notebookMetadata);
+            if (cancelToken.isCancellationRequested) {
+                return;
+            }
+            if (
+                (!notebookMetadata || isPythonNotebook(notebookMetadata)) &&
+                !isExactMatch &&
+                this.extensionChecker.isPythonExtensionActive &&
+                !this.isWebExtension
+            ) {
+                // If we're looking for local kernel connections then wait for all interpreters have been loaded
+                // & then fallback to the old approach of providing a best match.
+                // We wait for all kernels to be discovered so that we can provide a good preferred kernel
+                // instead of providing any kernel.
+                // E.g. assume we have discovered one kernel, & we don't have an exact match,
+                // then we fallback to the first found.
+                // Later we find another, and this code runs again and we find that the new kernel is a better match
+                // now we change the preferred to the new kernel
+                // I.e. it could change a number of times, to avoid this we should wait for all kernels to be discovered
+                // when we provide a fallback (when we don't have an exact match).
+                await this.interpreters.refreshInterpreters();
+            }
             if (cancelToken.isCancellationRequested) {
                 return;
             }

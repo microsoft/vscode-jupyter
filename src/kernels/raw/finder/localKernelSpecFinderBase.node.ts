@@ -228,7 +228,7 @@ export abstract class LocalKernelSpecFinderBase<
         protected readonly fs: IFileSystemNode,
         protected readonly workspaceService: IWorkspaceService,
         protected readonly extensionChecker: IPythonExtensionChecker,
-        protected readonly globalState: Memento,
+        protected readonly memento: Memento,
         disposables: IDisposableRegistry,
         private readonly env: IApplicationEnvironment,
         protected readonly jupyterPaths: JupyterPaths
@@ -238,7 +238,7 @@ export abstract class LocalKernelSpecFinderBase<
         this.promiseMonitor.onStateChange(() => {
             this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering';
         });
-        this.kernelSpecFinder = new LocalKernelSpecFinder(fs, globalState, jupyterPaths);
+        this.kernelSpecFinder = new LocalKernelSpecFinder(fs, memento, jupyterPaths);
         this.disposables.push(this.kernelSpecFinder);
     }
     public clearCache() {
@@ -304,7 +304,7 @@ export abstract class LocalKernelSpecFinderBase<
     protected async listKernelsFirstTimeFromMemento(cacheKey: string): Promise<T[]> {
         const promise = (async () => {
             // Check memento too
-            const cache = this.globalState.get<{ kernels: T[]; extensionVersion: string }>(cacheKey, {
+            const cache = this.memento.get<{ kernels: T[]; extensionVersion: string }>(cacheKey, {
                 kernels: [],
                 extensionVersion: ''
             });
@@ -341,8 +341,8 @@ export abstract class LocalKernelSpecFinderBase<
     protected async writeToMementoCache(values: T[], cacheKey: string) {
         const serialized = values.map((item) => item.toJSON());
         await Promise.all([
-            removeOldCachedItems(this.globalState),
-            this.globalState.update(cacheKey, {
+            removeOldCachedItems(this.memento),
+            this.memento.update(cacheKey, {
                 kernels: serialized,
                 extensionVersion: this.env.extensionVersion
             })

@@ -58,6 +58,7 @@ suite('Preferred Controller', () => {
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(vscNotebook.notebookDocuments).thenReturn([]);
         when(selection.getSelected(anything())).thenReturn(undefined);
+        when(interpreters.refreshInterpreters()).thenResolve();
         preferredControllerService = new ControllerPreferredService(
             instance(controllerRegistrations),
             instance(controllerLoader),
@@ -68,7 +69,8 @@ suite('Preferred Controller', () => {
             instance(extensionChecker),
             instance(uriStorage),
             instance(kernelRankHelper),
-            instance(selection)
+            instance(selection),
+            false
         );
     });
     teardown(() => {
