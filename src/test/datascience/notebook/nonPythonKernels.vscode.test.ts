@@ -99,11 +99,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
         verifyPromptWasNotDisplayed();
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
-    // https://github.com/microsoft/vscode-jupyter/issues/10900
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
-        if (!testJavaKernels) {
-            return this.skip();
-        }
         this.timeout(60_000); // Can be slow to start Julia kernel on CI.
 
         const notebook = await TestNotebookDocument.openFile(testJavaNb);
