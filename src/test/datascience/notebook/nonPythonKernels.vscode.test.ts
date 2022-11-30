@@ -54,7 +54,6 @@ suite('Non-Python Kernel @nonPython ', async function () {
     let pythonChecker: IPythonExtensionChecker;
     let controllerRegistration: IControllerRegistration;
     // eslint-disable-next-line local-rules/dont-use-process
-    const testJavaKernels = (process.env.VSC_JUPYTER_CI_RUN_JAVA_NB_TEST || '').toLowerCase() === 'true';
     this.timeout(120_000); // Julia and C# kernels can be slow
     suiteSetup(async function () {
         this.timeout(120_000);

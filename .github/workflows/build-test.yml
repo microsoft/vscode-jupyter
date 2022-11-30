@@ -599,7 +599,6 @@ jobs:
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
-          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
@@ -622,7 +621,6 @@ jobs:
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'web' }}
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection != 'web' }}
-          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
@@ -638,7 +636,6 @@ jobs:
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
-          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_PYTHON_LOG_FILE: ${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/python.log
