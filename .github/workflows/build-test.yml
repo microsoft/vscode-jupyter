@@ -483,6 +483,12 @@ jobs:
           python ./pythonFiles/install_debugpy.py
           python -m ipykernel install --user
 
+      - name: Install IPyKernel for Widgets
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && contains(matrix.tags, '@widgets')
+        run: |
+          python --version
+          python -m ipykernel install --user
+
       - name: Install Python Libs for conda
         shell: bash -l {0}
         if: matrix.python == 'conda'
