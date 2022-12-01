@@ -41,6 +41,7 @@ import {
 } from '../../platform/logging';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
+import { getLanguageOfNotebookDocument } from '../languages/helpers';
 import { findKernelSpecMatchingInterpreter } from './kernelRanking/helpers';
 import {
     IControllerDefaultService,
@@ -137,7 +138,13 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             // load all our controllers for interactive window
             const notebookMetadata = getNotebookMetadata(document);
             const resourceType = getResourceType(document.uri);
-            const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
+            const isEmptyMetadata =
+                !notebookMetadata || (!notebookMetadata.kernelspec && !notebookMetadata.language_info);
+            const isPythonNotebookLanguage =
+                (getLanguageOfNotebookDocument(document) || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
+            const isPythonNbOrInteractiveWindow =
+                (isEmptyMetadata ? isPythonNotebookLanguage : isPythonNotebook(notebookMetadata)) ||
+                resourceType === 'interactive';
             if (document.notebookType === JupyterNotebookView && !this.isLocalLaunch && isPythonNbOrInteractiveWindow) {
                 const defaultPythonController = await this.defaultService.computeDefaultController(
                     document.uri,
@@ -408,33 +415,17 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             return;
         }
 
-        // This method can get called very frequently, hence compute the preferred once in 100ms
-        const cancellationToken = new CancellationTokenSource();
-        const timeout = setTimeout(async () => {
-            // Provide the preferred controller only after we've loaded all controllers
-            // This avoids the kernel status label from flickering (i.e. changing from one to another).
-            // E.g. connect to a remote jupyter server
-            // Open a notebook with a kernel spec in the metadata
-            // We might set active interpreter as preferred,
-            // then change it to the local kernel spec.
-            // Then change to remove kernel spec
-            // Then change to the remote kernel session (assuming its still running).
-            await this.loader.loaded.catch(noop);
-            if (cancellationToken.token.isCancellationRequested) {
-                return;
-            }
-            this.computePreferred(document, undefined, cancellationToken.token).catch(noop);
-        }, 100);
+        // This method can get called very frequently
         this.debouncedPreferredCompute.get(document)?.dispose();
-        this.debouncedPreferredCompute.set(document, new Disposable(() => clearTimeout(timeout)));
+        const cancellationToken = new CancellationTokenSource();
         this.debouncedPreferredCompute.set(
             document,
             new Disposable(() => {
-                clearTimeout(timeout);
                 cancellationToken.cancel();
                 cancellationToken.dispose();
             })
         );
+        this.computePreferred(document, undefined, cancellationToken.token).catch(noop);
     }
 
     // Use our kernel finder to rank our kernels, and see if we have an exact match
@@ -478,7 +469,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 return;
             }
             if (
-                (!notebookMetadata || isPythonNotebook(notebookMetadata)) &&
+                (!notebookMetadata ||
+                    (!notebookMetadata.kernelspec && !notebookMetadata.language_info) ||
+                    isPythonNotebook(notebookMetadata)) &&
                 !isExactMatch &&
                 this.extensionChecker.isPythonExtensionActive &&
                 !this.isWebExtension
