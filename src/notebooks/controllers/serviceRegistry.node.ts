@@ -24,6 +24,7 @@ import { KernelRankingHelper } from './kernelRanking/kernelRankingHelper';
 import { NotebookKernelSourceSelector } from './kernelSource/notebookKernelSourceSelector';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { KernelSourceCommandHandler } from './kernelSource/kernelSourceCommandHandler';
+import { ServerConnectionControllerCommands } from './commands/serverConnectionControllerCommands';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IKernelRankingHelper>(IKernelRankingHelper, KernelRankingHelper);
@@ -45,6 +46,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelSourceCommandHandler
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSingleActivationService,
+        ServerConnectionControllerCommands
     );
     registerWidgetTypes(serviceManager, isDevMode);
 }
