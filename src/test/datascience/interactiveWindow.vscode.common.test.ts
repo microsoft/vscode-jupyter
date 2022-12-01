@@ -122,7 +122,7 @@ suite(`Interactive window execution @iw`, async function () {
         await waitForExecutionCompletedSuccessfully(secondCell!);
         await waitForTextOutput(secondCell!, '42');
     });
-    test.skip('__file__ exists even after restarting a kernel', async function () {
+    test('__file__ exists even after restarting a kernel', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/12251
         // Ensure we click `Yes` when prompted to restart the kernel.
         disposables.push(await clickOKForRestartPrompt());
