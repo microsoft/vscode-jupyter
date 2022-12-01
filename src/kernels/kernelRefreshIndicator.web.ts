@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { notebooks } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
+import { IApplicationEnvironment } from '../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
@@ -20,7 +21,8 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
     private refreshedOnceBefore?: boolean;
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
+        @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment
     ) {
         disposables.push(this);
     }
@@ -28,6 +30,9 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         disposeAllDisposables(this.disposables);
     }
     public activate() {
+        if (this.appEnvironment.channel === 'stable' && this.appEnvironment.vscodeVersion.startsWith('1.73')) {
+            return;
+        }
         this.startRefresh();
     }
 

@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { notebooks } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
+import { IApplicationEnvironment } from '../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
@@ -25,7 +26,8 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
+        @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment
     ) {
         disposables.push(this);
     }
@@ -33,6 +35,9 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         disposeAllDisposables(this.disposables);
     }
     public activate() {
+        if (this.appEnvironment.channel ==='stable' && this.appEnvironment.vscodeVersion.startsWith('1.73')){
+            return;
+        }
         if (this.extensionChecker.isPythonExtensionInstalled) {
             this.startRefreshWithPython();
         } else {

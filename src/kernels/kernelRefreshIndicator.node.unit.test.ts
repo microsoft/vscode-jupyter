@@ -13,6 +13,7 @@ import { IPythonExtensionChecker } from '../platform/api/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { createDeferred } from '../platform/common/utils/async';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
+import { IApplicationEnvironment } from '../platform/common/application/types';
 
 suite('Kernel Refresh Indicator (node)', () => {
     let indicator: KernelRefreshIndicator;
@@ -44,11 +45,14 @@ suite('Kernel Refresh Indicator (node)', () => {
         when(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)).thenReturn(
             instance(taskIW)
         );
+        const app = mock<IApplicationEnvironment>();
+        when(app.channel).thenReturn('insiders');
         indicator = new KernelRefreshIndicator(
             disposables,
             instance(extensionChecker),
             instance(interpreterService),
-            instance(kernelFinder)
+            instance(kernelFinder),
+            instance(app)
         );
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));

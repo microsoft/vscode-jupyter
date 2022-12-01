@@ -9,6 +9,7 @@ import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
 import { IKernelFinder } from './types';
 import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
+import { IApplicationEnvironment } from '../platform/common/application/types';
 
 suite('Kernel Refresh Indicator (web)', () => {
     let indicator: KernelRefreshIndicator;
@@ -30,7 +31,9 @@ suite('Kernel Refresh Indicator (web)', () => {
         when(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)).thenReturn(
             instance(taskIW)
         );
-        indicator = new KernelRefreshIndicator(disposables, instance(kernelFinder));
+        const app = mock<IApplicationEnvironment>();
+        when(app.channel).thenReturn('insiders');
+        indicator = new KernelRefreshIndicator(disposables, instance(kernelFinder), instance(app));
         disposables.push(indicator);
         disposables.push(onDidChangeStatus);
     });
