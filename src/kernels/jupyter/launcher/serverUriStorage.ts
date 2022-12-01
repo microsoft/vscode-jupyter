@@ -269,7 +269,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         try {
             const uri = await this.getUri();
             traceInfoIfCI(`getRemoteUri: ${uri?.uri}`);
-
+            if (uri?.uri === Settings.JupyterServerLocalLaunch) {
+                return;
+            }
             return uri;
         } catch (e) {
             traceError(`Exception getting uri: ${e}`);

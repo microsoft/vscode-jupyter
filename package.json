@@ -822,6 +822,10 @@
             {
                 "command": "jupyter.installPythonViaKernelPicker",
                 "title": "%DataScience.installPythonTitle%"
+            },
+            {
+                "command": "jupyter.switchToRemoteKernels",
+                "title": "%DataScience.switchToRemoteKernelsTitle%"
             }
         ],
         "menus": {
@@ -972,6 +976,10 @@
                 {
                     "command": "jupyter.installPythonViaKernelPicker",
                     "when": "jupyter.showInstallPythonCommand"
+                },
+                {
+                    "command": "jupyter.switchToRemoteKernels",
+                    "when": "jupyter.showingLocalOrWebEmpty"
                 }
             ],
             "interactive/toolbar": [
@@ -1449,6 +1457,10 @@
                 {
                     "command": "jupyter.interactive.clearAllCells",
                     "when": "activeEditor == 'workbench.editor.interactive' && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.switchToRemoteKernels",
+                    "when": "false"
                 }
             ],
             "debug/variables/context": [

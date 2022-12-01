@@ -1144,5 +1144,6 @@
     "DataScience.kernelPickerSelectKernelFromRemoteTitle": "Select a Kernel from {0}",
     "DataScience.UserJupyterServerUrlProviderDisplayName": "Existing Jupyter Server...",
     "DataScience.UserJupyterServerUrlProviderDetail": "Connect to an existing Jupyter Server",
-    "DataScience.UserJupyterServerUrlAlreadyExistError": "A Jupyter Server with the same URL already exists."
+    "DataScience.UserJupyterServerUrlAlreadyExistError": "A Jupyter Server with the same URL already exists.",
+    "DataScience.switchToRemoteKernelsTitle": "Connect to a Jupyter Server"
 }
