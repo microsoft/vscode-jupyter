@@ -41,7 +41,8 @@ import {
     EventEmitter,
     NotebookEditor,
     debug,
-    NotebookData
+    NotebookData,
+    Disposable
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import {
@@ -605,7 +606,12 @@ async function getActiveInterpreterKernelConnection() {
                     areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
             ) as PythonKernelConnectionMetadata,
         defaultNotebookTestTimeout,
-        `Kernel Connection pointing to active interpreter not found.0`
+        () =>
+            `Kernel Connection pointing to active interpreter not found.0, active interpreter
+        ${interpreter?.id} (${getDisplayPath(interpreter?.uri)}) for kernels ${kernelFinder.kernels
+                .map((item) => `${item.id}=> ${item.kind} (${getDisplayPath(item.interpreter?.uri)})`)
+                .join(', ')}`,
+        500
     );
 }
 async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
@@ -624,11 +630,11 @@ async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
             ) as RemoteKernelSpecConnectionMetadata,
         defaultNotebookTestTimeout,
         () =>
-            `Kernel Connection pointing to active interpreter not found.1, active interpreter ${getDisplayPath(
-                interpreter?.uri
-            )} for kernels ${kernelFinder.kernels
+            `Kernel Connection pointing to active interpreter not found.1, active interpreter
+            ${interpreter?.id} (${getDisplayPath(interpreter?.uri)}) for kernels ${kernelFinder.kernels
                 .map((item) => `${item.id}=> ${item.kind} (${getDisplayPath(item.interpreter?.uri)})`)
-                .join(', ')}`
+                .join(', ')}`,
+        500
     );
 }
 export async function getDefaultKernelConnection() {
