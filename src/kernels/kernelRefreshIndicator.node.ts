@@ -35,7 +35,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         disposeAllDisposables(this.disposables);
     }
     public activate() {
-        if (this.appEnvironment.channel ==='stable' && this.appEnvironment.vscodeVersion.startsWith('1.73')){
+        if (this.appEnvironment.channel === 'stable' && this.appEnvironment.vscodeVersion.startsWith('1.73')) {
             return;
         }
         if (this.extensionChecker.isPythonExtensionInstalled) {
