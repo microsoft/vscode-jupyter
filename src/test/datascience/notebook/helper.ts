@@ -41,8 +41,7 @@ import {
     EventEmitter,
     NotebookEditor,
     debug,
-    NotebookData,
-    Disposable
+    NotebookData
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import {
