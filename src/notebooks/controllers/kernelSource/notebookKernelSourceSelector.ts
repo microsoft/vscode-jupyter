@@ -9,7 +9,6 @@ import {
     CancellationToken,
     CancellationTokenSource,
     EventEmitter,
-    NotebookControllerAffinity,
     NotebookDocument,
     QuickPickItem,
     QuickPickItemKind,
@@ -44,8 +43,7 @@ import {
     MultiStepInput
 } from '../../../platform/common/utils/multiStepInput';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { traceWarning } from '../../../platform/logging';
-import { IControllerRegistration, INotebookKernelSourceSelector } from '../types';
+import { INotebookKernelSourceSelector } from '../types';
 import { CreateAndSelectItemFromQuickPick, KernelSelector } from './kernelSelector';
 import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
 import { ConnectionQuickPickItem, IQuickPickKernelItemProvider, MultiStepResult } from './types';
@@ -77,7 +75,6 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
     constructor(
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IJupyterUriProviderRegistration)
         private readonly uriProviderRegistration: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
@@ -121,7 +118,6 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
 
             // If we got both parts of the equation, then perform the kernel source and kernel switch
             if (state.source && state.selection?.type === 'connection') {
-                await this.onKernelConnectionSelected(notebook, state.selection.connection);
                 return state.selection.connection as LocalKernelConnectionMetadata;
             }
         } finally {
@@ -165,7 +161,6 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
 
             // If we got both parts of the equation, then perform the kernel source and kernel switch
             if (state.source && state.selection?.type === 'connection') {
-                await this.onKernelConnectionSelected(notebook, state.selection.connection);
                 return state.selection.connection as RemoteKernelConnectionMetadata;
             }
         } finally {
@@ -389,17 +384,5 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         } else if (result?.selection === 'userPerformedSomeOtherAction') {
             state.selection = { type: 'userPerformedSomeOtherAction' };
         }
-    }
-    private async onKernelConnectionSelected(notebook: NotebookDocument, connection: KernelConnectionMetadata) {
-        const controllers = this.controllerRegistration.addOrUpdate(connection, [
-            notebook.notebookType as typeof JupyterNotebookView | typeof InteractiveWindowView
-        ]);
-        if (!Array.isArray(controllers) || controllers.length === 0) {
-            traceWarning(`No controller created for selected kernel connection ${connection.kind}:${connection.id}`);
-            return;
-        }
-        controllers
-            .find((item) => item.viewType === notebook.notebookType)
-            ?.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity.Preferred);
     }
 }
