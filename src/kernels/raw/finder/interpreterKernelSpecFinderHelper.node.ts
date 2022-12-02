@@ -3,7 +3,7 @@
 
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Uri } from 'vscode';
 import {
     createInterpreterKernelSpec,
     getKernelId,
@@ -27,13 +27,16 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ITrustedKernelPaths } from './types';
+import { IDisposable } from '../../../platform/common/types';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 
 export const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2022_10';
 
 export class InterpreterKernelSpecFinderHelper {
     private readonly discoveredKernelSpecFiles = new Set<string>();
+    private readonly disposables: IDisposable[] = [];
     private readonly kernelsPerInterpreter = new Map<string, Promise<IJupyterKernelSpec[]>>();
-    private readonly interpreterKeyMapping = new Map<string, string>();
     constructor(
         private readonly jupyterPaths: JupyterPaths,
         private readonly kernelSpecFinder: LocalKernelSpecFinder,
@@ -45,7 +48,9 @@ export class InterpreterKernelSpecFinderHelper {
         this.kernelsPerInterpreter.clear();
         this.discoveredKernelSpecFiles.clear();
     }
-
+    public dispose() {
+        disposeAllDisposables(this.disposables);
+    }
     public async findMatchingInterpreter(kernelSpec: IJupyterKernelSpec): Promise<PythonEnvironment | undefined> {
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? this.interpreterService.resolvedEnvironments
@@ -134,40 +139,27 @@ export class InterpreterKernelSpecFinderHelper {
         interpreter: PythonEnvironment,
         cancelToken: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
-        const key = JSON.stringify(interpreter);
-        const oldKey = this.interpreterKeyMapping.get(interpreter.id);
-        if (oldKey !== key) {
-            // Delete the old promise, interpreter details have changed.
-            this.kernelsPerInterpreter.delete(key);
-        }
-        this.interpreterKeyMapping.set(interpreter.id, key);
-        // Interpreters can get discovered one after the other, and we might end up cancelling the previous discovery of an interpreter as a result fo changes to the interpreter.
-        // However if the interpreter that was being discovered doesn't change, then we can keep that cache around.
-        // Hence where possible cache the discovery results (to reduce I/O).
+        const key = `${interpreter.id}${interpreter.sysPrefix}`;
+
         if (!this.kernelsPerInterpreter.has(key)) {
-            const promise = this.findKernelSpecsInInterpreterImpl(interpreter, cancelToken);
-            promise
-                .then((result) => {
-                    if (Array.isArray(result) && result.length === 0) {
-                        // Even if cancellation token is cancelled, we can keep this cache as we've discovered some items.
-                        return;
-                    }
-                    // If the previous discovery was cancelled, then clear the cache for the interpreter.
-                    if (cancelToken.isCancellationRequested && this.kernelsPerInterpreter.get(key) === promise) {
-                        this.kernelsPerInterpreter.delete(key);
-                    }
-                })
-                .catch(() => {
-                    // If previous discovery failed, then do not cache a failure.
-                    if (this.kernelsPerInterpreter.get(key) === promise) {
-                        this.kernelsPerInterpreter.delete(key);
-                    }
-                });
+            const tokenSource = new CancellationTokenSource();
+            this.disposables.push(tokenSource);
+            const internalCancelToken = tokenSource.token;
+            const promise = this.findKernelSpecsInInterpreterImpl(interpreter, internalCancelToken);
+            promise.catch(() => {
+                // If previous discovery failed, then do not cache a failure.
+                if (this.kernelsPerInterpreter.get(key) === promise) {
+                    this.kernelsPerInterpreter.delete(key);
+                }
+            });
             this.kernelsPerInterpreter.set(key, promise);
         }
-        return this.kernelsPerInterpreter.get(key)!;
+        return Promise.race([
+            this.kernelsPerInterpreter.get(key)!,
+            createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: [], token: cancelToken })
+        ]);
     }
-    public async findKernelSpecsInInterpreterImpl(
+    private async findKernelSpecsInInterpreterImpl(
         interpreter: PythonEnvironment,
         cancelToken: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
