@@ -9,7 +9,7 @@ import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable, IDisposableRegistry, IFeaturesManager } from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError, traceWarning } from '../../../platform/logging';
@@ -22,7 +22,8 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
     constructor(
         @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {
         disposables.push(this);
     }
@@ -45,56 +46,58 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         updatePerFeature();
     }
     private _activate() {
-        this.localDisposables.push(
-            notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
-                provideNotebookKernelSourceActions: () => {
-                    return [
-                        {
-                            label: DataScience.localKernelSpecs(),
-                            detail: DataScience.pickLocalKernelSpecTitle(),
-                            command: 'jupyter.kernel.selectLocalKernelSpec'
-                        },
-                        {
-                            label: DataScience.localPythonEnvironments(),
-                            detail: DataScience.pickLocalKernelPythonEnvTitle(),
-                            command: 'jupyter.kernel.selectLocalPythonEnvironment'
-                        }
-                    ];
-                }
-            })
-        );
-        this.localDisposables.push(
-            notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
-                provideNotebookKernelSourceActions: () => {
-                    return [
-                        {
-                            label: DataScience.localKernelSpecs(),
-                            detail: DataScience.pickLocalKernelSpecTitle(),
-                            command: 'jupyter.kernel.selectLocalKernelSpec'
-                        },
-                        {
-                            label: DataScience.localPythonEnvironments(),
-                            detail: DataScience.pickLocalKernelPythonEnvTitle(),
-                            command: 'jupyter.kernel.selectLocalPythonEnvironment'
-                        }
-                    ];
-                }
-            })
-        );
-        this.localDisposables.push(
-            commands.registerCommand(
-                'jupyter.kernel.selectLocalKernelSpec',
-                this.onSelectLocalKernel.bind(this, ContributedKernelFinderKind.LocalKernelSpec),
-                this
-            )
-        );
-        this.localDisposables.push(
-            commands.registerCommand(
-                'jupyter.kernel.selectLocalPythonEnvironment',
-                this.onSelectLocalKernel.bind(this, ContributedKernelFinderKind.LocalPythonEnvironment),
-                this
-            )
-        );
+        if (!this.isWebExtension) {
+            this.localDisposables.push(
+                notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
+                    provideNotebookKernelSourceActions: () => {
+                        return [
+                            {
+                                label: DataScience.localKernelSpecs(),
+                                detail: DataScience.pickLocalKernelSpecTitle(),
+                                command: 'jupyter.kernel.selectLocalKernelSpec'
+                            },
+                            {
+                                label: DataScience.localPythonEnvironments(),
+                                detail: DataScience.pickLocalKernelPythonEnvTitle(),
+                                command: 'jupyter.kernel.selectLocalPythonEnvironment'
+                            }
+                        ];
+                    }
+                })
+            );
+            this.localDisposables.push(
+                notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
+                    provideNotebookKernelSourceActions: () => {
+                        return [
+                            {
+                                label: DataScience.localKernelSpecs(),
+                                detail: DataScience.pickLocalKernelSpecTitle(),
+                                command: 'jupyter.kernel.selectLocalKernelSpec'
+                            },
+                            {
+                                label: DataScience.localPythonEnvironments(),
+                                detail: DataScience.pickLocalKernelPythonEnvTitle(),
+                                command: 'jupyter.kernel.selectLocalPythonEnvironment'
+                            }
+                        ];
+                    }
+                })
+            );
+            this.localDisposables.push(
+                commands.registerCommand(
+                    'jupyter.kernel.selectLocalKernelSpec',
+                    this.onSelectLocalKernel.bind(this, ContributedKernelFinderKind.LocalKernelSpec),
+                    this
+                )
+            );
+            this.localDisposables.push(
+                commands.registerCommand(
+                    'jupyter.kernel.selectLocalPythonEnvironment',
+                    this.onSelectLocalKernel.bind(this, ContributedKernelFinderKind.LocalPythonEnvironment),
+                    this
+                )
+            );
+        }
         this.localDisposables.push(
             commands.registerCommand('jupyter.kernel.selectJupyterServerKernel', this.onSelectRemoteKernel, this)
         );
