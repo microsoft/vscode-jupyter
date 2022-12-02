@@ -9,7 +9,7 @@ import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfo, traceVerbose, traceError, traceDecoratorError } from '../../../platform/logging';
+import { traceInfo, traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable, IDisposableRegistry, ReadWrite } from '../../../platform/common/types';
@@ -65,6 +65,7 @@ export class LocalKernelSpecFinder implements IDisposable {
     }
     public clearCache() {
         this.pathToKernelSpec.clear();
+        this.findKernelSpecsInPathCache.clear();
     }
     public dispose() {
         disposeAllDisposables(this.disposables);
@@ -214,15 +215,6 @@ export abstract class LocalKernelSpecFinderBase<
     public readonly onDidChangeStatus = this._onDidChangeStatus.event;
     protected readonly _onDidChangeKernels = new EventEmitter<void>();
     public readonly onDidChangeKernels = this._onDidChangeKernels.event;
-    // Store our results when listing all possible kernelspecs for a resource
-    private kernelSpecCache = new Map<
-        string,
-        {
-            usesPython: boolean;
-            wasPythonExtInstalled: boolean;
-            promise: Promise<T[]>;
-        }
-    >();
     protected readonly kernelSpecFinder: LocalKernelSpecFinder;
     constructor(
         protected readonly fs: IFileSystemNode,
@@ -242,65 +234,12 @@ export abstract class LocalKernelSpecFinderBase<
         this.disposables.push(this.kernelSpecFinder);
     }
     public clearCache() {
-        this.kernelSpecCache.clear();
         this.kernelSpecFinder.clearCache();
     }
     public abstract dispose(): void | undefined;
     abstract refresh(): Promise<void>;
     abstract get kernels(): T[];
-    /**
-     * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.
-     * If for instance first Python Extension isn't installed, then we call this again, after installing it, then the cache will be blown away
-     */
-    @traceDecoratorError('List kernels failed')
-    protected async listKernelsWithCache(
-        cacheKey: string,
-        dependsOnPythonExtension: boolean,
-        finder: () => Promise<T[]>,
-        ignoreCache?: boolean
-    ): Promise<T[]> {
-        // If we have already searched for this resource, then use that.
-        const result = this.kernelSpecCache.get(cacheKey);
-        if (result && !ignoreCache) {
-            // If python extension is now installed & was not installed previously, then ignore the previous cache.
-            if (
-                result.usesPython &&
-                result.wasPythonExtInstalled === this.extensionChecker.isPythonExtensionInstalled
-            ) {
-                return result.promise;
-            } else if (!result.usesPython) {
-                return result.promise;
-            }
-        }
-        const promise = finder().then((items) => {
-            const distinctKernelMetadata = new Map<string, T>();
-            items.map((kernelSpec) => {
-                // Check if we have already seen this.
-                if (!distinctKernelMetadata.has(kernelSpec.id)) {
-                    distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
-                }
-            });
 
-            return Array.from(distinctKernelMetadata.values()).sort((a, b) => {
-                const nameA = a.kernelSpec.display_name.toUpperCase();
-                const nameB = b.kernelSpec.display_name.toUpperCase();
-                if (nameA === nameB) {
-                    return 0;
-                } else if (nameA < nameB) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            });
-        });
-        // Keep track of whether Python extension was installed or not when fetching this list of kernels.
-        // Next time if its installed then we can ignore this cache.
-        const wasPythonExtInstalled = this.extensionChecker.isPythonExtensionInstalled;
-        this.kernelSpecCache.set(cacheKey, { usesPython: dependsOnPythonExtension, promise, wasPythonExtInstalled });
-
-        // ! as the has and set above verify that we have a return here
-        return this.kernelSpecCache.get(cacheKey)!.promise;
-    }
     protected async listKernelsFirstTimeFromMemento(cacheKey: string): Promise<T[]> {
         const promise = (async () => {
             // Check memento too
