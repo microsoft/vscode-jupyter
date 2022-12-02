@@ -6,7 +6,7 @@
 #
 python-jsonrpc-server==0.4.0
     # via -r requirements.in
-ujson==5.4.0
+ujson==5.6.0
     # via
     #   -r requirements.in
     #   python-jsonrpc-server
