@@ -18,7 +18,7 @@ import { uriEquals } from '../../../test/datascience/helpers';
 import { IJupyterKernelSpec } from '../../types';
 import { noop } from '../../../test/core';
 
-suite.only('Interpreter Kernel Spec Finder Helper', () => {
+suite('Interpreter Kernel Spec Finder Helper', () => {
     let helper: InterpreterKernelSpecFinderHelper;
     const disposables: IDisposable[] = [];
     let jupyterPaths: JupyterPaths;
