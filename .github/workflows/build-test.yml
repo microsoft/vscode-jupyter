@@ -303,6 +303,12 @@ jobs:
             pythonVersion: '3.10'
             os: windows-latest
             tags: '^[^@]+$|@mandatory'
+          # Ensure we test kernels on Windows without zmq (never regress again #10940)
+          - jupyterConnection: local
+            python: python
+            pythonVersion: '3.10'
+            os: windows-latest
+            tags: '@kernelCore'
         # Conda
           - jupyterConnection: raw
             python: conda
