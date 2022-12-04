@@ -27,6 +27,16 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
     let extensionChecker: IPythonExtensionChecker;
     let trustedKernels: ITrustedKernelPaths;
     let venvInterpreter: PythonEnvironment;
+    const condaInterpreter: PythonEnvironment = {
+        id: 'conda',
+        sysPrefix: 'home/conda',
+        uri: Uri.file('conda')
+    };
+    const globalInterpreter: PythonEnvironment = {
+        id: 'globalInterpreter',
+        sysPrefix: 'home/global',
+        uri: Uri.joinPath(Uri.file('globalSys'), 'bin', 'python')
+    };
     setup(() => {
         jupyterPaths = mock<JupyterPaths>();
         when(jupyterPaths.getKernelSpecRootPath()).thenResolve();
@@ -154,5 +164,119 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         const kernelSpecs = await helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken2.token);
 
         assert.deepEqual(kernelSpecs, [kernelSpec]);
+    });
+    test('Find interpreter information for python defined in argv of Kernelspec.json', async () => {
+        const kernelSpec: IJupyterKernelSpec = {
+            argv: [venvInterpreter.uri.fsPath, '-m', 'venvKernelSpec'],
+            display_name: 'venvKernelSpec',
+            language: 'python',
+            name: 'venvKernelSpec',
+            executable: 'python'
+        };
+
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        when(interpreterService.resolvedEnvironments).thenReturn([
+            venvInterpreter,
+            condaInterpreter,
+            globalInterpreter
+        ]);
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec);
+
+        assert.strictEqual(interpreter, venvInterpreter);
+    });
+    test('Find interpreter information for python defined in metadata of Kernelspec.json', async () => {
+        const kernelSpec: IJupyterKernelSpec = {
+            argv: ['python', '-m', 'venvKernelSpec'],
+            display_name: 'venvKernelSpec',
+            language: 'python',
+            name: 'venvKernelSpec',
+            executable: 'python',
+            metadata: {
+                interpreter: {
+                    path: venvInterpreter.uri.fsPath
+                }
+            }
+        };
+
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        when(interpreterService.resolvedEnvironments).thenReturn([
+            venvInterpreter,
+            condaInterpreter,
+            globalInterpreter
+        ]);
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec);
+
+        assert.strictEqual(interpreter, venvInterpreter);
+    });
+    test('Find interpreter information for python defined in argv of Kernelspec.json (when python env is not yet discovered)', async () => {
+        const kernelSpec: IJupyterKernelSpec = {
+            argv: [venvInterpreter.uri.fsPath, '-m', 'venvKernelSpec'],
+            display_name: 'venvKernelSpec',
+            language: 'python',
+            name: 'venvKernelSpec',
+            executable: 'python',
+            metadata: {
+                interpreter: {
+                    path: venvInterpreter.uri.fsPath
+                }
+            }
+        };
+
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter, globalInterpreter]);
+        when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri))).thenResolve(venvInterpreter);
+        when(trustedKernels.isTrusted(uriEquals(venvInterpreter.uri))).thenReturn(true);
+
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec);
+
+        assert.strictEqual(interpreter, venvInterpreter);
+    });
+    test('Does not Find interpreter information for python defined in argv of Kernelspec.json (when python env is not yet discovered & kernelspec is not trusted)', async () => {
+        const kernelSpec: IJupyterKernelSpec = {
+            argv: [venvInterpreter.uri.fsPath, '-m', 'venvKernelSpec'],
+            display_name: 'venvKernelSpec',
+            language: 'python',
+            name: 'venvKernelSpec',
+            executable: 'python',
+            specFile: Uri.file('somefile.json').fsPath,
+            metadata: {
+                interpreter: {
+                    path: venvInterpreter.uri.fsPath
+                }
+            }
+        };
+
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter, globalInterpreter]);
+        when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri))).thenResolve(venvInterpreter);
+        when(trustedKernels.isTrusted(uriEquals(venvInterpreter.uri))).thenReturn(false);
+
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec);
+
+        assert.isUndefined(interpreter);
+    });
+    test('Does not Find interpreter information for python defined in argv of Kernelspec.json (when python env is not yet discovered & interpreter is not found)', async () => {
+        const kernelSpec: IJupyterKernelSpec = {
+            argv: [venvInterpreter.uri.fsPath, '-m', 'venvKernelSpec'],
+            display_name: 'venvKernelSpec',
+            language: 'python',
+            name: 'venvKernelSpec',
+            executable: 'python',
+            specFile: Uri.file('somefile.json').fsPath,
+            metadata: {
+                interpreter: {
+                    path: venvInterpreter.uri.fsPath
+                }
+            }
+        };
+
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter, globalInterpreter]);
+        when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri))).thenResolve(undefined);
+        when(trustedKernels.isTrusted(uriEquals(venvInterpreter.uri))).thenReturn(true);
+
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec);
+
+        assert.isUndefined(interpreter);
     });
 });
