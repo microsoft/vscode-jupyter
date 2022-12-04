@@ -83,6 +83,7 @@ export class CondaService {
                 .then((api) => (api.getCondaFile ? api.getCondaFile() : undefined));
             latestInfo
                 .then((file) => {
+                    traceVerbose(`Conda file returned by Python Extension is ${file}`);
                     this._file = file ? Uri.file(file) : undefined;
                     this.updateCache().catch(noop);
                 })
