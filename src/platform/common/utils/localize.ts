@@ -249,7 +249,7 @@ export namespace DataScience {
     export const unknownServerUri = () =>
         localize(
             'DataScience.unknownServerUri',
-            'Server URI cannot be used. Did you uninstall an extension that provided a Jupyter server connection?'
+            'Server URL cannot be used. Did you uninstall an extension that provided a Jupyter server connection?'
         );
     export const uriProviderDescriptionFormat = () =>
         localize('DataScience.uriProviderDescriptionFormat', '{0} (From {1} extension)');
@@ -617,9 +617,9 @@ export namespace DataScience {
     export const connectKernelHeader = () => localize('DataScience.connectKernelHeader', 'Connected to {0}');
 
     export const jupyterSelectURIPrompt = () =>
-        localize('DataScience.jupyterSelectURIPrompt', 'Enter the URI of the running Jupyter server');
+        localize('DataScience.jupyterSelectURIPrompt', 'Enter the URL of the running Jupyter server');
     export const jupyterSelectURIQuickPickTitle = () =>
-        localize('DataScience.jupyterSelectURIQuickPickTitle', 'Enter the URI of the running Jupyter server');
+        localize('DataScience.jupyterSelectURIQuickPickTitle', 'Enter the URL of the running Jupyter server');
     export const jupyterSelectURIQuickPickTitleOld = () =>
         localize('DataScience.jupyterSelectURIQuickPickTitleOld', 'Pick how to connect to Jupyter');
     export const jupyterSelectURIQuickPickPlaceholder = () =>
@@ -633,9 +633,9 @@ export namespace DataScience {
         localize('DataScience.jupyterSelectURIMRUDetail', 'Last Connection: {0}');
     export const jupyterSelectURINewLabel = () => localize('DataScience.jupyterSelectURINewLabel', 'Existing');
     export const jupyterSelectURINewDetail = () =>
-        localize('DataScience.jupyterSelectURINewDetail', 'Specify the URI of an existing server');
+        localize('DataScience.jupyterSelectURINewDetail', 'Specify the URL of an existing server');
     export const jupyterSelectURIInvalidURI = () =>
-        localize('DataScience.jupyterSelectURIInvalidURI', 'Invalid URI specified');
+        localize('DataScience.jupyterSelectURIInvalidURI', 'Invalid URL specified');
     export const jupyterSelectURIRunningDetailFormat = () =>
         localize('DataScience.jupyterSelectURIRunningDetailFormat', 'Last connection {0}. {1} existing connections.');
     export const jupyterSelectURINotRunningDetail = () =>
@@ -646,7 +646,7 @@ export namespace DataScience {
             'Enter your user name and password to connect to Jupyter Hub'
         );
     export const jupyterRenameServer = () =>
-        localize('DataScience.jupyterRenameServer', 'Change Server Display Name (Leave Blank To Use URI)');
+        localize('DataScience.jupyterRenameServer', 'Change Server Display Name (Leave Blank To Use URL)');
     export const jupyterSelectUserPrompt = () =>
         localize('DataScience.jupyterSelectUserPrompt', 'Enter your user name');
     export const jupyterSelectPasswordPrompt = () =>
@@ -698,7 +698,7 @@ export namespace DataScience {
     export const jupyterNotebookRemoteConnectFailedWeb = () =>
         localize(
             'DataScience.jupyterNotebookRemoteConnectFailedWeb',
-            'Failed to connect to remote Jupyter server.\r\nCheck that the Jupyter Server URI can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.'
+            'Failed to connect to remote Jupyter server.\r\nCheck that the Jupyter Server URL can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.'
         );
     export const changeRemoteJupyterConnectionButtonText = () =>
         localize('DataScience.changeRemoteJupyterConnectionButtonText', 'Manage Connections');
@@ -758,13 +758,13 @@ export namespace DataScience {
             { key: 'DataScience.pythonInterruptFailedHeader', comment: ['{Locked="kernel"}'] },
             'Keyboard interrupt crashed the kernel. Kernel restarted.'
         );
-    export const sysInfoURILabel = () => localize('DataScience.sysInfoURILabel', 'Jupyter Server URI: ');
+    export const sysInfoURILabel = () => localize('DataScience.sysInfoURILabel', 'Jupyter Server URL: ');
     export const executingCodeFailure = () =>
         localize('DataScience.executingCodeFailure', 'Executing code failed : {0}');
     export const inputWatermark = () =>
         localize('DataScience.inputWatermark', 'Type code here and press shift-enter to run');
     export const liveShareConnectFailure = () =>
-        localize('DataScience.liveShareConnectFailure', 'Cannot connect to host Jupyter session. URI not found.');
+        localize('DataScience.liveShareConnectFailure', 'Cannot connect to host Jupyter session. URL not found.');
     export const liveShareCannotSpawnNotebooks = () =>
         localize(
             'DataScience.liveShareCannotSpawnNotebooks',
@@ -1123,7 +1123,7 @@ export namespace DataScience {
     export const jupyterSelectURIQuickPickTitleRemoteOnly = () =>
         localize('DataScience.jupyterSelectURIQuickPickTitleRemoteOnly', 'Pick an already running Jupyter server');
     export const jupyterSelectURIRemoteDetail = () =>
-        localize('DataScience.jupyterSelectURIRemoteDetail', 'Specify the URI of an existing server');
+        localize('DataScience.jupyterSelectURIRemoteDetail', 'Specify the URL of an existing server');
     export const removeRemoteJupyterServerEntryInQuickPick = () =>
         localize('DataScience.removeRemoteJupyterServerEntryInQuickPick', 'Remove');
     export const specifyLocalOrRemoteJupyterServerForConnections = () =>
