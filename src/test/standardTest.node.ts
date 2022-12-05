@@ -110,9 +110,7 @@ async function createSettings(): Promise<string> {
         // Disable the restart ask so that restart just happens
         'jupyter.askForKernelRestart': false,
         // To get widgets working.
-        'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com'],
-        // New Kernel Picker.
-        'notebook.kernelPicker.type': 'mru'
+        'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com']
     };
     fs.ensureDirSync(path.dirname(settingsFile));
     fs.writeFileSync(settingsFile, JSON.stringify(defaultSettings, undefined, 4));
