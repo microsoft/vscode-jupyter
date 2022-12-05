@@ -103,7 +103,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             }, this)
         );
         this.disposables.add(
-            this.registration.onChanged(
+            this.registration.onDidChange(
                 ({ added }) =>
                     added.length
                         ? this.notebook.notebookDocuments.map((nb) => this.onDidOpenNotebookDocument(nb))

@@ -172,7 +172,7 @@ class JupyterKernelService implements IExportedKernelService {
             this,
             disposables
         );
-        this.controllerRegistration.onChanged(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
+        this.controllerRegistration.onDidChange(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
     }
     async getKernelSpecifications(): Promise<KernelConnectionMetadata[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {

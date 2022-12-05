@@ -14,7 +14,7 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
-import { IDisposableRegistry, IFeaturesManager } from '../../platform/common/types';
+import { IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../platform/common/types';
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -41,7 +41,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {}
 
     public activate(): void {
@@ -58,18 +58,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
 
-        this.interpreterService.onDidChangeInterpreter(
-            this.deleteControllerAssociatedWithPythonEnvsNotLongerValid,
-            this,
-            this.disposables
-        );
-        this.interpreterService.onDidChangeInterpreters(
-            this.deleteControllerAssociatedWithPythonEnvsNotLongerValid,
-            this,
-            this.disposables
-        );
-
-        this.registration.onChanged(
+        this.registration.onDidChange(
             ({ added }) => {
                 added.forEach((controller) => {
                     controller.onNotebookControllerSelectionChanged(
@@ -113,45 +102,8 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
             this.disposables
         );
     }
-    private async deleteControllerAssociatedWithPythonEnvsNotLongerValid() {
-        // If an environment has been deleted, the refresh the list of interpreters
-        // & wait for the kernels to detect the change.
-        await this.interpreterService.refreshInterpreters();
-        await new Promise<void>((resolve) => {
-            if (this.kernelFinder.status === 'idle') {
-                return resolve();
-            }
-            this.kernelFinder.onDidChangeStatus(
-                () => {
-                    if (this.kernelFinder.status === 'idle') {
-                        return resolve();
-                    }
-                },
-                this,
-                this.disposables
-            );
-        });
-        // Now that we've discovered all interpreters, we can remove any controllers that are associated with interpreters that no longer exist
-        // E.g. its possible a user creates a virtual env and its selected as a active kernel for active interpreter
-        // & subsequently the user deletes the virtual env.
-        const validInterpreters = new Set(this.interpreterService.environments.map((i) => i.id));
-        this.registration.registered.forEach((controller) => {
-            const interpreterId = controller.connection.interpreter?.id;
-            if (!interpreterId) {
-                return;
-            }
-            if (!validInterpreters.has(interpreterId)) {
-                // This means the interpreter no longer exists, hence remove the controller mapping.
-                traceVerbose(
-                    `Deleting controller ${controller.id} as it is associated with an interpreter ${interpreterId} that no longer exists, valid interpreters are ${validInterpreters}`
-                );
-                controller.dispose();
-            }
-        });
-    }
-
     private loadControllers() {
-        this.loadControllersImpl().ignoreErrors();
+        this.controllersPromise = this.loadControllersImpl();
         sendKernelListTelemetry(this.registration.registered.map((v) => v.connection));
 
         traceInfoIfCI(`Providing notebook controllers with length ${this.registration.registered.length}.`);
@@ -184,72 +136,69 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     }
 
     private async loadControllersImpl() {
-        this.controllersPromise = (async () => {
-            if (this.extensionChecker.isPythonExtensionInstalled) {
-                // This is temporary, when we create an MRU list in VS Code or the like, this should go away.
-                // Debt https://github.com/microsoft/vscode-jupyter/issues/11988
+        if (this.extensionChecker.isPythonExtensionInstalled && !this.isWebExtension) {
+            // This is temporary, when we create an MRU list in VS Code or the like, this should go away.
+            // Debt https://github.com/microsoft/vscode-jupyter/issues/11988
 
-                // First thing is to always create the controller for the active interpreter only if we don't have any remote connections.
-                // This reduces flickering (changing controllers from one to another).
-                const useNewKernelPicker = this.featuresManager.features.kernelPickerType === 'Insiders';
-                if (this.serverUriStorage.isLocalLaunch && !useNewKernelPicker) {
-                    await createActiveInterpreterController(
-                        JupyterNotebookView,
-                        undefined,
-                        this.interpreters,
-                        this.registration
-                    );
-                }
-            }
-            const connections = this.kernelFinder.kernels;
-            traceVerbose(`Found ${connections.length} cached controllers`);
-            this.createNotebookControllers(connections);
-
-            traceInfoIfCI(
-                `Kernels found in kernel finder include ${connections
-                    .map((c) => `${c.kind}:${c.id}`)
-                    .join('\n')} \n and currently registered controllers include ${this.registration.registered
-                    .map((c) => `${c.connection.kind}:${c.connection.id}`)
-                    .join('\n')}`
-            );
-            // Look for any controllers that we have disposed (no longer found when fetching)
-            const disposedControllers = Array.from(this.registration.registered).filter((controller) => {
-                const connectionIsStillValid = connections.some((connection) => {
-                    return connection.id === controller.connection.id;
-                });
-
-                // Never remove remote kernels that don't exist.
-                // Always leave them there for user to select, and if the connection is not available/not valid,
-                // then notify the user and remove them.
-                if (!connectionIsStillValid && controller.connection.kind === 'connectToLiveRemoteKernel') {
-                    return true;
-                }
-
-                // Don't dispose this controller if it's attached to a document.
-                if (!this.registration.canControllerBeDisposed(controller)) {
-                    return false;
-                }
-                if (!connectionIsStillValid) {
-                    traceVerbose(
-                        `Controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}' is no longer a valid`
-                    );
-                }
-                return !connectionIsStillValid;
-            });
-
-            // If we have any out of date connections, dispose of them
-            disposedControllers.forEach((controller) => {
-                traceVerbose(
-                    `Disposing old controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}'`
+            // First thing is to always create the controller for the active interpreter only if we don't have any remote connections.
+            // This reduces flickering (changing controllers from one to another).
+            const useNewKernelPicker = this.featuresManager.features.kernelPickerType === 'Insiders';
+            if (this.serverUriStorage.isLocalLaunch && !useNewKernelPicker) {
+                await createActiveInterpreterController(
+                    JupyterNotebookView,
+                    undefined,
+                    this.interpreters,
+                    this.registration
                 );
-                controller.dispose(); // This should remove it from the registered list
-            });
-        })();
+            }
+        }
+        const connections = this.kernelFinder.kernels;
+        traceVerbose(`Found ${connections.length} cached controllers`);
+        this.createNotebookControllers(connections);
 
-        // Set that we have loaded controllers
-        this.controllersPromise = this.controllersPromise || Promise.resolve();
+        traceInfoIfCI(
+            `Kernels found in kernel finder include ${connections
+                .map((c) => `${c.kind}:${c.id}`)
+                .join('\n')} \n and currently registered controllers include ${this.registration.registered
+                .map((c) => `${c.connection.kind}:${c.connection.id}`)
+                .join('\n')}`
+        );
+        // Look for any controllers that we have disposed (no longer found when fetching)
+        const disposedControllers = Array.from(this.registration.registered).filter((controller) => {
+            const connectionIsStillValid = connections.some((connection) => {
+                return connection.id === controller.connection.id;
+            });
+
+            // Never remove remote kernels that don't exist.
+            // Always leave them there for user to select, and if the connection is not available/not valid,
+            // then notify the user and remove them.
+            if (!connectionIsStillValid && controller.connection.kind === 'connectToLiveRemoteKernel') {
+                return true;
+            }
+
+            // Don't dispose this controller if it's attached to a document.
+            if (!this.registration.canControllerBeDisposed(controller)) {
+                return false;
+            }
+            if (!connectionIsStillValid) {
+                traceVerbose(
+                    `Controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}' is no longer a valid`
+                );
+            }
+            return !connectionIsStillValid;
+        });
+        // If we have any out of date connections, dispose of them
+        disposedControllers.forEach((controller) => {
+            traceVerbose(
+                `Disposing old controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}'`
+            );
+            controller.dispose(); // This should remove it from the registered list
+        });
     }
     private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]) {
+        if (kernelConnections.length === 0) {
+            return;
+        }
         traceVerbose(`Creating ${kernelConnections?.length} controllers`);
 
         try {

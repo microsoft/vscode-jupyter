@@ -46,7 +46,7 @@ export class ControllerRegistration implements IControllerRegistration {
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private changeEmitter = new EventEmitter<IVSCodeNotebookControllerUpdateEvent>();
     private registeredMetadatas = new Map<string, KernelConnectionMetadata>();
-    public get onChanged(): Event<IVSCodeNotebookControllerUpdateEvent> {
+    public get onDidChange(): Event<IVSCodeNotebookControllerUpdateEvent> {
         return this.changeEmitter.event;
     }
     public get registered(): IVSCodeNotebookController[] {

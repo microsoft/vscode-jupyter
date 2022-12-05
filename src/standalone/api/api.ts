@@ -77,7 +77,7 @@ function waitForNotebookControllersCreationForServer(
     controllerRegistration: IControllerRegistration
 ) {
     return new Promise<void>((resolve) => {
-        controllerRegistration.onChanged((e) => {
+        controllerRegistration.onDidChange((e) => {
             for (let controller of e.added) {
                 if (
                     controller.connection.kind === 'connectToLiveRemoteKernel' ||
