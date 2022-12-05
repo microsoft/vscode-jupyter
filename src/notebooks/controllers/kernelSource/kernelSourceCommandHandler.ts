@@ -104,7 +104,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         const uriRegistration = ServiceContainer.instance.get<IJupyterUriProviderRegistration>(
             IJupyterUriProviderRegistration
         );
-        uriRegistration.onDidChangeProviders(() => this.registerUriCommands, this, this.localDisposables);
+        uriRegistration.onDidChangeProviders(this.registerUriCommands, this, this.localDisposables);
         this.registerUriCommands();
     }
     private registerUriCommands() {
