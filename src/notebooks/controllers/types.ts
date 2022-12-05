@@ -92,6 +92,7 @@ export interface IControllerRegistration {
      * Event fired when controllers are added or removed
      */
     onChanged: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
+    isFiltered(metadata: KernelConnectionMetadata): boolean;
 }
 
 export const IControllerSelection = Symbol('IControllerSelection');
