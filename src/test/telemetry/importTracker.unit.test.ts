@@ -77,8 +77,8 @@ suite('Import Tracker', async () => {
                 ? hashes.map((hash) => ({ hashedNamev2: hash, when, resourceType }))
                 : hashes.map((hash) => ({ hashedNamev2: hash, when }));
             assert.deepEqual(
-                properties,
-                expected,
+                properties.sort((a, b) => a.hashedNamev2.localeCompare(b.hashedNamev2)),
+                expected.sort((a, b) => a.hashedNamev2.localeCompare(b.hashedNamev2)),
                 `Hashes not sent correctly, expected ${JSON.stringify(expected)} but got ${JSON.stringify(properties)}`
             );
         }
