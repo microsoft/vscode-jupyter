@@ -71,6 +71,14 @@ suite('Import Tracker', async () => {
                     'Hashed package name event not sent'
                 );
                 expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_NAME);
+                await waitForCondition(
+                    async () => {
+                        Reporter.properties.filter((item) => Object.keys(item).length).length === hashes.length;
+                        return true;
+                    },
+                    1_000,
+                    'Hashed package name event not sent'
+                );
             }
             const properties = Reporter.properties.filter((item) => Object.keys(item).length);
             const expected = resourceType
