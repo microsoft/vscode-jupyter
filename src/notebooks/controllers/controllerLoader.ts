@@ -26,7 +26,6 @@ import { IControllerLoader, IControllerRegistration } from './types';
  */
 @injectable()
 export class ControllerLoader implements IControllerLoader, IExtensionSyncActivationService {
-    private refreshedEmitter = new vscode.EventEmitter<void>();
     // Promise to resolve when we have loaded our controllers
     private controllersPromise: Promise<void>;
     constructor(
@@ -48,7 +47,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
-        this.registration.onChanged(() => this.refreshedEmitter.fire(), this, this.disposables);
 
         this.loadControllers();
         let previousKernelPickerType = this.featuresManager.features.kernelPickerType;
@@ -72,10 +70,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
 
         traceInfoIfCI(`Providing notebook controllers with length ${this.registration.registered.length}.`);
     }
-    public get refreshed(): vscode.Event<void> {
-        return this.refreshedEmitter.event;
-    }
-
     public get loaded() {
         return this.controllersPromise;
     }

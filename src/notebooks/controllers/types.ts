@@ -164,11 +164,6 @@ export const IControllerLoader = Symbol('IControllerLoader');
 
 export interface IControllerLoader {
     /**
-     * Event fired when all of the controllers have been refreshed
-     */
-    readonly refreshed: vscode.Event<void>;
-
-    /**
      * Promise resolved when controllers are done being loaded (refresh makes this promise update)
      */
     readonly loaded: Promise<void>;
