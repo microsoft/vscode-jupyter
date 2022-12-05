@@ -77,7 +77,12 @@ suite('Import Tracker', async () => {
                         return true;
                     },
                     1_000,
-                    'Hashed package name event not sent'
+                    () =>
+                        `Incorrect number of hashed package name events sent. Expected ${hashes.length}, got ${
+                            Reporter.properties.filter((item) => Object.keys(item).length).length
+                        }, with values ${JSON.stringify(
+                            Reporter.properties.filter((item) => Object.keys(item).length)
+                        )}`
                 );
             }
             const properties = Reporter.properties.filter((item) => Object.keys(item).length);
