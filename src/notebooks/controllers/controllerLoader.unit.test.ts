@@ -183,7 +183,7 @@ suite('Controller Loader', () => {
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
     });
-    teardown(()=> disposeAllDisposables(disposables));
+    teardown(() => disposeAllDisposables(disposables));
     [true, false].forEach((web) => {
         suite(`${web ? 'Web' : 'Desktop'}`, () => {
             setup(() => {
