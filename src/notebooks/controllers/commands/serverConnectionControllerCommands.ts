@@ -14,7 +14,7 @@ import {
     JVSC_EXTENSION_ID
 } from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
-import { IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { IControllerLoader, IControllerRegistration, IVSCodeNotebookController } from '../types';
 import {
@@ -28,6 +28,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { isLocalConnection } from '../../../kernels/types';
 import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 export function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][] {
     const result: T[][] = [];
@@ -93,9 +94,11 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     private async showVsCodeKernelPicker() {
         const activeEditor = this.notebooks.activeNotebookEditor;
         if (activeEditor) {
-            // Need to wait for controller to reupdate after
-            // switching local/remote
-            await this.controllerLoader.loaded;
+            if (this.featuresManager.features.kernelPickerType === 'Stable') {
+                // Need to wait for controller to reupdate after
+                // switching local/remote
+                await this.controllerLoader.loaded;
+            }
             this.commandManager
                 .executeCommand('notebook.selectKernel', { notebookEditor: activeEditor })
                 .then(noop, noop);
@@ -240,17 +243,21 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         });
 
         // Show quick pick with the list of controllers
+        const disposables: IDisposable[] = [];
+        const stopBusy = new EventEmitter<void>();
+        disposables.push(stopBusy);
+        this.controllerRegistration.onChanged(() => stopBusy.fire(), this, disposables);
         const result = await input.showQuickPick({
             title: title,
             items: quickPickItems,
             matchOnDescription: true,
             matchOnDetail: true,
             startBusy: quickPickItems.length === 0,
-            stopBusy: this.controllerLoader.refreshed,
+            stopBusy: stopBusy.event,
             placeholder,
             onDidChangeItems: changeEmitter.event
         });
-
+        disposeAllDisposables(disposables);
         if (result && result.label && (result as any).controller) {
             // We have selected this controller so switch to it.
             const controller = (result as any).controller;

@@ -17,7 +17,7 @@ import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/a
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { Commands, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
-import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
+import { IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
 import { sleep } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
@@ -46,7 +46,8 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
     ) {
         // Context keys to control when these commands are shown
         this.showInstallPythonExtensionContext = new ContextKey(
@@ -154,11 +155,15 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         }
     }
 
-    // Called when we select the command to install the python extension via the kernel picker
-    // If new controllers are added before this fully resolves any in progress executions will be
-    // passed on, so we can trigger with the run button, install, get a controller and not have to
-    // click run again
-    private async installPythonExtensionViaKernelPicker(): Promise<void> {
+    /**
+     * Called when we select the command to install the python extension via the kernel picker
+     * If new controllers are added before this fully resolves any in progress executions will be
+     * passed on, so we can trigger with the run button, install, get a controller and not have to
+     * click run again
+     *
+     * @return {*}  {Promise<boolean>} `true` if Python extension was installed, else not installed.
+     */
+    private async installPythonExtensionViaKernelPicker(): Promise<boolean | undefined> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
 
@@ -179,9 +184,13 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
                         action: 'success'
                     });
 
-                    // Trigger a load of our notebook controllers, we want to await it here so that any in
-                    // progress executions get passed to the suggested controller
-                    await this.controllerLoader.loaded;
+                    if (this.featureManager.features.kernelPickerType === 'Insiders') {
+                        return true;
+                    } else {
+                        // Trigger a load of our notebook controllers, we want to await it here so that any in
+                        // progress executions get passed to the suggested controller
+                        await this.controllerLoader.loaded;
+                    }
                 } else {
                     traceError('Failed to install Python Extension via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {

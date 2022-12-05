@@ -26,7 +26,7 @@ import { IPythonExtensionChecker } from '../../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { JupyterNotebookView, InteractiveWindowView, PYTHON_LANGUAGE } from '../../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
-import { IDisposable } from '../../../../platform/common/types';
+import { IDisposable, IFeaturesManager } from '../../../../platform/common/types';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 
 suite('Preferred Controller', () => {
@@ -59,6 +59,8 @@ suite('Preferred Controller', () => {
         when(vscNotebook.notebookDocuments).thenReturn([]);
         when(selection.getSelected(anything())).thenReturn(undefined);
         when(interpreters.refreshInterpreters()).thenResolve();
+        const featureManager = mock<IFeaturesManager>();
+        when(featureManager.features).thenReturn({ kernelPickerType: 'Stable' });
         preferredControllerService = new ControllerPreferredService(
             instance(controllerRegistrations),
             instance(controllerLoader),
@@ -70,7 +72,8 @@ suite('Preferred Controller', () => {
             instance(uriStorage),
             instance(kernelRankHelper),
             instance(selection),
-            false
+            false,
+            instance(featureManager)
         );
     });
     teardown(() => {

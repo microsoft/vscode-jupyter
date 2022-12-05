@@ -32,7 +32,7 @@ import { KernelConnector } from '../../notebooks/controllers/kernelConnector';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IExportedKernelServiceFactory } from './api';
-import { IControllerRegistration, IControllerLoader } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 
 @injectable()
 export class JupyterKernelServiceFactory implements IExportedKernelServiceFactory {
@@ -44,7 +44,6 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
         @inject(IThirdPartyKernelProvider) private readonly thirdPartyKernelProvider: IThirdPartyKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(ApiAccessService) private readonly apiAccess: ApiAccessService,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
@@ -66,7 +65,6 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
             this.thirdPartyKernelProvider,
             this.disposables,
             this.controllerRegistration,
-            this.controllerLoader,
             this.serviceContainer
         );
         this.extensionApi.set(accessInfo.extensionId, service);
@@ -116,7 +114,6 @@ class JupyterKernelService implements IExportedKernelService {
         @inject(IThirdPartyKernelProvider) private readonly thirdPartyKernelProvider: IThirdPartyKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {
         this.kernelFinder.onDidChangeStatus(
@@ -175,16 +172,14 @@ class JupyterKernelService implements IExportedKernelService {
             this,
             disposables
         );
-        this.controllerLoader.refreshed(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
+        this.controllerRegistration.onChanged(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
     }
     async getKernelSpecifications(): Promise<KernelConnectionMetadata[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getKernelSpecifications'
         });
-        await this.controllerLoader.loaded;
-        const items = this.controllerRegistration.registered;
-        return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item.connection));
+        return this.kernelFinder.kernels.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
     }
     getActiveKernels(): { metadata: KernelConnectionMetadata; uri: Uri | undefined }[] {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
@@ -275,9 +270,7 @@ class JupyterKernelService implements IExportedKernelService {
         spec: KernelConnectionMetadata | ActiveKernel,
         uri: Uri
     ): Promise<IKernelConnectionInfo> {
-        await this.controllerLoader.loaded;
-        const connections = this.controllerRegistration.all;
-        const connection = connections.find((item) => item.id === spec.id);
+        const connection = this.kernelFinder.kernels.find((item) => item.id === spec.id);
         if (!connection) {
             throw new Error('Not found');
         }

@@ -27,7 +27,13 @@ import {
 } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { IDisposable, IDisposableRegistry, IsWebExtension, Resource } from '../../platform/common/types';
+import {
+    IDisposable,
+    IDisposableRegistry,
+    IFeaturesManager,
+    IsWebExtension,
+    Resource
+} from '../../platform/common/types';
 import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -77,7 +83,8 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper,
         @inject(IControllerSelection) private readonly selection: IControllerSelection,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean
+        @inject(IsWebExtension) private readonly isWebExtension: boolean,
+        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
     ) {
         disposables.push(this);
     }
@@ -281,7 +288,9 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             } else if (document.notebookType === InteractiveWindowView) {
                 // Wait for our controllers to be loaded before we try to set a preferred on
                 // can happen if a document is opened quick and we have not yet loaded our controllers
-                await this.loader.loaded;
+                if (this.featureManager.features.kernelPickerType === 'Stable') {
+                    await this.loader.loaded;
+                }
                 if (preferredSearchToken.token.isCancellationRequested) {
                     traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
