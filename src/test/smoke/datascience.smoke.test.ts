@@ -10,7 +10,7 @@ import * as fs from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
-import { traceInfo } from '../../platform/logging';
+import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IExtensionTestApi, PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants.node';
@@ -107,6 +107,8 @@ suite('Smoke Tests', () => {
             id: controllerId,
             extension: 'ms-toolsai.jupyter'
         });
+
+        traceVerbose(`Selected kernel ${controllerId}`);
         await vscode.commands.executeCommand<void>('notebook.execute');
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
