@@ -5,14 +5,14 @@
 
 import { assert } from 'chai';
 /* eslint-disable , no-invalid-this, @typescript-eslint/no-explicit-any */
-
+import * as os from 'os';
 import * as fs from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { traceInfo } from '../../platform/logging';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { IExtensionTestApi, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
+import { IExtensionTestApi, PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants.node';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
@@ -93,6 +93,20 @@ suite('Smoke Tests', () => {
         // Unfortunately there's no way to know for sure it has completely loaded.
         await sleep(15_000);
 
+        let controllerId = '';
+        let pythonPath = PYTHON_PATH;
+        if (os.platform() === 'darwin') {
+            controllerId = `.jvsc74a57bd0396cba01897a9f2acbbfe0a6dcd789f4a066d92b27f41a29bade356faf26eba1.${pythonPath}.${pythonPath}.-m#ipykernel_launcher`;
+        } else if (os.platform() === 'linux') {
+            controllerId = `.jvsc74a57bd066f2b7bf0b1c80ed7c830b1a5555ddbc4af5468303d89f7ea039ef5384a7a529.${pythonPath}.${pythonPath}.-m#ipykernel_launcher`;
+        } else {
+            pythonPath = `${PYTHON_PATH.substring(0, 1).toLowerCase()}${PYTHON_PATH.substring(1)}`;
+            controllerId = `.jvsc74a57bd0d7b94230321e1e373f0403eaf807487012707ff7aa985439f4989b5650fe770c.${pythonPath}.${pythonPath}.-m#ipykernel_launcher`;
+        }
+        await vscode.commands.executeCommand('notebook.selectKernel', {
+            id: controllerId,
+            extension: 'ms-toolsai.jupyter'
+        });
         await vscode.commands.executeCommand<void>('notebook.execute');
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
