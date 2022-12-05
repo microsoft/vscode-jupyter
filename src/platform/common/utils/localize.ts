@@ -364,22 +364,22 @@ export namespace DataScience {
     export const libraryRequiredToLaunchJupyterNotInstalledInterpreter = () =>
         localize(
             'DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter',
-            "Running cells with '{0}' requires {1} package."
+            "Running cells with '{0}' requires the {1} package."
         );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter = () =>
         localize(
             'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter',
-            "Running cells with '{0}' requires {1} package."
+            "Running cells with '{0}' requires the {1} package."
         );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate = () =>
         localize(
             'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate',
-            "Running cells with '{0}' requires {1} package installed or requires an update."
+            "Running cells with '{0}' requires the {1} package to be installed or requires an update."
         );
     export const librariesRequiredToLaunchJupyterNotInstalledInterpreter = () =>
         localize(
             'DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter',
-            "Running cells with '{0}' requires {1} package."
+            "Running cells with '{0}' requires the {1} package."
         );
     export const installPackageInstructions = () =>
         localize(
