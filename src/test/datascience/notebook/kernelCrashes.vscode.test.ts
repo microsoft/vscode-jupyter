@@ -17,14 +17,7 @@ import {
     IWorkspaceService
 } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
-import {
-    IBrowserService,
-    IConfigurationService,
-    IDisposable,
-    IExtensionContext,
-    IJupyterSettings,
-    ReadWrite
-} from '../../../platform/common/types';
+import { IBrowserService, IConfigurationService, IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import {
@@ -81,7 +74,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     let kernelProvider: IKernelProvider;
-    let config: IConfigurationService;
     let notebook: TestNotebookDocument;
     const kernelCrashFailureMessageInCell =
         'The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure';
@@ -102,7 +94,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
         try {
             api = await initialize();
             kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-            config = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
             await startJupyterServer();
             sinon.restore();
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
@@ -198,8 +189,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
-        const settings = config.getSettings() as ReadWrite<IJupyterSettings>;
-        settings.disablePythonDaemon = false;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         sinon.restore();
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
