@@ -9,9 +9,8 @@
     -   [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
         Instructions on updating `npm` dependencies in `package.json` & `package-lock.json` can be found [here](https://github.com/microsoft/vscode-jupyter/wiki/Resolving-Component-Governance-and-Dependabot-issues-(updating-package-lock.json)).
 -   [ ] Create new release branch with format `release/release-YYYY.MM.100`.
-    -   [ ] Prepare a PR to this branch with the following changes...
-    -   [ ] Remove the `-insiders` from the vscode engine version. Run `npm install` to update this value in `package-lock.json`.
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
+-   [ ] Disable [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283). (`...` menu > Settings > Processing of new requests: Disabled)
 -   [ ] Create a PR to `main` with the following changes... (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
     -   [ ] Merge the changes from release (ThirdPartyNotices) into `main` branch
     -   [ ] At this point, the vscode engine version should also be the same as in the release branch- will be bumped when the next release happens
@@ -27,6 +26,7 @@
 -  [ ] Sanity test release candidate VSIX against VS Code RC
    -   Make sure that the sanity test hits both macOS and Windows builds
 -  [ ] Candidate bug fixes found from sanity test should be checked into `main` and cherry-picked to `release` branch
+   -   After a candidate fix is merged, a pre-release build can be released by manually running [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283) against the release branch.
 
 # Release (Tuesday or day before VS Code publishes, whichever is later)
 
@@ -47,7 +47,8 @@
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
 
 # Day of VS Code releasing the next insider version (Wednesday)
--   [ ] Bump the engines.vscode version on the `main` branch to point to the next insider version. For example, from `1.58.0` to `1.59.0-insider`
+-   [ ] Bump the engines.vscode version on the `main` branch to point to the next version. For example, from `1.58.0` to `1.59.0`
+-   [ ] Reenable [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283) (`...` menu > Settings > Processing of new requests: Enabled)
 
 ## Prep for the _next_ release
 
