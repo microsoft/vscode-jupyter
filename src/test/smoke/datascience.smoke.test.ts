@@ -103,6 +103,7 @@ suite('Smoke Tests', () => {
             pythonPath = `${PYTHON_PATH.substring(0, 1).toLowerCase()}${PYTHON_PATH.substring(1)}`;
             controllerId = `.jvsc74a57bd0d7b94230321e1e373f0403eaf807487012707ff7aa985439f4989b5650fe770c.${pythonPath}.${pythonPath}.-m#ipykernel_launcher`;
         }
+        traceVerbose(`Before selected kernel ${controllerId}`);
         await vscode.commands.executeCommand('notebook.selectKernel', {
             id: controllerId,
             extension: 'ms-toolsai.jupyter'
