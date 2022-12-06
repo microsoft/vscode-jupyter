@@ -22,7 +22,12 @@ resources:
 extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
+    locTsConfigs: $(Build.SourcesDirectory)/tsconfig.json
+    locBundleDestination: $(Build.SourcesDirectory)/out
     buildSteps:
+      - script: npm i -g npm@8.15.1
+        displayName: Install npm 8.15.1
+
       - script: npm ci
         displayName: Install dependencies
 
@@ -41,5 +46,5 @@ extends:
       - script: npm run updateBuildNumber
         displayName: Update build number
 
-      - script: gulp prePublishBundle
+      - script: npm run prePublishBundlePreRelease
         displayName: Build

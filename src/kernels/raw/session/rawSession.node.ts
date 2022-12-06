@@ -1,20 +1,20 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import { ISignal, Signal } from '@lumino/signaling';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import '../../../platform/common/extensions';
-import { traceVerbose, traceInfoIfCI, traceError } from '../../../platform/logging';
+import { traceVerbose, traceInfoIfCI, traceError, traceWarning } from '../../../platform/logging';
 import { IDisposable, Resource } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
-import { noop } from '../../../platform/common/utils/misc';
-import { KernelConnectionTimeoutError } from '../../../platform/errors/kernelConnectionTimeoutError';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
+import { Telemetry } from '../../../telemetry';
 import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../../types';
 import { IKernelProcess } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel.node';
+import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 
 /*
 RawSession class implements a jupyterlab ISession object
@@ -36,6 +36,9 @@ export class RawSession implements ISessionWithSocket {
     private readonly _kernelChanged: Signal<this, Session.ISessionConnection.IKernelChangedArgs>;
     private readonly _terminated: Signal<this, void>;
     private readonly _ioPubMessage: Signal<this, KernelMessage.IIOPubMessage>;
+    private readonly _unhandledMessage: Signal<this, KernelMessage.IMessage>;
+    private readonly _anyMessage: Signal<this, Kernel.IAnyMessageArgs>;
+    private readonly _disposed: Signal<this, void>;
     private readonly _connectionStatusChanged: Signal<this, Kernel.ConnectionStatus>;
     private readonly exitHandler: IDisposable;
     private readonly signaling: typeof import('@lumino/signaling');
@@ -62,7 +65,10 @@ export class RawSession implements ISessionWithSocket {
         this._kernelChanged = new signaling.Signal<this, Session.ISessionConnection.IKernelChangedArgs>(this);
         this._ioPubMessage = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this._terminated = new signaling.Signal<this, void>(this);
+        this._anyMessage = new signaling.Signal<this, Kernel.IAnyMessageArgs>(this);
+        this._unhandledMessage = new signaling.Signal<this, KernelMessage.IMessage>(this);
         this._connectionStatusChanged = new signaling.Signal<this, Kernel.ConnectionStatus>(this);
+        this._disposed = new signaling.Signal<this, void>(this);
         // Unique ID for this session instance
         this._id = uuid();
 
@@ -74,32 +80,46 @@ export class RawSession implements ISessionWithSocket {
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
         this._kernel.iopubMessage.connect(this.onIOPubMessage, this);
         this._kernel.connectionStatusChanged.connect(this.onKernelConnectionStatus, this);
+        this._kernel.unhandledMessage.connect(this.onUnhandledMessage, this);
+        this._kernel.anyMessage.connect(this.onAnyMessage, this);
+        this._kernel.disposed.connect(this.onDisposed, this);
         this.exitHandler = kernelProcess.exited(this.handleUnhandledExitingOfKernelProcess, this);
     }
     public get connectionStatus() {
         return this._kernel.connectionStatus;
     }
     public get connectionStatusChanged(): ISignal<this, Kernel.ConnectionStatus> {
-        return this._kernel.connectionStatusChanged;
+        return this._connectionStatusChanged;
     }
     public get disposed(): ISignal<this, void> {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return this._kernel.disposed as any;
+        return this._disposed;
     }
     isRemoteSession?: boolean | undefined;
 
     public async dispose() {
         // We want to know who called dispose on us
         const stacktrace = new Error().stack;
-        sendTelemetryEvent(Telemetry.RawKernelSessionDisposed, undefined, { stacktrace });
+        sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionDisposed, undefined, { stacktrace });
 
         // Now actually dispose ourselves
         this.isDisposing = true;
         if (!this.isDisposed) {
             this.exitHandler.dispose();
-            await this._kernel.shutdown();
+            await this._kernel
+                .shutdown()
+                .catch((ex) => traceWarning(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex));
             this._kernel.dispose();
-            await this.kernelProcess.dispose().catch(noop);
+            await this.kernelProcess.dispose();
+        }
+        try {
+            this._kernel.statusChanged.disconnect(this.onKernelStatus, this);
+            this._kernel.iopubMessage.disconnect(this.onIOPubMessage, this);
+            this._kernel.connectionStatusChanged.disconnect(this.onKernelConnectionStatus, this);
+            this._kernel.unhandledMessage.disconnect(this.onUnhandledMessage, this);
+            this._kernel.anyMessage.disconnect(this.onAnyMessage, this);
+            this._kernel.disposed.disconnect(this.onDisposed, this);
+        } catch {
+            //
         }
         this.isDisposed = true;
         this.signaling.Signal.disconnectAll(this);
@@ -180,10 +200,10 @@ export class RawSession implements ISessionWithSocket {
         return this._ioPubMessage;
     }
     get unhandledMessage(): ISignal<this, KernelMessage.IMessage> {
-        return this._kernel.unhandledMessage;
+        return this._unhandledMessage;
     }
     get anyMessage(): ISignal<this, Kernel.IAnyMessageArgs> {
-        return this._kernel.anyMessage;
+        return this._anyMessage;
     }
     get path(): string {
         throw new Error('Not yet implemented');
@@ -241,8 +261,17 @@ export class RawSession implements ISessionWithSocket {
         }
         this._ioPubMessage.emit(msg);
     }
+    private onAnyMessage(_sender: Kernel.IKernelConnection, msg: Kernel.IAnyMessageArgs) {
+        this._anyMessage.emit(msg);
+    }
+    private onUnhandledMessage(_sender: Kernel.IKernelConnection, msg: KernelMessage.IMessage) {
+        this._unhandledMessage.emit(msg);
+    }
     private onKernelConnectionStatus(_sender: Kernel.IKernelConnection, state: Kernel.ConnectionStatus) {
         this._connectionStatusChanged.emit(state);
+    }
+    private onDisposed(_sender: Kernel.IKernelConnection) {
+        this._disposed.emit();
     }
     private handleUnhandledExitingOfKernelProcess(e: { exitCode?: number | undefined; reason?: string | undefined }) {
         if (this.isDisposing) {
@@ -251,10 +280,14 @@ export class RawSession implements ISessionWithSocket {
         traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
         // Send telemetry so we know why the kernel process exited,
         // as this affects our kernel startup success
-        sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-            exitCode: e.exitCode,
-            exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(e.reason)
-        });
+        sendKernelTelemetryEvent(
+            this.resource,
+            Telemetry.RawKernelSessionKernelProcessExited,
+            e.exitCode ? { exitCode: e.exitCode } : undefined,
+            {
+                exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(e.reason)
+            }
+        );
 
         // Just kill the session.
         this.dispose().ignoreErrors();

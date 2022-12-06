@@ -1,0 +1,33 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/docker-existing-dockerfile
+{
+	"name": "Remote nonConda",
+	"build": {
+		"dockerfile": "../Dockerfile",
+		"context": "../../",
+		"args": {
+			// Update 'VARIANT' to pick a Python version: 3, 3.9, 3.8, 3.7, 3.6.
+			// Append -bullseye or -buster to pin to an OS version.
+			// Use -bullseye variants on local on arm64/Apple Silicon.
+			"VARIANT": "3.9-bullseye",
+			// Options
+			"NODE_VERSION": "lts/*"
+		}
+	},
+
+	"settings": {
+		"terminal.integrated.shell.linux": "/bin/bash",
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.languageServer": "Pylance",
+	},
+
+	"extensions": ["ms-python.vscode-pylance", "ms-python.python", "ms-vscode.vscode-typescript-tslint-plugin"],
+	"postCreateCommand": "python --version && python -c \"import sys;print(sys.executable)\" && python ./pythonFiles/install_debugpy.py",
+
+	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
+	// "runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined" ],
+
+	"workspaceMount": "source=${localWorkspaceFolder}/../,target=/workspace,type=bind",
+	"workspaceFolder": "/workspace",
+	"remoteUser": "vscode"
+}

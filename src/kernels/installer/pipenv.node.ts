@@ -1,11 +1,12 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import * as path from '../../platform/vscode-path/path';
 import { traceError } from '../../platform/logging';
 import { getEnvironmentVariable } from '../../platform/common/utils/platform.node';
-import { pathExists, readFile, arePathsSame, normCasePath } from '../../platform/common/platform/fileUtils.node';
+import { pathExists, readFile } from '../../platform/common/platform/fileUtils.node';
 import { Uri } from 'vscode';
+import { normCasePath, arePathsSame } from '../../platform/common/platform/fileUtils';
 
 function getSearchHeight() {
     // PIPENV_MAX_DEPTH tells pipenv the maximum number of directories to recursively search for
@@ -43,28 +44,6 @@ export async function _getAssociatedPipfile(
         heightToSearch -= 1;
     }
     return undefined;
-}
-
-/**
- * If interpreter path belongs to a pipenv environment which is located inside a project, return associated Pipfile,
- * otherwise return `undefined`.
- * @param interpreterPath Absolute path to any python interpreter.
- */
-async function getPipfileIfLocal(interpreterPath: Uri): Promise<string | undefined> {
-    // Local pipenv environments are created by setting PIPENV_VENV_IN_PROJECT to 1, which always names the environment
-    // folder '.venv': https://pipenv.pypa.io/en/latest/advanced/#pipenv.environments.PIPENV_VENV_IN_PROJECT
-    // This is the layout we wish to verify.
-    // project
-    // |__ Pipfile  <--- check if Pipfile exists here
-    // |__ .venv    <--- check if name of the folder is '.venv'
-    //     |__ Scripts/bin
-    //         |__ python  <--- interpreterPath
-    const venvFolder = path.dirname(path.dirname(interpreterPath.fsPath));
-    if (path.basename(venvFolder) !== '.venv') {
-        return undefined;
-    }
-    const directoryWhereVenvResides = path.dirname(venvFolder);
-    return _getAssociatedPipfile(directoryWhereVenvResides, { lookIntoParentDirectories: false });
 }
 
 /**
@@ -115,21 +94,6 @@ async function getPipfileIfGlobal(interpreterPath: Uri): Promise<string | undefi
     }
 
     return _getAssociatedPipfile(projectDir, { lookIntoParentDirectories: false });
-}
-
-/**
- * Checks if the given interpreter path belongs to a pipenv environment, by locating the Pipfile which was used to
- * create the environment.
- * @param interpreterPath: Absolute path to any python interpreter.
- */
-export async function isPipenvEnvironment(interpreterPath: Uri): Promise<boolean> {
-    if (await getPipfileIfLocal(interpreterPath)) {
-        return true;
-    }
-    if (await getPipfileIfGlobal(interpreterPath)) {
-        return true;
-    }
-    return false;
 }
 
 /**

@@ -1,34 +1,36 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import '../../../platform/common/extensions';
 
 import { ChildProcess } from 'child_process';
-import { Subscription } from 'rxjs';
+import { Subscription } from 'rxjs/Subscription';
 import { CancellationError, CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { traceInfo, traceError, traceWarning } from '../../../platform/logging';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
 import { Deferred, createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { RegExpValues } from '../../../webviews/webview-side/common/constants';
+import { RegExpValues } from '../../../platform/common/constants';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { IJupyterConnection } from '../../types';
 import { JupyterServerInfo } from '../types';
 import { getJupyterConnectionDisplayName } from './helpers';
+import { arePathsSame } from '../../../platform/common/platform/fileUtils';
+import { getFilePath } from '../../../platform/common/platform/fs-paths';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
-const namedRegexp = require('named-js-regexp');
-const urlMatcher = namedRegexp(RegExpValues.UrlPatternRegEx);
+const urlMatcher = new RegExp(RegExpValues.UrlPatternRegEx);
 
+/**
+ * When starting a local jupyter server, this object waits for the server to come up.
+ */
 export class JupyterConnectionWaiter implements IDisposable {
     private startPromise: Deferred<IJupyterConnection>;
     private launchTimeout: NodeJS.Timer | number;
     private configService: IConfigurationService;
-    private fs: IFileSystem;
     private stderr: string[] = [];
     private connectionDisposed = false;
     private subscriptions: Subscription[] = [];
@@ -42,7 +44,6 @@ export class JupyterConnectionWaiter implements IDisposable {
         private cancelToken?: CancellationToken
     ) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
 
         // Cancel our start promise if a cancellation occurs
         if (cancelToken) {
@@ -94,9 +95,23 @@ export class JupyterConnectionWaiter implements IDisposable {
         return this.startPromise.promise;
     }
 
-    private createConnection(baseUrl: string, token: string, hostName: string, processDisposable: Disposable) {
+    private createConnection(
+        url: string,
+        baseUrl: string,
+        token: string,
+        hostName: string,
+        processDisposable: Disposable
+    ) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        return new JupyterConnection(baseUrl, token, hostName, this.rootDir, processDisposable, this.launchResult.proc);
+        return new JupyterConnection(
+            url,
+            baseUrl,
+            token,
+            hostName,
+            this.rootDir,
+            processDisposable,
+            this.launchResult.proc
+        );
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -107,17 +122,16 @@ export class JupyterConnectionWaiter implements IDisposable {
     }
 
     // From a list of jupyter server infos try to find the matching jupyter that we launched
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
+    private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: string) {
         if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
-            const matchInfo = serverInfos.find((info) =>
-                this.fs.areLocalPathsSame(this.notebookDir.fsPath, info.notebook_dir)
-            );
+            const matchInfo = serverInfos.find((info) => {
+                return arePathsSame(getFilePath(this.notebookDir), getFilePath(Uri.file(info.notebook_dir)));
+            });
             if (matchInfo) {
                 const url = matchInfo.url;
                 const token = matchInfo.token;
                 const host = matchInfo.hostname;
-                this.resolveStartPromise(url, token, host);
+                this.resolveStartPromise(url, url, token, host);
             }
         }
         // At this point we failed to get the server info or a matching server via the python code, so fall back to
@@ -127,19 +141,14 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private getJupyterURLFromString(data: any) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const urlMatch = urlMatcher.exec(data) as any;
-        const groups = urlMatch.groups() as RegExpValues.IUrlPatternGroupType;
-        if (urlMatch && !this.startPromise.completed && groups && (groups.LOCAL || groups.IP)) {
+    private getJupyterURLFromString(data: string) {
+        const urlMatch = urlMatcher.exec(data);
+        const groups = urlMatch?.groups;
+        if (!this.startPromise.completed && groups && (groups.LOCAL || groups.IP)) {
             // Rebuild the URI from our group hits
             const host = groups.LOCAL ? groups.LOCAL : groups.IP;
             const uriString = `${groups.PREFIX}${host}${groups.REST}`;
 
-            // URL is not being found for some reason. Pull it in forcefully
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const URL = require('url').URL;
             let url: URL;
             try {
                 url = new URL(uriString);
@@ -154,6 +163,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             const pathName = url.pathname.endsWith('/tree') ? url.pathname.replace('/tree', '') : url.pathname;
             // Here we parsed the URL correctly
             this.resolveStartPromise(
+                uriString,
                 `${url.protocol}//${url.host}${pathName}`,
                 `${url.searchParams.get('token')}`,
                 url.hostname
@@ -161,8 +171,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private extractConnectionInformation = (data: any) => {
+    private extractConnectionInformation = (data: string) => {
         this.output(data);
 
         const httpMatch = RegExpValues.HttpPattern.exec(data);
@@ -184,11 +193,11 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     };
 
-    private resolveStartPromise = (baseUrl: string, token: string, hostName: string) => {
+    private resolveStartPromise(url: string, baseUrl: string, token: string, hostName: string) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout(this.launchTimeout as any);
         if (!this.startPromise.rejected) {
-            const connection = this.createConnection(baseUrl, token, hostName, this.launchResult);
+            const connection = this.createConnection(url, baseUrl, token, hostName, this.launchResult);
             const origDispose = connection.dispose.bind(connection);
             connection.dispose = () => {
                 // Stop listening when we disconnect
@@ -197,7 +206,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             };
             this.startPromise.resolve(connection);
         }
-    };
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private rejectStartPromise = (message: string | Error) => {
@@ -220,6 +229,7 @@ class JupyterConnection implements IJupyterConnection {
     public readonly type = 'jupyter';
     private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
     constructor(
+        public readonly url: string,
         public readonly baseUrl: string,
         public readonly token: string,
         public readonly hostName: string,

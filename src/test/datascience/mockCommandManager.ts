@@ -1,11 +1,12 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
-import { noop } from 'lodash';
 import { Disposable, TextEditor, TextEditorEdit } from 'vscode';
 
-import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
+import { ICommandNameArgumentTypeMapping } from '../../commands';
 import { ICommandManager } from '../../platform/common/application/types';
+import { noop } from '../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 export class MockCommandManager implements ICommandManager {

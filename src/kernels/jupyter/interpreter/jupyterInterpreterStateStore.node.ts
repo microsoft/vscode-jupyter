@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -39,7 +39,7 @@ export class JupyterInterpreterStateStore {
         }
         const memento = this.memento.get<string | undefined>(key, undefined);
         if (memento) {
-            return Uri.file(memento);
+            return Uri.parse(memento);
         }
     }
     public updateSelectedPythonPath(value: Uri | undefined) {

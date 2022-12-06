@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -10,15 +10,18 @@ import { ConfigurationChangeEvent, ConfigurationTarget, QuickPickItem, Uri } fro
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { IConfigurationService } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
 import {
     IMultiStepInputFactory,
     IMultiStepInput,
     InputStep,
     IQuickPickParameters
 } from '../../../platform/common/utils/multiStepInput';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 
+/**
+ * Provide a quick pick to let a user select command line options for starting jupyter
+ */
 @injectable()
 export class JupyterCommandLineSelector {
     private readonly defaultLabel = `$(zap) ${DataScience.jupyterCommandLineDefaultLabel()}`;
@@ -33,10 +36,9 @@ export class JupyterCommandLineSelector {
         workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
     }
 
-    @captureTelemetry(Telemetry.SelectJupyterURI)
-    public selectJupyterCommandLine(file: Uri): Promise<void> {
+    public async selectJupyterCommandLine(file: Uri): Promise<void> {
         const multiStep = this.multiStepFactory.create<{}>();
-        return multiStep.run(this.startSelectingCommandLine.bind(this, file), {});
+        await multiStep.run(this.startSelectingCommandLine.bind(this, file), {});
     }
 
     private async onDidChangeConfiguration(e: ConfigurationChangeEvent) {
@@ -47,7 +49,7 @@ export class JupyterCommandLineSelector {
                 reload
             );
             if (item === reload) {
-                void this.commandManager.executeCommand('workbench.action.reloadWindow');
+                this.commandManager.executeCommand('workbench.action.reloadWindow').then(noop, noop);
             }
         }
     }

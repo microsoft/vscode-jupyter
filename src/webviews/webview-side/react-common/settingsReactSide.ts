@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
-import { IJupyterExtraSettings } from '../../extension-side/types';
+import { IJupyterExtraSettings } from '../../../platform/webviews/types';
 
 export function getDefaultSettings(): IJupyterExtraSettings {
     // Default settings for tests
@@ -15,10 +16,8 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         allowImportFromNotebook: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
-        jupyterServerType: 'local',
         // eslint-disable-next-line no-template-curly-in-string
         notebookFileRoot: '${fileDirname}',
-        changeDirOnImportExport: false,
         useDefaultConfigForJupyter: true,
         jupyterInterruptTimeout: 10000,
         searchForJupyter: true,
@@ -50,7 +49,8 @@ export function getDefaultSettings(): IJupyterExtraSettings {
                 fontFamily: "Consolas, 'Courier New', monospace"
             },
             theme: 'Default Dark+',
-            hasPythonExtension: true
+            hasPythonExtension: true,
+            isWeb: false
         },
         runStartupCommands: '',
         debugJustMyCode: true,

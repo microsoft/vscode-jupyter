@@ -1,20 +1,21 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import '../../platform/common/extensions';
-
 import * as path from '../../platform/vscode-path/path';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IJupyterConnection } from '../types';
-import { IJupyterServerUri } from './types';
+import { IJupyterServerUri, JupyterServerUriHandle } from './types';
 import { getJupyterConnectionDisplayName } from './launcher/helpers';
 import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../../platform/common/constants';
+import { Identifiers, Telemetry } from '../../platform/common/constants';
+import { computeHash } from '../../platform/common/crypto';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -41,7 +42,7 @@ export function expandWorkingDir(
     return process.cwd();
 }
 
-export async function handleCertsError(
+export async function handleSelfCertsError(
     appShell: IApplicationShell,
     config: IConfigurationService,
     message: string
@@ -51,12 +52,37 @@ export async function handleCertsError(
     const closeOption: string = DataScience.jupyterSelfCertClose();
     const value = await appShell.showErrorMessage(
         DataScience.jupyterSelfCertFail().format(message),
+        { modal: true },
         enableOption,
         closeOption
     );
     if (value === enableOption) {
         sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
-        void config.updateSetting('allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace);
+        await config.updateSetting('allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace);
+        return true;
+    } else if (value === closeOption) {
+        sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
+    }
+    return false;
+}
+
+export async function handleExpiredCertsError(
+    appShell: IApplicationShell,
+    config: IConfigurationService,
+    message: string
+): Promise<boolean> {
+    // On a self cert error, warn the user and ask if they want to change the setting
+    const enableOption: string = DataScience.jupyterSelfCertEnable();
+    const closeOption: string = DataScience.jupyterSelfCertClose();
+    const value = await appShell.showErrorMessage(
+        DataScience.jupyterExpiredCertFail().format(message),
+        { modal: true },
+        enableOption,
+        closeOption
+    );
+    if (value === enableOption) {
+        sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
+        await config.updateSetting('allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace);
         return true;
     } else if (value === closeOption) {
         sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
@@ -71,20 +97,18 @@ export function createRemoteConnectionInfo(
     let url: URL;
     try {
         url = new URL(uri);
-
-        // Special case for URI's ending with 'lab'. Remove this from the URI. This is not
-        // the location for connecting to jupyterlab
-        if (url.pathname === '/lab') {
-            uri = uri.replace('lab', '');
-        }
-        url = new URL(uri);
     } catch (err) {
         // This should already have been parsed when set, so just throw if it's not right here
         throw err;
     }
 
     const serverUri = getJupyterServerUri(uri);
-    const baseUrl = serverUri ? serverUri.baseUrl : `${url.protocol}//${url.host}${url.pathname}`;
+
+    const baseUrl = serverUri
+        ? serverUri.baseUrl
+        : // Special case for URI's ending with 'lab'. Remove this from the URI. This is not
+          // the location for connecting to jupyterlab
+          `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`;
     const token = serverUri ? serverUri.token : `${url.searchParams.get('token')}`;
     const hostName = serverUri ? new URL(serverUri.baseUrl).hostname : url.hostname;
 
@@ -106,4 +130,26 @@ export function createRemoteConnectionInfo(
         getAuthHeader: serverUri ? () => getJupyterServerUri(uri)?.authorizationHeader : undefined,
         url: uri
     };
+}
+
+export async function computeServerId(uri: string) {
+    return computeHash(uri, 'SHA-256');
+}
+
+export function generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
+    // eslint-disable-next-line
+    return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
+        Identifiers.REMOTE_URI_HANDLE_PARAM
+    }=${encodeURI(result)}`;
+}
+
+export function extractJupyterServerHandleAndId(
+    uri: string
+): { handle: JupyterServerUriHandle; id: string } | undefined {
+    const url: URL = new URL(uri);
+
+    // Id has to be there too.
+    const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
+    const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
+    return id && uriHandle ? { handle: uriHandle, id } : undefined;
 }

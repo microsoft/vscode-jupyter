@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -9,16 +9,19 @@ import { traceDecoratorVerbose } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { IWorkspaceService } from '../application/types';
 import { IDisposableRegistry } from '../types';
-import { IEnvironmentVariablesProvider } from '../variables/types';
+import { ICustomEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc.node';
-import { IBufferDecoder, IProcessLogger, IProcessService, IProcessServiceFactory } from './types.node';
+import { IProcessLogger, IProcessService, IProcessServiceFactory } from './types.node';
 
+/**
+ * Factory for creating ProcessService objects. Get the current interpreter from a URI to determine the starting environment.
+ */
 @injectable()
 export class ProcessServiceFactory implements IProcessServiceFactory {
     constructor(
-        @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider,
+        @inject(ICustomEnvironmentVariablesProvider)
+        private readonly envVarsService: ICustomEnvironmentVariablesProvider,
         @inject(IProcessLogger) private readonly processLogger: IProcessLogger,
-        @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
@@ -28,8 +31,8 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         if (!this.workspace.isTrusted) {
             throw new Error('Workspace not trusted');
         }
-        const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
-        const proc: IProcessService = new ProcessService(this.decoder, customEnvVars);
+        const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource, 'RunNonPythonCode');
+        const proc: IProcessService = new ProcessService(customEnvVars);
         this.disposableRegistry.push(proc);
         return proc.on('exec', this.processLogger.logProcess.bind(this.processLogger));
     }

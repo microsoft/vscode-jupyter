@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -9,6 +9,9 @@ import { Commands } from '../../../platform/common/constants';
 import { IDisposable } from '../../../platform/common/types';
 import { JupyterCommandLineSelector } from '../launcher/commandLineSelector';
 
+/**
+ * Handles the SelectJupyterCommandLine command
+ */
 @injectable()
 export class JupyterCommandLineSelectorCommand implements IDisposable {
     private readonly disposables: IDisposable[] = [];

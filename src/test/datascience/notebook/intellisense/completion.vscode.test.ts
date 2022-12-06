@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
@@ -8,8 +8,7 @@ import { commands, CompletionList, Position } from 'vscode';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
-import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider.node';
-import { getTextOutputValue } from '../../../../notebooks/helpers';
+import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
 import { captureScreenShot, IExtensionTestApi } from '../../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
 import { initialize } from '../../../initialize.node';
@@ -24,11 +23,12 @@ import {
     createEmptyPythonNotebook
 } from '../helper.node';
 import { IInteractiveWindowProvider } from '../../../../interactive-window/types';
-import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
+import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { Settings } from '../../../../platform/common/constants';
+import { getTextOutputValue } from '../../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completion (slow)', function () {
+suite('VSCode Intellisense Notebook and Interactive Code Completion @lsp', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -62,7 +62,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         setIntellisenseTimeout(Settings.IntellisenseTimeout);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
@@ -70,7 +70,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell and get completions for variable', async () => {
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         await runCell(cell);
 
@@ -79,7 +79,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         const outputText = getTextOutputValue(cell.outputs[0]).trim();
         traceInfo(`Cell Output ${outputText}`);
         await insertCodeCell('a.', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
+        const cell2 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
 
         const position = new Position(0, 2);
         traceInfo('Get completions in test');

@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { injectable } from 'inversify';
 import {
     DecorationRenderOptions,
@@ -23,6 +24,9 @@ import { IDocumentManager } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 
+/**
+ * Wrapper around the vscode workspace and window apis related to TextDocuments
+ */
 @injectable()
 export class DocumentManager implements IDocumentManager {
     public get textDocuments(): readonly TextDocument[] {

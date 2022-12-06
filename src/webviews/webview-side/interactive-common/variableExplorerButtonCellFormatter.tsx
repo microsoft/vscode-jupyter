@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import * as React from 'react';
 import { IJupyterVariable } from '../../../kernels/variables/types';
@@ -38,7 +39,7 @@ export class VariableExplorerButtonCellFormatter extends React.Component<IVariab
                             baseTheme={this.props.baseTheme}
                             tooltip={getLocString(
                                 'DataScience.showDataExplorerTooltip',
-                                'Show variable in data viewer.'
+                                'Show variable snapshot in data viewer'
                             )}
                             onClick={this.onDataExplorerClick}
                         >

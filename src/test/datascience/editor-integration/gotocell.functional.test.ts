@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -10,7 +10,7 @@ suite('Dummy12', () => {
 // import { assert } from 'chai';
 // import { ChildProcess } from 'child_process';
 // import * as path from '../../platform/vscode-path/path';
-// import * as uuid from 'uuid/v4';
+// import uuid from 'uuid/v4';
 // import { CodeLens, Disposable, Position, Range, TextDocument } from 'vscode';
 // import { CancellationToken } from 'vscode-jsonrpc';
 
@@ -35,7 +35,7 @@ suite('Dummy12', () => {
 // import { MockDocumentManager } from '../mockDocumentManager';
 
 // /* eslint-disable @typescript-eslint/no-explicit-any, no-multi-str, , no-console, max-classes-per-file, comma-dangle */
-// suite('DataScience gotocell tests', () => {
+// suite('gotocell tests', () => {
 //     const disposables: Disposable[] = [];
 //     let codeLensProvider: IDataScienceCodeLensProvider;
 //     let codeLensFactory: ICodeLensFactory;

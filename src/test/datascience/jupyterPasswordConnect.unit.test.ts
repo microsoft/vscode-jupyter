@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
-import * as assert from 'assert';
+import assert from 'assert';
 import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';
 
@@ -15,7 +16,8 @@ import { MockInputBox } from './mockInputBox';
 import { MockQuickPick } from './mockQuickPick';
 import { JupyterPasswordConnect } from '../../kernels/jupyter/launcher/jupyterPasswordConnect';
 import { JupyterRequestCreator } from '../../kernels/jupyter/session/jupyterRequestCreator.node';
-import { IJupyterRequestCreator } from '../../kernels/jupyter/types';
+import { IJupyterRequestCreator, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import { IDisposableRegistry } from '../../platform/common/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('JupyterPasswordConnect', () => {
@@ -35,6 +37,8 @@ suite('JupyterPasswordConnect', () => {
         const mockDisposableRegistry = mock(AsyncDisposableRegistry);
         configService = mock(ConfigurationService);
         requestCreator = mock(JupyterRequestCreator);
+        const serverUriStorage = mock<IJupyterServerUriStorage>();
+        const disposables = mock<IDisposableRegistry>();
 
         jupyterPasswordConnect = new JupyterPasswordConnect(
             instance(appShell),
@@ -42,7 +46,9 @@ suite('JupyterPasswordConnect', () => {
             instance(mockDisposableRegistry),
             instance(configService),
             undefined,
-            instance(requestCreator)
+            instance(requestCreator),
+            instance(serverUriStorage),
+            instance(disposables)
         );
     });
 
@@ -52,11 +58,6 @@ suite('JupyterPasswordConnect', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
-        when(configService.updateSetting('jupyterServerType', anything(), anything(), anything())).thenCall(
-            (_a1, _a2, _a3, _a4) => {
-                return Promise.resolve();
-            }
-        );
 
         // Set up our fake node fetch
         const fetchMock: typemoq.IMock<typeof nodeFetch.default> = typemoq.Mock.ofInstance(nodeFetch.default);
@@ -116,6 +117,7 @@ suite('JupyterPasswordConnect', () => {
     }
 
     test('getPasswordConnectionInfo', async () => {
+        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true);
 
         // Mock our second call to get session cookie
@@ -131,6 +133,10 @@ suite('JupyterPasswordConnect', () => {
         mockSessionResponse.setup((mr) => mr.status).returns(() => 302);
         mockSessionResponse.setup((mr) => mr.headers).returns(() => mockSessionHeaders.object);
 
+        const postParams = new URLSearchParams();
+        postParams.append('_xsrf', '12341234');
+        postParams.append('password', 'Python');
+
         // typemoq doesn't love this comparison, so generalize it a bit
         fetchMock
             .setup((fm) =>
@@ -142,7 +148,8 @@ suite('JupyterPasswordConnect', () => {
                             Cookie: `_xsrf=${xsrfValue}`,
                             Connection: 'keep-alive',
                             'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
-                        }
+                        },
+                        body: postParams.toString()
                     })
                 )
             )
@@ -226,20 +233,110 @@ suite('JupyterPasswordConnect', () => {
         fetchMock.verifyAll();
     });
 
+    test('getPasswordConnectionInfo bad password followed by good password.', async () => {
+        // Reconfigure our app shell to first give a bad password
+        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('JUNK'));
+
+        const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true);
+
+        // Mock a bad request to the session cookie with the password JUNK
+        const mockSessionResponseBad = typemoq.Mock.ofType(nodeFetch.Response);
+        const mockSessionHeadersBad = typemoq.Mock.ofType(nodeFetch.Headers);
+        mockSessionHeadersBad
+            .setup((mh) => mh.raw())
+            .returns(() => {
+                return {
+                    'set-cookie': [`${sessionName}=${sessionValue}`]
+                };
+            });
+        mockSessionResponseBad.setup((mr) => mr.status).returns(() => 401);
+        mockSessionResponseBad.setup((mr) => mr.headers).returns(() => mockSessionHeadersBad.object);
+
+        let postParams = new URLSearchParams();
+        postParams.append('_xsrf', '12341234');
+        postParams.append('password', 'JUNK');
+
+        fetchMock
+            .setup((fm) =>
+                fm(
+                    'http://TESTNAME:8888/login?',
+                    typemoq.It.isObjectWith({
+                        method: 'post',
+                        headers: {
+                            Cookie: `_xsrf=${xsrfValue}`,
+                            Connection: 'keep-alive',
+                            'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                        },
+                        body: postParams.toString()
+                    })
+                )
+            )
+            .returns(() => Promise.resolve(mockSessionResponseBad.object));
+        when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
+
+        let result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
+        assert(!result, 'First call to get password should have failed');
+
+        // Now set our input for the correct password
+        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
+
+        // Mock our second call to get session cookie with the correct password 'Python'
+        const mockSessionResponse = typemoq.Mock.ofType(nodeFetch.Response);
+        const mockSessionHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
+        mockSessionHeaders
+            .setup((mh) => mh.raw())
+            .returns(() => {
+                return {
+                    'set-cookie': [`${sessionName}=${sessionValue}`]
+                };
+            });
+        mockSessionResponse.setup((mr) => mr.status).returns(() => 302);
+        mockSessionResponse.setup((mr) => mr.headers).returns(() => mockSessionHeaders.object);
+
+        postParams = new URLSearchParams();
+        postParams.append('_xsrf', '12341234');
+        postParams.append('password', 'Python');
+
+        // typemoq doesn't love this comparison, so generalize it a bit
+        fetchMock
+            .setup((fm) =>
+                fm(
+                    'http://TESTNAME:8888/login?',
+                    typemoq.It.isObjectWith({
+                        method: 'post',
+                        headers: {
+                            Cookie: `_xsrf=${xsrfValue}`,
+                            Connection: 'keep-alive',
+                            'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                        },
+                        body: postParams.toString()
+                    })
+                )
+            )
+            .returns(() => Promise.resolve(mockSessionResponse.object));
+        when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
+
+        // Retry the password
+        result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
+        assert(result, 'Expected to get a result on the second call');
+
+        // Verfiy calls
+        mockXsrfHeaders.verifyAll();
+        mockSessionHeaders.verifyAll();
+        mockXsrfResponse.verifyAll();
+        mockSessionResponse.verifyAll();
+        fetchMock.verifyAll();
+    });
+
     function createJupyterHubSetup() {
         const dsSettings = {
             allowUnauthorizedRemoteConnection: false
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
-        when(configService.updateSetting('jupyterServerType', anything(), anything(), anything())).thenCall(
-            (_a1, _a2, _a3, _a4) => {
-                return Promise.resolve();
-            }
-        );
 
         const quickPick = new MockQuickPick('');
-        const input = new MockInputBox('test');
+        const input = new MockInputBox('test', 2); // We want the input box to enter twice for this scenario
         when(appShell.createQuickPick()).thenReturn(quickPick!);
         when(appShell.createInputBox()).thenReturn(input);
 

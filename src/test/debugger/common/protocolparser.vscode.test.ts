@@ -1,13 +1,13 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
 import { PassThrough } from 'stream';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { ProtocolParser } from '../../../platform/debugger/extension/helpers/protocolParser.node';
+import { ProtocolParser } from '../../../notebooks/debugger/protocolParser.node';
 import { sleep } from '../../common.node';
 
-suite('Debugging - Protocol Parser', () => {
+suite('Debugging - Protocol Parser @debugger', () => {
     test('Test request, response and event messages', async () => {
         const stream = new PassThrough();
 

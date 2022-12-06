@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
@@ -9,9 +10,12 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { getAssociatedJupyterNotebook } from '../../notebooks/helpers';
+import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
 import { generateCellRangesFromDocument } from './cellFactory';
 
+/**
+ * Provides the lines that show up between cells in the editor.
+ */
 @injectable()
 export class Decorator implements IExtensionSingleActivationService, IDisposable {
     private currentCellTop: vscode.TextEditorDecorationType | undefined;

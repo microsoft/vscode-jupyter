@@ -44,6 +44,8 @@
             "label": "compile-web-test",
             "type": "npm",
             "script": "compile-web-test",
+            "dependsOrder": "sequence",
+            "dependsOn": ["Compile"],
             "isBackground": true,
             "group": {
                 "kind": "build",
@@ -68,6 +70,19 @@
         },
         {
             "type": "npm",
+            "script": "launchWebExtension",
+            "problemMatcher": [],
+            "label": "Launch Web Extension (Chrome)"
+        },
+        {
+            "type": "shell",
+            "problemMatcher": [],
+            "command": "npm",
+            "args": ["run", "launchWebExtension", "--", "--browser=webkit", "--port=3111"],
+            "label": "Launch Web Extension (Safari)"
+        },
+        {
+            "type": "npm",
             "script": "lint",
             "problemMatcher": ["$eslint-stylish"],
             "label": "npm: lint",
@@ -75,6 +90,40 @@
             "group": {
                 "kind": "build"
             }
+        },
+        {
+            "label": "Start Jupyter Server",
+            "type": "npm",
+            "dependsOn": "compile-web-test",
+            "isBackground": false,
+            "script": "startJupyterServer",
+            "problemMatcher": [],
+            "options": {
+                "env": {
+                    "CI_PYTHON_PATH": "", // Update with path to real python interpereter used for testing.
+                    "EXISTING_JUPYTER_URI": "" // Update with a server that you started yourself to avoid this script doing it
+                }
+            }
+        },
+        {
+            "label": "Start Jupyter Server Task",
+            "command": "echo ${input:terminateJupyterServerTask}",
+            "type": "shell",
+            "problemMatcher": []
+        },
+        {
+            "label": "Stop Jupyter Server",
+            "type": "npm",
+            "script": "stopJupyterServer",
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "terminateJupyterServerTask",
+            "type": "command",
+            "command": "workbench.action.tasks.terminate",
+            "args": "terminateAll"
         }
     ]
 }

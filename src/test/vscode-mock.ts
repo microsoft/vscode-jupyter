@@ -1,11 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
+import { anything, instance, mock, when } from 'ts-mockito';
 /* eslint-disable no-invalid-this, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any */
 
-import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { noop } from '../platform/common/utils/misc';
 import * as vscodeMocks from './mocks/vsc';
@@ -15,13 +15,13 @@ const Module = require('module');
 type VSCode = typeof vscode;
 
 const mockedVSCode: Partial<VSCode> = {};
-export const mockedVSCodeNamespaces: { [P in keyof VSCode]?: TypeMoq.IMock<VSCode[P]> } = {};
+export const mockedVSCodeNamespaces: { [P in keyof VSCode]: VSCode[P] } = {} as any;
 const originalLoad = Module._load;
 
 function generateMock<K extends keyof VSCode>(name: K): void {
-    const mockedObj = TypeMoq.Mock.ofType<VSCode[K]>();
-    (mockedVSCode as any)[name] = mockedObj.object;
-    mockedVSCodeNamespaces[name] = mockedObj as any;
+    const mockedObj = mock<VSCode[K]>();
+    (mockedVSCode as any)[name] = instance(mockedObj);
+    mockedVSCodeNamespaces[name] = mockedObj;
 }
 
 export class MockCommands {
@@ -65,17 +65,14 @@ export function initialize() {
     generateMock('debug');
     generateMock('scm');
     generateMock('notebooks');
-    generateNotebookMocks();
+    generateMock('commands');
 
-    const commands = new MockCommands();
-    (mockedVSCode as any).commands = commands;
-    mockedVSCodeNamespaces.commands = commands as any;
-    mockedVSCodeNamespaces.workspace?.setup((ws) => ws.notebookDocuments).returns(() => []);
-    mockedVSCodeNamespaces.window?.setup((w) => w.visibleNotebookEditors).returns(() => []);
+    when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
+    when(mockedVSCodeNamespaces.window.visibleNotebookEditors).thenReturn([]);
     // Use mock clipboard fo testing purposes.
     const clipboard = new MockClipboard();
-    mockedVSCodeNamespaces.env?.setup((e) => e.clipboard).returns(() => clipboard);
-    mockedVSCodeNamespaces.env?.setup((e) => e.appName).returns(() => 'Insider');
+    when(mockedVSCodeNamespaces.env.clipboard).thenReturn(clipboard);
+    when(mockedVSCodeNamespaces.env.appName).thenReturn('Insider');
 
     // When upgrading to npm 9-10, this might have to change, as we could have explicit imports (named imports).
     Module._load = function (request: any, _parent: any) {
@@ -140,28 +137,34 @@ mockedVSCode.QuickInputButtons = vscodeMocks.vscMockExtHostedTypes.QuickInputBut
 mockedVSCode.FileType = vscodeMocks.vscMock.FileType;
 mockedVSCode.UIKind = vscodeMocks.vscMock.UIKind;
 mockedVSCode.ThemeIcon = vscodeMocks.vscMockExtHostedTypes.ThemeIcon;
+mockedVSCode.ThemeColor = vscodeMocks.vscMockExtHostedTypes.ThemeColor;
 mockedVSCode.FileSystemError = vscodeMocks.vscMockExtHostedTypes.FileSystemError;
+mockedVSCode.FileDecoration = vscodeMocks.vscMockExtHostedTypes.FileDecoration;
+mockedVSCode.PortAutoForwardAction = vscodeMocks.vscMockExtHostedTypes.PortAutoForwardAction;
+mockedVSCode.PortAttributes = vscodeMocks.vscMockExtHostedTypes.PortAttributes;
+mockedVSCode.NotebookRendererScript = vscodeMocks.vscMockExtHostedTypes.NotebookRendererScript;
+mockedVSCode.NotebookEdit = vscodeMocks.vscMockExtHostedTypes.NotebookEdit;
+mockedVSCode.NotebookRange = vscodeMocks.vscMockExtHostedTypes.NotebookRange;
+mockedVSCode.QuickPickItemKind = vscodeMocks.vscMockExtHostedTypes.QuickPickItemKind;
 (mockedVSCode as any).NotebookCellKind = vscodeMocks.vscMockExtHostedTypes.NotebookCellKind;
 (mockedVSCode as any).NotebookRunState = vscodeMocks.vscMockExtHostedTypes.NotebookRunState;
 (mockedVSCode as any).NotebookCellRunState = vscodeMocks.vscMockExtHostedTypes.NotebookCellRunState;
+(mockedVSCode as any).NotebookControllerAffinity = vscodeMocks.vscMockExtHostedTypes.NotebookControllerAffinity;
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
+(mockedVSCode as any).NotebookCellOutput = vscodeMocks.vscMockExtHostedTypes.NotebookCellOutput;
+(mockedVSCode as any).NotebookCellOutputItem = vscodeMocks.vscMockExtHostedTypes.NotebookCellOutputItem;
+(mockedVSCode as any).NotebookCellExecutionState = vscodeMocks.vscMockExtHostedTypes.NotebookCellExecutionState;
 (mockedVSCode as any).notebook = { notebookDocuments: [] };
 mockedVSCode.workspace;
 // This API is used in src/telemetry/telemetry.ts
-const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();
-extensions.setup((e) => e.all).returns(() => []);
-const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
-const packageJson = TypeMoq.Mock.ofType<any>();
-const contributes = TypeMoq.Mock.ofType<any>();
-extension.setup((e) => e.packageJSON).returns(() => packageJson.object);
-packageJson.setup((p) => p.contributes).returns(() => contributes.object);
-contributes.setup((p) => p.debuggers).returns(() => [{ aiKey: '' }]);
-extensions.setup((e) => e.getExtension(TypeMoq.It.isAny())).returns(() => extension.object);
-mockedVSCode.extensions = extensions.object;
-
-function generateNotebookMocks() {
-    const mockedObj = TypeMoq.Mock.ofType<{}>();
-    (mockedVSCode as any).notebook = mockedObj.object;
-    (mockedVSCodeNamespaces as any).notebook = mockedObj as any;
-}
+const extensions = mock<typeof vscode.extensions>();
+when(extensions.all).thenReturn([]);
+const extension = mock<vscode.Extension<any>>();
+const packageJson = mock<any>();
+const contributes = mock<any>();
+when(extension.packageJSON).thenReturn(instance(packageJson));
+when(packageJson.contributes).thenReturn(instance(contributes));
+when(contributes.debuggers).thenReturn([{ aiKey: '' }]);
+when(extensions.getExtension(anything())).thenReturn(instance(extension));
+mockedVSCode.extensions = instance(extensions);

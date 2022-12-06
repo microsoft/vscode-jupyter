@@ -1,14 +1,17 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
+
 'use strict';
 import * as path from '../../vscode-path/path';
 import { Uri, Range } from 'vscode';
 import { IWorkspaceService, IDocumentManager } from '../application/types';
 import { AbstractSystemVariables } from './systemVariables';
 
+/**
+ * System variables for node.js. Node specific is necessary because of using the current process environment.
+ */
 export class SystemVariables extends AbstractSystemVariables {
     private _workspaceFolder: string;
     private _workspaceFolderName: string;

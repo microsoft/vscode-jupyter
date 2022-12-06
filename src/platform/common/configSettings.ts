@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 'use strict';
 
 import {
@@ -17,6 +20,7 @@ import {
     IExperiments,
     ILoggingSettings,
     InteractiveWindowMode,
+    InteractiveWindowViewColumn,
     IVariableQuery,
     IVariableTooltipFields,
     IWatchableJupyterSettings,
@@ -30,6 +34,9 @@ import { ISystemVariables, ISystemVariablesConstructor } from './variables/types
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
 // eslint-disable-next-line
+/**
+ * Typesafe representation of the settings in the jupyter extension.
+ */
 export class JupyterSettings implements IWatchableJupyterSettings {
     public get onDidChange(): Event<void> {
         return this._changeEmitter.event;
@@ -43,9 +50,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public jupyterInterruptTimeout: number = 10_000;
     public jupyterLaunchTimeout: number = 60_000;
     public jupyterLaunchRetries: number = 3;
-    public jupyterServerType: string = 'local';
     public notebookFileRoot: string = '';
-    public changeDirOnImportExport: boolean = false;
     public useDefaultConfigForJupyter: boolean = false;
     public searchForJupyter: boolean = false;
     public allowInput: boolean = false;
@@ -72,7 +77,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public stopOnFirstLineWhileDebugging: boolean = false;
     public textOutputLimit: number = 0;
     public magicCommandsAsComments: boolean = false;
-    public pythonExportMethod: string = 'direct';
+    public pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert' = 'direct';
     public stopOnError: boolean = false;
     public remoteDebuggerPort: number = 0;
     public colorizeInputBox: boolean = false;
@@ -86,19 +91,21 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public enablePythonKernelLogging: boolean = false;
     public jupyterCommandLineArguments: string[] = [];
     public widgetScriptSources: WidgetCDNs[] = [];
-    public alwaysScrollOnNewCell: boolean = false;
     public interactiveWindowMode: InteractiveWindowMode = 'multiple';
+    public pythonCellFolding: boolean = true;
+    public interactiveWindowViewColumn: InteractiveWindowViewColumn = 'secondGroup';
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     // Hidden settings not surfaced in package.json
-    public disablePythonDaemon: boolean = false;
+    public forceIPyKernelDebugger: boolean = false;
     public verboseLogging: boolean = false;
     public showVariableViewWhenDebugging: boolean = true;
     public newCellOnRunLast: boolean = true;
-    public pylanceHandlesNotebooks: boolean = false;
     public pythonCompletionTriggerCharacters: string = '';
     public logKernelOutputSeparately: boolean = false;
     public poetryPath: string = '';
+    public excludeUserSitePackages: boolean = false;
+    public enableExtendedKernelCompletions: boolean = false;
 
     public variableTooltipFields: IVariableTooltipFields = {
         python: {
@@ -229,7 +236,9 @@ export class JupyterSettings implements IWatchableJupyterSettings {
                 (<any>this)[k] = val;
             }
         };
-        const keys = this.getSerializableKeys().filter((f) => f !== 'experiments' && f !== 'logging');
+        const keys = this.getSerializableKeys().filter(
+            (f) => f !== 'experiments' && f !== 'logging' && f !== 'kernelPickerType'
+        );
         keys.forEach((k) => replacer(k, jupyterConfig));
 
         // Special case poetryPath. It actually comes from the python settings

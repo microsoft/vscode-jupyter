@@ -1,22 +1,33 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
 /* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
-import * as assert from 'assert';
+import assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from '../platform/vscode-path/path';
-import * as uuid from 'uuid/v4';
+import * as tmp from 'tmp';
 import { coerce, SemVer } from 'semver';
-import type { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IProcessService } from '../platform/common/process/types.node';
-import { IDisposable } from '../platform/common/types';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
-import { noop } from './core';
+import {
+    EXTENSION_ROOT_DIR_FOR_TESTS,
+    IS_MULTI_ROOT_TEST,
+    IS_PERF_TEST,
+    IS_REMOTE_NATIVE_TEST,
+    IS_SMOKE_TEST
+} from './constants.node';
+import { noop, sleep } from './core';
 import { isCI } from '../platform/common/constants';
 import { IWorkspaceService } from '../platform/common/application/types';
-import { waitForCondition } from './common';
+import { generateScreenShotFileName, initializeCommonApi } from './common';
+import { IDisposable } from '../platform/common/types';
+import { swallowExceptions } from '../platform/common/utils/misc';
+import { JupyterServer } from './datascience/jupyterServer.node';
+import type { ConfigurationTarget, NotebookDocument, TextDocument, Uri } from 'vscode';
+
+export { createEventHandler } from './common';
 
 const StreamZip = require('node-stream-zip');
 
@@ -119,7 +130,7 @@ export function retryAsync(this: any, wrapped: Function, retryCount: number = 2)
 
 async function setAutoSaveDelay(resource: string | Uri | undefined, config: ConfigurationTarget, delayinMS: number) {
     const vscode = require('vscode') as typeof import('vscode');
-    if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
+    if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST()) {
         return;
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
@@ -139,7 +150,7 @@ async function setPythonPathInWorkspace(
     pythonPath?: string
 ) {
     const vscode = require('vscode') as typeof import('vscode');
-    if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
+    if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST()) {
         return;
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
@@ -175,10 +186,8 @@ function getPythonPath(): string {
  * @return `SemVer` version of the Python interpreter, or `undefined` if an error occurs.
  */
 export async function getPythonSemVer(procService?: IProcessService): Promise<SemVer | undefined> {
-    const decoder = await import('../platform/common/process/decoder.node');
     const proc = await import('../platform/common/process/proc.node');
-
-    const pythonProcRunner = procService ? procService : new proc.ProcessService(new decoder.BufferDecoder());
+    const pythonProcRunner = procService ? procService : new proc.ProcessService();
     const pyVerArgs = ['-c', 'import sys;print("{0}.{1}.{2}".format(*sys.version_info[:3]))'];
 
     return pythonProcRunner
@@ -302,97 +311,20 @@ export async function openFile(file: string): Promise<TextDocument> {
     assert(vscode.window.activeTextEditor, 'No active editor');
     return textDocument;
 }
-
-/**
- * Helper class to test events.
- *
- * Usage: Assume xyz.onDidSave is the event we want to test.
- * const handler = new TestEventHandler(xyz.onDidSave);
- * // Do something that would trigger the event.
- * assert.ok(handler.fired)
- * assert.equal(handler.first, 'Args Passed to first onDidSave')
- * assert.equal(handler.count, 1)// Only one should have been fired.
- */
-export class TestEventHandler<T extends void | any = any> implements IDisposable {
-    public get fired() {
-        return this.handledEvents.length > 0;
-    }
-    public get first(): T {
-        return this.handledEvents[0];
-    }
-    public get second(): T {
-        return this.handledEvents[1];
-    }
-    public get last(): T {
-        return this.handledEvents[this.handledEvents.length - 1];
-    }
-    public get count(): number {
-        return this.handledEvents.length;
-    }
-    public get all(): T[] {
-        return this.handledEvents;
-    }
-    private readonly handler: IDisposable;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private readonly handledEvents: any[] = [];
-    constructor(event: Event<T>, private readonly eventNameForErrorMessages: string, disposables: IDisposable[] = []) {
-        disposables.push(this);
-        this.handler = event(this.listener, this);
-    }
-    public reset() {
-        while (this.handledEvents.length) {
-            this.handledEvents.pop();
-        }
-    }
-    public async assertFired(waitPeriod: number = 100): Promise<void> {
-        await waitForCondition(async () => this.fired, waitPeriod, `${this.eventNameForErrorMessages} event not fired`);
-    }
-    public async assertFiredExactly(numberOfTimesFired: number, waitPeriod: number = 2_000): Promise<void> {
-        await waitForCondition(
-            async () => this.count === numberOfTimesFired,
-            waitPeriod,
-            `${this.eventNameForErrorMessages} event fired ${this.count}, expected ${numberOfTimesFired}`
-        );
-    }
-    public async assertFiredAtLeast(numberOfTimesFired: number, waitPeriod: number = 2_000): Promise<void> {
-        await waitForCondition(
-            async () => this.count >= numberOfTimesFired,
-            waitPeriod,
-            `${this.eventNameForErrorMessages} event fired ${this.count}, expected at least ${numberOfTimesFired}.`
-        );
-    }
-    public atIndex(index: number): T {
-        return this.handledEvents[index];
-    }
-
-    public dispose() {
-        this.handler.dispose();
-    }
-
-    private listener(e: T) {
-        this.handledEvents.push(e);
-    }
-}
-
-export function createEventHandler<T, K extends keyof T>(
-    obj: T,
-    eventName: K,
-    disposables: IDisposable[] = []
-): T[K] extends Event<infer TArgs> ? TestEventHandler<TArgs> : TestEventHandler<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new TestEventHandler(obj[eventName] as any, eventName as string, disposables) as any;
-}
-
 /**
  * Captures screenshots (png format) & dumpts into root directory (only on CI).
  * If there's a failure, it will be logged (errors are swallowed).
  */
-export async function captureScreenShot(fileNamePrefix: string) {
+export async function captureScreenShot(contextOrFileName: string | Mocha.Context) {
     if (!isCI) {
         return;
     }
-    const name = `${fileNamePrefix}_${uuid()}`.replace(/[\W]+/g, '_');
-    const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, `${name}-screenshot.png`);
+    fs.ensureDirSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'logs'));
+    const filename = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'logs',
+        await generateScreenShotFileName(contextOrFileName)
+    );
     try {
         const screenshot = require('screenshot-desktop');
         await screenshot({ filename });
@@ -400,4 +332,52 @@ export async function captureScreenShot(fileNamePrefix: string) {
     } catch (ex) {
         console.error(`Failed to capture screenshot into ${filename}`, ex);
     }
+}
+
+export function initializeCommonNodeApi() {
+    const { commands, Uri } = require('vscode');
+    const { initialize } = require('./initialize.node');
+
+    initializeCommonApi({
+        async createTemporaryFile(options: {
+            contents?: string;
+            extension: string;
+        }): Promise<{ file: Uri } & IDisposable> {
+            const extension = options.extension || '.py';
+            const tempFile = tmp.tmpNameSync({ postfix: extension });
+            if (options.contents) {
+                await fs.writeFile(tempFile, options.contents);
+            }
+            return { file: Uri.file(tempFile), dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) };
+        },
+        async startJupyterServer(notebook?: NotebookDocument, useCert: boolean = false): Promise<any> {
+            if (IS_REMOTE_NATIVE_TEST()) {
+                const uriString = useCert
+                    ? await JupyterServer.instance.startJupyterWithCert()
+                    : await JupyterServer.instance.startJupyterWithToken();
+                console.info(`Jupyter started and listening at ${uriString}`);
+                try {
+                    await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
+                } catch (ex) {
+                    console.error('Failed to select jupyter server, retry in 1s', ex);
+                }
+                // Todo: Fix in debt week, we need to retry, some changes have caused the first connection attempt to fail on CI.
+                // Possible we're trying to connect before the server is ready.
+                await sleep(5_000);
+                await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
+            } else {
+                console.info(`Jupyter not started and set to local`); // This is the default
+            }
+        },
+        async stopJupyterServer() {
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return;
+            }
+            await JupyterServer.instance.dispose().catch(noop);
+        },
+        async initialize() {
+            return initialize();
+        },
+        captureScreenShot
+    });
 }

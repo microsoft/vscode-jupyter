@@ -1,9 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
-import * as fastDeepEqual from 'fast-deep-equal';
+import fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
-import { InteractiveWindowMessages } from '../../../../platform/messageTypes';
+import { InteractiveWindowMessages } from '../../../../messageTypes';
 import { BaseReduxActionPayload } from '../../../types';
 
 import { IMainState } from '../../interactive-common/mainState';
@@ -11,7 +12,7 @@ import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { getDefaultSettings } from '../../react-common/settingsReactSide';
 import { generateTestState } from '../mainState';
-import { isAllowedAction, isAllowedMessage, postActionToExtension } from './helpers';
+import { isAllowedMessage, postActionToExtension } from './helpers';
 import { generatePostOfficeSendReducer } from './postOffice';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
 
@@ -154,7 +155,6 @@ function createMiddleWare(
     /* Fixup this code if you need to debug redux
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
-    const actionsWithLargePayload = [CssMessages.GetCssResponse];
     const logger = createLogger({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         stateTransformer: (state: any) => {
@@ -178,9 +178,6 @@ function createMiddleWare(
         actionTransformer: (action: any) => {
             if (!action) {
                 return action;
-            }
-            if (actionsWithLargePayload.indexOf(action.type) >= 0) {
-                return { ...action, payload: reduceLogMessage };
             }
             return action;
         },
@@ -206,21 +203,6 @@ export interface IStore {
 export interface IMainWithVariables extends IMainState {
     variableState: IVariableState;
 }
-
-/**
- * Middleware that will ensure all actions have `messageDirection` property.
- */
-const addMessageDirectionMiddleware: Redux.Middleware = (_store) => (next) => (action: Redux.AnyAction) => {
-    if (isAllowedAction(action)) {
-        // Ensure all dispatched messages have been flagged as `incoming`.
-        const payload: BaseReduxActionPayload<{}> = action.payload || {};
-        if (!payload.messageDirection) {
-            action.payload = { ...payload, messageDirection: 'incoming' };
-        }
-    }
-
-    return next(action);
-};
 
 export function createStore<M>(
     skipDefault: boolean,
@@ -250,7 +232,7 @@ export function createStore<M>(
     });
 
     // Create our middleware
-    const middleware = createMiddleWare(testMode, postOffice, transformLoad).concat([addMessageDirectionMiddleware]);
+    const middleware = createMiddleWare(testMode, postOffice, transformLoad);
 
     // Use this reducer and middle ware to create a store
     const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));
@@ -263,14 +245,6 @@ export function createStore<M>(
             // Double check this is one of our messages. React will actually post messages here too during development
             if (isAllowedMessage(message)) {
                 const basePayload: BaseReduxActionPayload = { data: payload };
-                if (message === InteractiveWindowMessages.Sync) {
-                    // This is a message that has been sent from extension purely for synchronization purposes.
-                    // Unwrap the message.
-                    message = payload.type;
-                    // This is a message that came in as a result of an outgoing message from another view.
-                    basePayload.messageDirection = 'outgoing';
-                    basePayload.data = payload.payload.data;
-                }
                 store.dispatch({ type: message, payload: basePayload });
             }
             return true;

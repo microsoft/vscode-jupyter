@@ -1,8 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import * as WebSocketIsomorphic from 'isomorphic-ws';
+import WebSocketIsomorphic from 'isomorphic-ws';
 import { ClassType } from '../../../platform/ioc/types';
 import { traceError } from '../../../platform/logging';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
@@ -16,63 +16,51 @@ const JupyterWebSockets = new Map<string, WebSocketIsomorphic & IKernelSocket>()
 /* eslint-disable @typescript-eslint/no-explicit-any */
 @injectable()
 export class JupyterRequestCreator implements IJupyterRequestCreator {
-    public getRequestCtor(getAuthHeader?: () => any) {
+    public getRequestCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeaders?: () => any) {
         class AuthorizingRequest extends Request {
             constructor(input: RequestInfo, init?: RequestInit) {
                 super(input, init);
 
                 // Add all of the authorization parts onto the headers.
                 const origHeaders = this.headers;
-                const authorizationHeader = getAuthHeader!();
-                const keys = Object.keys(authorizationHeader);
-                keys.forEach((k) => origHeaders.append(k, authorizationHeader[k].toString()));
-                origHeaders.set('Content-Type', 'application/json');
 
-                // Rewrite the 'append' method for the headers to disallow 'authorization' after this point
-                const origAppend = origHeaders.append.bind(origHeaders);
-                origHeaders.append = (k, v) => {
-                    if (k.toLowerCase() !== 'authorization') {
-                        origAppend(k, v);
-                    }
-                };
-            }
-        }
+                if (getAuthHeaders) {
+                    const authorizationHeader = getAuthHeaders();
+                    const keys = Object.keys(authorizationHeader);
+                    keys.forEach((k) => origHeaders.append(k, authorizationHeader[k].toString()));
+                    origHeaders.set('Content-Type', 'application/json');
 
-        return getAuthHeader ? AuthorizingRequest : Request;
-    }
+                    // Rewrite the 'append' method for the headers to disallow 'authorization' after this point
+                    const origAppend = origHeaders.append.bind(origHeaders);
+                    origHeaders.append = (k, v) => {
+                        if (k.toLowerCase() !== 'authorization') {
+                            origAppend(k, v);
+                        }
+                    };
+                }
 
-    public getWebsocketCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeaders?: () => any) {
-        class JupyterWebSocket extends KernelSocketWrapper(WebSocketIsomorphic) {
-            private kernelId: string | undefined;
-            private timer: NodeJS.Timeout | number = 0;
-
-            constructor(url: string, protocols?: string | string[] | undefined) {
-                let co = {};
-                let co_headers: { [key: string]: string } | undefined;
-
+                // Append the other settings we might need too
                 if (allowUnauthorized) {
-                    co = { ...co, rejectUnauthorized: false };
+                    // rejectUnauthorized not allowed in web so we can't do anything here.
                 }
 
                 if (cookieString) {
-                    co_headers = { Cookie: cookieString };
+                    this.headers.append('Cookie', cookieString);
                 }
+            }
+        }
 
-                // Auth headers have to be refetched every time we create a connection. They may have expired
-                // since the last connection.
-                if (getAuthHeaders) {
-                    const authorizationHeader = getAuthHeaders();
-                    co_headers = co_headers ? { ...co_headers, ...authorizationHeader } : authorizationHeader;
-                }
-                if (co_headers) {
-                    co = { ...co, headers: co_headers };
-                    console.log(`CO Headers: ${co}`);
-                }
+        return AuthorizingRequest;
+    }
 
+    public getWebsocketCtor(_cookieString?: string, _allowUnauthorized?: boolean, _getAuthHeaders?: () => any) {
+        class JupyterWebSocket extends KernelSocketWrapper(WebSocketIsomorphic) {
+            private kernelId: string | undefined;
+            private timer: NodeJS.Timeout | number = 0;
+            private boundOpenHandler = this.openHandler.bind(this);
+
+            constructor(url: string, protocols?: string | string[] | undefined) {
                 super(url, protocols);
-
-                // TODO: How to send auth headers? Try debugging this to see what happens.
-
                 let timer: NodeJS.Timeout | undefined = undefined;
                 // Parse the url for the kernel id
                 const parsed = /.*\/kernels\/(.*)\/.*/.exec(url);
@@ -93,8 +81,38 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
                     traceError('KernelId not extracted from Kernel WebSocket URL');
                 }
 
+                // TODO: Implement ping. Well actually see if ping is necessary
                 // Ping the websocket connection every 30 seconds to make sure it stays alive
                 //timer = this.timer = setInterval(() => this.ping(), 30_000);
+
+                // On open, replace the onmessage handler with our own.
+                this.addEventListener('open', this.boundOpenHandler);
+            }
+
+            private openHandler() {
+                // Node version uses emit override to handle messages before they go to jupyter (and pause messages)
+                // We need a workaround. There is no 'emit' on websockets for the web so we have to create one.
+                const originalMessageHandler = this.onmessage;
+
+                // We do this by replacing the set onmessage (set by jupyterlabs) with our
+                // own version
+                this.onmessage = (ev) => {
+                    this.handleEvent(
+                        (ev, ...args) => {
+                            const event: WebSocketIsomorphic.MessageEvent = {
+                                data: args[0],
+                                type: ev.toString(),
+                                target: this
+                            };
+                            originalMessageHandler(event);
+                            return true;
+                        },
+                        'message',
+                        ev.data
+                    );
+                };
+
+                this.removeEventListener('open', this.boundOpenHandler);
             }
         }
         return JupyterWebSocket as any;

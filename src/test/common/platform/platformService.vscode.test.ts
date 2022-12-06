@@ -1,12 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
 import { expect, use } from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
-import * as os from 'os';
-import { parse } from 'semver';
+import chaiAsPromised from 'chai-as-promised';
 import { PlatformService } from '../../../platform/common/platform/platformService.node';
 import { OSType } from '../../../platform/common/utils/platform';
 
@@ -15,14 +13,6 @@ use(chaiAsPromised);
 // eslint-disable-next-line
 suite('PlatformService', () => {
     const osType = getOSType();
-
-    test('virtualEnvBinName - Windows', async () => {
-        const expected = osType === OSType.Windows ? 'Scripts' : 'bin';
-        const svc = new PlatformService();
-        const result = svc.virtualEnvBinName;
-
-        expect(result).to.be.equal(expected, 'invalid value');
-    });
 
     test('isWindows', async () => {
         const expected = osType === OSType.Windows;
@@ -46,49 +36,6 @@ suite('PlatformService', () => {
         const result = svc.isLinux;
 
         expect(result).to.be.equal(expected, 'invalid value');
-    });
-
-    test('osRelease', async () => {
-        const expected = os.release();
-        const svc = new PlatformService();
-        const result = svc.osRelease;
-
-        expect(result).to.be.equal(expected, 'invalid value');
-    });
-
-    test('is64bit', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const arch = require('arch');
-
-        const hostReports64Bit = arch() === 'x64';
-        const svc = new PlatformService();
-        const result = svc.is64bit;
-
-        expect(result).to.be.equal(
-            hostReports64Bit,
-            `arch() reports '${arch()}', PlatformService.is64bit reports ${result}.`
-        );
-    });
-
-    test('getVersion on Mac/Windows', async function () {
-        if (osType === OSType.Linux) {
-            // eslint-disable-next-line no-invalid-this
-            return this.skip();
-        }
-        const expectedVersion = parse(os.release())!;
-        const svc = new PlatformService();
-        const result = await svc.getVersion();
-
-        expect(result.compare(expectedVersion)).to.be.equal(0, 'invalid value');
-    });
-    test('getVersion on Linux shoud throw an exception', async function () {
-        if (osType !== OSType.Linux) {
-            // eslint-disable-next-line no-invalid-this
-            return this.skip();
-        }
-        const svc = new PlatformService();
-
-        await expect(svc.getVersion()).to.eventually.be.rejectedWith('Not Supported');
     });
 });
 

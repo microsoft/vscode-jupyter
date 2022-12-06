@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -6,8 +6,6 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
 import { IApplicationEnvironment } from '../application/types';
 import { JVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceVerbose } from '../../logging';
@@ -27,6 +25,10 @@ import { ExperimentationTelemetry } from './telemetry.node';
 // There's no public API yet, hence we access the global storage that is updated by the experiments package.
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
 
+/**
+ * Exposes an api to determine what experiments are in use. Experiments are generally feature flags that can be used to try out different features for a subset of users.
+ * For more information, see https://expdocs.azurewebsites.net/docs/experimentauth/featureexperiments.html
+ */
 @injectable()
 export class ExperimentService implements IExperimentService {
     /**
@@ -101,18 +103,10 @@ export class ExperimentService implements IExperimentService {
         // so we need to perform these checks and send the corresponding telemetry manually.
         switch (this.getOptInOptOutStatus(experiment)) {
             case 'optOut': {
-                sendTelemetryEvent(EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT, undefined, {
-                    expNameOptedOutOf: experiment
-                });
-
                 return false;
             }
             case 'optIn': {
                 await this.experimentationService.isCachedFlightEnabled(experiment);
-                sendTelemetryEvent(EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT, undefined, {
-                    expNameOptedInto: experiment
-                });
-
                 return true;
             }
 

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
@@ -19,17 +19,26 @@ import {
     NotebookDocumentContentOptions,
     Uri,
     NotebookDocumentShowOptions,
-    NotebookCellExecutionStateChangeEvent
+    NotebookCellExecutionStateChangeEvent,
+    commands,
+    EventEmitter
 } from 'vscode';
-import { isUri } from '../utils/misc';
+import { IDisposableRegistry } from '../types';
+import { sleep } from '../utils/async';
+import { testOnlyMethod } from '../utils/decorators';
 import { IApplicationEnvironment, IVSCodeNotebook } from './types';
 
+/**
+ * Wrapper around the vscode notebook apis. Essential to running tests as some of the ways we close down notebooks don't fire the real VS code apis.
+ */
 @injectable()
 export class VSCodeNotebook implements IVSCodeNotebook {
     public readonly onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
     public readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     public readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
-    public readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
+    public get onDidCloseNotebookDocument(): Event<NotebookDocument> {
+        return this._onDidCloseNotebookDocument.event;
+    }
     public readonly onDidChangeVisibleNotebookEditors: Event<readonly NotebookEditor[]>;
     public readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     public get onDidChangeNotebookCellExecutionState(): Event<NotebookCellExecutionStateChangeEvent> {
@@ -44,11 +53,15 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public get activeNotebookEditor(): NotebookEditor | undefined {
         return window.activeNotebookEditor;
     }
-    constructor(@inject(IApplicationEnvironment) readonly env: IApplicationEnvironment) {
+    private _onDidCloseNotebookDocument = new EventEmitter<NotebookDocument>();
+    constructor(
+        @inject(IApplicationEnvironment) readonly env: IApplicationEnvironment,
+        @inject(IDisposableRegistry) private diposables: IDisposableRegistry
+    ) {
         this.onDidChangeNotebookEditorSelection = window.onDidChangeNotebookEditorSelection;
         this.onDidChangeActiveNotebookEditor = window.onDidChangeActiveNotebookEditor;
         this.onDidOpenNotebookDocument = workspace.onDidOpenNotebookDocument;
-        this.onDidCloseNotebookDocument = workspace.onDidCloseNotebookDocument;
+        workspace.onDidCloseNotebookDocument((n) => this._onDidCloseNotebookDocument.fire(n), this, this.diposables);
         this.onDidChangeVisibleNotebookEditors = window.onDidChangeVisibleNotebookEditors;
         this.onDidSaveNotebookDocument = workspace.onDidSaveNotebookDocument;
     }
@@ -62,20 +75,11 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         }
     }
 
-    public async showNotebookDocument(uri: Uri, options?: NotebookDocumentShowOptions): Promise<NotebookEditor>;
     public async showNotebookDocument(
         document: NotebookDocument,
         options?: NotebookDocumentShowOptions
-    ): Promise<NotebookEditor>;
-    public async showNotebookDocument(
-        uriOrDocument: Uri | NotebookDocument,
-        options?: NotebookDocumentShowOptions
     ): Promise<NotebookEditor> {
-        if (isUri(uriOrDocument)) {
-            return window.showNotebookDocument(uriOrDocument, options);
-        } else {
-            return window.showNotebookDocument(uriOrDocument, options);
-        }
+        return window.showNotebookDocument(document, options);
     }
 
     public registerNotebookSerializer(
@@ -94,8 +98,32 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             notebook: NotebookDocument,
             controller: NotebookController
         ) => void | Thenable<void>,
-        rendererScripts?: NotebookRendererScript[]
+        rendererScripts?: NotebookRendererScript[],
+        _additionalLocalResourceRoots?: Uri[]
     ): NotebookController {
-        return notebooks.createNotebookController(id, viewType, label, handler, rendererScripts);
+        return notebooks.createNotebookController(
+            id,
+            viewType,
+            label,
+            handler,
+            rendererScripts
+            // Not suported yet. See https://github.com/microsoft/vscode/issues/149868
+            // additionalLocalResourceRoots
+        );
+    }
+
+    @testOnlyMethod()
+    public async closeActiveNotebooks() {
+        // We could have untitled notebooks, close them by reverting changes.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const documents = new Set<NotebookDocument>(this.notebookDocuments);
+        while (window.activeNotebookEditor) {
+            documents.add(window.activeNotebookEditor.notebook);
+            await commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+            await sleep(10);
+        }
+
+        // That command does not cause notebook on close to fire. Fire this for every active editor
+        documents.forEach((d) => this._onDidCloseNotebookDocument.fire(d));
     }
 }

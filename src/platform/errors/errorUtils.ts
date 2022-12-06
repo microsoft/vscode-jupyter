@@ -1,19 +1,12 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {
-    NotebookCell,
-    NotebookCellOutput,
-    NotebookCellOutputItem,
-    NotebookController,
-    Uri,
-    WorkspaceFolder
-} from 'vscode';
-import { CellExecutionCreator } from '../../notebooks/execution/cellExecutionCreator';
+import { NotebookCellOutput, NotebookCellOutputItem, Uri, WorkspaceFolder } from 'vscode';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { DataScience } from '../common/utils/localize';
 import { JupyterConnectError } from './jupyterConnectError';
 import { BaseError } from './types';
+import * as path from '../../platform/vscode-path/resources';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ErrorUtils {
@@ -196,16 +189,26 @@ type BaseFailure<Reason extends KernelFailureReason, ExtraData = {}> = {
 } & ExtraData;
 export type OverridingBuiltInModulesFailure = BaseFailure<
     KernelFailureReason.overridingBuiltinModules,
-    {
-        /**
-         * The module that has been overwritten.
-         */
-        moduleName: string;
-        /**
-         * Fully qualified path to the module.
-         */
-        fileName: string;
-    }
+    | {
+          /**
+           * The module that has been overwritten.
+           */
+          moduleName: string;
+          /**
+           * Fully qualified path to the module.
+           */
+          fileName: string;
+      }
+    | {
+          /**
+           * The module that has been overwritten.
+           */
+          moduleName: string;
+          /**
+           * Folder created by user (that contains a __init__.py) that is overriding the build in module/package.
+           */
+          folderName: string;
+      }
 >;
 export type ImportErrorFailure = BaseFailure<
     KernelFailureReason.importFailure,
@@ -266,7 +269,8 @@ export function analyzeKernelErrors(
     workspaceFolders: readonly WorkspaceFolder[],
     error: Error | string,
     kernelDisplayName: string | undefined,
-    pythonSysPrefix: string = ''
+    pythonSysPrefix: string = '',
+    filesInCwd: Uri[] = []
 ): KernelFailure | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stdErrOrStackTrace = error instanceof BaseError ? error.stdErr || error.stack || '' : error.toString();
@@ -319,7 +323,7 @@ export function analyzeKernelErrors(
             moduleName,
             message: moduleName
                 ? DataScience.failedToStartKernelDueToDllLoadFailure().format(moduleName)
-                : DataScience.failedToStartKernelDueToUnknowDllLoadFailure(),
+                : DataScience.failedToStartKernelDueToUnknownDllLoadFailure(),
             moreInfoLink: 'https://aka.ms/kernelFailuresDllLoad',
             telemetrySafeTags: ['dll.load.failed']
         };
@@ -431,22 +435,11 @@ export function analyzeKernelErrors(
             };
         }
     }
-    if (lastTwolinesOfError && lastTwolinesOfError[1].toLowerCase().startsWith('ModuleNotFoundError'.toLowerCase())) {
-        const info = extractModuleAndFileFromImportError(lastTwolinesOfError[1]);
-        if (info) {
-            return {
-                reason: KernelFailureReason.moduleNotFoundFailure,
-                moduleName: info.moduleName,
-                message: DataScience.failedToStartKernelDueToMissingModule().format(info.moduleName),
-                moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
-                telemetrySafeTags: ['module.notfound.error']
-            };
-        }
-    }
     // This happens when ipykernel is not installed and we attempt to run without checking for ipykernel.
     // '/home/don/samples/pySamples/crap/.venv/bin/python: No module named ipykernel_launcher\n'
     const noModule = 'No module named'.toLowerCase();
-    if (stdErr.includes(noModule)) {
+    const isNotAPackage = `is not a package`.toLowerCase();
+    if (stdErr.includes(noModule) && !isNotAPackage) {
         const line = stdErrOrStackTrace
             .splitLines()
             .map((line) => line.trim())
@@ -458,6 +451,88 @@ export function analyzeKernelErrors(
                 reason: KernelFailureReason.moduleNotFoundFailure,
                 moduleName,
                 message: DataScience.failedToStartKernelDueToMissingModule().format(moduleName),
+                moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
+                telemetrySafeTags: ['module.notfound.error']
+            };
+        }
+    } else if (stdErr.includes(noModule) && isNotAPackage) {
+        const line = stdErrOrStackTrace
+            .splitLines()
+            .map((line) => line.trim())
+            .filter((line) => line.length)
+            .find((line) => line.toLowerCase().includes(noModule));
+        let moduleName = line ? line.substring(line.toLowerCase().indexOf(noModule) + noModule.length).trim() : '';
+        let fileName = '';
+        let folderName = '';
+        if (moduleName.split("'").length > 2) {
+            fileName = moduleName.split("'").slice(-2)[0] || '';
+            fileName = fileName ? `${fileName}.py` : '';
+            folderName = fileName ? fileName : '';
+            moduleName = moduleName.split("'")[1] || moduleName;
+        }
+        const modulesInCwd = filesInCwd
+            .filter((file) => path.basename(file).toLowerCase() === '__init__.py')
+            .map((file) => path.basename(path.dirname(file)));
+        if (
+            moduleName &&
+            fileName &&
+            moduleName !== fileName &&
+            filesInCwd.some((file) => path.basename(file).toLowerCase() === fileName.toLowerCase())
+        ) {
+            return {
+                reason: KernelFailureReason.overridingBuiltinModules,
+                fileName,
+                moduleName,
+                message: DataScience.fileSeemsToBeInterferingWithKernelStartup().format(fileName),
+                moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
+                telemetrySafeTags: ['import.error', 'override.modules']
+            };
+        } else if (
+            moduleName &&
+            modulesInCwd &&
+            moduleName !== folderName &&
+            modulesInCwd.some((folder) => folder.toLowerCase() === folderName.toLowerCase())
+        ) {
+            return {
+                reason: KernelFailureReason.overridingBuiltinModules,
+                folderName,
+                moduleName,
+                message: DataScience.moduleSeemsToBeInterferingWithKernelStartup().format(folderName),
+                moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
+                telemetrySafeTags: ['import.error', 'override.modules']
+            };
+        } else {
+            return {
+                reason: KernelFailureReason.moduleNotFoundFailure,
+                moduleName,
+                message: DataScience.failedToStartKernelDueToMissingModule().format(moduleName),
+                moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
+                telemetrySafeTags: ['module.notfound.error']
+            };
+        }
+    } else if (error instanceof BaseError && error.category === 'invalidkernel' && filesInCwd.length) {
+        // This is the case when we're using non-zmq and we have no idea why the kernel died.
+        // If we have files that could cause the kernel to die, then display an error message
+        // informing the user about that.
+        const fileName = path.basename(filesInCwd[0]);
+        return {
+            reason: KernelFailureReason.overridingBuiltinModules,
+            fileName,
+            moduleName: path.basename(filesInCwd[0], '.py'),
+            message: DataScience.fileSeemsToBeInterferingWithKernelStartup().format(fileName),
+            moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
+            telemetrySafeTags: ['import.error', 'override.modules']
+        };
+    } else if (
+        lastTwolinesOfError &&
+        lastTwolinesOfError[1].toLowerCase().startsWith('ModuleNotFoundError'.toLowerCase())
+    ) {
+        const info = extractModuleAndFileFromImportError(lastTwolinesOfError[1]);
+        if (info) {
+            return {
+                reason: KernelFailureReason.moduleNotFoundFailure,
+                moduleName: info.moduleName,
+                message: DataScience.failedToStartKernelDueToMissingModule().format(info.moduleName),
                 moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
                 telemetrySafeTags: ['module.notfound.error']
             };
@@ -559,7 +634,7 @@ function isBuiltInModuleOverwritten(
     }
 
     // eslint-disable-next-line local-rules/dont-use-fspath
-    if (!workspaceFolders.some((folder) => fileName?.toLowerCase().startsWith(folder.uri.fsPath?.toLowerCase()))) {
+    if (!workspaceFolders.some((folder) => fileName.toLowerCase().startsWith(folder.uri.fsPath.toLowerCase()))) {
         return;
     }
 
@@ -575,47 +650,28 @@ function isBuiltInModuleOverwritten(
     };
 }
 
-export async function endCellAndDisplayErrorsInCell(
-    cell: NotebookCell,
-    controller: NotebookController,
-    errorMessage: string,
-    isCancelled: boolean
-) {
-    const execution = CellExecutionCreator.getOrCreate(cell, controller);
-    const output = createOutputWithErrorMessageForDisplay(errorMessage);
-    if (!output) {
-        if (execution.started) {
-            execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
-        }
-        return;
-    }
-    // Start execution if not already (Cell execution wrapper will ensure it won't start twice)
-    const started = execution.started;
-    if (!started) {
-        execution.start(cell.executionSummary?.timing?.endTime);
-        execution.executionOrder = cell.executionSummary?.executionOrder;
-    }
-    await execution.appendOutput(output);
-    execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
-}
-
 export function createOutputWithErrorMessageForDisplay(errorMessage: string) {
     if (!errorMessage) {
         return;
     }
     // If we have markdown links to run a command, turn that into a link.
-    const regex = /\[(?<name>.*)\]\((?<command>command:\S*)\)/gm;
+    const regex = /\[([^\[\]]*)\]\((.*?)\)/gm;
     let matches: RegExpExecArray | undefined | null;
     while ((matches = regex.exec(errorMessage)) !== null) {
         if (matches.length === 3) {
             errorMessage = errorMessage.replace(matches[0], `<a href='${matches[2]}'>${matches[1]}</a>`);
         }
     }
+    // Ensure all lines are colored red as errors (except for lines containing hyperlinks).
+    const stack = errorMessage
+        .splitLines({ removeEmptyEntries: false, trim: false })
+        .map((line) => `\u001b[1;31m${line}`)
+        .join('\n');
     return new NotebookCellOutput([
         NotebookCellOutputItem.error({
             message: '',
             name: '',
-            stack: `\u001b[1;31m${errorMessage.trim()}`
+            stack
         })
     ]);
 }

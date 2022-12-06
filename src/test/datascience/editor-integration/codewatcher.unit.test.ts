@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 /* eslint-disable , no-trailing-spaces, no-multi-str, , @typescript-eslint/no-unused-expressions */
 // Disable whitespace / multiline as we use that to pass in our fake file strings
@@ -25,7 +26,7 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
 import { IConfigurationService } from '../../../platform/common/types';
 import { CodeLensFactory } from '../../../interactive-window/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider';
@@ -37,15 +38,15 @@ import { MockJupyterSettings } from '../mockJupyterSettings';
 import { MockEditor } from '../mockTextEditor';
 import { createDocument } from './helpers';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { CellHashProviderFactory } from '../../../interactive-window/editor-integration/cellHashProviderFactory';
-import { IKernel, IKernelProvider } from '../../../platform/../kernels/types';
+import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { InteractiveCellResultError } from '../../../platform/errors/interactiveCellResultError';
-import { ICodeWatcher } from '../../../interactive-window/editor-integration/types';
+import { ICodeWatcher, IGeneratedCodeStorageFactory } from '../../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
 import { Commands, EditorContexts } from '../../../platform/common/constants';
-import { IDebugLocationTracker } from '../../../platform/debugger/types';
-import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { SystemVariables } from '../../../platform/common/variables/systemVariables.node';
+import { IDebugLocationTracker } from '../../../notebooks/debugger/debuggingTypes';
+import { noop } from '../../core';
+import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -70,7 +71,7 @@ function initializeMockTextEditor(
     return mockTextEditor;
 }
 
-suite('DataScience Code Watcher Unit Tests', () => {
+suite('Code Watcher Unit Tests', () => {
     let codeWatcher: CodeWatcher;
     let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
     let activeInteractiveWindow: TypeMoq.IMock<IInteractiveWindow>;
@@ -109,9 +110,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 20000,
             jupyterLaunchRetries: 3,
-            jupyterServerType: 'local',
             notebookFileRoot: 'WORKSPACE',
-            changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
@@ -151,7 +150,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         const notebook = mock<IVSCodeNotebook>();
         const execStateChangeEvent = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
         when(notebook.onDidChangeNotebookCellExecutionState).thenReturn(execStateChangeEvent.event);
-        const hashProviderFactory = mock<CellHashProviderFactory>();
+        const storageFactory = mock<IGeneratedCodeStorageFactory>();
         const kernelProvider = mock<IKernelProvider>();
         const kernelDisposedEvent = new EventEmitter<IKernel>();
         when(kernelProvider.onDidDisposeKernel).thenReturn(kernelDisposedEvent.event);
@@ -164,7 +163,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             instance(workspace),
             instance(notebook),
             disposables,
-            instance(hashProviderFactory),
+            instance(storageFactory),
             instance(kernelProvider)
         );
         serviceContainer
@@ -611,7 +610,7 @@ testing3`;
             })
             .verifiable(TypeMoq.Times.exactly(2));
 
-        void codeWatcher.runAllCells();
+        codeWatcher.runAllCells().then(noop, noop);
         await codeWatcher.runAllCells();
 
         expect(funcOrder).deep.equals(expectedFuncOrder);

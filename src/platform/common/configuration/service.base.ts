@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
@@ -8,6 +8,9 @@ import { JupyterSettings } from '../configSettings';
 import { isTestExecution, isUnitTestExecution } from '../constants';
 import { IConfigurationService, IWatchableJupyterSettings } from '../types';
 
+/**
+ * Wrapper around the workspace.getConfiguration api. Makes for typesafe access to configuration properties.
+ */
 export abstract class BaseConfigurationService implements IConfigurationService {
     protected readonly workspaceService: IWorkspaceService;
     constructor(private readonly serviceContainer: IServiceContainer) {

@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { Reducer } from 'redux';
 import {
@@ -10,8 +11,10 @@ import {
 import {
     InteractiveWindowMessages,
     IFinishCell,
-    IInteractiveWindowMapping
-} from '../../../../../platform/messageTypes';
+    IInteractiveWindowMapping,
+    SharedMessages
+} from '../../../../../messageTypes';
+import { IJupyterExtraSettings } from '../../../../../platform/webviews/types';
 import { BaseReduxActionPayload } from '../../../../types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { postActionToExtension } from '../helpers';
@@ -37,6 +40,7 @@ export type IVariableState = {
     showVariablesOnDebug: boolean;
     viewHeight: number;
     requestInProgress: boolean;
+    isWeb: boolean;
 };
 
 type VariableReducerFunc<T = never | undefined> = ReducerFunc<
@@ -122,6 +126,14 @@ function handleSort(arg: VariableReducerArg<ISortVariablesRequest>): IVariableSt
     });
     return {
         ...result
+    };
+}
+
+function handleIsWebUpdate(arg: VariableReducerArg<string>): IVariableState {
+    const settings = JSON.parse(arg.payload.data) as IJupyterExtraSettings;
+    return {
+        ...arg.prevState,
+        isWeb: settings.extraSettings.isWeb
     };
 }
 
@@ -367,7 +379,8 @@ const reducerMap: Partial<VariableActionMapping> = {
     [InteractiveWindowMessages.GetVariablesResponse]: handleResponse,
     [CommonActionType.RUN_BY_LINE]: handleDebugStart,
     [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: updateExecutionCount,
-    [CommonActionType.SORT_VARIABLES]: handleSort
+    [CommonActionType.SORT_VARIABLES]: handleSort,
+    [SharedMessages.UpdateSettings]: handleIsWebUpdate
 };
 
 export function generateVariableReducer(
@@ -387,7 +400,8 @@ export function generateVariableReducer(
         refreshCount: 0,
         showVariablesOnDebug,
         viewHeight: 0,
-        requestInProgress: false
+        requestInProgress: false,
+        isWeb: false
     };
 
     // Then combine that with our map of state change message to reducer

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -6,6 +6,9 @@
 import * as vscode from 'vscode';
 import { Channel, IApplicationEnvironment } from './types';
 
+/**
+ * Wrapper around the vscode.env object and some other properties related to the VS code instance.
+ */
 export abstract class BaseApplicationEnvironment implements IApplicationEnvironment {
     public abstract get userSettingsFile(): vscode.Uri | undefined;
     public abstract get userCustomKeybindingsFile(): vscode.Uri | undefined;
@@ -33,6 +36,10 @@ export abstract class BaseApplicationEnvironment implements IApplicationEnvironm
     public get extensionName(): string {
         // eslint-disable-next-line
         return this.packageJson.displayName;
+    }
+    public get extensionVersion(): string {
+        // eslint-disable-next-line
+        return this.packageJson.version;
     }
     /**
      * At the time of writing this API, the vscode.env.shell isn't officially released in stable version of VS Code.

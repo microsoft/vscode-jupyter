@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import type { Contents, ContentsManager } from '@jupyterlab/services';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { traceError } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -17,6 +18,13 @@ function getRemoteIPynbSuffix(): string {
     return `${jvscIdentifier}${uuid()}`;
 }
 
+export function generateBackingIPyNbFileName(resource: Resource) {
+    // Generate a more descriptive name
+    const suffix = `${getRemoteIPynbSuffix()}${uuid()}.ipynb`;
+    return resource
+        ? `${urlPath.basename(resource, '.ipynb')}${suffix}`
+        : `${DataScience.defaultNotebookName()}${suffix}`;
+}
 export class BaseBackingFileCreator implements IJupyterBackingFileCreator {
     public async createBackingFile(
         resource: Resource,
@@ -37,9 +45,7 @@ export class BaseBackingFileCreator implements IJupyterBackingFileCreator {
                 : { type: 'notebook' };
 
         // Generate a more descriptive name
-        const newName = resource
-            ? `${urlPath.basename(resource, '.ipynb')}${getRemoteIPynbSuffix()}.ipynb`
-            : `${DataScience.defaultNotebookName()}-${uuid()}.ipynb`;
+        const newName = generateBackingIPyNbFileName(resource);
 
         try {
             // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)

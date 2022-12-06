@@ -1,14 +1,17 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
-import { isJupyterNotebook } from '../../../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IInterpreterStatusbarVisibilityFilter, IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
+import { isJupyterNotebook } from '../../common/utils';
 
+/**
+ * Singleton that listens to active editor changes in order to hide/show the python interpreter
+ */
 @injectable()
 export class InterpreterStatusBarVisibility
     implements IInterpreterStatusbarVisibilityFilter, IExtensionSingleActivationService
@@ -43,7 +46,7 @@ export class InterpreterStatusBarVisibility
     }
     public get hidden() {
         return this.vscNotebook.activeNotebookEditor &&
-            isJupyterNotebook(this.vscNotebook.activeNotebookEditor.document)
+            isJupyterNotebook(this.vscNotebook.activeNotebookEditor.notebook)
             ? true
             : false;
     }

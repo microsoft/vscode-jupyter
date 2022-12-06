@@ -1,8 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
+/**
+ * Tracks wall clock time. Start time is set at contruction.
+ */
 export class StopWatch {
     private started = new Date().getTime();
     public get elapsedTime() {

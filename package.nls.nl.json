@@ -58,7 +58,6 @@
     "DataScience.pythonVersionHeader": "Python versie:",
     "DataScience.pythonRestartHeader": "Kernel herstart:",
     "DataScience.jupyterNotebookFailure": "Jupyter-notebook kon niet starten. \r\n{0}",
-    "DataScience.jupyterNotebookConnectFailed": "Verbinden met Jupiter-notebook is niet gelukt. \r\n{0}\r\n{1}",
     "DataScience.notebookVersionFormat": "Jupyter-notebook versie: {0}",
     "DataScience.jupyterKernelSpecNotFound": "Kan geen Jupyter-kernel-spec aanmaken en er zijn er geen beschikbaar voor gebruik",
     "DataScience.interruptKernel": "IPython-kernel onderbreken",

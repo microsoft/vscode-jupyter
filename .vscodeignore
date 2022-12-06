@@ -12,6 +12,7 @@ docs/**
 .gitignore
 .gitmodules
 .huskyrc.json
+.husky/**
 .npmrc
 .nvmrc
 .nycrc
@@ -28,13 +29,15 @@ package-lock.json
 packageExtension.cmd
 pvsc-dev-ext.py
 pvsc.code-workspace
-PYTHON_INTERACTIVE_TROUBLESHOOTING.md
+INTERACTIVE_TROUBLESHOOTING.md
 requirements.in
 sprint-planning.github-issues
 test.ipynb
 travis*.log
 tsconfig*.json
 tsfmt.json
+TELEMETRY.csv
+TELEMETRY.md
 .eslintrc.js
 typings.json
 vsc-extension-quickstart.md
@@ -69,9 +72,10 @@ debug_coverage*/**
 images/**/*.gif
 images/**/*.png
 ipywidgets/**
-news/**
+i18n/**
 node_modules/**
 obj/**
+logs/**
 out/**/*.stats.json
 out/**/*.analyzer.html
 out/coverconfig.json
@@ -111,3 +115,6 @@ typings/**
 types/**
 test-results*
 *.zip
+!**/*nls.*.json
+*.d.ts
+debugpy_logging.cmd

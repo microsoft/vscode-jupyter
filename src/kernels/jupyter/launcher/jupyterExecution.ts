@@ -1,44 +1,44 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import * as urlPath from '../../../platform/vscode-path/resources';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { Cancellation } from '../../../platform/common/cancellation';
-import { WrappedError } from '../../../platform/errors/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
-import { JupyterWaitForIdleError } from '../../../platform/errors/jupyterWaitForIdleError';
+import { JupyterWaitForIdleError } from '../../errors/jupyterWaitForIdleError';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
-import { Telemetry, Identifiers } from '../../../webviews/webview-side/common/constants';
-import { expandWorkingDir, createRemoteConnectionInfo } from '../jupyterUtils';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { expandWorkingDir } from '../jupyterUtils';
 import { IJupyterConnection } from '../../types';
 import {
     IJupyterExecution,
-    IJupyterUriProviderRegistration,
-    IJupyterServerUri,
     INotebookServerOptions,
     INotebookServer,
-    JupyterServerUriHandle,
     INotebookStarter,
-    IJupyterSessionManagerFactory,
-    IJupyterSessionManager,
     INotebookServerFactory
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
+import { JupyterConnection } from '../jupyterConnection';
+import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
+import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
+import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
+/**
+ * Responsible for starting a Jupyter server. It's a base class because we used
+ * to have a host and a guest version. Host version could be consolidated into this class now.
+ */
 export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonEnvironment | undefined;
     private disposed: boolean = false;
-    private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
-    private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
     constructor(
         private readonly interpreterService: IInterpreterService,
         private readonly disposableRegistry: IDisposableRegistry,
@@ -46,31 +46,28 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly configuration: IConfigurationService,
         private readonly notebookStarter: INotebookStarter | undefined,
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
-        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
-        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        private readonly notebookServerFactory: INotebookServerFactory
+        private readonly notebookServerFactory: INotebookServerFactory,
+        private readonly jupyterConnection: JupyterConnection
     ) {
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
         if (workspace) {
-            const disposable = workspace.onDidChangeConfiguration((e) => {
-                if (e.affectsConfiguration('python.dataScience', undefined)) {
-                    // When config changes happen, recreate our commands.
-                    this.onSettingsChanged();
-                }
-                if (e.affectsConfiguration('jupyter.jupyterServerType', undefined)) {
-                    // When server URI changes, clear our pending URI timeouts
-                    this.clearTimeouts();
-                }
-            });
-            this.disposableRegistry.push(disposable);
+            workspace.onDidChangeConfiguration(
+                (e) => {
+                    if (e.affectsConfiguration('python.dataScience', undefined)) {
+                        // When config changes happen, recreate our commands.
+                        this.onSettingsChanged();
+                    }
+                },
+                this,
+                this.disposableRegistry
+            );
         }
     }
 
     public dispose(): Promise<void> {
         this.disposed = true;
-        this.clearTimeouts();
         return Promise.resolve();
     }
 
@@ -111,7 +108,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
             traceInfo(`Connecting to server`);
-            const isLocalConnection = !options || !options.uri;
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 1;
@@ -131,10 +127,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Create a server tha  t we will then attempt to connect to.
                     result = await this.notebookServerFactory.createNotebookServer(connection);
                     traceInfo(`Connection complete server`);
-
-                    sendTelemetryEvent(
-                        isLocalConnection ? Telemetry.ConnectLocalJupyter : Telemetry.ConnectRemoteJupyter
-                    );
                     return result;
                 } catch (err) {
                     lastTryError = err;
@@ -158,25 +150,22 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         }
 
                         // Something else went wrong
-                        if (!isLocalConnection) {
-                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err, true);
+                        if (!options.localJupyter) {
+                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err);
 
                             // Check for the self signed certs error specifically
-                            if (err.message.indexOf('reason: self signed certificate') >= 0) {
+                            if (JupyterSelfCertsError.isSelfCertsError(err)) {
                                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                                 throw new JupyterSelfCertsError(connection.baseUrl);
+                            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
+                                sendTelemetryEvent(Telemetry.ConnectRemoteExpiredCertFailedJupyter);
+                                throw new JupyterSelfCertsExpiredError(connection.baseUrl);
                             } else {
-                                throw WrappedError.from(
-                                    DataScience.jupyterNotebookRemoteConnectFailed().format(connection.baseUrl, err),
-                                    err
-                                );
+                                throw new RemoteJupyterServerConnectionError(connection.baseUrl, options.serverId, err);
                             }
                         } else {
-                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err, true);
-                            throw WrappedError.from(
-                                DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
-                                err
-                            );
+                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err);
+                            throw new LocalJupyterServerConnectionError(err);
                         }
                     } else {
                         throw err;
@@ -193,86 +182,50 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Promise.resolve(undefined);
     }
 
-    public async validateRemoteUri(uri: string): Promise<void> {
-        let connection: IJupyterConnection | undefined = undefined;
-        let sessionManager: IJupyterSessionManager | undefined = undefined;
-        try {
-            // Prepare our map of server URIs (needed in order to retrieve the uri during the connection)
-            await this.updateServerUri(uri);
-
-            // Create an active connection.
-            connection = await createRemoteConnectionInfo(uri, this.getServerUri.bind(this));
-
-            // Attempt to list the running kernels. It will return empty if there are none, but will
-            // throw if can't connect.
-            sessionManager = await this.jupyterSessionManagerFactory.create(connection, false);
-            await sessionManager.getRunningKernels();
-
-            // We should throw an exception if any of that fails.
-        } finally {
-            if (connection) {
-                connection.dispose();
-            }
-            if (sessionManager) {
-                void sessionManager.dispose();
-            }
-        }
-    }
-
     private async startOrConnect(
         options: INotebookServerOptions,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
-        if (!options || !options.uri) {
+        if (options.localJupyter) {
             // If that works, then attempt to start the server
             traceInfo(`Launching server`);
-            const useDefaultConfig = !options || options.skipUsingDefaultConfig ? false : true;
             const settings = this.configuration.getSettings(options.resource);
-
+            const useDefaultConfig = settings.useDefaultConfigForJupyter;
+            const workingDir = await this.workspace.computeWorkingDirectory(options.resource);
             // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)
             const workingDirectory = expandWorkingDir(
-                options.workingDir,
+                workingDir,
                 this.workspace.rootFolder ? urlPath.joinPath(this.workspace.rootFolder, `${uuid()}.txt`) : undefined,
                 this.workspace,
                 settings
             );
 
-            const connection = await this.startNotebookServer(
+            return this.startNotebookServer(
                 options.resource,
                 useDefaultConfig,
                 this.configuration.getSettings(undefined).jupyterCommandLineArguments,
                 Uri.file(workingDirectory),
                 cancelToken
             );
-            if (connection) {
-                return connection;
-            } else {
-                // Throw a cancellation error if we were canceled.
-                Cancellation.throwIfCanceled(cancelToken);
-
-                // Otherwise we can't connect
-                throw new Error(DataScience.jupyterNotebookFailure().format(''));
-            }
         } else {
-            // Prepare our map of server URIs
-            await this.updateServerUri(options.uri);
-
             // If we have a URI spec up a connection info for it
-            return createRemoteConnectionInfo(options.uri, this.getServerUri.bind(this));
+            return this.jupyterConnection.createConnectionInfo({ serverId: options.serverId });
         }
     }
 
-    // eslint-disable-next-line
-    @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(
         resource: Resource,
         useDefaultConfig: boolean,
         customCommandLine: string[],
         workingDirectory: Uri,
         cancelToken: CancellationToken
-    ): Promise<IJupyterConnection | undefined> {
-        return this.notebookStarter?.start(
+    ): Promise<IJupyterConnection> {
+        if (!this.notebookStarter) {
+            // In desktop mode this must be defined, in web this code path never gets executed.
+            throw new Error('Notebook Starter cannot be undefined');
+        }
+        return this.notebookStarter!.start(
             resource,
             useDefaultConfig,
             customCommandLine,
@@ -283,46 +236,5 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values
         this.usablePythonInterpreter = undefined;
-    }
-
-    private extractJupyterServerHandleAndId(uri: string): { handle: JupyterServerUriHandle; id: string } | undefined {
-        const url: URL = new URL(uri);
-
-        // Id has to be there too.
-        const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
-        const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
-        return id && uriHandle ? { handle: uriHandle, id } : undefined;
-    }
-
-    private clearTimeouts() {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.pendingTimeouts.forEach((t) => clearTimeout(t as any));
-        this.pendingTimeouts = [];
-    }
-
-    private getServerUri(uri: string): IJupyterServerUri | undefined {
-        const idAndHandle = this.extractJupyterServerHandleAndId(uri);
-        if (idAndHandle) {
-            return this.uriToJupyterServerUri.get(uri);
-        }
-    }
-
-    private async updateServerUri(uri: string): Promise<void> {
-        const idAndHandle = this.extractJupyterServerHandleAndId(uri);
-        if (idAndHandle) {
-            const serverUri = await this.jupyterPickerRegistration.getJupyterServerUri(
-                idAndHandle.id,
-                idAndHandle.handle
-            );
-            this.uriToJupyterServerUri.set(uri, serverUri);
-            // See if there's an expiration date
-            if (serverUri.expiration) {
-                const timeoutInMS = serverUri.expiration.getTime() - Date.now();
-                // Week seems long enough (in case the expiration is ridiculous)
-                if (timeoutInMS > 0 && timeoutInMS < 604800000) {
-                    this.pendingTimeouts.push(setTimeout(() => this.updateServerUri(uri).ignoreErrors(), timeoutInMS));
-                }
-            }
-        }
     }
 }

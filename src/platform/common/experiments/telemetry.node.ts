@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -6,6 +6,9 @@
 import { IExperimentationTelemetry } from 'vscode-tas-client';
 import { sendTelemetryEvent, setSharedProperty } from '../../../telemetry';
 
+/**
+ * Used by the experimentation service to send extra properties
+ */
 export class ExperimentationTelemetry implements IExperimentationTelemetry {
     public setSharedProperty(name: string, value: string): void {
         // Add the shared property to all telemetry being sent, not just events being sent by the experimentation package.

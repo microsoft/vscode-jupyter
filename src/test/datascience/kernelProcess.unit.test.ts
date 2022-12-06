@@ -1,11 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use strict';
 
-import * as os from 'os';
 import { assert } from 'chai';
 import * as path from '../../platform/vscode-path/path';
+import * as sinon from 'sinon';
 import rewiremock from 'rewiremock';
 import { anything, instance, mock, when, verify, capture, deepEqual } from 'ts-mockito';
 import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess.node';
@@ -14,6 +16,7 @@ import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonExecutionService,
+    ObservableExecutionResult,
     Output
 } from '../../platform/common/process/types.node';
 import { IKernelConnection } from '../../kernels/raw/types';
@@ -22,19 +25,24 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
-import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService.node';
 import { IDisposable, IJupyterSettings, IOutputChannel } from '../../platform/common/types';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { noop } from '../core';
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'stream';
 import { PythonKernelInterruptDaemon } from '../../kernels/raw/finder/pythonKernelInterruptDaemon.node';
 import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths.node';
 import { waitForCondition } from '../common.node';
+import { uriEquals } from './helpers';
+import { IS_REMOTE_NATIVE_TEST } from '../constants';
+import { traceInfo } from '../../platform/logging';
+import { IPlatformService } from '../../platform/common/platform/types';
 
 suite('kernel Process', () => {
     let kernelProcess: KernelProcess;
@@ -51,7 +59,7 @@ suite('kernel Process', () => {
         transport: 'tcp'
     };
     let connectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata;
-    let fs: IFileSystem;
+    let fs: IFileSystemNode;
     let extensionChecker: IPythonExtensionChecker;
     let kernelEnvVarsService: KernelEnvironmentVariablesService;
     let pythonExecFactory: IPythonExecutionFactory;
@@ -66,7 +74,7 @@ suite('kernel Process', () => {
     let daemon: PythonKernelInterruptDaemon;
     let proc: ChildProcess;
     let jupyterPaths: JupyterPaths;
-    const tempFileCreationOptions = { fileExtension: '.json', prefix: 'kernel-' };
+    const tempFileCreationOptions = { fileExtension: '.json', prefix: 'kernel-v2-' };
     setup(() => {
         tempFileDisposable = mock<IDisposable>();
         token = new CancellationTokenSource();
@@ -74,7 +82,7 @@ suite('kernel Process', () => {
         processService = mock<IProcessService>();
         processServiceFactory = mock<IProcessServiceFactory>();
         connectionMetadata = mock<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
-        fs = mock<IFileSystem>();
+        fs = mock<IFileSystemNode>();
         extensionChecker = mock<IPythonExtensionChecker>();
         kernelEnvVarsService = mock<KernelEnvironmentVariablesService>();
         pythonExecFactory = mock<IPythonExecutionFactory>();
@@ -107,12 +115,16 @@ suite('kernel Process', () => {
             out: observableOutput,
             proc: instance(proc)
         });
-        when(daemon.getInterruptHandle()).thenResolve(1);
+        const interrupter = {
+            handle: 1,
+            dispose: () => Promise.resolve(),
+            interrupt: () => Promise.resolve()
+        };
+        when(daemon.createInterrupter(anything(), anything())).thenResolve(interrupter);
         (instance(processService) as any).then = undefined;
         (instance(pythonProcess) as any).then = undefined;
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
         (instance(daemon) as any).then = undefined;
-        when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(daemon));
         rewiremock.enable();
         rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
         when(fs.createTemporaryLocalFile(anything())).thenResolve({
@@ -120,6 +132,8 @@ suite('kernel Process', () => {
             filePath: 'connection.json'
         });
         when(jupyterPaths.getRuntimeDir()).thenResolve();
+        const platform = mock<IPlatformService>();
+        when(platform.isWindows).thenReturn(false);
         kernelProcess = new KernelProcess(
             instance(processServiceFactory),
             connection,
@@ -131,7 +145,9 @@ suite('kernel Process', () => {
             instance(pythonExecFactory),
             instance(outputChannel),
             instance(jupyterSettings),
-            instance(jupyterPaths)
+            instance(jupyterPaths),
+            instance(daemon),
+            instance(platform)
         );
     });
     teardown(() => {
@@ -143,7 +159,7 @@ suite('kernel Process', () => {
             argv: ['dotnet', 'csharp', '{connection_file}'],
             display_name: 'C# .NET',
             name: 'csharp',
-            uri: Uri.file('dotnet')
+            executable: 'dotnet'
         };
         const tempFile = 'temporary file.json';
         when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
@@ -157,15 +173,15 @@ suite('kernel Process', () => {
 
         verify(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).atLeast(1);
         verify(tempFileDisposable.dispose()).once();
-        verify(fs.writeLocalFile(tempFile, anything())).atLeast(1);
-        verify(tempFileDisposable.dispose()).calledBefore(fs.writeLocalFile(tempFile, anything()));
+        verify(fs.writeFile(uriEquals(tempFile), anything())).atLeast(1);
+        verify(tempFileDisposable.dispose()).calledBefore(fs.writeFile(uriEquals(tempFile), anything()));
     });
     test('Ensure kernelspec json file is created with the connection info in it', async () => {
         const kernelSpec: IJupyterKernelSpec = {
             argv: ['dotnet', 'csharp', '{connection_file}'],
             display_name: 'C# .NET',
             name: 'csharp',
-            uri: Uri.file('dotnet')
+            executable: 'dotnet'
         };
         const tempFile = 'temporary file.json';
         when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
@@ -177,14 +193,14 @@ suite('kernel Process', () => {
 
         await kernelProcess.launch('', 0, token.token);
 
-        verify(fs.writeLocalFile(tempFile, JSON.stringify(connection))).atLeast(1);
+        verify(fs.writeFile(uriEquals(tempFile), JSON.stringify(connection))).atLeast(1);
     });
     test('Ensure we start the .NET process instead of a Python process (& daemon is not started either)', async () => {
         const kernelSpec: IJupyterKernelSpec = {
             argv: ['dotnet', 'csharp', '{connection_file}'],
             display_name: 'C# .NET',
             name: 'csharp',
-            uri: Uri.file('dotnet')
+            executable: 'dotnet'
         };
         const tempFile = 'temporary file.json';
         when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
@@ -196,7 +212,7 @@ suite('kernel Process', () => {
 
         await kernelProcess.launch('', 0, token.token);
 
-        verify(pythonExecFactory.createDaemon(anything())).never();
+        verify(pythonExecFactory.createActivatedEnvironment(anything())).never();
         verify(pythonProcess.execObservable(anything(), anything())).never();
         assert.strictEqual(capture(processService.execObservable).first()[0], 'dotnet');
         assert.deepStrictEqual(capture(processService.execObservable).first()[1], ['csharp', `"${tempFile}"`]);
@@ -206,7 +222,7 @@ suite('kernel Process', () => {
             argv: ['dotnet', 'csharp', '{connection_file}'],
             display_name: 'C# .NET',
             name: 'csharp',
-            uri: Uri.file('dotnet')
+            executable: 'dotnet'
         };
         const tempFile = path.join('tmp', 'temporary file.json');
         const jupyterRuntimeDir = Uri.file(path.join('hello', 'jupyter', 'runtime'));
@@ -218,7 +234,7 @@ suite('kernel Process', () => {
             dispose: instance(tempFileDisposable).dispose,
             filePath: tempFile
         });
-        when(fs.localFileExists(expectedConnectionFile)).thenResolve(true);
+        when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(expectedConnectionFile).fsPath);
 
         await kernelProcess.launch('', 0, token.token);
 
@@ -232,7 +248,7 @@ suite('kernel Process', () => {
         await kernelProcess.dispose();
         await waitForCondition(
             () => {
-                verify(fs.deleteLocalFile(expectedConnectionFile)).once();
+                verify(fs.delete(uriEquals(expectedConnectionFile))).once();
                 return true;
             },
             5_000,
@@ -244,7 +260,7 @@ suite('kernel Process', () => {
             argv: ['dotnet', 'csharp', '{connection_file}'],
             display_name: 'C# .NET',
             name: 'csharp',
-            uri: Uri.file('dotnet')
+            executable: 'dotnet'
         };
         const tempFile = path.join('tmp', 'temporary file.json');
         when(jupyterPaths.getRuntimeDir()).thenResolve();
@@ -254,7 +270,7 @@ suite('kernel Process', () => {
             dispose: instance(tempFileDisposable).dispose,
             filePath: tempFile
         });
-        when(fs.localFileExists(tempFile)).thenResolve(true);
+        when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(tempFile).fsPath);
 
         await kernelProcess.launch('', 0, token.token);
 
@@ -265,7 +281,7 @@ suite('kernel Process', () => {
         await kernelProcess.dispose();
         await waitForCondition(
             () => {
-                verify(fs.deleteLocalFile(tempFile)).once();
+                verify(fs.delete(uriEquals(tempFile))).once();
                 return true;
             },
             5_000,
@@ -277,7 +293,7 @@ suite('kernel Process', () => {
             argv: ['python', '-f', '{connection_file}'],
             display_name: 'Python',
             name: 'Python3',
-            uri: Uri.file('python')
+            executable: 'python'
         };
         const tempFile = path.join('tmp', 'temporary file.json');
         const jupyterRuntimeDir = Uri.file(path.join('hello', 'jupyter', 'runtime'));
@@ -286,9 +302,9 @@ suite('kernel Process', () => {
             dispose: noop,
             filePath: tempFile
         });
-        when(fs.localFileExists(expectedConnectionFile)).thenResolve(true);
+        when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(expectedConnectionFile).fsPath);
         when(jupyterPaths.getRuntimeDir()).thenResolve(jupyterRuntimeDir);
-        when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(pythonProcess));
+        when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
         const expectedArgs = [
@@ -301,13 +317,11 @@ suite('kernel Process', () => {
             `--shell=${connection.shell_port}`,
             `--transport="${connection.transport}"`,
             `--iopub=${connection.iopub_port}`,
-            `--f=${expectedConnectionFile}`,
+            `--f="${expectedConnectionFile}"`,
             `--debug`
         ];
         await kernelProcess.launch(__dirname, 0, token.token);
 
-        // Daemon is created only on windows.
-        verify(pythonExecFactory.createDaemon(anything())).times(os.platform() === 'win32' ? 1 : 0);
         verify(processService.execObservable(anything(), anything())).never();
         verify(pythonProcess.execObservable(deepEqual(expectedArgs), anything())).once();
 
@@ -315,7 +329,7 @@ suite('kernel Process', () => {
         await kernelProcess.dispose();
         await waitForCondition(
             () => {
-                verify(fs.deleteLocalFile(expectedConnectionFile)).once();
+                verify(fs.delete(uriEquals(expectedConnectionFile))).once();
                 return true;
             },
             5_000,
@@ -327,16 +341,16 @@ suite('kernel Process', () => {
             argv: ['python', '-f', '{connection_file}'],
             display_name: 'Python',
             name: 'Python3',
-            uri: Uri.file('python')
+            executable: 'python'
         };
         const tempFile = path.join('tmp', 'temporary file.json');
         when(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).thenResolve({
             dispose: noop,
             filePath: tempFile
         });
-        when(fs.localFileExists(tempFile)).thenResolve(true);
+        when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(tempFile).fsPath);
         when(jupyterPaths.getRuntimeDir()).thenResolve();
-        when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(pythonProcess));
+        when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
         const expectedArgs = [
@@ -349,13 +363,11 @@ suite('kernel Process', () => {
             `--shell=${connection.shell_port}`,
             `--transport="${connection.transport}"`,
             `--iopub=${connection.iopub_port}`,
-            `--f=${tempFile}`,
+            `--f="${tempFile}"`,
             `--debug`
         ];
         await kernelProcess.launch(__dirname, 0, token.token);
 
-        // Daemon is created only on windows.
-        verify(pythonExecFactory.createDaemon(anything())).times(os.platform() === 'win32' ? 1 : 0);
         verify(processService.execObservable(anything(), anything())).never();
         verify(pythonProcess.execObservable(deepEqual(expectedArgs), anything())).once();
 
@@ -363,7 +375,7 @@ suite('kernel Process', () => {
         await kernelProcess.dispose();
         await waitForCondition(
             () => {
-                verify(fs.deleteLocalFile(tempFile)).once();
+                verify(fs.delete(uriEquals(tempFile))).once();
                 return true;
             },
             5_000,
@@ -375,9 +387,9 @@ suite('kernel Process', () => {
             argv: ['python', '-f', '{connection_file}'],
             display_name: 'Python',
             name: 'Python3',
-            uri: Uri.file('python')
+            executable: 'python'
         };
-        when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(pythonProcess));
+        when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
         const expectedArgs = [
@@ -395,9 +407,237 @@ suite('kernel Process', () => {
         ];
         await kernelProcess.launch(__dirname, 0, token.token);
 
-        // Daemon is created only on windows.
-        verify(pythonExecFactory.createDaemon(anything())).times(os.platform() === 'win32' ? 1 : 0);
         verify(processService.execObservable(anything(), anything())).never();
         verify(pythonProcess.execObservable(deepEqual(expectedArgs), anything())).once();
+    });
+});
+
+suite('Kernel Process', () => {
+    let processService: IProcessService;
+    let pythonExecFactory: IPythonExecutionFactory;
+    const disposables: IDisposable[] = [];
+    let token: CancellationTokenSource;
+    suiteSetup(async function () {
+        // These are slow tests, hence lets run only on linux on CI.
+        if (IS_REMOTE_NATIVE_TEST()) {
+            return this.skip();
+        }
+        rewiremock.disable();
+        sinon.restore();
+    });
+    suiteTeardown(async function () {
+        rewiremock.disable();
+        sinon.restore();
+    });
+    setup(() => {
+        token = new CancellationTokenSource();
+        disposables.push(token);
+    });
+
+    // setup(async function () {
+    //     traceInfo(`Start Test ${this.currentTest?.title}`);
+    // });
+    teardown(function () {
+        rewiremock.disable();
+        sinon.restore();
+        traceInfo(`End Test Complete ${this.currentTest?.title}`);
+        disposeAllDisposables(disposables);
+    });
+
+    function launchKernel(metadata: LocalKernelSpecConnectionMetadata, connectionFile: string) {
+        const processExecutionFactory = mock<IProcessServiceFactory>();
+        const connection = mock<IKernelConnection>();
+        const fs = mock<IFileSystemNode>();
+        const extensionChecker = mock<IPythonExtensionChecker>();
+        const kernelEnvVarsService = mock<KernelEnvironmentVariablesService>();
+        processService = mock<IProcessService>();
+        const instanceOfExecutionService = instance(processService);
+        (instanceOfExecutionService as any).then = undefined;
+        const observableProc: ObservableExecutionResult<string> = {
+            dispose: noop,
+            out: { subscribe: noop } as any,
+            proc: {
+                stdout: new EventEmitter(),
+                stderr: new EventEmitter(),
+                subscribe: noop,
+                on: noop
+            } as any
+        };
+        const jupyterPaths = mock<JupyterPaths>();
+        pythonExecFactory = mock<IPythonExecutionFactory>();
+        when(jupyterPaths.getRuntimeDir()).thenResolve();
+        when(processExecutionFactory.create(anything())).thenResolve(instanceOfExecutionService);
+        when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: connectionFile });
+        when(fs.writeFile(anything(), anything())).thenResolve();
+        when(kernelEnvVarsService.getEnvironmentVariables(anything(), anything(), anything())).thenResolve({});
+        when(processService.execObservable(anything(), anything(), anything())).thenReturn(observableProc);
+        rewiremock.enable();
+        rewiremock('tcp-port-used').with({ waitUntilUsed: () => Promise.resolve() });
+        const settings = mock<IJupyterSettings>();
+        when(settings.enablePythonKernelLogging).thenReturn(false);
+        const interruptDaemon = mock<PythonKernelInterruptDaemon>();
+        when(interruptDaemon.createInterrupter(anything(), anything())).thenResolve({
+            dispose: () => Promise.resolve(),
+            interrupt: () => Promise.resolve(),
+            handle: 1
+        });
+        const platform = mock<IPlatformService>();
+        when(platform.isWindows).thenReturn(false);
+
+        return new KernelProcess(
+            instance(processExecutionFactory),
+            instance(connection),
+            metadata,
+            instance(fs),
+            undefined,
+            instance(extensionChecker),
+            instance(kernelEnvVarsService),
+            instance(pythonExecFactory),
+            undefined,
+            instance(settings),
+            instance(jupyterPaths),
+            instance(interruptDaemon),
+            instance(platform)
+        );
+    }
+    test('Launch from kernelspec (linux)', async function () {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
+            id: '1',
+            kernelSpec: {
+                argv: [
+                    '/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home/bin/java',
+                    '--add-opens',
+                    'java.base/jdk.internal.misc=ALL-UNNAMED',
+                    '--illegal-access=permit',
+                    '-Djava.awt.headless=true',
+                    '-Djdk.disableLastUsageTracking=true',
+                    '-Dmaven.repo.local=/Users/jdoe/Notebooks/.venv/share/jupyter/repository',
+                    '-jar',
+                    '/Users/jdoe/.m2/repository/ganymede/ganymede/2.0.0-SNAPSHOT/ganymede-2.0.0-SNAPSHOT.jar',
+                    '--connection-file={connection_file}'
+                ],
+                language: 'java',
+                interrupt_mode: 'message',
+                display_name: '',
+                name: '',
+                executable: ''
+            }
+        });
+        const kernelProcess = launchKernel(metadata, 'wow/connection_config.json');
+        await kernelProcess.launch('', 10_000, token.token);
+        const args = capture(processService.execObservable).first();
+
+        assert.strictEqual(args[0], metadata.kernelSpec.argv[0]);
+        assert.deepStrictEqual(
+            args[1],
+            metadata.kernelSpec.argv
+                .slice(1, metadata.kernelSpec.argv.length - 1)
+                .concat('--connection-file=wow/connection_config.json')
+        );
+        await kernelProcess.dispose();
+    });
+    test('Launch from kernelspec (linux with space in file name)', async function () {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
+            id: '1',
+            kernelSpec: {
+                argv: [
+                    '/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home/bin/java',
+                    '--add-opens',
+                    'java.base/jdk.internal.misc=ALL-UNNAMED',
+                    '--illegal-access=permit',
+                    '-Djava.awt.headless=true',
+                    '-Djdk.disableLastUsageTracking=true',
+                    '-Dmaven.repo.local=/Users/jdoe/Notebooks/.venv/share/jupyter/repository',
+                    '-jar',
+                    '/Users/jdoe/.m2/repository/ganymede/ganymede/2.0.0-SNAPSHOT/ganymede-2.0.0-SNAPSHOT.jar',
+                    '--connection-file={connection_file}'
+                ],
+                language: 'java',
+                interrupt_mode: 'message',
+                display_name: '',
+                name: '',
+                executable: ''
+            }
+        });
+        const kernelProcess = launchKernel(metadata, 'wow/connection config.json');
+        await kernelProcess.launch('', 10_000, token.token);
+        const args = capture(processService.execObservable).first();
+
+        assert.strictEqual(args[0], metadata.kernelSpec.argv[0]);
+        assert.deepStrictEqual(
+            args[1],
+            metadata.kernelSpec.argv
+                .slice(1, metadata.kernelSpec.argv.length - 1)
+                .concat('--connection-file="wow/connection config.json"')
+        );
+        await kernelProcess.dispose();
+    });
+    test('Launch from kernelspec (windows)', async function () {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
+            id: '1',
+            kernelSpec: {
+                argv: [
+                    'C:\\Program Files\\AdoptOpenJDK\\jdk-16.0.1.9-hotspot\\bin\\java.exe',
+                    '--illegal-access=permit',
+                    '--add-opens',
+                    'java.base/jdk.internal.misc=ALL-UNNAMED',
+                    '-jar',
+                    'C:\\Users\\abc\\AppData\\Roaming\\jupyter\\kernels\\ganymede-1.1.0.20210614-java-16kernel.jar',
+                    '--runtime-dir=C:\\Users\\abc\\AppData\\Roaming\\jupyter\\runtime',
+                    '--connection-file={connection_file}'
+                ],
+                language: 'java',
+                interrupt_mode: 'message',
+                display_name: '',
+                name: '',
+                executable: ''
+            }
+        });
+        const kernelProcess = launchKernel(metadata, 'connection_config.json');
+        await kernelProcess.launch('', 10_000, token.token);
+        const args = capture(processService.execObservable).first();
+
+        assert.strictEqual(args[0], metadata.kernelSpec.argv[0]);
+        assert.deepStrictEqual(
+            args[1],
+            metadata.kernelSpec.argv
+                .slice(1, metadata.kernelSpec.argv.length - 1)
+                .concat('--connection-file=connection_config.json')
+        );
+        await kernelProcess.dispose();
+    });
+    test('Launch from kernelspec (windows with space in file name)', async function () {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
+            id: '1',
+            kernelSpec: {
+                argv: [
+                    'C:\\Program Files\\AdoptOpenJDK\\jdk-16.0.1.9-hotspot\\bin\\java.exe',
+                    '--illegal-access=permit',
+                    '--add-opens',
+                    'java.base/jdk.internal.misc=ALL-UNNAMED',
+                    '-jar',
+                    'C:\\Users\\abc\\AppData\\Roaming\\jupyter\\kernels\\ganymede-1.1.0.20210614-java-16kernel.jar',
+                    '--runtime-dir=C:\\Users\\abc\\AppData\\Roaming\\jupyter\\runtime',
+                    '--connection-file={connection_file}'
+                ],
+                language: 'java',
+                interrupt_mode: 'message',
+                display_name: '',
+                name: '',
+                executable: ''
+            }
+        });
+        const kernelProcess = launchKernel(metadata, 'D:\\hello\\connection config.json');
+        await kernelProcess.launch('', 10_000, token.token);
+        const args = capture(processService.execObservable).first();
+
+        assert.strictEqual(args[0], metadata.kernelSpec.argv[0]);
+        assert.deepStrictEqual(
+            args[1],
+            metadata.kernelSpec.argv
+                .slice(1, metadata.kernelSpec.argv.length - 1)
+                .concat('--connection-file="D:\\hello\\connection config.json"')
+        );
+        await kernelProcess.dispose();
     });
 });

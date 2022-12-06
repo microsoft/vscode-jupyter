@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -19,19 +19,18 @@ import {
     waitForExecutionCompletedSuccessfully,
     prewarmNotebooks,
     createEmptyPythonNotebook,
-    workAroundVSCodeNotebookStartPages,
     defaultNotebookTestTimeout
 } from './helper.node';
 import { IS_CONDA_TEST } from '../../constants.node';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
-import { JupyterNotebookView } from '../../../notebooks/constants';
-import { INotebookControllerManager } from '../../../notebooks/types';
+import { JupyterNotebookView } from '../../../platform/common/constants';
+import { IControllerRegistration } from '../../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function () {
+suite('Conda Env Detection @kernelPicker', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
-    let controllerManager: INotebookControllerManager;
+    let controllerRegistration: IControllerRegistration;
     this.timeout(120_000);
     suiteSetup(async function () {
         if (!IS_CONDA_TEST()) {
@@ -41,8 +40,7 @@ suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function (
         this.timeout(120_000);
         try {
             api = await initialize();
-            controllerManager = api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
-            await workAroundVSCodeNotebookStartPages();
+            controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
             await startJupyterServer();
             await prewarmNotebooks();
             sinon.restore();
@@ -63,14 +61,14 @@ suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function (
             assert.isOk(window.activeNotebookEditor, 'No active notebook');
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
-            await captureScreenShot(this.currentTest?.title || 'unknown');
+            await captureScreenShot(this);
             throw e;
         }
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
@@ -81,22 +79,20 @@ suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function (
         const uniqueCondaEnvName = `bogustTestEnv${Date.now()}`;
         await insertCodeCell(`!conda create -n ${uniqueCondaEnvName} python -y`, { index: 0 });
 
-        const cells = window.activeNotebookEditor!.document.getCells();
+        const cells = window.activeNotebookEditor!.notebook.getCells();
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[0])]);
 
         // Wait for this conda env to get added to the list of kernels.
         await waitForCondition(
             async () => {
                 return (
-                    controllerManager
-                        .registeredNotebookControllers()
-                        .filter(
-                            (item) =>
-                                item.controller.notebookType === JupyterNotebookView &&
-                                item.connection.kind === 'startUsingPythonInterpreter' &&
-                                item.connection.interpreter.envType === EnvironmentType.Conda &&
-                                item.connection.interpreter.envName === uniqueCondaEnvName
-                        ).length > 0
+                    controllerRegistration.registered.filter(
+                        (item) =>
+                            item.controller.notebookType === JupyterNotebookView &&
+                            item.connection.kind === 'startUsingPythonInterpreter' &&
+                            item.connection.interpreter.envType === EnvironmentType.Conda &&
+                            item.connection.interpreter.envName === uniqueCondaEnvName
+                    ).length > 0
                 );
             },
             defaultNotebookTestTimeout * 2,

@@ -1,15 +1,14 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
-import { traceError, traceInfo } from '../../platform/logging';
+import { traceInfo } from '../../platform/logging';
 import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     ObservableExecutionResult
 } from '../../platform/common/process/types.node';
-import { IOutputChannel } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { Products } from '../../platform/common/utils/localize';
 import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
@@ -26,6 +25,9 @@ export type ExecutionInstallArgs = {
     useShellExec?: boolean;
 };
 
+/**
+ * Base class for all module installers.
+ */
 export abstract class ModuleInstaller implements IModuleInstaller {
     public abstract get priority(): number;
     public abstract get name(): string;
@@ -111,13 +113,16 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 });
             }
             let lastStdErr: string | undefined;
+            const ticker = ['', '.', '..', '...'];
+            let counter = 0;
             if (observable) {
                 observable.out.subscribe({
                     next: (output) => {
+                        const suffix = ticker[counter % 4];
+                        const trimmedOutput = output.out.trim();
+                        counter += 1;
                         const message =
-                            output.out.length > 100
-                                ? `${output.out.substring(0, 50)}...${output.out.substring(output.out.length - 50)}`
-                                : output.out;
+                            trimmedOutput.length > 30 ? `${trimmedOutput.substring(0, 30)}${suffix}` : trimmedOutput;
                         progress.report({ message });
                         traceInfo(output.out);
                         if (output.source === 'stderr') {
@@ -151,34 +156,6 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         await shell.withProgress(options, async (progress, token: CancellationToken) => install(progress, token));
     }
     public abstract isSupported(interpreter: PythonEnvironment): Promise<boolean>;
-
-    // TODO: Figure out when to elevate
-    protected elevatedInstall(execPath: string, args: string[]) {
-        const options = {
-            name: 'VS Code Jupyter'
-        };
-        const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
-
-        traceInfo(`[Elevated] ${command}`);
-
-        const sudo = require('sudo-prompt');
-
-        sudo.exec(command, options, async (error: string, stdout: string, stderr: string) => {
-            if (error) {
-                const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-                await shell.showErrorMessage(error);
-            } else {
-                outputChannel.show();
-                if (stdout) {
-                    traceInfo(stdout);
-                }
-                if (stderr) {
-                    traceError(`Warning: ${stderr}`);
-                }
-            }
-        });
-    }
     protected abstract getExecutionArgs(
         moduleName: string,
         interpreter: PythonEnvironment,

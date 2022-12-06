@@ -1,5 +1,5 @@
 name: 'Create Virtual Environment'
-description: "Create Virtual Env for tests"
+description: 'Create Virtual Env for tests'
 
 outputs:
   path:
@@ -28,6 +28,7 @@ runs:
         python -m pip uninstall jedi --yes
         python -m pip install jedi==0.17.2
         python -m pip install pandas
+        python -m pip install ipywidgets==7.7.2
 
         python -m venv .venvnokernel
         source .venvnokernel/bin/activate

@@ -1,89 +1,99 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
-import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, ConfigurationTarget, env, Range, Uri, commands } from 'vscode';
-import { DebugProtocol } from 'vscode-debugprotocol';
-import { IShowDataViewerFromVariablePanel } from '../../platform/messageTypes';
-import { IKernelProvider } from '../../kernels/types';
-import { convertDebugProtocolVariableToIJupyterVariable } from '../../kernels/variables/helpers';
-import { DataViewerChecker } from '../../webviews/extension-side/dataviewer/dataViewerChecker';
-import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
+import { inject, injectable, optional } from 'inversify';
+import {
+    CodeLens,
+    ConfigurationTarget,
+    env,
+    Range,
+    Uri,
+    commands,
+    NotebookCell,
+    NotebookEdit,
+    NotebookRange,
+    Selection,
+    Position,
+    ViewColumn,
+    workspace,
+    WorkspaceEdit
+} from 'vscode';
+import { IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
+import { ICommandNameArgumentTypeMapping } from '../../commands';
 import {
     IApplicationShell,
+    IClipboard,
     ICommandManager,
     IDebugService,
     IDocumentManager,
+    IVSCodeNotebook,
     IWorkspaceService
 } from '../../platform/common/application/types';
-import { traceError } from '../../platform/logging';
 
-import {
-    IConfigurationService,
-    IDataScienceCommandListener,
-    IDisposable,
-    IDisposableRegistry,
-    IOutputChannel
-} from '../../platform/common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
-import { JUPYTER_OUTPUT_CHANNEL, Identifiers, Commands, Telemetry } from '../../platform/common/constants';
+import { capturePerfTelemetry, captureUsageTelemetry } from '../../telemetry';
 import {
-    IDataViewerDependencyService,
-    IDataViewerFactory,
-    IJupyterVariableDataProviderFactory
-} from '../../webviews/extension-side/dataviewer/types';
-import { IJupyterVariables } from '../../kernels/variables/types';
-import { IDataScienceErrorHandler } from '../../platform/errors/types';
+    Commands,
+    CommandSource,
+    JVSC_EXTENSION_ID,
+    PYTHON_LANGUAGE,
+    Telemetry
+} from '../../platform/common/constants';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from '../editor-integration/types';
-import { IExportCommands, IInteractiveWindowProvider } from '../types';
+import { IInteractiveWindowProvider } from '../types';
 import * as urlPath from '../../platform/vscode-path/resources';
-import { getFilePath } from '../../platform/common/platform/fs-paths';
+import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { ExportFormat, IExportDialog, IFileConverter } from '../../notebooks/export/types';
+import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
+import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
+import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
+import { generateCellsFromDocument } from '../editor-integration/cellFactory';
+import { IDataScienceErrorHandler } from '../../kernels/errors/types';
+import { INotebookEditorProvider } from '../../notebooks/types';
+import { INotebookExporter, IJupyterExecution } from '../../kernels/jupyter/types';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IControllerPreferredService } from '../../notebooks/controllers/types';
+import { StatusProvider } from './statusProvider';
 
+/**
+ * Class that registers command handlers for interactive window commands.
+ */
 @injectable()
 export class CommandRegistry implements IDisposable, IExtensionSingleActivationService {
-    private dataViewerChecker: DataViewerChecker;
+    private readonly statusProvider: StatusProvider;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(INotebookExporter) @optional() private jupyterExporter: INotebookExporter | undefined,
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(IApplicationShell) private applicationShell: IApplicationShell,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDataScienceCodeLensProvider)
         @optional()
         private dataScienceCodeLensProvider: IDataScienceCodeLensProvider | undefined,
-        @multiInject(IDataScienceCommandListener)
-        @optional()
-        private commandListeners: IDataScienceCommandListener[] | undefined,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDebugService) @optional() private debugService: IDebugService | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
-        @inject(IExportCommands) @optional() private readonly exportCommand: IExportCommands | undefined,
-        @inject(IJupyterVariableDataProviderFactory)
-        @optional()
-        private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory | undefined,
-        @inject(IDataViewerFactory) @optional() private readonly dataViewerFactory: IDataViewerFactory | undefined,
-        @inject(IJupyterVariables)
-        @optional()
-        @named(Identifiers.DEBUGGER_VARIABLES)
-        private variableProvider: IJupyterVariables | undefined,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IInteractiveWindowProvider)
-        @optional()
-        private readonly interactiveWindowProvider: IInteractiveWindowProvider | undefined,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IDataViewerDependencyService)
-        @optional()
-        private readonly dataViewerDependencyService: IDataViewerDependencyService | undefined,
-        @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
+        private readonly interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
+        @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
+        @inject(IFileConverter) private fileConverter: IFileConverter,
+        @inject(IExportDialog) private exportDialog: IExportDialog,
+        @inject(IClipboard) private clipboard: IClipboard,
+        @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook,
+        @inject(IControllerPreferredService) private controllerPreferredService: IControllerPreferredService
     ) {
-        this.dataViewerChecker = new DataViewerChecker(configService, appShell);
+        this.statusProvider = new StatusProvider(applicationShell);
         if (!this.workspace.isTrusted) {
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
@@ -106,7 +116,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         this.registerCommand(Commands.GotoPrevCellInFile, this.gotoPrevCellInFile);
         this.registerCommand(Commands.AddCellBelow, this.addCellBelow);
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
-        this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
         this.registerCommand(Commands.LatestExtension, this.openPythonExtensionPage);
         this.registerCommand(Commands.EnableDebugLogging, this.enableDebugLogging);
         this.registerCommand(Commands.ResetLoggingLevel, this.resetLoggingLevel);
@@ -114,11 +123,84 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
         );
-        if (this.commandListeners) {
-            this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
-                listener.register(this.commandManager);
-            });
-        }
+        this.registerCommand(Commands.CreateNewInteractive, (connection?: KernelConnectionMetadata) =>
+            this.createNewInteractiveWindow(connection)
+        );
+        this.registerCommand(
+            Commands.ImportNotebook,
+            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
+                return this.listenForErrors(() => {
+                    if (file) {
+                        return this.importNotebookOnFile(file);
+                    } else {
+                        return this.importNotebook();
+                    }
+                });
+            }
+        );
+        this.registerCommand(
+            Commands.ImportNotebookFile,
+            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
+                return this.listenForErrors(() => {
+                    if (file) {
+                        return this.importNotebookOnFile(file);
+                    } else {
+                        return this.importNotebook();
+                    }
+                });
+            }
+        );
+        this.commandManager.registerCommand(
+            Commands.ExportFileAsNotebook,
+            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
+                return this.listenForErrors(() => {
+                    if (file) {
+                        return this.exportFile(file);
+                    } else {
+                        const activeEditor = this.documentManager.activeTextEditor;
+                        if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
+                            return this.exportFile(activeEditor.document.uri);
+                        }
+                    }
+
+                    return Promise.resolve();
+                });
+            }
+        );
+        this.registerCommand(
+            Commands.ExportFileAndOutputAsNotebook,
+            (file: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
+                return this.listenForErrors(() => {
+                    if (file) {
+                        return this.exportFileAndOutput(file);
+                    } else {
+                        const activeEditor = this.documentManager.activeTextEditor;
+                        if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
+                            return this.exportFileAndOutput(activeEditor.document.uri);
+                        }
+                    }
+                    return Promise.resolve();
+                });
+            }
+        );
+        this.registerCommand(Commands.ExpandAllCells, async (context?: { notebookEditor: { notebookUri: Uri } }) =>
+            this.expandAllCells(context?.notebookEditor?.notebookUri)
+        );
+        this.registerCommand(Commands.CollapseAllCells, async (context?: { notebookEditor: { notebookUri: Uri } }) =>
+            this.collapseAllCells(context?.notebookEditor?.notebookUri)
+        );
+        this.registerCommand(Commands.ExportOutputAsNotebook, () => this.exportCells());
+        this.registerCommand(
+            Commands.InteractiveExportAsNotebook,
+            (context?: { notebookEditor: { notebookUri: Uri } }) => this.export(context?.notebookEditor?.notebookUri)
+        );
+        this.registerCommand(Commands.InteractiveExportAs, (context?: { notebookEditor: { notebookUri: Uri } }) =>
+            this.exportAs(context?.notebookEditor?.notebookUri)
+        );
+        this.registerCommand(Commands.ScrollToCell, (file: Uri, id: string) => this.scrollToCell(file, id));
+        this.registerCommand(Commands.InteractiveClearAll, this.clearAllCellsInInteractiveWindow);
+        this.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow);
+        this.commandManager.registerCommand(Commands.InteractiveCopyCell, this.copyCellInInteractiveWindow);
     }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
@@ -127,13 +209,12 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         if (!this.workspace.isTrusted) {
             return;
         }
-        this.exportCommand?.register();
         this.registerCommand(Commands.RunAllCells, this.runAllCells);
         this.registerCommand(Commands.RunCell, this.runCell);
         this.registerCommand(Commands.RunCurrentCell, this.runCurrentCell);
         this.registerCommand(Commands.RunCurrentCellAdvance, this.runCurrentCellAndAdvance);
         this.registerCommand(Commands.ExecSelectionInInteractiveWindow, (textOrUri: string | undefined | Uri) => {
-            void this.runSelectionOrLine(textOrUri);
+            this.runSelectionOrLine(textOrUri).catch(noop);
         });
         this.registerCommand(Commands.RunAllCellsAbove, this.runAllCellsAbove);
         this.registerCommand(Commands.RunCellAndAllBelow, this.runCellAndAllBelow);
@@ -147,7 +228,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         this.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor);
         this.registerCommand(Commands.OpenVariableView, this.openVariableView);
         this.registerCommand(Commands.OpenOutlineView, this.openOutlineView);
-        this.registerCommand(Commands.ShowDataViewer, this.onVariablePanelShowDataViewerRequest);
         this.registerCommand(Commands.RunToLine, this.runToLine);
         this.registerCommand(Commands.RunFromLine, this.runFromLine);
         this.registerCommand(Commands.RunFileInInteractiveWindows, this.runFileInteractive);
@@ -191,19 +271,13 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    private enableLoadingWidgetScriptsFromThirdParty(): void {
+    private async enableLoadingWidgetScriptsFromThirdParty() {
         if (this.configService.getSettings(undefined).widgetScriptSources.length > 0) {
             return;
         }
         // Update the setting and once updated, notify user to restart kernel.
-        this.configService
+        await this.configService
             .updateSetting('widgetScriptSources', ['jsdelivr.com', 'unpkg.com'], undefined, ConfigurationTarget.Global)
-            .then(() => {
-                // Let user know they'll need to restart the kernel.
-                this.appShell
-                    .showInformationMessage(DataScience.loadThirdPartyWidgetScriptsPostEnabled())
-                    .then(noop, noop);
-            })
             .catch(noop);
     }
 
@@ -343,41 +417,42 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    @captureTelemetry(Telemetry.DebugStepOver)
+    @captureUsageTelemetry(Telemetry.DebugStepOver)
     private async debugStepOver(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession) {
-            void this.commandManager.executeCommand('workbench.action.debug.stepOver');
+            this.commandManager.executeCommand('workbench.action.debug.stepOver').then(noop, noop);
         }
     }
 
-    @captureTelemetry(Telemetry.DebugStop)
+    @captureUsageTelemetry(Telemetry.DebugStop)
     private async debugStop(uri: Uri): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession && this.interactiveWindowProvider) {
             // Attempt to get the interactive window for this file
             const iw = this.interactiveWindowProvider.windows.find((w) => w.owner?.toString() == uri.toString());
             if (iw && iw.notebookDocument) {
-                const kernel = this.kernelProvider.get(iw.notebookDocument.uri);
+                const kernel = this.kernelProvider.get(iw.notebookDocument);
                 if (kernel) {
+                    traceVerbose(`Interrupt kernel due to debug stop of IW ${uri.toString()}`);
                     // If we have a matching iw, then stop current execution
                     await kernel.interrupt();
                 }
             }
 
-            void this.commandManager.executeCommand('workbench.action.debug.stop');
+            this.commandManager.executeCommand('workbench.action.debug.stop').then(noop, noop);
         }
     }
 
-    @captureTelemetry(Telemetry.DebugContinue)
+    @captureUsageTelemetry(Telemetry.DebugContinue)
     private async debugContinue(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession) {
-            void this.commandManager.executeCommand('workbench.action.debug.continue');
+            this.commandManager.executeCommand('workbench.action.debug.continue').then(noop, noop);
         }
     }
 
-    @captureTelemetry(Telemetry.AddCellBelow)
+    @capturePerfTelemetry(Telemetry.AddCellBelow)
     private async addCellBelow(): Promise<void> {
         await this.getCurrentCodeWatcher()?.addEmptyCellToBottom();
     }
@@ -493,10 +568,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         await commands.executeCommand('ipynb.newUntitledIpynb');
     }
 
-    private viewJupyterOutput() {
-        this.jupyterOutput.show(true);
-    }
-
     private getCurrentCodeLens(): CodeLens | undefined {
         const activeEditor = this.documentManager.activeTextEditor;
         const activeCodeWatcher = this.getCurrentCodeWatcher();
@@ -525,7 +596,10 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
     }
 
     private openPythonExtensionPage() {
-        void env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter`));
+        env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter`)).then(
+            noop,
+            noop
+        );
     }
 
     // Open up our variable viewer using the command that VS Code provides for this
@@ -539,47 +613,283 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
     private async openOutlineView(): Promise<void> {
         return this.commandManager.executeCommand('outline.focus');
     }
-    private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
-        sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
-        if (
-            this.debugService?.activeDebugSession &&
-            this.variableProvider &&
-            this.jupyterVariableDataProviderFactory &&
-            this.dataViewerFactory
-        ) {
-            try {
-                // First find out the current python environment that we are working with
-                if (
-                    this.debugService.activeDebugSession.configuration.python &&
-                    this.dataViewerDependencyService &&
-                    this.interpreterService
-                ) {
-                    const pythonEnv = await this.interpreterService.getInterpreterDetails(
-                        this.debugService.activeDebugSession.configuration.python
-                    );
-                    // Check that we have dependencies installed for data viewer
-                    pythonEnv && (await this.dataViewerDependencyService.checkAndInstallMissingDependencies(pythonEnv));
-                }
 
-                const variable = convertDebugProtocolVariableToIJupyterVariable(
-                    request.variable as DebugProtocol.Variable
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    private async listenForErrors(promise: () => Promise<any>): Promise<any> {
+        let result: any;
+        try {
+            result = await promise();
+            return result;
+        } catch (err) {
+            traceError('listenForErrors', err as any);
+            this.dataScienceErrorHandler.handleError(err).then(noop, noop);
+        }
+        return result;
+    }
+
+    @captureUsageTelemetry(Telemetry.ExportPythonFileInteractive)
+    private async exportFile(file: Uri): Promise<void> {
+        const filePath = getFilePath(file);
+        if (filePath && filePath.length > 0 && this.jupyterExporter) {
+            // If the current file is the active editor, then generate cells from the document.
+            const activeEditor = this.documentManager.activeTextEditor;
+            if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.uri, file)) {
+                const cells = generateCellsFromDocument(
+                    activeEditor.document,
+                    this.configuration.getSettings(activeEditor.document.uri)
                 );
-                const jupyterVariable = await this.variableProvider.getFullVariable(variable);
-                const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
-                    jupyterVariable
-                );
-                const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
-                const columnSize = dataFrameInfo?.columns?.length;
-                if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
-                    const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
-                    await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
-                    sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
+                if (cells) {
+                    // Bring up the export dialog box
+                    const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, file);
+                    await this.waitForStatus(
+                        async () => {
+                            if (uri) {
+                                const notebook = await this.jupyterExporter?.translateToNotebook(cells);
+                                await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
+                            }
+                        },
+                        DataScience.exportingFormat(),
+                        getDisplayPath(file)
+                    );
+                    // When all done, show a notice that it completed.
+                    if (uri && filePath) {
+                        const openQuestion1 = DataScience.exportOpenQuestion1();
+                        const selection = await this.applicationShell.showInformationMessage(
+                            DataScience.exportDialogComplete().format(getDisplayPath(file)),
+                            openQuestion1
+                        );
+                        if (selection === openQuestion1) {
+                            await openAndShowNotebook(uri);
+                        }
+                    }
                 }
-            } catch (e) {
-                sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, undefined, e);
-                traceError(e);
-                void this.errorHandler.handleError(e);
             }
         }
+    }
+
+    @captureUsageTelemetry(Telemetry.ExportPythonFileAndOutputInteractive)
+    private async exportFileAndOutput(file: Uri): Promise<Uri | undefined> {
+        const filePath = getFilePath(file);
+        if (
+            filePath &&
+            filePath.length > 0 &&
+            this.jupyterExporter &&
+            (await this.jupyterExecution.isNotebookSupported())
+        ) {
+            // If the current file is the active editor, then generate cells from the document.
+            const activeEditor = this.documentManager.activeTextEditor;
+            if (
+                activeEditor &&
+                activeEditor.document &&
+                this.fileSystem.arePathsSame(activeEditor.document.uri, file)
+            ) {
+                const cells = generateCellsFromDocument(
+                    activeEditor.document,
+                    this.configuration.getSettings(activeEditor.document.uri)
+                );
+                if (cells) {
+                    // Bring up the export dialog box
+                    const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, file);
+                    if (!uri) {
+                        return;
+                    }
+                    await this.waitForStatus(
+                        async () => {
+                            if (uri) {
+                                const notebook = await this.jupyterExporter?.translateToNotebook(cells);
+                                await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
+                            }
+                        },
+                        DataScience.exportingFormat(),
+                        getDisplayPath(file)
+                    );
+                    // Next open this notebook & execute it.
+                    const editor = await this.notebook
+                        .openNotebookDocument(uri)
+                        .then((document) => this.notebook.showNotebookDocument(document));
+                    const { controller } = await this.controllerPreferredService.computePreferred(editor.notebook);
+                    if (controller) {
+                        await this.commandManager.executeCommand('notebook.selectKernel', {
+                            id: controller.id,
+                            extension: JVSC_EXTENSION_ID
+                        });
+                    }
+                    await this.commandManager.executeCommand('notebook.execute');
+                    return uri;
+                }
+            }
+        } else {
+            await this.dataScienceErrorHandler.handleError(
+                new JupyterInstallError(
+                    DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError())
+                )
+            );
+        }
+    }
+
+    private async expandAllCells(uri?: Uri) {
+        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        traceInfo(`Expanding all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
+        if (interactiveWindow) {
+            await interactiveWindow.expandAllCells();
+        }
+    }
+
+    private async collapseAllCells(uri?: Uri) {
+        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        traceInfo(`Collapsing all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
+        if (interactiveWindow) {
+            await interactiveWindow.collapseAllCells();
+        }
+    }
+
+    private exportCells() {
+        const interactiveWindow = this.interactiveWindowProvider?.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.export();
+        }
+    }
+
+    private exportAs(uri?: Uri) {
+        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        if (interactiveWindow) {
+            interactiveWindow.exportAs();
+        }
+    }
+
+    private export(uri?: Uri) {
+        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        if (interactiveWindow) {
+            interactiveWindow.export();
+        }
+    }
+
+    @captureUsageTelemetry(Telemetry.CreateNewInteractive)
+    private async createNewInteractiveWindow(connection?: KernelConnectionMetadata): Promise<void> {
+        await this.interactiveWindowProvider?.getOrCreate(undefined, connection);
+    }
+
+    private waitForStatus<T>(
+        promise: () => Promise<T>,
+        format: string,
+        file?: string,
+        canceled?: () => void
+    ): Promise<T> {
+        const message = file ? format.format(file) : format;
+        return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
+    }
+
+    @captureUsageTelemetry(Telemetry.ImportNotebook, { scope: 'command' })
+    private async importNotebook(): Promise<void> {
+        const filtersKey = DataScience.importDialogFilter();
+        const filtersObject: { [name: string]: string[] } = {};
+        filtersObject[filtersKey] = ['ipynb'];
+
+        const uris = await this.applicationShell.showOpenDialog({
+            openLabel: DataScience.importDialogTitle(),
+            filters: filtersObject
+        });
+
+        if (uris && uris.length > 0) {
+            // Don't call the other overload as we'll end up with double telemetry.
+            await this.waitForStatus(
+                async () => {
+                    await this.fileConverter.importIpynb(uris[0]);
+                },
+                DataScience.importingFormat(),
+                getDisplayPath(uris[0])
+            );
+        }
+    }
+
+    @captureUsageTelemetry(Telemetry.ImportNotebook, { scope: 'file' })
+    private async importNotebookOnFile(file: Uri): Promise<void> {
+        const filepath = getFilePath(file);
+        if (filepath && filepath.length > 0) {
+            await this.waitForStatus(
+                async () => {
+                    await this.fileConverter.importIpynb(file);
+                },
+                DataScience.importingFormat(),
+                getDisplayPath(file)
+            );
+        }
+    }
+
+    private async scrollToCell(file: Uri, id: string): Promise<void> {
+        if (id && file) {
+            // Find the interactive windows that have this file as a submitter
+            const possibles = this.interactiveWindowProvider.windows.filter(
+                (w) => w.submitters.findIndex((s) => this.fileSystem.arePathsSame(s, file)) >= 0
+            );
+
+            // Scroll to cell in the one that has the cell. We need this so
+            // we don't activate all of them.
+            // eslint-disable-next-line @typescript-eslint/prefer-for-of
+            for (let i = 0; i < possibles.length; i += 1) {
+                if (await possibles[i].hasCell(id)) {
+                    possibles[i].scrollToCell(id);
+                    break;
+                }
+            }
+        }
+    }
+
+    private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri } }): Promise<void> {
+        const uri = this.getTargetInteractiveWindow(context?.notebookEditor?.notebookUri)?.notebookUri;
+        if (!uri) {
+            return;
+        }
+
+        // Look for the matching notebook document to add cells to
+        const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri.toString());
+        if (!document) {
+            return;
+        }
+
+        // Remove the cells from the matching notebook document
+        const edit = new WorkspaceEdit();
+        const nbEdit = NotebookEdit.deleteCells(new NotebookRange(0, document.cellCount));
+        edit.set(document.uri, [nbEdit]);
+        await workspace.applyEdit(edit);
+    }
+
+    private async goToCodeInInteractiveWindow(context?: NotebookCell) {
+        if (context && context.metadata?.interactive) {
+            const uri = Uri.parse(context.metadata.interactive.uristring);
+            const line = context.metadata.interactive.lineIndex;
+
+            const editor = await this.documentManager.showTextDocument(uri, { viewColumn: ViewColumn.One });
+
+            // If we found the editor change its selection
+            if (editor) {
+                editor.revealRange(new Range(line, 0, line, 0));
+                editor.selection = new Selection(new Position(line, 0), new Position(line, 0));
+            }
+        }
+    }
+
+    private async copyCellInInteractiveWindow(context?: NotebookCell) {
+        if (context) {
+            const settings = this.configuration.getSettings(context.notebook.uri);
+            const source = [
+                // Prepend cell marker to code
+                context.metadata.interactiveWindowCellMarker ?? settings.defaultCellMarker,
+                context.document.getText()
+            ].join('\n');
+            await this.clipboard.writeText(source);
+        }
+    }
+
+    private getTargetInteractiveWindow(notebookUri: Uri | undefined) {
+        let targetInteractiveWindow;
+        if (notebookUri !== undefined) {
+            targetInteractiveWindow = this.interactiveWindowProvider.windows.find(
+                (w) => w.notebookUri?.toString() === notebookUri.toString()
+            );
+        } else {
+            targetInteractiveWindow = this.interactiveWindowProvider.getActiveOrAssociatedInteractiveWindow();
+        }
+        return targetInteractiveWindow;
     }
 }

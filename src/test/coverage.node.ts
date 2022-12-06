@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import * as path from '../platform/vscode-path/path';
@@ -19,7 +19,7 @@ export function setupCoverage() {
     const nyc = new NYC({
         cwd: path.join(EXTENSION_ROOT_DIR_FOR_TESTS),
         extension: ['.ts'],
-        include: ['**/src/platform/**/*.ts', '**/out/platform/**/*.js'],
+        include: ['**/src/**/*.ts', '**/out/**/*.js'],
         exclude: ['**/test/**', '.vscode-test/**', '**/ipywidgets/**', '**/node_modules/**'],
         reporter: reports,
         'report-dir': path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'coverage'),

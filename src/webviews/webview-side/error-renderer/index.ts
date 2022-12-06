@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import './styles.css';
@@ -6,46 +6,205 @@ import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook
 import ansiToHtml from 'ansi-to-html';
 import escape from 'lodash/escape';
 
+let Localizations = {
+    'DataScience.outputSizeExceedLimit':
+        'Output exceeds the <a href={0}>size limit</a>. Open the full output data <a href={1}>in a text editor</a>'
+};
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-const handleInnerClick = (event: MouseEvent, context: RendererContext<any>) => {
-    if (!event || !event.view || !event.view.document) {
+/**
+ * Handle a click on an anchor element.
+ * @return {boolean} `true` if the event has been handled, else `false`
+ */
+function handleInnerClick(target: HTMLAnchorElement, context: RendererContext<any>) {
+    if (target.href && context.postMessage) {
+        if (target.href.indexOf('file') === 0) {
+            context.postMessage({
+                message: 'open_link',
+                payload: target.href
+            });
+            return true;
+        }
+        if (target.href.indexOf('vscode-notebook-cell') === 0) {
+            context.postMessage({
+                message: 'open_link',
+                payload: target.href
+            });
+            return true;
+        } else if (target.href.indexOf('command:workbench.action.openSettings') === 0) {
+            // Let the webview handle this.
+            return false;
+        } else if (target.href.indexOf('command') === 0) {
+            context.postMessage({
+                message: 'open_link',
+                payload: target.href
+            });
+            return true;
+        } else if (target.href.indexOf('https://aka.ms/') === 0) {
+            context.postMessage({
+                message: 'open_link',
+                payload: target.href
+            });
+            return true;
+        }
+    }
+    return false;
+}
+
+if (!String.prototype.format) {
+    String.prototype.format = function (this: string) {
+        const args = arguments;
+        return this.replace(/{(\d+)}/g, (match, number) => (args[number] === undefined ? match : args[number]));
+    };
+}
+
+function generateViewMoreElement(outputId: string) {
+    const container = document.createElement('span');
+    const infoInnerHTML = Localizations['DataScience.outputSizeExceedLimit'].format(
+        `"command:workbench.action.openSettings?["notebook.output.textLineLimit"]"`,
+        `"command:workbench.action.openLargeOutput?${outputId}"`
+    );
+    container.innerHTML = infoInnerHTML;
+    return container;
+}
+
+function handleANSIOutput(context: RendererContext<any>, converter: ansiToHtml, traceback: string[]) {
+    const tracebackElm = document.createElement('div');
+    try {
+        tracebackElm.innerHTML = traceback
+            .map((tb) => {
+                try {
+                    return tb
+                        .split(/\r?\n/)
+                        .map((tbLine) => {
+                            try {
+                                return converter.toHtml(tbLine);
+                            } catch (ex) {
+                                console.warn(`Failed to convert a traceback line to HTML`, ex);
+                                return tbLine;
+                            }
+                        })
+                        .join('\n');
+                } catch (ex) {
+                    console.warn(`Failed to convert a traceback line to HTML`, ex);
+                    return tb;
+                }
+            })
+            .join('\n');
+    } catch (ex) {
+        console.warn(`Failed to convert traceback to HTML`, ex);
+        tracebackElm.innerHTML = traceback.join('\n');
+    }
+    tracebackElm.addEventListener('click', (e) => {
+        const a = e.target as HTMLAnchorElement;
+        if (a && a.href && handleInnerClick(a, context)) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+        }
+    });
+    return tracebackElm;
+}
+
+export function truncatedArrayOfString(
+    id: string,
+    traceback: string[],
+    linesLimit: number,
+    container: HTMLElement,
+    context: RendererContext<any>,
+    converter: ansiToHtml,
+    outputItemJson: any
+) {
+    if (!traceback.some((item) => item.trim().length)) {
+        const header = document.createElement('div');
+        const headerMessage =
+            outputItemJson.name && outputItemJson.message
+                ? `${outputItemJson.name}: ${outputItemJson.message}`
+                : outputItemJson.name || outputItemJson.message;
+
+        if (headerMessage) {
+            header.classList.add('output-error-header');
+            header.innerText = headerMessage;
+            container.appendChild(header);
+        } else {
+            // We can't display nothing (other extesnsions might have differen formats of errors, like Julia, .NET, etc).
+            const tbEle = document.createElement('div');
+            container.appendChild(tbEle);
+            tbEle.innerHTML = traceback.join('<br>');
+        }
         return;
     }
 
-    for (const pathElement of event.composedPath()) {
-        const node: any = pathElement;
-        if (node.tagName && node.tagName.toLowerCase() === 'a' && node.href && context.postMessage) {
-            if (node.href.indexOf('file') === 0) {
-                context.postMessage({
-                    message: 'open_link',
-                    payload: node.href
-                });
-                event.preventDefault();
-                return;
-            }
-            if (node.href.indexOf('vscode-notebook-cell') === 0) {
-                context.postMessage({
-                    message: 'open_link',
-                    payload: node.href
-                });
-                event.preventDefault();
-                return;
-            } else if (node.href.indexOf('command') === 0) {
-                context.postMessage({
-                    message: 'open_link',
-                    payload: node.href
-                });
-                event.preventDefault();
-                return;
-            }
-        }
-    }
-};
+    let buffer = traceback.join('\n').split(/\r\n|\n|\r/g);
+    let lineCount = buffer.length;
 
-export const activate: ActivationFunction = (_context) => {
+    if (lineCount < linesLimit) {
+        container.appendChild(handleANSIOutput(context, converter, traceback));
+        return;
+    }
+
+    container.appendChild(generateViewMoreElement(id));
+
+    const div = document.createElement('div');
+    container.appendChild(div);
+    div.appendChild(handleANSIOutput(context, converter, buffer.slice(0, linesLimit - 5)));
+
+    // view more ...
+    const viewMoreElm = document.createElement('div');
+    viewMoreElm.innerText = '...';
+    viewMoreElm.classList.add('error-view-more');
+    container.appendChild(viewMoreElm);
+
+    const div2 = document.createElement('div');
+    container.appendChild(div2);
+    div2.appendChild(handleANSIOutput(context, converter, buffer.slice(lineCount - 5)));
+}
+
+export const activate: ActivationFunction = (context) => {
+    const latestContext = context as RendererContext<void> & { readonly settings: { readonly lineLimit: number } };
+    let loadLocalization: Promise<void>;
+    let isReady = false;
+
+    if (context.postMessage && context.onDidReceiveMessage) {
+        const requestLocalization = () => {
+            context.postMessage!({
+                type: 2 /** MessageType.LoadLoc */
+            });
+        };
+
+        let _loadLocResolveFunc: () => void;
+        loadLocalization = new Promise<void>((resolve) => {
+            _loadLocResolveFunc = resolve;
+        });
+        context.onDidReceiveMessage((e) => {
+            switch (e.type) {
+                case 1:
+                    if (!isReady) {
+                        // renderer activates before extension
+                        requestLocalization();
+                    }
+                    break;
+                case 2:
+                    // load localization
+                    Localizations = {
+                        ...Localizations,
+                        ...e.data
+                    };
+                    isReady = true;
+                    _loadLocResolveFunc();
+                    break;
+            }
+        });
+
+        requestLocalization();
+    } else {
+        loadLocalization = Promise.resolve();
+    }
+
     return {
-        renderOutputItem(outputItem: OutputItem, element: HTMLElement) {
+        renderOutputItem: async (outputItem: OutputItem, element: HTMLElement) => {
+            await loadLocalization;
+            const lineLimit = latestContext.settings.lineLimit;
             const converter = new ansiToHtml({
                 fg: 'var(--vscode-terminal-foreground)',
                 bg: 'var(--vscode-terminal-background)',
@@ -84,11 +243,11 @@ export const activate: ActivationFunction = (_context) => {
 
             // there is traceback
             // Fix links in tracebacks.
-            // RegEx `<a href='<file path>?line=<linenumber>'>line number</a>`
+            // RegEx `<a href='<file path>?line=<linenumber>'>line number or file name</a>`
             // When we escape, the links would be escaped as well.
             // We need to unescape them.
             const fileLinkRegExp = new RegExp(
-                /&lt;a href=&#39;(file|vscode-notebook-cell):(.*(?=\?))\?line=(\d*)&#39;&gt;(\d*)&lt;\/a&gt;/
+                /&lt;a href=&#39;(file|vscode-notebook-cell):(.*(?=\?))\?line=(\d*)&#39;&gt;(.*)&lt;\/a&gt;/
             );
             const commandRegEx = new RegExp(/&lt;a href=&#39;command:(.*)&#39;&gt;(.*)&lt;\/a&gt;/);
             const akaMsLinks = new RegExp(/&lt;a href=&#39;https:\/\/aka.ms\/(.*)&#39;&gt;(.*)&lt;\/a&gt;/);
@@ -98,7 +257,7 @@ export const activate: ActivationFunction = (_context) => {
                     if (matches.length === 5) {
                         line = line.replace(
                             matches[0],
-                            `<a href='${matches[1]}:${matches[2]}?line=${matches[3]}'>${matches[4]}<a>`
+                            `<a href='${matches[1]}:${matches[2]}?line=${matches[3]}'>${matches[4]}</a>`
                         );
                     }
                 }
@@ -115,35 +274,7 @@ export const activate: ActivationFunction = (_context) => {
                 return line;
             });
 
-            const html = traceback.some((item) => item.trim().length)
-                ? converter.toHtml(traceback.join('\n'))
-                : undefined;
-
-            if (html) {
-                const traceback = document.createElement('div');
-                container.appendChild(traceback);
-                traceback.innerHTML = html;
-                traceback.addEventListener('click', (e) => {
-                    handleInnerClick(e, _context);
-                });
-            } else {
-                const header = document.createElement('div');
-                const headerMessage =
-                    outputItemJson.name && outputItemJson.message
-                        ? `${outputItemJson.name}: ${outputItemJson.message}`
-                        : outputItemJson.name || outputItemJson.message;
-
-                if (headerMessage) {
-                    header.classList.add('output-error-header');
-                    header.innerText = headerMessage;
-                    container.appendChild(header);
-                } else {
-                    // We can't display nothing (other extesnsions might have differen formats of errors, like Julia, .NET, etc).
-                    const tbEle = document.createElement('div');
-                    container.appendChild(tbEle);
-                    tbEle.innerHTML = traceback.join('<br>');
-                }
-            }
+            truncatedArrayOfString(outputItem.id, traceback, lineLimit, container, context, converter, outputItemJson);
         }
     };
 };

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -15,22 +15,26 @@ if ((Reflect as any).metadata === undefined) {
 const { setupCoverage } = require('./coverage.node');
 const nyc = setupCoverage();
 
-import * as glob from 'glob';
-import * as Mocha from 'mocha';
+import * as fs from 'fs-extra';
+import glob from 'glob';
+import Mocha from 'mocha';
 import * as path from '../platform/vscode-path/path';
 import * as v8 from 'v8';
 import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants.node';
 import {
     IS_MULTI_ROOT_TEST,
     IS_SMOKE_TEST,
+    IS_PERF_TEST,
     MAX_EXTENSION_ACTIVATION_TIME,
     TEST_RETRYCOUNT,
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
+    EXTENSION_ROOT_DIR_FOR_TESTS
 } from './constants.node';
 import { noop } from './core';
 import { stopJupyterServer } from './datascience/notebook/helper.node';
 import { initialize } from './initialize.node';
-import { rootHooks } from './testHooks';
+import { rootHooks } from './testHooks.node';
+import { isCI } from '../platform/common/constants';
 
 type SetupOptions = Mocha.MochaOptions & {
     testFilesSuffix: string;
@@ -42,6 +46,11 @@ type SetupOptions = Mocha.MochaOptions & {
 };
 
 process.on('unhandledRejection', (ex: any, _a) => {
+    if (typeof ex === 'object' && ex && ex.name === 'Canceled' && ex instanceof Error) {
+        // We don't care about unhandled `Cancellation` errors.
+        // When we shutdown tests some of these cancellations (cancelling starting of Kernels, etc) bubble upto VS Code.
+        return;
+    }
     const message = [`${ex}`];
     if (typeof ex !== 'string' && ex && ex.message) {
         message.push(ex.name);
@@ -51,13 +60,25 @@ process.on('unhandledRejection', (ex: any, _a) => {
         }
     }
     // eslint-disable-next-line no-console
-    console.log(`Unhandled Promise Rejection with the message ${message.join(', ')}`);
+    const msg = `Unhandled Promise Rejection with the message ${message.join(', ')}`;
+
+    if (
+        msg.includes('Error: custom request failed') ||
+        msg.includes('ms-python.python') || // We don't care about unhanded promise rejections from the Python extension.
+        msg.includes('ms-python.isort') || // We don't care about unhanded promise rejections from the Python related extensions.
+        msg.includes('extensions/git/dist/main.js') // git extension often throws errors from calling extension APIs after EH has been disconnected
+    ) {
+        // Some error from VS Code, we can ignore this.
+        return;
+    }
+    console.log(msg);
+    if (isCI) {
+        fs.appendFileSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'unhandledErrors.txt'), `${msg}\n`);
+    }
 });
 
 /**
- * Configure the test environment and return the optoins required to run moch tests.
- *
- * @returns {SetupOptions}
+ * Configure the test environment and return the options required to run mocha tests.
  */
 function configure(): SetupOptions {
     process.env.VSC_JUPYTER_CI_TEST = '1';
@@ -73,13 +94,14 @@ function configure(): SetupOptions {
     // So the solution is to run them separately and first on CI.
     const grep = IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : defaultGrep;
     const testFilesSuffix = process.env.TEST_FILES_SUFFIX || '.test*';
+    const testTimeout = process.env.VSC_JUPYTER_TEST_TIMEOUT || TEST_TIMEOUT;
 
     const options: SetupOptions & { retries: number; invert: boolean } = {
         ui: 'tdd',
         color: true,
         rootHooks: rootHooks,
         invert,
-        timeout: TEST_TIMEOUT,
+        timeout: testTimeout,
         retries: IS_CI_SERVER ? TEST_RETRYCOUNT : 0,
         grep,
         testFilesSuffix,
@@ -96,8 +118,9 @@ function configure(): SetupOptions {
     // Without that the smoke tests process doesn't exit after the tests complete.
     options.reporter = 'mocha-multi-reporters';
     const reporterPath = path.join(__dirname, 'common', 'exitCIAfterTestReporter.js');
+    const customReporterPath = path.join(__dirname, 'web', 'customReporter.js');
     options.reporterOptions = {
-        reporterEnabled: `spec,mocha-junit-reporter,${reporterPath}`
+        reporterEnabled: `spec,mocha-junit-reporter,${reporterPath},${customReporterPath}`
     };
 
     // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.
@@ -120,7 +143,7 @@ function configure(): SetupOptions {
  * @returns
  */
 function activateExtensionScript() {
-    const ex = new Error('Failed to initialize Python extension for tests after 3 minutes');
+    const ex = new Error('Failed to initialize Python Extension for tests after 3 minutes');
     let timer: NodeJS.Timer | undefined;
     const failed = new Promise((_, reject) => {
         timer = setTimeout(() => reject(ex), MAX_EXTENSION_ACTIVATION_TIME);
@@ -144,7 +167,7 @@ export async function run(): Promise<void> {
     v8.setFlagsFromString('--expose_gc');
     const options = configure();
     const mocha = new Mocha(options);
-    const testsRoot = path.join(__dirname);
+    const testsRoot = path.join(__dirname, '..');
     // Enable source map support.
     require('source-map-support').install();
 
@@ -172,8 +195,12 @@ export async function run(): Promise<void> {
             break;
     }
     const testFiles = await new Promise<string[]>((resolve, reject) => {
+        // If we have mulitple patterns, then turn into regex from `a,b,c` to `(a|b|c)`
+        const pattern = options.testFilesSuffix.includes(',')
+            ? `(${options.testFilesSuffix.split(',').join('|')})`
+            : options.testFilesSuffix;
         glob(
-            `**/*${options.testFilesSuffix}.js`,
+            `**/*${pattern}.js`,
             { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'].concat(ignoreGlob), cwd: testsRoot },
             (error, files) => {
                 if (error) {
@@ -186,12 +213,17 @@ export async function run(): Promise<void> {
 
     // Setup test files that need to be run.
     testFiles.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
+    console.log(`Running tests with options ${JSON.stringify(options, undefined, 4)}`);
+    console.log(`Tests included ${testFiles.join(',')}`);
 
-    /* eslint-disable no-console */
-    console.time('Time taken to activate the extension');
-    console.log('Starting & waiting for Jupyter extension to activate');
-    await activateExtensionScript();
-    console.timeEnd('Time taken to activate the extension');
+    // for performance tests, extension activation is part of the test run
+    if (!IS_PERF_TEST()) {
+        /* eslint-disable no-console */
+        console.time('Time taken to activate the extension');
+        console.log('Starting & waiting for Jupyter Extension to activate');
+        await activateExtensionScript();
+        console.timeEnd('Time taken to activate the extension');
+    }
 
     try {
         // Run the tests.

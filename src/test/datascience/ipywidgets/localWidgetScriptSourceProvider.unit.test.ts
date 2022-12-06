@@ -1,245 +1,107 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { assert } from 'chai';
-import * as path from '../../../platform/vscode-path/path';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
-import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
-import { IKernel } from '../../../platform/../kernels/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.node';
+import { IKernel } from '../../../kernels/types';
+import { LocalWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/localWidgetScriptSourceProvider.node';
 import {
     ILocalResourceUriConverter,
-    IWidgetScriptSourceProvider
-} from '../../../kernels/ipywidgets-message-coordination/types';
+    IWidgetScriptSourceProvider,
+    IIPyWidgetScriptManager,
+    IIPyWidgetScriptManagerFactory
+} from '../../../notebooks/controllers/ipywidgets/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('DataScience - ipywidget - Local Widget Script Source', () => {
+suite('ipywidget - Local Widget Script Source', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let resourceConverter: ILocalResourceUriConverter;
-    let fs: IFileSystem;
     let kernel: IKernel;
-    let interpreterService: IInterpreterService;
-    const filesToLookSearchFor = `*${path.sep}index.js`;
+    let scriptManagerFactory: IIPyWidgetScriptManagerFactory;
+    let scriptManager: IIPyWidgetScriptManager;
     function asVSCodeUri(uri: Uri) {
         return `vscodeUri://${uri.fsPath}`;
     }
     setup(() => {
         resourceConverter = mock<ILocalResourceUriConverter>();
-        fs = mock(FileSystem);
-        interpreterService = mock<IInterpreterService>();
+        scriptManagerFactory = mock<IIPyWidgetScriptManagerFactory>();
+        scriptManager = mock<IIPyWidgetScriptManager>();
+        when(scriptManagerFactory.getOrCreate(anything())).thenReturn(instance(scriptManager));
         kernel = mock<IKernel>();
         when(resourceConverter.asWebviewUri(anything())).thenCall((uri) => Promise.resolve(asVSCodeUri(uri)));
         scriptSourceProvider = new LocalWidgetScriptSourceProvider(
             instance(kernel),
             instance(resourceConverter),
-            instance(fs),
-            instance(interpreterService),
-            instance(mock<IPythonExecutionFactory>())
+            instance(scriptManagerFactory)
         );
     });
-    test('No script source when there is no kernel associated with notebook', async () => {
-        when(kernel.kernelConnectionMetadata).thenReturn();
+    test('No baseurl if Script Manager does not support it', async () => {
+        when(scriptManager.getBaseUrl).thenReturn();
 
-        const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
+        assert.isOk(scriptManager.getBaseUrl);
+        const baseUrl = await scriptSourceProvider.getBaseUrl!();
 
-        assert.deepEqual(value, { moduleName: 'ModuleName' });
+        assert.isUndefined(baseUrl);
+    });
+    test('Get baseurl', async () => {
+        const uri = Uri.file(__dirname);
+        when(scriptManager.getBaseUrl!()).thenResolve(uri);
+
+        assert.isOk(scriptManager.getBaseUrl);
+        const baseUrl = await scriptSourceProvider.getBaseUrl!();
+
+        assert.strictEqual(baseUrl?.toString(), asVSCodeUri(uri).toString());
     });
     test('No script source when there are no widgets', async () => {
-        when(kernel.kernelConnectionMetadata).thenReturn({
-            kernelSpec: {
-                name: '',
-                uri: Uri.file(''),
-                display_name: '',
-                argv: [],
-                metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
-            },
-            id: '',
-            kind: 'startUsingLocalKernelSpec'
-        });
-        when(fs.searchLocal(anything(), anything())).thenResolve([]);
+        when(scriptManager.getWidgetModuleMappings()).thenResolve();
 
         const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
 
         assert.deepEqual(value, { moduleName: 'ModuleName' });
-
-        // Ensure we searched the directories.
-        verify(fs.searchLocal(anything(), anything())).once();
-    });
-    test('Look for widgets in sysPath of interpreter defined in kernel metadata', async () => {
-        const sysPrefix = 'sysPrefix Of Python in Metadata';
-        const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
-
-        when(kernel.kernelConnectionMetadata).thenReturn({
-            kernelSpec: {
-                name: '',
-                uri: Uri.file(''),
-                display_name: '',
-                argv: [],
-                metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
-            },
-            id: '',
-            kind: 'startUsingLocalKernelSpec'
-        });
-        when(fs.searchLocal(anything(), anything())).thenResolve([]);
-
-        const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
-
-        assert.deepEqual(value, { moduleName: 'ModuleName' });
-
-        // Ensure we look for the right things in the right place.
-        verify(fs.searchLocal(filesToLookSearchFor, searchDirectory)).once();
-    });
-    test('Look for widgets in sysPath of kernel', async () => {
-        const sysPrefix = 'sysPrefix Of Kernel';
-        const kernelPath = Uri.file('kernel Path.exe');
-        when(interpreterService.getInterpreterDetails(kernelPath)).thenResolve({ sysPrefix } as any);
-        const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
-
-        when(kernel.kernelConnectionMetadata).thenReturn({
-            kernelSpec: { name: '', display_name: '', argv: [], uri: kernelPath, language: PYTHON_LANGUAGE },
-            id: '',
-            kind: 'startUsingLocalKernelSpec'
-        });
-        when(fs.searchLocal(anything(), anything())).thenResolve([]);
-
-        const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
-
-        assert.deepEqual(value, { moduleName: 'ModuleName' });
-
-        // Ensure we look for the right things in the right place.
-        verify(fs.searchLocal(filesToLookSearchFor, searchDirectory)).once();
-    });
-    test('Ensure we cache the list of widgets source (when nothing is found)', async () => {
-        when(kernel.kernelConnectionMetadata).thenReturn({
-            kernelSpec: {
-                name: '',
-                uri: Uri.file(''),
-                display_name: '',
-                argv: [],
-                metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
-            },
-            id: '',
-            kind: 'startUsingLocalKernelSpec'
-        });
-        when(fs.searchLocal(anything(), anything())).thenResolve([]);
-
-        const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
-        assert.deepEqual(value, { moduleName: 'ModuleName' });
-        const value1 = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
-        assert.deepEqual(value1, { moduleName: 'ModuleName' });
-        const value2 = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
-        assert.deepEqual(value2, { moduleName: 'ModuleName' });
-
-        // Ensure we search directories once.
-        verify(fs.searchLocal(anything(), anything())).once();
-    });
-    test('Ensure we search directory only once (cache results)', async () => {
-        const sysPrefix = 'sysPrefix Of Python in Metadata';
-        const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
-        when(kernel.kernelConnectionMetadata).thenReturn({
-            kernelSpec: {
-                name: '',
-                uri: Uri.file(''),
-                display_name: '',
-                argv: [],
-                metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
-            },
-            id: '',
-            kind: 'startUsingLocalKernelSpec'
-        });
-        when(fs.searchLocal(anything(), anything())).thenResolve([
-            // In order to match the real behavior, don't use join here
-            'widget1/index.js',
-            'widget2/index.js',
-            'widget3/index.js'
-        ]);
-
-        const value = await scriptSourceProvider.getWidgetScriptSource('widget2', '1');
-        assert.deepEqual(value, {
-            moduleName: 'widget2',
-            source: 'local',
-            scriptUri: asVSCodeUri(Uri.file(path.join(searchDirectory, 'widget2', 'index.js')))
-        });
-        const value1 = await scriptSourceProvider.getWidgetScriptSource('widget2', '1');
-        assert.deepEqual(value1, value);
-        const value2 = await scriptSourceProvider.getWidgetScriptSource('widget2', '1');
-        assert.deepEqual(value2, value);
-
-        // Ensure we look for the right things in the right place.
-        verify(fs.searchLocal(filesToLookSearchFor, searchDirectory)).once();
-    });
-    test('Get source for a specific widget & search in the right place', async () => {
-        const sysPrefix = 'sysPrefix Of Python in Metadata';
-        const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
-        when(kernel.kernelConnectionMetadata).thenReturn({
-            kernelSpec: {
-                name: '',
-                uri: Uri.file(''),
-                display_name: '',
-                argv: [],
-                metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
-            },
-            id: '',
-            kind: 'startUsingLocalKernelSpec'
-        });
-        when(fs.searchLocal(anything(), anything())).thenResolve([
-            // In order to match the real behavior, don't use join here
-            'widget1/index.js',
-            'widget2/index.js',
-            'widget3/index.js'
-        ]);
-
-        const value = await scriptSourceProvider.getWidgetScriptSource('widget1', '1');
-
-        // Ensure the script paths are properly converted to be used within notebooks.
-        assert.deepEqual(value, {
-            moduleName: 'widget1',
-            source: 'local',
-            scriptUri: asVSCodeUri(Uri.file(path.join(searchDirectory, 'widget1', 'index.js')))
-        });
-
-        // Ensure we look for the right things in the right place.
-        verify(fs.searchLocal(filesToLookSearchFor, searchDirectory)).once();
     });
     test('Return empty source for widgets that cannot be found', async () => {
-        const sysPrefix = 'sysPrefix Of Python in Metadata';
-        const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
-        when(kernel.kernelConnectionMetadata).thenReturn({
-            kernelSpec: {
-                name: '',
-                uri: Uri.file(''),
-                display_name: '',
-                argv: [],
-                metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
-            },
-            id: '',
-            kind: 'startUsingLocalKernelSpec'
+        when(scriptManager.getWidgetModuleMappings()).thenResolve({
+            widget1: Uri.file('nbextensions/widget1/inex.js'),
+            widget2: Uri.file('nbextensions/widget2/inex.js')
         });
-        when(fs.searchLocal(anything(), anything())).thenResolve([
-            // In order to match the real behavior, don't use join here
-            'widget1/index.js',
-            'widget2/index.js',
-            'widget3/index.js'
-        ]);
 
         const value = await scriptSourceProvider.getWidgetScriptSource('widgetNotFound', '1');
         assert.deepEqual(value, {
             moduleName: 'widgetNotFound'
         });
-        const value1 = await scriptSourceProvider.getWidgetScriptSource('widgetNotFound', '1');
-        assert.isOk(value1);
-        const value2 = await scriptSourceProvider.getWidgetScriptSource('widgetNotFound', '1');
-        assert.deepEqual(value2, value1);
-        // We should ignore version numbers (when getting widget sources from local fs).
-        const value3 = await scriptSourceProvider.getWidgetScriptSource('widgetNotFound', '1234');
-        assert.deepEqual(value3, value1);
+    });
+    test('Finds the widget source', async () => {
+        when(scriptManager.getWidgetModuleMappings()).thenResolve({
+            widget1: Uri.file('nbextensions/widget1/inex.js'),
+            widget2: Uri.file('nbextensions/widget2/inex.js')
+        });
 
-        // Ensure we look for the right things in the right place.
-        // Also ensure we call once (& cache for subsequent searches).
-        verify(fs.searchLocal(filesToLookSearchFor, searchDirectory)).once();
+        const value = await scriptSourceProvider.getWidgetScriptSource('widget1', '1');
+        assert.deepEqual(value, {
+            moduleName: 'widget1',
+            source: 'local',
+            scriptUri: asVSCodeUri(Uri.file('nbextensions/widget1/inex.js'))
+        });
+    });
+    test('Gets the widget script sources', async () => {
+        when(scriptManager.getWidgetModuleMappings()).thenResolve({
+            widget1: Uri.file('nbextensions/widget1/inex.js'),
+            widget2: Uri.file('nbextensions/widget2/inex.js')
+        });
+
+        const values = await scriptSourceProvider.getWidgetScriptSources!();
+        assert.deepEqual(values, [
+            {
+                moduleName: 'widget1',
+                source: 'local',
+                scriptUri: asVSCodeUri(Uri.file('nbextensions/widget1/inex.js'))
+            },
+            {
+                moduleName: 'widget2',
+                source: 'local',
+                scriptUri: asVSCodeUri(Uri.file('nbextensions/widget2/inex.js'))
+            }
+        ]);
     });
 });

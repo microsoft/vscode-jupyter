@@ -1,25 +1,25 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import './mainPanel.css';
 
 import * as React from 'react';
 import { Tool, Value } from 'react-svg-pan-zoom';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 
 import { storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
-import { StyleInjector } from '../react-common/styleInjector';
 import { SvgList } from '../react-common/svgList';
 import { SvgViewer } from '../react-common/svgViewer';
 import { TestSvg } from './testSvg';
 import { Toolbar } from './toolbar';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { SharedMessages } from '../../../platform/messageTypes';
+import { SharedMessages } from '../../../messageTypes';
 import { IPlotViewerMapping, PlotViewerMessages } from '../../extension-side/plotting/types';
-import { IJupyterExtraSettings } from '../../extension-side/types';
-import { RegExpValues } from '../common/constants';
+import { IJupyterExtraSettings } from '../../../platform/webviews/types';
+import { RegExpValues } from '../../../platform/common/constants';
 
 // Our css has to come after in order to override body styles
 export interface IMainPanelProps {
@@ -42,7 +42,6 @@ interface IMainPanelState {
     ids: string[];
     currentImage: number;
     tool: Tool;
-    forceDark?: boolean;
     settings?: IJupyterExtraSettings;
 }
 
@@ -98,12 +97,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const baseTheme = this.computeBaseTheme();
             return (
                 <div className="main-panel" role="group" ref={this.container}>
-                    <StyleInjector
-                        expectingDark={this.props.baseTheme !== 'vscode-light'}
-                        settings={this.state.settings}
-                        darkChanged={this.darkChanged}
-                        postOffice={this.postOffice}
-                    />
                     {this.renderToolbar(baseTheme)}
                     {this.renderThumbnails(baseTheme)}
                     {this.renderPlot(baseTheme)}
@@ -149,26 +142,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         });
     }
 
-    private darkChanged = (newDark: boolean) => {
-        // update our base theme if allowed. Don't do this
-        // during testing as it will mess up the expected render count.
-        if (!this.props.testMode) {
-            this.setState({
-                forceDark: newDark
-            });
-        }
-    };
-
     private computeBaseTheme(): string {
         // If we're ignoring, always light
         if (this.state.settings?.ignoreVscodeTheme) {
             return 'vscode-light';
-        }
-
-        // Otherwise see if the style injector has figured out
-        // the theme is dark or not
-        if (this.state.forceDark !== undefined) {
-            return this.state.forceDark ? 'vscode-dark' : 'vscode-light';
         }
 
         return this.props.baseTheme;

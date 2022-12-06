@@ -1,15 +1,19 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
 import * as path from '../../vscode-path/path';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
+import { EventName } from '../../telemetry/constants';
 import { traceError } from '../../logging';
-import { isFileNotFoundError } from '../platform/errors.node';
-import { IFileSystem } from '../platform/types.node';
+import { isFileNotFoundError } from '../platform/errors';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
+import { Uri } from 'vscode';
+import { IFileSystem } from '../platform/types';
 
+/**
+ * Singleton utitility for managing environment variables. Allows merging, concating etc. Handles environment variables with different casing.
+ */
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
     constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
@@ -22,7 +26,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             return;
         }
         try {
-            return parseEnvFile(await this.fs.readLocalFile(filePath), baseVars);
+            return parseEnvFile(await this.fs.readFile(Uri.file(filePath)), baseVars);
         } catch (ex) {
             if (!isFileNotFoundError(ex)) {
                 traceError(`Failed to parse env file ${filePath}`, ex);
@@ -87,13 +91,13 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         // depending upon where the environment variable comes from (kernelspec might have 'PATH' whereas windows might use 'Path')
         const variableNameLower = variableName.toLowerCase();
         const matchingKey = vars ? Object.keys(vars).find((k) => k.toLowerCase() == variableNameLower) : undefined;
-        const variable = vars && matchingKey ? vars[matchingKey] : undefined;
+        const existingValue = vars && matchingKey ? vars[matchingKey] : undefined;
         const setKey = matchingKey || variableName;
-        if (variable && typeof variable === 'string' && variable.length > 0) {
-            if (append) {
-                vars[setKey] = variable + path.delimiter + valueToAppendOrPrepend;
-            } else {
-                vars[setKey] = valueToAppendOrPrepend + path.delimiter + variable;
+        if (existingValue && typeof existingValue === 'string' && existingValue.length > 0) {
+            if (append && !(vars[setKey] || '').endsWith(path.delimiter + valueToAppendOrPrepend)) {
+                vars[setKey] = existingValue + path.delimiter + valueToAppendOrPrepend;
+            } else if (!append && !(vars[setKey] || '').startsWith(valueToAppendOrPrepend + path.delimiter)) {
+                vars[setKey] = valueToAppendOrPrepend + path.delimiter + existingValue;
             }
         } else {
             vars[setKey] = valueToAppendOrPrepend;

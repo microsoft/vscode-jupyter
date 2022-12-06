@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { exec, execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
 import { CancellationError, Disposable } from 'vscode';
-import { traceDecoratorVerbose, traceInfoIfCI } from '../../logging';
+import { ignoreLogging, traceDecoratorVerbose, traceInfoIfCI } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 
 import { IDisposable } from '../types';
@@ -22,11 +23,25 @@ import {
     StdErrError
 } from './types.node';
 
+export class BufferDecoder implements IBufferDecoder {
+    public decode(buffers: Buffer[]): string {
+        return Buffer.concat(buffers).toString(DEFAULT_ENCODING);
+    }
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Used to create node processes and kill them.
+ * Tracks the process and its output.
+ * Can make observables or promises for launching.
+ * Environment variables to launch with can be passed into the constructor.
+ */
 export class ProcessService extends EventEmitter implements IProcessService {
     private processesToKill = new Set<IDisposable>();
-    constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) {
+    private readonly decoder: IBufferDecoder;
+    constructor(private readonly env?: EnvironmentVariables) {
         super();
+        this.decoder = new BufferDecoder();
     }
     public static isAlive(pid: number): boolean {
         try {
@@ -61,7 +76,6 @@ export class ProcessService extends EventEmitter implements IProcessService {
 
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         const spawnOptions = this.getDefaultOptions(options);
-        const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
         traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);
@@ -98,7 +112,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
             }
 
             const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-                const out = this.decoder.decode([data], encoding);
+                const out = this.decoder.decode([data]);
                 if (source === 'stderr' && options.throwOnStdErr) {
                     subscriber.error(new StdErrError(out));
                 } else {
@@ -136,7 +150,6 @@ export class ProcessService extends EventEmitter implements IProcessService {
     }
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         const spawnOptions = this.getDefaultOptions(options);
-        const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         const deferred = createDeferred<ExecutionResult<string>>();
         const disposable: IDisposable = {
@@ -175,11 +188,11 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 return;
             }
             const stderr: string | undefined =
-                stderrBuffers.length === 0 ? undefined : this.decoder.decode(stderrBuffers, encoding);
+                stderrBuffers.length === 0 ? undefined : this.decoder.decode(stderrBuffers);
             if (stderr && stderr.length > 0 && options.throwOnStdErr) {
                 deferred.reject(new StdErrError(stderr));
             } else {
-                const stdout = this.decoder.decode(stdoutBuffers, encoding);
+                const stdout = this.decoder.decode(stdoutBuffers);
                 deferred.resolve({ stdout, stderr });
             }
             disposables.forEach((d) => d.dispose());
@@ -195,7 +208,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
     }
 
     @traceDecoratorVerbose('Execing shell command', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    public shellExec(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
+    public shellExec(command: string, @ignoreLogging() options: ShellOptions = {}): Promise<ExecutionResult<string>> {
         const shellOptions = this.getDefaultOptions(options);
         return new Promise((resolve, reject) => {
             let cancelDisposable: Disposable | undefined;

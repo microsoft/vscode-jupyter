@@ -3,9 +3,3 @@
 # 1) pip install pip-tools
 # 2) pip-compile requirements.in
 
-# IntelliSense. This is a specific commit id of our fork of the pappasam jedi-language-server
-# If you make fixes to the fork, update the commit id here.
-# Note: This pulls in Jedi too but the pypi version.
-git+git://github.com/vscode-python/jedi-language-server@42823a2598d4b6369e9273c5ad237a48c5d67553
-# DS Python daemon
-python-jsonrpc-server==0.4.0

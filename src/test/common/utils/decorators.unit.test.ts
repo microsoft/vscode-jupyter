@@ -1,10 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
 import { expect, use } from 'chai';
-import * as chaiPromise from 'chai-as-promised';
+import chaiPromise from 'chai-as-promised';
 import {
     isUnitTestExecution,
     isTestExecution,

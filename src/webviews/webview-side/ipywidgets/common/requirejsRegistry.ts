@@ -1,9 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
-import { WidgetScriptSource } from '../../../../kernels/ipywidgets-message-coordination/types';
+import { WidgetScriptSource } from '../../../../notebooks/controllers/ipywidgets/types';
 import { logMessage } from '../../react-common/logger';
 
 type NonPartial<T> = {
@@ -11,7 +11,7 @@ type NonPartial<T> = {
 };
 
 // Key = module name, value = path to script.
-const scriptsAlreadyRegisteredInRequireJs = new Map<string, string>();
+export const scriptsAlreadyRegisteredInRequireJs = new Map<string, string>();
 
 function getScriptsToBeRegistered(scripts: WidgetScriptSource[]) {
     return scripts.filter((script) => {
@@ -44,16 +44,25 @@ function getScriptsWithAValidScriptUriToBeRegistered(scripts: WidgetScriptSource
         .map((source) => source as NonPartial<WidgetScriptSource>);
 }
 
-function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
+function getRequireJs() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const requirejsfunc = (window as any).requirejs as { config: Function };
-    if (!requirejsfunc) {
+    const requireJsFunc = (window as any).requirejs as { config: Function; define: Function; undef: Function };
+    if (!requireJsFunc) {
         window.console.error('Requirejs not found');
         throw new Error('Requirejs not found');
     }
-    const config: { paths: Record<string, string> } = {
+    return requireJsFunc;
+}
+function registerScriptsInRequireJs(baseUrl: string | undefined, scripts: NonPartial<WidgetScriptSource>[]) {
+    const requireJsFunc = getRequireJs();
+    const config: { baseUrl?: string; paths: Record<string, string> } = {
         paths: {}
     };
+    if (baseUrl) {
+        config.baseUrl = baseUrl;
+    }
+    registerCustomScripts();
+
     scripts.forEach((script) => {
         logMessage(`Registering IPyWidget ${script.moduleName} found in ${script.scriptUri}.`);
         scriptsAlreadyRegisteredInRequireJs.set(script.moduleName, script.scriptUri);
@@ -65,11 +74,31 @@ function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
         config.paths[script.moduleName] = scriptUri;
     });
 
-    requirejsfunc.config(config);
+    requireJsFunc.config(config);
 }
 
-export function registerScripts(scripts: WidgetScriptSource[]) {
+export function undefineModule(moduleName: string) {
+    scriptsAlreadyRegisteredInRequireJs.delete(moduleName);
+    getRequireJs().undef(moduleName);
+}
+export function registerScripts(baseUrl: string | undefined, scripts: WidgetScriptSource[]) {
     const scriptsToRegister = getScriptsToBeRegistered(scripts);
     const validScriptsToRegister = getScriptsWithAValidScriptUriToBeRegistered(scriptsToRegister);
-    registerScriptsInRequireJs(validScriptsToRegister);
+    registerScriptsInRequireJs(baseUrl, validScriptsToRegister);
+}
+
+function registerCustomScripts() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((registerCustomScripts as any).invoked) {
+        return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (registerCustomScripts as any).invoked = true;
+    getRequireJs().config({
+        map: {
+            '*': {
+                'jupyter-js-widgets': '@jupyter-widgets/base'
+            }
+        }
+    });
 }

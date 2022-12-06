@@ -1,6 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 'use strict';
 
@@ -63,6 +64,7 @@ suite('DataScienceInstaller install', async () => {
             envType: EnvironmentType.VirtualEnv,
             envName: 'test',
             envPath: interpreterPath,
+            id: interpreterPath.fsPath,
             uri: interpreterPath,
             sysPrefix: ''
         };
@@ -78,6 +80,7 @@ suite('DataScienceInstaller install', async () => {
             envType: EnvironmentType.VirtualEnv,
             envName: 'test',
             envPath: interpreterPath,
+            id: interpreterPath.fsPath,
             uri: interpreterPath,
             sysPrefix: ''
         };
@@ -108,6 +111,7 @@ suite('DataScienceInstaller install', async () => {
             envType: EnvironmentType.Conda,
             envName: 'test',
             envPath: interpreterPath,
+            id: interpreterPath.fsPath,
             uri: interpreterPath,
             sysPrefix: ''
         };
@@ -139,6 +143,7 @@ suite('DataScienceInstaller install', async () => {
             envName: 'test',
             envPath: interpreterPath,
             uri: interpreterPath,
+            id: interpreterPath.fsPath,
             sysPrefix: ''
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
@@ -169,6 +174,7 @@ suite('DataScienceInstaller install', async () => {
             envType: EnvironmentType.Poetry,
             envName: 'test',
             envPath: interpreterPath,
+            id: interpreterPath.fsPath,
             uri: interpreterPath,
             sysPrefix: ''
         };
@@ -200,6 +206,7 @@ suite('DataScienceInstaller install', async () => {
             envType: EnvironmentType.Pipenv,
             envName: 'test',
             envPath: interpreterPath,
+            id: interpreterPath.fsPath,
             uri: interpreterPath,
             sysPrefix: ''
         };

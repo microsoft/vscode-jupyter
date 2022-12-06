@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -18,7 +18,7 @@ import {
     isVirtualenvEnvironment,
     pathExists
 } from '../../platform/common/platform/fileUtils.node';
-import { isTestExecution } from '../../platform/common/constants.node';
+import { isTestExecution } from '../../platform/common/constants';
 
 /**
  * Global virtual env dir for a project is named as:

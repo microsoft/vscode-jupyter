@@ -1,21 +1,16 @@
-import { IFileSystem } from '../platform/types.node';
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
-import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getExecutablePath } from '../../pythonEnvironments/info/executable.node';
-import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter.node';
-import { traceError, traceInfo } from '../../logging';
 import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types.node';
 import { compare, SemVer } from 'semver';
 import type { PythonEnvironment as PyEnv } from '../../pythonEnvironments/info';
-import { getDisplayPath, getFilePath } from '../platform/fs-paths';
+import { getFilePath } from '../platform/fs-paths';
 import { Uri } from 'vscode';
+import { IFileSystem } from '../platform/types';
 class PythonEnvironment {
-    private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
-
     constructor(
         protected readonly interpreter: PyEnv,
         // "deps" is the externally defined functionality used by the class.
@@ -37,14 +32,6 @@ class PythonEnvironment {
         const python = this.deps.getObservablePythonArgv(this.interpreter.uri);
         return buildPythonExecInfo(python, pythonArgs);
     }
-
-    public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
-        if (this.cachedInterpreterInformation === null) {
-            this.cachedInterpreterInformation = await this.getInterpreterInformationImpl();
-        }
-        return this.cachedInterpreterInformation;
-    }
-
     public async getExecutablePath(): Promise<Uri> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
@@ -65,15 +52,6 @@ class PythonEnvironment {
             return false;
         }
         return true;
-    }
-
-    private async getInterpreterInformationImpl(): Promise<InterpreterInformation | undefined> {
-        try {
-            const python = this.getExecutionInfo();
-            return await getInterpreterInfo(python, this.deps.shellExec, { info: traceInfo, error: traceError });
-        } catch (ex) {
-            traceError(`Failed to get interpreter information for '${getDisplayPath(this.interpreter.uri)}'`, ex);
-        }
     }
 }
 
@@ -101,7 +79,7 @@ export function createPythonEnv(
     fs: IFileSystem
 ): PythonEnvironment {
     const deps = createDeps(
-        async (filename: Uri) => fs.localFileExists(getFilePath(filename)),
+        async (filename: Uri) => fs.exists(filename),
         // We use the default: [pythonPath].
         undefined,
         undefined,
@@ -137,36 +115,12 @@ export function createCondaEnv(
     }
     const pythonArgv = [condaFile, ...runArgs, 'python'];
     const deps = createDeps(
-        async (filename) => fs.localFileExists(getFilePath(filename)),
+        async (filename) => fs.exists(filename),
         pythonArgv,
         // eslint-disable-next-line
         // TODO: Use pythonArgv here once 'conda run' can be
         // run without buffering output.
         // See https://github.com/microsoft/vscode-python/issues/8473.
-        undefined,
-        (file, args, opts) => procs.exec(file, args, opts),
-        (command, opts) => procs.shellExec(command, opts)
-    );
-    return new PythonEnvironment(interpreter, deps);
-}
-
-export function createWindowsStoreEnv(
-    interpreter: PyEnv,
-    // These are used to generate the deps.
-    procs: IProcessService
-): PythonEnvironment {
-    const deps = createDeps(
-        /**
-         * With windows store python apps, we have generally use the
-         * symlinked python executable.  The actual file is not accessible
-         * by the user due to permission issues (& rest of exension fails
-         * when using that executable).  Hence lets not resolve the
-         * executable using sys.executable for windows store python
-         * interpreters.
-         */
-        async (_f: Uri) => true,
-        // We use the default: [pythonPath].
-        undefined,
         undefined,
         (file, args, opts) => procs.exec(file, args, opts),
         (command, opts) => procs.shellExec(command, opts)

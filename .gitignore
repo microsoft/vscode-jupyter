@@ -28,6 +28,7 @@ debug_coverage*/**
 languageServer/**
 languageServer.*/**
 bin/**
+logs/**
 obj/**
 .pytest_cache
 temp/**
@@ -37,6 +38,8 @@ src/test/datascience/temp/**
 .python-version
 .vs/
 test-results*.xml
+testresults.json
+telemetry.json
 xunit-test-results.xml
 build/ci/performance/performance-results.json
 !build/
@@ -50,3 +53,8 @@ nodeLanguageServer.*/**
 src/test/datascience/.venv*
 !src/test/pythonEnvironments/**/*.*
 .vscode-test-web
+.github_token
+# translation files
+*.xlf
+*.nls.*.json
+*.i18n.json

@@ -1,13 +1,14 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { assert } from 'chai';
-import { removeLinesFromFrontAndBack, stripComments } from '../../webviews/webview-side/common';
 import * as vscode from 'vscode';
 import { generateCells } from '../../interactive-window/editor-integration/cellFactory';
+import { removeLinesFromFrontAndBack, stripComments } from '../../platform/common/utils';
 
 /* eslint-disable  */
-suite('DataScience CellFactory', () => {
+suite('CellFactory', () => {
     test('parsing cells', () => {
         const uri = vscode.Uri.parse('file://foo.py');
         let cells = generateCells(undefined, '#%%\na=1\na', uri, true);

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
@@ -17,11 +17,11 @@ import {
     createEmptyPythonNotebook,
     waitForHover
 } from '../helper.node';
-import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
+import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { Settings } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Intellisense Notebook Hover', function () {
+suite('VSCode Intellisense Notebook Hover @lsp', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -55,7 +55,7 @@ suite('DataScience - VSCode Intellisense Notebook Hover', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Insert cell and get hover text', async () => {
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         const position = new Position(1, 2);
         traceInfo('Get hover in test');
         const hovers = await waitForHover(cell.document.uri, position);

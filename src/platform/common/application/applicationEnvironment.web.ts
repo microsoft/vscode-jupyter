@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -7,6 +7,9 @@ import { injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { BaseApplicationEnvironment } from './applicationEnvironment.base';
 
+/**
+ * BaseApplicationEnvironment for web. Some properties are not available in web.
+ */
 @injectable()
 export class ApplicationEnvironment extends BaseApplicationEnvironment {
     public get userSettingsFile(): Uri | undefined {

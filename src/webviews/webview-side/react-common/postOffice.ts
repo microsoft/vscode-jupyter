@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { Observable } from 'rxjs/Observable';
@@ -7,7 +8,7 @@ import { Subject } from 'rxjs/Subject';
 import { VSCodeEvent } from 'vscode-notebook-renderer/events';
 import { WebviewMessage } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
-import { logMessage, logMessageOnlyOnCI } from './logger';
+import { logMessage } from './logger';
 
 export interface IVsCodeApi {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,6 +31,9 @@ interface IMessageApi {
     sendMessage(type: string, payload?: any): void;
     dispose(): void;
 }
+
+declare var onDidReceiveKernelMessage: KernelMessagingApi['onDidReceiveKernelMessage'];
+declare var postKernelMessage: KernelMessagingApi['postKernelMessage'];
 
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
@@ -77,7 +81,6 @@ class VsCodeMessageApi implements IMessageApi {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public sendMessage(type: string, payload?: any) {
         if (this.vscodeApi) {
-            logMessageOnlyOnCI(`UI PostOffice Sent ${type}`);
             this.vscodeApi.postMessage({ type: type, payload });
         } else if (type === 'IPyWidgets_logMessage') {
             logMessage(`Logging message ${type}, ${payload}`);
@@ -224,9 +227,6 @@ export class PostOffice implements IDisposable {
     private async handleMessage(msg: WebviewMessage) {
         if (this.handlers) {
             if (msg) {
-                if ('type' in msg && typeof msg.type === 'string') {
-                    logMessageOnlyOnCI(`UI PostOffice Received ${msg.type}`);
-                }
                 this.subject.next({ type: msg.type, payload: msg.payload });
                 this.handlers.forEach((h: IMessageHandler | null) => {
                     if (h) {

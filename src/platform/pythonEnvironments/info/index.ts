@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -25,11 +25,8 @@ export enum EnvironmentType {
     Pipenv = 'PipEnv',
     Pyenv = 'Pyenv',
     Venv = 'Venv',
-    WindowsStore = 'WindowsStore',
     Poetry = 'Poetry',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
-    Global = 'Global',
-    System = 'System',
 }
 
 /**
@@ -41,6 +38,7 @@ export enum EnvironmentType {
  * @prop sysPrefix - the environment's install root (`sys.prefix`)
  */
 export type InterpreterInformation = {
+    id: string;
     uri: Uri;
     version?: PythonVersion;
     sysVersion?: string;
@@ -55,5 +53,13 @@ export type PythonEnvironment = InterpreterInformation & {
     displayName?: string;
     envType?: EnvironmentType;
     envName?: string;
+    /**
+     * Directory of the Python environment.
+     */
     envPath?: Uri;
+    /**
+     * This contains the path to the environment.
+     * Used for display purposes only (in kernel picker or other places).
+     */
+    displayPath?: Uri;
 };

@@ -1,10 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { IJupyterRequestCreator } from '../types';
 import * as nodeFetch from 'node-fetch';
 import { ClassType } from '../../../platform/ioc/types';
-import * as WebSocketIsomorphic from 'isomorphic-ws';
+import WebSocketIsomorphic from 'isomorphic-ws';
 import { traceError } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
@@ -19,7 +19,8 @@ const JupyterWebSockets = new Map<string, WebSocketIsomorphic & IKernelSocket>()
 /* eslint-disable @typescript-eslint/no-explicit-any */
 @injectable()
 export class JupyterRequestCreator implements IJupyterRequestCreator {
-    public getRequestCtor(getAuthHeader?: () => any) {
+    public getRequestCtor(_cookieString?: string, _allowUnauthorized?: boolean, getAuthHeader?: () => any) {
+        // Only need the authorizing part. Cookie and rejectUnauthorized are set in the websocket ctor for node.
         class AuthorizingRequest extends nodeFetch.Request {
             constructor(input: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) {
                 super(input, init);

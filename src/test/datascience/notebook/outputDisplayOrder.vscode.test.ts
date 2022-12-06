@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -13,10 +13,10 @@ import { closeNotebooksAndCleanUpAfterTests } from './helper.node';
 import { Uri, window } from 'vscode';
 import { initialize } from '../../initialize.node';
 import type * as nbformat from '@jupyterlab/nbformat';
-import { cellOutputToVSCCellOutput } from '../../../notebooks/helpers';
+import { cellOutputToVSCCellOutput } from '../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
+suite('Validate Output order', function () {
     const templateIPynb = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',
@@ -39,7 +39,7 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests());
     test('Verify order of outputs in existing ipynb file', async () => {
         await openNotebook(Uri.file(templateIPynb));
-        const cells = window.activeNotebookEditor?.document?.getCells()!;
+        const cells = window.activeNotebookEditor?.notebook?.getCells()!;
 
         const expectedOutputItemMimeTypes = [
             [['text/html', 'text/plain']],

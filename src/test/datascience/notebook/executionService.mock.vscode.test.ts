@@ -1,5 +1,5 @@
-// // Copyright (c) Microsoft Corporation. All rights reserved.
-// // Licensed under the MIT License.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 // 'use strict';
 
@@ -20,14 +20,13 @@
 //     waitForExecutionCompletedSuccessfully,
 //     hijackPrompt,
 //     createEmptyPythonNotebook,
-//     workAroundVSCodeNotebookStartPages,
-//     waitForTextOutput
+// //     waitForTextOutput
 // } from './helper';
 // import { ProductNames } from '../../../platform/common/installer/productNames';
 // import { INotebookControllerManager } from '../../../notebooks/types';
-// import { IKernelProvider } from '../../../platform/../kernels/types';
+// import { IKernelProvider } from '../../../kernels/types';
 // import {
-//     IJupyterSession,
+//     IJupyterKernelConnectionSession,
 //     INotebook,
 //     INotebookProvider,
 //     KernelSocketInformation
@@ -43,7 +42,7 @@
 // const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 // /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-// suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
+// suite('VSCode Notebook -', function () {
 //     let api: IExtensionTestApi;
 //     const disposables: IDisposable[] = [];
 //     let vscodeNotebook: IVSCodeNotebook;
@@ -68,8 +67,7 @@
 //         if (!(await canRunNotebookTests())) {
 //             return this.skip();
 //         }
-//         await workAroundVSCodeNotebookStartPages();
-//         await hijackPrompt(
+// //         await hijackPrompt(
 //             'showErrorMessage',
 //             { endsWith: expectedPromptMessageSuffix },
 //             { text: Common.install(), clickImmediately: true },
@@ -101,7 +99,7 @@
 //         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
 //     });
 //     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-//     function createKernelWithMockJupyterSession(notebook: NotebookDocument, session: IJupyterSession) {
+//     function createKernelWithMockJupyterSession(notebook: NotebookDocument, session: IJupyterKernelConnectionSession) {
 //         const controller = controllerManager.getSelectedNotebookController(notebook);
 //         if (!controller) {
 //             return;

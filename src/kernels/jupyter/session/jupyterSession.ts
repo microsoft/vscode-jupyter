@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
-import type { ContentsManager, Kernel, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
-import * as uuid from 'uuid/v4';
+import type { Contents, ContentsManager, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
+import uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
@@ -10,10 +11,9 @@ import { traceVerbose, traceError, traceInfo } from '../../../platform/logging';
 import { Resource, IOutputChannel, IDisplayOptions } from '../../../platform/common/types';
 import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { JupyterInvalidKernelError } from '../../../platform/errors/jupyterInvalidKernelError';
+import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
-import { captureTelemetry } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
 import { getNameOfKernelConnection } from '../../helpers';
 import {
@@ -21,14 +21,19 @@ import {
     isLocalConnection,
     IJupyterConnection,
     ISessionWithSocket,
-    KernelActionSource
+    KernelActionSource,
+    IJupyterKernelConnectionSession
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
-import { IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
-import { Uri } from 'vscode';
+import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
+import { CancellationError, Uri } from 'vscode';
+import { generateBackingIPyNbFileName } from './backingFileCreator.base';
+import { noop } from '../../../platform/common/utils/misc';
 
 // function is
-export class JupyterSession extends BaseJupyterSession {
+export class JupyterSession extends BaseJupyterSession implements IJupyterKernelConnectionSession {
+    public readonly kind: 'remoteJupyter' | 'localJupyter';
+
     constructor(
         resource: Resource,
         private connInfo: IJupyterConnection,
@@ -37,8 +42,6 @@ export class JupyterSession extends BaseJupyterSession {
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager,
         private readonly outputChannel: IOutputChannel,
-        private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
-        restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         override readonly workingDirectory: Uri,
         private readonly idleTimeout: number,
         private readonly kernelService: IJupyterKernelService | undefined,
@@ -47,30 +50,19 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly requestCreator: IJupyterRequestCreator,
         private readonly sessionCreator: KernelActionSource
     ) {
-        super(
-            connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
-            resource,
-            kernelConnectionMetadata,
-            restartSessionUsed,
-            workingDirectory,
-            interruptTimeout
-        );
+        super(resource, kernelConnectionMetadata, workingDirectory, interruptTimeout);
+        this.kind = connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter';
     }
 
-    @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
-    public waitForIdle(timeout: number): Promise<void> {
+    public override isServerSession(): this is IJupyterKernelConnectionSession {
+        return true;
+    }
+
+    @capturePerfTelemetry(Telemetry.WaitForIdleJupyter)
+    public waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         // Wait for idle on this session
-        return this.waitForIdleOnSession(this.session, timeout);
+        return this.waitForIdleOnSession(this.session, timeout, token);
     }
-
-    public override get kernel(): Kernel.IKernelConnection | undefined {
-        return this.session?.kernel || undefined;
-    }
-
-    public get kernelId(): string {
-        return this.session?.kernel?.id || '';
-    }
-
     public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Start a new session
         this.setSession(await this.createNewKernelSession(options));
@@ -115,17 +107,21 @@ export class JupyterSession extends BaseJupyterSession {
 
                 // newSession.kernel?.connectionStatus
                 await waitForCondition(
-                    async () => newSession?.kernel?.connectionStatus === 'connected',
+                    async () =>
+                        newSession?.kernel?.connectionStatus === 'connected' || options.token.isCancellationRequested,
                     this.idleTimeout,
                     100
                 );
+                if (options.token.isCancellationRequested) {
+                    throw new CancellationError();
+                }
             } else {
                 traceVerbose(`createNewKernelSession ${this.kernelConnectionMetadata?.id}`);
                 newSession = await this.createSession(options);
                 newSession.resource = this.resource;
 
                 // Make sure it is idle before we return
-                await this.waitForIdleOnSession(newSession, this.idleTimeout);
+                await this.waitForIdleOnSession(newSession, this.idleTimeout, options.token);
             }
         } catch (exc) {
             // Don't log errors if UI is disabled (e.g. auto starting a kernel)
@@ -144,7 +140,6 @@ export class JupyterSession extends BaseJupyterSession {
 
         return newSession;
     }
-
     protected async createRestartSession(
         disableUI: boolean,
         session: ISessionWithSocket,
@@ -162,10 +157,7 @@ export class JupyterSession extends BaseJupyterSession {
                 `JupyterSession.createNewKernelSession ${tryCount}, id is ${this.kernelConnectionMetadata?.id}`
             );
             result = await this.createSession({ token: cancelToken, ui });
-            await this.waitForIdleOnSession(result, this.idleTimeout);
-            if (result.kernel) {
-                this.restartSessionCreated(result.kernel);
-            }
+            await this.waitForIdleOnSession(result, this.idleTimeout, cancelToken);
             return result;
         } catch (exc) {
             traceInfo(`Error waiting for restart session: ${exc}`);
@@ -180,12 +172,68 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     protected startRestartSession(disableUI: boolean) {
-        if (!this.restartSessionPromise && this.session && this.contentsManager) {
-            const token = new CancellationTokenSource();
-            const promise = this.createRestartSession(disableUI, this.session, token.token);
-            this.restartSessionPromise = { token, promise };
-            promise.finally(() => token.dispose());
+        if (!this.session) {
+            throw new Error('Session disposed or not initialized');
         }
+        const token = new CancellationTokenSource();
+        const promise = this.createRestartSession(disableUI, this.session, token.token);
+        this.restartSessionPromise = { token, promise };
+        promise
+            .finally(() => {
+                token.dispose();
+                if (this.restartSessionPromise?.promise === promise) {
+                    this.restartSessionPromise = undefined;
+                }
+            })
+            .catch(noop);
+        return promise;
+    }
+
+    async invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void> {
+        if (!this.resource) {
+            return;
+        }
+
+        const backingFile = await this.backingFileCreator.createBackingFile(
+            this.resource,
+            this.workingDirectory,
+            this.kernelConnectionMetadata,
+            this.connInfo,
+            this.contentsManager
+        );
+
+        if (!backingFile) {
+            return;
+        }
+
+        await this.contentsManager
+            .save(backingFile!.filePath, {
+                content: JSON.parse(contents),
+                type: 'notebook'
+            })
+            .ignoreErrors();
+
+        await handler({
+            filePath: backingFile.filePath,
+            dispose: backingFile.dispose.bind(backingFile)
+        });
+
+        await backingFile.dispose();
+        await this.contentsManager.delete(backingFile.filePath).ignoreErrors();
+    }
+
+    async createTempfile(ext: string): Promise<string> {
+        const tempFile = await this.contentsManager.newUntitled({ type: 'file', ext });
+        return tempFile.path;
+    }
+
+    async deleteTempfile(file: string): Promise<void> {
+        await this.contentsManager.delete(file);
+    }
+
+    async getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel> {
+        const data = await this.contentsManager.get(file, { type: 'file', format: format, content: true });
+        return data;
     }
 
     private async createSession(options: {
@@ -233,7 +281,7 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Create our session options using this temporary notebook and our connection info
         const sessionOptions: Session.ISessionOptions = {
-            path: backingFile?.filePath || `${uuid()}.ipynb`, // Name has to be unique
+            path: backingFile?.filePath || generateBackingIPyNbFileName(this.resource), // Name has to be unique
             kernel: {
                 name: kernelName
             },
@@ -281,7 +329,7 @@ export class JupyterSession extends BaseJupyterSession {
                         throw new JupyterSessionStartError(new Error(`No kernel created`));
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
-                    .finally(() => {
+                    .finally(async () => {
                         if (this.connInfo && backingFile) {
                             this.contentsManager.delete(backingFile.filePath).ignoreErrors();
                         }

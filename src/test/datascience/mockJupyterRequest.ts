@@ -1,14 +1,15 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ICell } from '../../platform/common/types';
+import { concatMultilineString } from '../../platform/common/utils';
 
 import { createDeferred, Deferred } from '../../platform/common/utils/async';
-import { noop } from '../../platform/common/utils/misc';
-import { concatMultilineString } from '../../webviews/webview-side/common';
+import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface IMessageResult {
@@ -307,9 +308,9 @@ export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
                     .then((r) => {
                         // If there's a message, send it.
                         if (r.message && r.message.channel === 'iopub' && this.onIOPub) {
-                            void this.onIOPub(r.message as KernelMessage.IIOPubMessage);
+                            swallowExceptions(() => this.onIOPub(r.message as KernelMessage.IIOPubMessage));
                         } else if (r.message && r.message.channel === 'stdin' && this.onStdin) {
-                            void this.onStdin(r.message as KernelMessage.IStdinMessage);
+                            swallowExceptions(() => this.onStdin(r.message as KernelMessage.IStdinMessage));
                         }
 
                         // Move onto the next producer if allowed
@@ -334,7 +335,7 @@ export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
             replyProducer
                 .produceNextMessage()
                 .then((r) => {
-                    void this.onReply((<any>r.message) as KernelMessage.IShellMessage);
+                    swallowExceptions(() => this.onReply((<any>r.message) as KernelMessage.IShellMessage));
                 })
                 .ignoreErrors();
 
@@ -453,9 +454,9 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
                     .then((r) => {
                         // If there's a message, send it.
                         if (r.message && r.message.channel === 'iopub' && this.onIOPub) {
-                            void this.onIOPub(r.message as KernelMessage.IIOPubMessage);
+                            swallowExceptions(() => this.onIOPub(r.message as KernelMessage.IIOPubMessage));
                         } else if (r.message && r.message.channel === 'stdin' && this.onStdin) {
-                            void this.onStdin(r.message as KernelMessage.IStdinMessage);
+                            swallowExceptions(() => this.onStdin(r.message as KernelMessage.IStdinMessage));
                         }
 
                         // Move onto the next producer if allowed
@@ -480,7 +481,7 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
             replyProducer
                 .produceNextMessage()
                 .then((r) => {
-                    void this.onReply((<any>r.message) as KernelMessage.IShellMessage);
+                    swallowExceptions(() => this.onReply((<any>r.message) as KernelMessage.IShellMessage));
                 })
                 .ignoreErrors();
 

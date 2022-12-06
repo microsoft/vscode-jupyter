@@ -1,40 +1,18 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { NotebookCell, window } from 'vscode';
-import { NotebookCellScheme } from '../platform/common/constants';
+import { NotebookCell } from 'vscode';
 import { IJupyterSettings } from '../platform/common/types';
-import { removeLinesFromFrontAndBackNoConcat, appendLineFeed } from '../webviews/webview-side/common';
+import { appendLineFeed, removeLinesFromFrontAndBackNoConcat } from '../platform/common/utils';
+import { isUri } from '../platform/common/utils/misc';
 import { uncommentMagicCommands } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
-import { IInteractiveWindowProvider, IInteractiveWindow } from './types';
+import { InteractiveCellMetadata } from './editor-integration/types';
+import { InteractiveTab } from './types';
 
-export type InteractiveCellMetadata = {
-    interactiveWindowCellMarker: string;
-    interactive: {
-        uristring: string;
-        line: number;
-        originalSource: string;
-    };
-    id: string;
-};
 export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellMetadata | undefined {
     if (cell.metadata.interactive !== undefined) {
         return cell.metadata as InteractiveCellMetadata;
-    }
-}
-export function getActiveInteractiveWindow(
-    interactiveWindowProvider: IInteractiveWindowProvider
-): IInteractiveWindow | undefined {
-    if (interactiveWindowProvider.activeWindow) {
-        return interactiveWindowProvider.activeWindow;
-    }
-    if (window.activeTextEditor === undefined) {
-        return;
-    }
-    const textDocumentUri = window.activeTextEditor.document.uri;
-    if (textDocumentUri.scheme !== NotebookCellScheme) {
-        return interactiveWindowProvider.get(textDocumentUri);
     }
 }
 
@@ -58,4 +36,14 @@ export function generateInteractiveCode(code: string, settings: IJupyterSettings
     );
 
     return withMagicsAndLinefeeds.join('');
+}
+
+export function isInteractiveInputTab(tab: unknown): tab is InteractiveTab {
+    let interactiveTab = tab as InteractiveTab;
+    return (
+        interactiveTab &&
+        interactiveTab.input &&
+        isUri(interactiveTab.input.uri) &&
+        isUri(interactiveTab.input.inputBoxUri)
+    );
 }

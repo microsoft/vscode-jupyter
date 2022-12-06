@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -22,7 +22,7 @@ import { Uri } from 'vscode';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 
-suite('DataScience - Jupyter Interpreter Configuration', () => {
+suite('Jupyter Interpreter Configuration', () => {
     let configuration: JupyterInterpreterDependencyService;
     let appShell: IApplicationShell;
     let installer: IInstaller;
@@ -30,6 +30,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
     let command: IJupyterCommand;
     const pythonInterpreter: PythonEnvironment = {
         uri: Uri.file(''),
+        id: Uri.file('').fsPath,
         sysPrefix: '',
         sysVersion: ''
     };

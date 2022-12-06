@@ -1,10 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
 import { assert } from 'chai';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Memento, Uri } from 'vscode';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
@@ -16,10 +16,13 @@ import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interp
 import { MockMemento } from '../../../mocks/mementos';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 import { JupyterInterpreterDependencyResponse } from '../../../../kernels/jupyter/types';
+import { IApplicationShell } from '../../../../platform/common/application/types';
+import { JupyterInstallError } from '../../../../platform/errors/jupyterInstallError';
+import { DataScience } from '../../../../platform/common/utils/localize';
 
 /* eslint-disable  */
 
-suite('DataScience - Jupyter Interpreter Service', () => {
+suite('Jupyter Interpreter Service', () => {
     let jupyterInterpreterService: JupyterInterpreterService;
     let interpreterSelector: JupyterInterpreterSelector;
     let interpreterConfiguration: JupyterInterpreterDependencyService;
@@ -28,14 +31,17 @@ suite('DataScience - Jupyter Interpreter Service', () => {
     let memento: Memento;
     let interpreterSelectionState: JupyterInterpreterStateStore;
     let oldVersionCacheStateStore: JupyterInterpreterOldCacheStateStore;
+    let appShell: IApplicationShell;
     const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
     const pythonInterpreter: PythonEnvironment = {
         uri: Uri.file('some path'),
+        id: Uri.file('some path').fsPath,
         sysPrefix: '',
         sysVersion: ''
     };
     const secondPythonInterpreter: PythonEnvironment = {
         uri: Uri.file('second interpreter path'),
+        id: Uri.file('second interpreter path').fsPath,
         sysPrefix: '',
         sysVersion: ''
     };
@@ -47,15 +53,17 @@ suite('DataScience - Jupyter Interpreter Service', () => {
         memento = mock(MockMemento);
         interpreterSelectionState = mock(JupyterInterpreterStateStore);
         oldVersionCacheStateStore = mock(JupyterInterpreterOldCacheStateStore);
+        appShell = mock<IApplicationShell>();
         jupyterInterpreterService = new JupyterInterpreterService(
             instance(oldVersionCacheStateStore),
             instance(interpreterSelectionState),
             instance(interpreterSelector),
             instance(interpreterConfiguration),
-            instance(interpreterService)
+            instance(interpreterService),
+            instance(appShell)
         );
-        when(interpreterService.getInterpreterDetails(pythonInterpreter.uri, undefined)).thenResolve(pythonInterpreter);
-        when(interpreterService.getInterpreterDetails(secondPythonInterpreter.uri, undefined)).thenResolve(
+        when(interpreterService.getInterpreterDetails(pythonInterpreter.uri)).thenResolve(pythonInterpreter);
+        when(interpreterService.getInterpreterDetails(secondPythonInterpreter.uri)).thenResolve(
             secondPythonInterpreter
         );
         when(memento.update(anything(), anything())).thenResolve();
@@ -114,6 +122,21 @@ suite('DataScience - Jupyter Interpreter Service', () => {
         const selectedInterpreter = await jupyterInterpreterService.selectInterpreter();
 
         assert.equal(selectedInterpreter, secondPythonInterpreter);
+    });
+    test('Display prompt to select an interpreter when running the installer without an active interpreter', async () => {
+        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
+
+        const response = await jupyterInterpreterService.installMissingDependencies(new JupyterInstallError('Kaboom'));
+
+        verify(
+            appShell.showErrorMessage(
+                'Kaboom',
+                deepEqual({ modal: true }),
+                DataScience.selectDifferentJupyterInterpreter()
+            )
+        ).once();
+        verify(interpreterSelector.selectInterpreter()).never();
+        assert.equal(response, JupyterInterpreterDependencyResponse.cancel);
     });
     test('setInitialInterpreter if older version is set should use and clear', async () => {
         when(oldVersionCacheStateStore.getCachedInterpreterPath()).thenReturn(pythonInterpreter.uri);

@@ -1,57 +1,99 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 /* eslint-disable , , @typescript-eslint/no-explicit-any, no-multi-str, no-trailing-spaces */
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import rewiremock from 'rewiremock';
 import { instance, mock, when } from 'ts-mockito';
-import * as TypeMoq from 'typemoq';
-import { EventEmitter, NotebookDocument, TextDocument } from 'vscode';
-
-import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import {
+    EventEmitter,
+    NotebookCellExecutionState,
+    NotebookCellExecutionStateChangeEvent,
+    NotebookCellKind,
+    NotebookDocument
+} from 'vscode';
+
+import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
+import {
+    InteractiveWindowView,
     isTestExecution,
     isUnitTestExecution,
+    JupyterNotebookView,
     setTestExecution,
     setUnitTestExecution
 } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
-import { EventName } from '../../telemetry/constants';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { ImportTracker } from '../../telemetry/importTracker.node';
-import { createDocument } from '../datascience/editor-integration/helpers';
+import { EventName } from '../../platform/telemetry/constants';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
+import { ImportTracker } from '../../standalone/import-export/importTracker';
+import { ResourceTypeTelemetryProperty } from '../../telemetry';
+import { waitForCondition } from '../common';
+import { createMockedNotebookDocument } from '../datascience/editor-integration/helpers';
 
-suite('Import Tracker', () => {
+suite('Import Tracker', async () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();
     const oldValueOfVSC_JUPYTER_CI_TEST = isTestExecution();
     let importTracker: ImportTracker;
-    let documentManager: TypeMoq.IMock<IDocumentManager>;
-    let openedEventEmitter: EventEmitter<TextDocument>;
-    let savedEventEmitter: EventEmitter<TextDocument>;
-    const pandasHash: string = getTelemetrySafeHashedString('pandas');
-    const elephasHash: string = getTelemetrySafeHashedString('elephas');
-    const kerasHash: string = getTelemetrySafeHashedString('keras');
-    const pysparkHash: string = getTelemetrySafeHashedString('pyspark');
-    const sparkdlHash: string = getTelemetrySafeHashedString('sparkdl');
-    const numpyHash: string = getTelemetrySafeHashedString('numpy');
-    const scipyHash: string = getTelemetrySafeHashedString('scipy');
-    const sklearnHash: string = getTelemetrySafeHashedString('sklearn');
-    const randomHash: string = getTelemetrySafeHashedString('random');
-    const disposables: IDisposable[] = [];
+    let onDidChangeNotebookCellExecutionState: EventEmitter<NotebookCellExecutionStateChangeEvent>;
+    let onDidOpenNbEvent: EventEmitter<NotebookDocument>;
+    let onDidCloseNbEvent: EventEmitter<NotebookDocument>;
+    let onDidSaveNbEvent: EventEmitter<NotebookDocument>;
+    let vscNb: IVSCodeNotebook;
+    let pandasHash: string;
+    let elephasHash: string;
+    let kerasHash: string;
+    let pysparkHash: string;
+    let sparkdlHash: string;
+    let numpyHash: string;
+    let scipyHash: string;
+    let sklearnHash: string;
+    let randomHash: string;
+    let disposables: IDisposable[] = [];
     class Reporter {
         public static eventNames: string[] = [];
         public static properties: Record<string, string>[] = [];
         public static measures: {}[] = [];
 
-        public static expectHashes(...hashes: string[]) {
-            expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_PERF);
+        public static async expectHashes(
+            when: 'onExecution' | 'onOpenCloseOrSave' = 'onOpenCloseOrSave',
+            resourceType: ResourceTypeTelemetryProperty['resourceType'] = undefined,
+            ...hashes: string[]
+        ) {
             if (hashes.length > 0) {
+                await waitForCondition(
+                    async () => {
+                        expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_NAME);
+                        return true;
+                    },
+                    1_000,
+                    'Hashed package name event not sent'
+                );
                 expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_NAME);
+                await waitForCondition(
+                    async () => {
+                        Reporter.properties.filter((item) => Object.keys(item).length).length === hashes.length;
+                        return true;
+                    },
+                    1_000,
+                    () =>
+                        `Incorrect number of hashed package name events sent. Expected ${hashes.length}, got ${
+                            Reporter.properties.filter((item) => Object.keys(item).length).length
+                        }, with values ${JSON.stringify(
+                            Reporter.properties.filter((item) => Object.keys(item).length)
+                        )}`
+                );
             }
-
-            Reporter.properties.pop(); // HASHED_PACKAGE_PERF
-            expect(Reporter.properties).to.deep.equal(hashes.map((hash) => ({ hashedNamev2: hash })));
+            const properties = Reporter.properties.filter((item) => Object.keys(item).length);
+            const expected = resourceType
+                ? hashes.map((hash) => ({ hashedNamev2: hash, when, resourceType }))
+                : hashes.map((hash) => ({ hashedNamev2: hash, when }));
+            assert.deepEqual(
+                properties.sort((a, b) => a.hashedNamev2.localeCompare(b.hashedNamev2)),
+                expected.sort((a, b) => a.hashedNamev2.localeCompare(b.hashedNamev2)),
+                `Hashes not sent correctly, expected ${JSON.stringify(expected)} but got ${JSON.stringify(properties)}`
+            );
         }
 
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
@@ -60,29 +102,47 @@ suite('Import Tracker', () => {
             Reporter.measures.push(measures!);
         }
     }
-
+    suiteSetup(async () => {
+        pandasHash = await getTelemetrySafeHashedString('pandas');
+        elephasHash = await getTelemetrySafeHashedString('elephas');
+        kerasHash = await getTelemetrySafeHashedString('keras');
+        pysparkHash = await getTelemetrySafeHashedString('pyspark');
+        sparkdlHash = await getTelemetrySafeHashedString('sparkdl');
+        numpyHash = await getTelemetrySafeHashedString('numpy');
+        scipyHash = await getTelemetrySafeHashedString('scipy');
+        sklearnHash = await getTelemetrySafeHashedString('sklearn');
+        randomHash = await getTelemetrySafeHashedString('random');
+    });
     setup(() => {
         setTestExecution(false);
         setUnitTestExecution(false);
 
-        openedEventEmitter = new EventEmitter<TextDocument>();
-        savedEventEmitter = new EventEmitter<TextDocument>();
-
-        documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
-        documentManager.setup((a) => a.onDidOpenTextDocument).returns(() => openedEventEmitter.event);
-        documentManager.setup((a) => a.onDidSaveTextDocument).returns(() => savedEventEmitter.event);
-
         rewiremock.enable();
         rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
 
-        const vscNb = mock<IVSCodeNotebook>();
-        const onDidOpenCloseNbEvent = new EventEmitter<NotebookDocument>();
-        disposables.push(onDidOpenCloseNbEvent);
-        when(vscNb.onDidOpenNotebookDocument).thenReturn(onDidOpenCloseNbEvent.event);
-        when(vscNb.onDidCloseNotebookDocument).thenReturn(onDidOpenCloseNbEvent.event);
+        vscNb = mock<IVSCodeNotebook>();
+        onDidOpenNbEvent = new EventEmitter<NotebookDocument>();
+        onDidCloseNbEvent = new EventEmitter<NotebookDocument>();
+        onDidSaveNbEvent = new EventEmitter<NotebookDocument>();
+        onDidChangeNotebookCellExecutionState = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
+        disposables.push(onDidOpenNbEvent);
+        disposables.push(onDidCloseNbEvent);
+        disposables.push(onDidSaveNbEvent);
+        when(vscNb.onDidOpenNotebookDocument).thenReturn(onDidOpenNbEvent.event);
+        when(vscNb.onDidCloseNotebookDocument).thenReturn(onDidCloseNbEvent.event);
+        when(vscNb.onDidSaveNotebookDocument).thenReturn(onDidSaveNbEvent.event);
+        when(vscNb.onDidChangeNotebookCellExecutionState).thenReturn(onDidChangeNotebookCellExecutionState.event);
         when(vscNb.notebookDocuments).thenReturn([]);
-
-        importTracker = new ImportTracker(documentManager.object, instance(vscNb), disposables);
+        const workspace = mock<IWorkspaceService>();
+        when(workspace.getConfiguration('telemetry')).thenReturn({
+            inspect: () => {
+                return {
+                    key: 'enableTelemetry',
+                    globalValue: true
+                };
+            }
+        } as any);
+        importTracker = new ImportTracker(instance(vscNb), disposables, instance(workspace));
     });
     teardown(() => {
         setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);
@@ -94,171 +154,190 @@ suite('Import Tracker', () => {
         disposeAllDisposables(disposables);
     });
 
-    function emitDocEvent(code: string, ev: EventEmitter<TextDocument>) {
-        const textDoc = createDocument(code, 'foo.py', 1, TypeMoq.Times.atMost(100), true);
-        ev.fire(textDoc.object);
-    }
+    test('Open document', async () => {
+        const code = `import pandas\r\n`;
+        const nb = createMockedNotebookDocument([{ kind: NotebookCellKind.Code, languageId: 'python', value: code }]);
+        onDidOpenNbEvent.fire(nb);
 
-    test('Open document', () => {
-        emitDocEvent('import pandas\r\n', openedEventEmitter);
+        await Reporter.expectHashes('onOpenCloseOrSave', 'notebook', pandasHash);
+    });
+    test('Close document', async () => {
+        const code = `import pandas\r\n`;
+        const nb = createMockedNotebookDocument([{ kind: NotebookCellKind.Code, languageId: 'python', value: code }]);
+        onDidCloseNbEvent.fire(nb);
 
-        Reporter.expectHashes(pandasHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', 'notebook', pandasHash);
+    });
+    test('Save document', async () => {
+        const code = `import pandas\r\n`;
+        const nb = createMockedNotebookDocument([{ kind: NotebookCellKind.Code, languageId: 'python', value: code }]);
+        onDidSaveNbEvent.fire(nb);
+
+        await Reporter.expectHashes('onOpenCloseOrSave', 'notebook', pandasHash);
     });
 
     test('Already opened documents', async () => {
-        const doc = createDocument('import pandas\r\n', 'foo.py', 1, TypeMoq.Times.atMost(100), true);
-        documentManager.setup((d) => d.textDocuments).returns(() => [doc.object]);
+        const code = `import pandas\r\n`;
+        const nb = createMockedNotebookDocument([{ kind: NotebookCellKind.Code, languageId: 'python', value: code }]);
+        when(vscNb.notebookDocuments).thenReturn([nb]);
+
         await importTracker.activate();
 
-        Reporter.expectHashes(pandasHash);
+        await Reporter.expectHashes('onOpenCloseOrSave', 'notebook', pandasHash);
+    });
+    async function testImports(
+        code: string,
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
+        ...expectedPackageHashes: string[]
+    ) {
+        const nb = createMockedNotebookDocument(
+            [{ kind: NotebookCellKind.Code, languageId: 'python', value: code }],
+            undefined,
+            undefined,
+            notebookType
+        );
+        when(vscNb.notebookDocuments).thenReturn([nb]);
+
+        await importTracker.activate();
+
+        await Reporter.expectHashes(
+            'onOpenCloseOrSave',
+            notebookType === 'jupyter-notebook' ? 'notebook' : 'interactive',
+            ...expectedPackageHashes
+        );
+    }
+    test('from <pkg>._ import _, _', async () => {
+        const code = `
+            from elephas.java import java_classes, adapter
+            from keras.models import Sequential
+            from keras.layers import Dense
+
+            model = Sequential()
+            model.add(Dense(units=64, activation='relu', input_dim=100))
+            model.add(Dense(units=10, activation='softmax'))
+            model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+
+            model.save('test.h5')
+
+            kmi = java_classes.KerasModelImport
+            file = java_classes.File("test.h5")
+
+            java_model = kmi.importKerasSequentialModelAndWeights(file.absolutePath)
+
+            weights = adapter.retrieve_keras_weights(java_model)
+            model.set_weights(weights)`;
+        await testImports(code, 'jupyter-notebook', elephasHash, kerasHash);
     });
 
-    test('Save document', () => {
-        emitDocEvent('import pandas\r\n', savedEventEmitter);
+    test('from <pkg>._ import _', async () => {
+        const code = `from pyspark.ml.classification import LogisticRegression
+            from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+            from pyspark.ml import Pipeline
+            from sparkdl import DeepImageFeaturizer
 
-        Reporter.expectHashes(pandasHash);
+            featurizer = DeepImageFeaturizer(inputCol="image", outputCol="features", modelName="InceptionV3")
+            lr = LogisticRegression(maxIter=20, regParam=0.05, elasticNetParam=0.3, labelCol="label")
+            p = Pipeline(stages=[featurizer, lr])
+
+            model = p.fit(train_images_df)    # train_images_df is a dataset of images and labels
+
+            # Inspect training error
+            df = model.transform(train_images_df.limit(10)).select("image", "probability",  "uri", "label")
+            predictionAndLabels = df.select("prediction", "label")
+            evaluator = MulticlassClassificationEvaluator(metricName="accuracy")
+            print("Training set accuracy = " + str(evaluator.evaluate(predictionAndLabels)))`;
+
+        await testImports(code, 'interactive', pysparkHash, sparkdlHash);
     });
 
-    test('from <pkg>._ import _, _', () => {
-        const elephas = `
-        from elephas.java import java_classes, adapter
-        from keras.models import Sequential
-        from keras.layers import Dense
-
-
-        model = Sequential()
-        model.add(Dense(units=64, activation='relu', input_dim=100))
-        model.add(Dense(units=10, activation='softmax'))
-        model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
-
-        model.save('test.h5')
-
-
-        kmi = java_classes.KerasModelImport
-        file = java_classes.File("test.h5")
-
-        java_model = kmi.importKerasSequentialModelAndWeights(file.absolutePath)
-
-        weights = adapter.retrieve_keras_weights(java_model)
-        model.set_weights(weights)`;
-
-        emitDocEvent(elephas, savedEventEmitter);
-        Reporter.expectHashes(elephasHash, kerasHash);
-    });
-
-    test('from <pkg>._ import _', () => {
-        const pyspark = `from pyspark.ml.classification import LogisticRegression
-        from pyspark.ml.evaluation import MulticlassClassificationEvaluator
-        from pyspark.ml import Pipeline
-        from sparkdl import DeepImageFeaturizer
-
-        featurizer = DeepImageFeaturizer(inputCol="image", outputCol="features", modelName="InceptionV3")
-        lr = LogisticRegression(maxIter=20, regParam=0.05, elasticNetParam=0.3, labelCol="label")
-        p = Pipeline(stages=[featurizer, lr])
-
-        model = p.fit(train_images_df)    # train_images_df is a dataset of images and labels
-
-        # Inspect training error
-        df = model.transform(train_images_df.limit(10)).select("image", "probability",  "uri", "label")
-        predictionAndLabels = df.select("prediction", "label")
-        evaluator = MulticlassClassificationEvaluator(metricName="accuracy")
-        print("Training set accuracy = " + str(evaluator.evaluate(predictionAndLabels)))`;
-
-        emitDocEvent(pyspark, savedEventEmitter);
-        Reporter.expectHashes(pysparkHash, sparkdlHash);
-    });
-
-    test('import <pkg> as _', () => {
+    test('import <pkg> as _', async () => {
         const code = `import pandas as pd
-import numpy as np
-import random as rnd
+    import numpy as np
+    import random as rnd
 
-def simplify_ages(df):
-    df.Age = df.Age.fillna(-0.5)
-    bins = (-1, 0, 5, 12, 18, 25, 35, 60, 120)
-    group_names = ['Unknown', 'Baby', 'Child', 'Teenager', 'Student', 'Young Adult', 'Adult', 'Senior']
-    categories = pd.cut(df.Age, bins, labels=group_names)
-    df.Age = categories
-    return df`;
-        emitDocEvent(code, savedEventEmitter);
-        Reporter.expectHashes(pandasHash, numpyHash, randomHash);
+    def simplify_ages(df):
+        df.Age = df.Age.fillna(-0.5)
+        bins = (-1, 0, 5, 12, 18, 25, 35, 60, 120)
+        group_names = ['Unknown', 'Baby', 'Child', 'Teenager', 'Student', 'Young Adult', 'Adult', 'Senior']
+        categories = pd.cut(df.Age, bins, labels=group_names)
+        df.Age = categories
+        return df`;
+
+        await testImports(code, 'interactive', pandasHash, numpyHash, randomHash);
     });
 
-    test('from <pkg> import _', () => {
+    test('from <pkg> import _', async () => {
         const code = `from scipy import special
-def drumhead_height(n, k, distance, angle, t):
-   kth_zero = special.jn_zeros(n, k)[-1]
-   return np.cos(t) * np.cos(n*angle) * special.jn(n, distance*kth_zero)
-theta = np.r_[0:2*np.pi:50j]
-radius = np.r_[0:1:50j]
-x = np.array([r * np.cos(theta) for r in radius])
-y = np.array([r * np.sin(theta) for r in radius])
-z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
-        emitDocEvent(code, savedEventEmitter);
-        Reporter.expectHashes(scipyHash);
+    def drumhead_height(n, k, distance, angle, t):
+       kth_zero = special.jn_zeros(n, k)[-1]
+       return np.cos(t) * np.cos(n*angle) * special.jn(n, distance*kth_zero)
+    theta = np.r_[0:2*np.pi:50j]
+    radius = np.r_[0:1:50j]
+    x = np.array([r * np.cos(theta) for r in radius])
+    y = np.array([r * np.sin(theta) for r in radius])
+    z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
+
+        await testImports(code, 'interactive', scipyHash);
     });
 
-    test('from <pkg> import _ as _', () => {
+    test('from <pkg> import _ as _', async () => {
         const code = `from pandas import DataFrame as df`;
-        emitDocEvent(code, savedEventEmitter);
-        Reporter.expectHashes(pandasHash);
+        await testImports(code, 'jupyter-notebook', pandasHash);
     });
 
-    test('import <pkg1>, <pkg2>', () => {
+    test('import <pkg1>, <pkg2>', async () => {
         const code = `
-def drumhead_height(n, k, distance, angle, t):
-   import sklearn, pandas
-   return np.cos(t) * np.cos(n*angle) * special.jn(n, distance*kth_zero)
-theta = np.r_[0:2*np.pi:50j]
-radius = np.r_[0:1:50j]
-x = np.array([r * np.cos(theta) for r in radius])
-y = np.array([r * np.sin(theta) for r in radius])
-z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
-        emitDocEvent(code, savedEventEmitter);
-        Reporter.expectHashes(sklearnHash, pandasHash);
+    def drumhead_height(n, k, distance, angle, t):
+       import sklearn, pandas
+       return np.cos(t) * np.cos(n*angle) * special.jn(n, distance*kth_zero)
+    theta = np.r_[0:2*np.pi:50j]
+    radius = np.r_[0:1:50j]
+    x = np.array([r * np.cos(theta) for r in radius])
+    y = np.array([r * np.sin(theta) for r in radius])
+    z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
+        await testImports(code, 'interactive', sklearnHash, pandasHash);
     });
 
-    test('Import from within a function', () => {
+    test('Import from within a function', async () => {
         const code = `
-def drumhead_height(n, k, distance, angle, t):
-   import sklearn as sk
-   return np.cos(t) * np.cos(n*angle) * special.jn(n, distance*kth_zero)
-theta = np.r_[0:2*np.pi:50j]
-radius = np.r_[0:1:50j]
-x = np.array([r * np.cos(theta) for r in radius])
-y = np.array([r * np.sin(theta) for r in radius])
-z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
-        emitDocEvent(code, savedEventEmitter);
-        Reporter.expectHashes(sklearnHash);
+    def drumhead_height(n, k, distance, angle, t):
+       import sklearn as sk
+       return np.cos(t) * np.cos(n*angle) * special.jn(n, distance*kth_zero)
+    theta = np.r_[0:2*np.pi:50j]
+    radius = np.r_[0:1:50j]
+    x = np.array([r * np.cos(theta) for r in radius])
+    y = np.array([r * np.sin(theta) for r in radius])
+    z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
+
+        await testImports(code, 'interactive', sklearnHash);
     });
 
-    test('Do not send the same package twice', () => {
+    test('Do not send the same package twice', async () => {
         const code = `
-import pandas
-import pandas`;
-        emitDocEvent(code, savedEventEmitter);
-        Reporter.expectHashes(pandasHash);
+    import pandas
+    import pandas`;
+        await testImports(code, 'interactive', pandasHash);
     });
 
-    test('Ignore relative imports', () => {
+    test('Ignore relative imports', async () => {
         const code = 'from .pandas import not_real';
-        emitDocEvent(code, savedEventEmitter);
-        Reporter.expectHashes();
+        await testImports(code, 'interactive');
     });
+    test('Track packages when a cell is executed', async () => {
+        const code = `import numpy`;
+        const nb = createMockedNotebookDocument([{ kind: NotebookCellKind.Code, languageId: 'python', value: code }]);
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Pending });
 
-    test('Ignore docstring for `from` imports', () => {
-        const code = `"""
-from numpy import the random function
-"""`;
-        emitDocEvent(code, savedEventEmitter);
-        Reporter.expectHashes();
-    });
+        await Reporter.expectHashes('onExecution', 'notebook', numpyHash);
 
-    test('Ignore docstring for `import` imports', () => {
-        const code = `"""
-import numpy for all the things
-"""`;
-        emitDocEvent(code, savedEventEmitter);
-        Reporter.expectHashes();
+        // Executing the cell multiple will have no effect, the telemetry is only sent once.
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Pending });
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Executing });
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Idle });
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Pending });
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Executing });
+        onDidChangeNotebookCellExecutionState.fire({ cell: nb.cellAt(0), state: NotebookCellExecutionState.Idle });
+
+        await Reporter.expectHashes('onExecution', 'notebook', numpyHash);
     });
 });

@@ -1,7 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 'use strict';
 
+const webpack = require('webpack');
 const copyWebpackPlugin = require('copy-webpack-plugin');
 const removeFilesWebpackPlugin = require('remove-files-webpack-plugin');
 const path = require('path');
@@ -9,7 +10,7 @@ const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const constants = require('../constants');
 const common = require('./common');
 // tslint:disable-next-line:no-var-requires no-require-imports
-const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.node.json');
+const configFileName = path.join(constants.ExtensionRootDir, 'src/tsconfig.extension.node.json');
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
@@ -37,6 +38,16 @@ const config = {
             {
                 test: /\.ts$/,
                 use: [
+                    ...(process.env.BUILD_WITH_VSCODE_NLS
+                        ? [
+                              {
+                                  loader: 'vscode-nls-dev/lib/webpack-loader',
+                                  options: {
+                                      base: constants.ExtensionRootDir
+                                  }
+                              }
+                          ]
+                        : []),
                     {
                         loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
                     }
@@ -94,7 +105,7 @@ const config = {
         'commonjs',
         'electron',
         './node_modules/zeromq',
-        './node_modules/@vscode/jupyter-ipywidgets',
+        './node_modules/@vscode/jupyter-ipywidgets7',
         ...existingModulesInOutDir,
         '@opentelemetry/tracing',
         'applicationinsights-native-metrics'
@@ -109,6 +120,14 @@ const config = {
                 }
             ]
         }),
+        new copyWebpackPlugin({
+            patterns: [
+                {
+                    from: './node_modules/jquery/dist/jquery.min.js',
+                    to: './node_modules/jquery/dist/jquery.min.js'
+                }
+            ]
+        }),
         // ZMQ requires prebuilds to be in our node_modules directory. So recreate the ZMQ structure.
         // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
         // so at runtime we pick up the original structure.
@@ -117,7 +136,18 @@ const config = {
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/node-gyp-build/**/*' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/@vscode/jupyter-ipywidgets/dist/*.js' }] })
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/@vscode/jupyter-ipywidgets7/dist/*.js' }] }),
+        new webpack.IgnorePlugin({
+            resourceRegExp: /^\.\/locale$/,
+            contextRegExp: /moment$/
+        }),
+        new webpack.DefinePlugin({
+            IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: JSON.stringify(
+                typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
+                    ? process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION
+                    : 'true'
+            )
+        })
     ],
     resolve: {
         alias: {

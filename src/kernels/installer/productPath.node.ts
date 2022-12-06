@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -10,6 +10,9 @@ import { IConfigurationService } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IInstaller, IProductPathService, ModuleNamePurpose, Product } from './types';
 
+/**
+ * Determines if a product is a module or not
+ */
 export abstract class BaseProductPathsService implements IProductPathService {
     protected readonly configService: IConfigurationService;
     protected readonly productInstaller: IInstaller;

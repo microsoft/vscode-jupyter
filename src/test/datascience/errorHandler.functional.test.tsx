@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -17,7 +17,7 @@ suite('Dummy3', () => {
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { MockDocumentManager } from './mockDocumentManager';
 
-// suite('DataScience Error Handler Functional Tests', () => {
+// suite('Error Handler Functional Tests', () => {
 //     let ioc: DataScienceIocContainer;
 //     let stubbedInstallMissingDependencies: sinon.SinonStub<[(JupyterInstallError | undefined)?], Promise<void>>;
 //     setup(async () => {

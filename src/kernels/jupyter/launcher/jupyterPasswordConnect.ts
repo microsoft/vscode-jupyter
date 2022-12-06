@@ -1,21 +1,27 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { inject, injectable, optional } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { traceInfo } from '../../../platform/logging';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import {
     IJupyterPasswordConnect,
     IJupyterPasswordConnectInfo,
     IJupyterRequestAgentCreator,
-    IJupyterRequestCreator
+    IJupyterRequestCreator,
+    IJupyterServerUriEntry,
+    IJupyterServerUriStorage
 } from '../types';
 
+/**
+ * Responsible for intercepting connections to a remote server and asking for a password if necessary
+ */
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo | undefined>>();
@@ -27,25 +33,34 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         @inject(IJupyterRequestAgentCreator)
         @optional()
         private readonly agentCreator: IJupyterRequestAgentCreator | undefined,
-        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator
-    ) {}
+        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+    ) {
+        // Sign up to see if servers are removed from our uri storage list
+        this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
+    }
 
-    @captureTelemetry(Telemetry.GetPasswordAttempt)
     public getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
         if (!url || url.length < 1) {
             return Promise.resolve(undefined);
         }
 
         // Add on a trailing slash to our URL if it's not there already
-        let newUrl = url;
-        if (newUrl[newUrl.length - 1] !== '/') {
-            newUrl = `${newUrl}/`;
-        }
+        const newUrl = addTrailingSlash(url);
 
         // See if we already have this data. Don't need to ask for a password more than once. (This can happen in remote when listing kernels)
         let result = this.savedConnectInfo.get(newUrl);
         if (!result) {
-            result = this.getNonCachedPasswordConnectionInfo(newUrl);
+            result = this.getNonCachedPasswordConnectionInfo(newUrl).then((value) => {
+                // If we fail to get a valid password connect info, don't save the value
+                traceInfo(`Password for ${newUrl} was invalid.`);
+                if (!value) {
+                    this.savedConnectInfo.delete(newUrl);
+                }
+
+                return value;
+            });
             this.savedConnectInfo.set(newUrl, result);
         }
 
@@ -373,6 +388,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                 const closeOption: string = DataScience.jupyterSelfCertClose();
                 const value = await this.appShell.showErrorMessage(
                     DataScience.jupyterSelfCertFail().format(e.message),
+                    { modal: true },
                     enableOption,
                     closeOption
                 );
@@ -472,4 +488,21 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
         return cookieList;
     }
+
+    // When URIs are removed from the server list also remove them from
+    private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
+        uriEntries.forEach((uriEntry) => {
+            const newUrl = addTrailingSlash(uriEntry.uri);
+            this.savedConnectInfo.delete(newUrl);
+        });
+    }
+}
+
+// Small helper for tacking on a trailing slash if needed
+function addTrailingSlash(url: string): string {
+    let newUrl = url;
+    if (newUrl[newUrl.length - 1] !== '/') {
+        newUrl = `${newUrl}/`;
+    }
+    return newUrl;
 }

@@ -1,12 +1,15 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { injectable } from 'inversify';
-import { SemVer } from 'semver';
 import { OSType } from '../utils/platform';
 import { IPlatformService } from './types';
 
+/**
+ * Reimplementation of the node os module but for web.
+ */
 @injectable()
 export class PlatformService implements IPlatformService {
     public get tempDir() {
@@ -16,15 +19,8 @@ export class PlatformService implements IPlatformService {
         return undefined;
     }
     public readonly osType: OSType = OSType.Unknown;
-    public version?: SemVer;
     public get pathVariableName() {
         return '';
-    }
-    public get virtualEnvBinName() {
-        return this.isWindows ? 'Scripts' : 'bin';
-    }
-    public async getVersion(): Promise<SemVer> {
-        throw new Error('Not Supported');
     }
 
     public get isWindows(): boolean {
@@ -35,11 +31,5 @@ export class PlatformService implements IPlatformService {
     }
     public get isLinux(): boolean {
         return this.osType === OSType.Linux;
-    }
-    public get osRelease(): string {
-        return '';
-    }
-    public get is64bit(): boolean {
-        return false;
     }
 }

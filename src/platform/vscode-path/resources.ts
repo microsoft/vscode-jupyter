@@ -1,9 +1,9 @@
-/* eslint-disable local-rules/dont-use-fspath */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 /* eslint-disable @typescript-eslint/no-use-before-define */
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
+/* eslint-disable local-rules/dont-use-fspath */
+
 import { Uri as URI } from 'vscode';
 import { CharCode } from './charCode';
 import * as extpath from './extpath';
@@ -397,28 +397,6 @@ export const addTrailingPathSeparator = extUri.addTrailingPathSeparator.bind(ext
 
 //#endregion
 
-export function distinctParents<T>(items: T[], resourceAccessor: (item: T) => URI): T[] {
-    const distinctParents: T[] = [];
-    for (let i = 0; i < items.length; i++) {
-        const candidateResource = resourceAccessor(items[i]);
-        if (
-            items.some((otherItem, index) => {
-                if (index === i) {
-                    return false;
-                }
-
-                return isEqualOrParent(candidateResource, resourceAccessor(otherItem));
-            })
-        ) {
-            continue;
-        }
-
-        distinctParents.push(items[i]);
-    }
-
-    return distinctParents;
-}
-
 /**
  * Data URI related helpers.
  */
@@ -450,17 +428,4 @@ export namespace DataUri {
 
         return metadata;
     }
-}
-
-export function toLocalResource(resource: URI, authority: string | undefined, localScheme: string): URI {
-    if (authority) {
-        let path = resource.path;
-        if (path && path[0] !== paths.posix.sep) {
-            path = paths.posix.sep + path;
-        }
-
-        return resource.with({ scheme: localScheme, authority, path });
-    }
-
-    return resource.with({ scheme: localScheme });
 }

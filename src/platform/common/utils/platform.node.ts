@@ -1,11 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
 import { Uri } from 'vscode';
 import * as os from 'os';
-import { fsPathToUri } from '../../vscode-path/utils';
 import { EnvironmentVariables } from '../variables/types';
 import { getOSType, OSType } from './platform';
 export * from './platform';
@@ -22,12 +21,12 @@ export function getPathEnvironmentVariable(): string | undefined {
     return getEnvironmentVariable('Path') || getEnvironmentVariable('PATH');
 }
 
-export function getUserHomeDir(): Uri | undefined {
+export function getUserHomeDir(): Uri {
     if (getOSType() === OSType.Windows) {
-        return fsPathToUri(getEnvironmentVariable('USERPROFILE') || homePath);
+        return Uri.file(getEnvironmentVariable('USERPROFILE') || homePath);
     }
     const homeVar = getEnvironmentVariable('HOME') || getEnvironmentVariable('HOMEPATH') || homePath;
 
     // Make sure if linux, it uses linux separators
-    return fsPathToUri(homeVar?.replace(/\\/g, '/'));
+    return Uri.file(homeVar.replace(/\\/g, '/'));
 }

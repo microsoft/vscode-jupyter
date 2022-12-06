@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -10,17 +10,8 @@ import { IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterStatusBarVisibility } from '../interpreter/display/visibilityFilter.node';
 import { IServiceManager } from '../ioc/types';
-import { ApiAccessService } from './apiAccessService';
-import { JupyterKernelServiceFactory } from './kernelApi.node';
 import { InterpreterSelector, InterpreterService, PythonApiProvider, PythonExtensionChecker } from './pythonApi';
-import { LanguageServerProvider, PythonDebuggerPathProvider } from './pythonApi.node';
-import {
-    IExportedKernelServiceFactory,
-    ILanguageServerProvider,
-    IPythonApiProvider,
-    IPythonDebuggerPathProvider,
-    IPythonExtensionChecker
-} from './types';
+import { IPythonApiProvider, IPythonExtensionChecker } from './types';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IPythonApiProvider>(IPythonApiProvider, PythonApiProvider);
@@ -31,15 +22,8 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IExtensionSingleActivationService,
         InterpreterStatusBarVisibility
     );
-    serviceManager.addSingleton<IPythonDebuggerPathProvider>(IPythonDebuggerPathProvider, PythonDebuggerPathProvider);
-    serviceManager.addSingleton<ILanguageServerProvider>(ILanguageServerProvider, LanguageServerProvider);
     serviceManager.addSingleton<IEnvironmentActivationService>(
         IEnvironmentActivationService,
         EnvironmentActivationService
     );
-    serviceManager.addSingleton<IExportedKernelServiceFactory>(
-        IExportedKernelServiceFactory,
-        JupyterKernelServiceFactory
-    );
-    serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
 }

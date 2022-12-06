@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -15,6 +15,9 @@ import { ModuleInstallerType } from './types';
 
 export const poetryName = 'poetry';
 
+/**
+ * Installer for poetry environments.
+ */
 @injectable()
 export class PoetryInstaller extends ModuleInstaller {
     // eslint-disable-next-line class-methods-use-this

@@ -1,11 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
 /* eslint-disable  */
 
-import * as assert from 'assert';
+import assert from 'assert';
 import * as fs from 'fs';
 import * as path from '../../../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
@@ -54,7 +54,7 @@ suite('Localization', () => {
         const val = localize.ExtensionSurveyBanner.bannerMessage();
         assert.equal(
             val,
-            'Can you please take 2 minutes to tell us how the Python extension is working for you?',
+            'Can you please take 2 minutes to tell us how the Python Extension is working for you?',
             'LanguageService string doesnt match'
         );
         done();

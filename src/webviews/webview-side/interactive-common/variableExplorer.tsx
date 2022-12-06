@@ -1,18 +1,18 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import './variableExplorer.css';
 
-import * as fastDeepEqual from 'fast-deep-equal';
+import fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 
-import { RegExpValues } from '../common/constants';
 import { getLocString } from '../react-common/locReactSide';
 import { IButtonCellValue, VariableExplorerButtonCellFormatter } from './variableExplorerButtonCellFormatter';
 import { CellStyle, VariableExplorerCellFormatter } from './variableExplorerCellFormatter';
 import { VariableExplorerEmptyRowsView } from './variableExplorerEmptyRows';
 
-import * as AdazzleReactDataGrid from 'react-data-grid';
+import AdazzleReactDataGrid from 'react-data-grid';
 import { VariableExplorerHeaderCellFormatter } from './variableExplorerHeaderCellFormatter';
 import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
 
@@ -20,6 +20,7 @@ import { IVariableState } from './redux/reducers/variables';
 import './variableExplorerGrid.less';
 import { VariableExplorerLoadingRowsView } from './variableExplorerLoadingRows';
 import { IJupyterVariable } from '../../../kernels/variables/types';
+import { RegExpValues } from '../../../platform/common/constants';
 
 interface IVariableExplorerProps {
     baseTheme: string;
@@ -39,6 +40,7 @@ interface IVariableExplorerProps {
     sort(sortColumn: string, sortAscending: boolean): void;
     viewHeight: number;
     requestInProgress: boolean;
+    isWeb: boolean;
 }
 
 const defaultColumnProperties = {
@@ -66,6 +68,7 @@ interface IGridRow {
 interface IVariableExplorerState {
     containerHeight: number;
     gridHeight: number;
+    isWeb: boolean;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -99,7 +102,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         this.state = {
             containerHeight: this.props.containerHeight,
-            gridHeight: this.props.gridHeight
+            gridHeight: this.props.gridHeight,
+            isWeb: this.props.isWeb
         };
 
         this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
@@ -187,6 +191,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         // We need to update when height changes
         if (prevState.viewHeight !== nextProps.viewHeight) {
+            return true;
+        }
+
+        if (prevState.isWeb !== nextProps.isWeb) {
             return true;
         }
 
@@ -340,6 +348,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 } else if (variable.count) {
                     newSize = variable.count.toString();
                 }
+                let value = variable.value;
+                if (variable.type === 'str' && variable.value) {
+                    value = `'${variable.value}'`;
+                }
                 return {
                     buttons: {
                         name: variable.name,
@@ -351,9 +363,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     type: variable.type,
                     size: newSize,
                     index,
-                    value: variable.value
-                        ? variable.value
-                        : getLocString('DataScience.variableLoadingValue', 'Loading...')
+                    value: value ? value : getLocString('DataScience.variableLoadingValue', 'Loading...')
                 };
             }
         }

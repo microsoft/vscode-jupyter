@@ -1,0 +1,33 @@
+{
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": "..",
+        "rootDir": ".",
+        "outDir": "out",
+
+        // Types
+        "paths": {
+            "*": ["types/*"]
+        },
+        "typeRoots": [
+            "./node_modules/@types",
+        ],
+        "types": [
+            // "vscode-notebook-renderer",
+            "webpack-env"
+        ],
+        "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"]
+    },
+    "include": [
+        "./**/*",
+
+        // Include all types outside the type roots manually
+        "../types/slickgrid",
+        "../vscode.*"
+    ],
+    "exclude": [
+        "test/datascience/extensionapi",
+        "*.node.ts",
+        "**/*.node.ts"
+    ]
+}

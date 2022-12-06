@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
@@ -9,11 +10,16 @@ import { IApplicationShell } from '../platform/common/application/types';
 import { Telemetry } from '../platform/common/constants';
 import { IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
-import { endCellAndDisplayErrorsInCell } from '../platform/errors/errorUtils';
-import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
+import { noop } from '../platform/common/utils/misc';
+import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
+import { endCellAndDisplayErrorsInCell } from './execution/helpers';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
+import { swallowExceptions } from '../platform/common/utils/decorators';
 
+/**
+ * Monitors kernel crashes and on the event of a crash will display the results in the most recent cell.
+ */
 @injectable()
 export class KernelCrashMonitor implements IExtensionSyncActivationService {
     private lastExecutedCellPerKernel = new WeakMap<IKernel, NotebookCell | undefined>();
@@ -30,9 +36,12 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
     }
     private onDidStartKernel(kernel: IKernel) {
         this.kernelsStartedSuccessfully.add(kernel);
-        kernel.onPreExecute((cell) => this.lastExecutedCellPerKernel.set(kernel, cell), this, this.disposableRegistry);
+        this.kernelProvider
+            .getKernelExecution(kernel)
+            .onPreExecute((cell) => this.lastExecutedCellPerKernel.set(kernel, cell), this, this.disposableRegistry);
     }
 
+    @swallowExceptions()
     private async onKernelStatusChanged({ kernel }: { status: KernelMessage.Status; kernel: IKernel }) {
         // We're only interested in kernels that started successfully.
         if (!this.kernelsStartedSuccessfully.has(kernel)) {
@@ -46,11 +55,13 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         // and the session has died, then notify the user of this dead kernel.
         // Note: We know this kernel started successfully.
         if (kernel.session.kind === 'localRaw' && kernel.status === 'dead') {
-            void this.applicationShell.showErrorMessage(
-                DataScience.kernelDiedWithoutError().format(
-                    getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+            this.applicationShell
+                .showErrorMessage(
+                    DataScience.kernelDiedWithoutError().format(
+                        getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+                    )
                 )
-            );
+                .then(noop, noop);
 
             await this.endCellAndDisplayErrorsInCell(kernel);
         }
@@ -59,11 +70,13 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         // and the session is auto restarting, then this means the kernel died.
         // notify the user of this
         if (kernel.session.kind !== 'localRaw' && kernel.status === 'autorestarting') {
-            void this.applicationShell.showErrorMessage(
-                DataScience.kernelDiedWithoutErrorAndAutoRestarting().format(
-                    getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+            this.applicationShell
+                .showErrorMessage(
+                    DataScience.kernelDiedWithoutErrorAndAutoRestarting().format(
+                        getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+                    )
                 )
-            );
+                .then(noop, noop);
 
             await this.endCellAndDisplayErrorsInCell(kernel);
         }

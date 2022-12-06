@@ -1,5 +1,5 @@
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// Copyright (c) Microsoft Corporation. All rights reserved.
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 import type * as nbformat from '@jupyterlab/nbformat';
@@ -8,13 +8,13 @@ import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
 import { Uri } from 'vscode';
 import { IDisposable } from '../../../platform/common/types';
-import { ExportUtil } from '../../../platform/export/exportUtil.node';
+import { ExportUtil } from '../../../notebooks/export/exportUtil.node';
 import { IExtensionTestApi } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { closeActiveWindows, initialize } from '../../initialize.node';
 import { createTemporaryNotebookFromFile } from '../notebook/helper.node';
 
-suite('DataScience - Export Util', () => {
+suite('Export Util @export', () => {
     let api: IExtensionTestApi;
     let testPdfIpynb: Uri;
     const testDisposables: IDisposable[] = [];
@@ -24,7 +24,7 @@ suite('DataScience - Export Util', () => {
     setup(async () => {
         // Create a new file (instead of modifying existing file).
         testPdfIpynb = await createTemporaryNotebookFromFile(
-            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'testPDF.ipynb'),
+            Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'testPDF.ipynb')),
             testDisposables
         );
     });
@@ -32,8 +32,10 @@ suite('DataScience - Export Util', () => {
     suiteTeardown(() => closeActiveWindows(testDisposables));
     test('Remove svgs from model', async () => {
         const exportUtil = api.serviceContainer.get<ExportUtil>(ExportUtil);
+        const contents = fs.readFileSync(testPdfIpynb.fsPath).toString();
 
-        await exportUtil.removeSvgs(testPdfIpynb);
+        const contentsWithoutSvg = await exportUtil.removeSvgs(contents);
+        await fs.writeFile(testPdfIpynb.fsPath, contentsWithoutSvg);
         const model = JSON.parse(fs.readFileSync(testPdfIpynb.fsPath).toString()) as nbformat.INotebookContent;
 
         // make sure no svg exists in model

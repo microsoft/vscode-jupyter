@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import '../../../../platform/common/extensions';
 
@@ -18,30 +19,30 @@ import {
 } from '../../../../platform/common/types';
 import { createDeferred, sleep } from '../../../../platform/common/utils/async';
 import { DataScience } from '../../../../platform/common/utils/localize';
-import { StopWatch } from '../../../../platform/common/utils/stopWatch';
 import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError';
-import { sendKernelTelemetryEvent } from '../../../../telemetry/telemetry';
-import { Telemetry } from '../../../../webviews/webview-side/common/constants';
 import {
     KernelConnectionMetadata,
     isLocalConnection,
     IJupyterConnection,
-    INotebook,
-    KernelActionSource
+    KernelActionSource,
+    IJupyterKernelConnectionSession
 } from '../../../types';
 import { JupyterSessionManager } from '../../session/jupyterSessionManager';
-import { JupyterNotebook } from '../jupyterNotebook';
 import { noop } from '../../../../platform/common/utils/misc';
 import { Cancellation } from '../../../../platform/common/cancellation';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { INotebookServer } from '../../types';
 import { Uri } from 'vscode';
+import { RemoteJupyterServerConnectionError } from '../../../../platform/errors/remoteJupyterServerConnectionError';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/**
+ * Represents a connection to a Jupyter server.
+ */
 export class HostJupyterServer implements INotebookServer {
     private connectionInfoDisconnectHandler: IDisposable | undefined;
     private serverExitCode: number | undefined;
-    private notebooks = new Set<Promise<INotebook>>();
+    private sessions = new Set<Promise<IJupyterKernelConnectionSession>>();
     private disposed = false;
     constructor(
         @inject(IAsyncDisposableRegistry) private readonly asyncRegistry: IAsyncDisposableRegistry,
@@ -89,14 +90,13 @@ export class HostJupyterServer implements INotebookServer {
         cancelToken: CancellationToken,
         ui: IDisplayOptions,
         actionSource: KernelActionSource
-    ): Promise<INotebook> {
+    ): Promise<IJupyterKernelConnectionSession> {
         this.throwIfDisposedOrCancelled(cancelToken);
         // Compute launch information from the resource and the notebook metadata
-        const notebookPromise = createDeferred<INotebook>();
-        // Save the notebook
-        this.trackDisposable(notebookPromise.promise);
-        const getExistingSession = async () => {
-            const connection = this.connection;
+        const sessionPromise = createDeferred<IJupyterKernelConnectionSession>();
+        // Save the Session
+        this.trackDisposable(sessionPromise.promise);
+        const startNewSession = async () => {
             this.throwIfDisposedOrCancelled(cancelToken);
             // Figure out the working directory we need for our new notebook. This is only necessary for local.
             const workingDirectory = isLocalConnection(kernelConnection)
@@ -113,29 +113,26 @@ export class HostJupyterServer implements INotebookServer {
                 actionSource
             );
             this.throwIfDisposedOrCancelled(cancelToken);
-            traceInfo(`Started session for kernel ${kernelConnection.id}`);
-            return { connection, session };
+            traceInfo(`Started session for kernel ${kernelConnection.kind}:${kernelConnection.id}`);
+            return session;
         };
 
         try {
-            const { connection, session } = await getExistingSession();
+            const session = await startNewSession();
             this.throwIfDisposedOrCancelled(cancelToken);
 
             if (session) {
-                // Create our notebook
-                const notebook = new JupyterNotebook(session, connection);
-                traceInfo(`Finished connecting kernel ${kernelConnection.id}`);
-                notebookPromise.resolve(notebook);
+                sessionPromise.resolve(session);
             } else {
-                notebookPromise.reject(this.getDisposedError());
+                sessionPromise.reject(this.getDisposedError());
             }
         } catch (ex) {
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
-            notebookPromise.reject(ex);
+            sessionPromise.reject(ex);
         }
 
-        return notebookPromise.promise;
+        return sessionPromise.promise;
     }
 
     public async createNotebook(
@@ -144,7 +141,7 @@ export class HostJupyterServer implements INotebookServer {
         cancelToken: CancellationToken,
         ui: IDisplayOptions,
         creator: KernelActionSource
-    ): Promise<INotebook> {
+    ): Promise<IJupyterKernelConnectionSession> {
         this.throwIfDisposedOrCancelled(cancelToken);
         traceInfoIfCI(
             `HostJupyterServer.createNotebook for ${getDisplayPath(resource)} with ui.disableUI=${
@@ -154,33 +151,35 @@ export class HostJupyterServer implements INotebookServer {
         if (!this.sessionManager || this.isDisposed) {
             throw new SessionDisposedError();
         }
-        const stopWatch = new StopWatch();
-        // Create a notebook and return it.
-        try {
-            const notebook = await this.createNotebookInstance(
-                resource,
-                this.sessionManager,
-                kernelConnection,
-                cancelToken,
-                ui,
-                creator
-            );
-            this.throwIfDisposedOrCancelled(cancelToken);
-            const baseUrl = this.connection?.baseUrl || '';
-            this.logRemoteOutput(DataScience.createdNewNotebook().format(baseUrl));
-            sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime);
-            return notebook;
-        } catch (ex) {
-            sendKernelTelemetryEvent(
-                resource,
-                Telemetry.JupyterCreatingNotebook,
-                stopWatch.elapsedTime,
-                undefined,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ex as any
-            );
-            throw ex;
+        if (
+            this.sessionManager &&
+            !this.isDisposed &&
+            (kernelConnection.kind === 'connectToLiveRemoteKernel' ||
+                kernelConnection.kind === 'startUsingRemoteKernelSpec')
+        ) {
+            try {
+                await Promise.all([this.sessionManager.getRunningKernels(), this.sessionManager.getKernelSpecs()]);
+            } catch (ex) {
+                traceError(
+                    'Failed to fetch running kernels from remote server, connection may be outdated or remote server may be unreachable',
+                    ex
+                );
+                throw new RemoteJupyterServerConnectionError(kernelConnection.baseUrl, kernelConnection.serverId, ex);
+            }
         }
+        // Create a session and return it.
+        const session = await this.createNotebookInstance(
+            resource,
+            this.sessionManager,
+            kernelConnection,
+            cancelToken,
+            ui,
+            creator
+        );
+        this.throwIfDisposedOrCancelled(cancelToken);
+        const baseUrl = this.connection?.baseUrl || '';
+        this.logRemoteOutput(DataScience.createdNewNotebook().format(baseUrl));
+        return session;
     }
 
     private async shutdown(): Promise<void> {
@@ -197,8 +196,8 @@ export class HostJupyterServer implements INotebookServer {
             }
 
             traceInfo('Shutting down notebooks');
-            const notebooks = await Promise.all([...this.notebooks.values()]);
-            await Promise.all(notebooks.map((n) => n?.session.dispose()));
+            const session = await Promise.all([...this.sessions.values()]);
+            await Promise.all(session.map((session) => session.dispose()));
             traceInfo(`Shut down session manager : ${this.sessionManager ? 'existing' : 'undefined'}`);
             if (this.sessionManager) {
                 // Session manager in remote case may take too long to shutdown. Don't wait that
@@ -241,15 +240,15 @@ export class HostJupyterServer implements INotebookServer {
         // Default is just say session was disposed
         return new SessionDisposedError();
     }
-    private trackDisposable(notebook: Promise<INotebook>) {
-        notebook
-            .then((nb) => {
-                nb.session.onDidDispose(() => this.notebooks.delete(notebook), this, this.disposables);
+    private trackDisposable(sessionPromise: Promise<IJupyterKernelConnectionSession>) {
+        sessionPromise
+            .then((session) => {
+                session.onDidDispose(() => this.sessions.delete(sessionPromise), this, this.disposables);
             })
-            .catch(() => this.notebooks.delete(notebook));
+            .catch(() => this.sessions.delete(sessionPromise));
 
         // Save the notebook
-        this.notebooks.add(notebook);
+        this.sessions.add(sessionPromise);
     }
 
     private logRemoteOutput(output: string) {

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 'use strict';
 
@@ -7,7 +7,6 @@ const colors = require('colors/safe');
 const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
-const child_process = require('child_process');
 
 /**
  * In order to get raw kernels working, we reuse the default kernel that jupyterlab ships.
@@ -125,7 +124,29 @@ function fixJupyterLabRenderers() {
     }
 }
 
+/**
+ * Ensures extension loads in safari (https://github.com/microsoft/vscode-jupyter/issues/10621)
+ * Some of the regexes are not supported in safari and not required either.
+ */
+function fixStripComments() {
+    const file = 'node_modules/strip-comments/lib/languages.js';
+    const filePath = path.join(__dirname, '..', '..', file);
+    if (!fs.existsSync(filePath)) {
+        return;
+    }
+    const contents = `
+'use strict';
+
+exports.javascript = {
+    BLOCK_OPEN_REGEX: /^\\/\\*\\*?(!?)/,
+    BLOCK_CLOSE_REGEX: /^\\*\\/(\\n?)/,
+    LINE_REGEX: /^\\/\\/(!?).*/
+};`;
+    fs.writeFileSync(filePath, contents);
+}
+
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
 createJupyterKernelWithoutSerialization();
 updateJSDomTypeDefinition();
+fixStripComments();

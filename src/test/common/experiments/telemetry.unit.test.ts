@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { ExperimentationTelemetry } from '../../../platform/common/experiments/telemetry.node';
-import * as Telemetry from '../../../telemetry';
+import * as Telemetry from '../../../platform/telemetry/index';
 
 suite('Experimentation telemetry', () => {
     const event = 'SomeEventName';

@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { Container, injectable, interfaces } from 'inversify';
 import { testOnlyMethod } from '../common/utils/decorators';
 
@@ -7,6 +8,9 @@ import { Abstract, ClassType, IServiceManager, Newable } from './types';
 
 type identifier<T> = string | symbol | Newable<T> | Abstract<T>;
 
+/**
+ * Wrapper around an inversify container. Provides add/bind/get access to different services.
+ */
 @injectable()
 export class ServiceManager implements IServiceManager {
     @testOnlyMethod()

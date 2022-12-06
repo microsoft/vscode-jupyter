@@ -1,11 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
 import * as sinon from 'sinon';
 import * as path from '../../../platform/vscode-path/path';
-import * as assert from 'assert';
+import assert from 'assert';
 import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
@@ -89,6 +89,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: '0'
         };
 
@@ -102,6 +103,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: '0'
         };
         const settings = mock(JupyterSettings);
@@ -119,6 +121,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
             uri: Uri.file(path.join(project1, '.venv', 'scripts', 'python.exe')),
+            id: Uri.file(path.join(project1, '.venv', 'scripts', 'python.exe')).fsPath,
             sysPrefix: '0'
         };
 
@@ -137,6 +140,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: '0'
         };
 
@@ -155,6 +159,7 @@ suite('Module Installer - Poetry', () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
             uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
             sysPrefix: '0'
         };
 

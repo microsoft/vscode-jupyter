@@ -1,10 +1,13 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { injectable } from 'inversify';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposable } from './types';
 
-// List of disposables that need to run a promise.
+/**
+ * List of disposables where the dispose function returns a promise instead of a void.
+ */
 @injectable()
 export class AsyncDisposableRegistry implements IAsyncDisposableRegistry {
     private _list: (IDisposable | IAsyncDisposable)[] = [];

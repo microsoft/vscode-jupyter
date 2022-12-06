@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -16,7 +16,7 @@ import {
     waitForTextOutput
 } from './notebook/helper.node';
 
-suite('Interactive window (remote)', async () => {
+suite('Interactive window (remote) @iw', async () => {
     let interactiveWindowProvider: IInteractiveWindowProvider;
     let disposables: Disposable[] = [];
     setup(async function () {
@@ -50,7 +50,7 @@ suite('Interactive window (remote)', async () => {
         return { notebookDocument };
     }
 
-    test('Execute cell from Python file', async () => {
+    test('Execute cell from Python file @mandatory', async () => {
         const source = 'print("Hello World")';
         const { notebookDocument } = await runCellInRemoveInteractiveWindow(source);
 

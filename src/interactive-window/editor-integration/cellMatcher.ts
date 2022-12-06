@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { RegExpValues } from '../../platform/common/constants';
 import '../../platform/common/extensions';
@@ -7,6 +8,9 @@ import { IJupyterSettings } from '../../platform/common/types';
 
 import { noop } from '../../platform/common/utils/misc';
 
+/**
+ * CellMatcher is used to match either markdown or code cells using the regex's provided in the settings.
+ */
 export class CellMatcher {
     public codeExecRegEx: RegExp;
     public markdownExecRegEx: RegExp;
@@ -34,11 +38,11 @@ export class CellMatcher {
     }
 
     public isMarkdown(code: string): boolean {
-        return this.markdownMatchRegEx.test(code);
+        return this.markdownMatchRegEx.test(code.trim());
     }
 
     public isCode(code: string): boolean {
-        return this.codeMatchRegEx.test(code) || code.trim() === this.defaultCellMarker;
+        return this.codeMatchRegEx.test(code.trim()) || code.trim() === this.defaultCellMarker;
     }
 
     public getCellType(code: string): string {

@@ -1,17 +1,15 @@
-import * as assert from 'assert';
-import * as pathModule from '../../../platform/vscode-path/path';
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+import assert from 'assert';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import * as platformApis from '../../../platform/common/utils/platform.node';
 import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
+import * as fileUtilsCommon from '../../../platform/common/platform/fileUtils';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
-import {
-    isPipenvEnvironmentRelatedToFolder,
-    isPipenvEnvironment,
-    _getAssociatedPipfile
-} from '../../../kernels/installer/pipenv.node';
+import { isPipenvEnvironmentRelatedToFolder, _getAssociatedPipfile } from '../../../kernels/installer/pipenv.node';
 import { Uri } from 'vscode';
-
-const path = platformApis.getOSType() === platformApis.OSType.Windows ? pathModule.win32 : pathModule.posix;
 
 suite('Pipenv helper', () => {
     suite('isPipenvEnvironmentRelatedToFolder()', async () => {
@@ -24,7 +22,7 @@ suite('Pipenv helper', () => {
             getEnvVar = sinon.stub(platformApis, 'getEnvironmentVariable');
             readFile = sinon.stub(fileUtils, 'readFile');
             pathExists = sinon.stub(fileUtils, 'pathExists');
-            arePathsSame = sinon.stub(fileUtils, 'arePathsSame');
+            arePathsSame = sinon.stub(fileUtilsCommon, 'arePathsSame');
         });
 
         teardown(() => {
@@ -142,102 +140,6 @@ suite('Pipenv helper', () => {
             const isRelated = await isPipenvEnvironmentRelatedToFolder(interpreterPath, folder);
 
             assert.strictEqual(isRelated, true);
-        });
-    });
-
-    suite('isPipenvEnvironment()', async () => {
-        let readFile: sinon.SinonStub;
-        let getEnvVar: sinon.SinonStub;
-        let pathExists: sinon.SinonStub;
-        setup(() => {
-            getEnvVar = sinon.stub(platformApis, 'getEnvironmentVariable');
-            readFile = sinon.stub(fileUtils, 'readFile');
-            pathExists = sinon.stub(fileUtils, 'pathExists');
-        });
-
-        teardown(() => {
-            readFile.restore();
-            getEnvVar.restore();
-            pathExists.restore();
-        });
-
-        test('If the project layout matches that of a local pipenv environment, return true', async () => {
-            const project = Uri.file(path.join('path', 'to', 'project'));
-            pathExists.withArgs(project.fsPath).resolves(true);
-            const pipFile = Uri.file(path.join(project.fsPath, 'Pipfile'));
-            // Pipfile associated with environment exists
-            pathExists.withArgs(pipFile.fsPath).resolves(true);
-            // Environment is inside the project
-            const interpreterPath = Uri.file(path.join(project.fsPath, '.venv', 'Scripts', 'python.exe'));
-
-            const result = await isPipenvEnvironment(interpreterPath);
-
-            assert.strictEqual(result, true);
-        });
-
-        test('If not local & dotProject file is missing, return false', async () => {
-            const interpreterPath = Uri.file(path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe'));
-            const project = path.join('path', 'to', 'project');
-            pathExists.withArgs(project).resolves(true);
-            const pipFile = path.join(project, 'Pipfile');
-            // Pipfile associated with environment exists
-            pathExists.withArgs(pipFile).resolves(true);
-            const expectedDotProjectFile = path.join('environments', 'project-2s1eXEJ2', '.project');
-            // dotProject file doesn't exist
-            pathExists.withArgs(expectedDotProjectFile).resolves(false);
-
-            const result = await isPipenvEnvironment(interpreterPath);
-
-            assert.strictEqual(result, false);
-        });
-
-        test('If not local & dotProject contains invalid path to project, return false', async () => {
-            const interpreterPath = Uri.file(path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe'));
-            const project = path.join('path', 'to', 'project');
-            // Project doesn't exist
-            pathExists.withArgs(project).resolves(false);
-            const expectedDotProjectFile = path.join('environments', 'project-2s1eXEJ2', '.project');
-            // dotProject file doesn't exist
-            pathExists.withArgs(expectedDotProjectFile).resolves(false);
-            pathExists.withArgs(expectedDotProjectFile).resolves(true);
-            readFile.withArgs(expectedDotProjectFile).resolves(project);
-
-            const result = await isPipenvEnvironment(interpreterPath);
-
-            assert.strictEqual(result, false);
-        });
-
-        test("If not local & the name of the project isn't used as a prefix in the environment folder, return false", async () => {
-            const interpreterPath = Uri.file(path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe'));
-            // The project name (someProjectName) isn't used as a prefix in environment folder name (project-2s1eXEJ2)
-            const project = path.join('path', 'to', 'someProjectName');
-            pathExists.withArgs(project).resolves(true);
-            const pipFile = path.join(project, 'Pipfile');
-            // Pipfile associated with environment exists
-            pathExists.withArgs(pipFile).resolves(true);
-            const expectedDotProjectFile = path.join('environments', 'project-2s1eXEJ2', '.project');
-            pathExists.withArgs(expectedDotProjectFile).resolves(true);
-            readFile.withArgs(expectedDotProjectFile).resolves(project);
-
-            const result = await isPipenvEnvironment(interpreterPath);
-
-            assert.strictEqual(result, false);
-        });
-
-        test('If the project layout matches that of a global pipenv environment, return true', async () => {
-            const interpreterPath = Uri.file(path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe'));
-            const project = Uri.file(path.join('path', 'to', 'project'));
-            pathExists.withArgs(project.fsPath).resolves(true);
-            const pipFile = Uri.file(path.join(project.fsPath, 'Pipfile'));
-            // Pipfile associated with environment exists
-            pathExists.withArgs(pipFile.fsPath).resolves(true);
-            const expectedDotProjectFile = Uri.file(path.join('environments', 'project-2s1eXEJ2', '.project'));
-            pathExists.withArgs(expectedDotProjectFile.fsPath).resolves(true);
-            readFile.withArgs(expectedDotProjectFile.fsPath).resolves(project.fsPath);
-
-            const result = await isPipenvEnvironment(interpreterPath);
-
-            assert.strictEqual(result, true);
         });
     });
 

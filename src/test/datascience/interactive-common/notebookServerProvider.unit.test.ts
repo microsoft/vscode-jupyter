@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import { SemVer } from 'semver';
@@ -6,12 +6,10 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IJupyterExecution, INotebookServer } from '../../../kernels/jupyter/types';
 
@@ -26,14 +24,13 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
 }
 
 /* eslint-disable  */
-suite('DataScience - NotebookServerProvider', () => {
+suite('NotebookServerProvider', () => {
     let serverProvider: NotebookServerProvider;
-    let configurationService: IConfigurationService;
     let jupyterExecution: IJupyterExecution;
     let interpreterService: IInterpreterService;
-    let pythonSettings: IWatchableJupyterSettings;
     const workingPython: PythonEnvironment = {
         uri: Uri.file('/foo/bar/python.exe'),
+        id: Uri.file('/foo/bar/python.exe').fsPath,
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python'
@@ -41,31 +38,23 @@ suite('DataScience - NotebookServerProvider', () => {
     const disposables: Disposable[] = [];
     let source: CancellationTokenSource;
     setup(() => {
-        configurationService = mock<IConfigurationService>();
         jupyterExecution = mock<IJupyterExecution>();
         interpreterService = mock<IInterpreterService>();
 
-        // Set up our settings
-        pythonSettings = mock<IWatchableJupyterSettings>();
-        when(pythonSettings.jupyterServerType).thenReturn('local');
-        when(configurationService.getSettings(anything())).thenReturn(instance(pythonSettings));
         const serverStorage = mock(JupyterServerUriStorage);
-        when(serverStorage.getUri()).thenResolve('local');
-        const serverSelector = mock(JupyterServerSelector);
+        when(serverStorage.getUri()).thenResolve({ uri: 'local', time: Date.now(), serverId: 'local' });
+        when(serverStorage.getRemoteUri()).thenResolve();
         const eventEmitter = new EventEmitter<void>();
         disposables.push(eventEmitter);
         when(serverStorage.onDidChangeUri).thenReturn(eventEmitter.event);
         when((jupyterExecution as any).then).thenReturn(undefined);
-        when((serverSelector as any).then).thenReturn(undefined);
         when((serverStorage as any).then).thenReturn(undefined);
 
         // Create the server provider
         serverProvider = new NotebookServerProvider(
-            instance(configurationService),
             instance(jupyterExecution),
             instance(interpreterService),
             instance(serverStorage),
-            instance(serverSelector),
             disposables
         );
         source = new CancellationTokenSource();

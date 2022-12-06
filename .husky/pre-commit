@@ -1,0 +1,17 @@
+#!/bin/sh
+if npm list prettier | grep -q prettier@ ; then
+    echo husky - prettier is installed
+else
+    echo husky - prettier is not installed, skipping format check
+    exit 0
+fi
+
+# run prettier on all .ts files that are in the commit
+changed=$(git diff --diff-filter=ACM --cached --name-only | grep .ts$ | tr '\n' ' ')
+
+if [ -z "$changed" ]; then
+    echo husky - No modified files to check
+    exit 0
+fi
+
+npx prettier $changed --check

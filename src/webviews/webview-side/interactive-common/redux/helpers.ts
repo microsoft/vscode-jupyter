@@ -1,22 +1,16 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
 import * as Redux from 'redux';
-import {
-    InteractiveWindowMessages,
-    CssMessages,
-    SharedMessages,
-    IInteractiveWindowMapping
-} from '../../../../platform/messageTypes';
+import { InteractiveWindowMessages, SharedMessages, IInteractiveWindowMapping } from '../../../../messageTypes';
 import { BaseReduxActionPayload } from '../../../types';
 import { QueueAnotherFunc } from '../../react-common/reduxUtils';
 import { CommonActionType, CommonActionTypeMapping } from './reducers/types';
 
 const AllowedMessages = [
     ...Object.values(InteractiveWindowMessages),
-    ...Object.values(CssMessages),
     ...Object.values(SharedMessages),
     ...Object.values(CommonActionType)
 ];

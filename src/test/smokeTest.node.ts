@@ -1,7 +1,13 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+
+// This line should always be right on top.
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+if ((Reflect as any).metadata === undefined) {
+    require('reflect-metadata');
+}
 
 // Must always be on top to setup expected env.
 process.env.VSC_JUPYTER_SMOKE_TEST = '1';

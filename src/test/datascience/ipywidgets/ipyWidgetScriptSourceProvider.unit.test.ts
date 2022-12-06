@@ -1,57 +1,78 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { ConfigurationChangeEvent, ConfigurationTarget, EventEmitter } from 'vscode';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { ConfigurationChangeEvent, EventEmitter, Memento } from 'vscode';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { HttpClient } from '../../../platform/common/net/httpClient.node';
+import { HttpClient } from '../../../platform/common/net/httpClient';
 import { PersistentState, PersistentStateFactory } from '../../../platform/common/persistentState';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
-import { IConfigurationService, IJupyterSettings } from '../../../platform/common/types';
-import { Common, DataScience } from '../../../platform/common/utils/localize';
-import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.node';
-import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider';
-import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.node';
-import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/remoteWidgetScriptSourceProvider';
+import {
+    IConfigurationService,
+    IDisposable,
+    IExtensionContext,
+    IJupyterSettings,
+    ReadWrite
+} from '../../../platform/common/types';
+import { IKernel, LocalKernelSpecConnectionMetadata, RemoteKernelSpecConnectionMetadata } from '../../../kernels/types';
+import { IPyWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/ipyWidgetScriptSourceProvider';
+import { LocalWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/localWidgetScriptSourceProvider.node';
+import { RemoteWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/remoteWidgetScriptSourceProvider';
 import {
     ILocalResourceUriConverter,
     IWidgetScriptSourceProviderFactory
-} from '../../../kernels/ipywidgets-message-coordination/types';
-import { ScriptSourceProviderFactory } from '../../../kernels/ipywidgets-message-coordination/scriptSourceProviderFactory.node';
+} from '../../../notebooks/controllers/ipywidgets/types';
+import { ScriptSourceProviderFactory } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/scriptSourceProviderFactory.node';
+import { CDNWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
+import { IPyWidgetScriptManagerFactory } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/ipyWidgetScriptManagerFactory.node';
+import { NbExtensionsPathProvider } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/nbExtensionsPathProvider.node';
+import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { noop } from '../../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 
-suite('DataScience - ipywidget - Widget Script Source Provider', () => {
+suite('ipywidget - Widget Script Source Provider', () => {
     let scriptSourceProvider: IPyWidgetScriptSourceProvider;
     let kernel: IKernel;
     let configService: IConfigurationService;
-    let settings: IJupyterSettings;
+    let settings: ReadWrite<IJupyterSettings>;
     let appShell: IApplicationShell;
     let workspaceService: IWorkspaceService;
     let scriptSourceFactory: IWidgetScriptSourceProviderFactory;
     let onDidChangeWorkspaceSettings: EventEmitter<ConfigurationChangeEvent>;
     let userSelectedOkOrDoNotShowAgainInPrompt: PersistentState<boolean>;
+    let context: IExtensionContext;
+    let memento: Memento;
+    let jupyterPaths: JupyterPaths;
+    const disposables: IDisposable[] = [];
     setup(() => {
         configService = mock(ConfigurationService);
         appShell = mock(ApplicationShell);
         workspaceService = mock(WorkspaceService);
+        context = mock<IExtensionContext>();
+        memento = mock<Memento>();
         onDidChangeWorkspaceSettings = new EventEmitter<ConfigurationChangeEvent>();
         when(workspaceService.onDidChangeConfiguration).thenReturn(onDidChangeWorkspaceSettings.event);
-        const httpClient = mock(HttpClient);
-        const resourceConverter = mock<ILocalResourceUriConverter>();
-        const fs = mock(FileSystem);
-        const interpreterService = mock<IInterpreterService>();
         const stateFactory = mock(PersistentStateFactory);
-        const factory = mock<IPythonExecutionFactory>();
         userSelectedOkOrDoNotShowAgainInPrompt = mock<PersistentState<boolean>>();
         kernel = mock<IKernel>();
+        const onStarted = new EventEmitter<void>();
+        const onReStarted = new EventEmitter<void>();
+        disposables.push(onStarted);
+        disposables.push(onReStarted);
+        when(kernel.onStarted).thenReturn(onStarted.event);
+        when(kernel.onRestarted).thenReturn(onReStarted.event);
+        when(kernel.kernelSocket).thenReturn({
+            subscribe: () => ({
+                dispose: () => noop()
+            })
+        } as any);
         when(stateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(
             instance(userSelectedOkOrDoNotShowAgainInPrompt)
         );
@@ -59,145 +80,66 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         when(configService.getSettings(anything())).thenReturn(settings as any);
         when(userSelectedOkOrDoNotShowAgainInPrompt.value).thenReturn(false);
         when(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(anything())).thenResolve();
+    });
+    teardown(() => {
+        sinon.restore();
+        disposeAllDisposables(disposables);
+    });
+    function createScripSourceProvider() {
+        const httpClient = mock(HttpClient);
+        const resourceConverter = mock<ILocalResourceUriConverter>();
+        const fs = mock(FileSystem);
+        jupyterPaths = mock<JupyterPaths>();
+        const scriptManagerFactory = new IPyWidgetScriptManagerFactory(
+            new NbExtensionsPathProvider(),
+            instance(fs),
+            instance(context),
+            instance(httpClient),
+            instance(jupyterPaths),
+            disposables
+        );
         scriptSourceFactory = new ScriptSourceProviderFactory(
             instance(configService),
-            instance(fs),
-            instance(interpreterService),
-            instance(factory)
+            scriptManagerFactory,
+            instance(appShell),
+            instance(memento)
         );
-
+        const cdnScriptProvider = mock<CDNWidgetScriptSourceProvider>();
+        when(cdnScriptProvider.isOnCDN(anything())).thenResolve(false);
         scriptSourceProvider = new IPyWidgetScriptSourceProvider(
             instance(kernel),
             instance(resourceConverter),
-            instance(appShell),
             instance(configService),
-            instance(workspaceService),
-            instance(stateFactory),
             instance(httpClient),
-            scriptSourceFactory
+            scriptSourceFactory,
+            Promise.resolve(true),
+            instance(cdnScriptProvider)
         );
-    });
-    teardown(() => sinon.restore());
-
+    }
     [true, false].forEach((localLaunch) => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
             setup(() => {
-                if (!localLaunch) {
-                    when(kernel.kernelConnectionMetadata).thenReturn(<RemoteKernelSpecConnectionMetadata>{
-                        baseUrl: '',
-                        id: '',
-                        kernelSpec: {},
-                        kind: 'startUsingRemoteKernelSpec'
-                    });
+                if (localLaunch) {
+                    when(kernel.kernelConnectionMetadata).thenReturn(
+                        LocalKernelSpecConnectionMetadata.create({
+                            id: '',
+                            kernelSpec: {} as any
+                        })
+                    );
+                } else {
+                    when(kernel.kernelConnectionMetadata).thenReturn(
+                        RemoteKernelSpecConnectionMetadata.create({
+                            baseUrl: '',
+                            id: '',
+                            serverId: '',
+                            kernelSpec: {} as any
+                        })
+                    );
                 }
+                createScripSourceProvider();
             });
-            test('Prompt to use CDN', async () => {
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
-
-                await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
-
-                verify(
-                    appShell.showInformationMessage(
-                        DataScience.useCDNForWidgets(),
-                        Common.ok(),
-                        Common.cancel(),
-                        Common.doNotShowAgain()
-                    )
-                ).once();
-            });
-            test('Do  not prompt to use CDN if user has chosen not to use a CDN', async () => {
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
-                when(userSelectedOkOrDoNotShowAgainInPrompt.value).thenReturn(true);
-
-                await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
-
-                verify(
-                    appShell.showInformationMessage(
-                        DataScience.useCDNForWidgets(),
-                        Common.ok(),
-                        Common.cancel(),
-                        Common.doNotShowAgain()
-                    )
-                ).never();
-            });
-            function verifyNoCDNUpdatedInSettings() {
-                // Confirm message was displayed.
-                verify(
-                    appShell.showInformationMessage(
-                        DataScience.useCDNForWidgets(),
-                        Common.ok(),
-                        Common.cancel(),
-                        Common.doNotShowAgain()
-                    )
-                ).once();
-
-                // Confirm settings were updated.
-                verify(
-                    configService.updateSetting(
-                        'widgetScriptSources',
-                        deepEqual([]),
-                        undefined,
-                        ConfigurationTarget.Global
-                    )
-                ).once();
-            }
-            test('Do not update if prompt is dismissed', async () => {
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
-
-                await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
-
-                verify(configService.updateSetting(anything(), anything(), anything(), anything())).never();
-                verify(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(true)).never();
-            });
-            test('Do not update settings if Cancel is clicked in prompt', async () => {
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                    Common.cancel() as any
-                );
-
-                await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
-
-                verify(configService.updateSetting(anything(), anything(), anything(), anything())).never();
-                verify(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(true)).never();
-            });
-            test('Update settings to not use CDN if `Do Not Show Again` is clicked in prompt', async () => {
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                    Common.doNotShowAgain() as any
-                );
-
-                await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
-
-                verifyNoCDNUpdatedInSettings();
-                verify(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(true)).once();
-            });
-            test('Update settings to use CDN based on prompt', async () => {
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                    Common.ok() as any
-                );
-
-                await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
-
-                // Confirm message was displayed.
-                verify(
-                    appShell.showInformationMessage(
-                        DataScience.useCDNForWidgets(),
-                        Common.ok(),
-                        Common.cancel(),
-                        Common.doNotShowAgain()
-                    )
-                ).once();
-                // Confirm settings were updated.
-                verify(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(true)).once();
-                verify(
-                    configService.updateSetting(
-                        'widgetScriptSources',
-                        deepEqual(['jsdelivr.com', 'unpkg.com']),
-                        undefined,
-                        ConfigurationTarget.Global
-                    )
-                ).once();
-            });
-            test('Attempt to get widget source from all providers', async () => {
-                (<any>settings).widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
+            test('Attempt to get widget source from CDN', async () => {
+                settings.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
                     : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
@@ -206,23 +148,23 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 localOrRemoteSource.resolves({ moduleName: 'HelloWorld' });
                 cdnSource.resolves({ moduleName: 'HelloWorld' });
 
-                scriptSourceProvider.initialize();
                 const value = await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 
                 assert.deepEqual(value, { moduleName: 'HelloWorld' });
-                assert.isTrue(localOrRemoteSource.calledOnce);
                 assert.isTrue(cdnSource.calledOnce);
+                assert.isTrue(localOrRemoteSource.calledOnce);
+                // Give preference to CDN.
+                assert.isTrue(cdnSource.calledBefore(localOrRemoteSource));
             });
             test('Widget sources should respect changes to configuration settings', async () => {
                 // 1. Search CDN then local/remote juptyer.
-                (<any>settings).widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
+                settings.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
                     : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
                 const cdnSource = sinon.stub(CDNWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
                 cdnSource.resolves({ moduleName: 'moduleCDN', scriptUri: '1', source: 'cdn' });
 
-                scriptSourceProvider.initialize();
                 let values = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '`');
 
                 assert.deepEqual(values, { moduleName: 'moduleCDN', scriptUri: '1', source: 'cdn' });
@@ -232,18 +174,18 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 // 2. Update settings to remove the use of CDNs
                 localOrRemoteSource.reset();
                 cdnSource.reset();
+                cdnSource.resolves({ moduleName: 'moduleCDN' });
                 localOrRemoteSource.resolves({ moduleName: 'moduleLocal', scriptUri: '1', source: 'local' });
-                (<any>settings).widgetScriptSources = [];
-                onDidChangeWorkspaceSettings.fire({ affectsConfiguration: () => true });
+                settings.widgetScriptSources = [];
 
                 values = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '`');
                 assert.deepEqual(values, { moduleName: 'moduleLocal', scriptUri: '1', source: 'local' });
                 assert.isTrue(localOrRemoteSource.calledOnce);
-                assert.isFalse(cdnSource.calledOnce);
+                assert.isTrue(cdnSource.calledOnce);
             });
             test('Widget source should support fall back search', async () => {
                 // 1. Search CDN and if that fails then get from local/remote.
-                (<any>settings).widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
+                settings.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
                     : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
@@ -251,7 +193,6 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 localOrRemoteSource.resolves({ moduleName: 'moduleLocal', scriptUri: '1', source: 'local' });
                 cdnSource.resolves({ moduleName: 'moduleCDN' });
 
-                scriptSourceProvider.initialize();
                 const value = await scriptSourceProvider.getWidgetScriptSource('', '');
 
                 // 1. Confirm CDN was first searched, then local/remote
@@ -262,7 +203,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 cdnSource.calledBefore(localOrRemoteSource);
             });
             test('Widget sources from CDN should be given preference', async () => {
-                (<any>settings).widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
+                settings.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
                     : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
@@ -271,44 +212,12 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 localOrRemoteSource.resolves({ moduleName: 'module1' });
                 cdnSource.resolves({ moduleName: 'module1', scriptUri: '1', source: 'cdn' });
 
-                scriptSourceProvider.initialize();
                 const values = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
 
                 assert.deepEqual(values, { moduleName: 'module1', scriptUri: '1', source: 'cdn' });
                 assert.isFalse(localOrRemoteSource.calledOnce);
                 assert.isTrue(cdnSource.calledOnce);
                 verify(appShell.showWarningMessage(anything(), anything(), anything(), anything())).never();
-            });
-            test('When CDN is turned on and widget script is not found, then display a warning about script not found on CDN', async () => {
-                (<any>settings).widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
-                const localOrRemoteSource = localLaunch
-                    ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
-                    : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
-                const cdnSource = sinon.stub(CDNWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
-
-                localOrRemoteSource.resolves({ moduleName: 'module1' });
-                cdnSource.resolves({ moduleName: 'module1' });
-
-                scriptSourceProvider.initialize();
-                let values = await scriptSourceProvider.getWidgetScriptSource('module1', '1');
-
-                assert.deepEqual(values, { moduleName: 'module1' });
-                assert.isTrue(localOrRemoteSource.calledOnce);
-                assert.isTrue(cdnSource.calledOnce);
-                const expectedMessage = DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format(
-                    'module1',
-                    '1',
-                    JSON.stringify((<any>settings).widgetScriptSources)
-                );
-                verify(appShell.showWarningMessage(expectedMessage, anything(), anything(), anything())).once();
-
-                // Ensure message is not displayed more than once.
-                values = await scriptSourceProvider.getWidgetScriptSource('module1', '1');
-
-                assert.deepEqual(values, { moduleName: 'module1' });
-                assert.isTrue(localOrRemoteSource.calledTwice);
-                assert.isTrue(cdnSource.calledTwice);
-                verify(appShell.showWarningMessage(expectedMessage, anything(), anything(), anything())).once();
             });
         });
     });

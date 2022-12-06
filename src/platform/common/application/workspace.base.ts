@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import * as path from '../../vscode-path/path';
@@ -18,6 +18,9 @@ import { Resource } from '../types';
 import { getOSType, OSType } from '../utils/platform';
 import { IWorkspaceService } from './types';
 
+/**
+ * Wrapper around vscode's workspace namespace.
+ */
 export abstract class BaseWorkspaceService implements IWorkspaceService {
     public get onDidChangeConfiguration(): Event<ConfigurationChangeEvent> {
         return workspace.onDidChangeConfiguration;

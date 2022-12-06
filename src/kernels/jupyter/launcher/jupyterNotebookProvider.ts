@@ -1,14 +1,14 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import {
     ConnectNotebookProviderOptions,
+    GetServerOptions,
     IJupyterConnection,
-    INotebook,
+    IKernelConnectionSession,
     isLocalConnection,
     NotebookCreationOptions
 } from '../../types';
@@ -24,44 +24,41 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
     ) {}
 
     public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection> {
-        const server = await this.serverProvider.getOrCreateServer({
-            ui: options.ui,
-            resource: options.resource,
-            token: options.token,
-            localJupyter: options.kind === 'localJupyter'
-        });
-        const connection = await server.connection;
-        if (options.kind === 'remoteJupyter') {
+        const { connection } = await this.serverProvider.getOrCreateServer(options);
+        if (!options.localJupyter) {
             // Log this remote URI into our MRU list
-            void this.serverStorage.addToUriList(
-                connection.url || connection.displayName,
-                Date.now(),
-                connection.displayName
-            );
+            this.serverStorage
+                .addToUriList(connection.url || connection.displayName, Date.now(), connection.displayName)
+                .ignoreErrors();
         }
         return connection;
     }
 
-    public async createNotebook(options: NotebookCreationOptions): Promise<INotebook> {
+    public async createNotebook(options: NotebookCreationOptions): Promise<IKernelConnectionSession> {
+        const kernelConnection = options.kernelConnection;
         // Make sure we have a server
-        const server = await this.serverProvider.getOrCreateServer({
-            ui: options.ui,
-            resource: options.resource,
-            token: options.token,
-            localJupyter: isLocalConnection(options.kernelConnection)
-        });
+        const serverOptions: GetServerOptions = isLocalConnection(kernelConnection)
+            ? {
+                  ui: options.ui,
+                  resource: options.resource,
+                  token: options.token,
+                  localJupyter: true
+              }
+            : {
+                  ui: options.ui,
+                  resource: options.resource,
+                  token: options.token,
+                  localJupyter: false,
+                  serverId: kernelConnection.serverId
+              };
+        const server = await this.serverProvider.getOrCreateServer(serverOptions);
         Cancellation.throwIfCanceled(options.token);
-        if (server) {
-            return server.createNotebook(
-                options.resource,
-                options.kernelConnection,
-                options.token,
-                options.ui,
-                options.creator
-            );
-        }
-        // We want createNotebook to always return a notebook promise, so if we don't have a server
-        // here throw our generic server disposed message that we use in server creatio n
-        throw new SessionDisposedError();
+        return server.createNotebook(
+            options.resource,
+            options.kernelConnection,
+            options.token,
+            options.ui,
+            options.creator
+        );
     }
 }

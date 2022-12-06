@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
@@ -189,34 +189,36 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                 return;
             }
             shownOnce = true;
-            void window.withProgress(
-                { location: ProgressLocation.Notification, title },
-                async (progress, token: CancellationToken) => {
-                    const info = KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key);
-                    if (!info) {
-                        return;
-                    }
-                    info.reporter = progress;
-                    // If we have any messages, then report them.
-                    while (info.pendingProgress.length > 0) {
-                        const message = info.pendingProgress.shift();
-                        if (message === title) {
-                            info.progressList.push(message);
-                        } else if (message !== title && message) {
-                            info.progressList.push(message);
-                            progress.report({ message });
+            window
+                .withProgress(
+                    { location: ProgressLocation.Notification, title },
+                    async (progress, token: CancellationToken) => {
+                        const info = KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key);
+                        if (!info) {
+                            return;
                         }
+                        info.reporter = progress;
+                        // If we have any messages, then report them.
+                        while (info.pendingProgress.length > 0) {
+                            const message = info.pendingProgress.shift();
+                            if (message === title) {
+                                info.progressList.push(message);
+                            } else if (message !== title && message) {
+                                info.progressList.push(message);
+                                progress.report({ message });
+                            }
+                        }
+                        await Promise.race([
+                            createPromiseFromCancellation({ token, cancelAction: 'resolve', defaultValue: true }),
+                            deferred.promise
+                        ]);
+                        if (KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key) === info) {
+                            KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
+                        }
+                        KernelProgressReporter.disposables.delete(disposable);
                     }
-                    await Promise.race([
-                        createPromiseFromCancellation({ token, cancelAction: 'resolve', defaultValue: true }),
-                        deferred.promise
-                    ]);
-                    if (KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key) === info) {
-                        KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
-                    }
-                    KernelProgressReporter.disposables.delete(disposable);
-                }
-            );
+                )
+                .then(noop, noop);
         };
 
         KernelProgressReporter.instance!.kernelResourceProgressReporter.set(key, {

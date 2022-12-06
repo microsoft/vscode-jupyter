@@ -1,17 +1,18 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { EventEmitter, Memento, Uri } from 'vscode';
+import { EventEmitter, Memento } from 'vscode';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore.node';
 import { MockMemento } from '../../../mocks/mementos';
+import { arePathsSame } from '../../../../platform/common/platform/fileUtils';
 
-suite('DataScience - Jupyter Interpreter State', () => {
+suite('Jupyter Interpreter State', () => {
     let selected: JupyterInterpreterStateStore;
     let memento: Memento;
     let interpreterService: JupyterInterpreterService;
@@ -26,7 +27,7 @@ suite('DataScience - Jupyter Interpreter State', () => {
         selected = new JupyterInterpreterStateStore(instance(memento));
     });
 
-    test('Interpeter should not be set for fresh installs', async () => {
+    test('Interpreter should not be set for fresh installs', async () => {
         when(memento.get(anything(), false)).thenReturn(false);
 
         assert.isFalse(selected.interpreterSetAtleastOnce);
@@ -41,6 +42,6 @@ suite('DataScience - Jupyter Interpreter State', () => {
         const uri = 'jupyter.exe';
         when(memento.get<string | undefined>(anything(), undefined)).thenReturn(uri);
 
-        assert.equal(selected.selectedPythonPath?.fsPath, Uri.file(uri).fsPath);
+        assert.isTrue(arePathsSame(selected.selectedPythonPath!.fsPath, uri));
     });
 });

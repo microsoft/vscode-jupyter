@@ -1,16 +1,13 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
+import { SemVer, parse } from 'semver';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
-import { SemVer, parse } from 'semver';
-import { Uri } from 'vscode';
-import { sendTelemetryEvent } from '../../telemetry';
-import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
-import { splitMultilineString } from '../../webviews/webview-side/common';
-
-import { jupyterLanguageToMonacoLanguageMapping, Telemetry } from './constants';
+import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
+import { InteractiveWindowView, jupyterLanguageToMonacoLanguageMapping, JupyterNotebookView } from './constants';
 import { traceError, traceInfo } from '../logging';
 
 import { ICell } from './types';
@@ -149,6 +146,263 @@ export function generateNewNotebookUri(
     }
 }
 
+/**
+ * Whether this is a Notebook we created/manage/use.
+ * Remember, there could be other notebooks such as GitHub Issues nb by VS Code.
+ */
+export function isJupyterNotebook(document: NotebookDocument): boolean;
+// eslint-disable-next-line @typescript-eslint/unified-signatures
+export function isJupyterNotebook(viewType: string): boolean;
+export function isJupyterNotebook(option: NotebookDocument | string) {
+    if (typeof option === 'string') {
+        return option === JupyterNotebookView || option === InteractiveWindowView;
+    } else {
+        return option.notebookType === JupyterNotebookView || option.notebookType === InteractiveWindowView;
+    }
+}
+export type NotebookMetadata = nbformat.INotebookMetadata & {
+    /**
+     * We used to store interpreter at this level.
+     * @deprecated
+     */
+    interpreter?: { hash?: string };
+    /**
+     * As per docs in Jupyter, custom metadata should go into a separate namespace.
+     */
+    vscode?: {
+        /**
+         * If we've selected a Python env for this notebook, then this is the hash of the interpreter.
+         */
+        interpreter?: {
+            /**
+             * Hash of the interpreter executable path.
+             */
+            hash?: string;
+        };
+    };
+};
+
+export function getNotebookMetadata(document: NotebookDocument | NotebookData): NotebookMetadata | undefined {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
+    // Create a clone.
+    return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
+}
+
+export function getNotebookFormat(document: NotebookDocument): {
+    nbformat: number | undefined;
+    nbformat_minor: number | undefined;
+} {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
+    // Create a clone.
+    return {
+        nbformat: notebookContent?.nbformat,
+        nbformat_minor: notebookContent?.nbformat_minor
+    };
+}
+
+export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDocument | undefined {
+    return workspace.notebookDocuments.find(
+        (notebook) => isJupyterNotebook(notebook) && notebook.getCells().some((cell) => cell.document === document)
+    );
+}
+
+export function concatMultilineString(str: nbformat.MultilineString): string {
+    if (Array.isArray(str)) {
+        let result = '';
+        for (let i = 0; i < str.length; i += 1) {
+            const s = str[i];
+            if (i < str.length - 1 && !s.endsWith('\n')) {
+                result = result.concat(`${s}\n`);
+            } else {
+                result = result.concat(s);
+            }
+        }
+        return result;
+    }
+    return str.toString();
+}
+
+export function splitMultilineString(source: nbformat.MultilineString): string[] {
+    // Make sure a multiline string is back the way Jupyter expects it
+    if (Array.isArray(source)) {
+        return source as string[];
+    }
+    const str = source.toString();
+    if (str.length > 0) {
+        // Each line should be a separate entry, but end with a \n if not last entry
+        const arr = str.split('\n');
+        return arr
+            .map((s, i) => {
+                if (i < arr.length - 1) {
+                    return `${s}\n`;
+                }
+                return s;
+            })
+            .filter((s) => s.length > 0); // Skip last one if empty (it's the only one that could be length 0)
+    }
+    return [];
+}
+
+// Took this from jupyter/notebook
+// https://github.com/jupyter/notebook/blob/b8b66332e2023e83d2ee04f83d8814f567e01a4e/notebook/static/base/js/utils.js
+// Remove characters that are overridden by backspace characters
+function fixBackspace(txt: string) {
+    let tmp = txt;
+    do {
+        txt = tmp;
+        // Cancel out anything-but-newline followed by backspace
+        tmp = txt.replace(/[^\n]\x08/gm, '');
+    } while (tmp.length < txt.length);
+    return txt;
+}
+
+// Remove chunks that should be overridden by the effect of
+// carriage return characters
+// From https://github.com/jupyter/notebook/blob/master/notebook/static/base/js/utils.js
+function fixCarriageReturn(txt: string) {
+    txt = txt.replace(/\r+\n/gm, '\n'); // \r followed by \n --> newline
+    while (txt.search(/\r[^$]/g) > -1) {
+        var base = txt.match(/^(.*)\r+/m)![1];
+        var insert = txt.match(/\r+(.*)$/m)![1];
+        insert = insert + base.slice(insert.length, base.length);
+        txt = txt.replace(/\r+.*$/m, '\r').replace(/^.*\r/m, insert);
+    }
+    return txt;
+}
+
+export function formatStreamText(str: string): string {
+    // Do the same thing jupyter is doing
+    return fixCarriageReturn(fixBackspace(str));
+}
+
+const SingleQuoteMultiline = "'''";
+const DoubleQuoteMultiline = '"""';
+
+// eslint-disable-next-line complexity
+export function parseForComments(
+    lines: string[],
+    foundCommentLine: (s: string, i: number) => void,
+    foundNonCommentLine: (s: string, i: number) => void
+) {
+    // Check for either multiline or single line comments
+    let insideMultilineComment: string | undefined;
+    let insideMultilineQuote: string | undefined;
+    let pos = 0;
+    for (const l of lines) {
+        const trim = l.trim();
+        // Multiline is triple quotes of either kind
+        const isMultilineComment = trim.startsWith(SingleQuoteMultiline)
+            ? SingleQuoteMultiline
+            : trim.startsWith(DoubleQuoteMultiline)
+            ? DoubleQuoteMultiline
+            : undefined;
+        const isMultilineQuote = trim.includes(SingleQuoteMultiline)
+            ? SingleQuoteMultiline
+            : trim.includes(DoubleQuoteMultiline)
+            ? DoubleQuoteMultiline
+            : undefined;
+
+        // Check for ending quotes of multiline string
+        if (insideMultilineQuote) {
+            if (insideMultilineQuote === isMultilineQuote) {
+                insideMultilineQuote = undefined;
+            }
+            foundNonCommentLine(l, pos);
+            // Not inside quote, see if inside a comment
+        } else if (insideMultilineComment) {
+            if (insideMultilineComment === isMultilineComment) {
+                insideMultilineComment = undefined;
+            }
+            if (insideMultilineComment) {
+                foundCommentLine(l, pos);
+            }
+            // Not inside either, see if starting a quote
+        } else if (isMultilineQuote && !isMultilineComment) {
+            // Make sure doesn't begin and end on the same line.
+            const beginQuote = trim.indexOf(isMultilineQuote);
+            const endQuote = trim.lastIndexOf(isMultilineQuote);
+            insideMultilineQuote = endQuote !== beginQuote ? undefined : isMultilineQuote;
+            foundNonCommentLine(l, pos);
+            // Not starting a quote, might be starting a comment
+        } else if (isMultilineComment) {
+            // See if this line ends the comment too or not
+            const endIndex = trim.indexOf(isMultilineComment, 3);
+            insideMultilineComment = endIndex >= 0 ? undefined : isMultilineComment;
+
+            // Might end with text too
+            if (trim.length > 3) {
+                foundCommentLine(trim.slice(3, endIndex >= 0 ? endIndex : undefined), pos);
+            }
+        } else {
+            // Normal line
+            if (trim.startsWith('#')) {
+                foundCommentLine(trim.slice(1), pos);
+            } else {
+                foundNonCommentLine(l, pos);
+            }
+        }
+        pos += 1;
+    }
+}
+
+// Strip out comment lines from code
+export function stripComments(str: string): string {
+    let result: string = '';
+    parseForComments(
+        str.splitLines({ trim: false, removeEmptyEntries: false }),
+        (_s) => {
+            // Do nothing
+        },
+        (s) => (result = result.concat(`${s}\n`))
+    );
+    return result;
+}
+
+export function appendLineFeed(arr: string[], eol: string = '\n', modifier?: (s: string) => string) {
+    return arr.map((s: string, i: number) => {
+        const out = modifier ? modifier(s) : s;
+        return i === arr.length - 1 ? `${out}` : `${out}${eol}`;
+    });
+}
+
+function extractComments(lines: string[]): string[] {
+    const result: string[] = [];
+    parseForComments(
+        lines,
+        (s) => result.push(s),
+        (_s) => {
+            // Do nothing
+        }
+    );
+    return result;
+}
+
+export function generateMarkdownFromCodeLines(lines: string[]) {
+    // Generate markdown by stripping out the comments and markdown header
+    return appendLineFeed(extractComments(lines.slice(lines.length > 1 ? 1 : 0)));
+}
+
+export function removeLinesFromFrontAndBackNoConcat(lines: string[]): string[] {
+    let lastNonEmptyLine = lines.length;
+    let firstNonEmptyLine = -1;
+    lines.forEach((l, i) => {
+        if (l.trim()) {
+            lastNonEmptyLine = i;
+            if (firstNonEmptyLine < 0) {
+                firstNonEmptyLine = i;
+            }
+        }
+    });
+    return firstNonEmptyLine >= 0 ? lines.slice(firstNonEmptyLine, lastNonEmptyLine + 1) : [];
+}
+
+export function removeLinesFromFrontAndBack(code: string | string[]): string {
+    const lines = Array.isArray(code) ? code : code.splitLines({ trim: false, removeEmptyEntries: false });
+    return removeLinesFromFrontAndBackNoConcat(lines).join('\n');
+}
+
 // For the given string parse it out to a SemVer or return undefined
 export function parseSemVer(versionString: string): SemVer | undefined {
     const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(versionString);
@@ -158,12 +412,4 @@ export function parseSemVer(versionString: string): SemVer | undefined {
         const build = parseInt(versionMatch[3], 10);
         return parse(`${major}.${minor}.${build}`, true) ?? undefined;
     }
-}
-
-export function sendNotebookOrKernelLanguageTelemetry(
-    telemetryEvent: Telemetry.SwitchToExistingKernel | Telemetry.NotebookLanguage,
-    language?: string
-) {
-    language = getTelemetrySafeLanguage(language);
-    sendTelemetryEvent(telemetryEvent, undefined, { language });
 }

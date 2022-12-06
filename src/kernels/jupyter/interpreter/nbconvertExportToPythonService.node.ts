@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -6,12 +6,14 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
 import { traceError } from '../../../platform/logging';
-import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../../../platform/common/process/types.node';
-import { reportAction } from '../../../platform/progress/decorator.node';
+import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
+import { reportAction } from '../../../platform/progress/decorator';
 import { ReportableAction } from '../../../platform/progress/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { JupyterDaemonModule } from '../../../webviews/webview-side/common/constants';
 
+/**
+ * Implements exporting using nbconvert
+ */
 @injectable()
 export class NbConvertExportToPythonService {
     constructor(@inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory) {}
@@ -23,8 +25,9 @@ export class NbConvertExportToPythonService {
         template?: string,
         token?: CancellationToken
     ): Promise<string> {
-        const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
-            daemonModule: JupyterDaemonModule,
+        const daemon = await this.pythonExecutionFactory.createActivatedEnvironment({
+            allowEnvironmentFetchExceptions: true,
+            resource: file,
             interpreter: interpreter
         });
         // Wait for the nbconvert to finish

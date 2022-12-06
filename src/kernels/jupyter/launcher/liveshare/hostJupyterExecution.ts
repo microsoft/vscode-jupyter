@@ -1,9 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import '../../../../platform/common/extensions';
 
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
 import { JupyterExecutionBase } from '../jupyterExecution';
@@ -23,15 +24,17 @@ import {
     INotebookServerOptions,
     INotebookServer,
     INotebookStarter,
-    IJupyterUriProviderRegistration,
-    IJupyterSessionManagerFactory,
     INotebookServerFactory,
     IJupyterServerUriStorage
 } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../../types.node';
+import { JupyterConnection } from '../../jupyterConnection';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/**
+ * Jupyter server implementation that uses the JupyterExecutionBase class to launch Jupyter.
+ */
 @injectable()
 export class HostJupyterExecution extends JupyterExecutionBase implements IJupyterExecution {
     private serverCache: ServerCache;
@@ -47,10 +50,9 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         @inject(IJupyterSubCommandExecutionService)
         @optional()
         jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
-        @inject(IJupyterUriProviderRegistration) jupyterPickerRegistration: IJupyterUriProviderRegistration,
-        @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(INotebookServerFactory) notebookServerFactory: INotebookServerFactory,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(JupyterConnection) jupyterConnection: JupyterConnection
     ) {
         super(
             interpreterService,
@@ -59,11 +61,10 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
             configService,
             notebookStarter,
             jupyterInterpreterService,
-            jupyterPickerRegistration,
-            sessionManagerFactory,
-            notebookServerFactory
+            notebookServerFactory,
+            jupyterConnection
         );
-        this.serverCache = new ServerCache(workspace);
+        this.serverCache = new ServerCache();
         this.serverUriStorage.onDidChangeUri(
             () => {
                 this.serverCache.clearCache();
@@ -94,7 +95,7 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         traceInfo(`Finished disposing HostJupyterExecution  ${this._id}`);
     }
 
-    public async hostConnectToNotebookServer(
+    private async hostConnectToNotebookServer(
         options: INotebookServerOptions,
         cancelToken: CancellationToken
     ): Promise<INotebookServer> {

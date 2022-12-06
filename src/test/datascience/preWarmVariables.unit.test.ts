@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -7,11 +7,9 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { PythonExtensionChecker } from '../../platform/api/pythonApi';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
-import { IWorkspaceService } from '../../platform/common/application/types';
+import { IPythonApiProvider } from '../../platform/api/types';
 import { CondaService } from '../../platform/common/process/condaService.node';
 import { createDeferred } from '../../platform/common/utils/async';
-import { IEnvironmentVariablesProvider } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
@@ -19,7 +17,7 @@ import { PreWarmActivatedJupyterEnvironmentVariables } from '../../kernels/varia
 import { sleep } from '../core';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 
-suite('DataScience - PreWarm Env Vars', () => {
+suite('PreWarm Env Vars', () => {
     let activationService: IExtensionSingleActivationService;
     let envActivationService: IEnvironmentActivationService;
     let jupyterInterpreter: JupyterInterpreterService;
@@ -30,6 +28,7 @@ suite('DataScience - PreWarm Env Vars', () => {
     setup(() => {
         interpreter = {
             uri: Uri.file(''),
+            id: Uri.file('').fsPath,
             sysPrefix: '',
             sysVersion: ''
         };
@@ -40,16 +39,10 @@ suite('DataScience - PreWarm Env Vars', () => {
         extensionChecker = mock(PythonExtensionChecker);
         const apiProvider = mock<IPythonApiProvider>();
         when(apiProvider.onDidActivatePythonExtension).thenReturn(new EventEmitter<void>().event);
-        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
         when(extensionChecker.isPythonExtensionActive).thenReturn(true);
         zmqSupported = mock<IRawNotebookSupportedService>();
-        const envVarsProvider = mock<IEnvironmentVariablesProvider>();
-        when(envVarsProvider.getEnvironmentVariables(anything())).thenResolve();
-        const workspace = mock<IWorkspaceService>();
-        when(workspace.workspaceFolders).thenReturn();
         when(zmqSupported.isSupported).thenReturn(false);
-        const pythonChecker = mock<IPythonExtensionChecker>();
-        when(pythonChecker.isPythonExtensionInstalled).thenReturn(false);
         activationService = new PreWarmActivatedJupyterEnvironmentVariables(
             instance(envActivationService),
             instance(jupyterInterpreter),
@@ -57,10 +50,7 @@ suite('DataScience - PreWarm Env Vars', () => {
             instance(extensionChecker),
             instance(apiProvider),
             instance(zmqSupported),
-            instance(envVarsProvider),
-            instance(workspace),
-            instance(mock(CondaService)),
-            instance(pythonChecker)
+            instance(mock(CondaService))
         );
     });
     test('Should not pre-warm env variables if there is no jupyter interpreter', async () => {

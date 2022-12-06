@@ -1,10 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import type { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
-import { ISignal } from '@lumino/signaling';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 import cloneDeep = require('lodash/cloneDeep');
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
@@ -14,6 +14,8 @@ import { IKernelProcess } from '../types';
 import { RawSocket } from './rawSocket.node';
 import { IKernelSocket } from '../../types';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
+import { Signal } from '@lumino/signaling';
+import type { IIOPubMessage, IMessage, IOPubMessageType, MessageType } from '@jupyterlab/services/lib/kernel/messages';
 
 /*
 RawKernel class represents the mapping from the JupyterLab services IKernel interface
@@ -22,23 +24,14 @@ input request, translating them, sending them to an IPython kernel over ZMQ, the
 */
 export class RawKernel implements Kernel.IKernelConnection {
     public socket: IKernelSocket & IDisposable;
-    public get statusChanged() {
-        return this.realKernel.statusChanged as any; // NOSONAR
-    }
-    public get iopubMessage() {
-        return this.realKernel.iopubMessage as any; // NOSONAR
-    }
-    public get unhandledMessage() {
-        return this.realKernel.unhandledMessage as any; // NOSONAR
-    }
-    public get connectionStatusChanged() {
-        return this.realKernel.connectionStatusChanged as any; // NOSONAR
-    }
+    public readonly statusChanged = new Signal<this, Kernel.Status>(this);
+    public readonly connectionStatusChanged = new Signal<this, Kernel.ConnectionStatus>(this);
+    public readonly iopubMessage = new Signal<this, IIOPubMessage<IOPubMessageType>>(this);
+    public readonly unhandledMessage = new Signal<this, IMessage<MessageType>>(this);
+    public readonly anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
+    public readonly disposed = new Signal<this, void>(this);
     public get connectionStatus() {
         return this.realKernel.connectionStatus;
-    }
-    public get anyMessage() {
-        return this.realKernel.anyMessage as any; // NOSONAR
     }
     public get serverSettings(): ServerConnection.ISettings {
         return this.realKernel.serverSettings;
@@ -78,7 +71,7 @@ export class RawKernel implements Kernel.IKernelConnection {
         // Save this raw socket as our kernel socket. It will be
         // used to watch and respond to kernel messages.
         this.socket = socket;
-
+        this.startHandleKernelMessages();
         // Pretend like an open occurred. This will prime the real kernel to be connected
         socket.emit('open');
     }
@@ -93,14 +86,12 @@ export class RawKernel implements Kernel.IKernelConnection {
     ): Kernel.IKernelConnection {
         return createRawKernel(this.kernelProcess, options?.clientId || this.clientId);
     }
-    public get disposed(): ISignal<this, void> {
-        return this.realKernel.disposed as any; // NOSONAR
-    }
 
     public async shutdown(): Promise<void> {
         suppressShutdownErrors(this.realKernel);
         await this.kernelProcess.dispose();
         this.socket.dispose();
+        this.stopHandlingKernelMessages();
     }
     public get spec(): Promise<KernelSpec.ISpecModel | undefined> {
         if (this.kernelProcess.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec') {
@@ -245,6 +236,35 @@ export class RawKernel implements Kernel.IKernelConnection {
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
         this.realKernel.removeMessageHook(msgId, hook);
+    }
+    private startHandleKernelMessages() {
+        this.realKernel.anyMessage.connect(this.onAnyMessage, this);
+        this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
+        this.realKernel.unhandledMessage.connect(this.onUnhandledMessage, this);
+        this.realKernel.statusChanged.connect(this.onStatusChanged, this);
+        this.realKernel.disposed.connect(this.onDisposed, this);
+    }
+    private stopHandlingKernelMessages() {
+        this.realKernel.anyMessage.disconnect(this.onAnyMessage, this);
+        this.realKernel.iopubMessage.disconnect(this.onIOPubMessage, this);
+        this.realKernel.unhandledMessage.disconnect(this.onUnhandledMessage, this);
+        this.realKernel.statusChanged.disconnect(this.onStatusChanged, this);
+        this.realKernel.disposed.disconnect(this.onDisposed, this);
+    }
+    private onAnyMessage(_connection: Kernel.IKernelConnection, msg: Kernel.IAnyMessageArgs) {
+        this.anyMessage.emit(msg);
+    }
+    private onIOPubMessage(_connection: Kernel.IKernelConnection, msg: IIOPubMessage) {
+        this.iopubMessage.emit(msg);
+    }
+    private onUnhandledMessage(_connection: Kernel.IKernelConnection, msg: IMessage<MessageType>) {
+        this.unhandledMessage.emit(msg);
+    }
+    private onStatusChanged(_connection: Kernel.IKernelConnection, msg: Kernel.Status) {
+        this.statusChanged.emit(msg);
+    }
+    private onDisposed(_connection: Kernel.IKernelConnection) {
+        this.disposed.emit();
     }
 }
 

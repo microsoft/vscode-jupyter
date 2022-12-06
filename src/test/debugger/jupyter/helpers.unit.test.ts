@@ -1,8 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { isShortNamePath } from '../../../platform/debugger/jupyter/helper.node';
+import { isShortNamePath } from '../../../notebooks/debugger/helper';
 
 suite('Debugging - Helpers', () => {
     suite('isShortNamePath', async () => {

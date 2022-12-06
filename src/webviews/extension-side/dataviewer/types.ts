@@ -1,14 +1,15 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { Event } from 'vscode';
 import { IKernel } from '../../../kernels/types';
 import { IJupyterVariable } from '../../../kernels/variables/types';
 import { IDisposable } from '../../../platform/common/types';
-import { SharedMessages } from '../../../platform/messageTypes';
+import { SharedMessages } from '../../../messageTypes';
+import { SliceOperationSource } from '../../../platform/telemetry/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { SliceOperationSource } from '../../../telemetry/constants';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -129,6 +130,7 @@ export interface IJupyterVariableDataProviderFactory {
 }
 
 export const IDataViewerDependencyService = Symbol('IDataViewerDependencyService');
+
 export interface IDataViewerDependencyService {
-    checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void>;
+    checkAndInstallMissingDependencies(executionEnvironment: IKernel | PythonEnvironment): Promise<void>;
 }

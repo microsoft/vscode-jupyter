@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -10,8 +10,7 @@ import * as WebSocketWS from 'ws';
 import { KernelSocketOptions } from '../../../../kernels/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
 import { serializeDataViews, deserializeDataViews } from '../../../../platform/common/utils/serializers';
-import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../../platform/messageTypes';
-import { logMessageOnlyOnCI } from '../../react-common/logger';
+import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../../messageTypes';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -324,7 +323,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
         this.messageHooks.set(msgId, hook);
 
         // Wrap the hook and send it to the real kernel
-        logMessageOnlyOnCI(`Registering hook for ${msgId}`);
         this.realKernel.registerMessageHook(msgId, this.messageHook);
     }
 
@@ -350,7 +348,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
         this.lastHookedMessageId = undefined;
 
         // Remove from the real kernel
-        logMessageOnlyOnCI(`Removing hook for ${msgId}`);
         this.realKernel.removeMessageHook(msgId, this.messageHook);
     }
 
@@ -393,9 +390,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     }
     private messageHookInterceptor(msg: KernelMessage.IIOPubMessage): boolean | PromiseLike<boolean> {
         try {
-            logMessageOnlyOnCI(
-                `Message hook callback for ${(msg as any).header.msg_type} and ${(msg.parent_header as any).msg_id}`
-            );
             // Save the active message that is currently being hooked. The Extension
             // side needs this information during removeMessageHook so it can delay removal until after a message is called
             this.lastHookedMessageId = msg.header.msg_id;

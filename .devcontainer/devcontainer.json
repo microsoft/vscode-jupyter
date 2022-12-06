@@ -7,7 +7,7 @@
         "dockerfile": "Dockerfile",
         "args": {
             "INSTALL_NODE": "true",
-            "NODE_VERSION": "16.13.0"
+            "NODE_VERSION": "16.14.2"
         }
     },
 
@@ -21,7 +21,7 @@
     // Add the IDs of extensions you want installed when the container is created.
     "extensions": ["ms-python.python", "ms-python.vscode-pylance", "ms-vscode.vscode-typescript-tslint-plugin"],
     "mounts": [
-        "source=${localEnv:HOME}${localEnv:USERPROFILE}/Desktop/Development,target=/workspaces/local,type=bind,consistency=cached"
+        "source=${localWorkspaceFolder},target=/workspaces/local,type=bind,consistency=cached"
     ],
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 'use strict';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
@@ -8,15 +11,31 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
+// Naive polyfill for setImmediate as it is required by @jupyterlab/services/lib/kernel/future.js
+// when running in a web worker as it selects either requestAnimationFrame or setImmediate, both of
+// which are not available in a worker in Safari.
+declare var self: {};
+if (typeof requestAnimationFrame === 'undefined' && typeof setImmediate === 'undefined') {
+    (self as any).setImmediate = (cb: (...args: any[]) => any) => setTimeout(cb);
+    (self as any).clearImmediate = (id: any) => clearTimeout(id);
+}
+
 // Initialize the logger first.
-require('./platform/logging');
+import './platform/logging';
 
 //===============================================
 // We start tracking the extension's startup time at this point.  The
 // locations at which we record various Intervals are marked below in
 // the same way as this.
 
-const durations: Record<string, number> = {};
+const durations = {
+    totalActivateTime: 0,
+    codeLoadingTime: 0,
+    startActivateTime: 0,
+    endActivateTime: 0,
+    workspaceFolderCount: 0
+};
+
 import { StopWatch } from './platform/common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
@@ -39,7 +58,7 @@ import {
     window,
     workspace
 } from 'vscode';
-import { buildApi, IExtensionApi } from './platform/api';
+import { buildApi, IExtensionApi } from './standalone/api/api';
 import { IApplicationEnvironment, ICommandManager } from './platform/common/application/types';
 import { traceError } from './platform/logging';
 import {
@@ -49,7 +68,7 @@ import {
     IDisposableRegistry,
     IExperimentService,
     IExtensionContext,
-    IFeatureDeprecationManager,
+    IFeaturesManager,
     IMemento,
     IOutputChannel,
     IsCodeSpace,
@@ -60,25 +79,31 @@ import {
 import { createDeferred } from './platform/common/utils/async';
 import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry';
+import { sendErrorTelemetry, sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
-import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './webviews/webview-side/common/constants';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.web';
-import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry.web';
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.web';
 import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.web';
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.web';
-import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.web';
+import { registerTypes as registerTerminalTypes } from './platform/terminals/serviceRegistry.web';
+import { registerTypes as registerStandaloneTypes } from './standalone/serviceRegistry.web';
+import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.web';
 import { IExtensionActivationManager } from './platform/activation/types';
-import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
-import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
+import {
+    isCI,
+    isTestExecution,
+    JUPYTER_OUTPUT_CHANNEL,
+    PythonExtension,
+    STANDARD_OUTPUT_CHANNEL
+} from './platform/common/constants';
+import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
 import { Container } from 'inversify/lib/container/container';
 import { ServiceContainer } from './platform/ioc/container';
 import { ServiceManager } from './platform/ioc/serviceManager';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
-import { initializeGlobals as initializeTelemetryGlobals } from './telemetry/telemetry';
+import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -112,12 +137,13 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // Disable this, as we don't want Python extension or any other extensions that depend on this to fall over.
         // Return a dummy object, to ensure other extension do not fall over.
         return {
-            createBlankNotebook: () => Promise.resolve(),
             ready: Promise.resolve(),
             registerPythonApi: noop,
             registerRemoteServerProvider: noop,
             showDataViewer: () => Promise.resolve(),
-            getKernelService: () => Promise.resolve(undefined)
+            getKernelService: () => Promise.resolve(undefined),
+            getSuggestedController: () => Promise.resolve(undefined),
+            addRemoteJupyterServer: () => Promise.resolve(undefined)
         };
     }
 }
@@ -153,7 +179,7 @@ async function activateUnsafe(
 
         const [serviceManager, serviceContainer] = initializeGlobals(context);
         activatedServiceContainer = serviceContainer;
-        initializeTelemetryGlobals(serviceContainer);
+        initializeTelemetryGlobals(() => Promise.resolve(new Map()));
         const activationPromise = activateComponents(context, serviceManager, serviceContainer);
 
         //===============================================
@@ -181,10 +207,8 @@ function displayProgress(promise: Promise<any>) {
 /////////////////////////////
 // error handling
 
-async function handleError(ex: Error, startupDurations: Record<string, number>) {
-    notifyUser(
-        "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
-    );
+async function handleError(ex: Error, startupDurations: typeof durations) {
+    notifyUser(Common.handleExtensionActivationError());
     // Possible logger hasn't initialized either.
     console.error('extension activation failed', ex);
     traceError('extension activation failed', ex);
@@ -193,7 +217,7 @@ async function handleError(ex: Error, startupDurations: Record<string, number>) 
 
 function notifyUser(msg: string) {
     try {
-        void window.showErrorMessage(msg);
+        window.showErrorMessage(msg).then(noop, noop);
     } catch (ex) {
         traceError('failed to notify user', ex);
     }
@@ -270,21 +294,22 @@ async function activateLegacy(
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
     serviceManager.addSingletonInstance<boolean>(IsWebExtension, true);
     if (isDevMode) {
-        void commands.executeCommand('setContext', 'jupyter.development', true);
+        commands.executeCommand('setContext', 'jupyter.development', true).then(noop, noop);
     }
-    void commands.executeCommand('setContext', 'jupyter.webExtension', true);
+    commands.executeCommand('setContext', 'jupyter.webExtension', true).then(noop, noop);
 
     // Output channel is special. We need it before everything else
     addOutputChannel(context, serviceManager, isDevMode);
     addConsoleLogger();
 
     // Register the rest of the types (platform is first because it's needed by others)
-    registerPlatformTypes(context, serviceManager, isDevMode);
-    registerTelemetryTypes(serviceManager);
-    registerNotebookTypes(serviceManager);
+    registerPlatformTypes(serviceManager);
+    registerNotebookTypes(serviceManager, isDevMode);
     registerKernelTypes(serviceManager, isDevMode);
     registerInteractiveTypes(serviceManager);
-    registerIntellisenseTypes(serviceManager, isDevMode);
+    registerTerminalTypes(serviceManager);
+    registerStandaloneTypes(context, serviceManager, isDevMode);
+    registerWebviewTypes(serviceManager);
 
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync
@@ -314,11 +339,9 @@ async function activateLegacy(
     context.subscriptions.push(manager);
     manager.activateSync();
     const activationPromise = manager.activate();
-
-    const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
-    deprecationMgr.initialize();
-    context.subscriptions.push(deprecationMgr);
-
+    const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
+    featureManager.initialize();
+    context.subscriptions.push(featureManager);
     return activationPromise;
 }
 

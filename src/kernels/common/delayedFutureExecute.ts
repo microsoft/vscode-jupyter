@@ -1,11 +1,12 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
-import { CancellationError } from '../../platform/common/cancellation';
 import { traceInfoIfCI } from '../../platform/logging';
 import { createDeferred } from '../../platform/common/utils/async';
+import { CancellationError } from 'vscode';
 
 // Wraps a future so that a requestExecute on a session will wait for the previous future to finish before actually executing
 export class DelayedFutureExecute

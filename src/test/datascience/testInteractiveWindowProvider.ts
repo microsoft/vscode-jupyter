@@ -1,29 +1,5 @@
-// // Copyright (c) Microsoft Corporation. All rights reserved.
-// // Licensed under the MIT License.
-// 'use strict';
-// import { inject, injectable, named } from 'inversify';
-// import * as uuid from 'uuid/v4';
-// import { Memento, Uri } from 'vscode';
-// import * as types from '../../platform/common/application/types';
-// import { IFileSystem } from '../../platform/common/platform/types.node';
-// import {
-//     GLOBAL_MEMENTO,
-//     IAsyncDisposableRegistry,
-//     IConfigurationService,
-//     IDisposableRegistry,
-//     IMemento,
-//     InteractiveWindowMode,
-//     Resource
-// } from '../../platform/common/types';
-// import { createDeferred, Deferred } from '../../platform/common/utils/async';
-// import { resetIdentity } from '../../platform/datascience/interactive-window/identity';
-// import { InteractiveWindow } from '../../platform/datascience/interactive-window/interactiveWindow';
-// import { InteractiveWindowProvider } from '../../platform/datascience/interactive-window/interactiveWindowProvider';
-// import { IInteractiveWindow, IInteractiveWindowProvider } from '../../platform/datascience/types';
-// import { IServiceContainer } from '../../platform/ioc/types';
-// import { DataScienceIocContainer } from './dataScienceIocContainer';
-// import { IMountedWebView } from './mountedWebView';
-// import { WaitForMessageOptions } from './uiTests/helpers';
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 // export interface ITestInteractiveWindowProvider extends IInteractiveWindowProvider {
 //     getMountedWebView(window: IInteractiveWindow | undefined): IMountedWebView;

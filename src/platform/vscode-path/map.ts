@@ -1,40 +1,11 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
 
 import { Uri as URI } from 'vscode';
 import { CharCode } from './charCode';
 import { compare, compareIgnoreCase, compareSubstring, compareSubstringIgnoreCase } from './strings';
-
-export function getOrSet<K, V>(map: Map<K, V>, key: K, value: V): V {
-    let result = map.get(key);
-    if (result === undefined) {
-        result = value;
-        map.set(key, result);
-    }
-
-    return result;
-}
-
-export function mapToString<K, V>(map: Map<K, V>): string {
-    const entries: string[] = [];
-    map.forEach((value, key) => {
-        entries.push(`${key} => ${value}`);
-    });
-
-    return `Map(${map.size}) {${entries.join(', ')}}`;
-}
-
-export function setToString<K>(set: Set<K>): string {
-    const entries: K[] = [];
-    set.forEach((value) => {
-        entries.push(value);
-    });
-
-    return `Set(${set.size}) {${entries.join(', ')}}`;
-}
 
 export interface IKeyIterator<K> {
     reset(key: K): this;
@@ -813,98 +784,5 @@ export class LinkedMap<K, V> implements Map<K, V> {
         for (const [key, value] of data) {
             this.set(key, value);
         }
-    }
-}
-
-export class LRUCache<K, V> extends LinkedMap<K, V> {
-    private _limit: number;
-    private _ratio: number;
-
-    constructor(limit: number, ratio: number = 1) {
-        super();
-        this._limit = limit;
-        this._ratio = Math.min(Math.max(0, ratio), 1);
-    }
-
-    get limit(): number {
-        return this._limit;
-    }
-
-    set limit(limit: number) {
-        this._limit = limit;
-        this.checkTrim();
-    }
-
-    get ratio(): number {
-        return this._ratio;
-    }
-
-    set ratio(ratio: number) {
-        this._ratio = Math.min(Math.max(0, ratio), 1);
-        this.checkTrim();
-    }
-
-    override get(key: K, touch: Touch = Touch.AsNew): V | undefined {
-        return super.get(key, touch);
-    }
-
-    peek(key: K): V | undefined {
-        return super.get(key, Touch.None);
-    }
-
-    override set(key: K, value: V): this {
-        super.set(key, value, Touch.AsNew);
-        this.checkTrim();
-        return this;
-    }
-
-    private checkTrim() {
-        if (this.size > this._limit) {
-            this.trimOld(Math.round(this._limit * this._ratio));
-        }
-    }
-}
-
-/**
- * Wraps the map in type that only implements readonly properties. Useful
- * in the extension host to prevent the consumer from making any mutations.
- */
-export class ReadonlyMapView<K, V> implements ReadonlyMap<K, V> {
-    readonly #source: ReadonlyMap<K, V>;
-
-    public get size() {
-        return this.#source.size;
-    }
-
-    constructor(source: ReadonlyMap<K, V>) {
-        this.#source = source;
-    }
-
-    forEach(callbackfn: (value: V, key: K, map: ReadonlyMap<K, V>) => void, thisArg?: any): void {
-        this.#source.forEach(callbackfn, thisArg);
-    }
-
-    get(key: K): V | undefined {
-        return this.#source.get(key);
-    }
-
-    has(key: K): boolean {
-        return this.#source.has(key);
-    }
-
-    entries(): IterableIterator<[K, V]> {
-        return this.#source.entries();
-    }
-
-    keys(): IterableIterator<K> {
-        return this.#source.keys();
-    }
-
-    values(): IterableIterator<V> {
-        return this.#source.values();
-    }
-
-    [Symbol.iterator](): IterableIterator<[K, V]> {
-        return this.#source.entries();
     }
 }

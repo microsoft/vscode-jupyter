@@ -1,7 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
-import { InteractiveWindowMessages, CssMessages, SharedMessages } from '../../../../../platform/messageTypes';
+import { InteractiveWindowMessages, SharedMessages } from '../../../../../messageTypes';
 import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { CommonActionType } from '../../../interactive-common/redux/reducers/types';
@@ -12,7 +13,6 @@ export const reducerMap: Partial<IVariableViewPanelActionMapping> = {
     [CommonActionType.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
     [CommonActionType.LINK_CLICK]: Transfer.linkClick,
     [InteractiveWindowMessages.Activate]: CommonEffects.activate,
-    [CssMessages.GetCssResponse]: CommonEffects.handleCss,
     [SharedMessages.LocInit]: CommonEffects.handleLocInit,
     [CommonActionType.VARIABLE_VIEW_LOADED]: Transfer.variableViewStarted,
     [InteractiveWindowMessages.GetHTMLByIdRequest]: CommonEffects.getHTMLByIdRequest

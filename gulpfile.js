@@ -21,6 +21,9 @@ const os = require('os');
 const { spawnSync } = require('child_process');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
+const { dumpTestSummary } = require('./build/webTestReporter');
+const { Validator } = require('jsonschema');
+const { stripVTControlCharacters } = require('util');
 
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
@@ -46,14 +49,54 @@ gulp.task('createNycFolder', async (done) => {
 });
 
 gulp.task('validateTranslationFiles', (done) => {
+    const validator = new Validator();
+    const schema = {
+        type: 'object',
+        patternProperties: {
+            '^[a-z0-9.]*': {
+                anyOf: [
+                    {
+                        type: ['string'],
+                        additionalProperties: false
+                    },
+                    {
+                        type: ['object'],
+                        properties: {
+                            message: { type: 'string' },
+                            comment: {
+                                type: 'array',
+                                items: {
+                                    type: 'string'
+                                }
+                            }
+                        },
+                        required: ['message'],
+                        additionalProperties: false
+                    }
+                ]
+            }
+        },
+        additionalProperties: false
+    };
+
     glob.sync('package.nls.*.json', { sync: true }).forEach((file) => {
         // Verify we can open and parse as JSON.
         try {
-            JSON.parse(fs.readFileSync(file));
+            const js = JSON.parse(fs.readFileSync(file));
+            const result = validator.validate(js, schema);
+            if (Array.isArray(result.errors) && result.errors.length) {
+                console.error(result.errors);
+                throw new Error(result.errors.map((err) => `${err.property} ${err.message}`).join('\n'));
+            }
         } catch (ex) {
-            throw new Error(`Error parsing Translation File ${file}`);
+            throw new Error(`Error parsing Translation File ${file}, ${ex.message}`);
         }
     });
+    done();
+});
+
+gulp.task('printTestResults', async (done) => {
+    await dumpTestSummary();
     done();
 });
 
@@ -61,7 +104,7 @@ gulp.task('output:clean', () => del(['coverage']));
 
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out', '!out/test']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
-gulp.task('clean:out', () => del(['out/**', '!out', '!out/client_renderer/**']));
+gulp.task('clean:out', () => del(['out/**', '!out', '!out/client_renderer/**', '!**/*nls.*.json']));
 
 gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
 
@@ -159,16 +202,36 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
         await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
     }
 }
-gulp.task('webpack', async () => {
-    // Build node_modules.
+
+gulp.task('webpack-dependencies', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
-    // Build DS stuff (separately as it uses far too much memory and slows down CI).
-    // Individually is faster on CI.
+});
+
+gulp.task('webpack-renderers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js', 'production');
+});
+
+gulp.task('webpack-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
+});
+
+gulp.task('webpack-extension-node', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.node.config.js', 'extension');
+});
+
+gulp.task('webpack-extension-web', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js', 'extension');
 });
+
+gulp.task(
+    'webpack',
+    gulp.series(
+        // Dependencies first
+        gulp.parallel('webpack-dependencies', 'webpack-renderers', 'webpack-viewers'),
+        // Then the two extensions
+        gulp.parallel('webpack-extension-node', 'webpack-extension-web')
+    )
+);
 
 gulp.task('updateBuildNumber', async () => {
     await updateBuildNumber();
@@ -223,14 +286,14 @@ async function buildWebPack(webpackConfigName, args, env) {
         .filter((item) => item.length > 0);
     // Remember to perform a case insensitive search.
     const warnings = stdOutLines
-        .filter((item) => item.startsWith('WARNING in '))
+        .filter((item) => stripVTControlCharacters(item).startsWith('WARNING in '))
         .filter(
             (item) =>
                 allowedWarnings.findIndex((allowedWarning) =>
-                    item.toLowerCase().startsWith(allowedWarning.toLowerCase())
+                    stripVTControlCharacters(item).toLowerCase().startsWith(allowedWarning.toLowerCase())
                 ) == -1
         );
-    const errors = stdOutLines.some((item) => item.startsWith('ERROR in'));
+    const errors = stdOutLines.some((item) => stripVTControlCharacters(item).startsWith('ERROR in'));
     if (errors) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
@@ -347,7 +410,51 @@ function hasNativeDependencies() {
     return false;
 }
 
+async function generateTelemetryMD() {
+    const generator = require('./out/telemetryGenerator.node');
+    await generator.default();
+}
 gulp.task('generateTelemetryMd', async () => {
-    const generator = require('./out/platform/tools/telemetryGenerator.node');
-    return generator.default();
+    return generateTelemetryMD();
+});
+
+gulp.task('validateTelemetry', async () => {
+    const telemetryMD = fs.readFileSync(path.join(__dirname, 'TELEMETRY.md'), 'utf-8');
+    const telemetryCSV = fs.readFileSync(path.join(__dirname, 'TELEMETRY.csv'), 'utf-8');
+    const gdprTS = fs.readFileSync(path.join(__dirname, 'src', 'gdpr.ts'), 'utf-8');
+    await generateTelemetryMD();
+    const gdprTS2 = fs.readFileSync(path.join(__dirname, 'src', 'gdpr.ts'), 'utf-8');
+    if (gdprTS2.trim() !== gdprTS.trim()) {
+        console.error('src/gdpr.ts is not valid, please re-run `npm run generateTelemetry`');
+        throw new Error('src/gdpr.ts is not valid, please re-run `npm run generateTelemetry`');
+    }
+    const telemetryMD2 = fs.readFileSync(path.join(__dirname, 'TELEMETRY.md'), 'utf-8');
+    if (telemetryMD2.trim() !== telemetryMD.trim()) {
+        console.error('Telemetry.md is not valid, please re-run `npm run generateTelemetry`');
+        throw new Error('Telemetry.md is not valid, please re-run `npm run generateTelemetry`');
+    }
+    const telemetryCSV2 = fs.readFileSync(path.join(__dirname, 'TELEMETRY.csv'), 'utf-8');
+    if (telemetryCSV2.trim() !== telemetryCSV.trim()) {
+        console.error('Telemetry.csv is not valid, please re-run `npm run generateTelemetry`');
+        throw new Error('Telemetry.csv is not valid, please re-run `npm run generateTelemetry`');
+    }
+});
+
+gulp.task('validatePackageLockJson', async () => {
+    const fileName = path.join(__dirname, 'package-lock.json');
+    const oldContents = fs.readFileSync(fileName).toString();
+    spawnSync('npm', ['install']);
+    const newContents = fs.readFileSync(fileName).toString();
+    if (oldContents.trim() !== newContents.trim()) {
+        throw new Error('package-lock.json has changed after running `npm install`');
+    }
+});
+
+gulp.task('verifyUnhandledErrors', async () => {
+    const fileName = path.join(__dirname, 'unhandledErrors.txt');
+    const contents = fs.pathExistsSync(fileName) ? fs.readFileSync(fileName, 'utf8') : '';
+    if (contents.trim().length) {
+        console.error(contents);
+        throw new Error('Unhandled errors detected. Please fix them before merging this PR.', contents);
+    }
 });

@@ -1,29 +1,15 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {
-    KernelAction,
-    KernelActionSource,
-    KernelConnectionMetadata,
-    KernelInterpreterDependencyResponse
-} from '../../kernels/types';
-import { Resource } from '../common/types';
-
+/**
+ * Base class for all errors that we send telemetry about.
+ *
+ * @category - What type of error it is. Sent in telemetry data
+ */
 export abstract class BaseError extends Error {
     public stdErr?: string;
     constructor(public readonly category: ErrorCategory, message: string) {
         super(message);
-    }
-}
-
-export abstract class BaseKernelError extends BaseError {
-    public override stdErr?: string;
-    constructor(
-        category: ErrorCategory,
-        message: string,
-        public readonly kernelConnectionMetadata: KernelConnectionMetadata
-    ) {
-        super(category, message);
     }
 }
 
@@ -61,15 +47,6 @@ export class WrappedError extends BaseError {
         return err;
     }
 }
-export class WrappedKernelError extends WrappedError {
-    constructor(
-        message: string,
-        originalException: Error | undefined,
-        public readonly kernelConnectionMetadata: KernelConnectionMetadata
-    ) {
-        super(message, originalException);
-    }
-}
 
 export function getErrorCategory(error?: Error): ErrorCategory {
     if (!error) {
@@ -90,6 +67,8 @@ export type ErrorCategory =
     | 'jupyterconnection'
     | 'jupyterinstall'
     | 'jupyterselfcert'
+    | 'jupyterexpiredcert'
+    | 'jupyterselfexpiredcert'
     | 'invalidkernel'
     | 'noipykernel'
     | 'fetcherror'
@@ -98,58 +77,47 @@ export type ErrorCategory =
     | 'unsupportedKernelSpec' // Left for historical purposes, not used anymore.
     | 'sessionDisposed'
     | 'nodeonly'
+    | 'remotejupyterserverconnection'
+    | 'localjupyterserverconnection'
+    | 'remotejupyterserveruriprovider'
+    | 'invalidremotejupyterserverurihandle'
     | 'unknown';
 
 // If there are errors, then the are added to the telementry properties.
 export type TelemetryErrorProperties = {
+    /**
+     * Whether there was a failure.
+     * Common to most of the events.
+     */
     failed: true;
     /**
      * Node stacktrace without PII.
+     * Common to most of the events.
      */
-    stackTrace: string;
+    stackTrace?: string;
     /**
      * A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
+     * Common to most of the events.
      */
     failureCategory?: string;
     /**
      * Further sub classification of the error. E.g. kernel died due to the fact that zmq is not installed properly.
+     * Common to most of the events.
      */
     failureSubCategory?: string;
     /**
      * Hash of the file name that contains the file in the last frame (from Python stack trace).
+     * Common to most of the events.
      */
     pythonErrorFile?: string;
     /**
      * Hash of the folder that contains the file in the last frame (from Python stack trace).
+     * Common to most of the events.
      */
     pythonErrorFolder?: string;
     /**
      * Hash of the module that contains the file in the last frame (from Python stack trace).
+     * Common to most of the events.
      */
     pythonErrorPackage?: string;
 };
-
-export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
-export interface IDataScienceErrorHandler {
-    /**
-     * Handles the errors and if necessary displays an error message.
-     */
-    handleError(err: Error): Promise<void>;
-    /**
-     * Handles errors specific to kernels.
-     * The value of `errorContext` is used to determine the context of the error message, whether it applies to starting or interrupting kernels or the like.
-     * Thus based on the context the error message would be different.
-     */
-    handleKernelError(
-        err: Error,
-        errorContext: KernelAction,
-        kernelConnection: KernelConnectionMetadata,
-        resource: Resource,
-        actionSource: KernelActionSource
-    ): Promise<KernelInterpreterDependencyResponse>;
-    /**
-     * The value of `errorContext` is used to determine the context of the error message, whether it applies to starting or interrupting kernels or the like.
-     * Thus based on the context the error message would be different.
-     */
-    getErrorMessageForDisplayInCell(err: Error, errorContext: KernelAction): Promise<string>;
-}

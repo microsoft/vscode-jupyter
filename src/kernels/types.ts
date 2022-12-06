@@ -1,9 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
-import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
+import type { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { JSONObject } from '@lumino/coreutils';
 import type {
@@ -11,16 +11,22 @@ import type {
     Disposable,
     Event,
     NotebookCell,
-    NotebookController,
-    QuickPickItem,
+    NotebookCellExecution,
+    NotebookDocument,
     Uri
 } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { IAsyncDisposable, IDisplayOptions, Resource } from '../platform/common/types';
-import { WebSocketData } from '../platform/api/extension';
-import { IJupyterKernel } from './jupyter/types';
+import { IAsyncDisposable, IDisplayOptions, IDisposable, ReadWrite, Resource } from '../platform/common/types';
+import { IBackupFile, IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
+import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
+import { IContributedKernelFinder } from './internalTypes';
+import { isWeb } from '../platform/common/utils/misc';
+import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
+import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
+
+export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
 export type LiveKernelModel = IJupyterKernel &
     Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined; notebook?: { path?: string } };
@@ -30,73 +36,255 @@ export enum NotebookCellRunState {
     Success = 'Success',
     Error = 'Error'
 }
+
+async function getConnectionIdHash(connection: KernelConnectionMetadata) {
+    if (!isWeb() && connection.interpreter?.uri) {
+        // eslint-disable-next-line local-rules/dont-use-fspath
+        const interpreterPath = connection.interpreter.uri.fsPath;
+        // eslint-disable-next-line local-rules/dont-use-fspath
+        const normalizedPath = getNormalizedInterpreterPath(connection.interpreter.uri).fsPath;
+        // Connection ids can contain Python paths in them.
+        const normalizedId = connection.id.replace(interpreterPath, normalizedPath);
+        return getTelemetrySafeHashedString(normalizedId);
+    }
+    return getTelemetrySafeHashedString(connection.id);
+}
+export class BaseKernelConnectionMetadata {
+    public static fromJSON(
+        json:
+            | Record<string, unknown>
+            | ReadWrite<LocalKernelSpecConnectionMetadata>
+            | ReadWrite<LiveRemoteKernelConnectionMetadata>
+            | ReadWrite<RemoteKernelSpecConnectionMetadata>
+            | ReadWrite<PythonKernelConnectionMetadata>
+    ) {
+        if (json.interpreter) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            json.interpreter = deserializePythonEnvironment(json.interpreter as any, '')!;
+        }
+        switch (json.kind) {
+            case 'startUsingLocalKernelSpec':
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                return LocalKernelSpecConnectionMetadata.create(json as LocalKernelSpecConnectionMetadata);
+            case 'connectToLiveRemoteKernel':
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                return LiveRemoteKernelConnectionMetadata.create(json as LiveRemoteKernelConnectionMetadata);
+            case 'startUsingRemoteKernelSpec':
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                return RemoteKernelSpecConnectionMetadata.create(json as RemoteKernelSpecConnectionMetadata);
+            case 'startUsingPythonInterpreter':
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                return PythonKernelConnectionMetadata.create(json as PythonKernelConnectionMetadata);
+            default:
+                throw new Error(`Invalid object to be deserialized into a connection, kind = ${json.kind}`);
+        }
+    }
+}
 /**
  * Connection metadata for Live Kernels.
  * With this we are able connect to an existing kernel (instead of starting a new session).
  */
-export type LiveRemoteKernelConnectionMetadata = Readonly<{
-    kernelModel: LiveKernelModel;
+export class LiveRemoteKernelConnectionMetadata {
+    public readonly kind = 'connectToLiveRemoteKernel';
+    public readonly kernelModel: LiveKernelModel;
     /**
      * Python interpreter will be used for intellisense & the like.
      */
-    interpreter?: PythonEnvironment;
-    baseUrl: string;
-    kind: 'connectToLiveRemoteKernel';
-    id: string;
-}>;
+    public readonly baseUrl: string;
+    public readonly serverId: string;
+    public readonly id: string;
+    public readonly interpreter?: PythonEnvironment;
+
+    private constructor(options: {
+        kernelModel: LiveKernelModel;
+        /**
+         * Python interpreter will be used for intellisense & the like.
+         */
+        interpreter?: PythonEnvironment;
+        baseUrl: string;
+        serverId: string;
+        id: string;
+    }) {
+        this.kernelModel = options.kernelModel;
+        this.interpreter = options.interpreter;
+        this.baseUrl = options.baseUrl;
+        this.id = options.id;
+        this.serverId = options.serverId;
+    }
+    public static create(options: {
+        kernelModel: LiveKernelModel;
+        /**
+         * Python interpreter will be used for intellisense & the like.
+         */
+        interpreter?: PythonEnvironment;
+        baseUrl: string;
+        serverId: string;
+        id: string;
+    }) {
+        return new LiveRemoteKernelConnectionMetadata(options);
+    }
+    public getHashId() {
+        return getConnectionIdHash(this);
+    }
+    public toJSON() {
+        return {
+            id: this.id,
+            kind: this.kind,
+            baseUrl: this.baseUrl,
+            serverId: this.serverId,
+            interpreter: serializePythonEnvironment(this.interpreter),
+            kernelModel: this.kernelModel
+        };
+    }
+    public static fromJSON(json: Record<string, unknown> | LiveRemoteKernelConnectionMetadata) {
+        return BaseKernelConnectionMetadata.fromJSON(json) as LiveRemoteKernelConnectionMetadata;
+    }
+}
 /**
  * Connection metadata for Kernels started using kernelspec (JSON).
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
- * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
+ * If the executable is not defined in kernelSpec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
-export type LocalKernelSpecConnectionMetadata = Readonly<{
-    kernelModel?: undefined;
-    kernelSpec: IJupyterKernelSpec;
-    /**
-     * Indicates the interpreter that may be used to start the kernel.
-     * If possible to start a kernel without this Python interpreter, then this Python interpreter will be used for intellisense & the like.
-     * This interpreter could also be the interpreter associated with the kernel spec that we are supposed to start.
-     */
-    interpreter?: PythonEnvironment;
-    kind: 'startUsingLocalKernelSpec';
-    id: string;
-}>;
+export class LocalKernelSpecConnectionMetadata {
+    public readonly kernelModel?: undefined;
+    public readonly kind = 'startUsingLocalKernelSpec';
+    public readonly id: string;
+    public readonly kernelSpec: Readonly<IJupyterKernelSpec>;
+    public readonly interpreter?: Readonly<PythonEnvironment>;
+    private constructor(options: {
+        kernelSpec: IJupyterKernelSpec;
+        /**
+         * Indicates the interpreter that may be used to start the kernel.
+         * If possible to start a kernel without this Python interpreter, then this Python interpreter will be used for intellisense & the like.
+         * This interpreter could also be the interpreter associated with the kernel spec that we are supposed to start.
+         */
+        interpreter?: PythonEnvironment;
+        id: string;
+    }) {
+        this.kernelSpec = options.kernelSpec;
+        this.interpreter = options.interpreter;
+        this.id = options.id;
+    }
+    public static create(options: {
+        kernelSpec: IJupyterKernelSpec;
+        /**
+         * Indicates the interpreter that may be used to start the kernel.
+         * If possible to start a kernel without this Python interpreter, then this Python interpreter will be used for intellisense & the like.
+         * This interpreter could also be the interpreter associated with the kernel spec that we are supposed to start.
+         */
+        interpreter?: PythonEnvironment;
+        id: string;
+    }) {
+        return new LocalKernelSpecConnectionMetadata(options);
+    }
+    public getHashId() {
+        return getConnectionIdHash(this);
+    }
+    public toJSON() {
+        return {
+            id: this.id,
+            kernelSpec: this.kernelSpec,
+            interpreter: serializePythonEnvironment(this.interpreter),
+            kind: this.kind
+        };
+    }
+    public static fromJSON(options: Record<string, unknown> | LocalKernelSpecConnectionMetadata) {
+        return BaseKernelConnectionMetadata.fromJSON(options) as LocalKernelSpecConnectionMetadata;
+    }
+}
+
 /**
  * Connection metadata for Remote Kernels started using kernelspec (JSON).
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
  * If the executable is not defined in kernelspec json, & it is a Python kernel, then we'll use the provided python interpreter.
  */
-export type RemoteKernelSpecConnectionMetadata = Readonly<{
-    kernelModel?: undefined;
-    interpreter?: PythonEnvironment; // Can be set if URL is localhost
-    kernelSpec: IJupyterKernelSpec;
-    kind: 'startUsingRemoteKernelSpec';
-    baseUrl: string;
-    id: string;
-}>;
+export class RemoteKernelSpecConnectionMetadata {
+    public readonly kernelModel?: undefined;
+    public readonly kind = 'startUsingRemoteKernelSpec';
+    public readonly id: string;
+    public readonly kernelSpec: IJupyterKernelSpec;
+    public readonly baseUrl: string;
+    public readonly serverId: string;
+    public readonly interpreter?: PythonEnvironment; // Can be set if URL is localhost
+    private constructor(options: {
+        interpreter?: PythonEnvironment; // Can be set if URL is localhost
+        kernelSpec: IJupyterKernelSpec;
+        baseUrl: string;
+        serverId: string;
+        id: string;
+    }) {
+        this.interpreter = options.interpreter;
+        this.kernelSpec = options.kernelSpec;
+        this.baseUrl = options.baseUrl;
+        this.id = options.id;
+        this.serverId = options.serverId;
+    }
+    public static create(options: {
+        interpreter?: PythonEnvironment; // Can be set if URL is localhost
+        kernelSpec: IJupyterKernelSpec;
+        baseUrl: string;
+        serverId: string;
+        id: string;
+    }) {
+        return new RemoteKernelSpecConnectionMetadata(options);
+    }
+    public getHashId() {
+        return getConnectionIdHash(this);
+    }
+    public toJSON() {
+        return {
+            id: this.id,
+            kernelSpec: this.kernelSpec,
+            interpreter: serializePythonEnvironment(this.interpreter),
+            baseUrl: this.baseUrl,
+            serverId: this.serverId,
+            kind: this.kind
+        };
+    }
+    public static fromJSON(options: Record<string, unknown> | RemoteKernelSpecConnectionMetadata) {
+        return BaseKernelConnectionMetadata.fromJSON(options) as RemoteKernelSpecConnectionMetadata;
+    }
+}
 /**
  * Connection metadata for Kernels started using Python interpreter.
  * These are not necessarily raw (it could be plain old Jupyter Kernels, where we register Python interpreter as a kernel).
  * We can have KernelSpec information here as well, however that is totally optional.
  * We will always start this kernel using old Jupyter style (provided we first register this interpreter as a kernel) or raw.
  */
-export type PythonKernelConnectionMetadata = Readonly<{
-    kernelSpec: IJupyterKernelSpec;
-    interpreter: PythonEnvironment;
-    kind: 'startUsingPythonInterpreter';
-    id: string;
-}>;
+export class PythonKernelConnectionMetadata {
+    public readonly kind = 'startUsingPythonInterpreter';
+    public readonly kernelSpec: IJupyterKernelSpec;
+    public readonly interpreter: PythonEnvironment;
+    public readonly id: string;
+    private constructor(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment; id: string }) {
+        this.kernelSpec = options.kernelSpec;
+        this.interpreter = options.interpreter;
+        this.id = options.id;
+    }
+    public static create(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment; id: string }) {
+        return new PythonKernelConnectionMetadata(options);
+    }
+    public getHashId() {
+        return getConnectionIdHash(this);
+    }
+    public toJSON() {
+        return {
+            id: this.id,
+            kernelSpec: this.kernelSpec,
+            interpreter: serializePythonEnvironment(this.interpreter),
+            kind: this.kind
+        };
+    }
+    public static fromJSON(options: Record<string, unknown> | PythonKernelConnectionMetadata) {
+        return BaseKernelConnectionMetadata.fromJSON(options) as PythonKernelConnectionMetadata;
+    }
+}
 /**
  * Readonly to ensure these are immutable, if we need to make changes then create a new one.
  * This ensure we don't update is somewhere unnecessarily (such updates would be unexpected).
  * Unexpected as connections are defined once & not changed, if we need to change then user needs to create a new connection.
  */
-export type KernelConnectionMetadata =
-    | Readonly<LiveRemoteKernelConnectionMetadata>
-    | Readonly<LocalKernelSpecConnectionMetadata>
-    | Readonly<RemoteKernelSpecConnectionMetadata>
-    | Readonly<PythonKernelConnectionMetadata>;
-
+export type KernelConnectionMetadata = RemoteKernelConnectionMetadata | LocalKernelConnectionMetadata;
 /**
  * Connection metadata for local kernels. Makes it easier to not have to check for the live connection type.
  */
@@ -104,10 +292,12 @@ export type LocalKernelConnectionMetadata =
     | Readonly<LocalKernelSpecConnectionMetadata>
     | Readonly<PythonKernelConnectionMetadata>;
 
-export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata>
-    extends QuickPickItem {
-    selection: T;
-}
+/**
+ * Connection metadata for remote kernels. Makes it easier to not have to check for the live connection type.
+ */
+export type RemoteKernelConnectionMetadata =
+    | Readonly<LiveRemoteKernelConnectionMetadata>
+    | Readonly<RemoteKernelSpecConnectionMetadata>;
 
 export function isLocalConnection(
     kernelConnection: KernelConnectionMetadata
@@ -117,10 +307,22 @@ export function isLocalConnection(
     );
 }
 
-export interface IKernel extends IAsyncDisposable {
-    readonly connection: INotebookProviderConnection | undefined;
-    readonly id: Uri;
-    /**;
+export function isRemoteConnection(
+    kernelConnection: KernelConnectionMetadata
+): kernelConnection is RemoteKernelConnectionMetadata {
+    return !isLocalConnection(kernelConnection);
+}
+
+export type KernelHooks =
+    | 'willRestart'
+    | 'willInterrupt'
+    | 'restartCompleted'
+    | 'interruptCompleted'
+    | 'didStart'
+    | 'willCancel';
+export interface IBaseKernel extends IAsyncDisposable {
+    readonly uri: Uri;
+    /**
      * In the case of Notebooks, this is the same as the Notebook Uri.
      * But in the case of Interactive Window, this is the Uri of the file (such as the Python file).
      * However if we create an intearctive window without a file, then this is undefined.
@@ -136,16 +338,8 @@ export interface IKernel extends IAsyncDisposable {
     readonly onDisposed: Event<void>;
     readonly onStarted: Event<void>;
     readonly onRestarted: Event<void>;
-    readonly onPreExecute: Event<NotebookCell>;
+    readonly restarting: Promise<void>;
     readonly status: KernelMessage.Status;
-    /**
-     * Who created this kernel, 3rd party extension or our (jupyter) extension.
-     */
-    readonly creator: KernelActionSource;
-    /**
-     * Cells that are still being executed (or pending).
-     */
-    readonly pendingCells: readonly NotebookCell[];
     readonly disposed: boolean;
     readonly disposing: boolean;
     /**
@@ -162,7 +356,7 @@ export interface IKernel extends IAsyncDisposable {
      * Provides access to the underlying kernel.
      * The Jupyter kernel can be directly access via the `session.kernel` property.
      */
-    readonly session?: IJupyterSession;
+    readonly session?: IKernelConnectionSession;
     /**
      * We create IKernels early on to ensure they are mapped with the notebook documents.
      * I.e. created even before they are used.
@@ -170,51 +364,131 @@ export interface IKernel extends IAsyncDisposable {
      * This flag will tell us whether a real kernel was or is active.
      */
     readonly startedAtLeastOnce?: boolean;
+    start(options?: IDisplayOptions): Promise<IKernelConnectionSession>;
+    interrupt(): Promise<void>;
+    restart(): Promise<void>;
+    addHook(
+        event: 'willRestart',
+        hook: (sessionPromise?: Promise<IKernelConnectionSession>) => Promise<void>,
+        thisArgs?: unknown,
+        disposables?: IDisposable[]
+    ): IDisposable;
+    addHook(
+        event: 'willInterrupt' | 'restartCompleted' | 'interruptCompleted' | 'didStart' | 'willCancel',
+        hook: () => Promise<void>,
+        thisArgs?: unknown,
+        disposables?: IDisposable[]
+    ): IDisposable;
+}
+
+/**
+ * Kernels created by this extension.
+ */
+export interface IKernel extends IBaseKernel {
+    readonly notebook: NotebookDocument;
     /**
      * Controller associated with this kernel
      */
-    readonly controller: NotebookController;
-    start(options?: IDisplayOptions): Promise<void>;
-    interrupt(): Promise<void>;
-    restart(): Promise<void>;
-    executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
+    readonly controller: IKernelController;
+    readonly creator: 'jupyterExtension';
+}
+
+export interface INotebookKernelExecution {
+    /**
+     * Total execution count on this kernel
+     */
+    readonly executionCount: number;
+    readonly onPreExecute: Event<NotebookCell>;
+    readonly onPostExecute: Event<NotebookCell>;
+    /**
+     * Cells that are still being executed (or pending).
+     */
+    readonly pendingCells: readonly NotebookCell[];
+    /**
+     * @param cell Cell to execute
+     * @param codeOverride Override the code to execute
+     */
+    executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState>;
     /**
      * Executes arbitrary code against the kernel without incrementing the execution count.
      */
     executeHidden(code: string): Promise<nbformat.IOutput[]>;
-    addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
-    removeEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void;
+}
+/**
+ * Kernels created by third party extensions.
+ */
+export interface IThirdPartyKernel extends IBaseKernel {
+    readonly creator: '3rdPartyExtension';
 }
 
+/**
+ * Kernel options for creating first party kernels.
+ */
 export type KernelOptions = {
     metadata: KernelConnectionMetadata;
-    controller: NotebookController;
+    controller: IKernelController;
     /**
      * When creating a kernel for an Interactive window, pass the Uri of the Python file here (to set the working directory, file & the like)
      * In the case of Notebooks, just pass the uri of the notebook.
      */
     resourceUri: Resource;
-    /**
-     * What is initiating this kernel action, is it Jupyter or a 3rd party extension.
-     */
-    creator: KernelActionSource;
 };
-export const IKernelProvider = Symbol('IKernelProvider');
-export interface IKernelProvider extends IAsyncDisposable {
-    readonly kernels: Readonly<IKernel[]>;
-    onDidStartKernel: Event<IKernel>;
-    onDidRestartKernel: Event<IKernel>;
-    onDidDisposeKernel: Event<IKernel>;
-    onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: IKernel }>;
+
+/**
+ * Kernel options for creating third party kernels.
+ */
+export type ThirdPartyKernelOptions = {
+    metadata: KernelConnectionMetadata;
     /**
-     * Get hold of the active kernel for a given Notebook.
+     * When creating a kernel for an Interactive window, pass the Uri of the Python file here (to set the working directory, file & the like)
+     * In the case of Notebooks, just pass the uri of the notebook.
      */
-    get(uri: Uri): IKernel | undefined;
+    resourceUri: Resource;
+};
+
+/**
+ * Common kernel provider interface shared between first party and third party kernel providers.
+ */
+export interface IBaseKernelProvider<T extends IBaseKernel> extends IAsyncDisposable {
+    readonly kernels: Readonly<T[]>;
+    onDidCreateKernel: Event<T>;
+    onDidStartKernel: Event<T>;
+    onDidRestartKernel: Event<T>;
+    onDidDisposeKernel: Event<T>;
+    onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: T }>;
+}
+
+/**
+ * Kernel provider for fetching and creating kernels inside the extension.
+ */
+export const IKernelProvider = Symbol('IKernelProvider');
+export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
+    /**
+     * Get hold of the active kernel for a given notebook document.
+     */
+    get(uriOrNotebook: Uri | NotebookDocument): IKernel | undefined;
     /**
      * Gets or creates a kernel for a given Notebook.
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
-    getOrCreate(uri: Uri, options: KernelOptions): IKernel;
+    getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
+    getKernelExecution(kernel: IKernel): INotebookKernelExecution;
+}
+
+/**
+ * Kernel provider used by third party extensions (indirectly).
+ */
+export const IThirdPartyKernelProvider = Symbol('IThirdPartyKernelProvider');
+export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPartyKernel> {
+    /**
+     * Get hold of the active kernel for a given resource uri.
+     */
+    get(uri: Uri): IThirdPartyKernel | undefined;
+    /**
+     * Gets or creates a kernel for a given resource uri.
+     * WARNING: If called with different options for same resource uri, old kernel associated with the Uri will be disposed.
+     */
+    getOrCreate(uri: Uri, options: ThirdPartyKernelOptions): IThirdPartyKernel;
 }
 
 export interface IRawConnection {
@@ -226,7 +500,7 @@ export interface IRawConnection {
 export interface IJupyterConnection extends Disposable {
     readonly type: 'jupyter';
     readonly localLaunch: boolean;
-    readonly displayName: string;
+    displayName: string;
     disconnected: Event<number>;
 
     // Jupyter specific members
@@ -234,7 +508,7 @@ export interface IJupyterConnection extends Disposable {
     readonly token: string;
     readonly hostName: string;
     readonly rootDirectory: Uri; // Directory where the notebook server was started.
-    readonly url?: string;
+    readonly url: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getAuthHeader?(): any; // Snould be a json object
 }
@@ -247,36 +521,21 @@ export enum InterruptResult {
     Restarted = 'restart'
 }
 
-export interface INotebook {
-    readonly connection: INotebookProviderConnection | undefined;
-    readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
-}
-
-// Options for connecting to a notebook provider
-export type ConnectNotebookProviderOptions = {
-    ui: IDisplayOptions;
-    kind: 'localJupyter' | 'remoteJupyter';
-    token: CancellationToken | undefined;
-    resource: Resource;
-};
-
-export const IJupyterSession = Symbol('IJupyterSession');
 /**
  * Closely represents Jupyter Labs Kernel.IKernelConnection.
  */
-export interface IJupyterSession extends IAsyncDisposable {
-    readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter';
+export interface IBaseKernelConnectionSession extends IAsyncDisposable {
     readonly disposed: boolean;
     readonly kernel?: Kernel.IKernelConnection;
     readonly status: KernelMessage.Status;
     readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    isServerSession(): this is IJupyterKernelConnectionSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
-    onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
-    waitForIdle(timeout: number): Promise<void>;
+    waitForIdle(timeout: number, token: CancellationToken): Promise<void>;
     requestExecute(
         content: KernelMessage.IExecuteRequestMsg['content'],
         disposeOnDone?: boolean,
@@ -301,6 +560,18 @@ export interface IJupyterSession extends IAsyncDisposable {
     requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined>;
     shutdown(): Promise<void>;
 }
+
+export interface IJupyterKernelConnectionSession extends IBaseKernelConnectionSession {
+    readonly kind: 'remoteJupyter' | 'localJupyter';
+    invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void>;
+    createTempfile(ext: string): Promise<string>;
+    deleteTempfile(file: string): Promise<void>;
+    getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel>;
+}
+export interface IRawKernelConnectionSession extends IBaseKernelConnectionSession {
+    readonly kind: 'localRaw';
+}
+export type IKernelConnectionSession = IJupyterKernelConnectionSession | IRawKernelConnectionSession;
 
 export type ISessionWithSocket = Session.ISessionConnection & {
     /**
@@ -328,7 +599,7 @@ export interface IJupyterKernelSpec {
     id?: string;
     name: string;
     language?: string;
-    uri: Uri;
+    executable: string; // argv[0] of the kernelspec.json
     env?: NodeJS.ProcessEnv | undefined;
     /**
      * Kernel display name.
@@ -386,16 +657,24 @@ export interface IJupyterKernelSpec {
         | 'registeredByNewVersionOfExtForCustomKernelSpec';
 }
 
-export type GetServerOptions = {
-    ui: IDisplayOptions;
-    /**
-     * Whether we're only interested in local Jupyter Servers.
-     */
-    localJupyter: boolean;
-    token: CancellationToken | undefined;
-    resource: Resource;
-};
+export type GetServerOptions =
+    | {
+          ui: IDisplayOptions;
+          localJupyter: true;
+          token: CancellationToken | undefined;
+          resource: Resource;
+          serverId?: undefined;
+      }
+    | {
+          ui: IDisplayOptions;
+          localJupyter: false;
+          token: CancellationToken | undefined;
+          resource: Resource;
+          serverId: string;
+      };
 
+// Options for connecting to a notebook provider
+export type ConnectNotebookProviderOptions = GetServerOptions;
 /**
  * Options for getting a notebook
  */
@@ -412,7 +691,7 @@ export interface INotebookProvider {
     /**
      * Creates a notebook.
      */
-    createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
+    create(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
     /**
      * Connect to a notebook provider to prepare its connection and to get connection information
      */
@@ -420,6 +699,12 @@ export interface INotebookProvider {
 }
 
 export interface IKernelSocket {
+    /**
+     * These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
+     * As a result, we don't get any notification that messages were sent (on the anymessage signal).
+     * To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
+     */
+    onAnyMessage: Event<{ msg: string | KernelMessage.IMessage; direction: 'send' }>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sendToRealKernel(data: any, cb?: (err?: Error) => void): void;
     /**
@@ -491,11 +776,23 @@ export type KernelSocketInformation = {
  * (these values are used in telemetry)
  */
 export enum KernelInterpreterDependencyResponse {
-    ok = 0, // Used in telemetry.
-    cancel = 1, // Used in telemetry.
-    failed = 2, // Used in telemetry.
-    selectDifferentKernel = 3, // Used in telemetry.
-    uiHidden = 4 // Used in telemetry.
+    /**
+     * Could mean dependencies are already installed
+     * or user clicked ok to install and it got installed.
+     */
+    ok = 0,
+    cancel = 1,
+    failed = 2,
+    /**
+     * User chose to select a different kernel.
+     */
+    selectDifferentKernel = 3,
+    /**
+     * Missing dependencies not installed and UI not displayed to the user
+     * as the kernel startup is part of a background process.
+     * In such cases we do not notify user of any failures or the like.
+     */
+    uiHidden = 4
 }
 
 export const IKernelDependencyService = Symbol('IKernelDependencyService');
@@ -503,14 +800,15 @@ export interface IKernelDependencyService {
     /**
      * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
      */
-    installMissingDependencies(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        ui: IDisplayOptions,
-        token: CancellationToken,
-        ignoreCache?: boolean,
-        cannotChangeKernels?: boolean
-    ): Promise<KernelInterpreterDependencyResponse>;
+    installMissingDependencies(options: {
+        resource: Resource;
+        kernelConnection: KernelConnectionMetadata;
+        ui: IDisplayOptions;
+        token: CancellationToken;
+        ignoreCache?: boolean;
+        cannotChangeKernels?: boolean;
+        installWithoutPrompting?: boolean;
+    }): Promise<KernelInterpreterDependencyResponse>;
     /**
      * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
      */
@@ -524,25 +822,65 @@ export interface IKernelDependencyService {
 export const IKernelFinder = Symbol('IKernelFinder');
 
 export interface IKernelFinder {
-    rankKernels(
-        resource: Resource,
-        option?: nbformat.INotebookMetadata,
-        cancelToken?: CancellationToken,
-        useCache?: 'useCache' | 'ignoreCache'
-    ): Promise<KernelConnectionMetadata[] | undefined>;
-    listKernels(
-        resource: Resource,
-        cancelToken?: CancellationToken,
-        useCache?: 'useCache' | 'ignoreCache'
-    ): Promise<KernelConnectionMetadata[]>;
-    // For the given kernel connection, return true if it's an exact match for the notebookMetadata
-    isExactMatch(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        notebookMetadata: nbformat.INotebookMetadata | undefined
-    ): boolean;
+    readonly status: 'discovering' | 'idle';
+    onDidChangeStatus: Event<void>;
+    onDidChangeKernels: Event<void>;
+    kernels: KernelConnectionMetadata[];
+    /*
+     * For a given kernel connection metadata return what kernel finder found it
+     */
+    getFinderForConnection(kernelMetadata: KernelConnectionMetadata): IContributedKernelFinder | undefined;
+    /*
+     * Return basic info on all currently registered kernel finders
+     */
+    registered: IContributedKernelFinder[];
+    onDidChangeRegistrations: Event<{ added: IContributedKernelFinder[]; removed: IContributedKernelFinder[] }>;
 }
 
 export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';
 
 export type KernelActionSource = 'jupyterExtension' | '3rdPartyExtension';
+
+export const ITracebackFormatter = Symbol('ITracebackFormatter');
+export interface ITracebackFormatter {
+    /**
+     * Modifies a traceback from an error message.
+     * Tracebacks take a form like so:
+     * "[1;31m---------------------------------------------------------------------------[0m"
+     * "[1;31mZeroDivisionError[0m                         Traceback (most recent call last)"
+     * "[1;32md:\Training\SnakePython\foo.py[0m in [0;36m<module>[1;34m[0m\n[0;32m      1[0m [0mprint[0m[1;33m([0m[1;34m'some more'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 2[1;33m [0mcause_error[0m[1;33m([0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
+     * "[1;32md:\Training\SnakePython\foo.py[0m in [0;36mcause_error[1;34m()[0m\n[0;32m      3[0m     [0mprint[0m[1;33m([0m[1;34m'error'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0;32m      4[0m     [0mprint[0m[1;33m([0m[1;34m'now'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 5[1;33m     [0mprint[0m[1;33m([0m [1;36m1[0m [1;33m/[0m [1;36m0[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
+     * "[1;31mZeroDivisionError[0m: division by zero"
+     * Each item in the array being a stack frame.
+     */
+    format(cell: NotebookCell, traceback: string[]): string[];
+}
+
+export const enum StartupCodePriority {
+    Base = 0,
+    Debugging = 5
+}
+
+/**
+ * Startup code provider provides code snippets that are run right after the kernel is started but before running any code.
+ */
+export const IStartupCodeProvider = Symbol('IStartupCodeProvider');
+export interface IStartupCodeProvider {
+    priority: StartupCodePriority;
+    getCode(kernel: IBaseKernel): Promise<string[]>;
+}
+
+export interface IKernelSettings {
+    enableExtendedKernelCompletions: boolean;
+    themeMatplotlibPlots: boolean;
+    ignoreVscodeTheme: boolean;
+    generateSVGPlots: boolean;
+    launchTimeout: number;
+    interruptTimeout: number;
+    runStartupCommands: string | string[];
+}
+
+export type IKernelController = {
+    id: string;
+    createNotebookCellExecution(cell: NotebookCell): NotebookCellExecution;
+};

@@ -1,9 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../../kernels/variables/types';
-import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../platform/messageTypes';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../messageTypes';
 import {
     CommonAction,
     CommonActionType,

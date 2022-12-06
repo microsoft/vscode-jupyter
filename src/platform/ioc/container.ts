@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { EventEmitter } from 'events';
@@ -16,9 +16,18 @@ try {
     traceWarning('Failed to decorate EventEmitter for DI (possibly already decorated by another Extension)', ex);
 }
 
+/**
+ * Wrapper around an inversify container. Provides get access to different services.
+ */
 @injectable()
 export class ServiceContainer implements IServiceContainer {
-    constructor(private container: Container) {}
+    public static get instance(): IServiceContainer {
+        return ServiceContainer._instance;
+    }
+    private static _instance: IServiceContainer;
+    constructor(private container: Container) {
+        ServiceContainer._instance = this;
+    }
     public get<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, name?: string | number | symbol): T {
         return name ? this.container.getNamed<T>(serviceIdentifier, name) : this.container.get<T>(serviceIdentifier);
     }

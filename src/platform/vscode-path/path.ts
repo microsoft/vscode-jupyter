@@ -1,8 +1,7 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 /* eslint-disable local-rules/dont-use-process */
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
 
 // NOTE: VSCode's copy of nodejs path library to be usable in common (non-node) namespace
 // Copied from: https://github.com/nodejs/node/blob/v14.16.0/lib/path.js
@@ -42,6 +41,16 @@ const CHAR_BACKWARD_SLASH = 92; /* \ */
 const CHAR_COLON = 58; /* : */
 const CHAR_QUESTION_MARK = 63; /* ? */
 
+/**
+ * Error thrown when invalid args are passed to a function.
+ *
+ * Cause:
+ * - `path` is not a string.
+ * - `options` is not an object.
+ *
+ * Handled by:
+ * Code execution.
+ */
 class ErrorInvalidArgType extends Error {
     code: 'ERR_INVALID_ARG_TYPE';
     constructor(name: string, expected: string, actual: unknown) {

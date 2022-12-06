@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
@@ -18,6 +19,13 @@ export class ChainingExecuteRequester {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
+        // For requests we send out, there's no need to queue them.
+        // I.e. where possible we shouldn't have to queue requests unnecessarily.
+        // Ensures we don't run into situations where we're waiting for a previous request to complete, which could result in a dead lock.
+        // See here for such an example https://github.com/microsoft/vscode-jupyter/issues/10510
+        if (!content.store_history) {
+            return kernel.requestExecute(content, disposeOnDone, metadata);
+        }
         // Wrap execute in a delay so we don't queue up more than one of these at a time.
         // Make sure for same kernel though. Otherwise the previous execute may never return.
         const nextExecute =

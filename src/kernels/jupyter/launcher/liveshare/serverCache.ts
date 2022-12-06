@@ -1,10 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import '../../../../platform/common/extensions';
 
 import { CancellationToken } from 'vscode';
-import { IWorkspaceService } from '../../../../platform/common/application/types';
 import { traceInfo, traceError } from '../../../../platform/logging';
 import { IAsyncDisposable } from '../../../../platform/common/types';
 import { sleep } from '../../../../platform/common/utils/async';
@@ -16,11 +16,13 @@ interface IServerData {
     resolved: boolean;
 }
 
+/**
+ * Cache of connections to notebook servers.
+ */
 export class ServerCache implements IAsyncDisposable {
     private cache: Map<string, IServerData> = new Map<string, IServerData>();
     private disposed = false;
 
-    constructor(private workspace: IWorkspaceService) {}
     public clearCache() {
         this.cache.clear();
     }
@@ -103,23 +105,23 @@ export class ServerCache implements IAsyncDisposable {
     }
 
     public async generateDefaultOptions(options: INotebookServerOptions): Promise<INotebookServerOptions> {
+        if (options.localJupyter) {
+            return {
+                resource: options?.resource,
+                ui: options.ui,
+                localJupyter: true
+            };
+        }
         return {
-            uri: options ? options.uri : undefined,
+            serverId: options.serverId,
             resource: options?.resource,
-            skipUsingDefaultConfig: options ? options.skipUsingDefaultConfig : false, // Default for this is false
-            workingDir:
-                options && options.workingDir
-                    ? options.workingDir
-                    : await this.workspace.computeWorkingDirectory(options.resource),
             ui: options.ui,
-            localJupyter: options.localJupyter
+            localJupyter: false
         };
     }
 
     private generateKey(options: INotebookServerOptions): string {
         // combine all the values together to make a unique key
-        const uri = options.uri ? options.uri.toString() : '';
-        const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
-        return `uri=${uri};useFlag=${useFlag};local=${options.localJupyter};workingDir=${options.workingDir}`;
+        return `serverId=${options.localJupyter ? '' : options.serverId};local=${options.localJupyter};`;
     }
 }

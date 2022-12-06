@@ -1,13 +1,12 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as glob from 'glob';
+import glob from 'glob';
 import * as path from '../../platform/vscode-path/path';
 import { parse, SemVer } from 'semver';
 import { promisify } from 'util';
 import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { arePathsSame } from '../../platform/common/platform/fileUtils.node';
-import { BufferDecoder } from '../../platform/common/process/decoder.node';
 import { ProcessService } from '../../platform/common/process/proc.node';
 import { parseCondaEnvFileContents } from './condaHelper';
 import { isCondaEnvironment } from './condaLocator.node';
@@ -95,7 +94,7 @@ async function getCondaInfo(): Promise<CondaInfo | undefined> {
         return condaInfo;
     }
     try {
-        const processService = new ProcessService(new BufferDecoder());
+        const processService = new ProcessService();
         condaInfo = await processService
             .exec(await getCondaFile(), ['info', '--json'])
             .then((output) => JSON.parse(output.stdout));
@@ -113,7 +112,7 @@ async function getCondaVersion(): Promise<SemVer | undefined> {
     if (condaVersion) {
         return condaVersion;
     }
-    const processService = new ProcessService(new BufferDecoder());
+    const processService = new ProcessService();
     const info = await getCondaInfo();
     let versionString: string | undefined;
     if (info && info.conda_version) {
@@ -146,7 +145,7 @@ async function getCondaEnvironments(): Promise<CondaEnvironmentInfo[] | undefine
     }
 
     try {
-        const processService = new ProcessService(new BufferDecoder());
+        const processService = new ProcessService();
         const condaFile = await getCondaFile();
         let envInfo = await processService.exec(condaFile, ['env', 'list']).then((output) => output.stdout);
         traceVerbose(`Conda Env List ${envInfo}}`);

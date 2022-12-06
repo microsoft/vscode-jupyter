@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -12,7 +12,7 @@ import { KernelConnectionMetadata } from '../types';
 import { IJupyterKernelService } from './types';
 
 /**
- * Responsible for registering and updating kernels
+ * Responsible for registering and updating kernels in a web situation
  *
  * @export
  * @class JupyterKernelService

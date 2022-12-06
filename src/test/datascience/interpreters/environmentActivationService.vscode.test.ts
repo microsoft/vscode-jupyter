@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -9,38 +9,36 @@ import * as sinon from 'sinon';
 import { traceInfo } from '../../../platform/logging';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { initialize } from '../../initialize.node';
-import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import {
-    EnvironmentActivationService,
-    EnvironmentVariablesCacheInformation
-} from '../../../platform/common/process/environmentActivationService.node';
+import { EnvironmentActivationService } from '../../../platform/common/process/environmentActivationService.node';
 import * as path from '../../../platform/vscode-path/path';
 import { IS_WINDOWS } from '../../../platform/common/platform/constants.node';
 import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async';
-import { IPythonApiProvider, PythonApi } from '../../../platform/api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { CondaService } from '../../../platform/common/process/condaService.node';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { CurrentProcess } from '../../../platform/common/process/currentProcess.node';
-import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
+import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
-import { Disposable, Memento } from 'vscode';
-import { instance, mock, verify } from 'ts-mockito';
-import { defaultNotebookTestTimeout } from '../notebook/helper.node';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { getFilePath } from '../../../platform/common/platform/fs-paths';
+import { ProposedExtensionAPI } from '../../../platform/api/pythonApiTypes';
+import { defaultNotebookTestTimeout } from '../notebook/helper';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
+suite('Conda Execution @python @mandatory', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let envActivationService: EnvironmentActivationService;
     let activeCondaInterpreter: PythonEnvironment;
     const pathEnvVariableName = IS_WINDOWS ? 'Path' : 'PATH';
     let pythonApiProvider: IPythonApiProvider;
+    let extensionChecker: IPythonExtensionChecker;
+    let pythonApi: ProposedExtensionAPI;
+    let originalActiveInterpreter: PythonEnvironment | undefined;
     this.timeout(120_000);
     suiteSetup(async function () {
         if (!IS_CONDA_TEST() || IS_REMOTE_NATIVE_TEST()) {
@@ -52,13 +50,29 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             api = await initialize();
             sinon.restore();
             pythonApiProvider = api.serviceContainer.get<IPythonApiProvider>(IPythonApiProvider);
-            const interpreter = await api.serviceContainer
-                .get<IInterpreterService>(IInterpreterService)
-                .getActiveInterpreter();
-            if (!interpreter) {
+            const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+            extensionChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
+            originalActiveInterpreter = await interpreterService.getActiveInterpreter();
+            if (!originalActiveInterpreter || originalActiveInterpreter.envType !== EnvironmentType.Conda) {
+                const interpreters = interpreterService.resolvedEnvironments;
+                await waitForCondition(
+                    () => interpreters.find((i) => i.envType === EnvironmentType.Conda) !== undefined,
+                    defaultNotebookTestTimeout,
+                    'Waiting for interpreters to be discovered'
+                );
+
+                const firstCondaInterpreter = interpreters.find((i) => i.envType === EnvironmentType.Conda);
+                pythonApi = (await pythonApiProvider.getNewApi())!;
+                if (firstCondaInterpreter) {
+                    await pythonApi?.environments.updateActiveEnvironmentPath(getFilePath(firstCondaInterpreter.uri));
+                }
+                activeCondaInterpreter = firstCondaInterpreter!;
+            } else {
+                activeCondaInterpreter = originalActiveInterpreter;
+            }
+            if (!activeCondaInterpreter) {
                 throw new Error('Active interpreter not found');
             }
-            activeCondaInterpreter = interpreter;
             traceInfo('Suite Setup (completed)');
         } catch (e) {
             await captureScreenShot('execution-suite');
@@ -79,19 +93,24 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         disposeAllDisposables(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
+    suiteTeardown(async () => {
+        if (originalActiveInterpreter && pythonApi) {
+            await pythonApi.environments
+                .updateActiveEnvironmentPath(getFilePath(originalActiveInterpreter.uri))
+                .ignoreErrors();
+        }
+    });
     function createService(serviceContainer: IServiceContainer) {
         return new EnvironmentActivationService(
             serviceContainer.get(IPlatformService),
             serviceContainer.get(IProcessServiceFactory),
-            serviceContainer.get(CurrentProcess),
             serviceContainer.get(IWorkspaceService),
             serviceContainer.get(IInterpreterService),
-            serviceContainer.get(IEnvironmentVariablesProvider),
+            serviceContainer.get(ICustomEnvironmentVariablesProvider),
             serviceContainer.get(IPythonApiProvider),
             serviceContainer.get(IMemento, GLOBAL_MEMENTO),
             serviceContainer.get(CondaService),
-            serviceContainer.get(IFileSystem),
-            1
+            serviceContainer.get(IFileSystem)
         );
     }
     test('Verify Conda Activation', async () => {
@@ -110,10 +129,9 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         );
         verifyVariables(envVarsOurselves!, '(ourselves)');
     });
-    test('Acitvate conda environment using conda run and activation commands', async () => {
+    test('Activate conda environment using conda run and activation commands', async () => {
         // Ensure we don't get stuff from Python extension.
-        const deferred = createDeferred<PythonApi>();
-        const stub = sinon.stub(pythonApiProvider, 'getApi').returns(deferred.promise);
+        const stub = sinon.stub(extensionChecker, 'isPythonExtensionInstalled').returns(false);
         envActivationService = createService(api.serviceContainer);
         const activatedEnvVars1 = await envActivationService.getActivatedEnvironmentVariables(
             undefined,
@@ -137,86 +155,6 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         verifyVariables(activatedCommandEnvVars!, '(command)');
         verifyVariables(activatedCondaRunEnvVars!, '(conda run)');
     });
-    test('Verify env variables are cached and we do not attempt to get env vars using Conda scripts our selves', async function () {
-        return this.skip();
-        const cacheKey = envActivationService.getInterpreterEnvCacheKeyForTesting(undefined, activeCondaInterpreter);
-        const memento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
-        await memento.update(cacheKey, undefined);
-
-        // Ensure we get the env variables from Python extension & its cached.
-        envActivationService = createService(api.serviceContainer);
-        await envActivationService.getActivatedEnvironmentVariables(undefined, activeCondaInterpreter);
-
-        // Wait for cache to get updated (could be slow if Python extension is slow).
-        await waitForCondition(
-            async () => memento.get(cacheKey) !== undefined,
-            defaultNotebookTestTimeout,
-            'Cache not updated'
-        );
-        envActivationService.dispose();
-
-        // Update the cache so we can test and ensure we get the env variables from the cache.
-        const env = { HELLO: Date.now().toString() };
-        const cachedData = Object.assign({}, memento.get<EnvironmentVariablesCacheInformation>(cacheKey)!);
-        cachedData.activatedEnvVariables = env;
-
-        // Ensure no other code (such as extension code which is running while tests run),
-        // gets to update this cache entry.
-        const stub = sinon.stub(memento, 'update').callsFake(async (key: string, value: any) => {
-            if (key !== cacheKey || value === cachedData) {
-                return (memento.update as any).wrappedMethod.apply(memento, [key, value]);
-            }
-            return Promise.resolve();
-        });
-        await memento.update(cacheKey, cachedData);
-        // Verify data is in cache.
-        // Some times while extension code is running the cache can get cleared.
-        assert.strictEqual(
-            memento.get<EnvironmentVariablesCacheInformation>(cacheKey)!.activatedEnvVariables!.HELLO,
-            env.HELLO,
-            'Env variables not in cache anymore'
-        );
-
-        disposables.push(new Disposable(() => stub.restore()));
-
-        // Create a whole new instance.
-        // This time ensure Python is slow to get the env variables
-        const mockConda = mock(CondaService);
-        envActivationService = new EnvironmentActivationService(
-            api.serviceContainer.get(IPlatformService),
-            api.serviceContainer.get(IProcessServiceFactory),
-            api.serviceContainer.get(CurrentProcess),
-            api.serviceContainer.get(IWorkspaceService),
-            api.serviceContainer.get(IInterpreterService),
-            api.serviceContainer.get(IEnvironmentVariablesProvider),
-            api.serviceContainer.get(IPythonApiProvider),
-            api.serviceContainer.get(IMemento, GLOBAL_MEMENTO),
-            instance(mockConda),
-            api.serviceContainer.get(IFileSystem),
-            1
-        );
-
-        // Get the env variables from a new instance of the class.
-        // Use a new instance to ensure we don't use any in-memory cache.
-        const activatedEnvVars1 = await envActivationService.getActivatedEnvironmentVariables(
-            undefined,
-            activeCondaInterpreter
-        );
-
-        // Verify data is still in cache (possible it got blown away by some other test)
-        assert.strictEqual(
-            memento.get<EnvironmentVariablesCacheInformation>(cacheKey)!.activatedEnvVariables!.HELLO,
-            env.HELLO,
-            'Env variables not in cache'
-        );
-
-        // Ensure we get the env variables from the cache.
-        assert.strictEqual(activatedEnvVars1!.HELLO, env.HELLO);
-
-        // Ensure we didn't run conda run (just check if we tried to get conda information).
-        verify(mockConda.getCondaFile()).never();
-        verify(mockConda.getCondaVersion()).never();
-    });
     function verifyVariables(envVars: NodeJS.ProcessEnv, errorMessageSuffix: string = '') {
         assert.ok(envVars, `Conda Env Vars not set ${errorMessageSuffix}`);
         assert.strictEqual(
@@ -229,10 +167,11 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             activeCondaInterpreter.sysPrefix,
             `Activated env Prefix not set ${errorMessageSuffix}`
         );
-        const execPath = path.dirname(activeCondaInterpreter.uri.fsPath);
+        const execPath = path.dirname(activeCondaInterpreter.uri.fsPath).toLowerCase();
+        const potentialPathVariable = envVars['Path'] || envVars['PATH'];
         assert.ok(
-            envVars[pathEnvVariableName]?.startsWith(execPath),
-            `Path for Conda should be at the start of ENV[PATH], expected ${execPath} to be in front of ${envVars[pathEnvVariableName]} ${errorMessageSuffix}`
+            potentialPathVariable?.toLowerCase().includes(execPath),
+            `Path for Conda should be at the inside of ENV[PATH], expected ${execPath} to be inside of ${envVars[pathEnvVariableName]} ${errorMessageSuffix}`
         );
     }
 });

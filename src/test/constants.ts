@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 export const JVSC_EXTENSION_ID_FOR_TESTS = 'ms-toolsai.jupyter';
 
 export type TestSettingsType = {
@@ -65,3 +68,5 @@ function isMultirootTest() {
 export function setTestSettings(newSettings: Partial<TestSettingsType>) {
     testSettings = { ...testSettings, ...newSettings };
 }
+
+export const IPYTHON_VERSION_CODE = 'import IPython\nprint(int(IPython.__version__[0]))\n';

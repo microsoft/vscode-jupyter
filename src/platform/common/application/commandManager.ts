@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -7,11 +7,14 @@ import { injectable } from 'inversify';
 import { commands, Disposable, TextEditor, TextEditorEdit } from 'vscode';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../constants';
-import { ICommandNameArgumentTypeMapping } from './commands';
+import { ICommandNameArgumentTypeMapping } from '../../../commands';
 import { ICommandManager } from './types';
 
 // This contains a list of commands to be ignored when sending telemetry in the command handler.
 const commandsToIgnore = new Set<string>(['setContext']);
+/**
+ * Wrapper around the vscode commands api but reenforces type safety for each command.
+ */
 @injectable()
 export class CommandManager implements ICommandManager {
     /**

@@ -1,16 +1,16 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { Request as RequestResult } from 'request';
 import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
-import { IExtensionSingleActivationService } from '../activation/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { CommandsWithoutArgs } from './application/commands';
+import { CommandsWithoutArgs } from '../../commands';
 import { ICommandManager } from './application/types';
 import { Experiments } from './experiments/groups';
 import { ISystemVariables } from './variables/types';
+
 export const IsCodeSpace = Symbol('IsCodeSpace');
 export const IsDevMode = Symbol('IsDevMode');
 export const IsWebExtension = Symbol('IsWebExtension');
@@ -59,9 +59,7 @@ export interface IJupyterSettings {
     readonly jupyterInterruptTimeout: number;
     readonly jupyterLaunchTimeout: number;
     readonly jupyterLaunchRetries: number;
-    readonly jupyterServerType: string;
     readonly notebookFileRoot: string;
-    readonly changeDirOnImportExport: boolean;
     readonly useDefaultConfigForJupyter: boolean;
     readonly searchForJupyter: boolean;
     readonly allowInput: boolean;
@@ -89,7 +87,7 @@ export interface IJupyterSettings {
     readonly stopOnFirstLineWhileDebugging: boolean;
     readonly textOutputLimit: number;
     readonly magicCommandsAsComments: boolean;
-    readonly pythonExportMethod: string;
+    readonly pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert';
     readonly stopOnError: boolean;
     readonly remoteDebuggerPort: number;
     readonly colorizeInputBox: boolean;
@@ -103,17 +101,19 @@ export interface IJupyterSettings {
     readonly disableJupyterAutoStart: boolean;
     readonly jupyterCommandLineArguments: string[];
     readonly widgetScriptSources: WidgetCDNs[];
-    readonly alwaysScrollOnNewCell: boolean;
     readonly interactiveWindowMode: InteractiveWindowMode;
+    readonly pythonCellFolding: boolean;
+    readonly interactiveWindowViewColumn: InteractiveWindowViewColumn;
     readonly disableZMQSupport: boolean;
-    readonly disablePythonDaemon: boolean;
+    readonly forceIPyKernelDebugger?: boolean;
     readonly variableTooltipFields: IVariableTooltipFields;
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;
-    readonly pylanceHandlesNotebooks?: boolean;
     readonly pythonCompletionTriggerCharacters?: string;
     readonly logKernelOutputSeparately: boolean;
     readonly poetryPath: string;
+    readonly excludeUserSitePackages: boolean;
+    readonly enableExtendedKernelCompletions: boolean;
 }
 
 export interface IVariableTooltipFields {
@@ -156,6 +156,10 @@ export interface IVariableQuery {
 
 export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
 
+export type InteractiveWindowViewColumn = 'beside' | 'active' | 'secondGroup';
+
+export type KernelPickerType = 'Stable' | 'Insiders';
+
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -192,35 +196,9 @@ export type DownloadOptions = {
     extension: 'tmp' | string;
 };
 
-export const IFileDownloader = Symbol('IFileDownloader');
-/**
- * File downloader, that'll display progress in the status bar.
- *
- * @export
- * @interface IFileDownloader
- */
-export interface IFileDownloader {
-    /**
-     * Download file and display progress in statusbar.
-     * Optionnally display progress in the provided output channel.
-     *
-     * @param {string} uri
-     * @param {DownloadOptions} options
-     * @returns {Promise<string>}
-     * @memberof IFileDownloader
-     */
-    downloadFile(uri: string, options: DownloadOptions): Promise<string>;
-}
-
 export const IHttpClient = Symbol('IHttpClient');
 export interface IHttpClient {
-    downloadFile(uri: string): Promise<RequestResult>;
-    /**
-     * Downloads file from uri as string and parses them into JSON objects
-     * @param uri The uri to download the JSON from
-     * @param strict Set `false` to allow trailing comma and comments in the JSON, defaults to `true`
-     */
-    getJSON<T>(uri: string, strict?: boolean): Promise<T>;
+    downloadFile(uri: string): Promise<Response>;
     /**
      * Returns the url is valid (i.e. return status code of 200).
      */
@@ -273,10 +251,6 @@ export interface IJupyterExtensionBanner {
     isEnabled(type: BannerType): boolean;
     showBanner(type: BannerType): Promise<void>;
 }
-export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';
-
-export const ISurveyBanner = Symbol('ISurveyBanner');
-export interface ISurveyBanner extends IExtensionSingleActivationService, IJupyterExtensionBanner {}
 
 export type DeprecatedSettingAndValue = {
     setting: string;
@@ -291,9 +265,15 @@ export type DeprecatedFeatureInfo = {
     setting?: DeprecatedSettingAndValue;
 };
 
-export const IFeatureDeprecationManager = Symbol('IFeatureDeprecationManager');
+export interface IFeatureSet {
+    readonly kernelPickerType: KernelPickerType;
+}
 
-export interface IFeatureDeprecationManager extends Disposable {
+export const IFeaturesManager = Symbol('IFeaturesManager');
+
+export interface IFeaturesManager extends Disposable {
+    readonly features: IFeatureSet;
+    readonly onDidChangeFeatures: Event<void>;
     initialize(): void;
     registerDeprecation(deprecatedInfo: DeprecatedFeatureInfo): void;
 }
@@ -306,14 +286,6 @@ export interface IAsyncDisposable {
 }
 
 /**
- * Stores hash formats
- */
-export interface IHashFormat {
-    number: number; // If hash format is a number
-    string: string; // If hash format is a string
-}
-
-/**
  * Interface used to implement cryptography tools
  */
 export const ICryptoUtils = Symbol('ICryptoUtils');
@@ -322,14 +294,9 @@ export interface ICryptoUtils {
      * Creates hash using the data and encoding specified
      * @returns hash as number, or string
      * @param data The string to hash
-     * @param hashFormat Return format of the hash, number or string
-     * @param [algorithm]
+     * @param [algorithm] Defaults to SHA-256
      */
-    createHash<E extends keyof IHashFormat>(
-        data: string,
-        hashFormat: E,
-        algorithm?: 'SHA512' | 'SHA256' | 'FNV'
-    ): IHashFormat[E];
+    createHash(data: string, algorithm?: 'SHA-512' | 'SHA-256'): Promise<string>;
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
@@ -370,9 +337,45 @@ export interface ICell {
 // Was only intended to aggregate together ranges to create an ICell
 // However the "range" aspect is useful when working with plain text document
 // Ultimately, it would probably be ideal to be ICell and change line to range.
-// Specificially see how this is being used for the ICodeLensFactory to
+// Specifically see how this is being used for the ICodeLensFactory to
 // provide cells for the CodeWatcher to use.
 export interface ICellRange {
     range: Range;
     cell_type: string;
+}
+
+export const IVariableScriptGenerator = Symbol('IVariableScriptGenerator');
+
+type ScriptCode = {
+    /**
+     * Code that must be executed to initialize the environment.
+     */
+    initializeCode?: string;
+    /**
+     * Actual code that will produce the required information.
+     */
+    code: string;
+    /**
+     * Code that will be executed to re-set the environment, eg. remove variables/functions introduced into the users environment.
+     */
+    cleanupCode?: string;
+};
+export interface IVariableScriptGenerator {
+    generateCodeToGetVariableInfo(options: { isDebugging: boolean; variableName: string }): Promise<ScriptCode>;
+    generateCodeToGetVariableProperties(options: {
+        isDebugging: boolean;
+        variableName: string;
+        stringifiedAttributeNameList: string;
+    }): Promise<ScriptCode>;
+    generateCodeToGetVariableTypes(options: { isDebugging: boolean }): Promise<ScriptCode>;
+}
+export const IDataFrameScriptGenerator = Symbol('IDataFrameScriptGenerator');
+export interface IDataFrameScriptGenerator {
+    generateCodeToGetDataFrameInfo(options: { isDebugging: boolean; variableName: string }): Promise<ScriptCode>;
+    generateCodeToGetDataFrameRows(options: {
+        isDebugging: boolean;
+        variableName: string;
+        startIndex: number;
+        endIndex: number;
+    }): Promise<ScriptCode>;
 }

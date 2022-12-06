@@ -1,7 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
-import { InteractiveWindowMessages, CssMessages } from '../../../../../platform/messageTypes';
+import { InteractiveWindowMessages } from '../../../../../messageTypes';
 import { IMainState } from '../../mainState';
 import { postActionToExtension } from '../helpers';
 import { CommonActionType, CommonReducerArg, ILinkClickAction, IShowDataViewerAction } from './types';
@@ -29,7 +30,6 @@ export namespace Transfer {
     export function variableViewStarted(arg: CommonReducerArg): IMainState {
         // Send all of our initial requests
         postActionToExtension(arg, InteractiveWindowMessages.Started);
-        postActionToExtension(arg, CssMessages.GetCssRequest, { isDark: arg.prevState.baseTheme !== 'vscode-light' });
         return arg.prevState;
     }
 }

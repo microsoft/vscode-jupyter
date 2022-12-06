@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
@@ -13,7 +14,6 @@ import {
     runCell,
     insertCodeCell,
     waitForExecutionCompletedSuccessfully,
-    workAroundVSCodeNotebookStartPages,
     startJupyterServer,
     defaultNotebookTestTimeout
 } from '../notebook/helper.node';
@@ -24,16 +24,18 @@ import { traceInfo } from '../../../platform/logging';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { Commands } from '../../../platform/common/constants';
-import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer.node';
+import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
 import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';
+import { IKernelProvider } from '../../../kernels/types';
 
-suite('DataScience - VariableView', function () {
+suite('VariableView @variableViewer', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     let commandManager: ICommandManager;
     let variableViewProvider: ITestVariableViewProvider;
     let activeInterpreter: PythonEnvironment;
+    let kernelProvider: IKernelProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo('Suite Setup');
@@ -45,10 +47,10 @@ suite('DataScience - VariableView', function () {
             return this.skip();
         }
 
-        await workAroundVSCodeNotebookStartPages();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+        kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         const interpreter = await api.serviceContainer
             .get<IInterpreterService>(IInterpreterService)
             .getActiveInterpreter();
@@ -74,7 +76,7 @@ suite('DataScience - VariableView', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test for basic variable view functionality with one document
-    test('Can show VariableView (webview-test)', async function () {
+    test('Can show VariableView (webview-test) and do not have any additional variables', async function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
@@ -85,21 +87,40 @@ suite('DataScience - VariableView', function () {
 
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Send a second cell
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
         await runCell(cell2);
 
         // Parse the HTML for our expected variables
         const expectedVariables = [
-            { name: 'test', type: 'str', length: '11', value: ' MYTESTVALUE' },
-            { name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' }
+            { name: 'test', type: 'str', length: '11', value: "'MYTESTVALUE'" },
+            { name: 'test2', type: 'str', length: '12', value: "'MYTESTVALUE2'" }
         ];
         await waitForVariablesToMatch(expectedVariables, variableView);
+
+        // Verify we don't have any new variables apart from test, test2, os & sys
+        const kernel = kernelProvider.get(cell.notebook.uri)!;
+        const execution = kernelProvider.getKernelExecution(kernel);
+        const outputs = await execution.executeHidden('%who_ls');
+        // https://github.com/microsoft/vscode-jupyter/issues/10559
+        const varsToIgnore = ['matplotlib_inline', 'matplotlib', 'sys', 'os'];
+        // Sample output is `["test", "test2", "os", "sys"]`
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const vars = ((outputs[0].data as any)['text/plain'] as string)
+            .trim()
+            .substring(1)
+            .slice(0, -1)
+            .split(',')
+            .map((item) => item.trim())
+            .map((item) => item.trimQuotes())
+            .filter((item) => !varsToIgnore.includes(item))
+            .sort();
+        assert.deepEqual(vars, ['test', 'test2'].sort());
     });
 
     test('Can show variables even when print is overridden', async function () {
@@ -113,17 +134,17 @@ suite('DataScience - VariableView', function () {
 
         // Add cell that overrides print
         await insertCodeCell('def print():\n  x = 1', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Send a second cell
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
         await runCell(cell2);
 
         // Parse the HTML for our expected variables
-        const expectedVariables = [{ name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' }];
+        const expectedVariables = [{ name: 'test2', type: 'str', length: '12', value: "'MYTESTVALUE2'" }];
         await waitForVariablesToMatch(expectedVariables, variableView);
     });
 
@@ -139,11 +160,11 @@ suite('DataScience - VariableView', function () {
 
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![0]!;
         await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Parse the HTML for our expected variables
-        const expectedVariables = [{ name: 'test', type: 'str', length: '11', value: ' MYTESTVALUE' }];
+        const expectedVariables = [{ name: 'test', type: 'str', length: '11', value: "'MYTESTVALUE'" }];
         await waitForVariablesToMatch(expectedVariables, variableView);
 
         // Now create a second document
@@ -154,18 +175,18 @@ suite('DataScience - VariableView', function () {
 
         // Execute a cell on the second document
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 0 });
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![0]!;
         await Promise.all([runCell(cell2), waitForExecutionCompletedSuccessfully(cell2)]);
 
         // Execute a second cell on the second document
         await insertCodeCell('test3 = "MYTESTVALUE3"', { index: 1 });
-        const cell3 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        const cell3 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
         await Promise.all([runCell(cell3), waitForExecutionCompletedSuccessfully(cell3)]);
 
         // Parse the HTML for our expected variables
         const expectedVariables2 = [
-            { name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' },
-            { name: 'test3', type: 'str', length: '12', value: ' MYTESTVALUE3' }
+            { name: 'test2', type: 'str', length: '12', value: "'MYTESTVALUE2'" },
+            { name: 'test3', type: 'str', length: '12', value: "'MYTESTVALUE3'" }
         ];
         await waitForVariablesToMatch(expectedVariables2, variableView);
     });
@@ -195,7 +216,7 @@ class MyClass:
 myClass = MyClass()
 `;
         await insertCodeCell(code, { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
@@ -203,13 +224,13 @@ myClass = MyClass()
         // If the value can change (ordering or python version), then omit the value to not check it
         const expectedVariables = [
             { name: 'myClass', type: 'MyClass', length: '' },
-            { name: 'myDataframe', type: 'DataFrame', length: '(3, 1)', value: '\n     0\n0  1.0\n1  2.0\n2  3.0' },
+            { name: 'myDataframe', type: 'DataFrame', length: '(3, 1)', value: '     0\n0  1.0\n1  2.0\n2  3.0' },
             { name: 'mynpArray', type: 'ndarray', length: '(3,)' },
             {
                 name: 'mySeries',
                 type: 'Series',
                 length: '(3,)',
-                value: '\n0    1.0\n1    2.0\n2    3.0\nName: 0, dtype: float64'
+                value: '0    1.0\n1    2.0\n2    3.0\nName: 0, dtype: float64'
             }
         ];
 
@@ -235,20 +256,20 @@ myDict = {'a': 1}
 mySet = {1, 2, 3}
 `;
         await insertCodeCell(code, { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Parse the HTML for our expected variables
         // If the value can change (ordering or python version), then omit the value to not check it
         const expectedVariables = [
-            { name: 'myComplex', type: 'complex', length: '', value: ' (1+1j)' },
-            { name: 'myDict', type: 'dict', length: '1', value: " {'a': 1}" },
-            { name: 'myFloat', type: 'float', length: '', value: ' 9999.9999' },
-            { name: 'myInt', type: 'int', length: '', value: ' 99999999' },
-            { name: 'myList', type: 'list', length: '3', value: ' [1, 2, 3]' },
-            { name: 'mySet', type: 'set', length: '3', value: ' {1, 2, 3}' },
-            { name: 'myTuple', type: 'tuple', length: '3', value: ' (1, 2, 3)' }
+            { name: 'myComplex', type: 'complex', length: '', value: '(1+1j)' },
+            { name: 'myDict', type: 'dict', length: '1', value: "{'a': 1}" },
+            { name: 'myFloat', type: 'float', length: '', value: '9999.9999' },
+            { name: 'myInt', type: 'int', length: '', value: '99999999' },
+            { name: 'myList', type: 'list', length: '3', value: '[1, 2, 3]' },
+            { name: 'mySet', type: 'set', length: '3', value: '{1, 2, 3}' },
+            { name: 'myTuple', type: 'tuple', length: '3', value: '(1, 2, 3)' }
         ];
 
         await waitForVariablesToMatch(expectedVariables, variableView);
@@ -266,18 +287,18 @@ mySet = {1, 2, 3}
 
         // Add one simple cell and execute it
         await insertCodeCell('test = [1, 2, 3]');
-        const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![0]!;
         await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Add another cell so we have two lists
         await insertCodeCell('test2 = [1, 2, 3]');
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
         await Promise.all([runCell(cell2), waitForExecutionCompletedSuccessfully(cell2)]);
 
         // Parse the HTML for our expected variables
         const expectedVariables = [
-            { name: 'test', type: 'list', length: '3', value: ' [1, 2, 3]' },
-            { name: 'test2', type: 'list', length: '3', value: ' [1, 2, 3]' }
+            { name: 'test', type: 'list', length: '3', value: '[1, 2, 3]' },
+            { name: 'test2', type: 'list', length: '3', value: '[1, 2, 3]' }
         ];
         await waitForVariablesToMatch(expectedVariables, variableView);
 

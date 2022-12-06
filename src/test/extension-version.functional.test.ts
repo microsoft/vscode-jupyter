@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -7,7 +7,7 @@
 
 import { expect } from 'chai';
 import * as fs from 'fs';
-import * as glob from 'glob';
+import glob from 'glob';
 import * as path from '../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR } from '../platform/constants.node';
 

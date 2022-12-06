@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -6,27 +6,28 @@
 /* eslint-disable  */
 
 import { expect, use } from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised';
 import * as path from '../../../platform/vscode-path/path';
-import * as TypeMoq from 'typemoq';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { EnvironmentVariablesService, parseEnvFile } from '../../../platform/common/variables/environment.node';
+import { anything, instance, mock, when } from 'ts-mockito';
+import { Uri } from 'vscode';
 
 use(chaiAsPromised);
 
 suite('Environment Variables Service', () => {
     const filename = 'x/y/z/.env';
-    let fs: TypeMoq.IMock<IFileSystem>;
+    let fs: IFileSystemNode;
     let variablesService: EnvironmentVariablesService;
     setup(() => {
-        fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Loose);
-        variablesService = new EnvironmentVariablesService(fs.object);
+        fs = mock<IFileSystemNode>();
+        variablesService = new EnvironmentVariablesService(instance(fs));
     });
     function setFile(fileName: string, text: string) {
-        fs.setup((f) => f.localFileExists(fileName)) // Handle the specific file.
-            .returns(() => Promise.resolve(true)); // The file exists.
-        fs.setup((f) => f.readLocalFile(fileName)) // Handle the specific file.
-            .returns(() => Promise.resolve(text)); // Pretend to read from the file.
+        when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(fileName).fsPath);
+        when(fs.readFile(anything())).thenCall((file: Uri) =>
+            Promise.resolve(file.fsPath === Uri.file(fileName).fsPath ? text : '')
+        );
     }
 
     suite('parseFile()', () => {
@@ -37,8 +38,7 @@ suite('Environment Variables Service', () => {
         });
 
         test('Custom variables should be undefined with non-existent files', async () => {
-            fs.setup((f) => f.localFileExists(filename)) // Handle the specific file.
-                .returns(() => Promise.resolve(false)); // The file is missing.
+            when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath !== Uri.file(filename).fsPath);
 
             const vars = await variablesService.parseFile(filename);
 
@@ -47,9 +47,7 @@ suite('Environment Variables Service', () => {
 
         test('Custom variables should be undefined when folder name is passed instead of a file name', async () => {
             const dirname = 'x/y/z';
-            fs.setup((f) => f.localFileExists(dirname)) // Handle the specific "file".
-                .returns(() => Promise.resolve(false)); // It isn't a "regular" file.
-
+            when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath !== Uri.file(dirname).fsPath);
             const vars = await variablesService.parseFile(dirname);
 
             expect(vars).to.equal(undefined, 'Variables should be undefined');
@@ -225,7 +223,7 @@ PYTHON=${BINDIR}/python3\n\
             expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
         });
 
-        test(`Ensure PATH is appeneded irregardless of case`, async () => {
+        test(`Ensure PATH is appended irregardless of case`, async () => {
             const vars = { ONE: '1' };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (vars as any)['paTh'] = 'PATH';
@@ -236,6 +234,54 @@ PYTHON=${BINDIR}/python3\n\
             expect(Object.keys(vars)).lengthOf(2, `Incorrect number of variables ${Object.keys(vars).join(' ')}`);
             expect(vars).to.have.property('ONE', '1', 'Incorrect value');
             expect(vars).to.have.property(`paTh`, `PATH${path.delimiter}${pathToAppend}`, 'Incorrect value');
+        });
+        test(`Ensure PATH is not appended if already at the end`, async () => {
+            const defaultPath = `/usr/one${path.delimiter}/usr/three${path.delimiter}/usr/four${path.delimiter}/usr/five`;
+            const vars = {
+                ONE: '1',
+                paTh: defaultPath
+            };
+            const pathToAppend = `/usr/four${path.delimiter}/usr/five`;
+
+            variablesService.appendPath(vars, pathToAppend);
+
+            expect(vars).to.have.property(`paTh`, defaultPath, 'Incorrect value');
+        });
+        test(`Ensure PATH is appended even if path exists elsewhere in the PATH value`, async () => {
+            const defaultPath = `/usr/one${path.delimiter}/usr/three${path.delimiter}/usr/four${path.delimiter}/usr/five`;
+            const vars = {
+                ONE: '1',
+                paTh: defaultPath
+            };
+            const pathToAppend = `/usr/one${path.delimiter}/usr/three`;
+
+            variablesService.appendPath(vars, pathToAppend);
+
+            expect(vars).to.have.property(`paTh`, `${defaultPath}${path.delimiter}${pathToAppend}`, 'Incorrect value');
+        });
+        test(`Ensure PATH is not prepended if already at the start`, async () => {
+            const defaultPath = `/usr/one${path.delimiter}/usr/three${path.delimiter}/usr/four${path.delimiter}/usr/five`;
+            const vars = {
+                ONE: '1',
+                paTh: defaultPath
+            };
+            const pathToPrepend = `/usr/one${path.delimiter}/usr/three`;
+
+            variablesService.prependPath(vars, pathToPrepend);
+
+            expect(vars).to.have.property(`paTh`, defaultPath, 'Incorrect value');
+        });
+        test(`Ensure PATH is prepended even if path exists elsewhere in the PATH value`, async () => {
+            const defaultPath = `/usr/one${path.delimiter}/usr/three${path.delimiter}/usr/four${path.delimiter}/usr/five`;
+            const vars = {
+                ONE: '1',
+                paTh: defaultPath
+            };
+            const pathToPrepend = `/usr/four${path.delimiter}/usr/five`;
+
+            variablesService.prependPath(vars, pathToPrepend);
+
+            expect(vars).to.have.property(`paTh`, `${pathToPrepend}${path.delimiter}${defaultPath}`, 'Incorrect value');
         });
     });
 

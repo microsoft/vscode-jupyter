@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -9,7 +9,7 @@ import { CancellationToken, CancellationTokenSource, Progress as VSCProgress } f
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { getUserMessageForAction } from '../../../platform/progress/messages';
-import { ProgressReporter } from '../../../platform/progress/progressReporter.node';
+import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { ReportableAction } from '../../../platform/progress/types';
 import { noop, sleep } from '../../core';
 type Task<R> = (
@@ -18,7 +18,7 @@ type Task<R> = (
 ) => Promise<R>;
 
 // eslint-disable-next-line
-suite('DataScience - Progress Reporter', () => {
+suite('Progress Reporter', () => {
     let reporter: ProgressReporter;
     let vscodeProgressReporter: VSCProgress<{ message?: string | undefined; increment?: number | undefined }>;
     let appShell: IApplicationShell;

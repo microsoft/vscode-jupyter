@@ -1,12 +1,12 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { expect, use } from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
 import { createPythonEnv } from '../../../platform/common/process/pythonEnvironment.node';
 import { createPythonProcessService } from '../../../platform/common/process/pythonProcess.node';
 import { IProcessService, StdErrError } from '../../../platform/common/process/types.node';
@@ -125,6 +125,6 @@ suite('PythonProcessService', () => {
 
         const result = procs.execModule(moduleName, args, options);
 
-        void expect(result).to.eventually.be.rejectedWith(`Module '${moduleName}' not installed`);
+        await expect(result).to.eventually.be.rejectedWith(`Module '${moduleName}' not installed`);
     });
 });

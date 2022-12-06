@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -17,7 +17,7 @@ suite('Dummy9', () => {
 // import { SemVer } from 'semver';
 // import { Readable, Writable } from 'stream';
 // import { anything, instance, mock, when } from 'ts-mockito';
-// import * as uuid from 'uuid/v4';
+// import uuid from 'uuid/v4';
 // import { Disposable, Uri } from 'vscode';
 // import { CancellationToken } from 'vscode-jsonrpc';
 // import { ApplicationShell } from '../../platform/common/application/applicationShell';
@@ -34,7 +34,7 @@ suite('Dummy9', () => {
 // import { ExportFormat } from '../../platform/datascience/export/types';
 // import { getDefaultInteractiveIdentity } from '../../platform/datascience/interactive-window/identity';
 // import { getMessageForLibrariesNotInstalled } from '../../platform/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
-// import { JupyterKernelPromiseFailedError } from '../../platform/../kernels/jupyterKernelPromiseFailedError';
+// import { JupyterKernelPromiseFailedError } from '../../kernels/jupyterKernelPromiseFailedError';
 // import { HostJupyterExecution } from '../../platform/datascience/jupyter/liveshare/hostJupyterExecution';
 // import { HostJupyterNotebook } from '../../platform/datascience/jupyter/liveshare/hostJupyterNotebook';
 // import {
@@ -61,7 +61,7 @@ suite('Dummy9', () => {
 // import { createPythonService, startRemoteServer } from './remoteTestHelpers';
 
 // /* eslint-disable @typescript-eslint/no-explicit-any, no-multi-str, , no-console, max-classes-per-file, comma-dangle */
-// suite('DataScience notebook tests', () => {
+// suite('notebook tests', () => {
 //     [true].forEach((useRawKernel) => {
 //         suite(`${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'}`, () => {
 //             const disposables: Disposable[] = [];

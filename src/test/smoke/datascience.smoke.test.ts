@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -16,6 +16,7 @@ import { IExtensionTestApi, setAutoSaveDelayInWorkspaceRoot, waitForCondition } 
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants.node';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
+import { captureScreenShot } from '../common';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
 suite('Smoke Tests', () => {
@@ -35,6 +36,9 @@ suite('Smoke Tests', () => {
     suiteTeardown(closeActiveWindows);
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this);
+        }
         await closeActiveWindows();
         traceInfo(`End Test Compelete ${this.currentTest?.title}`);
     });
@@ -66,7 +70,7 @@ suite('Smoke Tests', () => {
     //     console.log('Step4');
     // }).timeout(timeoutForCellToRun);
 
-    test('Run Cell in native editor', async () => {
+    test('Run Cell in Notebook', async function () {
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
@@ -89,7 +93,7 @@ suite('Smoke Tests', () => {
         // Unfortunately there's no way to know for sure it has completely loaded.
         await sleep(15_000);
 
-        await vscode.commands.executeCommand<void>('jupyter.runallcells');
+        await vscode.commands.executeCommand<void>('notebook.execute');
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
 
@@ -110,8 +114,16 @@ suite('Smoke Tests', () => {
 
         // Now change active interpreter
         const interpreterService = api.serviceManager.get<IInterpreterService>(IInterpreterService);
-        const allInterpreters = await interpreterService.getInterpreters();
-        assert.ok(allInterpreters.length > 1, 'Not enough interpreters to run interactive window smoke test');
+        await waitForCondition(
+            async () => interpreterService.resolvedEnvironments.length > 0,
+            15_000,
+            'Waiting for interpreters to be discovered'
+        );
+
+        assert.ok(
+            interpreterService.resolvedEnvironments.length > 1,
+            'Not enough interpreters to run interactive window smoke test'
+        );
         // const differentInterpreter = allInterpreters.find((interpreter) => interpreter !== interpreterForCurrentWindow);
         // await vscode.commands.executeCommand<void>('python.setInterpreter', differentInterpreter); // Requires change to Python extension
 

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
@@ -16,6 +16,9 @@ import { getFilePath } from '../../platform/common/platform/fs-paths';
 
 export const pipenvName = 'pipenv';
 
+/**
+ * Installer for pipenv (not the same as pip)
+ */
 @injectable()
 export class PipEnvInstaller extends ModuleInstaller {
     constructor(

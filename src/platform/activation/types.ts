@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -25,20 +25,6 @@ export interface IExtensionActivationManager extends IDisposable {
      * @memberof IExtensionActivationManager
      */
     activate(): Promise<void>;
-}
-
-export const IDownloadChannelRule = Symbol('IDownloadChannelRule');
-export enum PlatformName {
-    Windows32Bit = 'win-x86',
-    Windows64Bit = 'win-x64',
-    Mac64Bit = 'osx-x64',
-    Linux64Bit = 'linux-x64'
-}
-export const IPlatformData = Symbol('IPlatformData');
-export interface IPlatformData {
-    readonly platformName: PlatformName;
-    readonly engineDllName: string;
-    readonly engineExecutableName: string;
 }
 
 export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivationService');

@@ -1,35 +1,38 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
 import * as cp from 'child_process';
-import * as url from 'url';
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, Uri } from 'vscode';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import {
+    Cancellation,
+    createPromiseFromCancellation,
+    isCancellationError
+} from '../../../platform/common/cancellation';
+import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceError } from '../../../platform/logging';
-import { TemporaryDirectory } from '../../../platform/common/platform/types';
+import { IFileSystem, TemporaryDirectory } from '../../../platform/common/platform/types';
 import { IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../../webviews/webview-side/common/constants';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterConnectionWaiter } from './jupyterConnection.node';
 import { WrappedError } from '../../../platform/errors/types';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { ReportableAction } from '../../../platform/progress/types';
 import { IJupyterConnection } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { INotebookStarter } from '../types';
+import { getFilePath } from '../../../platform/common/platform/fs-paths';
 
 /**
  * Responsible for starting a notebook.
@@ -79,6 +82,7 @@ export class NotebookStarter implements INotebookStarter {
         let exitCode: number | null = 0;
         let starter: JupyterConnectionWaiter | undefined;
         const disposables: IDisposable[] = [];
+        const stopWatch = new StopWatch();
         const progress = KernelProgressReporter.reportProgress(resource, ReportableAction.NotebookStart);
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
@@ -97,7 +101,6 @@ export class NotebookStarter implements INotebookStarter {
 
             // Then use this to launch our notebook process.
             traceInfo('Starting Jupyter Notebook');
-            const stopWatch = new StopWatch();
             const [launchResult, tempDir] = await Promise.all([
                 this.jupyterInterpreterService.startNotebook(args || [], {
                     throwOnStdErr: false,
@@ -148,11 +151,8 @@ export class NotebookStarter implements INotebookStarter {
                 throw new CancellationError();
             }
 
-            // Fire off telemetry for the process being talkable
-            sendTelemetryEvent(Telemetry.StartJupyterProcess, stopWatch.elapsedTime);
-
             try {
-                const port = parseInt(url.parse(connection.baseUrl).port || '0', 10);
+                const port = parseInt(new URL(connection.baseUrl).port || '0', 10);
                 if (port && !isNaN(port)) {
                     if (launchResult.proc) {
                         launchResult.proc.on('exit', () => NotebookStarter._usedPorts.delete(port));
@@ -163,10 +163,11 @@ export class NotebookStarter implements INotebookStarter {
                 traceError(`Parsing failed ${connection.baseUrl}`, ex);
             }
             disposeAllDisposables(disposables);
+            sendTelemetryEvent(Telemetry.StartJupyter, { duration: stopWatch.elapsedTime });
             return connection;
         } catch (err) {
             disposeAllDisposables(disposables);
-            if (err instanceof CancellationError || err instanceof JupyterConnectError) {
+            if (isCancellationError(err) || err instanceof JupyterConnectError) {
                 throw err;
             }
 
@@ -179,7 +180,7 @@ export class NotebookStarter implements INotebookStarter {
 
             // Something else went wrong. See if the local proc died or not.
             if (exitCode !== 0) {
-                throw new Error(DataScience.jupyterServerCrashed().format(exitCode?.toString()));
+                throw new Error(DataScience.jupyterServerCrashed().format(exitCode.toString()));
             } else {
                 throw WrappedError.from(DataScience.jupyterNotebookFailure().format(err), err);
             }
@@ -268,7 +269,7 @@ export class NotebookStarter implements INotebookStarter {
         // In the temp dir, create an empty config python file. This is the same
         // as starting jupyter with all of the defaults.
         const configFile = path.join(tempDir.path, 'jupyter_notebook_config.py');
-        await this.fs.writeLocalFile(configFile, '');
+        await this.fs.writeFile(Uri.file(configFile), '');
         traceInfo(`Generating custom default config at ${configFile}`);
 
         // Create extra args based on if we have a config or not
@@ -287,7 +288,7 @@ export class NotebookStarter implements INotebookStarter {
         const args: string[] = [];
         // Check for a docker situation.
         try {
-            const cgroup = await this.fs.readLocalFile('/proc/self/cgroup').catch(() => '');
+            const cgroup = await this.fs.readFile(Uri.file('/proc/self/cgroup')).catch(() => '');
             if (!cgroup.includes('docker') && !cgroup.includes('kubepods')) {
                 return args;
             }
@@ -309,11 +310,11 @@ export class NotebookStarter implements INotebookStarter {
         }
     }
     private async generateTempDir(): Promise<TemporaryDirectory> {
-        const resultDir = path.join(os.tmpdir(), uuid());
-        await this.fs.createLocalDirectory(resultDir);
+        const resultDir = Uri.file(path.join(os.tmpdir(), uuid()));
+        await this.fs.createDirectory(resultDir);
 
         return {
-            path: resultDir,
+            path: getFilePath(resultDir),
             dispose: async () => {
                 // Try ten times. Process may still be up and running.
                 // We don't want to do async as async dispose means it may never finish and then we don't
@@ -321,7 +322,7 @@ export class NotebookStarter implements INotebookStarter {
                 let count = 0;
                 while (count < 10) {
                     try {
-                        await this.fs.deleteLocalDirectory(resultDir);
+                        await this.fs.delete(resultDir);
                         count = 10;
                     } catch {
                         count += 1;

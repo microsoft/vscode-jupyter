@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -29,7 +29,7 @@ export const __ = '';
 //     const type = UseVSCodeNotebookEditorApi ? 'Insiders' : 'Stable';
 //     const survey = UseVSCodeNotebookEditorApi ? BannerType.InsidersNotebookSurvey : BannerType.DSSurvey;
 
-//     suite('DataScience Survey Banner - ' + type, () => {
+//     suite('Survey Banner - ' + type, () => {
 //         let appShell: IApplicationShell;
 //         let browser: IBrowserService;
 //         let bannerService: DataScienceSurveyBanner;

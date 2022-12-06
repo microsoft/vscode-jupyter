@@ -1,17 +1,12 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { Event } from 'vscode';
 import { IVariableExplorerHeight } from '../../../webviews/webview-side/interactive-common/redux/reducers/types';
-import {
-    InteractiveWindowMessages,
-    IShowDataViewer,
-    IFinishCell,
-    CssMessages,
-    IGetCssRequest,
-    IGetCssResponse,
-    SharedMessages
-} from '../../../platform/messageTypes';
+import { InteractiveWindowMessages, IShowDataViewer, IFinishCell, SharedMessages } from '../../../messageTypes';
 import { IKernel } from '../../../kernels/types';
 import { IJupyterVariablesRequest, IJupyterVariablesResponse } from '../../../kernels/variables/types';
-import { IVSCWebviewViewProvider } from '../types';
+import { IVSCWebviewViewProvider } from '../../../platform/webviews/types';
 
 // Mapping of Message to payload that our VariableViewPanel needs to support
 export class IVariableViewPanelMapping {
@@ -24,8 +19,6 @@ export class IVariableViewPanelMapping {
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
     public [InteractiveWindowMessages.SetVariableExplorerHeight]: IVariableExplorerHeight;
     public [InteractiveWindowMessages.VariableExplorerHeightResponse]: IVariableExplorerHeight;
-    public [CssMessages.GetCssRequest]: IGetCssRequest;
-    public [CssMessages.GetCssResponse]: IGetCssResponse;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
     public [SharedMessages.UpdateSettings]: string;
@@ -46,7 +39,7 @@ export interface INotebookWatcher {
     readonly activeKernel?: IKernel;
     readonly activeNotebookExecutionCount?: number;
     readonly onDidChangeActiveNotebook: Event<IActiveNotebookChangedEvent>;
-    readonly onDidExecuteActiveNotebook: Event<{ executionCount: number }>;
+    readonly onDidFinishExecutingActiveNotebook: Event<{ executionCount: number }>;
     readonly onDidRestartActiveNotebook: Event<void>;
 }
 

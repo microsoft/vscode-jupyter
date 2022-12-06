@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -10,6 +10,9 @@ import { DataScience } from '../utils/localize';
 import * as stacktrace from 'stack-trace';
 import { JVSC_EXTENSION_ID } from '../constants';
 
+/**
+ * Provides functions for tracking the list of extensions that VS code has installed (besides our own)
+ */
 @injectable()
 export class Extensions implements IExtensions {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,6 +31,7 @@ export class Extensions implements IExtensions {
     public async determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }> {
         const stack = new Error().stack;
         if (stack) {
+            const jupyterExtRoot = this.getExtension(JVSC_EXTENSION_ID)!.extensionUri.toString().toLowerCase();
             const frames = stack
                 .split('\n')
                 .map((f) => {
@@ -36,16 +40,23 @@ export class Extensions implements IExtensions {
                         return result[1];
                     }
                 })
-                .filter((item) => item && !item.toLowerCase().includes(JVSC_EXTENSION_ID)) as string[];
+                // Since this is web, look for paths that start with http (which also includes https).
+                .filter((item) => item && item.toLowerCase().startsWith('http'))
+                .filter((item) => item && !item.toLowerCase().startsWith(jupyterExtRoot)) as string[];
             stacktrace.parse(new Error('Ex')).forEach((item) => {
                 const fileName = item.getFileName();
-                if (fileName && !fileName.toLowerCase().includes(JVSC_EXTENSION_ID)) {
+                if (fileName && !fileName.toLowerCase().startsWith(jupyterExtRoot)) {
                     frames.push(fileName);
                 }
             });
-            // This file is from a different extension. Try to find its package.json
-            // TODO: Need to try this in web and see if we can just get the extension information from the path
-            // and then use the extensionid to lookup the extension
+            for (const frame of frames) {
+                const matchingExt = this.all.find(
+                    (ext) => ext.id !== JVSC_EXTENSION_ID && frame.startsWith(ext.extensionUri.toString())
+                );
+                if (matchingExt) {
+                    return { extensionId: matchingExt.id, displayName: matchingExt.packageJSON.displayName };
+                }
+            }
         }
         return { extensionId: DataScience.unknownPackage(), displayName: DataScience.unknownPackage() };
     }

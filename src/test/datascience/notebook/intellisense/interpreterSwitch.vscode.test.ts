@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
@@ -26,12 +26,12 @@ import {
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { IPythonExecutionFactory } from '../../../../platform/common/process/types.node';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
-import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
+import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { Settings } from '../../../../platform/common/constants';
 import { getOSType, OSType } from '../../../../platform/common/utils/platform';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - Intellisense Switch interpreters in a notebook', function () {
+suite('Intellisense Switch interpreters in a notebook @lsp', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
@@ -65,13 +65,34 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         }
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        // Wait for all interpreters so we can make sure we can get details on the paths we have
-        await interpreterService.getInterpreters();
-        const [activeInterpreter, interpreter1, interpreter2] = await Promise.all([
-            interpreterService.getActiveInterpreter(),
-            interpreterService.getInterpreterDetails(venvNoKernelPython),
-            interpreterService.getInterpreterDetails(venvKernelPython)
-        ]);
+        await waitForCondition(
+            async () => {
+                if ((await interpreterService.getActiveInterpreter()) !== undefined) {
+                    return true;
+                }
+                return false;
+            },
+            defaultNotebookTestTimeout,
+            'Waiting for interpreters to be discovered'
+        );
+
+        let lastError: Error | undefined = undefined;
+        const [activeInterpreter, interpreter1, interpreter2] = await waitForCondition(
+            async () => {
+                try {
+                    return await Promise.all([
+                        interpreterService.getActiveInterpreter(),
+                        interpreterService.getInterpreterDetails(venvNoKernelPython),
+                        interpreterService.getInterpreterDetails(venvKernelPython)
+                    ]);
+                } catch (ex) {
+                    lastError = ex;
+                }
+            },
+            defaultNotebookTestTimeout,
+            () => `Failed to get interpreter information for 1,2 &/or 3, ${lastError?.toString()}`
+        );
+
         if (!activeInterpreter || !interpreter1 || !interpreter2) {
             throw new Error('Unable to get information for interpreter 1');
         }
@@ -101,7 +122,7 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         setIntellisenseTimeout(Settings.IntellisenseTimeout);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
@@ -120,7 +141,7 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         await waitForKernelToChange({ interpreterPath: venvNoKernelPythonPath });
 
         // Wait for an error to show up
-        cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await waitForCondition(
             async () => {
                 diagnostics = languages.getDiagnostics(cell.document.uri);
@@ -134,7 +155,7 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         await waitForKernelToChange({ interpreterPath: venvKernelPythonPath });
 
         // Now there should be 1 error again
-        cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await waitForCondition(
             async () => {
                 diagnostics = languages.getDiagnostics(cell.document.uri);

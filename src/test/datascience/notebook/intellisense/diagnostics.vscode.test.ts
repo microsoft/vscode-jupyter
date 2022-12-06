@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
@@ -17,10 +17,10 @@ import {
     waitForDiagnostics
 } from '../helper.node';
 import { Settings } from '../../../../platform/common/constants';
-import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
+import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Intellisense Notebook Diagnostics', function () {
+suite('VSCode Intellisense Notebook Diagnostics @lsp', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -54,7 +54,7 @@ suite('DataScience - VSCode Intellisense Notebook Diagnostics', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Add cells and make sure errors show up', async () => {
         await insertCodeCell('import system', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         traceInfo('Get diagnostics in test');
         // Ask for the list of diagnostics

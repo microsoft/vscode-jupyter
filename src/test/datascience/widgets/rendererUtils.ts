@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /*
@@ -37,28 +37,23 @@ const handlers = new Map<string, (data: any) => void>();
 handlers.set('queryInnerHTML', queryInnerHTMLHandler);
 handlers.set('clickElement', clickHandler);
 handlers.set('setElementValue', setElementValueHandler);
+handlers.set('hijackLogging', hijackLogging);
 
 function initializeComms() {
     if (!rendererContext.onDidReceiveMessage || !rendererContext.postMessage) {
         return;
     }
     rendererContext.onDidReceiveMessage((message) => {
-        console.log(`Received message in Widget renderer ${JSON.stringify(message)}`);
-        rendererContext.postMessage!({
-            command: 'log',
-            message: `Received message in Widget renderer ${JSON.stringify(message)}`
-        });
-
         if (!message || !message.command) {
             return;
         }
         if (handlers.has(message.command)) {
-            rendererContext.postMessage!({
-                command: 'log',
-                message: `Handled message in Widget renderer ${JSON.stringify(message)}`
-            });
             handlers.get(message.command)!(message);
         } else {
+            rendererContext.postMessage!({
+                command: 'log',
+                message: `Error: Message not handled in Widget renderer ${JSON.stringify(message)}`
+            });
             console.error('No handler for command', message.command);
         }
     });
@@ -159,4 +154,49 @@ function getOutputCellIndex(outputItem: OutputItem): number | undefined {
     if (model && '_vsc_test_cellIndex' in model) {
         return parseInt(model._vsc_test_cellIndex);
     }
+}
+
+let consoleLoggersHijacked = false;
+/**
+ * Highjack the console log messages & send them to the extension host.
+ * On CI we cannot see the console log messages of the webview, so we need to hijack them.
+ * Sometimes when widgets fail this is very useful in diagnosing what went wrong on the webview side of things.
+ */
+function hijackLogging() {
+    if (consoleLoggersHijacked) {
+        return;
+    }
+    consoleLoggersHijacked = true;
+    type ConsoleChannel = 'log' | 'warn' | 'error' | 'debug' | 'trace';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const logMessage = (channel: ConsoleChannel, args: any[]) => {
+        let message = `WebView ${channel} Console:`;
+        (args || []).forEach((arg) => {
+            try {
+                // This could fail if we have cyclic objects.
+                message += ` ${JSON.stringify(arg)},`;
+            } catch {
+                try {
+                    message += ` ${(arg || '').toString()},`;
+                } catch {
+                    message += ` <Failed to serialize an argument>,`;
+                }
+            }
+        });
+        rendererContext.postMessage!({
+            command: 'log',
+            message: `Handled message in Widget renderer ${message}`,
+            category: channel
+        });
+    };
+    (['log', 'error', 'warn', 'debug', 'trace'] as ConsoleChannel[]).forEach((channel) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (console as any)[channel] = (...args: any[]) => {
+            logMessage(channel, args);
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (globalThis.console as any)[channel] = (...args: any[]) => {
+            logMessage(channel, args);
+        };
+    });
 }

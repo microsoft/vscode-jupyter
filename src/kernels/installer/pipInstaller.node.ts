@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
@@ -12,6 +12,9 @@ import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnviron
 import { IServiceContainer } from '../../platform/ioc/types';
 import { translateProductToModule } from './utils';
 
+/**
+ * Installer for pip. Default installer for most everything.
+ */
 @injectable()
 export class PipInstaller extends ModuleInstaller {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
@@ -75,6 +78,9 @@ export class PipInstaller extends ModuleInstaller {
         args.push(...['install', '-U']);
         if (flags & ModuleInstallFlags.reInstall) {
             args.push('--force-reinstall');
+        }
+        if (interpreter.envType === EnvironmentType.Unknown) {
+            args.push('--user');
         }
         return {
             args: ['-m', 'pip', ...args, moduleName]

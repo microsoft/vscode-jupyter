@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
-import { CancellationToken, Event } from 'vscode';
+import { CancellationToken, Event, Uri } from 'vscode';
 import { IKernel } from '../types';
 import type { JSONObject } from '@lumino/coreutils';
 
@@ -24,7 +25,7 @@ export interface IJupyterVariable {
     rowCount?: number;
     indexColumn?: string;
     maximumRowChunkSize?: number;
-    fileName?: string;
+    fileName?: Uri;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');

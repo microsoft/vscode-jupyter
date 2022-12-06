@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -11,6 +11,9 @@ import { Logging } from '../utils/localize';
 import { IProcessLogger, SpawnOptions } from './types.node';
 import { removeHomeFromFile } from '../platform/fs-paths.node';
 
+/***
+ * Logs the running of a new process. Does not log stdout/stderr.
+ */
 @injectable()
 export class ProcessLogger implements IProcessLogger {
     constructor(

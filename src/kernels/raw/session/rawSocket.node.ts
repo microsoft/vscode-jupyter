@@ -1,9 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { IDisposable } from '@fluentui/react';
 import type { KernelMessage } from '@jupyterlab/services';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
 import { traceError } from '../../../platform/logging';
@@ -12,6 +13,7 @@ import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelSocket } from '../../types';
 import { IKernelConnection } from '../types';
 import type { Channel } from '@jupyterlab/services/lib/kernel/messages';
+import { EventEmitter } from 'vscode';
 
 function formConnectionString(config: IKernelConnection, channel: string) {
     const portDelimiter = config.transport === 'tcp' ? ':' : '-';
@@ -34,6 +36,8 @@ interface IChannels {
  * it does all serialization/deserialization itself.
  */
 export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
+    private _onAnyMessage = new EventEmitter<{ msg: string; direction: 'send' }>();
+    public onAnyMessage = this._onAnyMessage.event;
     public onopen: (event: { target: any }) => void = noop;
     public onerror: (event: { error: any; message: string; type: string; target: any }) => void = noop;
     public onclose: (event: { wasClean: boolean; code: number; reason: string; target: any }) => void = noop;
@@ -100,7 +104,10 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         // If from ipywidgets, this will be serialized already, so turn it back into a message so
         // we can add the special hash to it.
         const message = this.deserialize(data);
-
+        // These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
+        // As a result, we don't get any notification that messages were sent (on the anymessage signal).
+        // To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
+        this._onAnyMessage.fire({ msg: data, direction: 'send' });
         // Send this directly (don't call back into the hooks)
         this.sendMessage(message, true);
     }
@@ -272,6 +279,8 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 this.postToSocket(msg.channel, data);
             });
         }
+        // Ensure we don't have any unhandled exceptions (swallow exceptions as we're not awaiting on this promise).
+        this.sendChain.catch(noop);
     }
 
     private postToSocket(channel: string, data: any) {

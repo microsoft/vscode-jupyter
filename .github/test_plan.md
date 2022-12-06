@@ -31,7 +31,6 @@
         1. Please note, when installing PyTorch please visit pytorch.org to determine how to install `torch` for your environment. Do not run `pip install torch` as that will not suffice.
     1. On the first cell click `Run Below`
     1. Interactive Window should open, show connection information, and execute cells
-    1. The first thing in the window should have a line like this: `Jupyter Server URI: http://localhost:[port number]/?token=[token value]`
 -   [ ] Verify basic outputs
     1. Run all the cells in manualTestFile.py
     1. Check to make sure that no outputs have errors
@@ -148,7 +147,6 @@
     1. Run the command `Python: Select Jupyter server URI` then `Type in the URI to connect to a running jupyter server`
     1. Input the server / token name here
     1. Now run the cells in the manualTestFile.py
-    1. Verify that you see the server name in the initial connection message
     1. Verify the outputs of the cells
 -   [ ] Interactive Window commands
     -   [ ] Verify per-cell commands
@@ -237,7 +235,6 @@
     1. Right click on each of the following variables and select the 'View Variable in Data Viewer' option from the context menu: myNparray, myDataFrame, mySeries, myList, myString, myTensor. Verify that the data viewer opens and displays them
     1. Expand the tree view for the variable `x`. Right click on its instance member `b` and select 'View Variable in Data Viewer' from the context menu. Verify that this opens `x.b` and not `b` in the data viewer.
 -   [ ] Run by line
-    1. Opt into the custom editor experiment (not yet supported in native notebooks)
     1. Open a new blank Jupyter notebook.
     1. Add the following code to a cell:
         ```python

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -11,13 +11,13 @@ import { traceError } from '../../../platform/logging';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry, JupyterCommands } from '../../../webviews/webview-side/common/constants';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { JupyterCommands } from '../../../platform/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { ProductNames } from '../../installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../installer/types';
 import { HelpLinks } from '../../../platform/common/constants';
-import { reportAction } from '../../../platform/progress/decorator.node';
+import { reportAction } from '../../../platform/progress/decorator';
 import { ReportableAction } from '../../../platform/progress/types';
 import { JupyterInterpreterDependencyResponse } from '../types';
 import { IJupyterCommandFactory } from '../types.node';
@@ -329,8 +329,8 @@ export class JupyterInterpreterDependencyService {
         }
         const selectionFromError = await this.applicationShell.showErrorMessage(
             DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.uri.fsPath),
-            DataScience.selectDifferentJupyterInterpreter(),
-            Common.cancel()
+            { modal: true },
+            DataScience.selectDifferentJupyterInterpreter()
         );
         return selectionFromError === DataScience.selectDifferentJupyterInterpreter()
             ? JupyterInterpreterDependencyResponse.selectAnotherInterpreter

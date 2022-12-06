@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -13,8 +13,7 @@ import { WorkspaceService } from '../../../platform/common/application/workspace
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { ExperimentService } from '../../../platform/common/experiments/service';
 import { IConfigurationService } from '../../../platform/common/types';
-import * as Telemetry from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
+import * as Telemetry from '../../../platform/telemetry/index';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants.node';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockMemento } from '../../mocks/mementos';
@@ -216,11 +215,6 @@ suite('Experimentation service', () => {
             const result = await experimentService.inExperiment(experiment);
 
             assert.isTrue(result);
-            assert.equal(telemetryEvents.length, 1);
-            assert.deepEqual(telemetryEvents[0], {
-                eventName: EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT,
-                properties: { expNameOptedInto: experiment }
-            });
             sinon.assert.calledOnce(isCachedFlightEnabledStub);
         });
 
@@ -236,11 +230,6 @@ suite('Experimentation service', () => {
             const result = await experimentService.inExperiment(experiment);
 
             assert.isFalse(result);
-            assert.equal(telemetryEvents.length, 1);
-            assert.deepEqual(telemetryEvents[0], {
-                eventName: EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT,
-                properties: { expNameOptedOutOf: experiment }
-            });
             sinon.assert.notCalled(isCachedFlightEnabledStub);
         });
     });

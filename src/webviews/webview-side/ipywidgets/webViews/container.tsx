@@ -1,19 +1,18 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
 import * as React from 'react';
 import { Store } from 'redux';
-import { SharedMessages } from '../../../../platform/messageTypes';
-import { IJupyterExtraSettings } from '../../../extension-side/types';
 import {
-    CommonAction,
-    CommonActionType,
     ILoadIPyWidgetClassFailureAction,
     LoadIPyWidgetClassLoadAction,
-    NotifyIPyWidgeWidgetVersionNotSupportedAction
-} from '../../interactive-common/redux/reducers/types';
+    NotifyIPyWidgetWidgetVersionNotSupportedAction,
+    SharedMessages
+} from '../../../../messageTypes';
+import { IJupyterExtraSettings } from '../../../../platform/webviews/types';
+import { CommonAction, CommonActionType } from '../../interactive-common/redux/reducers/types';
 import { IStore } from '../../interactive-common/redux/store';
 import { PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';
@@ -97,7 +96,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
     private createWidgetVersionNotSupportedErrorAction(
         moduleName: 'qgrid',
         moduleVersion: string
-    ): CommonAction<NotifyIPyWidgeWidgetVersionNotSupportedAction> {
+    ): CommonAction<NotifyIPyWidgetWidgetVersionNotSupportedAction> {
         return {
             type: CommonActionType.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED,
             payload: {

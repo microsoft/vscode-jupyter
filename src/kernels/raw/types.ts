@@ -1,16 +1,13 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
 import { CancellationToken, Event } from 'vscode';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import {
-    ConnectNotebookProviderOptions,
-    INotebook,
-    INotebookProviderConnection,
-    IRawConnection,
+    IKernelConnectionSession,
     KernelConnectionMetadata,
-    LocalKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../types';
@@ -40,6 +37,7 @@ export interface IKernelConnection {
 }
 
 export interface IKernelProcess extends IAsyncDisposable {
+    readonly pid?: number;
     readonly connection: Readonly<IKernelConnection>;
     readonly kernelConnectionMetadata: Readonly<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>;
     /**
@@ -58,22 +56,6 @@ export interface IKernelProcess extends IAsyncDisposable {
     interrupt(): Promise<void>;
 }
 
-export const ILocalKernelFinder = Symbol('ILocalKernelFinder');
-export interface ILocalKernelFinder {
-    /**
-     * Finds all kernel specs including Python.
-     */
-    listKernels(resource: Resource, cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
-}
-
-export const IRemoteKernelFinder = Symbol('IRemoteKernelFinder');
-export interface IRemoteKernelFinder {
-    listKernels(
-        resource: Resource,
-        connInfo: INotebookProviderConnection | undefined,
-        cancelToken?: CancellationToken
-    ): Promise<KernelConnectionMetadata[]>;
-}
 /**
  * The daemon responsible for the Python Kernel.
  */
@@ -92,11 +74,10 @@ export interface IRawNotebookSupportedService {
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
     isSupported: boolean;
-    connect(connect: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined>;
     createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         cancelToken: CancellationToken
-    ): Promise<INotebook>;
+    ): Promise<IKernelConnectionSession>;
 }

@@ -1,7 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as assert from 'assert';
+import assert from 'assert';
 import { Container } from 'inversify';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
@@ -20,6 +20,7 @@ const info: PythonEnvironment = {
     displayName: '',
     envName: '',
     uri: Uri.file(''),
+    id: Uri.file('').fsPath,
     envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',

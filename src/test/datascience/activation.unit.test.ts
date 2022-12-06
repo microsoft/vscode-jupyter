@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -25,7 +25,7 @@ export const __ = '';
 // import { FakeClock } from '../common';
 // import { createPythonInterpreter } from '../utils/interpreters';
 
-// suite('DataScience - Activation', () => {
+// suite('Activation', () => {
 //     let activator: IExtensionSingleActivationService;
 //     let notebookEditorProvider: INotebookEditorProvider;
 //     let jupyterInterpreterService: JupyterInterpreterService;

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -11,18 +11,13 @@ import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { initialize } from '../../initialize.node';
-import {
-    closeNotebooksAndCleanUpAfterTests,
-    insertCodeCell,
-    createEmptyPythonNotebook,
-    workAroundVSCodeNotebookStartPages
-} from './helper.node';
+import { closeNotebooksAndCleanUpAfterTests, insertCodeCell, createEmptyPythonNotebook } from './helper.node';
 import { NotebookDocument, Range } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { NotebookCellBangInstallDiagnosticsProvider } from '../../../intellisense/diagnosticsProvider';
+import { NotebookCellBangInstallDiagnosticsProvider } from '../../../standalone/intellisense/diagnosticsProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
+suite('VSCode Notebook -', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -32,17 +27,16 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         try {
             traceInfo(`Start Test ${this.currentTest?.title}`);
             api = await initialize();
-            await workAroundVSCodeNotebookStartPages();
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             diagnosticProvider = api.serviceContainer
                 .getAll<NotebookCellBangInstallDiagnosticsProvider>(IExtensionSyncActivationService)
                 .find((item) => item instanceof NotebookCellBangInstallDiagnosticsProvider)!;
             await createEmptyPythonNotebook(disposables);
-            activeNotebook = vscodeNotebook.activeNotebookEditor!.document;
+            activeNotebook = vscodeNotebook.activeNotebookEditor!.notebook;
             assert.isOk(activeNotebook, 'No active notebook');
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
-            await captureScreenShot(this.currentTest?.title || 'unknown');
+            await captureScreenShot(this);
             throw e;
         }
     });
@@ -53,7 +47,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Show error for pip install', async () => {
         await insertCodeCell('!pip install xyz', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         await waitForCondition(
             async () => (diagnosticProvider.problems.get(cell.document.uri) || []).length > 0,
@@ -69,7 +63,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Show error for conda install', async () => {
         await insertCodeCell('!conda install xyz', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         await waitForCondition(
             async () => (diagnosticProvider.problems.get(cell.document.uri) || []).length > 0,

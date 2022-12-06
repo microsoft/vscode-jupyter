@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Created internally
         id: internal
         env:
             ISSUE_OWNER: ${{github.event.issue.user.login}}
         run: |
-          echo ::set-output name=result::$(node -p -e "['rchiodo', 'greazer', 'amunger', 'IanMatthewHuff', 'DonJayamanne', 'minsa110', 'rebornix', 'roblourens'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
+          echo ::set-output name=result::$(node -p -e "['amunger', 'DonJayamanne', 'minsa110', 'rebornix', 'roblourens', 'kieferrm'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
         shell: bash
       - name: Should we proceed
         id: proceed
@@ -55,85 +55,85 @@ jobs:
           echo ${{steps.week.outputs.odd}}
           echo ${{steps.hour.outputs.hour}}
         shell: bash
-      - name: Saturday (Aaron)
+      - name: Saturday (Don)
         if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 6
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6.3.3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            github.issues.addAssignees({
+            github.rest.issues.addAssignees({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              assignees: ['DonJayamanne']
+            })
+      - name: Sunday (Don)
+        if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 0
+        uses: actions/github-script@v6.3.3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.addAssignees({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              assignees: ['DonJayamanne']
+            })
+      - name: Monday (Aaron)
+        if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 1 && steps.hour.outputs.hour < 16
+        uses: actions/github-script@v6.3.3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.addAssignees({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               assignees: ['amunger']
             })
-      - name: Sunday (Don)
-        if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 0
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              assignees: ['DonJayamanne']
-            })
-      - name: Monday (Don)
-        if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 1 && steps.hour.outputs.hour < 16
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addAssignees({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              assignees: ['DonJayamanne']
-            })
-      - name: Tuesday (Rich)
+      - name: Tuesday (Rob)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 1 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 2 && steps.hour.outputs.hour < 16)
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6.3.3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            github.issues.addAssignees({
+            github.rest.issues.addAssignees({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees: ['rchiodo']
+              assignees: ['roblourens ']
             })
-      - name: Wednesday (Rich)
+      - name: Wednesday (Don)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 2 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 3 && steps.hour.outputs.hour < 16)
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6.3.3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            github.issues.addAssignees({
+            github.rest.issues.addAssignees({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees: ['rchiodo']
+              assignees: ['DonJayamanne']
             })
-      - name: Thursday (Ian)
+      - name: Thursday (Peng)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 3 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 4 && steps.hour.outputs.hour < 16)
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6.3.3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            github.issues.addAssignees({
+            github.rest.issues.addAssignees({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees: ['IanMatthewHuff']
+              assignees: ['rebornix']
             })
       - name: Friday (Aaron)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 4 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 5)
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6.3.3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            github.issues.addAssignees({
+            github.rest.issues.addAssignees({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,

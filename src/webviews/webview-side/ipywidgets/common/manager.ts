@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -8,7 +8,7 @@ import '@jupyter-widgets/controls/css/labvariables.css';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { Widget } from '@lumino/widgets';
-import * as fastDeepEqual from 'fast-deep-equal';
+import fastDeepEqual from 'fast-deep-equal';
 import 'rxjs/add/operator/concatMap';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
@@ -16,14 +16,10 @@ import { logMessage, setLogger } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { create as createKernel } from './kernel';
 import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, ScriptLoader } from './types';
-import { WIDGET_MIMETYPE } from '../../../../kernels/ipywidgets-message-coordination/constants';
 import { KernelSocketOptions } from '../../../../kernels/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
-import {
-    IInteractiveWindowMapping,
-    IPyWidgetMessages,
-    InteractiveWindowMessages
-} from '../../../../platform/messageTypes';
+import { IInteractiveWindowMapping, IPyWidgetMessages, InteractiveWindowMessages } from '../../../../messageTypes';
+import { WIDGET_MIMETYPE } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -55,8 +51,11 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
 
         // Handshake.
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_Ready);
-        setLogger((message: string) =>
-            this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_logMessage, message)
+        setLogger((category: 'error' | 'verbose', message: string) =>
+            this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_logMessage, {
+                category,
+                message
+            })
         );
     }
     public dispose(): void {
@@ -122,19 +121,20 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.modelIdsToBeDisplayed.set(modelId, createDeferred());
         }
         // Wait until it is flagged as ready to be processed.
-        // This widget manager must have recieved this message and performed all operations before this.
-        // Once all messages prior to this have been processed in sequence and this message is receievd,
+        // This widget manager must have received this message and performed all operations before this.
+        // Once all messages prior to this have been processed in sequence and this message is received,
         // then, and only then are we ready to render the widget.
-        // I.e. this is a way of synchronzing the render with the processing of the messages.
+        // I.e. this is a way of synchronizing the render with the processing of the messages.
+        logMessage(`Waiting for model to be available before rendering it ${data.model_id}`);
         await this.modelIdsToBeDisplayed.get(modelId)!.promise;
 
         const modelPromise = this.manager.get_model(data.model_id);
         if (!modelPromise) {
-            console.warn('Widget model not avaialble to render an ipywidget');
+            console.warn('Widget model not available to render an ipywidget');
             return undefined;
         }
 
-        // ipywdigets may not have completed creating the model.
+        // IPyWidgets may not have completed creating the model.
         // ipywidgets have a promise, as the model may get created by a 3rd party library.
         // That 3rd party library may not be available and may have to be downloaded.
         // Hence the promise to wait until it has been created.
@@ -147,6 +147,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         if (this.manager && this.proxyKernel && fastDeepEqual(options, this.options)) {
             return;
         }
+        this.options = options;
         this.proxyKernel?.dispose(); // NOSONAR
         this.proxyKernel = createKernel(options, this.postOffice, this.pendingMessages);
         this.pendingMessages = [];
@@ -172,7 +173,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
 
             // Listen for unhandled IO pub so we can forward to the extension
-            this.manager.onUnhandledIOPubMessage.connect(this.handleUnhanldedIOPubMessage.bind(this));
+            this.manager.onUnhandledIOPubMessage.connect(this.handleUnhandledIOPubMessage.bind(this));
 
             // Tell the observable about our new manager
             WidgetManager._instance.next(this);
@@ -200,6 +201,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data = displayMsg.content.data[WIDGET_MIMETYPE] as any;
             const modelId = data.model_id;
+            logMessage(`Received display data message ${modelId}`);
             let deferred = this.modelIdsToBeDisplayed.get(modelId);
             if (!deferred) {
                 deferred = createDeferred();
@@ -217,7 +219,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         }
     }
 
-    private handleUnhanldedIOPubMessage(_manager: any, msg: KernelMessage.IIOPubMessage) {
+    private handleUnhandledIOPubMessage(_manager: any, msg: KernelMessage.IIOPubMessage) {
         // Send this to the other side
         this.postOffice.sendMessage<IInteractiveWindowMapping>(
             InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage,

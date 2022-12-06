@@ -1,7 +1,10 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
-import { SliceOperationSource } from '../../../telemetry/constants';
+import { SliceOperationSource } from '../../../platform/telemetry/constants';
 import { IGetSliceRequest } from '../../extension-side/dataviewer/types';
 import { getLocString } from '../react-common/locReactSide';
 import { measureText } from '../react-common/textMeasure';

@@ -1,23 +1,20 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
-let messageLogger: undefined | ((message: string) => void);
+let messageLogger: undefined | ((category: 'error' | 'verbose', message: string) => void);
 export function logMessage(message: string) {
     if (messageLogger) {
-        messageLogger(message);
+        messageLogger('verbose', message);
     }
 }
-/**
- * Logging in production seems to slow down webview (unnecessarily too chatty)
- */
-export function logMessageOnlyOnCI(message: string) {
-    // TODO: No way to check if CI for webview
+export function logErrorMessage(message: string) {
     if (messageLogger) {
-        messageLogger(message);
+        messageLogger('error', message);
     }
 }
 
-export function setLogger(logger: (message: string) => void) {
+export function setLogger(logger: (category: 'error' | 'verbose', message: string) => void) {
     messageLogger = logger;
 }

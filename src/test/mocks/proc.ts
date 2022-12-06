@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import 'rxjs/add/observable/of';
 
 import { EventEmitter } from 'events';

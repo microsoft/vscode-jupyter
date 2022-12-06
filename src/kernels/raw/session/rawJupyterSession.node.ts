@@ -1,37 +1,43 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
-import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { CancellationError, CancellationTokenSource, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import {
+    Cancellation,
+    createPromiseFromCancellation,
+    isCancellationError
+} from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisplayOptions, IDisposable, Resource } from '../../../platform/common/types';
-import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../../telemetry/telemetry';
-import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
+import { trackKernelResourceInformation } from '../../telemetry/helper';
+import { Telemetry } from '../../../telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
-import { ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
+import { IRawKernelConnectionSession, ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
 import { BaseJupyterSession } from '../../common/baseJupyterSession';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
-import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from '../../displayOptions';
+import { noop } from '../../../platform/common/utils/misc';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 
 /*
-RawJupyterSession is the implementation of IJupyterSession that instead of
+RawJupyterSession is the implementation of IJupyterKernelConnectionSession that instead of
 connecting to JupyterLab services it instead connects to a kernel directly
 through ZMQ.
-It's responsible for translating our IJupyterSession interface into the
+It's responsible for translating our IJupyterKernelConnectionSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
-export class RawJupyterSession extends BaseJupyterSession {
+export class RawJupyterSession extends BaseJupyterSession implements IRawKernelConnectionSession {
+    public readonly kind = 'localRaw';
     private processExitHandler = new WeakMap<RawSession, IDisposable>();
     private terminatingStatus?: KernelMessage.Status;
     public get atleastOneCellExecutedSuccessfully() {
@@ -46,25 +52,21 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
         return super.status;
     }
-    public get kernelId(): string {
-        return this.session?.kernel?.id || '';
-    }
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
         resource: Resource,
-        restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         workingDirectory: Uri,
         interruptTimeout: number,
         kernelConnection: KernelConnectionMetadata,
         private readonly launchTimeout: number
     ) {
-        super('localRaw', resource, kernelConnection, restartSessionUsed, workingDirectory, interruptTimeout);
+        super(resource, kernelConnection, workingDirectory, interruptTimeout);
     }
 
-    public async waitForIdle(timeout: number): Promise<void> {
+    public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         // Wait until status says idle.
         if (this.session) {
-            return this.waitForIdleOnSession(this.session, timeout);
+            return this.waitForIdleOnSession(this.session, timeout, token);
         }
     }
 
@@ -72,20 +74,16 @@ export class RawJupyterSession extends BaseJupyterSession {
     public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Save the resource that we connect with
         let newSession: RawSession;
-        trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
-        const stopWatch = new StopWatch();
+        await trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
         try {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
-            newSession = await this.startRawSession(options);
+            newSession = await this.startRawSession({ ...options, purpose: 'start' });
             Cancellation.throwIfCanceled(options.token);
-            // Only connect our session if we didn't cancel or timeout
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime);
             traceInfo(
-                `${DataScience.kernelStarted().format(
-                    getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-                )}, (Raw session started and connected)`
+                `Started Kernel ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)} (pid: ${
+                    newSession.kernelProcess.pid
+                })`
             );
             this.setSession(newSession);
 
@@ -93,52 +91,13 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
         } catch (error) {
             this.connected = false;
-            if (error instanceof CancellationError) {
-                sendKernelTelemetryEvent(
-                    this.resource,
-                    Telemetry.RawKernelSessionStart,
-                    stopWatch.elapsedTime,
-                    undefined,
-                    error
-                );
-                sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartUserCancel);
-                traceInfo('Starting of raw session cancelled by user');
-                throw error;
-            } else if (error instanceof TimedOutError) {
-                sendKernelTelemetryEvent(
-                    this.resource,
-                    Telemetry.RawKernelSessionStart,
-                    stopWatch.elapsedTime,
-                    undefined,
-                    error
-                );
-                sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartTimeout);
-                traceError('Raw session failed to start in given timeout');
+            if (isCancellationError(error) || options.token.isCancellationRequested) {
+                traceVerbose('Starting of raw session cancelled by user');
                 throw error;
             } else {
-                // Send our telemetry event with the error included
-                sendKernelTelemetryEvent(
-                    this.resource,
-                    Telemetry.RawKernelSessionStart,
-                    stopWatch.elapsedTime,
-                    undefined,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    error as any
-                );
-                sendKernelTelemetryEvent(
-                    this.resource,
-                    Telemetry.RawKernelSessionStartException,
-                    undefined,
-                    undefined,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    error as any
-                );
-
                 traceError(`Failed to connect raw kernel session: ${error}`);
                 throw error;
             }
-        } finally {
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionConnect, stopWatch.elapsedTime);
         }
 
         this.connected = true;
@@ -156,7 +115,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         // We want to know why we got shut down
         const stacktrace = new Error().stack;
         return super.shutdownSession(session, statusHandler, isRequestToShutdownRestartSession).then(() => {
-            sendTelemetryEvent(Telemetry.RawKernelSessionShutdown, undefined, {
+            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionShutdown, undefined, {
                 isRequestToShutdownRestartSession,
                 stacktrace
             });
@@ -182,10 +141,14 @@ export class RawJupyterSession extends BaseJupyterSession {
             if (session !== this.session) {
                 return;
             }
-            sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-                exitCode,
-                exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
-            });
+            sendKernelTelemetryEvent(
+                this.resource,
+                Telemetry.RawKernelSessionKernelProcessExited,
+                exitCode ? { exitCode } : undefined,
+                {
+                    exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
+                }
+            );
             traceError(`Raw kernel process exited code: ${exitCode}`);
 
             // If the raw kernel process dies, then send the terminating event, and shutdown the session.
@@ -212,25 +175,35 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     protected startRestartSession(disableUI: boolean) {
-        if (!this.restartSessionPromise) {
-            const token = new CancellationTokenSource();
-            const promise = this.createRestartSession(disableUI, token.token);
-            this.restartSessionPromise = { token, promise };
-            promise.finally(() => token.dispose());
-        }
+        const token = new CancellationTokenSource();
+        const promise = this.createRestartSession(disableUI, token.token);
+        this.restartSessionPromise = { token, promise };
+        promise.catch(noop);
+        promise
+            .finally(() => {
+                token.dispose();
+                if (this.restartSessionPromise?.promise === promise) {
+                    this.restartSessionPromise = undefined;
+                }
+            })
+            .catch(noop);
+        return promise;
     }
-    protected async createRestartSession(
+    private async createRestartSession(
         disableUI: boolean,
         cancelToken: CancellationToken
     ): Promise<ISessionWithSocket> {
         if (!this.kernelConnectionMetadata || this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
             throw new Error('Unsupported - unable to restart live kernel sessions using raw kernel.');
         }
-        return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI) });
+        return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI), purpose: 'restart' });
     }
 
-    @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
-    private async startRawSession(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<RawSession> {
+    private async startRawSession(options: {
+        token: CancellationToken;
+        ui: IDisplayOptions;
+        purpose?: 'start' | 'restart';
+    }): Promise<RawSession> {
         if (
             this.kernelConnectionMetadata.kind !== 'startUsingLocalKernelSpec' &&
             this.kernelConnectionMetadata.kind !== 'startUsingPythonInterpreter'
@@ -239,12 +212,6 @@ export class RawJupyterSession extends BaseJupyterSession {
                 `Unable to start Raw Kernels for Kernel Connection of type ${this.kernelConnectionMetadata.kind}`
             );
         }
-
-        traceInfo(
-            `Starting raw kernel ${getDisplayNameOrNameOfKernelConnection(
-                this.kernelConnectionMetadata
-            )} for interpreter ${getDisplayPath(this.kernelConnectionMetadata.interpreter?.uri)}`
-        );
 
         this.terminatingStatus = undefined;
         const process = await KernelProgressReporter.wrapAndReportProgress(
@@ -262,7 +229,6 @@ export class RawJupyterSession extends BaseJupyterSession {
                     options.token
                 )
         );
-
         return KernelProgressReporter.wrapAndReportProgress(
             this.resource,
             DataScience.waitingForJupyterSessionToBeIdle(),
@@ -286,9 +252,9 @@ export class RawJupyterSession extends BaseJupyterSession {
             traceVerbose('Successfully waited for Raw Session to be ready in postStartRawSession');
         } catch (ex) {
             traceError('Failed waiting for Raw Session to be ready', ex);
-            void process.dispose();
-            void result.dispose();
-            if (ex instanceof CancellationError || options.token.isCancellationRequested) {
+            await process.dispose();
+            result.dispose().catch(noop);
+            if (isCancellationError(ex) || options.token.isCancellationRequested) {
                 throw new CancellationError();
             }
             throw ex;
@@ -321,8 +287,8 @@ export class RawJupyterSession extends BaseJupyterSession {
                 ]);
             } catch (ex) {
                 traceError('Failed to request kernel info', ex);
-                void process.dispose();
-                void result.dispose();
+                await process.dispose();
+                result.dispose().catch(noop);
                 throw ex;
             } finally {
                 result.iopubMessage.disconnect(iopubHandler);
@@ -341,10 +307,14 @@ export class RawJupyterSession extends BaseJupyterSession {
         } else {
             traceWarning(`Didn't get response for requestKernelInfo after ${stopWatch.elapsedTime}ms.`);
         }
-        sendTelemetryEvent(Telemetry.RawKernelInfoResonse, stopWatch.elapsedTime, {
-            attempts,
-            timedout: !gotIoPubMessage.completed
-        });
+        sendKernelTelemetryEvent(
+            this.resource,
+            Telemetry.RawKernelInfoResponse,
+            { duration: stopWatch.elapsedTime, attempts },
+            {
+                timedout: !gotIoPubMessage.completed
+            }
+        );
 
         /**
          * To get a better understanding of the way Jupyter works, we need to look at Jupyter Client code.

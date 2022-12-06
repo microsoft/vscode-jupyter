@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import './mainPanel.css';
 
@@ -8,7 +9,6 @@ import * as React from 'react';
 import { getLocString, storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
-import { StyleInjector } from '../react-common/styleInjector';
 import { cellFormatterFunc } from './cellFormatter';
 import { ISlickGridAdd, ISlickGridSlice, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from './testData';
@@ -16,11 +16,11 @@ import { generateTestData } from './testData';
 import '../react-common/codicon/codicon.css';
 import '../react-common/seti/seti.less';
 import { SliceControl } from './sliceControl';
-import { debounce } from 'lodash';
-import * as uuid from 'uuid/v4';
+import debounce from 'lodash/debounce';
+import uuid from 'uuid/v4';
 
 import { initializeIcons } from '@fluentui/react';
-import { SharedMessages } from '../../../platform/messageTypes';
+import { SharedMessages } from '../../../messageTypes';
 import {
     IDataViewerMapping,
     DataViewerMessages,
@@ -33,7 +33,7 @@ import {
     ColumnType,
     IGetSliceRequest
 } from '../../extension-side/dataviewer/types';
-import { IJupyterExtraSettings } from '../../extension-side/types';
+import { IJupyterExtraSettings } from '../../../platform/webviews/types';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);
@@ -53,7 +53,6 @@ interface IMainPanelState {
     totalRowCount: number;
     filters: {};
     indexColumn: string;
-    styleReady: boolean;
     settings?: IJupyterExtraSettings;
     dataDimensionality: number;
     originalVariableShape?: number[];
@@ -98,7 +97,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 fetchedRowCount: -1,
                 filters: {},
                 indexColumn: data.primaryKeys[0],
-                styleReady: false,
                 dataDimensionality: data.dataDimensionality ?? 2,
                 originalVariableShape: data.originalVariableShape,
                 isSliceDataEnabled: false,
@@ -115,7 +113,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 fetchedRowCount: -1,
                 filters: {},
                 indexColumn: 'index',
-                styleReady: false,
                 dataDimensionality: 2,
                 originalVariableShape: undefined,
                 isSliceDataEnabled: false,
@@ -153,16 +150,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         return (
             <div className="main-panel" ref={this.container}>
-                <StyleInjector
-                    onReady={this.saveReadyState}
-                    settings={this.state.settings}
-                    expectingDark={this.props.baseTheme !== 'vscode-light'}
-                    postOffice={this.postOffice}
-                />
                 {progressBar}
                 {this.renderBreadcrumb()}
                 {this.renderSliceControls()}
-                {this.state.totalRowCount > 0 && this.state.styleReady && this.renderGrid()}
+                {this.state.totalRowCount > 0 && this.renderGrid()}
             </div>
         );
     };
@@ -249,10 +240,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             settings: newSettings
         });
     }
-
-    private saveReadyState = () => {
-        this.setState({ styleReady: true });
-    };
 
     private renderGrid() {
         const filterRowsTooltip = getLocString('DataScience.filterRowsTooltip', 'Click to filter');

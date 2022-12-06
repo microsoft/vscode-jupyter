@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
-import * as fastDeepEqual from 'fast-deep-equal';
+import fastDeepEqual from 'fast-deep-equal';
 import { assert } from 'chai';
-import { waitForCondition } from '../../common.node';
-import { defaultNotebookTestTimeout } from '../notebook/helper.node';
+import { waitForCondition } from '../../common';
+import { defaultNotebookTestTimeout } from '../notebook/helper';
 import { ITestWebviewHost } from '../testInterfaces';
 
 // Basic shape of a variable result

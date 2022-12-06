@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
-import { Event, CodeLens, CodeLensProvider, Uri, TextEditor, NotebookCell, Range, TextDocument } from 'vscode';
+import { Event, CodeLens, CodeLensProvider, Uri, TextEditor, Range, TextDocument, NotebookDocument } from 'vscode';
 import { ICellRange, IDisposable } from '../../platform/common/types';
 
 // Wraps the vscode CodeLensProvider base class
@@ -10,6 +11,12 @@ export const IDataScienceCodeLensProvider = Symbol('IDataScienceCodeLensProvider
 export interface IDataScienceCodeLensProvider extends CodeLensProvider {
     getCodeWatcher(document: TextDocument): ICodeWatcher | undefined;
 }
+
+export type CodeLensPerfMeasures = {
+    totalCodeLensUpdateTimeInMs: number;
+    codeLensUpdateCount: number;
+    maxCellCount: number;
+};
 
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
@@ -55,46 +62,73 @@ export interface ICodeLensFactory {
     updateRequired: Event<void>;
     createCodeLenses(document: TextDocument): CodeLens[];
     getCellRanges(document: TextDocument): ICellRange[];
+    getPerfMeasures(): CodeLensPerfMeasures;
 }
 
-export interface ICellHash {
-    line: number; // 1 based
+export interface IGeneratedCode {
+    /**
+     * 1 based, excluding the cell marker.
+     */
+    line: number;
     endLine: number; // 1 based and inclusive
     runtimeLine: number; // Line in the jupyter source to start at
-    hash: string;
     runtimeFile: string; // Name of the cell's file
     executionCount: number;
     id: string; // Cell id as sent to jupyter
     timestamp: number;
     code: string; // Code that was actually hashed (might include breakpoint and other code)
     debuggerStartLine: number; // 1 based line in source .py that we start our file mapping from
+    startOffset: number;
+    endOffset: number;
+    deleted: boolean;
+    realCode: string;
+    trimmedRightCode: string;
+    firstNonBlankLineIndex: number; // zero based. First non blank line of the real code.
+    lineOffsetRelativeToIndexOfFirstLineInCell: number;
+    hasCellMarker: boolean;
 }
 
-export interface IFileHashes {
+export interface IFileGeneratedCodes {
     uri: Uri;
-    hashes: ICellHash[];
+    generatedCodes: IGeneratedCode[];
 }
 
-export const ICellHashListener = Symbol('ICellHashListener');
-export interface ICellHashListener {
-    hashesUpdated(hashes: IFileHashes[]): Promise<void>;
+export const IGeneratedCodeStore = Symbol('IGeneratedCodeStore');
+export interface IGeneratedCodeStore {
+    clear(): void;
+    readonly all: IFileGeneratedCodes[];
+    getFileGeneratedCode(fileUri: Uri): IGeneratedCode[];
+    store(fileUri: Uri, info: IGeneratedCode): void;
 }
 
-export interface ICellHashProvider {
-    updated: Event<void>;
-    getHashes(): IFileHashes[];
-    getExecutionCount(): number;
-    incExecutionCount(): void;
-    addCellHash(notebookCell: NotebookCell): Promise<ICellHash | undefined>;
-    /**
-     * This function will modify a traceback from an error message.
-     * Tracebacks take a form like so:
-     * "[1;31m---------------------------------------------------------------------------[0m"
-     * "[1;31mZeroDivisionError[0m                         Traceback (most recent call last)"
-     * "[1;32md:\Training\SnakePython\foo.py[0m in [0;36m<module>[1;34m[0m\n[0;32m      1[0m [0mprint[0m[1;33m([0m[1;34m'some more'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 2[1;33m [0mcause_error[0m[1;33m([0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
-     * "[1;32md:\Training\SnakePython\foo.py[0m in [0;36mcause_error[1;34m()[0m\n[0;32m      3[0m     [0mprint[0m[1;33m([0m[1;34m'error'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0;32m      4[0m     [0mprint[0m[1;33m([0m[1;34m'now'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 5[1;33m     [0mprint[0m[1;33m([0m [1;36m1[0m [1;33m/[0m [1;36m0[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
-     * "[1;31mZeroDivisionError[0m: division by zero"
-     * Each item in the array being a stack frame.
-     */
-    modifyTraceback(traceback: string[]): string[];
+export const IGeneratedCodeStorageFactory = Symbol('IGeneratedCodeStorageFactory');
+export interface IGeneratedCodeStorageFactory {
+    getOrCreate(notebook: NotebookDocument): IGeneratedCodeStore;
+    get(options: { notebook: NotebookDocument } | { fileUri: Uri }): IGeneratedCodeStore | undefined;
+}
+export type InteractiveCellMetadata = {
+    interactiveWindowCellMarker?: string;
+    interactive: {
+        uristring: string;
+        lineIndex: number;
+        originalSource: string;
+    };
+    generatedCode?: IGeneratedCode;
+    id: string;
+};
+
+export interface IInteractiveWindowCodeGenerator extends IDisposable {
+    reset(): void;
+    generateCode(
+        metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id' | 'interactiveWindowCellMarker'>,
+        cellIndex: number,
+        debug: boolean,
+        usingJupyterDebugProtocol?: boolean
+    ): Promise<IGeneratedCode | undefined>;
+}
+
+export const ICodeGeneratorFactory = Symbol('ICodeGeneratorFactory');
+export interface ICodeGeneratorFactory {
+    getOrCreate(notebook: NotebookDocument): IInteractiveWindowCodeGenerator;
+    get(notebook: NotebookDocument): IInteractiveWindowCodeGenerator | undefined;
 }

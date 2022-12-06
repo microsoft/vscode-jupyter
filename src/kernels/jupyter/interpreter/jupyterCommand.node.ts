@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { SpawnOptions } from 'child_process';
 import { inject, injectable } from 'inversify';
@@ -8,14 +9,16 @@ import { traceError } from '../../../platform/logging';
 import {
     IPythonExecutionService,
     IPythonExecutionFactory,
-    IPythonDaemonExecutionService,
     ExecutionResult
 } from '../../../platform/common/process/types.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { JupyterCommands, JupyterDaemonModule } from '../../../webviews/webview-side/common/constants';
+import { JupyterCommands } from '../../../platform/common/constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types.node';
 
+/**
+ * Launches jupyter using the current python environment.
+ */
 class InterpreterJupyterCommand implements IJupyterCommand {
     protected interpreterPromise: Promise<PythonEnvironment>;
     private pythonLauncher: Promise<IPythonExecutionService>;
@@ -24,47 +27,13 @@ class InterpreterJupyterCommand implements IJupyterCommand {
         protected readonly moduleName: string,
         protected args: string[],
         protected readonly pythonExecutionFactory: IPythonExecutionFactory,
-        private readonly _interpreter: PythonEnvironment,
-        isActiveInterpreter: boolean
+        private readonly _interpreter: PythonEnvironment
     ) {
         this.interpreterPromise = Promise.resolve(this._interpreter);
         this.pythonLauncher = this.interpreterPromise.then(async (interpreter) => {
-            // Create a daemon only if the interpreter is the same as the current interpreter.
-            // We don't want too many daemons (we don't want one for each of the users interpreter on their machine).
-            if (isActiveInterpreter) {
-                const svc = await pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
-                    daemonModule: JupyterDaemonModule,
-                    interpreter
-                });
-
-                // If we're using this command to start notebook, then ensure the daemon can start a notebook inside it.
-                if (
-                    (moduleName.toLowerCase() === 'jupyter' &&
-                        args.join(' ').toLowerCase().startsWith('-m jupyter notebook')) ||
-                    (moduleName.toLowerCase() === 'notebook' && args.join(' ').toLowerCase().startsWith('-m notebook'))
-                ) {
-                    try {
-                        const output = await svc.exec(
-                            [
-                                path.join(
-                                    EXTENSION_ROOT_DIR,
-                                    'pythonFiles',
-                                    'vscode_datascience_helpers',
-                                    'jupyter_nbInstalled.py'
-                                )
-                            ],
-                            {}
-                        );
-                        if (output.stdout.toLowerCase().includes('available')) {
-                            return svc;
-                        }
-                    } catch (ex) {
-                        traceError('Checking whether notebook is importable failed', ex);
-                    }
-                }
-            }
             return pythonExecutionFactory.createActivatedEnvironment({
-                interpreter: this._interpreter
+                allowEnvironmentFetchExceptions: true,
+                interpreter
             });
         });
     }
@@ -96,10 +65,9 @@ export class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand
         moduleName: string,
         args: string[],
         pythonExecutionFactory: IPythonExecutionFactory,
-        interpreter: PythonEnvironment,
-        isActiveInterpreter: boolean
+        interpreter: PythonEnvironment
     ) {
-        super(moduleName, args, pythonExecutionFactory, interpreter, isActiveInterpreter);
+        super(moduleName, args, pythonExecutionFactory, interpreter);
     }
 }
 
@@ -117,10 +85,9 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         moduleName: string,
         args: string[],
         pythonExecutionFactory: IPythonExecutionFactory,
-        interpreter: PythonEnvironment,
-        isActiveInterpreter: boolean
+        interpreter: PythonEnvironment
     ) {
-        super(moduleName, args, pythonExecutionFactory, interpreter, isActiveInterpreter);
+        super(moduleName, args, pythonExecutionFactory, interpreter);
     }
 
     /**
@@ -231,26 +198,13 @@ export class JupyterCommandFactory implements IJupyterCommandFactory {
         command: JupyterCommands,
         moduleName: string,
         args: string[],
-        interpreter: PythonEnvironment,
-        isActiveInterpreter: boolean
+        interpreter: PythonEnvironment
     ): IJupyterCommand {
         if (command === JupyterCommands.NotebookCommand) {
-            return new InterpreterJupyterNotebookCommand(
-                moduleName,
-                args,
-                this.executionFactory,
-                interpreter,
-                isActiveInterpreter
-            );
+            return new InterpreterJupyterNotebookCommand(moduleName, args, this.executionFactory, interpreter);
         } else if (command === JupyterCommands.KernelSpecCommand) {
-            return new InterpreterJupyterKernelSpecCommand(
-                moduleName,
-                args,
-                this.executionFactory,
-                interpreter,
-                isActiveInterpreter
-            );
+            return new InterpreterJupyterKernelSpecCommand(moduleName, args, this.executionFactory, interpreter);
         }
-        return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
+        return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter);
     }
 }

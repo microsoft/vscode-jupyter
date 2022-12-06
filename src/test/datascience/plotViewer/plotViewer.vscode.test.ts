@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -8,7 +8,6 @@ import * as vscode from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { createJupyterCellFromVSCNotebookCell } from '../../../notebooks/helpers';
 import { IExtensionTestApi, waitForCondition } from '../../common.node';
 import { closeActiveWindows, initialize } from '../../initialize.node';
 import {
@@ -19,8 +18,9 @@ import {
     runAllCellsInActiveNotebook,
     waitForExecutionCompletedSuccessfully
 } from '../notebook/helper.node';
+import { createJupyterCellFromVSCNotebookCell } from '../../../kernels/execution/helpers';
 
-suite('VSCode Notebook PlotViewer integration - VSCode Notebook', function () {
+suite('VSCode Notebook PlotViewer integration - VSCode Notebook @webview', function () {
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
     const disposables: IDisposable[] = [];
@@ -60,7 +60,7 @@ plt.show()`,
             { index: 0 }
         );
 
-        const plotCell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const plotCell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(plotCell);
@@ -85,7 +85,8 @@ plt.show()`,
             'Plain Text Mime missing'
         );
     });
-    test('Verify that we generate SVGs when the setting is on', async function () {
+    test.skip('Verify that we generate SVGs when the setting is on', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/12195
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('generateSVGPlots', 'true');
         await startJupyterServer();
@@ -102,7 +103,7 @@ plt.show()`,
             { index: 0 }
         );
 
-        const plotCell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const plotCell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(plotCell);

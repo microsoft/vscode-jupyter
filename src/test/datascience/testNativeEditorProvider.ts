@@ -1,9 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 export const __ = '';
 // import { inject, injectable } from 'inversify';
-// import * as uuid from 'uuid/v4';
+// import uuid from 'uuid/v4';
 // import { CustomDocument, Uri, WebviewPanel } from 'vscode';
 
 // import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';

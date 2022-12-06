@@ -1,21 +1,31 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { FetchError } from 'node-fetch';
 import * as stackTrace from 'stack-trace';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { getTelemetrySafeHashedString } from '../telemetry/helpers';
 import { getErrorTags } from './errors';
 import { getLastFrameFromPythonTraceback } from './errorUtils';
 import { getErrorCategory, TelemetryErrorProperties, BaseError, WrappedError } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProperties>, error: Error) {
+export async function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProperties>, error: Error) {
     props.failed = true;
     // Don't blow away what we already have.
     props.failureCategory = props.failureCategory || getErrorCategory(error);
-    if (props.failureCategory === 'unknown' && isErrorType(error, FetchError)) {
+
+    // In browsers, FetchError is undefined and the error we receive is a `TypeError` with message `Failed to fetch`.
+    const isBrowserFetchError = !FetchError && error?.name === 'TypeError' && error?.message === 'Failed to fetch';
+    const errorType = isBrowserFetchError ? TypeError : FetchError;
+
+    // In the web we might receive other errors besides `TypeError: Failed to fetch`.
+    // In such cases, we should not try to compare the error type with `FetchError`, since it's not defined.
+    const isFetchError = (isBrowserFetchError || FetchError !== undefined) && isErrorType(error, errorType);
+
+    if (props.failureCategory === 'unknown' && isFetchError) {
         props.failureCategory = 'fetcherror';
     }
+
     props.stackTrace = serializeStackTrace(error);
     if (typeof error === 'string') {
         // Helps us determine that we are rejecting with errors in some places, in which case we aren't getting meaningful errors/data.
@@ -31,9 +41,11 @@ export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProp
     if (!info) {
         return;
     }
-    props.pythonErrorFile = props.pythonErrorFile || getTelemetrySafeHashedString(info.fileName);
-    props.pythonErrorFolder = props.pythonErrorFolder || getTelemetrySafeHashedString(info.folderName);
-    props.pythonErrorPackage = props.pythonErrorPackage || getTelemetrySafeHashedString(info.packageName);
+    [props.pythonErrorFile, props.pythonErrorFolder, props.pythonErrorPackage] = await Promise.all([
+        Promise.resolve(props.pythonErrorFile || getTelemetrySafeHashedString(info.fileName)),
+        Promise.resolve(props.pythonErrorFolder || getTelemetrySafeHashedString(info.folderName)),
+        Promise.resolve(props.pythonErrorPackage || getTelemetrySafeHashedString(info.packageName))
+    ]);
 }
 
 function parseStack(ex: Error) {
@@ -81,7 +93,14 @@ function getCallSite(frame: stackTrace.StackFrame) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T> = { new (...args: any[]): T };
+
 function isErrorType<T>(error: Error, expectedType: Constructor<T>) {
+    // If the expectedType is undefined, which may happen in the web,
+    // we should log the error and return false.
+    if (!expectedType) {
+        console.error('Error type is not defined', error);
+        return false;
+    }
     if (error instanceof expectedType) {
         return true;
     }

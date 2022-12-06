@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { OSType } from '../../../platform/common/utils/platform';
 
 // Javascript keyCodes

@@ -1,17 +1,13 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-/* eslint-disable no-console */
+
 import type * as nbformat from '@jupyterlab/nbformat';
-import { logMessage } from '../../react-common/logger';
 import { KernelMessagingApi, PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';
 import { ScriptManager } from '../common/scriptManager';
 import { OutputItem } from 'vscode-notebook-renderer';
-import {
-    SharedMessages,
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages
-} from '../../../../platform/messageTypes';
+import { SharedMessages, IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../messageTypes';
+import { logErrorMessage, logMessage } from '../../react-common/logger';
 
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
@@ -55,7 +51,7 @@ class WidgetManagerComponent {
             cdnsUsed: this.widgetsCanLoadFromCDN,
             isOnline: data.isOnline,
             timedout: data.timedout,
-            error: data.error
+            error: JSON.stringify(data.error)
         });
         console.error(`Failed to to Widget load class ${data.moduleName}${data.className}`, data);
     }
@@ -80,14 +76,17 @@ class WidgetManagerComponent {
 }
 
 const outputDisposables = new Map<string, { dispose(): void }>();
-const htmlDisposables = new WeakMap<HTMLElement, { dispose(): void }>();
-const renderedWidgets = new Set<string>();
+const renderedWidgets = new Map<string, { container: HTMLElement; widget?: { dispose: Function } }>();
 /**
  * Called from renderer to render output.
  * This will be exposed as a public method on window for renderer to render output.
  */
 let stackOfWidgetsRenderStatusByOutputId: { outputId: string; container: HTMLElement; success?: boolean }[] = [];
-export function renderOutput(outputItem: OutputItem, element: HTMLElement, logger: (message: string) => void) {
+export function renderOutput(
+    outputItem: OutputItem,
+    element: HTMLElement,
+    logger: (message: string, category?: 'info' | 'error') => void
+) {
     try {
         stackOfWidgetsRenderStatusByOutputId.push({ outputId: outputItem.id, container: element });
         const output = convertVSCodeOutputToExecuteResultOrDisplayData(outputItem);
@@ -95,20 +94,23 @@ export function renderOutput(outputItem: OutputItem, element: HTMLElement, logge
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const model = output.data['application/vnd.jupyter.widget-view+json'] as any;
         if (!model) {
-            logger(`Error: Model not found to render output ${outputItem.id}`);
+            logger(`Error: Model not found to render output ${outputItem.id}`, 'error');
             // eslint-disable-next-line no-console
             return console.error('Nothing to render');
         }
         /* eslint-disable no-console */
         renderIPyWidget(outputItem.id, model, element, logger);
     } catch (ex) {
-        logger(`Error: render output ${outputItem.id} failed ${ex.toString()}`);
+        logger(`Error: render output ${outputItem.id} failed ${ex.toString()}`, 'error');
         console.error(`Failed to render ipywidget type`, ex);
         throw ex;
     }
 }
 export function disposeOutput(outputId?: string) {
     if (outputId) {
+        // We can't delete the widgets because they may be rerendered when we scroll them into view.
+        // See issue: https://github.com/microsoft/vscode-jupyter/issues/10485
+        // However we can mark them as not being currently rendered.
         stackOfWidgetsRenderStatusByOutputId = stackOfWidgetsRenderStatusByOutputId.filter(
             (item) => !(outputId in item)
         );
@@ -125,10 +127,15 @@ function renderIPyWidget(
         _vsc_test_cellIndex?: number;
     },
     container: HTMLElement,
-    logger: (message: string) => void
+    logger: (message: string, category?: 'info' | 'error') => void
 ) {
+    logger(`Rendering IPyWidget ${outputId} with model ${model.model_id}`);
+    if (renderedWidgets.has(outputId) && renderedWidgets.get(outputId)?.container === container) {
+        return logger('already rendering');
+    }
     if (renderedWidgets.has(outputId)) {
-        return console.error('already rendering');
+        logger('Widget was already rendering for another container, dispose that widget so we can re-render it');
+        renderedWidgets.get(outputId)?.widget?.dispose();
     }
     const output = document.createElement('div');
     output.className = 'cell-output cell-output';
@@ -139,9 +146,17 @@ function renderIPyWidget(
     ele.className = 'cell-output-ipywidget-background';
     container.appendChild(ele);
     ele.appendChild(output);
-    renderedWidgets.add(outputId);
+    renderedWidgets.set(outputId, { container });
     createWidgetView(model, ele)
         .then((w) => {
+            if (renderedWidgets.get(outputId)?.container !== container) {
+                logger('Widget container changed, hence disposing the widget');
+                w?.dispose();
+                return;
+            }
+            if (renderedWidgets.has(outputId)) {
+                renderedWidgets.get(outputId)!.widget = w;
+            }
             const disposable = {
                 dispose: () => {
                     // What if we render the same model in two cells.
@@ -150,7 +165,6 @@ function renderIPyWidget(
                 }
             };
             outputDisposables.set(outputId, disposable);
-            htmlDisposables.set(ele, disposable);
             // Keep track of the fact that we have successfully rendered a widget for this outputId.
             const statusInfo = stackOfWidgetsRenderStatusByOutputId.find((item) => item.outputId === outputId);
             if (statusInfo) {
@@ -158,7 +172,7 @@ function renderIPyWidget(
             }
         })
         .catch((ex) => {
-            logger(`Error: Failed to render ${outputId}, ${ex.toString()}`);
+            logger(`Error: Failed to render ${outputId}, ${ex.toString()}`, 'error');
             console.error('Failed to render', ex);
         });
 }
@@ -198,7 +212,8 @@ async function createWidgetView(
         return await wm?.renderWidget(widgetData, element);
     } catch (ex) {
         // eslint-disable-next-line no-console
-        console.error('Failed to render widget', ex);
+        console.error(`Failed to render widget ${widgetData.model_id}`, ex);
+        logErrorMessage(`Error: Failed to render widget ${widgetData.model_id}, ${ex.toString()}`);
     }
 }
 
@@ -212,6 +227,7 @@ function initialize(context?: KernelMessagingApi) {
     } catch (ex) {
         // eslint-disable-next-line no-console
         console.error('Exception initializing WidgetManager', ex);
+        logErrorMessage(`Error: Exception initializing WidgetManager, ${ex.toString()}`);
     }
 }
 
@@ -241,7 +257,7 @@ let capturedContext: KernelMessagingApi | undefined;
 // To ensure we initialize after the other scripts, wait for them.
 function attemptInitialize(context?: KernelMessagingApi) {
     capturedContext = capturedContext || context;
-    console.log('Attempt Initialize IpyWidgets kernel.js', context);
+    logMessage(`Attempt Initialize IpyWidgets kernel.js : ${JSON.stringify(context)}`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).vscIPyWidgets) {
         logMessage('IPyWidget kernel initializing...');

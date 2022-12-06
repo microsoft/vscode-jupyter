@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
 /* eslint-disable , , @typescript-eslint/no-explicit-any */
@@ -25,6 +26,7 @@ import {
     setTestExecution,
     setUnitTestExecution
 } from '../../platform/common/constants';
+import { sleep } from '../core';
 
 suite('Telemetry', () => {
     let workspaceService: IWorkspaceService;
@@ -161,7 +163,7 @@ suite('Telemetry', () => {
         expect(Reporter.measures).to.deep.equal([measures]);
         expect(Reporter.properties).to.deep.equal([expectedProperties]);
     });
-    test('Send Error Telemetry', () => {
+    test('Send Error Telemetry', async () => {
         rewiremock.enable();
         const error = new Error('Boo');
         rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
@@ -172,22 +174,22 @@ suite('Telemetry', () => {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
-
+        await sleep(1);
         const expectedErrorProperties = {
             failed: 'true',
             failureCategory: 'unknown',
             failureSubCategory: '',
-            originalEventName: eventName
+            hello: 'world',
+            foo: 'bar'
         };
 
-        expect(Reporter.eventName).to.deep.equal(['ERROR']);
+        expect(Reporter.eventName).to.deep.equal([eventName]);
         expect(Reporter.measures).to.deep.equal([measures]);
         expect(Reporter.properties[0].stackTrace).to.be.length.greaterThan(1);
         delete Reporter.properties[0].stackTrace;
         expect(Reporter.properties).to.deep.equal([expectedErrorProperties]);
-        expect(Reporter.errorProps).to.deep.equal([]);
     });
-    test('Send Error Telemetry with stack trace', () => {
+    test('Send Error Telemetry with stack trace', async () => {
         rewiremock.enable();
         const error = new Error('Boo');
         const root = EXTENSION_ROOT_DIR.replace(/\\/g, '/');
@@ -219,22 +221,22 @@ suite('Telemetry', () => {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
-
+        await sleep(1);
         const expectedErrorProperties = {
             failed: 'true',
             failureCategory: 'unknown',
             failureSubCategory: '',
-            originalEventName: eventName
+            hello: 'world',
+            foo: 'bar'
         };
 
         const stackTrace = Reporter.properties[0].stackTrace;
         delete Reporter.properties[0].stackTrace;
 
-        expect(Reporter.eventName).to.deep.equal(['ERROR']);
+        expect(Reporter.eventName).to.deep.equal([eventName]);
         expect(Reporter.measures).to.deep.equal([measures]);
         expect(Reporter.properties).to.deep.equal([expectedErrorProperties]);
         expect(stackTrace).to.be.length.greaterThan(1);
-        expect(Reporter.errorProps).to.deep.equal([]);
 
         const expectedStack = [
             `at Context.test ${root}/src/test/telemetry/index.unit.test.ts:50:23`,

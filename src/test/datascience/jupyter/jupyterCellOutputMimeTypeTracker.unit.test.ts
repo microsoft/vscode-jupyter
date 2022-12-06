@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 export const __ = '';
 // import type * as nbformat from '@jupyterlab/nbformat';
 // import * as fakeTimers from '@sinonjs/fake-timers';
@@ -18,7 +19,7 @@ export const __ = '';
 // import { IDisposable } from '../../../platform/common/types';
 // import { disposeAllDisposables } from '../../../platform/common/helpers';
 
-// suite('DataScience - Cell Output Mimetype Tracker', () => {
+// suite('Cell Output Mimetype Tracker', () => {
 //     const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;
 //     const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
 //     let outputMimeTypeTracker: CellOutputMimeTypeTracker;

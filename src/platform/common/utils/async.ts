@@ -1,21 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
-import { BaseError } from '../../errors/types';
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
-
-/**
- * Error type thrown when a timeout occurs
- */
-export class TimedOutError extends BaseError {
-    constructor(message: string) {
-        super('timeout', message);
-    }
-}
 
 export async function sleep(timeout: number): Promise<number> {
     return new Promise<number>((resolve) => {
@@ -65,11 +54,6 @@ export async function waitForCondition(
             resolve(result);
         };
     });
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isThenable<T>(v: any): v is Thenable<T> {
-    return typeof v?.then === 'function';
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

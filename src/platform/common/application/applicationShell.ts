@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
@@ -34,8 +35,12 @@ import {
     WorkspaceFolder,
     WorkspaceFolderPickOptions
 } from 'vscode';
+import { noop } from '../utils/misc';
 import { IApplicationShell } from './types';
 
+/**
+ * Singleton wrapper around the VS code window namespace. Makes for easier mocking.
+ */
 @injectable()
 export class ApplicationShell implements IApplicationShell {
     public get activeColorTheme(): ColorTheme {
@@ -104,7 +109,7 @@ export class ApplicationShell implements IApplicationShell {
         return window.showInputBox(options, token);
     }
     public openUrl(url: string): void {
-        void env.openExternal(Uri.parse(url));
+        env.openExternal(Uri.parse(url)).then(noop, noop);
     }
 
     public setStatusBarMessage(text: string, hideAfterTimeout: number): Disposable;

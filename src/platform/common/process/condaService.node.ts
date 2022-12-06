@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
@@ -7,17 +7,20 @@ import { EventEmitter, Memento, RelativePattern, Uri, workspace } from 'vscode';
 import { IPythonApiProvider } from '../../api/types';
 import { TraceOptions } from '../../logging/types';
 import { traceDecoratorVerbose, traceError, traceVerbose } from '../../logging';
-import { IPlatformService } from '../platform/types';
+import { IFileSystem, IPlatformService } from '../platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../types';
 import { createDeferredFromPromise } from '../utils/async';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { swallowExceptions } from '../utils/decorators';
-import { IFileSystem } from '../platform/types.node';
 import { homePath } from '../platform/fs-paths.node';
+import { noop } from '../utils/misc';
 
 const CACHEKEY_FOR_CONDA_INFO = 'CONDA_INFORMATION_CACHE';
 const condaEnvironmentsFile = uriPath.joinPath(homePath, '.conda', 'environments.txt');
+/**
+ * Provides utilties to query information about conda that's installed on the same machine as the extension. (Note: doesn't work over remote)
+ */
 @injectable()
 export class CondaService {
     private isAvailable: boolean | undefined;
@@ -37,7 +40,7 @@ export class CondaService {
         @inject(IPlatformService) private readonly ps: IPlatformService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposable[]
     ) {
-        void this.monitorCondaEnvFile();
+        this.monitorCondaEnvFile().catch(noop);
     }
 
     @traceDecoratorVerbose('getCondaVersion', TraceOptions.BeforeCall)
@@ -50,10 +53,12 @@ export class CondaService {
         }
         const promise = async () => {
             const latestInfo = this.getCondaVersionFromPython();
-            void latestInfo.then((version) => {
-                this._version = version;
-                void this.updateCache();
-            });
+            latestInfo
+                .then((version) => {
+                    this._version = version;
+                    this.updateCache().catch(noop);
+                })
+                .catch(noop);
             const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
             await Promise.race([cachedInfo.promise, latestInfo]);
             if (cachedInfo.completed && cachedInfo.value?.version) {
@@ -76,10 +81,13 @@ export class CondaService {
             const latestInfo = this.pythonApi
                 .getApi()
                 .then((api) => (api.getCondaFile ? api.getCondaFile() : undefined));
-            void latestInfo.then((file) => {
-                this._file = file ? Uri.file(file) : undefined;
-                void this.updateCache();
-            });
+            latestInfo
+                .then((file) => {
+                    traceVerbose(`Conda file returned by Python Extension is ${file}`);
+                    this._file = file ? Uri.file(file) : undefined;
+                    this.updateCache().catch(noop);
+                })
+                .catch(noop);
             const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
             await Promise.race([cachedInfo.promise, latestInfo]);
             if (cachedInfo.completed && cachedInfo.value?.file) {
@@ -105,9 +113,9 @@ export class CondaService {
                 const fileDir = path.dirname(file.fsPath);
                 // Batch file depends upon OS
                 if (this.ps.isWindows) {
-                    const possibleBatch = path.join(fileDir, '..', 'condabin', 'conda.bat');
-                    if (await this.fs.localFileExists(possibleBatch)) {
-                        return Uri.file(possibleBatch);
+                    const possibleBatch = Uri.file(path.join(fileDir, '..', 'condabin', 'conda.bat'));
+                    if (await this.fs.exists(possibleBatch)) {
+                        return possibleBatch;
                     }
                 }
             }
@@ -153,10 +161,10 @@ export class CondaService {
 
     private async getCondaEnvsFromEnvFile(): Promise<string[]> {
         try {
-            const fileContents = await this.fs.readLocalFile(condaEnvironmentsFile.fsPath);
+            const fileContents = await this.fs.readFile(condaEnvironmentsFile);
             return fileContents.split('\n').sort();
         } catch (ex) {
-            if (await this.fs.localFileExists(condaEnvironmentsFile.fsPath)) {
+            if (await this.fs.exists(condaEnvironmentsFile)) {
                 traceError(`Failed to read file ${condaEnvironmentsFile}`, ex);
             }
             return [];
@@ -166,9 +174,7 @@ export class CondaService {
         if (!this._file || !this._version) {
             return;
         }
-        const fileHash = this._file.fsPath.toLowerCase().endsWith('conda')
-            ? ''
-            : await this.fs.getFileHash(this._file.fsPath);
+        const fileHash = this._file.fsPath.toLowerCase().endsWith('conda') ? '' : await this.fs.getFileHash(this._file);
         await this.globalState.update(CACHEKEY_FOR_CONDA_INFO, {
             version: this._version.raw,
             file: this._file.fsPath,
@@ -190,7 +196,7 @@ export class CondaService {
         }
         const fileHash = cachedInfo.file.toLowerCase().endsWith('conda')
             ? ''
-            : await this.fs.getFileHash(cachedInfo.file);
+            : await this.fs.getFileHash(Uri.file(cachedInfo.file));
         if (cachedInfo.fileHash === fileHash) {
             return {
                 version: new SemVer(cachedInfo.version),

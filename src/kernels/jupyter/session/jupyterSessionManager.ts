@@ -1,9 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import type {
     ContentsManager,
-    Kernel,
     KernelSpecManager,
     KernelManager,
     ServerConnection,
@@ -11,7 +11,7 @@ import type {
     SessionManager
 } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
-import { CancellationToken, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
 import {
@@ -54,8 +54,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private serverSettings: ServerConnection.ISettings | undefined;
     private _jupyterlab?: typeof import('@jupyterlab/services');
     private readonly userAllowsInsecureConnections: IPersistentState<boolean>;
-    private restartSessionCreatedEvent = new EventEmitter<Kernel.IKernelConnection>();
-    private restartSessionUsedEvent = new EventEmitter<Kernel.IKernelConnection>();
     private disposed?: boolean;
     private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
@@ -83,13 +81,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         );
     }
 
-    public get onRestartSessionCreated() {
-        return this.restartSessionCreatedEvent.event;
-    }
-
-    public get onRestartSessionUsed() {
-        return this.restartSessionUsedEvent.event;
-    }
     public async dispose() {
         if (this.disposed) {
             return;
@@ -110,6 +101,13 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
                 this.sessionManager = undefined;
+            }
+            if (!this.kernelManager?.isDisposed) {
+                this.kernelManager?.dispose();
+            }
+            if (!this.specsManager?.isDisposed) {
+                this.specsManager?.dispose();
+                this.specsManager = undefined;
             }
         } catch (e) {
             traceError(`Exception on session manager shutdown: `, e);
@@ -200,8 +198,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.sessionManager,
             this.contentsManager,
             this.outputChannel,
-            this.restartSessionCreatedEvent.fire.bind(this.restartSessionCreatedEvent),
-            this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent),
             workingDirectory,
             this.configService.getSettings(resource).jupyterLaunchTimeout,
             this.kernelService,
@@ -255,7 +251,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 );
                 // If for some reason the session manager refuses to communicate, fall
                 // back to a default. This may not exist, but it's likely.
-                return [createInterpreterKernelSpec()];
+                return [await createInterpreterKernelSpec()];
             }
         } catch (e) {
             traceError(`SessionManager:getKernelSpecs failure: `, e);
@@ -330,7 +326,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ) as any,
             fetch: this.requestCreator.getFetchMethod(),
-            Request: this.requestCreator.getRequestCtor(connInfo.getAuthHeader),
+            Request: this.requestCreator.getRequestCtor(cookieString, allowUnauthorized, connInfo.getAuthHeader),
             Headers: this.requestCreator.getHeadersCtor()
         };
 

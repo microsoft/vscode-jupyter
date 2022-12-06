@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
@@ -17,11 +17,11 @@ import {
     createEmptyPythonNotebook,
     defaultNotebookTestTimeout
 } from '../helper.node';
-import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
+import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { Settings } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definition (slow)', function () {
+suite('VSCode Intellisense Notebook and Interactive Goto Definition @lsp', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     suiteSetup(async function () {
@@ -49,7 +49,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definitio
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         setIntellisenseTimeout(Settings.IntellisenseTimeout);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
@@ -102,7 +102,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definitio
         );
     });
 
-    test('Import pandas and goto it', async () => {
+    test.skip('Import pandas and goto it', async () => {
         await insertCodeCell('import pandas as pd');
         const cell2 = await insertCodeCell('pd.read_csv');
 

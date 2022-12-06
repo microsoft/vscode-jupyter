@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -143,19 +143,6 @@ function buildConfiguration(bundle) {
                 }
             ]
         );
-    }
-    if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
-        filesToCopy.push({
-            from: path.join(constants.ExtensionRootDir, 'src/webviews/webview-side/ipywidgets/kernel/require.js'),
-            to: path.join(constants.ExtensionRootDir, 'out', 'webviews/webview-side', 'ipywidgetsKernel')
-        });
-    } else if (bundle === 'widgetTester') {
-        ///
-    } else {
-        filesToCopy.push({
-            from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
-            to: path.join(constants.ExtensionRootDir, 'out', 'webviews/webview-side', bundleFolder)
-        });
     }
     const plugins = [
         new webpack.optimize.LimitChunkCountPlugin({

@@ -1,11 +1,15 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import * as vscode from 'vscode';
-import { clearPendingChainedUpdatesForTests } from '../notebooks/execution/notebookUpdater';
-import { IExtensionApi } from '../platform/api';
+import { clearPendingChainedUpdatesForTests } from '../kernels/execution/notebookUpdater';
+import { IExtensionApi } from '../standalone/api/api';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';
 import { sleep } from '../platform/common/utils/async';
 import { clearPendingTimers, IExtensionTestApi } from './common';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
+import { noop } from './core';
 
 export function isInsiders() {
     return vscode.env.appName.indexOf('Insider') > 0 || vscode.env.appName.indexOf('OSS') > 0;
@@ -48,7 +52,7 @@ async function closeWindowsAndNotebooks(): Promise<void> {
     // Work around VS Code issues (sometimes notebooks do not get closed).
     // Hence keep trying.
     for (let counter = 0; counter <= 5 && isANotebookOpen(); counter += 1) {
-        await sleep(counter * 100);
+        await sleep(counter * 10);
         await closeWindowsInternal();
     }
 }
@@ -57,7 +61,7 @@ async function closeWindowsInternal() {
     // If there are no editors, we can skip. This seems to time out if no editors visible.
     if (!vscode.window.visibleTextEditors || !isANotebookOpen()) {
         // Instead just post the command
-        void vscode.commands.executeCommand('workbench.action.closeAllEditors');
+        vscode.commands.executeCommand('workbench.action.closeAllEditors').then(noop, noop);
         return;
     }
 
@@ -66,7 +70,7 @@ async function closeWindowsInternal() {
             super("Command 'workbench.action.closeAllEditors' timed out");
         }
     }
-    const closeWindowsImplementation = (timeout = 2_000) => {
+    const closeWindowsImplementation = (timeout = 1_000) => {
         return new Promise<void>((resolve, reject) => {
             // Attempt to fix #1301.
             // Lets not waste too much time.

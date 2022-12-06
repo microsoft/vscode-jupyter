@@ -1,11 +1,6 @@
 name: 'Build VSIX'
 description: "Build the extension's VSIX"
 
-inputs:
-  package_command:
-     description: 'Package.json package script'
-     required: false
-     default: 'package'
 outputs:
   path:
     description: 'Path to the VSIX'
@@ -17,23 +12,5 @@ runs:
     - run: npm ci --prefer-offline
       shell: bash
 
-    - name: Echo inputs
-      shell: bash
-      run: |
-        echo "Building package with method: ${{inputs.package_command}}"
-       
-
-
-    # Use the GITHUB_RUN_ID environment variable to update the build number.
-    # GITHUB_RUN_ID is a unique number for each run within a repository.
-    # This number does not change if you re-run the workflow run.
-    - name: Update build number
-      run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
-      shell: bash
-
-    # Update change log (for release notes).
-    # - run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID --updateChangelog
-    #   shell: bash
-
-    - run: npm run ${{ inputs.package_command }}
+    - run: npm run package
       shell: bash

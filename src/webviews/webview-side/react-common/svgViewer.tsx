@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import * as React from 'react';
 import { POSITION_TOP, ReactSVGPanZoom, Tool, Value } from 'react-svg-pan-zoom';
@@ -57,9 +58,7 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
     }
 
     public override render() {
-        const plotBackground = this.props.themeMatplotlibPlots
-            ? 'var(--override-widget-background, var(--vscode-notifications-background))'
-            : 'white';
+        const plotBackground = this.props.themeMatplotlibPlots ? 'var(--vscode-notifications-background)' : 'white';
         return (
             <AutoSizer>
                 {({ height, width }) =>

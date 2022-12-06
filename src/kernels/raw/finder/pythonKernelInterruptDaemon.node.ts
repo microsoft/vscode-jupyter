@@ -1,48 +1,228 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
 
-import { ChildProcess } from 'child_process';
-import { MessageConnection, RequestType0 } from 'vscode-jsonrpc';
-import { traceInfo } from '../../../platform/logging';
-import { IPlatformService } from '../../../platform/common/platform/types';
-import { BasePythonDaemon } from '../../../platform/common/process/baseDaemon.node';
-import { IPythonExecutionService } from '../../../platform/common/process/types.node';
-import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { IPythonKernelDaemon } from '../types';
-
-export class PythonKernelInterruptDaemon extends BasePythonDaemon implements IPythonKernelDaemon {
-    private killed?: boolean;
-    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
-    constructor(
-        pythonExecutionService: IPythonExecutionService,
-        platformService: IPlatformService,
-        interpreter: PythonEnvironment,
-        proc: ChildProcess,
-        connection: MessageConnection
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
+import { IPythonExecutionFactory, ObservableExecutionResult } from '../../../platform/common/process/types.node';
+import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { inject, injectable } from 'inversify';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IAsyncDisposable, IDisposableRegistry, IExtensionContext, Resource } from '../../../platform/common/types';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
+import { Disposable, Uri } from 'vscode';
+import { EOL } from 'os';
+import { swallowExceptions } from '../../../platform/common/utils/misc';
+function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
+    // Give preference to globally installed python environments.
+    // The assumption is that users are more likely to uninstall/delete local python environments
+    // than global ones.
+    // The process started for interrupting kernels is per vs code session.
+    // What we'd like to prevent is, a user creates a local python environment, and then we start an interrupt daemon
+    // from that and then they subsequently delete that environment (on linux things should be fine, but on windows, users might not be able
+    // to delete that environment folder as the files are in use).
+    // At least this way user will  not have to exit vscode completely to delete such files/folders.
+    if (
+        isSupportedPythonVersion(interpreter) &&
+        (interpreter?.envType === EnvironmentType.Unknown ||
+            interpreter?.envType === EnvironmentType.Pyenv ||
+            interpreter?.envType === EnvironmentType.Conda)
     ) {
-        super(pythonExecutionService, platformService, interpreter, proc, connection);
+        return true;
     }
-    public async interrupt() {
-        const request = new RequestType0<void, void>('interrupt_kernel');
-        await this.sendRequestWithoutArgs(request);
+    return false;
+}
+function isSupportedPythonVersion(interpreter: PythonEnvironment) {
+    if (
+        (interpreter?.version?.major ?? 3) >= 3 &&
+        // Even thought 3.6 is no longer supported, we know this works well enough for what we want.
+        // This way we don't need to update this every time the supported version changes.
+        (interpreter?.version?.minor ?? 6) >= 6
+    ) {
+        return true;
     }
-    public async kill() {
-        traceInfo('kill daemon');
-        if (this.killed) {
-            return;
+    return false;
+}
+
+type InterruptHandle = number;
+type Command =
+    | { command: 'INITIALIZE_INTERRUPT' }
+    | { command: 'INTERRUPT'; handle: InterruptHandle }
+    | { command: 'DISPOSE_INTERRUPT_HANDLE'; handle: InterruptHandle };
+export type Interrupter = IAsyncDisposable & {
+    handle: InterruptHandle;
+    interrupt: () => Promise<void>;
+};
+/**
+ * Special daemon (process) creator to handle allowing interrupt on windows.
+ * On windows we need a separate process to handle an interrupt signal that we custom send from the extension.
+ * Things like SIGTERM don't work on windows.
+ */
+@injectable()
+export class PythonKernelInterruptDaemon {
+    private startupPromise?: Promise<ObservableExecutionResult<string>>;
+    private messages = new Map<number, { command: Command; deferred: Deferred<unknown> }>();
+    private requestCounter: number = 0;
+    constructor(
+        @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
+        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
+    ) {}
+    public async createInterrupter(pythonEnvironment: PythonEnvironment, resource: Resource): Promise<Interrupter> {
+        try {
+            return await this.createInterrupterImpl(pythonEnvironment, resource);
+        } catch (ex) {
+            traceError(`Failed to create interrupter, trying again`, ex);
+            return this.createInterrupterImpl(pythonEnvironment, resource);
         }
-        this.killed = true;
-        const request = new RequestType0<void, void>('kill_kernel');
-        await this.sendRequestWithoutArgs(request);
+    }
+    private async createInterrupterImpl(
+        pythonEnvironment: PythonEnvironment,
+        resource: Resource
+    ): Promise<Interrupter> {
+        const interruptHandle = (await this.sendCommand(
+            { command: 'INITIALIZE_INTERRUPT' },
+            pythonEnvironment,
+            resource
+        )) as number;
+        if (!interruptHandle) {
+            traceError(`Unable to initialize interrupt handle`);
+            throw new Error(`Unable to initialize interrupt handle`);
+        }
+
+        return {
+            handle: interruptHandle,
+            interrupt: async () => {
+                await this.sendCommand({ command: 'INTERRUPT', handle: interruptHandle }, pythonEnvironment, resource);
+            },
+            dispose: async () => {
+                await this.sendCommand(
+                    { command: 'DISPOSE_INTERRUPT_HANDLE', handle: interruptHandle },
+                    pythonEnvironment,
+                    resource
+                ).catch((ex) => traceError(`Failed to dispose interrupt handle for ${pythonEnvironment.id}`, ex));
+            }
+        };
     }
 
-    public async getInterruptHandle() {
-        traceInfo('get interrupthandle daemon');
-        const request = new RequestType0<number, void>('get_handle');
+    private async getInterpreter(interpreter: PythonEnvironment) {
+        if (interpreter && isBestPythonInterpreterForAnInterruptDaemon(interpreter)) {
+            return interpreter;
+        }
 
-        const response = await this.sendRequestWithoutArgs(request);
-        return response;
+        const interpreters = this.interpreters.resolvedEnvironments;
+        if (interpreters.length === 0) {
+            return interpreter;
+        }
+        return (
+            interpreters.find(isBestPythonInterpreterForAnInterruptDaemon) ||
+            interpreters.find(isSupportedPythonVersion) ||
+            interpreter
+        );
+    }
+    private async initializeInterrupter(pythonEnvironment: PythonEnvironment, resource: Resource) {
+        if (this.startupPromise) {
+            return this.startupPromise;
+        }
+        const promise = (async () => {
+            const interpreter = await this.getInterpreter(pythonEnvironment);
+            const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
+                interpreter,
+                resource
+            });
+            const dsFolder = Uri.joinPath(this.context.extensionUri, 'pythonFiles', 'vscode_datascience_helpers');
+            const file = Uri.joinPath(dsFolder, 'kernel_interrupt_daemon.py');
+            const proc = executionService.execObservable([file.fsPath, '--ppid', process.pid.toString()], {
+                cwd: dsFolder.fsPath
+            });
+
+            await new Promise<void>((resolve, reject) => {
+                let started = false;
+                const subscription = proc.out.subscribe((out) => {
+                    traceInfoIfCI(`Output from interrupt daemon started = ${started}, output = ${out.out} ('END)`);
+                    if (out.source === 'stdout' && out.out.trim().includes('DAEMON_STARTED:') && !started) {
+                        started = true;
+                        resolve();
+                    } else if (out.source === 'stdout' && out.out.includes('INTERRUPT:') && started) {
+                        out.out
+                            .splitLines({ trim: true, removeEmptyEntries: true })
+                            .filter((output) => output.includes('INTERRUPT:'))
+                            .forEach((output) => {
+                                try {
+                                    const [command, id, response] = output.split(':');
+                                    const deferred = this.messages.get(parseInt(id, 10));
+                                    if (deferred) {
+                                        traceVerbose(`Got a response of ${response} for ${command}:${id}`);
+                                        deferred.deferred.resolve(response);
+                                        this.messages.delete(parseInt(id, 10));
+                                    } else {
+                                        traceError(
+                                            `Got a response of ${response} for ${command}:${id} but no command entry found in ${out.out}`
+                                        );
+                                    }
+                                } catch (ex) {
+                                    traceError(`Failed to parse interrupt daemon response, ${out.out}`, ex);
+                                }
+                            });
+                    } else if (out.out.includes('ERROR: handling command')) {
+                        traceWarning(`Error output in interrupt daemon response ${out.out} ('END')`);
+                        if (!started) {
+                            return reject(new Error(`Interrupt daemon failed to start, ${out.out}`));
+                        }
+                        try {
+                            const id = out.out.split(':')[2];
+                            const deferred = this.messages.get(parseInt(id, 10));
+                            if (deferred) {
+                                deferred.deferred.reject(new Error(out.out));
+                                this.messages.delete(parseInt(id, 10));
+                                return;
+                            }
+                        } catch (ex) {
+                            traceError(`Failed to parse interrupt daemon response, ${out.out}`, ex);
+                        }
+                    }
+                });
+                this.disposableRegistry.push(new Disposable(() => subscription.unsubscribe()));
+            });
+            this.disposableRegistry.push(new Disposable(() => swallowExceptions(() => proc.proc?.kill())));
+            // Added for logging to see if this process dies.
+            // We can remove this later if there are no more flaky test failures.
+            proc.proc?.on('close', () => traceInfoIfCI('Interrupt daemon closed'));
+            // Added for logging to see if this process dies.
+            // We can remove this later if there are no more flaky test failures.
+            proc.proc?.on('exit', () => traceInfoIfCI('Interrupt daemon exited'));
+            return proc;
+        })();
+        promise.catch((ex) => traceError(`Failed to start interrupt daemon for (${pythonEnvironment.id})`, ex));
+        this.startupPromise = promise;
+        return promise;
+    }
+    private async sendCommand(
+        command: Command,
+        pythonEnvironment: PythonEnvironment,
+        resource: Resource
+    ): Promise<unknown> {
+        const deferred = createDeferred<unknown>();
+        const id = this.requestCounter++;
+        this.messages.set(id, { command, deferred });
+        const messageToSend =
+            command.command === 'INITIALIZE_INTERRUPT'
+                ? `${command.command}:${id}`
+                : `${command.command}:${id}:${command.handle}`;
+        const { proc } = await this.initializeInterrupter(pythonEnvironment, resource);
+        if (!proc || !proc.stdin) {
+            // An impossible scenario, but types in node.js requires this, and we need to check to keep the compiler happy
+            traceError('No process or stdin');
+            throw new Error('No process or stdin');
+        }
+        proc.stdin.write(`${messageToSend}${EOL}`);
+        traceInfoIfCI(`Sending Interrupt Request id=${id}, Command ${command.command} for ${pythonEnvironment.id}`);
+        const response = await deferred.promise;
+        traceInfoIfCI(`Got Interrupt Response id=${id}, Command ${command.command} for ${pythonEnvironment.id}`);
+        if (command.command === 'INITIALIZE_INTERRUPT') {
+            return parseInt(response as string, 10);
+        }
+        return;
     }
 }

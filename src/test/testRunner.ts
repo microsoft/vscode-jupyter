@@ -1,13 +1,13 @@
-/* eslint-disable local-rules/dont-use-filename */
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/* eslint-disable local-rules/dont-use-filename */
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, , , @typescript-eslint/no-explicit-any, prefer-template, no-console */
 // Most of the source is in node_modules/vscode/lib/testrunner.js
 
 'use strict';
-import * as glob from 'glob';
-import * as Mocha from 'mocha';
+import glob from 'glob';
+import Mocha from 'mocha';
 import * as path from '../platform/vscode-path/path';
 import { IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME } from './constants.node';
 import { noop } from './core';
@@ -48,7 +48,7 @@ export function configure(setupOptions: SetupOptions): void {
 }
 
 export async function run(): Promise<void> {
-    const testsRoot = path.join(__dirname);
+    const testsRoot = path.join(__dirname, '..');
     // Enable source map support.
     require('source-map-support').install();
 
@@ -69,7 +69,7 @@ export async function run(): Promise<void> {
      * @returns
      */
     function initializationScript() {
-        const ex = new Error('Failed to initialize Python extension for tests after 3 minutes');
+        const ex = new Error('Failed to initialize Python Extension for tests after 3 minutes');
         let timer: NodeJS.Timer | undefined;
         const failed = new Promise((_, reject) => {
             timer = setTimeout(() => reject(ex), MAX_EXTENSION_ACTIVATION_TIME);

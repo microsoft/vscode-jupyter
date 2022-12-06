@@ -1,10 +1,5 @@
-// Miscellaneous functions from other spots in VS code
-
-import { Uri } from 'vscode';
-
-export function fsPathToUri(path: string | undefined) {
-    return path ? Uri.file(path) : undefined;
-}
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 export namespace Schemas {
     /**

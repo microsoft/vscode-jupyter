@@ -1,4 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -8,6 +10,9 @@ import { Uri, Range } from 'vscode';
 import { IWorkspaceService, IDocumentManager } from '../application/types';
 import { AbstractSystemVariables } from './systemVariables';
 
+/**
+ * System variables for web extension. Web specific is necessary because of lacking of the current process environment.
+ */
 export class SystemVariables extends AbstractSystemVariables {
     private _workspaceFolder: string;
     private _filePath: string | undefined;

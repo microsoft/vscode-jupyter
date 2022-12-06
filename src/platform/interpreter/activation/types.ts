@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -13,5 +13,4 @@ export interface IEnvironmentActivationService {
         interpreter: PythonEnvironment,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined>;
-    hasActivationCommands(resource: Resource, interpreter?: PythonEnvironment): Promise<boolean>;
 }

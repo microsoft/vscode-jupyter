@@ -1,5 +1,8 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import { assert } from 'chai';
-import { cloneDeep } from 'lodash';
+import cloneDeep = require('lodash/cloneDeep');
 import * as sinon from 'sinon';
 import * as path from '../../../platform/vscode-path/path';
 import * as vscode from 'vscode';
@@ -16,13 +19,13 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { initialize } from '../../initialize.node';
 import { HoverProvider } from '../../../interactive-window/editor-integration/hoverProvider';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IKernelProvider } from '../../../platform/../kernels/types';
+import { IKernelProvider } from '../../../kernels/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
 import { IJupyterVariables } from '../../../kernels/variables/types';
 import { Identifiers } from '../../../platform/common/constants';
 
-suite('Hover provider', async () => {
+suite('Hover provider @lsp', async () => {
     const file = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',

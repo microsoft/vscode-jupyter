@@ -1,11 +1,15 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Arguments = any[];
 
 function valueToLogString(value: unknown, kind: string): string {
+    if (Array.isArray(value)) {
+        return value.map((item) => valueToLogString(item, kind)).join(', ');
+    }
     if (value === undefined) {
         return 'undefined';
     }
@@ -49,5 +53,9 @@ export function returnValueToLogString(returnValue: unknown): string {
 }
 export function getTimeForLogging(): string {
     const date = new Date();
-    return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}`;
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const millis = String(date.getMilliseconds()).padStart(3, '0');
+    return `${hours}:${minutes}:${seconds}.${millis}`;
 }

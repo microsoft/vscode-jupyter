@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -7,6 +7,9 @@ import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { GLOBAL_MEMENTO, IMemento, IPersistentState, IPersistentStateFactory, WORKSPACE_MEMENTO } from './types';
 
+/**
+ * Used to store values that survive the lifetime of the extension.
+ */
 export class PersistentState<T> implements IPersistentState<T> {
     constructor(
         private storage: Memento,

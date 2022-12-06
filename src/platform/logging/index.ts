@@ -1,11 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Disposable, Uri } from 'vscode';
-import { sendTelemetryEvent } from '../../telemetry';
 import { isCI } from '../common/constants';
 import { Arguments, ILogger, LogLevel, TraceDecoratorType, TraceOptions } from './types';
 import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
@@ -102,7 +101,7 @@ export function traceDecoratorWarn(message: string): TraceDecoratorType {
 type ParameterLogInformation =
     | {
           parameterIndex: number;
-          propertyOfParaemterToLog: string;
+          propertyOfParameterToLog: string;
       }
     | { parameterIndex: number; ignore: true };
 type MethodName = string | symbol;
@@ -128,7 +127,7 @@ export function logValue<T>(property: keyof T) {
         const params = parameterInfos.get(methodName)!;
         params.push({
             parameterIndex,
-            propertyOfParaemterToLog: property as string
+            propertyOfParameterToLog: property as string
         });
     };
 }
@@ -221,8 +220,8 @@ function formatArgument(target: Object, method: MethodName, arg: any, parameterI
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let valueToLog: any = arg;
-    if ('propertyOfParaemterToLog' in info && info.propertyOfParaemterToLog) {
-        valueToLog = arg[info.propertyOfParaemterToLog];
+    if ('propertyOfParameterToLog' in info && info.propertyOfParameterToLog) {
+        valueToLog = arg[info.propertyOfParameterToLog];
     }
     return typeof valueToLog === 'string' ? removeUserPaths(valueToLog) : valueToLog;
 }
@@ -274,17 +273,6 @@ function logResult(info: LogInfo, traced: TraceInfo, call?: CallInfo) {
         }
     } else {
         logTo(LogLevel.Error, formatted, traced.err);
-        sendTelemetryEvent(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            'ERROR' as any,
-            undefined,
-            {
-                failureCategory: 'methodException',
-                failureSubCategory: call ? `${call.name}:${call.methodName}` : 'unknown'
-            },
-            traced.err,
-            true
-        );
     }
 }
 
@@ -300,6 +288,9 @@ export function logTo(logLevel: LogLevel, message: string, ...args: Arguments): 
             traceInfo(message, ...args);
             break;
         case LogLevel.Debug:
+            traceVerbose(message, ...args);
+            break;
+        case LogLevel.Trace:
             traceVerbose(message, ...args);
             break;
         default:

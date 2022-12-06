@@ -1,39 +1,12 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as path from '../../vscode-path/path';
 import { getOSType, OSType } from '../utils/platform';
 import { getDisplayPath as getDisplayPathCommon } from './fs-paths';
 import { Uri, WorkspaceFolder } from 'vscode';
+import { homedir } from 'os';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const untildify = require('untildify');
-
-export const homePath = Uri.file(untildify('~')); // This is the only thing requiring a node version
-
-export class Executables {
-    constructor(
-        // the $PATH delimiter to use
-        public readonly delimiter: string,
-        // the OS type to target
-        private readonly osType: OSType
-    ) {}
-    // Create a new object using common-case default values.
-    // We do not use an alternate constructor because defaults in the
-    // constructor runs counter to our typical approach.
-    public static withDefaults(): Executables {
-        return new Executables(
-            // Use node's value.
-            path.delimiter,
-            // Use the current OS.
-            getOSType()
-        );
-    }
-
-    public get envVar(): string {
-        return this.osType === OSType.Windows ? 'Path' : 'PATH';
-    }
-}
+export const homePath = Uri.file(homedir()); // This is the only thing requiring a node version
 
 export function removeHomeFromFile(file: string | undefined) {
     if (getOSType() === OSType.Windows) {

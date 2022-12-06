@@ -1,25 +1,29 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
-import { sha256 } from 'hash.js';
-import * as nock from 'nock';
+import nock from 'nock';
 import * as path from '../../../platform/vscode-path/path';
 import { Readable } from 'stream';
-import { anything, instance, mock, when } from 'ts-mockito';
-import { Uri } from 'vscode';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { ConfigurationTarget, Memento, Uri } from 'vscode';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
-import { IConfigurationService, WidgetCDNs } from '../../../platform/common/types';
+import { IConfigurationService, IDisposable, WidgetCDNs } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
-import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.node';
 import {
-    ILocalResourceUriConverter,
-    IWidgetScriptSourceProvider
-} from '../../../kernels/ipywidgets-message-coordination/types';
+    CDNWidgetScriptSourceProvider,
+    GlobalStateKeyToNeverWarnAboutNoNetworkAccess,
+    GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce
+} from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
+import { IWidgetScriptSourceProvider } from '../../../notebooks/controllers/ipywidgets/types';
+import { HttpClient } from '../../../platform/common/net/httpClient';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { Common, DataScience } from '../../../platform/common/utils/localize';
+import { computeHash } from '../../../platform/common/crypto';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
 const sanitize = require('sanitize-filename');
@@ -28,44 +32,29 @@ const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('DataScience - ipywidget - CDN', () => {
+suite('ipywidget - CDN', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let configService: IConfigurationService;
     let settings: JupyterSettings;
-    let fileSystem: IFileSystem;
-    let webviewUriConverter: ILocalResourceUriConverter;
-    let tempFileCount = 0;
-    suiteSetup(function () {
-        // Nock seems to fail randomly on CI builds. See bug
-        // https://github.com/microsoft/vscode-python/issues/11442
-        // eslint-disable-next-line no-invalid-this
-        return this.skip();
-    });
+    let memento: Memento;
+    let appShell: IApplicationShell;
+    const disposables: IDisposable[] = [];
     setup(() => {
         configService = mock(ConfigurationService);
-        fileSystem = mock(FileSystem);
-        webviewUriConverter = mock(ILocalResourceUriConverter);
         settings = { widgetScriptSources: [] } as any;
         when(configService.getSettings(anything())).thenReturn(settings as any);
-        when(fileSystem.localFileExists(anything())).thenCall((f) => fs.pathExists(f));
-
-        when(fileSystem.createTemporaryLocalFile(anything())).thenCall(createTemporaryFile);
-        when(fileSystem.createLocalWriteStream(anything())).thenCall((p) => fs.createWriteStream(p));
-        when(fileSystem.createDirectory(anything())).thenCall((d) => fs.ensureDir(d));
-        when(webviewUriConverter.rootScriptFolder).thenReturn(
-            Uri.file(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts'))
-        );
-        when(webviewUriConverter.asWebviewUri(anything())).thenCall((u) => u);
+        const httpClient = mock(HttpClient);
+        appShell = mock<IApplicationShell>();
+        memento = mock<Memento>();
         scriptSourceProvider = new CDNWidgetScriptSourceProvider(
+            instance(appShell),
+            instance(memento),
             instance(configService),
-            instance(webviewUriConverter),
-            instance(fileSystem)
+            instance(httpClient)
         );
     });
 
-    teardown(() => {
-        clearDiskCache();
-    });
+    teardown(() => disposeAllDisposables(disposables));
 
     function createStreamFromString(str: string) {
         const readable = new Readable();
@@ -75,38 +64,200 @@ suite('DataScience - ipywidget - CDN', () => {
         return readable;
     }
 
-    function createTemporaryFile(ext: string) {
-        tempFileCount += 1;
-
-        // Put temp files next to extension so we can clean them up later
-        const filePath = path.join(
-            EXTENSION_ROOT_DIR,
-            'tmp',
-            'tempfile_loc',
-            `tempfile_for_test${tempFileCount}.${ext}`
-        );
-        fs.createFileSync(filePath);
-        return {
-            filePath,
-            dispose: () => {
-                fs.removeSync(filePath);
-            }
-        };
-    }
-
-    function generateScriptName(moduleName: string, moduleVersion: string) {
-        const hash = sanitize(sha256().update(`${moduleName}${moduleVersion}`).digest('hex'));
+    async function generateScriptName(moduleName: string, moduleVersion: string) {
+        const hash = sanitize(await computeHash(`${moduleName}${moduleVersion}`, 'SHA-256'));
         return Uri.file(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts', hash, 'index.js')).toString();
     }
+    test('Prompt to use CDN', async () => {
+        when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve();
 
-    function clearDiskCache() {
-        try {
-            fs.removeSync(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts'));
-            fs.removeSync(path.join(EXTENSION_ROOT_DIR, 'tmp', 'tempfile_loc'));
-        } catch {
-            // Swallow any errors here
-        }
+        await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1', true);
+
+        verify(
+            appShell.showInformationMessage(
+                DataScience.useCDNForWidgetsNoInformation(),
+                deepEqual({ modal: true }),
+                Common.ok(),
+                Common.doNotShowAgain(),
+                Common.moreInfo()
+            )
+        ).once();
+    });
+    test('Warn if there is no network access and CDN is used', async () => {
+        settings.widgetScriptSources = ['jsdelivr.com'];
+        when(appShell.showWarningMessage(anything(), anything(), anything(), anything())).thenResolve();
+        when(memento.get(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, anything())).thenReturn(false);
+
+        await scriptSourceProvider.getWidgetScriptSource('Hello World', '1', false);
+
+        verify(
+            appShell.showWarningMessage(
+                DataScience.cdnWidgetScriptNotAccessibleWarningMessage().format(
+                    'Hello World',
+                    JSON.stringify(settings.widgetScriptSources)
+                ),
+                Common.ok(),
+                Common.doNotShowAgain(),
+                Common.moreInfo()
+            )
+        ).once();
+    });
+    test('Do not warn if there is no network access and CDN is not used', async () => {
+        settings.widgetScriptSources = [];
+        when(appShell.showWarningMessage(anything(), anything(), anything(), anything())).thenResolve();
+        when(memento.get(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, anything())).thenReturn(false);
+
+        await scriptSourceProvider.getWidgetScriptSource('Hello World', '1', false);
+
+        verify(
+            appShell.showWarningMessage(
+                DataScience.cdnWidgetScriptNotAccessibleWarningMessage().format(
+                    'Hello World',
+                    JSON.stringify(settings.widgetScriptSources)
+                ),
+                Common.ok(),
+                Common.doNotShowAgain(),
+                Common.moreInfo()
+            )
+        ).never();
+    });
+    test('Verify we track the fact that we should not warn again if there is no network access', async () => {
+        settings.widgetScriptSources = ['jsdelivr.com'];
+        when(appShell.showWarningMessage(anything(), anything(), anything(), anything())).thenResolve(
+            Common.doNotShowAgain() as any
+        );
+        when(memento.get(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, anything())).thenReturn(false);
+
+        await scriptSourceProvider.getWidgetScriptSource('Hello World', '1', false);
+
+        verify(
+            appShell.showWarningMessage(
+                DataScience.cdnWidgetScriptNotAccessibleWarningMessage().format(
+                    'Hello World',
+                    JSON.stringify(settings.widgetScriptSources)
+                ),
+                Common.ok(),
+                Common.doNotShowAgain(),
+                Common.moreInfo()
+            )
+        ).once();
+        verify(memento.update(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, true)).once();
+    });
+    test('Do not prompt to use CDN if user has chosen not to use a CDN', async () => {
+        when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve();
+        when(memento.get(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, false)).thenReturn(true);
+
+        await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
+
+        verify(
+            appShell.showInformationMessage(
+                DataScience.useCDNForWidgetsNoInformation(),
+                deepEqual({ modal: true }),
+                Common.ok(),
+                Common.doNotShowAgain(),
+                Common.moreInfo()
+            )
+        ).never();
+    });
+    test('Return an empty item if CDN is not configured', async () => {
+        settings.widgetScriptSources = [];
+
+        const result = await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
+
+        assert.deepEqual(result, { moduleName: 'HelloWorld' });
+    });
+    function verifyNoCDNUpdatedInSettings() {
+        // Confirm message was displayed.
+        verify(
+            appShell.showInformationMessage(
+                DataScience.useCDNForWidgetsNoInformation(),
+                anything(),
+                Common.ok(),
+                Common.doNotShowAgain(),
+                Common.moreInfo()
+            )
+        ).once();
+
+        // Confirm settings were updated.
+        verify(
+            configService.updateSetting('widgetScriptSources', deepEqual([]), undefined, ConfigurationTarget.Global)
+        ).once();
     }
+    test('Do not update if prompt is dismissed', async () => {
+        when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve();
+
+        await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
+
+        verify(configService.updateSetting(anything(), anything(), anything(), anything())).never();
+        verify(memento.update(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, anything())).never();
+    });
+    test('Do not update settings if Cancel is clicked in prompt', async () => {
+        when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
+            Common.cancel() as any
+        );
+
+        await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
+
+        verify(configService.updateSetting(anything(), anything(), anything(), anything())).never();
+        verify(memento.update(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, anything())).never();
+    });
+    test('Update settings to not use CDN if `Do Not Show Again` is clicked in prompt', async () => {
+        when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
+            Common.doNotShowAgain() as any
+        );
+
+        await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
+
+        verifyNoCDNUpdatedInSettings();
+        verify(memento.update(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, true)).once();
+    });
+    test('Update settings to use CDN based on prompt', async () => {
+        when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
+            Common.ok() as any
+        );
+
+        await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
+
+        // Confirm message was displayed.
+        verify(
+            appShell.showInformationMessage(
+                DataScience.useCDNForWidgetsNoInformation(),
+                anything(),
+                Common.ok(),
+                Common.doNotShowAgain(),
+                Common.moreInfo()
+            )
+        ).once();
+        // Confirm settings were updated.
+        verify(memento.update(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, true)).once();
+        verify(
+            configService.updateSetting(
+                'widgetScriptSources',
+                deepEqual(['jsdelivr.com', 'unpkg.com']),
+                undefined,
+                ConfigurationTarget.Global
+            )
+        ).once();
+    });
+    test('When CDN is turned on and widget script is not found, then display a warning about script not found on CDN', async () => {
+        settings.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
+
+        let values = await scriptSourceProvider.getWidgetScriptSource('module1', '1');
+
+        assert.deepEqual(values, { moduleName: 'module1' });
+        const expectedMessage = DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format(
+            'module1',
+            '1',
+            JSON.stringify((<any>settings).widgetScriptSources)
+        );
+        verify(appShell.showWarningMessage(expectedMessage, anything(), anything(), anything())).once();
+
+        // Ensure message is not displayed more than once.
+        values = await scriptSourceProvider.getWidgetScriptSource('module1', '1');
+
+        assert.deepEqual(values, { moduleName: 'module1' });
+        verify(appShell.showWarningMessage(expectedMessage, anything(), anything(), anything())).once();
+    });
 
     [true, false].forEach((localLaunch) => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
@@ -121,17 +272,19 @@ suite('DataScience - ipywidget - CDN', () => {
                 settings.widgetScriptSources = values;
             }
             (['unpkg.com', 'jsdelivr.com'] as WidgetCDNs[]).forEach((cdn) => {
-                suite(cdn, () => {
+                // Nock seems to fail randomly on CI builds. See bug
+                // https://github.com/microsoft/vscode-python/issues/11442
+                // eslint-disable-next-line no-invalid-this
+                suite.skip(cdn, () => {
                     const moduleName = 'HelloWorld';
                     const moduleVersion = '1';
                     let baseUrl = '';
                     let scriptUri = '';
-                    setup(() => {
+                    setup(async () => {
                         baseUrl = cdn === 'unpkg.com' ? unpgkUrl : jsdelivrUrl;
-                        scriptUri = generateScriptName(moduleName, moduleVersion);
+                        scriptUri = await generateScriptName(moduleName, moduleVersion);
                     });
                     teardown(() => {
-                        clearDiskCache();
                         scriptSourceProvider.dispose();
                         nock.cleanAll();
                     });

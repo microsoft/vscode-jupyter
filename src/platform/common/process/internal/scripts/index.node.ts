@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import * as path from '../../../../vscode-path/path';
@@ -31,8 +31,6 @@ const SCRIPTS_DIR = _SCRIPTS_DIR;
 // ignored scripts:
 //  * install_debugpy.py  (used only for extension development)
 
-export * as testing_tools from './testing_tools.node';
-
 //============================
 // interpreterInfo.py
 
@@ -45,23 +43,6 @@ export type PythonEnvInfo = {
     is64Bit: boolean;
     exe: string;
 };
-
-export function interpreterInfo(): [string[], (out: string) => PythonEnvInfo] {
-    const script = path.join(SCRIPTS_DIR, 'interpreterInfo.py');
-    const args = [script];
-
-    function parse(out: string): PythonEnvInfo {
-        let json: PythonEnvInfo;
-        try {
-            json = JSON.parse(out);
-        } catch (ex) {
-            throw Error(`python ${args} returned bad JSON (${out}) (${ex})`);
-        }
-        return json;
-    }
-
-    return [args, parse];
-}
 
 //============================
 // completion.py

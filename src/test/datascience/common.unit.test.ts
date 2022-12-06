@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { assert } from 'chai';
-import { formatStreamText } from '../../webviews/webview-side/common';
+import { formatStreamText } from '../../platform/common/utils';
 
-suite('DataScience Common Tests', () => {
+suite('Common Tests', () => {
     test('formatting stream text', async () => {
         assert.equal(formatStreamText('\rExecute\rExecute 1'), 'Execute 1');
         assert.equal(formatStreamText('\rExecute\r\nExecute 2'), 'Execute\nExecute 2');

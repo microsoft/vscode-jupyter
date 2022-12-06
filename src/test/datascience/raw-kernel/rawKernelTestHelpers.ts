@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
-import { KernelMessage } from '@jupyterlab/services';
-import { JSONObject } from '@lumino/coreutils';
+import type { KernelMessage } from '@jupyterlab/services';
+import type { JSONObject } from '@lumino/coreutils';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { RawKernel } from '../../../kernels/raw/session/rawKernel.node';
 

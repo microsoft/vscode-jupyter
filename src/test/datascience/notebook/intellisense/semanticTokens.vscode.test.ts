@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
@@ -21,7 +21,7 @@ import {
 } from '../helper.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode semantic token tests', function () {
+suite('VSCode semantic token tests @lsp', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -51,7 +51,7 @@ suite('DataScience - VSCode semantic token tests', function () {
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
@@ -60,8 +60,8 @@ suite('DataScience - VSCode semantic token tests', function () {
     test('Open a notebook and add a bunch of cells', async function () {
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1');
         await insertCodeCell('\ndef test():\n  print("test")\ntest()');
-        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
+        const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
 
         // Wait for tokens on the first cell (it works with just plain pylance)
         await waitForCondition(
@@ -86,11 +86,11 @@ suite('DataScience - VSCode semantic token tests', function () {
         assert.equal(tokens.data[0], 1, 'Tokens not correctly offset');
     });
 
-    test('Edit cells in a notebook', async function () {
+    test.skip('Edit cells in a notebook', async function () {
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1');
         await insertCodeCell('\ndef test():\n  print("test")\ntest()');
-        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
+        const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
 
         const editor = window.visibleTextEditors.find((e) => e.document.uri === cell1.document.uri);
         await editor?.edit((b) => {
@@ -122,21 +122,16 @@ suite('DataScience - VSCode semantic token tests', function () {
         assert.deepStrictEqual(actualTokens, expectedTokens, 'Tokens not correct after edit');
     });
 
-    test('Special token check', async function () {
+    test.skip('Special token check', async function () {
         await insertCodeCell(
             'import sqllite3 as sql\n\nconn = sql.connect("test.db")\ncur = conn.cursor()\n# BLAH BLAH'
         );
-        await insertCodeCell('\n');
-        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
-
-        const editor = window.visibleTextEditors.find((e) => e.document.uri === cell2.document.uri);
-        await editor?.edit((b) => {
-            b.insert(
-                new Position(1, 0),
-                'data = [\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n]'
-            );
-        });
+        await insertCodeCell(
+            '\ndata = [\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n]',
+            { index: 1 }
+        );
+        const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
 
         // Wait for tokens on the first cell (it works with just plain pylance)
         await waitForCondition(

@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { Event, Uri } from 'vscode';
 import { ClassType } from '../../ioc/types';
+import { Resource } from '../types';
 
 export type EnvironmentVariables = Object & Record<string, string | undefined>;
 
@@ -49,10 +50,25 @@ export interface ISystemVariables {
 
 export type ISystemVariablesConstructor = ClassType<ISystemVariables>;
 
-export const IEnvironmentVariablesProvider = Symbol('IEnvironmentVariablesProvider');
+export const ICustomEnvironmentVariablesProvider = Symbol('ICustomEnvironmentVariablesProvider');
 
-export interface IEnvironmentVariablesProvider {
+export interface ICustomEnvironmentVariablesProvider {
+    /**
+     * Triggered when the .env file changes.
+     */
     onDidEnvironmentVariablesChange: Event<Uri | undefined>;
-    getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables>;
-    getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined>;
+    /**
+     * Gets merged result of process.env and env variables defined in the .env file.
+     */
+    getEnvironmentVariables(
+        resource: Resource,
+        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+    ): Promise<EnvironmentVariables>;
+    /**
+     * Gets the env variables defined in the .env file.
+     */
+    getCustomEnvironmentVariables(
+        resource: Resource,
+        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+    ): Promise<EnvironmentVariables | undefined>;
 }

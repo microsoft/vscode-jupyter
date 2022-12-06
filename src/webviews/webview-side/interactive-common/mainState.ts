@@ -1,25 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
-import { IJupyterExtraSettings } from '../../extension-side/types';
+import { IJupyterExtraSettings } from '../../../platform/webviews/types';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
-
-export enum CursorPos {
-    Top,
-    Bottom,
-    Current
-}
-
-// The state we are in for run by line debugging
-export enum DebugState {
-    Break,
-    Design,
-    Run
-}
-
-export function activeDebugState(state: DebugState): boolean {
-    return state === DebugState.Break || state === DebugState.Run;
-}
 
 export type IMainState = {
     busy: boolean;
@@ -57,8 +41,6 @@ const darkStyle = `
             --code-string-color: #ce9178;
             --code-variable-color: #9CDCFE;
             --code-type-color: #4EC9B0;
-            --code-font-family: Consolas, 'Courier New', monospace;
-            --code-font-size: 14px;
         }
 `;
 

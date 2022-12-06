@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import {
     Breakpoint,
@@ -72,7 +73,7 @@ import {
 } from 'vscode';
 
 import { IAsyncDisposable, Resource } from '../types';
-import { ICommandNameArgumentTypeMapping } from './commands';
+import { ICommandNameArgumentTypeMapping } from '../../../commands';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 
@@ -963,6 +964,12 @@ export interface IApplicationEnvironment {
      * @readonly
      */
     readonly extensionName: string;
+    /**
+     * The extension name.
+     *
+     * @readonly
+     */
+    readonly extensionVersion: string;
 
     /**
      * The application root folder from which the editor is running.
@@ -1096,19 +1103,19 @@ export interface IWebview {
 // Wraps the VS Code webview view
 export const IWebviewView = Symbol('IWebviewView');
 export interface IWebviewView extends IWebview {
-    readonly onDidChangeVisiblity: Event<void>;
+    readonly onDidChangeVisibility: Event<void>;
     readonly visible: boolean;
 }
 
 export interface IWebviewOptions {
-    rootPath: string;
-    cwd: string;
-    scripts: string[];
+    rootPath: Uri;
+    cwd: Uri;
+    scripts: Uri[];
     /**
      * Additional paths apart from cwd and rootPath, that webview would allow loading resources/files from.
      * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
      */
-    additionalPaths?: string[];
+    additionalPaths?: Uri[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     settings?: any;
     // Instead of creating a webview we may be passed on already created by VS Code
@@ -1147,11 +1154,6 @@ export interface IWebviewPanel extends IWebview {
      * Indicates if the webview has the focus or not.
      */
     isActive(): boolean;
-    /**
-     * Updates the current working directory for serving up files.
-     * @param cwd
-     */
-    updateCwd(cwd: string): void;
 }
 
 export interface IWebviewPanelOptions extends IWebviewOptions {
@@ -1199,14 +1201,6 @@ export interface ILanguageService {
 
 export type Channel = 'stable' | 'insiders';
 
-/**
- * Wraps the `ActiveResourceService` API class. Created for injecting and mocking class methods in testing
- */
-export const IActiveResourceService = Symbol('IActiveResourceService');
-export interface IActiveResourceService {
-    getActiveResource(): Resource;
-}
-
 export const IClipboard = Symbol('IClipboard');
 export interface IClipboard {
     /**
@@ -1247,11 +1241,11 @@ export interface IVSCodeNotebook {
             notebook: NotebookDocument,
             controller: NotebookController
         ) => void | Thenable<void>,
-        rendererScripts?: NotebookRendererScript[]
+        rendererScripts?: NotebookRendererScript[],
+        additionalLocalResourceRoots?: Uri[]
     ): NotebookController;
     openNotebookDocument(uri: Uri): Thenable<NotebookDocument>;
     openNotebookDocument(viewType: string, content?: NotebookData): Promise<NotebookDocument>;
-    showNotebookDocument(uri: Uri, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
     showNotebookDocument(document: NotebookDocument, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
 }
 

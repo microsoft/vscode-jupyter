@@ -1,17 +1,16 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import '../../platform/common/extensions';
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { NotebookCell, NotebookCellKind, NotebookDocument, Range, TextDocument, Uri } from 'vscode';
-
-import { appendLineFeed, generateMarkdownFromCodeLines, parseForComments } from '../../webviews/webview-side/common';
+import { NotebookCellKind, NotebookDocument, Range, TextDocument, Uri } from 'vscode';
 import { CellMatcher } from './cellMatcher';
-import { createJupyterCellFromVSCNotebookCell } from '../../notebooks/helpers';
-import { ICell, ICellRange, IJupyterSettings, Resource } from '../../platform/common/types';
+import { ICell, ICellRange, IJupyterSettings } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { getInteractiveCellMetadata } from '../helpers';
+import { createJupyterCellFromVSCNotebookCell } from '../../kernels/execution/helpers';
+import { appendLineFeed, parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
 
 export function createCodeCell(): nbformat.ICodeCell;
 // eslint-disable-next-line @typescript-eslint/unified-signatures
@@ -77,13 +76,6 @@ function generateMarkdownCell(code: string[], uri: Uri | undefined, useSourceAsI
         uri,
         data: createMarkdownCell(code, useSourceAsIs)
     };
-}
-
-export function getCellResource(cell: NotebookCell): Resource {
-    if (getInteractiveCellMetadata(cell)?.interactive.uristring) {
-        return Uri.parse(cell.metadata.interactive.uristring);
-    }
-    return undefined;
 }
 
 export function generateCells(

@@ -1,6 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import * as vscode from 'vscode';
+import { IDisposableRegistry } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
 import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from './types';
 
@@ -9,12 +11,53 @@ import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from '
  * extra data on the other extension's UI.
  */
 export class JupyterUriProviderWrapper implements IJupyterUriProvider {
-    constructor(private readonly provider: IJupyterUriProvider, private packageName: string) {}
+    onDidChangeHandles?: vscode.Event<void>;
+    getHandles?(): Promise<JupyterServerUriHandle[]>;
+    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
+
+    constructor(
+        private readonly provider: IJupyterUriProvider,
+        private packageName: string,
+        disposables: IDisposableRegistry
+    ) {
+        if (provider.onDidChangeHandles) {
+            const _onDidChangeHandles = new vscode.EventEmitter<void>();
+            this.onDidChangeHandles = _onDidChangeHandles.event.bind(this);
+
+            disposables.push(_onDidChangeHandles);
+            disposables.push(
+                provider.onDidChangeHandles(() => {
+                    _onDidChangeHandles.fire();
+                })
+            );
+        }
+
+        if (provider.getHandles) {
+            this.getHandles = async () => {
+                return provider.getHandles!();
+            };
+        }
+
+        if (provider.removeHandle) {
+            this.removeHandle = (handle: JupyterServerUriHandle) => {
+                return provider.removeHandle!(handle);
+            };
+        }
+    }
     public get id() {
         return this.provider.id;
     }
-    public getQuickPickEntryItems(): vscode.QuickPickItem[] {
-        return this.provider.getQuickPickEntryItems().map((q) => {
+    public get displayName(): string | undefined {
+        return this.provider.displayName;
+    }
+    public get detail(): string | undefined {
+        return this.provider.detail;
+    }
+    public async getQuickPickEntryItems(): Promise<vscode.QuickPickItem[]> {
+        if (!this.provider.getQuickPickEntryItems) {
+            return [];
+        }
+        return (await this.provider.getQuickPickEntryItems()).map((q) => {
             return {
                 ...q,
                 // Add the package name onto the description
@@ -26,10 +69,13 @@ export class JupyterUriProviderWrapper implements IJupyterUriProvider {
             };
         });
     }
-    public handleQuickPick(
+    public async handleQuickPick(
         item: vscode.QuickPickItem,
         back: boolean
     ): Promise<JupyterServerUriHandle | 'back' | undefined> {
+        if (!this.provider.handleQuickPick) {
+            return;
+        }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((item as any).original) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

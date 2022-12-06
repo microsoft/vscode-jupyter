@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -9,11 +9,14 @@ import { CancellationToken } from 'vscode';
 import { parseSemVer } from '../../../platform/common/utils';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ResourceSet } from '../../../platform/vscode-path/map';
-import { JupyterCommands } from '../../../webviews/webview-side/common/constants';
+import { JupyterCommands } from '../../../telemetry';
 import { IInstaller, Product } from '../../installer/types';
 import { INbConvertInterpreterDependencyChecker } from '../types';
 import { IJupyterCommandFactory } from '../types.node';
 
+/**
+ * Checks the dependencies for nbconvert.
+ */
 @injectable()
 export class NbConvertInterpreterDependencyChecker implements INbConvertInterpreterDependencyChecker {
     // Track interpreters that nbconvert has been installed into

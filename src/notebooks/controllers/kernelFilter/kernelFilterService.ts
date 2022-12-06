@@ -1,4 +1,5 @@
-// import { INotebookControllerManager } from './types';
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, EventEmitter, Uri } from 'vscode';
@@ -11,6 +12,9 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../platform/common/constants';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
+/**
+ * Keeps track of which kernels are filtered or not. Supports local and remote but not 'live' kernels.
+ */
 @injectable()
 export class KernelFilterService implements IDisposable {
     private readonly disposables: IDisposable[] = [];
@@ -31,22 +35,18 @@ export class KernelFilterService implements IDisposable {
     }
     public isKernelHidden(kernelConnection: KernelConnectionMetadata): boolean {
         const hiddenList = this.getFilters();
-        if (
-            kernelConnection.kind === 'connectToLiveRemoteKernel' ||
-            kernelConnection.kind === 'startUsingRemoteKernelSpec'
-        ) {
+        if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
             return false;
         }
         const hidden = hiddenList.some((item) => {
-            if (
-                kernelConnection.kind === 'startUsingLocalKernelSpec' &&
-                item.type === 'jupyterKernelspec' &&
-                kernelConnection.kernelSpec.specFile
-            ) {
+            if (item.type === 'jupyterKernelspec' && kernelConnection.kernelSpec.specFile) {
                 return item.path.toLowerCase() === kernelConnection.kernelSpec.specFile.toLowerCase();
             }
             if (kernelConnection.kind === 'startUsingPythonInterpreter' && item.type === 'pythonEnvironment') {
                 return item.path.toLowerCase() === getDisplayPath(kernelConnection.interpreter.uri).toLowerCase();
+            }
+            if (kernelConnection.kind === 'startUsingRemoteKernelSpec' && item.type === 'remoteKernelSpec') {
+                return item.path === `${kernelConnection.kernelSpec.name}${kernelConnection.serverId}`;
             }
             return false;
         });
@@ -75,7 +75,7 @@ export class KernelFilterService implements IDisposable {
         const itemsToHide = hiddenKernels
             .map((item) => {
                 const filter = this.translateConnectionToFilter(item);
-                if (!filter || duplicates.has(filter?.path)) {
+                if (!filter || duplicates.has(filter.path)) {
                     return;
                 }
                 duplicates.add(filter.path);
@@ -111,11 +111,20 @@ export class KernelFilterService implements IDisposable {
                 path: getDisplayPath(connection.interpreter.uri),
                 type: 'pythonEnvironment'
             };
+        } else if (
+            connection.kind === 'startUsingRemoteKernelSpec' &&
+            connection.kernelSpec.name &&
+            connection.serverId
+        ) {
+            return <RemoteSpecFilter>{
+                path: `${connection.kernelSpec.name}${connection.serverId}`,
+                type: 'remoteKernelSpec'
+            };
         }
     }
 }
 
-type KernelFilter = KernelSpecFiter | InterpreterFiter;
+type KernelFilter = KernelSpecFiter | InterpreterFiter | RemoteSpecFilter;
 type KernelSpecFiter = {
     type: 'jupyterKernelspec';
     /**
@@ -136,6 +145,13 @@ type InterpreterFiter = {
      * Later we can support multiple OS (via env variables such as $CONDAPATH or the like)
      * E.g. `~/miniconda3/envs/wow/hello/python`
      * Paths defined here can be case insensitive and path seprators can be either / or \
+     */
+    path: string;
+};
+type RemoteSpecFilter = {
+    type: 'remoteKernelSpec';
+    /**
+     * Combination of the name and serverid
      */
     path: string;
 };

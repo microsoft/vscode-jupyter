@@ -1,13 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable local-rules/node-imports */
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+/* eslint-disable local-rules/node-imports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /** DO NOT USE VSCODE in this file. It's loaded outside of an extension */
 
-import * as getFreePort from 'get-port';
+import getFreePort from 'get-port';
 import * as tcpPortUsed from 'tcp-port-used';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as child_process from 'child_process';
@@ -18,8 +19,9 @@ import { Observable } from 'rxjs-compat/Observable';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 
-import * as iconv from 'iconv-lite';
 import { sleep } from '../core';
+import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
+import { noop } from '../../platform/common/utils/misc';
 
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
@@ -32,9 +34,8 @@ function getPythonPath(): string {
 }
 
 class BufferDecoder {
-    public decode(buffers: Buffer[], encoding: string = 'utf-8'): string {
-        encoding = iconv.encodingExists(encoding) ? encoding : 'utf-8';
-        return iconv.decode(Buffer.concat(buffers), encoding);
+    public decode(buffers: Buffer[]): string {
+        return Buffer.concat(buffers).toString('utf-8');
     }
 }
 
@@ -69,6 +70,10 @@ function traceInfoIfCI(message: string) {
 }
 
 export class JupyterServer {
+    /**
+     * Used in vscode debugger launcher `preDebugWebTest.js` to kill the Jupyter Server by pid.
+     */
+    public pid: number = -1;
     public static get instance(): JupyterServer {
         if (!JupyterServer._instance) {
             JupyterServer._instance = new JupyterServer();
@@ -79,8 +84,10 @@ export class JupyterServer {
     private _disposables: IDisposable[] = [];
     private _jupyterServerWithToken?: Promise<string>;
     private _secondJupyterServerWithToken?: Promise<string>;
+    private _jupyterServerWithCert?: Promise<string>;
     private availablePort?: number;
     private availableSecondPort?: number;
+    private availableThirdPort?: number;
     private decoder = new BufferDecoder();
     public async dispose() {
         this._jupyterServerWithToken = undefined;
@@ -89,13 +96,42 @@ export class JupyterServer {
         disposeAllDisposables(this._disposables);
         traceInfo('Shutting Jupyter server used for remote tests');
         if (this.availablePort) {
-            await tcpPortUsed.waitUntilFree(this.availablePort, 200, 5_000);
+            await tcpPortUsed.waitUntilFree(this.availablePort, 200, 5_000).catch(noop);
         }
         if (this.availableSecondPort) {
-            await tcpPortUsed.waitUntilFree(this.availableSecondPort, 200, 5_000);
+            await tcpPortUsed.waitUntilFree(this.availableSecondPort, 200, 5_000).catch(noop);
         }
     }
-    public async startJupyterWithToken(token = this.generateToken()): Promise<string> {
+
+    public async startJupyterWithCert(detached?: boolean): Promise<string> {
+        if (!this._jupyterServerWithCert) {
+            this._jupyterServerWithCert = new Promise<string>(async (resolve, reject) => {
+                const token = this.generateToken();
+                const port = await this.getThirdFreePort();
+                // Possible previous instance of jupyter has not completely shutdown.
+                // Wait for it to shutdown fully so that we can re-use the same port.
+                await tcpPortUsed.waitUntilFree(port, 200, 10_000);
+                try {
+                    await this.startJupyterServer({
+                        port,
+                        token,
+                        useCert: true,
+                        detached
+                    });
+                    await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
+
+                    // Anything with a cert is https, not http
+                    resolve(`https://localhost:${port}/?token=${token}`);
+                } catch (ex) {
+                    reject(ex);
+                }
+            });
+        }
+        return this._jupyterServerWithCert;
+    }
+
+    public async startJupyterWithToken({ detached }: { detached?: boolean } = {}): Promise<string> {
+        const token = this.generateToken();
         if (!this._jupyterServerWithToken) {
             this._jupyterServerWithToken = new Promise<string>(async (resolve, reject) => {
                 const port = await this.getFreePort();
@@ -105,10 +141,13 @@ export class JupyterServer {
                 try {
                     await this.startJupyterServer({
                         port,
-                        token
+                        token,
+                        detached
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    resolve(`http://localhost:${port}/?token=${token}`);
+                    const url = `http://localhost:${port}/?token=${token}`;
+                    console.log(`Started Jupyter Server on ${url}`);
+                    resolve(url);
                 } catch (ex) {
                     reject(ex);
                 }
@@ -129,7 +168,9 @@ export class JupyterServer {
                         token
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    resolve(`http://localhost:${port}/?token=${token}`);
+                    const url = `http://localhost:${port}/?token=${token}`;
+                    console.log(`Started Jupyter Server on ${url}`);
+                    resolve(url);
                 } catch (ex) {
                     reject(ex);
                 }
@@ -158,7 +199,26 @@ export class JupyterServer {
         return this.availableSecondPort!;
     }
 
-    private startJupyterServer({ token, port }: { token: string; port: number }): Promise<void> {
+    private async getThirdFreePort() {
+        // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
+        // The remote uri is cached in a few places (known issue).
+        if (!this.availableThirdPort) {
+            this.availableThirdPort = await getFreePort({ host: 'localhost' }).then((p) => p);
+        }
+        return this.availableThirdPort!;
+    }
+
+    private startJupyterServer({
+        token,
+        port,
+        useCert,
+        detached
+    }: {
+        token: string;
+        port: number;
+        useCert?: boolean;
+        detached?: boolean;
+    }): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             try {
                 const args = [
@@ -170,13 +230,35 @@ export class JupyterServer {
                     `--NotebookApp.token=${token}`,
                     `--NotebookApp.allow_origin=*`
                 ];
+                if (useCert) {
+                    const pemFile = path.join(
+                        EXTENSION_ROOT_DIR,
+                        'src',
+                        'test',
+                        'datascience',
+                        'serverConfigFiles',
+                        'jcert.pem'
+                    );
+                    const keyFile = path.join(
+                        EXTENSION_ROOT_DIR,
+                        'src',
+                        'test',
+                        'datascience',
+                        'serverConfigFiles',
+                        'jkey.key'
+                    );
+                    args.push(`--certfile=${pemFile}`);
+                    args.push(`--keyfile=${keyFile}`);
+                }
                 traceInfoIfCI(`Starting Jupyter on CI with args ${args.join(' ')}`);
                 const result = this.execObservable(getPythonPath(), args, {
-                    cwd: testFolder
+                    cwd: testFolder,
+                    detached
                 });
                 if (!result.proc) {
                     throw new Error('Starting Jupyter failed, no process');
                 }
+                this.pid = result.proc.pid;
                 result.proc.once('close', () => traceInfo('Shutting Jupyter server used for remote tests (closed)'));
                 result.proc.once('disconnect', () =>
                     traceInfo('Shutting Jupyter server used for remote tests (disconnected)')
@@ -195,7 +277,10 @@ export class JupyterServer {
                     }
                 };
                 const subscription = result.out.subscribe((output) => {
-                    traceInfo(`Test Remote Jupyter Server Output: ${output.out}`);
+                    // When debugging Web Tests using VSCode dfebugger, we'd like to see this info.
+                    // This way we can click the link in the output panel easily.
+                    console.info(output.out);
+                    traceInfoIfCI(`Test Remote Jupyter Server Output: ${output.out}`);
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels')) {
                         resolve();
                     }
@@ -214,7 +299,6 @@ export class JupyterServer {
         args: string[],
         options: child_process.SpawnOptions = {}
     ): ObservableExecutionResult<string> {
-        const encoding = 'utf8';
         const proc = child_process.spawn(file, args, options);
         let procExited = false;
         traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);
@@ -239,7 +323,7 @@ export class JupyterServer {
             };
 
             const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-                const out = this.decoder.decode([data], encoding);
+                const out = this.decoder.decode([data]);
                 subscriber.next({ source, out: out });
             };
 

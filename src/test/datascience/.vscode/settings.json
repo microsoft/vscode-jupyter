@@ -22,14 +22,20 @@
     "files.autoSaveDelay": 1,
     // We don't want jupyter to start when testing (DS functionality or anything else).
     "jupyter.disableJupyterAutoStart": true,
-    "jupyter.logging.level": "debug",
+    // In web tests, VS Code will be reading this property (as we're changing the scope of this setting from machine to resource).
+    "jupyter.logging.level": "verbose",
     "python.logging.level": "debug",
     "webview.experimental.useIframes": true,
     "jupyter.interactiveWindowMode": "multiple",
     "jupyter.magicCommandsAsComments": false,
     // Python experiments have to be on for insiders to work
     "python.experiments.enabled": true,
-    "python.defaultInterpreterPath": "python",
     "jupyter.generateSVGPlots": false,
-    "jupyter.jupyterServerType": "local"
+    // See https://github.com/microsoft/vscode-jupyter/issues/10258
+    "jupyter.forceIPyKernelDebugger": false,
+    "python.defaultInterpreterPath": "python",
+    "task.problemMatchers.neverPrompt": {
+        "shell": true,
+        "npm": true
+    }
 }

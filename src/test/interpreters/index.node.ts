@@ -1,14 +1,13 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import * as path from '../../platform/vscode-path/path';
 import '../../platform/common/extensions';
 import { traceError } from '../../platform/logging';
-import { BufferDecoder } from '../../platform/common/process/decoder.node';
 import { PythonEnvInfo } from '../../platform/common/process/internal/scripts/index.node';
 import { ProcessService } from '../../platform/common/process/proc.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { parsePythonVersion } from '../../platform/pythonEnvironments/info/pythonVersion';
+import { parsePythonVersion } from '../../platform/pythonEnvironments/info/pythonVersion.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { isCondaEnvironment } from './condaLocator.node';
 import { getCondaEnvironment, getCondaFile, isCondaAvailable } from './condaService.node';
@@ -40,7 +39,7 @@ export async function getInterpreterInfo(pythonPath: Uri | undefined): Promise<P
     const promise = (async () => {
         try {
             const cli = await getPythonCli(pythonPath);
-            const processService = new ProcessService(new BufferDecoder());
+            const processService = new ProcessService();
             const argv = [...cli, path.join(SCRIPTS_DIR, 'interpreterInfo.py').fileToCommandArgument()];
             const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');
             const result = await processService.shellExec(cmd, {
@@ -55,6 +54,7 @@ export async function getInterpreterInfo(pythonPath: Uri | undefined): Promise<P
             const json: PythonEnvInfo = JSON.parse(result.stdout.trim());
             const rawVersion = `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}`;
             return {
+                id: json.exe,
                 uri: Uri.file(json.exe),
                 displayName: `Python${rawVersion}`,
                 version: parsePythonVersion(rawVersion),
@@ -78,7 +78,7 @@ export async function getActivatedEnvVariables(pythonPath: Uri): Promise<NodeJS.
     }
     const promise = (async () => {
         const cli = await getPythonCli(pythonPath);
-        const processService = new ProcessService(new BufferDecoder());
+        const processService = new ProcessService();
         const separator = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d';
         const argv = [...cli, path.join(SCRIPTS_DIR, 'printEnvVariables.py')];
         const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');
@@ -90,7 +90,7 @@ export async function getActivatedEnvVariables(pythonPath: Uri): Promise<NodeJS.
             shell: defaultShell
         });
         if (result.stderr && result.stderr.length) {
-            traceError(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
+            traceError(`Failed to get env vars for shell ${defaultShell} with ${argv} stderr: ${result.stderr}`);
             return;
         }
         try {
@@ -99,7 +99,7 @@ export async function getActivatedEnvVariables(pythonPath: Uri): Promise<NodeJS.
             const output = result.stdout;
             return JSON.parse(output.substring(output.indexOf(separator) + separator.length).trim());
         } catch (ex) {
-            traceError(`Failed to parse interpreter information for ${argv}`, ex);
+            traceError(`Failed to get env vars for shell ${defaultShell} with ${argv}`, ex);
         }
     })();
     envVariables.set(key, promise);

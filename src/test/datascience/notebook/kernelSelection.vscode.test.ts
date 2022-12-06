@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
@@ -6,17 +6,13 @@ import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { commands, Uri, window } from 'vscode';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { BufferDecoder } from '../../../platform/common/process/decoder.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IDisposable } from '../../../platform/common/types';
-import { IKernelProvider } from '../../../platform/../kernels/types';
+import { IKernelProvider } from '../../../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import {
-    getInterpreterHash,
-    getNormalizedInterpreterPath
-} from '../../../platform/pythonEnvironments/info/interpreter';
+import { getNormalizedInterpreterPath } from '../../../platform/pythonEnvironments/info/interpreter';
 import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize.node';
@@ -35,15 +31,17 @@ import {
     defaultNotebookTestTimeout,
     createTemporaryNotebookFromFile
 } from './helper.node';
-import { getTextOutputValue } from '../../../notebooks/helpers';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
+import { getTextOutputValue } from '../../../kernels/execution/helpers';
+import { noop } from '../../core';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
-suite('DataScience - VSCode Notebook - Kernel Selection', function () {
+suite('Kernel Selection @kernelPicker', function () {
     const disposables: IDisposable[] = [];
-    const templateIPynbFile = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src/test/datascience/notebook/nbWithKernel.ipynb'
+    const templateIPynbFile = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/notebook/nbWithKernel.ipynb')
     );
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     const venvNoKernelPython = Uri.file(
@@ -69,6 +67,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     const venvNoRegSearchString = '.venvnoreg';
     let activeInterpreterSearchString = '';
     let vscodeNotebook: IVSCodeNotebook;
+    let serverUriStorage: IJupyterServerUriStorage;
+    let jupyterServerUri: string | undefined;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
     /*
     This test requires a virtual environment to be created & registered as a kernel.
@@ -91,6 +91,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+        serverUriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
 
         if (!pythonChecker.isPythonExtensionInstalled) {
             return this.skip();
@@ -98,17 +99,39 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         // Wait for all interpreters so we can make sure we can get details on the paths we have
-        await interpreterService.getInterpreters();
-        const [activeInterpreter, interpreter1, interpreter2, interpreter3] = await Promise.all([
-            interpreterService.getActiveInterpreter(),
-            interpreterService.getInterpreterDetails(venvNoKernelPython),
-            interpreterService.getInterpreterDetails(venvKernelPython),
-            interpreterService.getInterpreterDetails(venvNoRegPath)
-        ]);
+        await waitForCondition(
+            async () => {
+                if ((await interpreterService.getActiveInterpreter()) !== undefined) {
+                    return true;
+                }
+                return false;
+            },
+            defaultNotebookTestTimeout,
+            'Waiting for interpreters to be discovered'
+        );
+
+        let lastError: Error | undefined = undefined;
+        const [activeInterpreter, interpreter1, interpreter2, interpreter3] = await waitForCondition(
+            async () => {
+                try {
+                    return await Promise.all([
+                        interpreterService.getActiveInterpreter(),
+                        interpreterService.getInterpreterDetails(venvNoKernelPython),
+                        interpreterService.getInterpreterDetails(venvKernelPython),
+                        interpreterService.getInterpreterDetails(venvNoRegPath)
+                    ]);
+                } catch (ex) {
+                    lastError = ex;
+                }
+            },
+            defaultNotebookTestTimeout,
+            () => `Failed to get interpreter information for 1,2, 3 &/or 4, ${lastError?.toString()}`
+        );
+
         if (!activeInterpreter || !interpreter1 || !interpreter2 || !interpreter3) {
-            throw new Error('Unable to get information for interpreter 1');
+            throw new Error('Unable to get information for interpreter 2');
         }
-        activeInterpreterPath = activeInterpreter?.uri;
+        activeInterpreterPath = activeInterpreter.uri;
         venvNoKernelPythonPath = interpreter1.uri;
         venvKernelPythonPath = interpreter2.uri;
         venvNoRegPythonPath = interpreter3.uri;
@@ -123,7 +146,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
                 : activeInterpreterPath.fsPath;
 
         // Ensure IPykernel is in all environments.
-        const proc = new ProcessService(new BufferDecoder());
+        const proc = new ProcessService();
         await Promise.all([
             proc.exec(venvNoKernelPython.fsPath, ['-m', 'pip', 'install', 'ipykernel']),
             proc.exec(venvKernelPython.fsPath, ['-m', 'pip', 'install', 'ipykernel']),
@@ -131,22 +154,19 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         ]);
 
         await startJupyterServer();
+        jupyterServerUri = (await serverUriStorage.getRemoteUri())?.uri;
         sinon.restore();
     });
 
     setup(async function () {
         console.log(`Start test ${this.currentTest?.title}`);
+        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getNewApi();
+        const env = await pythonApi?.environments.resolveEnvironment(venvNoKernelPythonPath.fsPath);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile1 = await createTemporaryNotebookFromFile(templateIPynbFile, disposables, venvNoKernelDisplayName);
         // Update hash in notebook metadata.
-        fs.writeFileSync(
-            nbFile1.fsPath,
-            fs
-                .readFileSync(nbFile1.fsPath)
-                .toString('utf8')
-                .replace('<hash>', getInterpreterHash({ uri: venvNoKernelPythonPath }))
-        );
+        fs.writeFileSync(nbFile1.fsPath, fs.readFileSync(nbFile1.fsPath).toString('utf8').replace('<id>', env!.id));
         await closeActiveWindows();
         sinon.restore();
         console.log(`Start Test completed ${this.currentTest?.title}`);
@@ -155,6 +175,9 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         console.log(`End test ${this.currentTest?.title}`);
         await closeNotebooksAndCleanUpAfterTests(disposables);
         console.log(`End test completed ${this.currentTest?.title}`);
+        if (jupyterServerUri) {
+            await serverUriStorage.setUriToRemote(jupyterServerUri, '');
+        }
     });
 
     test('Ensure we select active interpreter as kernel (when Raw Kernels)', async function () {
@@ -165,7 +188,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         await waitForCondition(
@@ -197,11 +220,11 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
-        await openNotebook(nbFile1);
-        await waitForKernelToGetAutoSelected(undefined);
+        const { editor } = await openNotebook(nbFile1);
+        await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),
@@ -219,8 +242,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
         await insertCodeCell('print("Hello World")', { index: 1 });
 
-        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
 
         // If it was successfully selected, then we know a Python kernel was correctly selected & managed to run the code.
         await Promise.all([
@@ -234,11 +257,11 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
-        await openNotebook(nbFile1);
-        await waitForKernelToGetAutoSelected(undefined);
+        const { editor } = await openNotebook(nbFile1);
+        await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),
@@ -265,7 +288,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),
@@ -282,7 +305,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         }
 
         // Very this kernel gets disposed when we switch the notebook kernel.
-        const kernel = kernelProvider.get(window.activeNotebookEditor!.document.uri)!;
+        const kernel = kernelProvider.get(window.activeNotebookEditor!.notebook)!;
         assert.ok(kernel, 'Kernel is not defined');
         const eventListener = createEventHandler(kernel, 'onDisposed');
 
@@ -304,7 +327,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Verify the new kernel is not the same as the old.
         assert.isFalse(
-            kernel === kernelProvider.get(window.activeNotebookEditor!.document.uri),
+            kernel === kernelProvider.get(window.activeNotebookEditor!.notebook),
             'Kernels should not be the same'
         );
     });
@@ -316,7 +339,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),
@@ -332,7 +355,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await waitForKernelToChange({ interpreterPath: venvNoRegPythonPath });
 
         // Clear the cells & execute again
-        void commands.executeCommand('notebook.clearAllCellsOutputs');
+        commands.executeCommand('notebook.clearAllCellsOutputs').then(noop, noop);
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
         await Promise.all([
             runAllCellsInActiveNotebook(),

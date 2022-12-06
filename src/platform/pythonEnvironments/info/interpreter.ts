@@ -1,22 +1,17 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { sha256 } from 'hash.js';
 import { Uri } from 'vscode';
 import * as uriPath from '../../vscode-path/resources';
 import { PythonEnvironment } from '.';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { getFilePath } from '../../common/platform/fs-paths';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 
 export function getInterpreterHash(interpreter: PythonEnvironment | {uri: Uri}){
     const interpreterPath = getNormalizedInterpreterPath(interpreter.uri);
-    return sha256().update(interpreterPath.path).digest('hex');
+    return getTelemetrySafeHashedString(interpreterPath.path);
 }
-
-export function areInterpretersSame(i1: PythonEnvironment | undefined, i2: PythonEnvironment | undefined) {
-    return areInterpreterPathsSame(i1?.uri, i2?.uri) && i1?.displayName == i2?.displayName;
-}
-
 /**
  * Sometimes on CI, we have paths such as (this could happen on user machines as well)
  *  - /opt/hostedtoolcache/Python/3.8.11/x64/python
@@ -56,13 +51,4 @@ export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = U
         return fsPath.endsWith('/bin/python') && fsPath.split('/').length > 4 ? Uri.file(fsPath.replace('/bin/python', '/python')) : Uri.file(fsPath);
     }
     return Uri.file(fsPath);
-}
-
-/**
- * Generates a unique id for an intepreter
- * @param interpreter 
- * @returns 
- */
-export function getInterpreterId(interpreter: PythonEnvironment) {
-    return getInterpreterHash(interpreter);
 }

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -9,10 +9,10 @@ import {
     JupyterCompletionItem,
     generateSortString,
     filterCompletions
-} from '../../../../intellisense/pythonKernelCompletionProvider.node';
+} from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { MockDocument } from '../../mockDocument';
 
-suite('DataScience - Jupyter Completion Unit Tests', () => {
+suite('Jupyter Completion Unit Tests', () => {
     let mockDocument: MockDocument;
     setup(() => {
         mockDocument = new MockDocument('print(1)\n', 'test.ipynb', () => Promise.resolve(false));
@@ -94,7 +94,7 @@ suite('DataScience - Jupyter Completion Unit Tests', () => {
             new vscode.Position(1, 1)
         );
         assert.isNotEmpty(filtered, 'Filtered list should have an item in it');
-        assert.equal(filtered.length, 1, 'Wrong number of filtered results');
+        assert.equal(filtered.length, 2, 'Wrong number of filtered results');
         assert.ok(
             filtered.find((f) => f.label == 'test.ipynb'),
             'Inside string should show paths'
@@ -118,7 +118,7 @@ suite('DataScience - Jupyter Completion Unit Tests', () => {
             new vscode.Position(1, 7)
         );
         assert.isNotEmpty(filtered, 'Filtered list should have an item in it');
-        assert.equal(filtered.length, 2, 'Wrong number of filtered results');
+        assert.equal(filtered.length, 3, 'Wrong number of filtered results');
         assert.ok(
             filtered.find((f) => f.label == 'test.ipynb'),
             'Inside string didnt work'

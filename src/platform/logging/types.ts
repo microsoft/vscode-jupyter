@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/ban-types */
@@ -45,5 +45,6 @@ export enum TraceOptions {
 }
 
 export enum ConsoleForegroundColors {
-    Green = '\x1b[32m'
+    Green = '\x1b[32m',
+    Red = `\x1b[31m`
 }

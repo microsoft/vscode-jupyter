@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { noop } from 'lodash';
 import { StatusBarAlignment, StatusBarItem } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import {
@@ -11,18 +10,22 @@ import {
     ICommandManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { IDisposable, IDisposableRegistry, IFeaturesManager } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
-import { Commands } from '../../webviews/webview-side/common/constants';
+import { Commands } from '../../platform/common/constants';
 import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
-import { isJupyterNotebook } from '../helpers';
-import { INotebookControllerManager } from '../types';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { Settings } from '../../platform/common/constants';
+import { isJupyterNotebook } from '../../platform/common/utils';
+import { noop } from '../../platform/common/utils/misc';
+import { IControllerSelection } from './types';
 
+/**
+ * Implements the UI for the status bar that says 'Jupyter:Local' or 'Jupyter:Remote'
+ */
 @injectable()
 export class RemoteSwitcher implements IExtensionSingleActivationService {
-    private readonly disposables: IDisposable[] = [];
+    private disposables: IDisposable[] = [];
     constructor(
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
@@ -31,7 +34,8 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
+        @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection,
+        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
     ) {
         this.disposableRegistry.push(this);
     }
@@ -40,6 +44,20 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         this.disposables.forEach((item) => item.dispose());
     }
     public async activate(): Promise<void> {
+        const updatePerFeature = () => {
+            if (this.featuresManager.features.kernelPickerType === 'Insiders') {
+                this.disposables.forEach((item) => item.dispose());
+                this.disposables = [];
+            } else {
+                this._registerStatusBar();
+            }
+        };
+
+        this.disposableRegistry.push(this.featuresManager.onDidChangeFeatures(() => updatePerFeature()));
+        updatePerFeature();
+    }
+
+    private _registerStatusBar() {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SelectNativeJupyterUriFromToolBar, this.onToolBarCommand, this)
         );
@@ -48,29 +66,25 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         this.notebook.onDidChangeActiveNotebookEditor(this.updateStatusBar.bind(this), this.disposables);
         this.documentManager.onDidChangeActiveTextEditor(this.updateStatusBar.bind(this), this.disposables);
         this.serverUriStorage.onDidChangeUri(this.updateStatusBar.bind(this), this.disposables);
-        this.notebookControllerManager.onNotebookControllerSelected(
-            this.updateStatusBar.bind(this),
-            this,
-            this.disposables
-        );
+        this.notebookControllerSelection.onControllerSelected(this.updateStatusBar.bind(this), this, this.disposables);
         this.disposables.push(this.statusBarItem);
         this.updateStatusBar().catch(noop);
     }
     private async onToolBarCommand() {
-        await this.serverSelector.selectJupyterURI(true, 'nativeNotebookToolbar');
+        await this.serverSelector.selectJupyterURI('nativeNotebookToolbar');
     }
     private async updateStatusBar() {
-        if (!this.notebook.activeNotebookEditor || !isJupyterNotebook(this.notebook.activeNotebookEditor.document)) {
+        if (!this.notebook.activeNotebookEditor || !isJupyterNotebook(this.notebook.activeNotebookEditor.notebook)) {
             this.statusBarItem.hide();
             return;
         }
         this.statusBarItem.show();
-        const uri = await this.serverUriStorage.getUri();
+        const uri = await this.serverUriStorage.getRemoteUri();
         const label =
-            uri === Settings.JupyterServerLocalLaunch
+            !uri || !uri.isValidated || uri.uri === Settings.JupyterServerLocalLaunch
                 ? DataScience.jupyterNativeNotebookUriStatusLabelForLocal()
                 : DataScience.jupyterNativeNotebookUriStatusLabelForRemote();
-        const tooltipSuffix = uri === Settings.JupyterServerLocalLaunch ? '' : ` (${uri})`;
+        const tooltipSuffix = uri?.uri === Settings.JupyterServerLocalLaunch ? '' : ` (${uri})`;
         const tooltip = `${DataScience.specifyLocalOrRemoteJupyterServerForConnections()}${tooltipSuffix}`;
         this.statusBarItem.text = `$(debug-disconnect) ${label}`;
         this.statusBarItem.tooltip = tooltip;

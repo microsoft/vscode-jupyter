@@ -25,18 +25,10 @@ on:
   schedule:
     - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code pre-release builds which is 11pm PDT)
   workflow_dispatch:
-    inputs:
-      publishPreRelease:
-        description: 'Publish Pre-Release'
-        required: false
-        default: 'Do not publish'
-        type: choice
-        options:
-          - Do not publish
-          - Yes, publish pre-release
 
 env:
-  NODE_VERSION: 16.13.0
+  NODE_VERSION: 16.14.2
+  NPM_VERSION: 8.15.1
   PYTHON_VERSION: 3.8
   JULIA_VERSION: 1.5.2
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
@@ -54,10 +46,8 @@ env:
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install pre-release in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
-  VSIX_NAME_PYTHON: 'ms-python-insiders.vsix'
-  VSC_JUPTYER_PYTHON_EXTENSION_VERSION: 'stable'
   VSC_JUPYTER_LOG_KERNEL_OUTPUT: true
-  DOTNET_VERSION: 6.0.x
+  DOTNET_VERSION: 7.0.x
 
 jobs:
   # Make sure to cancel previous runs on a push
@@ -65,89 +55,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.11.0
         with:
           access_token: ${{ github.token }}
 
-  pick_environment:
-    name: Pick Environment
-    runs-on: ubuntu-latest
-    outputs:
-      vsix_name: ${{ env.vsix_name }}
-      test_matrix_os: ${{ env.test_matrix_os }}
-      release_channel: ${{ env.release_channel }}
-      package_command: ${{ env.package_command }}
-    if: github.repository == 'microsoft/vscode-jupyter'
-    steps:
-      - name: dump_event
-        uses: crazy-max/ghaction-dump-context@v1
-
-      - name: default_package
-        run: |
-          echo "package_command=package" >> $GITHUB_ENV
-
-      - name: pr
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
-          echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
-
-      - name: pr release push
-        if: github.event_name == 'pull_request' && contains(github.event.body, 'publish')
-        run: |
-          echo "release_channel=stable" >> $GITHUB_ENV
-          echo "package_command=packagePreRelease" >> $GITHUB_ENV
-
-      - name: pre-release
-        if: (github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        run: |
-          echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
-          echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
-
-      #   - name:
-      #       pre-release channel
-      #       # Scheduled builds will publish pre-release builds.
-      #     if: (github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
-      #     run: |
-      #       echo "package_command=packagePreRelease" >> $GITHUB_ENV
-      #       echo "release_channel=pre-release" >> $GITHUB_ENV
-
-      - name: release
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && contains(github.ref, 'refs/heads/release')
-        run: |
-          echo "vsix_name=ms-toolsai-jupyter-release.vsix" >> $GITHUB_ENV
-          echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
-
-      - name: release channel
-        # All pushes to release can push to marketplace place with the words `release` `publish` in commit.
-        if: github.event_name == 'push' && contains(github.ref, 'refs/heads/release') && contains(github.event.head_commit.message, 'release') && contains(github.event.head_commit.message, 'publish')
-        run: |
-          echo "release_channel=stable" >> $GITHUB_ENV
-
   build-vsix:
-    needs: pick_environment
     name: Build VSIX
     runs-on: ubuntu-latest
-    # if: github.repository == 'microsoft/vscode-jupyter'
+    if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
+
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -162,18 +97,12 @@ jobs:
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
-        with:
-          package_command: ${{ needs.pick_environment.outputs.package_command }}
         id: build-vsix
 
-      - name: Rename VSIX for release branch
-        if: steps.build-vsix.outputs.path != needs.pick_environment.outputs.vsix_name
-        run: mv ${{ steps.build-vsix.outputs.path }} ${{ needs.pick_environment.outputs.vsix_name }}
-
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
-          name: ${{needs.pick_environment.outputs.vsix_name}}
-          path: ${{needs.pick_environment.outputs.vsix_name}}
+          name: 'ms-toolsai-jupyter-insiders.vsix'
+          path: 'ms-toolsai-jupyter-insiders.vsix'
 
   lint:
     name: Lint
@@ -181,16 +110,16 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache pip files
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}
 
       - name: Cache npm files
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
@@ -215,7 +144,7 @@ jobs:
         run: npx prettier 'build/**/*.js' --check
 
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
@@ -230,7 +159,7 @@ jobs:
         run: npm run prePublishNonBundle
 
       - name: Cache the out/ directory
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
@@ -238,43 +167,36 @@ jobs:
       - name: Check dependencies
         run: npm run checkDependencies
 
-      - name: 'Check for telemetry edit'
-        uses: brettcannon/check-for-changed-files@v1.1.0
-        with:
-          prereq-pattern: './src/telemetry/index.ts'
-          file-pattern: 'telemetry.md'
-          skip-label: 'skip telemetry'
-          failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'
+      - name: Check changes to package-lock.json
+        run: npx gulp validatePackageLockJson
 
-    #   - name: 'Check for news entry'
-    #     uses: brettcannon/check-for-changed-files@v1.1.0
-    #     with:
-    #       file-pattern: 'news/*/*.md'
-    #       skip-label: 'skip news'
-    #       failure-message: 'News entry file missing; see news/README.md for instructions (the ${skip-label} label can be used to pass this check)'
+      - name: Validate TELEMETRY files
+        run: npm run validateTelemetry
 
   ts_tests:
-    needs: pick_environment
     name: Type Script Tests
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
       fail-fast: false
       matrix:
-        os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
+        os: ["ubuntu-latest", "windows-latest"]
         test-suite: [ts-unit]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
+
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         if: matrix.os != 'windows-latest'
         with:
           path: ~/.npm
@@ -288,7 +210,7 @@ jobs:
         run: |
           echo "::set-output name=dir::$(npm config get cache)"
       - name: Cache npm on windows
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         if: matrix.os == 'windows-latest'
         with:
           path: ${{ steps.npm-cache.outputs.dir }}
@@ -299,7 +221,7 @@ jobs:
       - name: Cache compiled TS files
         # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
         id: out-cache
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
@@ -309,13 +231,16 @@ jobs:
 
       - name: Compile if not cached
         run: npm run prePublishNonBundle
+        if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
 
-        # if: steps.out-cache.outputs.cache-hit == false
       - name: Run TypeScript unit tests
         id: test_unittests
         run: npm run test:unittests
+
+      - name: Verify there are no unhandled errors
+        run: npm run verifyUnhandledErrors
 
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
@@ -330,10 +255,10 @@ jobs:
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
         with:
-          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
           path: .nyc_output
           retention-days: 1
 
@@ -347,63 +272,82 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jupyter: [raw, local]
-        python: [nonConda, conda]
-        pythonVersion: ['3.9', '3.10']
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest]
+        jupyterConnection: [raw] # valid values include raw = uzing zqm, local = using local jupyter, remote = using remote jupyter, web = using remote jupyter in web mode
+        python: [python]  # valid values include python,conda,noPython
+        pythonVersion: ['3.10']
         # Whether we're using stable (<empty>) or pre-release versions of Python packages.
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
         packageVersion: ['']
+        tags: ['^[^@]+$|@mandatory', '@kernelCore', '@widgets', '@iw', '@webview|@export|@lsp|@variableViewer', '@debugger', '@kernelPicker|@python|@jupyter', '@kernelInstall']
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
+        os: [ubuntu-latest]
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
         include:
-          - jupyter: remote # We don't care how remote is started (we only want to test connecting to it)
-            python: nonConda
-            pythonVersion: '3.9'
+        # Mandatory tests
+          - jupyterConnection: remote
+            python: python
+            pythonVersion: '3.10'
             os: ubuntu-latest
-            web: false
-          - jupyter: remote
-            python: nonConda
-            pythonVersion: '3.9'
+            tags: '^[^@]+$|@mandatory'
+          - jupyterConnection: web
+            python: python
+            pythonVersion: '3.10'
             os: ubuntu-latest
-            web: true
-          - jupyter: raw
-            python: noPython
-            os: ubuntu-latest
-          - jupyter: raw
-            python: nonConda
+            tags: '^[^@]+$|@mandatory'
+          - jupyterConnection: raw
+            python: python
             pythonVersion: '3.10'
             os: windows-latest
-          - jupyter: local
-            python: nonConda
-            pythonVersion: '3.9'
-            os: ubuntu-latest
-            packageVersion: 'prerelease'
-          - jupyter: raw
-            python: nonConda
-            pythonVersion: '3.9'
-            os: ubuntu-latest
-            packageVersion: 'prerelease'
-        exclude:
-          - python: conda # Conda does't seem to support 3.10 yet.
+            tags: '^[^@]+$|@mandatory'
+        # Conda
+          - jupyterConnection: raw
+            python: conda
             pythonVersion: '3.10'
-        #   - pythonVersion: '3.9'
-        #     python: nonConda
-        #     jupyter: raw
-        #     os: windows-latest
+            os: ubuntu-latest
+            tags: '^[^@]+$|@mandatory|@python'
+        # Pre-Release Versions
+          - jupyterConnection: raw
+            python: python
+            pythonVersion: '3.10'
+            packageVersion: 'prerelease'
+            os: ubuntu-latest
+            tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
+        # Without Python
+          - jupyterConnection: raw
+            python: noPython
+            os: ubuntu-latest
+            tags: '@nonPython'
+        # Misc
+          - jupyterConnection: local
+            python: python
+            pythonVersion: '3.10'
+            os: ubuntu-latest
+            tags: '@kernelCore|@kernelInstall'
+          - jupyterConnection: remote
+            python: python
+            pythonVersion: '3.10'
+            os: ubuntu-latest
+            tags: '@kernelPicker|@kernelCore'
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
+      - name: Generate Tag Variable
+        run:
+          echo "TAGSVAR=${{ matrix.tags }}}" >> $GITHUB_ENV
+
+      - name: Generate Friendly Variable
+        run:
+          # Generate a file friendly tag name for the test run (used for the artifacts)
+          echo "TAGS_NAME=${TAGSVAR//[^a-zA-Z]/_}" >> $GITHUB_ENV
 
       - name: Use Python ${{matrix.pythonVersion}}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         if: matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           python-version: ${{matrix.pythonVersion}}
@@ -445,16 +389,19 @@ jobs:
         if: matrix.python != 'conda' && matrix.python != 'noPython'
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
+
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
 
       # Start caching
 
       # Cache Python Dependencies.
       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip on linux
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           path: ~/.cache/pip
@@ -463,7 +410,7 @@ jobs:
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
 
       - name: Cache pip on mac
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           path: ~/Library/Caches/pip
@@ -472,7 +419,7 @@ jobs:
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
 
       - name: Cache pip on windows
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           path: ~\AppData\Local\pip\Cache
@@ -482,7 +429,7 @@ jobs:
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         if: matrix.os != 'windows-latest'
         with:
           path: ~/.npm
@@ -496,7 +443,7 @@ jobs:
         run: |
           echo "::set-output name=dir::$(npm config get cache)"
       - name: Cache npm on windows
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         if: matrix.os == 'windows-latest'
         with:
           path: ${{ steps.npm-cache.outputs.dir }}
@@ -506,7 +453,7 @@ jobs:
 
       - name: Cache compiled TS files
         id: out-cache
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
@@ -540,6 +487,7 @@ jobs:
         shell: bash -l {0}
         if: matrix.python == 'conda'
         run: |
+          conda init bash
           conda activate functional_test_env
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/conda-nonconda-test-requirements.txt
@@ -547,30 +495,48 @@ jobs:
           beakerx_kernel_java install
           conda install pytorch cpuonly -c pytorch
 
+      - name: Install pythreejs and matplotlib widgets into user and system paths
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory'
+        # This test will ensure widgets work when installed in 3 places
+        # 1. In python environments site-packages folder (we have other 3rd party widgets in the python env)
+        # 2. In user's home folder (pythreejs will be installed in there)
+        # 3. In system folder (all users) (matplotlib will be installed in there)
+        run: |
+            # Uninstall pythreejs from the sys prefix folder and ensure the widget scripts are installed
+            # into the user directory.
+            export PYTHON_EXECUTABLE=$(which python)
+            echo $PYTHON_EXECUTABLE
+            python -m jupyter nbextension uninstall --sys-prefix --py pythreejs
+            python -m jupyter nbextension install --user --py pythreejs
+            python -m jupyter nbextension uninstall --sys-prefix --py ipympl
+            sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
+
         # This step is slow.
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
       - name: Install screen capture dependencies
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install imagemagick
+        run: sudo apt-get install imagemagick x11-xserver-utils
 
         # This step is slow.
       - name: Compile if not cached
         run: npm run prePublishNonBundle
+        if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Julia
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
         uses: julia-actions/setup-julia@v1
         with:
           version: ${{env.JULIA_VERSION}}
 
       - name: Install Julia Kernel
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
         shell: bash
         run: |
           julia -e '
@@ -578,29 +544,42 @@ jobs:
             Pkg.add("IJulia")'
 
       - name: Install Dot.net
-        if: matrix.os != 'windows-latest'
-        uses: actions/setup-dotnet@v1.8.0
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+        uses: actions/setup-dotnet@v3.0.3
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
 
       - name: Install .NET Interactive
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 
       - name: Install .NET Kernel
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
         shell: bash -l {0}
         run: dotnet interactive jupyter install
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyter != 'remote'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory'
+
+      - name: Create temp folder for user data dir
+        run: |
+          echo "VSC_JUPYTER_USER_DATA_DIR=$env:USERPROFILE\AppData\Local\Temp" >> $Env:GITHUB_ENV
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+
+      - name: Print temp folder for user data dir
+        run: |
+          echo ${{env.VSC_JUPYTER_USER_DATA_DIR}} is user data dir
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
 
       - name: Create temp folder for user data dir
         run: |
           echo "VSC_JUPYTER_USER_DATA_DIR=$(mktemp -d)" >> $GITHUB_ENV
           echo ${{env.VSC_JUPYTER_USER_DATA_DIR}} is user data dir
+        if: matrix.os != 'windows-latest'
 
       # Set the correct xvfb commands to run vscode tests
       # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
@@ -610,14 +589,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
 
-      - name: Publish VSCode Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: VSCode Test Report
-        if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
-
       - name: Run Native Notebook with VSCode & Jupyter (ubuntu)
         uses: GabrielBB/xvfb-action@v1.4
         with:
@@ -626,17 +597,20 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_ubuntu
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && !matrix.web
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web'
 
       - name: Build web bundle for testing
         run: npm run compile-web-test
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.web
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
+        env:
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
       - name: Run Native Notebook with VSCode & Jupyter (web)
         uses: GabrielBB/xvfb-action@v1.4
@@ -646,13 +620,14 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'web' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection != 'web' }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_web
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.web
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (windows)
         run: |
@@ -661,23 +636,15 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_PYTHON_LOG_FILE: ${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/python.log
           TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test*'
         id: test_notebook_vscode_windows
-        if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && !matrix.web
-
-      - name: Publish Notebook Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
-        if: (steps.test_notebook_vscode_windows.outcome == 'failure' || steps.test_notebook_vscode_ubuntu.outcome == 'failure') && failure()
+        if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.jupyterConnection != 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
@@ -687,51 +654,44 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebookWithoutPythonExt_vscode
         if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
-
-      - name: Publish Notebook Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook without Python Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
-        if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
 
       - name: Create coverage folder (if not created)
         run: npm run createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
         with:
-          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
           path: .nyc_output
           retention-days: 1
 
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
-          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
-          retention-days: 1
-
       - name: Upload VS code logs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: VSCodeLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
+          name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
-      - name: Upload Memory snapshot
-        uses: actions/upload-artifact@v2
+      - name: Log test results
+        if: always()
+        run: npm run printTestResults
+
+      - name: Upload test result, screenshots files
+        uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: SD-memtest.json
-          path: './SD-memtest.json'
-          retention-days: 20
+          name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}
+          path: './logs/*'
+          retention-days: 60
+
+      - name: Verify there are no unhandled errors
+        run: npm run verifyUnhandledErrors
 
   smoke-tests:
     timeout-minutes: 30
@@ -739,9 +699,9 @@ jobs:
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
-    needs: [build-vsix, pick_environment]
+    needs: [build-vsix]
     env:
-      VSIX_NAME: ${{ needs.pick_environment.outputs.vsix_name }}
+      VSIX_NAME: 'ms-toolsai-jupyter-insiders.vsix'
     strategy:
       fail-fast: false
       matrix:
@@ -749,10 +709,10 @@ jobs:
         python: [3.9]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{matrix.python}}
 
@@ -766,14 +726,17 @@ jobs:
         run: python -m pip install -U pip
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
+
       - name: Download VSIX
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
-          name: ${{needs.pick_environment.outputs.vsix_name}}
+          name: 'ms-toolsai-jupyter-insiders.vsix'
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -792,28 +755,105 @@ jobs:
       - name: Run desktop smoke tests
         env:
           DISPLAY: 10
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSmokeLogged
 
-      - name: Upload smoke-test log
-        uses: actions/upload-artifact@v2
-        if: failure()
+      - name: Upload test result, screenshots files
+        uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: smoke-test-${{matrix.os}}.log
-          path: './smoke-test.log'
+          name: TestLogs-Smoke-${{matrix.python}}-${{matrix.os}}
+          path: './logs/*'
+          retention-days: 60
 
       - name: Create coverage folder (if not created)
         run: npm run createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
           path: .nyc_output
           retention-days: 1
+
+  perf-tests:
+    timeout-minutes: 30
+    name: Performance tests
+    # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'microsoft/vscode-jupyter' && github.event_name != 'pull_request'
+    needs: [build-vsix]
+    env:
+      VSIX_NAME: 'ms-toolsai-jupyter-insiders.vsix'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: [3.9]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Use Python ${{matrix.python}}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{matrix.python}}
+
+      - name: Set CI Path
+        uses: ./.github/actions/set-python
+        id: set-python
+        with:
+          PYTHON_VERSION: ${{matrix.python}}
+
+      - name: Upgrade pip
+        run: python -m pip install -U pip
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
+
+      - name: Download VSIX
+        uses: actions/download-artifact@v3
+        with:
+          name: 'ms-toolsai-jupyter-insiders.vsix'
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      - name: pip install system test requirements
+        run: |
+          python -m pip install --upgrade -r build/venv-test-requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+        shell: bash
+
+      # Compile the test files.
+      - name: Prepare for perf tests
+        run: npx tsc -p ./
+        shell: bash
+
+      - name: Run desktop perf tests
+        env:
+          DISPLAY: 10
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: npm run testPerformance
+
+      - name: Upload test result, screenshots files
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: TestLogs-Perf-${{matrix.python}}-${{matrix.os}}
+          path: './logs/*'
+          retention-days: 60
 
   coverage:
     name: Coverage reports upload
@@ -822,10 +862,10 @@ jobs:
     needs: [ts_tests, vscodeTests, smoke-tests]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Node
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -834,31 +874,32 @@ jobs:
 
       - name: Cache compiled TS files
         id: out-cache
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Compile if not cached
         run: npm run prePublishNonBundle
+        if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
 
       # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
-      # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
+      # The name pattern is ${{env.COVERAGE_REPORTS}}-${{runner.os}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
       # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
       - name: Download Ubuntu test coverage artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
-          name: ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
-          path: ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+          name: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
+          path: ${{env.COVERAGE_REPORTS}}-${{runner.os}}
 
       - name: Extract Ubuntu coverage artifacts to ./nyc_output
         run: |
           pwd
           mkdir .nyc_output
-          mv ${{runner.os}}-${{ env.COVERAGE_REPORTS }}/* .nyc_output
-          rm -r ${{runner.os}}-${{ env.COVERAGE_REPORTS }}
+          mv ${{env.COVERAGE_REPORTS}}-${{runner.os}}/* .nyc_output
+          rm -r ${{env.COVERAGE_REPORTS}}-${{runner.os}}
 
       - name: Merge coverage reports
         run: |
@@ -882,85 +923,3 @@ jobs:
       # Alternative method for uploading
       # - name: Upload coverage to codecov
       #  run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml -v
-
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    # This should happen in the release and main branch
-    if: github.repository == 'microsoft/vscode-jupyter' && (needs.pick_environment.outputs.release_channel == 'pre-release' || needs.pick_environment.outputs.release_channel == 'stable')
-    needs: [pick_environment, build-vsix, lint, ts_tests, smoke-tests]
-    environment:
-      name: ${{needs.pick_environment.outputs.release_channel}}
-    steps:
-      - name: dump_event
-        run: |
-          echo "Event_name is ${{ github.event_name }}"
-          echo "Ref is ${{ github.ref }}"
-          echo "Release Channel (Environment) is is ${{needs.pick_environment.outputs.release_channel}}"
-          echo "VSIX Name is ${{ needs.pick_environment.outputs.vsix_name }}"
-
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{env.PYTHON_VERSION}}
-
-      - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
-        with:
-          node-version: ${{env.NODE_VERSION}}
-
-      - run: npm i -g vsce
-
-      - name: Download VSIX
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{needs.pick_environment.outputs.vsix_name}}
-
-      - name: Publish Pre-release
-        if: needs.pick_environment.outputs.release_channel == 'pre-release'
-        run: vsce publish --pre-release --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
-
-      - name: Publish Stable
-        if: needs.pick_environment.outputs.release_channel == 'stable'
-        run: vsce publish --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
-
-      - name: Extract Extension
-        if: needs.pick_environment.outputs.release_channel == 'stable'
-        shell: bash
-        run: |
-          python -c "import zipfile;zip=zipfile.ZipFile('${{needs.pick_environment.outputs.vsix_name}}', 'r');zip.extractall('tmp')"
-
-      - name: Get Version
-        if: needs.pick_environment.outputs.release_channel == 'stable'
-        id: version
-        run: |
-          echo ::set-output name=version::$(node -p -e "require('./package.json').version")
-        shell: bash
-
-      - name: Generate Changelog
-        if: needs.pick_environment.outputs.release_channel == 'stable'
-        # Just extract change log, anything between `\n## 20` (for each release we have a section with year and month..)
-        run: |
-          echo ::set-output name=changelog::$(node -p -e "let fs = require('fs');let changelog = fs.readFileSync('./CHANGELOG.md').toString();changelog = changelog.split('\n## 20')[1].split('\n').filter((_, index) => index > 0).join('\n');fs.writeFileSync('./RELEASE_CHANGELOG.md', changelog)")
-        shell: bash
-
-      - name: Print version
-        run: |
-          echo ${{steps.version.outputs.version}}
-        shell: bash
-
-      - name: Create GH Release
-        id: create_release
-        if: needs.pick_environment.outputs.release_channel == 'stable'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
-        with:
-          tag_name: ${{steps.version.outputs.version}}
-          release_name: Release ${{steps.version.outputs.version}}
-          body_path: RELEASE_CHANGELOG.md
-          draft: false
-          prerelease: false

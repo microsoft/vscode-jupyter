@@ -1,9 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Uri } from 'vscode';
+import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Tab, Uri } from 'vscode';
+import { IDebuggingManager } from '../notebooks/debugger/debuggingTypes';
 import { IKernel, KernelConnectionMetadata } from '../kernels/types';
 import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';
+import { IFileGeneratedCodes } from './editor-integration/types';
 
 export type INativeInteractiveWindow = { notebookUri: Uri; inputUri: Uri; notebookEditor: NotebookEditor };
 
@@ -13,6 +15,7 @@ export interface IInteractiveWindowDebugger {
     detach(kernel: IKernel): Promise<void>;
     enable(kernel: IKernel): void;
     disable(kernel: IKernel): void;
+    updateSourceMaps(generatedCodes: IFileGeneratedCodes[]): Promise<void>;
 }
 
 export const IInteractiveWindowProvider = Symbol('IInteractiveWindowProvider');
@@ -44,6 +47,10 @@ export interface IInteractiveWindowProvider {
      * @param owner The URI of a text document which may be associated with an interactive window.
      */
     get(owner: Uri): IInteractiveWindow | undefined;
+    /**
+     * The active interactive window if it has the focus, or the interactive window associated with current active text editor
+     */
+    getActiveOrAssociatedInteractiveWindow(): IInteractiveWindow | undefined;
 }
 
 export interface IInteractiveBase extends Disposable {
@@ -59,6 +66,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly inputUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
     closed: Event<void>;
+    ensureInitialized(): Promise<void>;
     addCode(code: string, file: Uri, line: number): Promise<boolean>;
     addErrorMessage(message: string, cell: NotebookCell): Promise<void>;
     debugCode(code: string, file: Uri, line: number): Promise<boolean>;
@@ -69,11 +77,28 @@ export interface IInteractiveWindow extends IInteractiveBase {
     export(cells?: ICell[]): void;
 }
 
+export interface IInteractiveWindowCache {
+    owner: Resource;
+    mode: InteractiveWindowMode;
+    uriString: string;
+    inputBoxUriString: string;
+}
+
+export interface TabInputInteractiveWindow {
+    readonly uri: Uri;
+    readonly inputBoxUri: Uri;
+}
+
+export interface InteractiveTab extends Tab {
+    readonly input: TabInputInteractiveWindow;
+}
+
 export interface IInteractiveWindowLoadable extends IInteractiveWindow {
     changeMode(newMode: InteractiveWindowMode): void;
 }
 
-export const IExportCommands = Symbol('IExportCommands');
-export interface IExportCommands {
-    register(): void;
+export const IInteractiveWindowDebuggingManager = Symbol('IInteractiveWindowDebuggingManager');
+export interface IInteractiveWindowDebuggingManager extends IDebuggingManager {
+    start(editor: NotebookEditor, cell: NotebookCell): Promise<void>;
+    updateSourceMaps(editor: NotebookEditor, generatedCodes: IFileGeneratedCodes[]): Promise<void>;
 }

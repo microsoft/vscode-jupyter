@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import { CancellationTokenSource, Memento, NotebookDocument } from 'vscode';
@@ -13,12 +14,12 @@ import {
     IMemento,
     WORKSPACE_MEMENTO
 } from '../../../platform/common/types';
-import { isJupyterNotebook } from '../../../notebooks/helpers';
 import { getKernelConnectionLanguage } from '../../helpers';
 import { IKernel, IKernelProvider, INotebookProvider } from '../../types';
-import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
 import { DisplayOptions } from '../../displayOptions';
 import { IRawNotebookProvider } from '../../raw/types';
+import { isJupyterNotebook } from '../../../platform/common/utils';
+import { noop } from '../../../platform/common/utils/misc';
 
 const LastPythonNotebookCreatedKey = 'last-python-notebook-created';
 const LastNotebookCreatedKey = 'last-notebook-created';
@@ -30,7 +31,6 @@ const LastNotebookCreatedKey = 'last-notebook-created';
 export class ServerPreload implements IExtensionSingleActivationService {
     constructor(
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -40,7 +40,6 @@ export class ServerPreload implements IExtensionSingleActivationService {
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
         notebook.onDidOpenNotebookDocument(this.onDidOpenNotebook.bind(this), this, disposables);
-        this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.onDidOpenOrCloseInteractive.bind(this));
     }
     public activate(): Promise<void> {
         // This is the list of things that should cause us to start a local server
@@ -92,7 +91,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
                 await this.notebookProvider.connect({
                     resource: undefined,
                     ui,
-                    kind: 'localJupyter',
+                    localJupyter: true,
                     token: source.token
                 });
             }
@@ -112,21 +111,15 @@ export class ServerPreload implements IExtensionSingleActivationService {
         this.createServerIfNecessary().ignoreErrors();
     }
 
-    private onDidOpenOrCloseInteractive(interactive: IInteractiveWindow | undefined) {
-        if (interactive) {
-            this.createServerIfNecessary().ignoreErrors();
-        }
-    }
-
     // Callback for when a notebook is created by the notebook provider
     // Note the time as well as an extra time for python specific notebooks
     private kernelStarted(kernel: IKernel) {
         const language = getKernelConnectionLanguage(kernel.kernelConnectionMetadata);
 
-        void this.mementoStorage.update(LastNotebookCreatedKey, Date.now());
+        this.mementoStorage.update(LastNotebookCreatedKey, Date.now()).then(noop, noop);
 
         if (language === PYTHON_LANGUAGE) {
-            void this.mementoStorage.update(LastPythonNotebookCreatedKey, Date.now());
+            this.mementoStorage.update(LastPythonNotebookCreatedKey, Date.now()).then(noop, noop);
         }
     }
 }

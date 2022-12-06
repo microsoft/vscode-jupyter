@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -8,19 +8,18 @@ import { IExtensionSingleActivationService } from '../../../platform/activation/
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
-import { JupyterServerSelectorCommand } from './serverSelector';
 
+/**
+ * Registers jupyter (non ZMQ) specific commands
+ */
 @injectable()
 export class CommandRegistry implements IExtensionSingleActivationService {
     private readonly disposables: IDisposable[] = [];
     constructor(
-        @inject(JupyterServerSelectorCommand) private readonly serverSelectedCommand: JupyterServerSelectorCommand,
         @inject(JupyterCommandLineSelectorCommand)
         private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {
-        this.disposables.push(this.serverSelectedCommand);
-    }
+    ) {}
     public async activate() {
         this.registerCommandsIfTrusted();
     }
@@ -32,6 +31,5 @@ export class CommandRegistry implements IExtensionSingleActivationService {
             return;
         }
         this.commandLineCommand.register();
-        this.serverSelectedCommand.register();
     }
 }

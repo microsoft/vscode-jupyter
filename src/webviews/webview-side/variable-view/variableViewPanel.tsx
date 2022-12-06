@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
@@ -47,11 +48,6 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
     }
 
     public override render() {
-        const dynamicFont: React.CSSProperties = {
-            fontSize: this.props.font.size,
-            fontFamily: this.props.font.family
-        };
-
         // If in test mode, update our count. Use this to determine how many renders a normal update takes.
         if (this.props.testMode) {
             this.renderCount = this.renderCount + 1;
@@ -60,7 +56,7 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
         // Return our variable panel, we wrap this in one more top level element "variable-view-main-panel" so that
         // we can size and host it differently from the variable panel in the interactive window or native editor
         return (
-            <div id="variable-view-main-panel" role="Main" ref={this.panelRef} style={dynamicFont}>
+            <div id="variable-view-main-panel" role="Main" ref={this.panelRef}>
                 <div className="styleSetter">
                     <style>{`${this.props.rootCss ? this.props.rootCss : ''}
 ${buildSettingsCss(this.props.settings)}`}</style>
@@ -116,7 +112,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             refreshCount: this.props.variableState.refreshCount,
             offsetHeight: 0, // No toolbar in variable view panel
             viewHeight: this.props.variableState.viewHeight, // Height to use for variable view mode
-            requestInProgress: this.props.variableState.requestInProgress
+            requestInProgress: this.props.variableState.requestInProgress,
+            isWeb: this.props.variableState.isWeb
         };
     };
 

@@ -81,7 +81,7 @@
 }
 
 .react-grid-header-cell:hover {
-    background-color: var(--override-selection-background, var(--vscode-list-hoverBackground));
+    background-color: var(--vscode-list-hoverBackground);
 }
 
 .react-grid-header-cell > .slick-sort-indicator-asc::before {
@@ -109,7 +109,7 @@
 }
 
 .slick-row:hover > .react-grid-cell {
-    background-color: var(--override-selection-background, var(--vscode-list-hoverBackground));
+    background-color: var(--vscode-list-hoverBackground);
 }
 
 /* Slick.Editors.Text */

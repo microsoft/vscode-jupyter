@@ -1,6 +1,5 @@
-// // Copyright (c) Microsoft Corporation. All rights reserved.
-// // Licensed under the MIT License.
-// 'use strict';
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 // import { expect } from 'chai';
 // import { anything, instance, mock, when } from 'ts-mockito';
@@ -13,7 +12,7 @@
 // import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../platform/datascience/types';
 // import { MockMemento } from '../mocks/mementos';
 
-// suite('DataScience - View tracker', () => {
+// suite('View tracker', () => {
 //     let editorProvider: INotebookEditorProvider;
 //     let editor1: INotebookEditor;
 //     let editor2: INotebookEditor;

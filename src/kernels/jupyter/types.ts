@@ -1,9 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
-import type { Kernel, Session, ContentsManager } from '@jupyterlab/services';
+import type { Session, ContentsManager } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri, QuickPickItem } from 'vscode';
@@ -13,17 +15,20 @@ import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
     KernelConnectionMetadata,
-    INotebook,
     IJupyterConnection,
     ConnectNotebookProviderOptions,
     NotebookCreationOptions,
-    IJupyterSession,
+    IJupyterKernelConnectionSession,
     IJupyterKernelSpec,
     GetServerOptions,
     IKernelSocket,
-    KernelActionSource
+    KernelActionSource,
+    LiveRemoteKernelConnectionMetadata,
+    IKernelConnectionSession,
+    RemoteKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
+import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -52,7 +57,7 @@ export interface INotebookServer extends IAsyncDisposable {
         cancelToken: CancellationToken,
         ui: IDisplayOptions,
         creator: KernelActionSource
-    ): Promise<INotebook>;
+    ): Promise<IKernelConnectionSession>;
     readonly connection: IJupyterConnection;
 }
 
@@ -65,23 +70,27 @@ export interface INotebookServerFactory {
 export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
     connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
-    createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
+    createNotebook(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
 }
 
-export interface INotebookServerOptions {
-    /**
-     * Undefined when connecting to local Jupyter (in case Raw kernels aren't supported)
-     */
-    uri?: string;
+export type INotebookServerLocalOptions = {
     resource: Resource;
-    skipUsingDefaultConfig?: boolean;
-    workingDir?: string;
     ui: IDisplayOptions;
     /**
      * Whether we're only interested in local Jupyter Servers.
      */
-    localJupyter: boolean;
-}
+    localJupyter: true;
+};
+export type INotebookServerRemoteOptions = {
+    serverId: string;
+    resource: Resource;
+    ui: IDisplayOptions;
+    /**
+     * Whether we're only interested in local Jupyter Servers.
+     */
+    localJupyter: false;
+};
+export type INotebookServerOptions = INotebookServerLocalOptions | INotebookServerRemoteOptions;
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
@@ -91,7 +100,6 @@ export interface IJupyterExecution extends IAsyncDisposable {
     getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
     refreshCommands(): Promise<void>;
-    validateRemoteUri(uri: string): Promise<void>;
 }
 
 export interface IJupyterPasswordConnectInfo {
@@ -107,14 +115,10 @@ export interface IJupyterPasswordConnect {
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
 export interface IJupyterSessionManagerFactory {
-    readonly onRestartSessionCreated: Event<Kernel.IKernelConnection>;
-    readonly onRestartSessionUsed: Event<Kernel.IKernelConnection>;
     create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager>;
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
-    readonly onRestartSessionCreated: Event<Kernel.IKernelConnection>;
-    readonly onRestartSessionUsed: Event<Kernel.IKernelConnection>;
     startNew(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
@@ -122,7 +126,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         ui: IDisplayOptions,
         cancelToken: CancellationToken,
         creator: KernelActionSource
-    ): Promise<IJupyterSession>;
+    ): Promise<IJupyterKernelConnectionSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;
     getRunningSessions(): Promise<Session.IModel[]>;
@@ -150,7 +154,6 @@ export const INotebookExporter = Symbol('INotebookExporter');
 export interface INotebookExporter extends Disposable {
     translateToNotebook(
         cells: ICell[],
-        directoryChange?: string,
         kernelSpec?: nbformat.IKernelspecMetadata
     ): Promise<nbformat.INotebookContent | undefined>;
     exportToFile(cells: ICell[], file: string, showOpenPrompt?: boolean): Promise<void>;
@@ -204,29 +207,87 @@ export interface IJupyterServerUri {
 export type JupyterServerUriHandle = string;
 
 export interface IJupyterUriProvider {
-    readonly id: string; // Should be a unique string (like a guid)
-    getQuickPickEntryItems(): QuickPickItem[];
-    handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    /**
+     * Should be a unique string (like a guid)
+     */
+    readonly id: string;
+    readonly displayName?: string;
+    readonly detail?: string;
+    onDidChangeHandles?: Event<void>;
+    getQuickPickEntryItems?(): Promise<QuickPickItem[]> | QuickPickItem[];
+    handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    /**
+     * Given the handle, returns the Jupyter Server information.
+     */
     getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    /**
+     * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
+     */
+    getHandles?(): Promise<JupyterServerUriHandle[]>;
+    /**
+     * Users request to remove a handle.
+     */
+    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
 }
 
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
 
 export interface IJupyterUriProviderRegistration {
+    onDidChangeProviders: Event<void>;
     getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
-    registerProvider(picker: IJupyterUriProvider): void;
+    getProvider(id: string): Promise<IJupyterUriProvider | undefined>;
+    registerProvider(picker: IJupyterUriProvider): IDisposable;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+}
+
+/**
+ * Entry into our list of saved servers
+ */
+export interface IJupyterServerUriEntry {
+    /**
+     * Uri of the server to connect to
+     */
+    uri: string;
+    /**
+     * Unique ID using a hash of the full uri
+     */
+    serverId: string;
+    /**
+     * The most recent time that we connected to this server
+     */
+    time: number;
+    /**
+     * An optional display name to show for this server as opposed to just the Uri
+     */
+    displayName?: string;
+    /**
+     * Whether the server is validated by its provider or not
+     */
+    isValidated?: boolean;
 }
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
+    isLocalLaunch: boolean;
+    onDidChangeConnectionType: Event<void>;
+    readonly currentServerId: string | undefined;
     readonly onDidChangeUri: Event<void>;
+    readonly onDidRemoveUris: Event<IJupyterServerUriEntry[]>;
+    readonly onDidAddUri: Event<IJupyterServerUriEntry>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
-    getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string }[]>;
+    getSavedUriList(): Promise<IJupyterServerUriEntry[]>;
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
-    getUri(): Promise<string>;
-    setUri(uri: string): Promise<void>;
+    getRemoteUri(): Promise<IJupyterServerUriEntry | undefined>;
+    getUriForServer(id: string): Promise<IJupyterServerUriEntry | undefined>;
+    setUriToLocal(): Promise<void>;
+    setUriToRemote(uri: string, displayName: string): Promise<void>;
+    setUriToNone(): Promise<void>;
+}
+
+export interface IBackupFile {
+    dispose: () => Promise<unknown>;
+    filePath: string;
 }
 
 export const IJupyterBackingFileCreator = Symbol('IJupyterBackingFileCreator');
@@ -237,7 +298,7 @@ export interface IJupyterBackingFileCreator {
         kernel: KernelConnectionMetadata,
         connInfo: IJupyterConnection,
         contentsManager: ContentsManager
-    ): Promise<{ dispose: () => Promise<unknown>; filePath: string } | undefined>;
+    ): Promise<IBackupFile | undefined>;
 }
 
 export const IJupyterKernelService = Symbol('IJupyterKernelService');
@@ -260,7 +321,7 @@ export interface IJupyterRequestAgentCreator {
 export const IJupyterRequestCreator = Symbol('IJupyterRequestCreator');
 export interface IJupyterRequestCreator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getRequestCtor(getAuthHeader?: () => any): ClassType<Request>;
+    getRequestCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeader?: () => any): ClassType<Request>;
     getFetchMethod(): (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     getHeadersCtor(): ClassType<Headers>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -282,4 +343,30 @@ export interface INotebookStarter extends IDisposable {
         workingDirectory: Uri,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection>;
+}
+
+export const ILiveRemoteKernelConnectionUsageTracker = Symbol('ILiveRemoteKernelConnectionUsageTracker');
+export interface ILiveRemoteKernelConnectionUsageTracker {
+    /**
+     * Whether the provided remote kernel was ever used by any notebook within the extension.
+     */
+    wasKernelUsed(connection: LiveRemoteKernelConnectionMetadata): boolean;
+    /**
+     * Tracks the fact that the provided remote kernel for a given server was used by a notebook defined by the uri.
+     */
+    trackKernelIdAsUsed(resource: Uri, serverId: string, kernelId: string): void;
+    /**
+     * Tracks the fact that the provided remote kernel for a given server is no longer used by a notebook defined by the uri.
+     */
+    trackKernelIdAsNotUsed(resource: Uri, serverId: string, kernelId: string): void;
+}
+
+export const IJupyterRemoteCachedKernelValidator = Symbol('IJupyterRemoteCachedKernelValidator');
+export interface IJupyterRemoteCachedKernelValidator {
+    isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean>;
+}
+
+export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {
+    kind: ContributedKernelFinderKind.Remote;
+    serverUri: IJupyterServerUriEntry;
 }

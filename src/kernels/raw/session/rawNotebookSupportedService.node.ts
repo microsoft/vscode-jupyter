@@ -1,11 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { inject, injectable } from 'inversify';
-import { traceInfo, traceError } from '../../../platform/logging';
+import { traceInfo, traceWarning } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { IRawNotebookSupportedService } from '../types';
 
 // This class check to see if we have everything in place to support a raw kernel launch on the machine
@@ -40,11 +39,9 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
         try {
             require('zeromq');
             traceInfo(`ZMQ install verified.`);
-            sendTelemetryEvent(Telemetry.ZMQSupported);
             this._isSupported = true;
         } catch (e) {
-            traceError(`Exception while attempting zmq :`, e);
-            sendTelemetryEvent(Telemetry.ZMQNotSupported);
+            traceWarning(`Exception while attempting zmq :`, e);
             this._isSupported = false;
         }
 

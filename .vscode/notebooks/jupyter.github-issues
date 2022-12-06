@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2022-04-08"
+    "value": "$TODAYS_DATE=2022-05-04"
   },
   {
     "kind": 1,
@@ -17,7 +17,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internalbacklog\r\n$PYTHON_REPOS=repo:microsoft/vscode-python\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_REPOS $PYTHON_REPOS\r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
+    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internalbacklog\n$PYTHON_REPOS=repo:microsoft/vscode-python\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_REPOS $PYTHON_REPOS\n\n// project:microsoft/vscode-jupyter/3 == monthly-release\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\n"
   },
   {
     "kind": 1,
@@ -27,7 +27,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TEAM_AUTHOR_INCLUSION = author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:rebornix author:roblourens author:amunger\r\n$TEAM_AUTHOR_EXLUSION = -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens -author:amunger\r\n\r\n$TEAM_ASSIGNMENT = assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff assignee:amunger assignee:minsa110 assignee:ronglums"
+    "value": "$TEAM_AUTHOR_INCLUSION = author:DonJayamanne author:rchiodo author:greazer author:rebornix author:roblourens author:amunger\n$TEAM_AUTHOR_EXLUSION = -author:DonJayamanne -author:rchiodo -author:greazer -author:rebornix -author:roblourens -author:amunger\n\n$TEAM_ASSIGNMENT = assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:amunger assignee:minsa110 assignee:ronglums"
   },
   {
     "kind": 1,
@@ -37,7 +37,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$CURRENT_MILESTONE=milestone:\"January 2022\"\r\n$RECOVERY_MILESTONE=milestone:\"January 2022 Recovery\"\r\n$NEXT_MILESTONE=milestone:\"February 2022\""
+    "value": "$CURRENT_MILESTONE=milestone:\"January 2022\"\n$RECOVERY_MILESTONE=milestone:\"January 2022 Recovery\"\n$NEXT_MILESTONE=milestone:\"February 2022\""
   },
   {
     "kind": 1,
@@ -47,12 +47,12 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "// $BASE_CATEGORIES - All issues have to be categorized with one of the following labels.\r\n$BASE_CATEGORIES=bug,documentation,engineering,enhancement,endgame-plan,iteration-plan,iteration-plan-draft,iteration-plan-candidate,release-plan,discussion,pm-task,marketing\r\n\r\n// $XXX_FEATURE_AREAS - All bugs, enhancement, and documentation issues need to be associated with a feature area.\r\n$JUPYTER_FEATURE_AREAS=azureml,cell-magics,codespaces,conda,data-prep,data-viewer,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-doctor,kernel-enumeration,kernel-issues,kernel-management,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-compatibility,notebook-debugging,notebook-diff,notebook-dnd,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-markdown,notebook-params-papermill,notebook-remote,notebook-output,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,vscode-web,webview-cleanup,webview-notebook,WSL\r\n$VSCODE_FEATURE_AREAS=notebook,notebook-diff,notebook-dnd,notebook-output,notebook-kernel,notebook-markdown,notebook-folding,notebook-multiselect,notebook-layout,notebook-ipynb\r\n"
+    "value": "// $BASE_CATEGORIES - All issues have to be categorized with one of the following labels.\r\n$BASE_CATEGORIES=bug,documentation,engineering,feature-request,endgame-plan,iteration-plan,iteration-plan-draft,iteration-plan-candidate,release-plan,discussion,pm-task,marketing\r\n\r\n// $XXX_FEATURE_AREAS - All bugs, feature-request, and documentation issues need to be associated with a feature area.\r\n$JUPYTER_FEATURE_AREAS=azureml,cell-magics,codespaces,conda,data-prep,data-viewer,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-doctor,kernel-enumeration,kernel-issues,kernel-management,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-compatibility,notebook-debugging,notebook-diff,notebook-dnd,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-markdown,notebook-params-papermill,notebook-remote,notebook-output,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,vscode-web,webview-cleanup,webview-notebook,WSL\r\n$VSCODE_FEATURE_AREAS=notebook,notebook-diff,notebook-dnd,notebook-output,notebook-kernel,notebook-markdown,notebook-folding,notebook-multiselect,notebook-layout,notebook-ipynb\r\n"
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "---\r\n## Triage\r\n\r\n\r\nIssues that should be looked at *by the team* should remain tagged with the \"*needs-triage*\" label by the engineer on issue-duty."
+    "value": "---\r\n## Triage\r\n\r\n\r\nIssues that should be looked at *by the team* should remain tagged with the \"*triage-needed*\" label by the engineer on issue-duty."
   },
   {
     "kind": 1,
@@ -62,7 +62,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_EXLUSION sort:author-date"
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:triage-needed $TEAM_AUTHOR_EXLUSION sort:author-date"
   },
   {
     "kind": 1,
@@ -72,7 +72,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:triage-needed $TEAM_AUTHOR_INCLUSION sort:created-asc"
   },
   {
     "kind": 1,
@@ -92,7 +92,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:triage-needed sort:created-asc"
   },
   {
     "kind": 1,
@@ -122,7 +122,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:closed label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue is:closed label:triage-needed $TEAM_AUTHOR_EXLUSION sort:created-asc"
   },
   {
     "kind": 1,
@@ -217,7 +217,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "#### *verification-needed* issues in our repo\r\n\r\nThe *verification-needed* label is added to issues that do not have the \"bug\" label and are not covered in a testplan for the endgame. Typically small enhancements."
+    "value": "#### *verification-needed* issues in our repo\r\n\r\nThe *verification-needed* label is added to issues that do not have the \"bug\" label and are not covered in a testplan for the endgame. Typically small feature-requests."
   },
   {
     "kind": 2,
@@ -277,22 +277,22 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### Issues not categorized at all\r\n\r\nAll issues should be categorized as a bug, enhancement, documentation, pm-task etc ($BASE_CATEGORIES). Should be driven to zero."
+    "value": "### Issues not categorized at all\r\n\r\nAll issues should be categorized as a bug, feature-request, documentation, pm-task etc ($BASE_CATEGORIES). Should be driven to zero."
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$HOUSEKEEPING_REPO is:open is:issue -label:$BASE_CATEGORIES -label:needs-triage"
+    "value": "$HOUSEKEEPING_REPO is:open is:issue -label:$BASE_CATEGORIES -label:triage-needed"
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### Bugs, enhancements, documentation not assigned to any area\r\n\r\nAll bugs and enhancements should be assigned with some feature area label. During housekeeping this query should be driven to zero at least once."
+    "value": "### Bugs, feature-requests, documentation not assigned to any area\r\n\r\nAll bugs and feature-requests should be assigned with some feature area label. During housekeeping this query should be driven to zero at least once."
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$HOUSEKEEPING_REPO is:open is:issue label:bug -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:enhancement -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:documentation -label:$JUPYTER_FEATURE_AREAS -label:needs-triage\r\n"
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:bug -label:$JUPYTER_FEATURE_AREAS -label:triage-needed\r\n$HOUSEKEEPING_REPO is:open is:issue label:feature-request -label:$JUPYTER_FEATURE_AREAS -label:triage-needed\r\n$HOUSEKEEPING_REPO is:open is:issue label:documentation -label:$JUPYTER_FEATURE_AREAS -label:triage-needed\r\n"
   },
   {
     "kind": 1,
@@ -307,12 +307,12 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### Feature Area Housekeeping Review Instructions\r\nOnce the above queries are clean, the ```housekeeping-review``` label will be added to every bug, enhancement or documentation issue. We will assign all such issues in bulk to a teammember. It's that teammember's job to review each issue assigned to them to make sure it's still valid. Once reviewed, the ```housekeeping-review``` label is removed."
+    "value": "### Feature Area Housekeeping Review Instructions\r\nOnce the above queries are clean, the ```housekeeping-review``` label will be added to every bug, feature-request or documentation issue. We will assign all such issues in bulk to a teammember. It's that teammember's job to review each issue assigned to them to make sure it's still valid. Once reviewed, the ```housekeeping-review``` label is removed."
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$HOUSEKEEPING_REPO is:open is:issue label:bug label:housekeeping-review -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:enhancement label:housekeeping-review -label:needs-triage\r\n$HOUSEKEEPING_REPO is:open is:issue label:documentation label:housekeeping-review -label:needs-triage\r\n"
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:bug label:housekeeping-review -label:triage-needed\r\n$HOUSEKEEPING_REPO is:open is:issue label:feature-request label:housekeeping-review -label:triage-needed\r\n$HOUSEKEEPING_REPO is:open is:issue label:documentation label:housekeeping-review -label:triage-needed\r\n"
   },
   {
     "kind": 1,
@@ -332,7 +332,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$HOUSEKEEPING_REPO is:open is:issue label:debt label:housekeeping-review -label:needs-triage"
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:debt label:housekeeping-review -label:triage-needed"
   },
   {
     "kind": 1,
@@ -347,12 +347,12 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### All Open Enhancements\r\n\r\nJust an informational query. Nothing needs to be driven here."
+    "value": "### All Open feature-requests\r\n\r\nJust an informational query. Nothing needs to be driven here."
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$HOUSEKEEPING_REPO is:open is:issue label:enhancement"
+    "value": "$HOUSEKEEPING_REPO is:open is:issue label:feature-request"
   },
   {
     "kind": 1,
@@ -392,7 +392,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:open is:issue label:interactive-window label:important -label:feature-request -label:enhancement -label:unreleased"
+    "value": "$ALL_REPOS is:open is:issue label:interactive-window label:important -label:feature-request -label:unreleased"
   },
   {
     "kind": 1,

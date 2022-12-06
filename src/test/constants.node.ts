@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import * as path from '../platform/vscode-path/path';
@@ -24,8 +24,6 @@ export const SMOKE_TEST_EXTENSIONS_DIR = path.join(
     'ext',
     'smokeTestExtensionsFolder'
 );
-
-export const IPYTHON_VERSION_CODE = 'import IPython\nprint(int(IPython.__version__[0]))\n';
 
 // Have to set these values in a '.node' based file.
 setCI(process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true');

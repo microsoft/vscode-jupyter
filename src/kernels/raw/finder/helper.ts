@@ -1,9 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { Telemetry } from '../../../platform/common/constants';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 import { IJupyterKernelSpec } from '../../types';
 
 const shellScripts = ['/bin/sh', '/bin/bash', '/bin/zsh'];
@@ -13,7 +12,7 @@ export function sendKernelSpecTelemetry(kernelSpec: IJupyterKernelSpec, kind: 'l
         return shellScripts.some((shell) => arg.includes(shell));
     });
     sendTelemetryEvent(Telemetry.KernelSpecLanguage, undefined, {
-        language: getTelemetrySafeLanguage(kernelSpec.language),
+        language: kernelSpec.language,
         kind,
         usesShell
     });

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import { Uri, WorkspaceFolder } from 'vscode';
@@ -11,8 +11,10 @@ export function getFilePath(file: Uri | undefined) {
     if (file) {
         const fsPath = uriPath.originalFSPath(file);
 
-        // Remove separator on the front
-        if (fsPath && fsPath.startsWith(path.sep) && isWindows) {
+        // Remove separator on the front if not a network drive.
+        // Example, if you create a URI with Uri.file('hello world'), the fsPath will come out as '\Hello World' on windows. We don't want that
+        // However if you create a URI from a network drive, like '\\mydrive\foo\bar\python.exe', we want to keep the \\ on the front.
+        if (fsPath && fsPath.startsWith(path.sep) && fsPath.length > 1 && fsPath[1] !== path.sep && isWindows) {
             return fsPath.slice(1);
         }
         return fsPath || '';

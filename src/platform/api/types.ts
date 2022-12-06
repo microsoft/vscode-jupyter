@@ -1,26 +1,19 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, Event, Uri } from 'vscode';
-import * as lsp from 'vscode-languageserver-protocol';
-import { InterpreterUri, Resource } from '../common/types';
-import { IInterpreterQuickPickItem } from '../interpreter/configuration/types';
+import { Event, QuickPickItem, Uri } from 'vscode';
+import { Resource } from '../common/types';
 import type { SemVer } from 'semver';
-import { EnvironmentType, IExportedKernelService, PythonVersion } from './extension';
-export type ILanguageServerConnection = Pick<
-    lsp.ProtocolConnection,
-    'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
->;
-
-export interface ILanguageServer extends Disposable {
-    readonly connection: ILanguageServerConnection;
-    readonly capabilities: lsp.ServerCapabilities;
-}
+import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
+import { EnvironmentType } from '../pythonEnvironments/info';
+import { Environment, ProposedExtensionAPI } from './pythonApiTypes';
 
 export const IPythonApiProvider = Symbol('IPythonApi');
 export interface IPythonApiProvider {
     onDidActivatePythonExtension: Event<void>;
+    pythonExtensionHooked: Promise<void>;
     getApi(): Promise<PythonApi>;
+    getNewApi(): Promise<ProposedExtensionAPI | undefined>;
     setApi(api: PythonApi): void;
 }
 export const IPythonExtensionChecker = Symbol('IPythonExtensionChecker');
@@ -28,10 +21,12 @@ export interface IPythonExtensionChecker {
     readonly isPythonExtensionInstalled: boolean;
     readonly isPythonExtensionActive: boolean;
     showPythonExtensionInstallRequiredPrompt(): Promise<void>;
+    directlyInstallPythonExtension(): Promise<void>;
+    onPythonExtensionInstallationStatusChanged: Event<'installed' | 'uninstalled'>;
 }
 
 /**
- * This allows Python exntension to update Product enum without breaking Jupyter.
+ * This allows Python extension to update Product enum without breaking Jupyter.
  * I.e. we have a strict contract, else using numbers (in enums) is bound to break across products.
  */
 export enum JupyterProductToInstall {
@@ -67,25 +62,18 @@ export type PythonEnvironment_PythonApi = InterpreterInformation_PythonApi & {
     envPath?: string;
 };
 
-export type PythonApi = {
+export interface IInterpreterQuickPickItem_PythonApi extends QuickPickItem {
+    path: string;
     /**
-     * IInterpreterService
+     * The interpreter related to this quickpick item.
+     *
+     * @type {PythonEnvironment}
+     * @memberof IInterpreterQuickPickItem
      */
-    onDidChangeInterpreter: Event<void>;
-    onDidChangeInterpreters: Event<void>;
-    /**
-     * IInterpreterService
-     */
-    getInterpreters(resource?: Uri): Promise<PythonEnvironment_PythonApi[]>;
-    /**
-     * IInterpreterService
-     */
-    getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment_PythonApi | undefined>;
-    /**
-     * IInterpreterService
-     */
-    getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment_PythonApi>;
+    interpreter: PythonEnvironment_PythonApi;
+}
 
+export type PythonApi = {
     /**
      * IEnvironmentActivationService
      */
@@ -94,10 +82,8 @@ export type PythonApi = {
         interpreter: PythonEnvironment_PythonApi,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined>;
-    /**
-     * IWindowsStoreInterpreter
-     */
-    getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
+    getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem_PythonApi[]>;
+    getKnownSuggestions?(resource: Resource): IInterpreterQuickPickItem_PythonApi[];
     /**
      * Retrieve interpreter path selected for Jupyter server from Python memento storage
      */
@@ -106,11 +92,6 @@ export type PythonApi = {
      * Returns path to where `debugpy` is. In python extension this is `/pythonFiles/lib/python`.
      */
     getDebuggerPath(): Promise<string>;
-    /**
-     * Returns a ILanguageServer that can be used for communicating with a language server process.
-     * @param resource file that determines which connection to return
-     */
-    getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined>;
     /**
      * Registers a visibility filter for the interpreter status bar.
      */
@@ -124,51 +105,21 @@ export type PythonApi = {
         resource: Resource,
         interpreter?: PythonEnvironment_PythonApi
     ): Promise<string[] | undefined>;
+
     /**
-     * This API will re-trigger environment discovery. Extensions can wait on the returned
-     * promise to get the updated interpreters list. If there is a refresh already going on
-     * then it returns the promise for that refresh.
-     * @param options : [optional]
-     *     * clearCache : When true, this will clear the cache before interpreter refresh
-     *                    is triggered.
+     * Call to provide a function that the Python extension can call to request the Python
+     * path to use for a particular notebook.
+     * @param func : The function that Python should call when requesting the Python path.
      */
-    refreshInterpreters(options?: RefreshInterpretersOptions): Promise<string[] | undefined>;
+    registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
+
     /**
-     * Changes the active interpreter in use by the python extension
-     * @param interpreterPath
-     * @param resource
+     * Call to provide a function that the Python extension can call to request the notebook
+     * document URI related to a particular text document URI, or undefined if there is no
+     * associated notebook.
+     * @param func : The function that Python should call when requesting the notebook URI.
      */
-    setActiveInterpreter(interpreterPath: string, resource?: Resource): Promise<void>;
+    registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void;
 };
 
-export type RefreshInterpretersOptions = {
-    clearCache?: boolean;
-};
-export type IPythonProposedApi = {
-    environment: {
-        /**
-         * This API will re-trigger environment discovery. Extensions can wait on the returned
-         * promise to get the updated interpreters list. If there is a refresh already going on
-         * then it returns the promise for that refresh.
-         * @param options : [optional]
-         *     * clearCache : When true, this will clear the cache before interpreter refresh
-         *                    is triggered.
-         */
-        refreshInterpreters(options?: RefreshInterpretersOptions): Promise<string[] | undefined>;
-    };
-};
-
-export const IPythonDebuggerPathProvider = Symbol('IPythonDebuggerPathProvider');
-export interface IPythonDebuggerPathProvider {
-    getDebuggerPath(): Promise<string>;
-}
-
-export const ILanguageServerProvider = Symbol('ILanguageServerProvider');
-export interface ILanguageServerProvider {
-    getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined>;
-}
-
-export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
-export interface IExportedKernelServiceFactory {
-    getService(): Promise<IExportedKernelService | undefined>;
-}
+export type PythonEnvironmentV2 = Environment;

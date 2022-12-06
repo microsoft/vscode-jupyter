@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import { inject, injectable, named } from 'inversify';
 
@@ -7,7 +8,7 @@ import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Cancellation } from '../../platform/common/cancellation';
-import { Identifiers, PYTHON, Telemetry } from '../../platform/common/constants';
+import { Identifiers, InteractiveWindowView, PYTHON, Telemetry } from '../../platform/common/constants';
 import { traceError } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 
@@ -15,12 +16,15 @@ import { sleep } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { InteractiveWindowView } from '../../notebooks/constants';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { IInteractiveWindowProvider } from '../types';
 import { getInteractiveCellMetadata } from '../helpers';
 import * as urlPath from '../../platform/vscode-path/resources';
 
+/**
+ * Provides hover support in python files based on the state of a jupyter kernel. Files that are
+ * sent to the Interactive Window have hover support added when hovering over variables.
+ */
 @injectable()
 export class HoverProvider implements IExtensionSyncActivationService, vscode.HoverProvider {
     private runFiles = new Set<string>();
@@ -76,9 +80,13 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         const timeoutHandler = sleep(300).then(() => undefined);
         this.stopWatch.reset();
         const result = await Promise.race([timeoutHandler, this.getVariableHover(document, position, token)]);
-        sendTelemetryEvent(Telemetry.InteractiveFileTooltipsPerf, this.stopWatch.elapsedTime, {
-            isResultNull: !!result
-        });
+        sendTelemetryEvent(
+            Telemetry.InteractiveFileTooltipsPerf,
+            { duration: this.stopWatch.elapsedTime },
+            {
+                isResultNull: !!result
+            }
+        );
         return result;
     }
 
@@ -136,7 +144,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         this.notebook.notebookDocuments
             .filter((item) => notebookUris.includes(item.uri.toString()))
             .forEach((item) => {
-                const kernel = this.kernelProvider.get(item.uri);
+                const kernel = this.kernelProvider.get(item);
                 if (kernel) {
                     kernels.add(kernel);
                 }

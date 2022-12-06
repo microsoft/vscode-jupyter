@@ -1,12 +1,12 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 'use strict';
 import '../../../platform/common/extensions';
 
 import * as vscode from 'vscode';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { injectable, inject } from 'inversify';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceInfo, traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -19,33 +19,25 @@ import {
 } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { trackKernelResourceInformation } from '../../../telemetry/telemetry';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { isPythonKernelConnection } from '../../helpers';
-import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook';
-import { ConnectNotebookProviderOptions, INotebook, IRawConnection, KernelConnectionMetadata } from '../../types';
+import { trackKernelResourceInformation } from '../../telemetry/helper';
+import { IRawKernelConnectionSession, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
-import { noop } from '../../../platform/common/utils/misc';
 import { Cancellation } from '../../../platform/common/cancellation';
+import { noop } from '../../../platform/common/utils/misc';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-class RawConnection implements IRawConnection {
-    public readonly type = 'raw';
-    public readonly localLaunch = true;
-    public readonly displayName = '';
-}
-
+/**
+ * Implements IRawNotebookProvider for raw kernel connections.
+ */
 @injectable()
 export class HostRawNotebookProvider implements IRawNotebookProvider {
     public get id(): string {
         return this._id;
     }
-    private notebooks = new Set<Promise<INotebook>>();
-    private rawConnection = new RawConnection();
+    private sessions = new Set<Promise<IRawKernelConnectionSession>>();
     private _id = uuid();
     private disposed = false;
     constructor(
@@ -55,7 +47,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
         @inject(IRawNotebookSupportedService)
         private readonly rawNotebookSupportedService: IRawNotebookSupportedService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         this.asyncRegistry.push(this);
@@ -65,13 +56,9 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         if (!this.disposed) {
             this.disposed = true;
             traceInfo(`Shutting down notebooks for ${this.id}`);
-            const notebooks = await Promise.all([...this.notebooks.values()]);
-            await Promise.all(notebooks.map((n) => n?.session.dispose()));
+            const notebooks = await Promise.all([...this.sessions.values()]);
+            await Promise.all(notebooks.map((session) => session.dispose()));
         }
-    }
-
-    public async connect(_options: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined> {
-        return this.rawConnection;
     }
 
     // Check to see if we have all that we need for supporting raw kernel launch
@@ -79,33 +66,20 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         return this.rawNotebookSupportedService.isSupported;
     }
 
-    @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
     public async createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         cancelToken: vscode.CancellationToken
-    ): Promise<INotebook> {
-        traceInfo(`Creating raw notebook for ${getDisplayPath(resource)}`);
-        const notebookPromise = createDeferred<INotebook>();
-        this.trackDisposable(notebookPromise.promise);
+    ): Promise<IRawKernelConnectionSession> {
+        traceVerbose(`Creating raw notebook for resource '${getDisplayPath(resource)}'`);
+        const sessionPromise = createDeferred<IRawKernelConnectionSession>();
+        this.trackDisposable(sessionPromise.promise);
         let rawSession: RawJupyterSession | undefined;
 
-        traceVerbose(`Getting preferred kernel for ${getDisplayPath(resource)}`);
         try {
             const kernelConnectionProvided = !!kernelConnection;
-            if (
-                kernelConnection &&
-                isPythonKernelConnection(kernelConnection) &&
-                kernelConnection.kind === 'startUsingLocalKernelSpec'
-            ) {
-                if (!kernelConnection.interpreter) {
-                    sendTelemetryEvent(Telemetry.AttemptedToLaunchRawKernelWithoutInterpreter, undefined, {
-                        pythonExtensionInstalled: this.extensionChecker.isPythonExtensionInstalled
-                    });
-                }
-            }
-            traceInfo(`Computing working directory ${getDisplayPath(resource)}`);
+            traceInfo(`Computing working directory for resource '${getDisplayPath(resource)}'`);
             const workingDirectory = await this.workspaceService.computeWorkingDirectory(resource);
             Cancellation.throwIfCanceled(cancelToken);
             const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
@@ -113,7 +87,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
                 resource,
-                noop,
                 vscode.Uri.file(workingDirectory),
                 interruptTimeout,
                 kernelConnection,
@@ -123,24 +96,16 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
             // If a kernel connection was not provided, then we set it up here.
             if (!kernelConnectionProvided) {
-                trackKernelResourceInformation(resource, { kernelConnection });
+                await trackKernelResourceInformation(resource, { kernelConnection });
             }
-            traceVerbose(
-                `Connecting to raw session for ${getDisplayPath(resource)} with connection ${kernelConnection.id}`
-            );
             await rawSession.connect({ token: cancelToken, ui });
             if (cancelToken.isCancellationRequested) {
                 throw new vscode.CancellationError();
             }
             if (rawSession.isConnected) {
-                // Create our notebook
-                const notebook = new JupyterNotebook(rawSession, this.rawConnection);
-
-                traceInfo(`Finished connecting ${this.id}`);
-
-                notebookPromise.resolve(notebook);
+                sessionPromise.resolve(rawSession);
             } else {
-                notebookPromise.reject(new Error(DataScience.rawConnectionBrokenError()));
+                sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError()));
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process
@@ -149,24 +114,26 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             });
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
-            notebookPromise.reject(ex);
+            sessionPromise.reject(ex);
         }
 
-        return notebookPromise.promise;
+        return sessionPromise.promise;
     }
 
-    private trackDisposable(notebook: Promise<INotebook>) {
-        void notebook.then((nb) => {
-            nb.session.onDidDispose(
-                () => {
-                    this.notebooks.delete(notebook);
-                },
-                this,
-                this.disposables
-            );
-        });
+    private trackDisposable(sessionPromise: Promise<IRawKernelConnectionSession>) {
+        void sessionPromise
+            .then((session) => {
+                session.onDidDispose(
+                    () => {
+                        this.sessions.delete(sessionPromise);
+                    },
+                    this,
+                    this.disposables
+                );
+            })
+            .catch(noop);
 
-        // Save the notebook
-        this.notebooks.add(notebook);
+        // Save the session
+        this.sessions.add(sessionPromise);
     }
 }

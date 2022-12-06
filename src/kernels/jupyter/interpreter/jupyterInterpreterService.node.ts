@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -11,15 +11,20 @@ import '../../../platform/common/extensions';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterOldCacheStateStore } from './jupyterInterpreterOldCacheStateStore.node';
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
 import { JupyterInterpreterDependencyResponse } from '../types';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { DataScience } from '../../../platform/common/utils/localize';
 
+/**
+ * Manages picking an interpreter that can run jupyter.
+ * This interpreter is how we start jupyter on a local machine when ZMQ doesn't work.
+ */
 @injectable()
 export class JupyterInterpreterService {
     private _selectedInterpreter?: PythonEnvironment;
@@ -36,7 +41,8 @@ export class JupyterInterpreterService {
         @inject(JupyterInterpreterSelector) private readonly jupyterInterpreterSelector: JupyterInterpreterSelector,
         @inject(JupyterInterpreterDependencyService)
         private readonly interpreterConfiguration: JupyterInterpreterDependencyService,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
     /**
      * Gets the selected interpreter configured to run Jupyter.
@@ -79,6 +85,7 @@ export class JupyterInterpreterService {
      * @memberof JupyterInterpreterService
      */
     public async selectInterpreter(): Promise<PythonEnvironment | undefined> {
+        sendTelemetryEvent(Telemetry.SelectJupyterInterpreter);
         const interpreter = await this.jupyterInterpreterSelector.selectInterpreter();
         if (!interpreter) {
             sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'notSelected' });
@@ -95,6 +102,9 @@ export class JupyterInterpreterService {
                 sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'installationCancelled' });
                 return;
             default:
+                sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, {
+                    result: 'selectAnotherInterpreter'
+                });
                 return this.selectInterpreter();
         }
     }
@@ -109,6 +119,17 @@ export class JupyterInterpreterService {
             // Use current interpreter.
             interpreter = await this.interpreterService.getActiveInterpreter(undefined);
             if (!interpreter) {
+                if (err) {
+                    const selection = await this.appShell.showErrorMessage(
+                        err.message,
+                        { modal: true },
+                        DataScience.selectDifferentJupyterInterpreter()
+                    );
+                    if (selection !== DataScience.selectDifferentJupyterInterpreter()) {
+                        return JupyterInterpreterDependencyResponse.cancel;
+                    }
+                }
+
                 // Unlikely scenario, user hasn't selected python, python extension will fall over.
                 // Get user to select something.
                 await this.selectInterpreter();
@@ -174,7 +195,7 @@ export class JupyterInterpreterService {
             });
             // First see if we can get interpreter details
             const interpreter = await Promise.race([
-                this.interpreterService.getInterpreterDetails(pythonPath, undefined),
+                this.interpreterService.getInterpreterDetails(pythonPath),
                 resolveToUndefinedWhenCancelled
             ]);
             if (interpreter) {

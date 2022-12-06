@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -6,6 +6,9 @@
 import { injectable } from 'inversify';
 import { IProductService, Product, ProductType } from './types';
 
+/**
+ * Legacy code. Determines what type of installer to use for a product. We only have one, so we could probably eliminate this class.
+ */
 @injectable()
 export class ProductService implements IProductService {
     private ProductTypes = new Map<Product, ProductType>();

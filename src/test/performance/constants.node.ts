@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 export const ACTIVATION_TIMES_DEV_LOG_FILE_PATHS = process.env.ACTIVATION_TIMES_DEV_LOG_FILE_PATHS;
 export const ACTIVATION_TIMES_EXT_VERSION = process.env.ACTIVATION_TIMES_EXT_VERSION;
 export const ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS = process.env.ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS;

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 'use strict';
@@ -13,7 +13,7 @@ import { IDisposableRegistry } from '../../../../platform/common/types';
 import { JupyterInterpreterSelectionCommand } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelectionCommand.node';
 import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 
-suite('DataScience - Jupyter Interpreter Command', () => {
+suite('Jupyter Interpreter Command', () => {
     let interpreterCommand: IExtensionSingleActivationService;
     let disposableRegistry: IDisposableRegistry;
     let commandManager: ICommandManager;

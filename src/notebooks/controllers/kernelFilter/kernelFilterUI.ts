@@ -1,4 +1,5 @@
-// import { INotebookControllerManager } from './types';
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
 import { QuickPickItem } from 'vscode';
@@ -10,25 +11,38 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import {
     getDisplayNameOrNameOfKernelConnection,
-    getKernelConnectionPath,
+    getKernelConnectionDisplayPath,
     getRemoteKernelSessionInformation
 } from '../../../kernels/helpers';
-import { KernelConnectionMetadata } from '../../../kernels/types';
-import { INotebookControllerManager } from '../../types';
+import { isRemoteConnection, KernelConnectionMetadata } from '../../../kernels/types';
 import { KernelFilterService } from './kernelFilterService';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../platform/common/constants';
+import { IControllerLoader, IControllerRegistration } from '../types';
+import { IPlatformService } from '../../../platform/common/platform/types';
 
+function getKernelLabel(metadata: KernelConnectionMetadata): string {
+    if (isRemoteConnection(metadata)) {
+        return `${DataScience.kernelPrefixForRemote()} ${getDisplayNameOrNameOfKernelConnection(metadata)}`;
+    }
+    return getDisplayNameOrNameOfKernelConnection(metadata);
+}
+
+/**
+ * Provides a UI for filtering kernels.
+ */
 @injectable()
 export class KernelFilterUI implements IExtensionSyncActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
-        @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager,
+        @inject(IControllerRegistration) private readonly controllers: IControllerRegistration,
+        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDisposableRegistry) disposales: IDisposableRegistry,
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IPlatformService) private readonly platform: IPlatformService
     ) {
         disposales.push(this);
     }
@@ -48,12 +62,12 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         quickPick.busy = true;
         quickPick.enabled = false;
 
-        this.controllers.kernelConnections
-            .then((connections) => {
+        this.controllerLoader.loaded
+            .then(() => {
                 if (quickPickHidden) {
                     return;
                 }
-                const items = connections
+                const items = this.controllers.all
                     .filter((item) => {
                         if (duplicates.has(item.id)) {
                             return false;
@@ -63,9 +77,9 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                     })
                     .map((item) => {
                         return <QuickPickType>{
-                            label: getDisplayNameOrNameOfKernelConnection(item),
+                            label: getKernelLabel(item),
                             picked: !this.kernelFilter.isKernelHidden(item),
-                            description: getKernelConnectionPath(item, this.workspace),
+                            description: getKernelConnectionDisplayPath(item, this.workspace, this.platform),
                             detail:
                                 item.kind === 'connectToLiveRemoteKernel'
                                     ? getRemoteKernelSessionInformation(item)
@@ -108,7 +122,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                 const hiddenConnections = items
                     .map((item) => item.connection)
                     .filter((item) => !selectedItems.has(item));
-                void this.kernelFilter.storeHiddenKernels(hiddenConnections.map((item) => item));
+                this.kernelFilter.storeHiddenKernels(hiddenConnections.map((item) => item)).then(noop, noop);
                 sendTelemetryEvent(Telemetry.JupyterKernelFilterUsed);
             },
             this,

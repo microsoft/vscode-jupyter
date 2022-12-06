@@ -19,8 +19,8 @@
             "path": "../vscode-python"
         },
         {
-            "name": "vscode-jupyter-kernelManager",
-            "path": "../vscode-jupyter-kernelManager"
+            "name": "vscode-jupyter-powertoys",
+            "path": "../vscode-jupyter-powertoys"
         }
     ],
     "settings": {
@@ -109,6 +109,25 @@
             {
                 "type": "extensionHost",
                 "request": "launch",
+                "name": "Jupyter + Powertoys Extension",
+                "args": [
+                    "--enable-proposed-api",
+                    "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}",
+                    "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter-powertoys}"
+                ],
+                "stopOnEntry": false,
+                "sourceMaps": true,
+                "outFiles": [
+                    "${workspaceFolder:vscode-jupyter}/out/**/*.js",
+                    "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*",
+                    "${workspaceFolder:vscode-jupyter-powertoys}/out/**/*.js",
+                    "!${workspaceFolder:vscode-jupyter-powertoys}/**/node_modules**/*"
+                ],
+                "skipFiles": ["<node_internals>/**"]
+            },
+            {
+                "type": "extensionHost",
+                "request": "launch",
                 "name": "Jupyter + Renderer Extension",
                 "args": [
                     "--enable-proposed-api",
@@ -143,7 +162,7 @@
                     "VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST": "", // Initialize this to run tests again Julia & other kernels.
                     "VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE": "true", // Initialize to create the webview test middleware
                     "VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE": "true",
-                    "TEST_FILES_SUFFIX": "vscode.test*",
+                    "TEST_FILES_SUFFIX": "*.vscode.test,*.vscode.common.test",
                     "VSC_JUPYTER_REMOTE_NATIVE_TEST": "false", // Change to `true` to run the Native Notebook tests with remote jupyter connections.
                     "VSC_JUPYTER_NON_RAW_NATIVE_TEST": "false", // Change to `true` to run the Native Notebook tests with non-raw kernels (i.e. local jupyter server).
                     "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE": "1",
