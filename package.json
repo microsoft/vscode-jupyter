@@ -1739,6 +1739,7 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.generateSVGPlots.description%",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.generateSVGPlots.deprecationMessage%",
                     "scope": "resource"
                 },
                 "jupyter.codeLenses": {
