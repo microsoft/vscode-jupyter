@@ -370,7 +370,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
 _VSCODE_fileList = [${fileListString}]
 for file in _VSCODE_fileList:
     try:
-    _VSCODE_os.remove(file)
+        _VSCODE_os.remove(file)
     except:
         pass
 del _VSCODE_fileList
