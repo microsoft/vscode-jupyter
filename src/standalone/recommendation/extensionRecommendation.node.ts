@@ -16,7 +16,7 @@ import {
     getLanguageInNotebookMetadata,
     isPythonKernelConnection
 } from '../../kernels/helpers';
-import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
+import { IControllerRegistry, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 
 const mementoKeyToNeverPromptExtensionAgain = 'JVSC_NEVER_PROMPT_EXTENSIONS_LIST';
@@ -47,7 +47,7 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
     private recommendedInSession = new Set<string>();
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IControllerSelection) private readonly controllerManager: IControllerSelection,
+        @inject(IControllerRegistry) private readonly controllerManager: IControllerRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,

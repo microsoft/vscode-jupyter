@@ -29,7 +29,7 @@ import {
 import { isWeb } from '../../../platform/common/utils/misc';
 import { createActiveInterpreterController } from '../../../notebooks/controllers/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { IControllerRegistration } from '../../../notebooks/controllers/types';
+import { IControllerRegistry } from '../../../notebooks/controllers/types';
 
 suite('IPyWidget Script Manager @widgets', function () {
     this.timeout(120_000);
@@ -73,7 +73,7 @@ suite('IPyWidget Script Manager @widgets', function () {
         if (!isWeb()) {
             // Create the controller and select it for the tests.
             const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-            const controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+            const controllerRegistration = api.serviceContainer.get<IControllerRegistry>(IControllerRegistry);
             const controller = await createActiveInterpreterController(
                 notebook.notebookType as 'jupyter-notebook' | 'interactive',
                 notebook.uri,

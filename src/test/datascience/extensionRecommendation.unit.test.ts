@@ -14,7 +14,7 @@ import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNote
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../kernels/types';
 import { ExtensionRecommendationService } from '../../standalone/recommendation/extensionRecommendation.node';
 import { JupyterNotebookView } from '../../platform/common/constants';
-import { IControllerSelection } from '../../notebooks/controllers/types';
+import { IControllerRegistry } from '../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('Extension Recommendation', () => {
@@ -28,7 +28,7 @@ suite('Extension Recommendation', () => {
                 let appShell: IApplicationShell;
                 let extensions: IExtensions;
                 let commandManager: ICommandManager;
-                let controllerSelection: IControllerSelection;
+                let controllerSelection: IControllerRegistry;
                 let onDidOpenNotebookDocument: EventEmitter<NotebookDocument>;
                 let onNotebookControllerSelected: EventEmitter<{
                     notebook: NotebookDocument;
@@ -45,7 +45,7 @@ suite('Extension Recommendation', () => {
                     }>();
                     vscNotebook = mock<IVSCodeNotebook>();
                     when(vscNotebook.onDidOpenNotebookDocument).thenReturn(onDidOpenNotebookDocument.event);
-                    controllerSelection = mock<IControllerSelection>();
+                    controllerSelection = mock<IControllerRegistry>();
                     when(controllerSelection.onControllerSelected).thenReturn(onNotebookControllerSelected.event);
                     memento = mock<Memento>();
                     appShell = mock<IApplicationShell>();

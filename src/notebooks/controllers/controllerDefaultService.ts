@@ -16,8 +16,7 @@ import { isEqual } from '../../platform/vscode-path/resources';
 import { createActiveInterpreterController } from './helpers';
 import {
     IControllerDefaultService,
-    IControllerLoader,
-    IControllerRegistration,
+    IControllerRegistry,
     IVSCodeNotebookController
 } from './types';
 
@@ -30,8 +29,8 @@ export class ControllerDefaultService implements IControllerDefaultService {
         return this.serverUriStorage.isLocalLaunch;
     }
     constructor(
-        @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
-        @inject(IControllerLoader) private readonly loader: IControllerLoader,
+        @inject(IControllerRegistry) private readonly registration: IControllerRegistry,
+        @inject(IControllerRegistry) private readonly loader: IControllerRegistry,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,

@@ -32,7 +32,7 @@ import { KernelConnector } from '../../notebooks/controllers/kernelConnector';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IExportedKernelServiceFactory } from './api';
-import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { IControllerRegistry } from '../../notebooks/controllers/types';
 
 @injectable()
 export class JupyterKernelServiceFactory implements IExportedKernelServiceFactory {
@@ -43,7 +43,7 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IThirdPartyKernelProvider) private readonly thirdPartyKernelProvider: IThirdPartyKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IControllerRegistry) private readonly controllerRegistration: IControllerRegistry,
         @inject(ApiAccessService) private readonly apiAccess: ApiAccessService,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
@@ -113,7 +113,7 @@ class JupyterKernelService implements IExportedKernelService {
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IThirdPartyKernelProvider) private readonly thirdPartyKernelProvider: IThirdPartyKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IControllerRegistry) private readonly controllerRegistration: IControllerRegistry,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {
         this.kernelFinder.onDidChangeStatus(

@@ -13,7 +13,7 @@ import { IDisposable, IDisposableRegistry, IFeaturesManager, IsWebExtension } fr
 import { DataScience } from '../../../platform/common/utils/localize';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError, traceWarning } from '../../../platform/logging';
-import { IControllerRegistration, INotebookKernelSourceSelector } from '../types';
+import { IControllerRegistry, INotebookKernelSourceSelector } from '../types';
 
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
@@ -22,7 +22,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
     constructor(
         @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IControllerRegistry) private readonly controllerRegistration: IControllerRegistry,
         @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {
         disposables.push(this);

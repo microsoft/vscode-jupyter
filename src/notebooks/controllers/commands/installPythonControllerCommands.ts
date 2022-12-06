@@ -26,7 +26,7 @@ import { traceError, traceInfo } from '../../../platform/logging';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getLanguageOfNotebookDocument } from '../../languages/helpers';
-import { IControllerLoader } from '../types';
+import { IControllerRegistry } from '../types';
 
 // This service owns the commands that show up in the kernel picker to allow for either installing
 // the Python Extension or installing Python
@@ -43,7 +43,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
+        @inject(IControllerRegistry) private readonly controllerLoader: IControllerRegistry,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,

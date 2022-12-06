@@ -12,7 +12,7 @@ import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferred
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { waitForCondition } from '../../platform/common/utils/async';
-import { IControllerLoader, IControllerRegistration, IControllerSelection } from './types';
+import { IControllerRegistry } from './types';
 
 /**
  * This class listens tracks notebook controller selection. When a notebook runs
@@ -24,9 +24,9 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IControllerSelection) private readonly controllerSelection: IControllerSelection,
+        @inject(IControllerRegistry) private readonly controllerLoader: IControllerRegistry,
+        @inject(IControllerRegistry) private readonly controllerRegistration: IControllerRegistry,
+        @inject(IControllerRegistry) private readonly controllerSelection: IControllerRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider

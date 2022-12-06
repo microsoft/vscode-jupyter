@@ -33,12 +33,12 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { IDisposable } from '../../../platform/common/types';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { runCellAndVerifyUpdateOfPreferredRemoteKernelId } from './remoteNotebookEditor.vscode.common.test';
-import { IControllerLoader, IControllerRegistration, IControllerSelection } from '../../../notebooks/controllers/types';
+import { IControllerRegistry } from '../../../notebooks/controllers/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
 suite('Remote Kernel Execution', function () {
-    let controllerLoader: IControllerLoader;
-    let controllerRegistration: IControllerRegistration;
+    let controllerLoader: IControllerRegistry;
+    let controllerRegistration: IControllerRegistry;
     let jupyterServerSelector: JupyterServerSelector;
     let vscodeNotebook: IVSCodeNotebook;
     let ipynbFile: Uri;
@@ -60,8 +60,8 @@ suite('Remote Kernel Execution', function () {
         sinon.restore();
         const serviceContainer = api.serviceContainer;
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        controllerLoader = api.serviceContainer.get<IControllerLoader>(IControllerLoader);
-        controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        controllerLoader = api.serviceContainer.get<IControllerRegistry>(IControllerRegistry);
+        controllerRegistration = api.serviceContainer.get<IControllerRegistry>(IControllerRegistry);
         jupyterServerSelector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
         vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         remoteKernelIdProvider = serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider);
@@ -170,7 +170,7 @@ suite('Remote Kernel Execution', function () {
         const activeInterpreter = await interpreterService.getActiveInterpreter();
         traceInfoIfCI(`active interpreter ${activeInterpreter?.uri.path}`);
         const { notebook } = await createEmptyPythonNotebook(disposables);
-        const controllerManager = svcContainer.get<IControllerSelection>(IControllerSelection);
+        const controllerManager = svcContainer.get<IControllerRegistry>(IControllerRegistry);
         const preferredController = controllerManager.getSelected(notebook);
         traceInfoIfCI(`preferred controller ${preferredController?.connection.id}`);
 
@@ -275,7 +275,7 @@ suite('Remote Kernel Execution', function () {
 
         const nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
-        const controllerManager = svcContainer.get<IControllerSelection>(IControllerSelection);
+        const controllerManager = svcContainer.get<IControllerRegistry>(IControllerRegistry);
 
         // Verify we're connected to a remote kernel.
         const remoteController = controllerManager.getSelected(nbEditor.notebook);

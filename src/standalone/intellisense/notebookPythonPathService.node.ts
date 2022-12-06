@@ -13,7 +13,7 @@ import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import * as semver from 'semver';
 import { traceInfo, traceVerbose } from '../../platform/logging';
-import { IControllerSelection } from '../../notebooks/controllers/types';
+import { IControllerRegistry } from '../../notebooks/controllers/types';
 
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
@@ -29,7 +29,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection,
+        @inject(IControllerRegistry) private readonly notebookControllerSelection: IControllerRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
         if (!this._isPylanceExtensionInstalled()) {

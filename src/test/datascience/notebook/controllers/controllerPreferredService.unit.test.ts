@@ -16,9 +16,7 @@ import {
 import { ControllerPreferredService } from '../../../../notebooks/controllers/controllerPreferredService';
 import {
     IControllerDefaultService,
-    IControllerLoader,
-    IControllerRegistration,
-    IControllerSelection,
+    IControllerRegistry,
     IKernelRankingHelper,
     IVSCodeNotebookController
 } from '../../../../notebooks/controllers/types';
@@ -33,16 +31,16 @@ suite('Preferred Controller', () => {
     const disposables: IDisposable[] = [];
     let kernelRankHelper: IKernelRankingHelper;
     let preferredControllerService: ControllerPreferredService;
-    let controllerRegistrations: IControllerRegistration;
-    let controllerLoader: IControllerLoader;
+    let controllerRegistrations: IControllerRegistry;
+    let controllerLoader: IControllerRegistry;
     let vscNotebook: IVSCodeNotebook;
     let extensionChecker: IPythonExtensionChecker;
     let uriStorage: IJupyterServerUriStorage;
     let defaultControllerService: IControllerDefaultService;
     let interpreters: IInterpreterService;
     setup(() => {
-        controllerRegistrations = mock<IControllerRegistration>();
-        controllerLoader = mock<IControllerLoader>();
+        controllerRegistrations = mock<IControllerRegistry>();
+        controllerLoader = mock<IControllerRegistry>();
         vscNotebook = mock<IVSCodeNotebook>();
         extensionChecker = mock<IPythonExtensionChecker>();
         uriStorage = mock<IJupyterServerUriStorage>();
@@ -53,7 +51,7 @@ suite('Preferred Controller', () => {
         disposables.push(onDidOpenNotebookDocument);
         const onDidCloseNotebookDocument = new EventEmitter<NotebookDocument>();
         disposables.push(onDidCloseNotebookDocument);
-        const selection = mock<IControllerSelection>();
+        const selection = mock<IControllerRegistry>();
         when(vscNotebook.onDidOpenNotebookDocument).thenReturn(onDidOpenNotebookDocument.event);
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(vscNotebook.notebookDocuments).thenReturn([]);

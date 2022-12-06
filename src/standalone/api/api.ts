@@ -19,7 +19,7 @@ import { isTestExecution } from '../../platform/common/constants';
 import { IExtensionContext } from '../../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
-import { IControllerPreferredService, IControllerRegistration } from '../../notebooks/controllers/types';
+import { IControllerPreferredService, IControllerRegistry } from '../../notebooks/controllers/types';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -72,10 +72,7 @@ export interface IExtensionApi {
     addRemoteJupyterServer(providerId: string, handle: JupyterServerUriHandle): Promise<void>;
 }
 
-function waitForNotebookControllersCreationForServer(
-    serverId: string,
-    controllerRegistration: IControllerRegistration
-) {
+function waitForNotebookControllersCreationForServer(serverId: string, controllerRegistration: IControllerRegistry) {
     return new Promise<void>((resolve) => {
         controllerRegistration.onDidChange((e) => {
             for (let controller of e.added) {
@@ -133,7 +130,7 @@ export function buildApi(
             notebook: NotebookDocument
         ) => {
             const controllers = serviceContainer.get<IControllerPreferredService>(IControllerPreferredService);
-            const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+            const controllerRegistration = serviceContainer.get<IControllerRegistry>(IControllerRegistry);
             const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
             const uri = generateUriFromRemoteProvider(providerId, handle);
             const serverId = await computeServerId(uri);
@@ -170,7 +167,7 @@ export function buildApi(
                 const uri = generateUriFromRemoteProvider(providerId, handle);
                 const serverId = await computeServerId(uri);
 
-                const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+                const controllerRegistration = serviceContainer.get<IControllerRegistry>(IControllerRegistry);
                 const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
                     serverId,
                     controllerRegistration

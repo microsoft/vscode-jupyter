@@ -33,7 +33,7 @@ import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IRawNotebookProvider } from '../../kernels/raw/types';
-import { IControllerSelection, IVSCodeNotebookController } from './types';
+import { IControllerRegistry, IVSCodeNotebookController } from './types';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
@@ -53,7 +53,7 @@ export class KernelConnector {
         const editor = notebookEditorProvider.findNotebookEditor(resource);
 
         // Listen for selection change events (may not fire if user cancels)
-        const controllerManager = serviceContainer.get<IControllerSelection>(IControllerSelection);
+        const controllerManager = serviceContainer.get<IControllerRegistry>(IControllerRegistry);
         let controller: IVSCodeNotebookController | undefined;
         const waitForSelection = createDeferred<IVSCodeNotebookController>();
         const disposable = controllerManager.onControllerSelected((e) => waitForSelection.resolve(e.controller));

@@ -23,11 +23,7 @@ import {
     defaultNotebookTestTimeout
 } from './helper.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import {
-    IControllerLoader,
-    IControllerPreferredService,
-    IControllerRegistration
-} from '../../../notebooks/controllers/types';
+import { IControllerPreferredService, IControllerRegistry } from '../../../notebooks/controllers/types';
 import { createKernelController, TestNotebookDocument } from './executionHelper';
 import { IKernelProvider } from '../../../kernels/types';
 import { noop } from '../../core';
@@ -52,7 +48,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
     let controllerPreferred: IControllerPreferredService;
     let kernelProvider: IKernelProvider;
     let pythonChecker: IPythonExtensionChecker;
-    let controllerRegistration: IControllerRegistration;
+    let controllerRegistration: IControllerRegistry;
     // eslint-disable-next-line local-rules/dont-use-process
     const testJavaKernels = (process.env.VSC_JUPYTER_CI_RUN_JAVA_NB_TEST || '').toLowerCase() === 'true';
     this.timeout(120_000); // Julia and C# kernels can be slow
@@ -71,10 +67,10 @@ suite('Non-Python Kernel @nonPython ', async function () {
         sinon.restore();
         verifyPromptWasNotDisplayed();
         controllerPreferred = api.serviceContainer.get<IControllerPreferredService>(IControllerPreferredService);
-        controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        controllerRegistration = api.serviceContainer.get<IControllerRegistry>(IControllerRegistry);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-        const controllerLoader = api.serviceContainer.get<IControllerLoader>(IControllerLoader);
+        const controllerLoader = api.serviceContainer.get<IControllerRegistry>(IControllerRegistry);
         await controllerLoader.loaded;
     });
     function verifyPromptWasNotDisplayed() {

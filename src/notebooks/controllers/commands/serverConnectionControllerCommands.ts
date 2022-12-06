@@ -16,7 +16,7 @@ import {
 import { ContextKey } from '../../../platform/common/contextKey';
 import { IDisposable, IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { IControllerLoader, IControllerRegistration, IVSCodeNotebookController } from '../types';
+import { IControllerRegistry, IVSCodeNotebookController } from '../types';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -63,8 +63,8 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IControllerRegistry) private readonly controllerLoader: IControllerRegistry,
+        @inject(IControllerRegistry) private readonly controllerRegistration: IControllerRegistry,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager

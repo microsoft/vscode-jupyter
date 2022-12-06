@@ -50,7 +50,7 @@ import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import {
     IControllerDefaultService,
-    IControllerRegistration,
+    IControllerRegistry,
     IVSCodeNotebookController
 } from '../notebooks/controllers/types';
 import { getResourceType } from '../platform/common/utils';
@@ -99,7 +99,7 @@ export class InteractiveWindowProvider
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IControllerRegistry) private readonly controllerRegistration: IControllerRegistry,
         @inject(IControllerDefaultService) private readonly controllerDefaultService: IControllerDefaultService,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider
     ) {

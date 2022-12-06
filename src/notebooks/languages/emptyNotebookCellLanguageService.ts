@@ -11,7 +11,7 @@ import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { chainWithPendingUpdates } from '../../kernels/execution/notebookUpdater';
 import { isJupyterNotebook, translateKernelLanguageToMonaco } from '../../platform/common/utils';
-import { IControllerSelection, IVSCodeNotebookController } from '../controllers/types';
+import { IControllerRegistry, IVSCodeNotebookController } from '../controllers/types';
 /**
  * If user creates a blank notebook, then they'll mostl likely end up with a blank cell with language, lets assume `Python`.
  * Now if the user changes the kernel to say `Julia`. After this, they need to also change the language of the cell.
@@ -24,7 +24,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection
+        @inject(IControllerRegistry) private readonly notebookControllerSelection: IControllerRegistry
     ) {}
     public async activate(): Promise<void> {
         this.notebookControllerSelection.onControllerSelected(

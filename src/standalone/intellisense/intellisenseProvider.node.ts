@@ -20,7 +20,7 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { INotebookCompletionProvider, INotebookEditorProvider } from '../../notebooks/types';
 import { LanguageServer } from './languageServer.node';
-import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
+import { IControllerRegistry, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { getComparisonKey } from '../../platform/vscode-path/resources';
 import { CompletionRequest } from 'vscode-languageclient';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
@@ -42,7 +42,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
 
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection,
+        @inject(IControllerRegistry) private readonly notebookControllerSelection: IControllerRegistry,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,

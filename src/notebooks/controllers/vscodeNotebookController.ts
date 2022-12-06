@@ -93,10 +93,6 @@ import { ConnectionDisplayDataProvider } from './connectionDisplayData';
  * in the kernel picker by VS code.
  */
 export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
-    private readonly _onNotebookControllerSelected: EventEmitter<{
-        notebook: NotebookDocument;
-        controller: VSCodeNotebookController;
-    }>;
     private readonly _onNotebookControllerSelectionChanged = new EventEmitter<{
         selected: boolean;
         notebook: NotebookDocument;
@@ -128,9 +124,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         return this._viewType as typeof InteractiveWindowView | typeof JupyterNotebookView;
     }
 
-    get onNotebookControllerSelected() {
-        return this._onNotebookControllerSelected.event;
-    }
     get onNotebookControllerSelectionChanged() {
         return this._onNotebookControllerSelectionChanged.event;
     }
@@ -174,11 +167,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             this,
             this.disposables
         );
-        this._onNotebookControllerSelected = new EventEmitter<{
-            notebook: NotebookDocument;
-            controller: VSCodeNotebookController;
-        }>();
-
         const displayData = this.displayDataProvider.getDisplayData(this.connection);
         traceVerbose(
             `Creating notebook controller for ${kernelConnection.kind} & view ${_viewType} (id='${kernelConnection.id}') with name '${displayData.label}'`
@@ -259,7 +247,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             } called from ${new Error('').stack}`
         );
         this.isDisposed = true;
-        this._onNotebookControllerSelected.dispose();
         this._onNotebookControllerSelectionChanged.dispose();
         this.controller.dispose();
         this._onDidDispose.fire();
@@ -375,7 +362,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         await this.updateCellLanguages(event.notebook);
 
         // If this NotebookController was selected, fire off the event
-        this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
         this._onNotebookControllerSelectionChanged.fire(event);
         traceVerbose(`Controller selection change completed`);
         deferred.resolve();

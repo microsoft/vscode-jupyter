@@ -14,7 +14,7 @@ import { IFileSystem } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { IFileConverter } from '../../notebooks/export/types';
 import { ExportCommands } from './exportCommands';
-import { IControllerSelection, IControllerPreferredService } from '../../notebooks/controllers/types';
+import { IControllerRegistry, IControllerPreferredService } from '../../notebooks/controllers/types';
 
 /**
  * Registers the export commands if in a trusted workspace.
@@ -33,7 +33,7 @@ export class CommandRegistry implements IExtensionSingleActivationService {
         @inject(IInteractiveWindowProvider)
         @optional()
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
-        @inject(IControllerSelection) readonly controllerSelection: IControllerSelection,
+        @inject(IControllerRegistry) readonly controllerSelection: IControllerRegistry,
         @inject(IControllerPreferredService) readonly controllerPreferred: IControllerPreferredService
     ) {
         this.exportCommand = new ExportCommands(

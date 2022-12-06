@@ -21,7 +21,7 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from '../../../../kernels/types';
 import { RemoteKernelControllerWatcher } from '../../../../notebooks/controllers/remoteKernelControllerWatcher';
-import { IControllerRegistration, IVSCodeNotebookController } from '../../../../notebooks/controllers/types';
+import { IControllerRegistry, IVSCodeNotebookController } from '../../../../notebooks/controllers/types';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
 import { IDisposable } from '../../../../platform/common/types';
 import { waitForCondition } from '../../../common';
@@ -31,12 +31,12 @@ suite('RemoteKernelControllerWatcher', () => {
     const disposables: IDisposable[] = [];
     let uriProviderRegistration: IJupyterUriProviderRegistration;
     let uriStorage: IJupyterServerUriStorage;
-    let controllers: IControllerRegistration;
+    let controllers: IControllerRegistry;
     let onDidChangeProviders: EventEmitter<void>;
     setup(() => {
         uriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         uriStorage = mock<IJupyterServerUriStorage>();
-        controllers = mock<IControllerRegistration>();
+        controllers = mock<IControllerRegistry>();
         onDidChangeProviders = new EventEmitter<void>();
         disposables.push(onDidChangeProviders);
         when(uriProviderRegistration.onDidChangeProviders).thenReturn(onDidChangeProviders.event);

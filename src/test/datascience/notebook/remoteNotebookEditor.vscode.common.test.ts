@@ -32,11 +32,7 @@ import { IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../consta
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { setIntellisenseTimeout } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
-import {
-    IControllerDefaultService,
-    IControllerLoader,
-    IControllerRegistration
-} from '../../../notebooks/controllers/types';
+import { IControllerDefaultService, IControllerRegistry } from '../../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Remote Execution @kernelCore', function () {
@@ -48,8 +44,8 @@ suite('Remote Execution @kernelCore', function () {
     let serviceContainer: IServiceContainer;
     let globalMemento: Memento;
     let encryptedStorage: IEncryptedStorage;
-    let controllerLoader: IControllerLoader;
-    let controllerRegistration: IControllerRegistration;
+    let controllerLoader: IControllerRegistry;
+    let controllerRegistration: IControllerRegistry;
     let controllerDefault: IControllerDefaultService;
 
     suiteSetup(async function () {
@@ -64,8 +60,8 @@ suite('Remote Execution @kernelCore', function () {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         encryptedStorage = api.serviceContainer.get<IEncryptedStorage>(IEncryptedStorage);
         globalMemento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
-        controllerLoader = api.serviceContainer.get<IControllerLoader>(IControllerLoader);
-        controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        controllerLoader = api.serviceContainer.get<IControllerRegistry>(IControllerRegistry);
+        controllerRegistration = api.serviceContainer.get<IControllerRegistry>(IControllerRegistry);
         controllerDefault = api.serviceContainer.get<IControllerDefaultService>(IControllerDefaultService);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).

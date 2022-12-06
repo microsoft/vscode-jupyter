@@ -24,13 +24,13 @@ import {
 import { IS_CONDA_TEST } from '../../constants.node';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { JupyterNotebookView } from '../../../platform/common/constants';
-import { IControllerRegistration } from '../../../notebooks/controllers/types';
+import { IControllerRegistry } from '../../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Conda Env Detection @kernelPicker', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
-    let controllerRegistration: IControllerRegistration;
+    let controllerRegistration: IControllerRegistry;
     this.timeout(120_000);
     suiteSetup(async function () {
         if (!IS_CONDA_TEST()) {
@@ -40,7 +40,7 @@ suite('Conda Env Detection @kernelPicker', function () {
         this.timeout(120_000);
         try {
             api = await initialize();
-            controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+            controllerRegistration = api.serviceContainer.get<IControllerRegistry>(IControllerRegistry);
             await startJupyterServer();
             await prewarmNotebooks();
             sinon.restore();

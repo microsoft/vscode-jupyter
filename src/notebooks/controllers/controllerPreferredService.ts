@@ -51,10 +51,8 @@ import { getLanguageOfNotebookDocument } from '../languages/helpers';
 import { findKernelSpecMatchingInterpreter } from './kernelRanking/helpers';
 import {
     IControllerDefaultService,
-    IControllerLoader,
     IControllerPreferredService,
-    IControllerRegistration,
-    IControllerSelection,
+    IControllerRegistry,
     IKernelRankingHelper,
     IVSCodeNotebookController,
     PreferredKernelExactMatchReason
@@ -73,8 +71,8 @@ export class ControllerPreferredService implements IControllerPreferredService, 
     }
     private disposables = new Set<IDisposable>();
     constructor(
-        @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
-        @inject(IControllerLoader) private readonly loader: IControllerLoader,
+        @inject(IControllerRegistry) private readonly registration: IControllerRegistry,
+        @inject(IControllerRegistry) private readonly loader: IControllerRegistry,
         @inject(IControllerDefaultService) private readonly defaultService: IControllerDefaultService,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
@@ -82,7 +80,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper,
-        @inject(IControllerSelection) private readonly selection: IControllerSelection,
+        @inject(IControllerRegistry) private readonly selection: IControllerRegistry,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
     ) {

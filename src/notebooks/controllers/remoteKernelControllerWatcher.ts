@@ -12,7 +12,7 @@ import { isLocalConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { IControllerRegistration } from './types';
+import { IControllerRegistry } from './types';
 
 /**
  * Tracks 3rd party IJupyterUriProviders and requests URIs from their handles. We store URI information in our
@@ -25,7 +25,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IJupyterUriProviderRegistration) private readonly providerRegistry: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly uriStorage: IJupyterServerUriStorage,
-        @inject(IControllerRegistration) private readonly controllers: IControllerRegistration
+        @inject(IControllerRegistry) private readonly controllers: IControllerRegistry
     ) {}
     activate(): void {
         this.providerRegistry.onDidChangeProviders(this.addProviderHandlers, this, this.disposables);

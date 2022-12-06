@@ -51,7 +51,7 @@ import { translateCellErrorOutput, getTextOutputValue } from '../../kernels/exec
 import dedent from 'dedent';
 import { generateCellRangesFromDocument } from '../../interactive-window/editor-integration/cellFactory';
 import { Commands } from '../../platform/common/constants';
-import { IControllerSelection } from '../../notebooks/controllers/types';
+import { IControllerRegistry } from '../../notebooks/controllers/types';
 import { format } from 'util';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
 
@@ -96,7 +96,7 @@ suite(`Interactive window execution @iw`, async function () {
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         )!;
-        const controllerSelection = api.serviceManager.get<IControllerSelection>(IControllerSelection);
+        const controllerSelection = api.serviceManager.get<IControllerRegistry>(IControllerRegistry);
         // Ensure we picked up the active interpreter for use as the kernel
         const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
 
@@ -362,7 +362,7 @@ ${actualCode}
         // Ensure we picked up the active interpreter for use as the kernel
         if (!IS_REMOTE_NATIVE_TEST()) {
             const interpreterService = api.serviceManager.get<IInterpreterService>(IInterpreterService);
-            const controllerSelection = api.serviceManager.get<IControllerSelection>(IControllerSelection);
+            const controllerSelection = api.serviceManager.get<IControllerRegistry>(IControllerRegistry);
             const controller = notebookDocument ? controllerSelection.getSelected(notebookDocument) : undefined;
             const activeInterpreter = await interpreterService.getActiveInterpreter();
             assert.ok(

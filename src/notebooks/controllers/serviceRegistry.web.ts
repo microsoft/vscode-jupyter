@@ -8,14 +8,10 @@ import { IServiceManager } from '../../platform/ioc/types';
 import { ControllerDefaultService } from './controllerDefaultService';
 import { ControllerLoader } from './controllerLoader';
 import { ControllerPreferredService } from './controllerPreferredService';
-import { ControllerRegistration } from './controllerRegistration';
-import { ControllerSelection } from './controllerSelection';
 import {
     IControllerDefaultService,
-    IControllerLoader,
+    IControllerRegistry,
     IControllerPreferredService,
-    IControllerRegistration,
-    IControllerSelection,
     IKernelRankingHelper,
     INotebookKernelSourceSelector
 } from './types';
@@ -28,13 +24,11 @@ import { ServerConnectionControllerCommands } from './commands/serverConnectionC
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IKernelRankingHelper>(IKernelRankingHelper, KernelRankingHelper);
-    serviceManager.addSingleton<IControllerRegistration>(IControllerRegistration, ControllerRegistration);
     serviceManager.addSingleton<IControllerDefaultService>(IControllerDefaultService, ControllerDefaultService);
-    serviceManager.addSingleton<IControllerLoader>(IControllerLoader, ControllerLoader);
-    serviceManager.addBinding(IControllerLoader, IExtensionSingleActivationService);
+    serviceManager.addSingleton<IControllerRegistry>(IControllerRegistry, ControllerLoader);
+    serviceManager.addBinding(IControllerRegistry, IExtensionSingleActivationService);
     serviceManager.addSingleton<IControllerPreferredService>(IControllerPreferredService, ControllerPreferredService);
     serviceManager.addBinding(IControllerPreferredService, IExtensionSyncActivationService);
-    serviceManager.addSingleton<IControllerSelection>(IControllerSelection, ControllerSelection);
     serviceManager.addSingleton<ConnectionDisplayDataProvider>(
         ConnectionDisplayDataProvider,
         ConnectionDisplayDataProvider

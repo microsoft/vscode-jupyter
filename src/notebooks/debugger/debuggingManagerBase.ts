@@ -22,7 +22,7 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IControllerLoader, IControllerSelection } from '../controllers/types';
+import { IControllerRegistry } from '../controllers/types';
 import { DebuggingTelemetry } from './constants';
 import { Debugger } from './debugger';
 import { IDebuggingManager, INotebookDebugConfig, KernelDebugMode } from './debuggingTypes';
@@ -44,8 +44,8 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
 
     public constructor(
         protected readonly kernelProvider: IKernelProvider,
-        private readonly notebookControllerLoader: IControllerLoader,
-        private readonly notebookControllerSelection: IControllerSelection,
+        private readonly notebookControllerLoader: IControllerRegistry,
+        private readonly notebookControllerSelection: IControllerRegistry,
         protected readonly commandManager: ICommandManager,
         protected readonly appShell: IApplicationShell,
         protected readonly vscNotebook: IVSCodeNotebook,

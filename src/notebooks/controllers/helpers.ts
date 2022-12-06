@@ -10,7 +10,7 @@ import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Resource } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceInfoIfCI } from '../../platform/logging';
-import { IControllerRegistration, IVSCodeNotebookController } from './types';
+import { IControllerRegistry, IVSCodeNotebookController } from './types';
 
 // This is here so the default service and the loader service can both use it without having
 // a circular reference with each other
@@ -18,7 +18,7 @@ export async function createActiveInterpreterController(
     viewType: typeof JupyterNotebookView | typeof InteractiveWindowView,
     resource: Resource,
     interpreters: IInterpreterService,
-    registration: IControllerRegistration
+    registration: IControllerRegistry
 ): Promise<IVSCodeNotebookController | undefined> {
     const pythonInterpreter = await interpreters.getActiveInterpreter(resource);
     if (pythonInterpreter) {

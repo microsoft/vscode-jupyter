@@ -32,7 +32,7 @@ import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { getNotebookMetadata } from '../platform/common/utils';
 import { KernelConnector } from './controllers/kernelConnector';
-import { IControllerSelection } from './controllers/types';
+import { IControllerRegistry } from './controllers/types';
 
 /**
  * Registers commands specific to the notebook UI
@@ -48,7 +48,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IConfigurationService) private configurationService: IConfigurationService,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
-        @inject(IControllerSelection) private notebookControllerSelection: IControllerSelection,
+        @inject(IControllerRegistry) private notebookControllerSelection: IControllerRegistry,
         @inject(IDataScienceErrorHandler) private errorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer

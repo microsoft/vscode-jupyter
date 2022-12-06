@@ -21,7 +21,7 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ControllerLoader } from './controllerLoader';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
-import { IControllerRegistration, IVSCodeNotebookController, IVSCodeNotebookControllerUpdateEvent } from './types';
+import { IControllerRegistry, IVSCodeNotebookController, IVSCodeNotebookControllerUpdateEvent } from './types';
 
 suite('Controller Loader', () => {
     const activePythonEnv: PythonEnvironment = {
@@ -73,7 +73,7 @@ suite('Controller Loader', () => {
     let kernelFinder: IKernelFinder;
     let extensionChecker: IPythonExtensionChecker;
     let interpreters: IInterpreterService;
-    let registration: IControllerRegistration;
+    let registration: IControllerRegistry;
     let featureManager: IFeaturesManager;
     let serverUriStorage: IJupyterServerUriStorage;
     let kernelFilter: KernelFilterService;
@@ -107,7 +107,7 @@ suite('Controller Loader', () => {
         kernelFinder = mock<IKernelFinder>();
         extensionChecker = mock<IPythonExtensionChecker>();
         interpreters = mock<IInterpreterService>();
-        registration = mock<IControllerRegistration>();
+        registration = mock<IControllerRegistry>();
         featureManager = mock<IFeaturesManager>();
         serverUriStorage = mock<IJupyterServerUriStorage>();
         kernelFilter = mock<KernelFilterService>();

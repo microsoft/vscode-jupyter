@@ -18,7 +18,7 @@ import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { Settings } from '../../platform/common/constants';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
-import { IControllerSelection } from './types';
+import { IControllerRegistry } from './types';
 
 /**
  * Implements the UI for the status bar that says 'Jupyter:Local' or 'Jupyter:Remote'
@@ -34,7 +34,7 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection,
+        @inject(IControllerRegistry) private readonly notebookControllerSelection: IControllerRegistry,
         @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
     ) {
         this.disposableRegistry.push(this);
