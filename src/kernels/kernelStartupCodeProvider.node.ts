@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import { CodeSnippets } from '../platform/common/constants';
 import { getFilePath } from '../platform/common/platform/fs-paths';
-import { traceInfo } from '../platform/logging';
 import { KernelWorkingFolder } from './kernelWorkingFolder.node';
 import { IKernel, IStartupCodeProvider, StartupCodePriority } from './types';
 
@@ -17,7 +16,6 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider {
     async getCode(kernel: IKernel): Promise<string[]> {
         const suggestedDir = await this.kernelWorkingFolder.getWorkingDirectory(kernel);
         if (suggestedDir) {
-            traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
             return CodeSnippets.UpdateCWDAndPath.format(getFilePath(suggestedDir)).splitLines({ trim: false });
         }
         return [];

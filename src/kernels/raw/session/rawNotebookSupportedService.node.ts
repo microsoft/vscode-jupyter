@@ -3,7 +3,7 @@
 
 'use strict';
 import { inject, injectable } from 'inversify';
-import { traceInfo, traceWarning } from '../../../platform/logging';
+import { traceVerbose, traceWarning } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IRawNotebookSupportedService } from '../types';
 
@@ -38,10 +38,10 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
         }
         try {
             require('zeromq');
-            traceInfo(`ZMQ install verified.`);
             this._isSupported = true;
         } catch (e) {
-            traceWarning(`Exception while attempting zmq :`, e);
+            traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
+            traceVerbose(`Exception while attempting zmq :`, e);
             this._isSupported = false;
         }
 

@@ -254,13 +254,13 @@ export class KernelProcess implements IKernelProcess {
                     if (stdout.includes(kernelOutputWithConnectionFile)) {
                         sawKernelConnectionFile = true;
                     }
-                    traceInfo(`Kernel Output: ${stdout}`);
+                    traceVerbose(`Kernel Output: ${stdout}`);
                 }
                 this.sendToOutput(output.out);
             },
             (error) => {
                 if (this.disposed) {
-                    traceInfo('Kernel died', error, stderr);
+                    traceWarning('Kernel died', error, stderr);
                     return;
                 }
                 traceError('Kernel died', error, stderr);
@@ -578,7 +578,7 @@ export class KernelProcess implements IKernelProcess {
             // If we are not python just use the ProcessExecutionFactory
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
-            traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
+            traceInfo(`Launching Raw Kernel ${this.launchKernelSpec.display_name} # ${executable}`);
             const promiseCancellation = createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' });
             const [executionService, env] = await Promise.all([
                 Promise.race([
