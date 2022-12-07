@@ -16,7 +16,7 @@ import {
 } from '../../../platform/common/cancellation';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { traceInfo, traceError } from '../../../platform/logging';
+import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
 import { IFileSystem, TemporaryDirectory } from '../../../platform/common/platform/types';
 import { IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -100,7 +100,7 @@ export class NotebookStarter implements INotebookStarter {
             Cancellation.throwIfCanceled(cancelToken);
 
             // Then use this to launch our notebook process.
-            traceInfo('Starting Jupyter Notebook');
+            traceVerbose('Starting Jupyter Notebook');
             const [launchResult, tempDir] = await Promise.all([
                 this.jupyterInterpreterService.startNotebook(args || [], {
                     throwOnStdErr: false,
@@ -128,7 +128,7 @@ export class NotebookStarter implements INotebookStarter {
             }
 
             // Wait for the connection information on this result
-            traceInfo('Waiting for Jupyter Notebook');
+            traceVerbose('Waiting for Jupyter Notebook');
             starter = new JupyterConnectionWaiter(
                 launchResult,
                 Uri.file(tempDir.path),

@@ -3,7 +3,7 @@
 
 import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { traceInfo } from '../../platform/logging';
+import { traceVerbose } from '../../platform/logging';
 import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
@@ -80,7 +80,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 }
                 try {
                     const results = await proc.shellExec(args.args.join(' '), { cwd: args.cwd });
-                    traceInfo(results.stdout);
+                    traceVerbose(results.stdout);
                     deferred.resolve();
                 } catch (ex) {
                     deferred.reject(ex);
@@ -124,7 +124,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                         const message =
                             trimmedOutput.length > 30 ? `${trimmedOutput.substring(0, 30)}${suffix}` : trimmedOutput;
                         progress.report({ message });
-                        traceInfo(output.out);
+                        traceVerbose(output.out);
                         if (output.source === 'stderr') {
                             lastStdErr = output.out;
                         }

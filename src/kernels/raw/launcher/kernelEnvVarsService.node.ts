@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
-import { traceInfo, traceError } from '../../../platform/logging';
+import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IConfigurationService, Resource } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -80,7 +80,7 @@ export class KernelEnvironmentVariablesService {
         });
 
         if (!interpreterEnv && Object.keys(customEnvVars || {}).length === 0) {
-            traceInfo('No custom variables nor do we have a conda environment');
+            traceVerbose('No custom variables nor do we have a conda environment');
         }
         // Merge the env variables with that of the kernel env.
         interpreterEnv = interpreterEnv || {};

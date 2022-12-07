@@ -14,7 +14,7 @@ import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
-import { traceDecoratorVerbose, traceInfo, traceWarning } from '../../../platform/logging';
+import { traceDecoratorVerbose, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../platform/common/process/types.node';
@@ -72,13 +72,13 @@ export class KernelLauncher implements IKernelLauncher {
         try {
             // Destroy the file
             const port = await KernelLauncher.startPortPromise;
-            traceInfo(`Cleaning up port start file : ${port}`);
+            traceVerbose(`Cleaning up port start file : ${port}`);
 
             const filePath = path.join(os.tmpdir(), PortFormatString.format(port.toString()));
             await fsextra.remove(filePath);
         } catch (exc) {
             // If it fails it doesn't really matter. Just a temp file
-            traceInfo(`Kernel port mutex failed to cleanup: `, exc);
+            traceWarning(`Kernel port mutex failed to cleanup: `, exc);
         }
     }
 
@@ -100,7 +100,7 @@ export class KernelLauncher implements IKernelLauncher {
                     portStart += 1_000;
                 }
             }
-            traceInfo(`Computed port start for KernelLauncher is : ${result}`);
+            traceVerbose(`Computed port start for KernelLauncher is : ${result}`);
 
             return result;
         } else {

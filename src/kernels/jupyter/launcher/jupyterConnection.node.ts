@@ -9,7 +9,7 @@ import { Subscription } from 'rxjs/Subscription';
 import { CancellationError, CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Cancellation } from '../../../platform/common/cancellation';
-import { traceInfo, traceError, traceWarning } from '../../../platform/logging';
+import { traceError, traceWarning, traceVerbose } from '../../../platform/logging';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
 import { Deferred, createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -117,7 +117,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private output(data: any) {
         if (!this.connectionDisposed) {
-            traceInfo(data.toString('utf8'));
+            traceVerbose(data.toString('utf8'));
         }
     }
 

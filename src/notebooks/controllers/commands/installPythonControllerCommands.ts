@@ -22,7 +22,7 @@ import { sleep } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { traceError, traceInfo } from '../../../platform/logging';
+import { traceError, traceVerbose } from '../../../platform/logging';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getLanguageOfNotebookDocument } from '../../languages/helpers';
@@ -179,7 +179,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
                 // Make sure that we didn't timeout waiting for the hook
                 if (this.extensionChecker.isPythonExtensionInstalled && typeof hookResult !== 'number') {
-                    traceInfo('Python Extension installed via Kernel Picker command');
+                    traceVerbose('Python Extension installed via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'success'
                     });
