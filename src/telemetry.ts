@@ -842,6 +842,59 @@ export class IEventNamePropertyMapping {
         feature: ['Debugger'],
         source: 'User Action'
     };
+    [Telemetry.JupyterKernelSpecEnumeration]: TelemetryEventInfo<
+        | {
+              failed: true;
+              sessionManagerReady?: boolean;
+              specsManagerReady?: boolean;
+              reason:
+                  | 'NoSpecsManager'
+                  | 'SpecsDidNotChangeInTime'
+                  | 'NoSpecsEventAfterRefresh'
+                  | 'SpecManagerIsNotReady'
+                  | 'SessionManagerIsNotReady';
+          }
+        | (DurationMeasurement & {
+              wasSessionManagerReady: boolean;
+              wasSpecsManagerReady: boolean;
+              sessionManagerReady: boolean;
+              specsManagerReady: boolean;
+          })
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        tags: ['KernelStartup'],
+        properties: {
+            ...commonClassificationForErrorProperties(),
+            failed: {
+                classification: 'CallstackOrException',
+                purpose: 'PerformanceAndHealth'
+            },
+            reason: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Reason for failure to fetch kernel specs'
+            },
+            sessionManagerReady: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            specsManagerReady: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            wasSessionManagerReady: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            wasSpecsManagerReady: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        },
+        measures: commonClassificationForDurationProperties()
+    };
     /**
      * Sent when we fail to update the kernel spec json file.
      */
