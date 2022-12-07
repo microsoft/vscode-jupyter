@@ -25,8 +25,11 @@ suite('Smoke Tests', () => {
         if (!IS_SMOKE_TEST()) {
             return this.skip();
         }
+        traceInfo(`Start Smoke tests1.`);
         api = await initialize();
+        traceInfo(`Start Smoke tests2.`);
         await setAutoSaveDelayInWorkspaceRoot(1);
+        traceInfo(`Start Smoke tests3.`);
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
@@ -40,7 +43,7 @@ suite('Smoke Tests', () => {
             await captureScreenShot(this);
         }
         await closeActiveWindows();
-        traceInfo(`End Test Compelete ${this.currentTest?.title}`);
+        traceInfo(`End Test Complete ${this.currentTest?.title}`);
     });
 
     // test('Run Cell in interactive window', async () => {
@@ -87,6 +90,7 @@ suite('Smoke Tests', () => {
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }
+        traceInfo(`Opening notebook file ${file}`);
         await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(file), 'jupyter-notebook');
 
         // Wait for 15 seconds for notebook to launch.
