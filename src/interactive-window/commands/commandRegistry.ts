@@ -645,7 +645,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
                         async () => {
                             if (uri) {
                                 const notebook = await this.jupyterExporter?.translateToNotebook(cells);
-                                await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
+                                await this.fileSystem.writeFile(uri, JSON.stringify(notebook, undefined, 1));
                             }
                         },
                         DataScience.exportingFormat(),
@@ -697,7 +697,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
                         async () => {
                             if (uri) {
                                 const notebook = await this.jupyterExporter?.translateToNotebook(cells);
-                                await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
+                                await this.fileSystem.writeFile(uri, JSON.stringify(notebook, undefined, 1));
                             }
                         },
                         DataScience.exportingFormat(),
