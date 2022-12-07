@@ -57,15 +57,7 @@ export class ExportUtil extends ExportUtilBase {
         source: Uri,
         defaultFileName?: string | undefined
     ): Promise<Uri | undefined> {
-        let target;
-
-        if (format !== ExportFormat.python) {
-            target = await this.filePicker.showDialog(format, source, defaultFileName);
-        } else {
-            target = Uri.file((await this.fs.createTemporaryLocalFile('.py')).filePath);
-        }
-
-        return target;
+        return this.filePicker.showDialog(format, source, defaultFileName);
     }
 
     public async makeFileInDirectory(contents: string, fileName: string, dirPath: string): Promise<string> {
