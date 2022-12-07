@@ -209,7 +209,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         });
 
         // Listen to new controllers being added
-        this.controllerRegistration.onChanged((changed) => {
+        this.controllerRegistration.onDidChange((changed) => {
             changed.added.forEach((e) => {
                 if (
                     e.viewType === viewType &&
@@ -246,7 +246,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         const disposables: IDisposable[] = [];
         const stopBusy = new EventEmitter<void>();
         disposables.push(stopBusy);
-        this.controllerRegistration.onChanged(() => stopBusy.fire(), this, disposables);
+        this.controllerRegistration.onDidChange(() => stopBusy.fire(), this, disposables);
         const result = await input.showQuickPick({
             title: title,
             items: quickPickItems,
