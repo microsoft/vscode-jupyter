@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.74.0-insider"
+        "vscode": "^1.75.0"
     },
     "keywords": [
         "jupyter",
