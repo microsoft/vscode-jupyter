@@ -218,8 +218,6 @@ export namespace Commands {
     export const ExportFileAndOutputAsNotebook = 'jupyter.exportfileandoutputasnotebook';
     export const InterruptKernel = 'jupyter.interruptkernel';
     export const RestartKernel = 'jupyter.restartkernel';
-    export const NotebookEditorUndoCells = 'jupyter.notebookeditor.undocells';
-    export const NotebookEditorRedoCells = 'jupyter.notebookeditor.redocells';
     export const NotebookEditorRemoveAllCells = 'jupyter.notebookeditor.removeallcells';
     export const NotebookEditorRestartKernel = 'jupyter.notebookeditor.restartkernel';
     export const NotebookEditorRunAllCells = 'jupyter.notebookeditor.runallcells';
@@ -298,13 +296,9 @@ export namespace CodeLensCommands {
 
 export namespace EditorContexts {
     export const HasCodeCells = 'jupyter.hascodecells';
-    export const HaveInteractiveCells = 'jupyter.haveinteractivecells';
-    export const HaveRedoableCells = 'jupyter.haveredoablecells';
-    export const HaveInteractive = 'jupyter.haveinteractive';
     export const IsInteractiveActive = 'jupyter.isinteractiveactive';
     export const OwnsSelection = 'jupyter.ownsSelection';
     export const HaveNativeCells = 'jupyter.havenativecells';
-    export const HaveNativeRedoableCells = 'jupyter.havenativeredoablecells';
     export const HaveNative = 'jupyter.havenative';
     export const IsNativeActive = 'jupyter.isnativeactive';
     export const IsInteractiveOrNativeActive = 'jupyter.isinteractiveornativeactive';
