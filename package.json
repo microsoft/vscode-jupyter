@@ -1456,7 +1456,7 @@
                 },
                 {
                     "command": "jupyter.interactive.clearAllCells",
-                    "when": "activeEditor == 'workbench.editor.interactive' && isWorkspaceTrusted"
+                    "when": "editorFocus && editorLangId == python || activeEditor == 'workbench.editor.interactive'"
                 },
                 {
                     "command": "jupyter.switchToRemoteKernels",
