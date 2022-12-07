@@ -842,11 +842,26 @@ export class IEventNamePropertyMapping {
         feature: ['Debugger'],
         source: 'User Action'
     };
+    /**
+     * How often we wait to fetch remote kernel specs or how long it takes to fetch them.
+     */
     [Telemetry.JupyterKernelSpecEnumeration]: TelemetryEventInfo<
         | {
+              /**
+               * Failure to enumerate kernel specs
+               */
               failed: true;
+              /**
+               * Whether Jupyter session manager was ready before we started.
+               */
               sessionManagerReady?: boolean;
+              /**
+               * Whether Jupyter spec manager was ready before we started.
+               */
               specsManagerReady?: boolean;
+              /**
+               * Reason for the failure
+               */
               reason:
                   | 'NoSpecsManager'
                   | 'SpecsDidNotChangeInTime'
@@ -855,9 +870,21 @@ export class IEventNamePropertyMapping {
                   | 'SessionManagerIsNotReady';
           }
         | (DurationMeasurement & {
+              /**
+               * Whether Jupyter session manager was ready before we started.
+               */
               wasSessionManagerReady: boolean;
+              /**
+               * Whether Jupyter spec manager was ready before we started.
+               */
               wasSpecsManagerReady: boolean;
+              /**
+               * Whether Jupyter session manager was ready after we started.
+               */
               sessionManagerReady: boolean;
+              /**
+               * Whether Jupyter spec manager was ready after we started.
+               */
               specsManagerReady: boolean;
           })
     > = {
