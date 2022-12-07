@@ -43,8 +43,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.CreateNewInteractive]: [];
     [DSCommands.InterruptKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
     [DSCommands.RestartKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
-    [DSCommands.NotebookEditorUndoCells]: [];
-    [DSCommands.NotebookEditorRedoCells]: [];
     [DSCommands.NotebookEditorRemoveAllCells]: [];
     [DSCommands.NotebookEditorRestartKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined | Uri];
     [DSCommands.NotebookEditorRunAllCells]: [];

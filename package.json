@@ -1276,18 +1276,6 @@
                     "when": "jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.notebookeditor.undocells",
-                    "title": "%jupyter.command.jupyter.undocells.title%",
-                    "category": "Notebook",
-                    "when": "jupyter.haveinteractivecells && jupyter.isnativeactive && !notebookEditorFocused && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.redocells",
-                    "title": "%jupyter.command.jupyter.redocells.title%",
-                    "category": "Notebook",
-                    "when": "jupyter.havenativeredoablecells && jupyter.isnativeactive && !notebookEditorFocused&& isWorkspaceTrusted"
-                },
-                {
                     "command": "jupyter.notebookeditor.removeallcells",
                     "title": "%jupyter.command.jupyter.notebookeditor.removeallcells.title%",
                     "category": "Notebook",
