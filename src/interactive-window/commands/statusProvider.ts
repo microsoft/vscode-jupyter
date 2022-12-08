@@ -53,7 +53,6 @@ class StatusItem implements Disposable {
 /**
  * Turns a withProgress callback into a promise.
  */
-@injectable()
 export class StatusProvider {
     private statusCount: number = 0;
 
