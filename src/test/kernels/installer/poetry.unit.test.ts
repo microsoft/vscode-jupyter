@@ -127,7 +127,7 @@ suite('Poetry binary is located correctly', async () => {
             if (
                 command === `poetryPath env list --full-path` &&
                 options.cwd &&
-                fileUtils.arePathsSame(options.cwd, project1)
+                fileUtils.arePathsSame(options.cwd.toString(), project1)
             ) {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }
@@ -145,7 +145,7 @@ suite('Poetry binary is located correctly', async () => {
             if (
                 command === `poetry env list --full-path` &&
                 options.cwd &&
-                fileUtils.arePathsSame(options.cwd, project1)
+                fileUtils.arePathsSame(options.cwd.toString(), project1)
             ) {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }
@@ -172,7 +172,7 @@ suite('Poetry binary is located correctly', async () => {
             if (
                 command === `${defaultPoetry} env list --full-path` &&
                 options.cwd &&
-                fileUtils.arePathsSame(options.cwd, project1)
+                fileUtils.arePathsSame(options.cwd.toString(), project1)
             ) {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }

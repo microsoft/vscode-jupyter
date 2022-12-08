@@ -37,7 +37,7 @@ export class ProcessLogger implements IProcessLogger {
 
         const info = [`> ${removeHomeFromFile(file)} ${argsList}`];
         if (options && options.cwd) {
-            info.push(`${Logging.currentWorkingDirectory()} ${removeHomeFromFile(options.cwd)}`);
+            info.push(`${Logging.currentWorkingDirectory()} ${removeHomeFromFile(options.cwd.toString())}`);
         }
 
         info.forEach((line) => {

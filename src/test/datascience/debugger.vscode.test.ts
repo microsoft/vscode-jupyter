@@ -72,7 +72,7 @@ suite('Run By Line @debugger', function () {
             const controller = await api.serviceContainer
                 .get<IControllerDefaultService>(IControllerDefaultService)
                 .computeDefaultController(undefined, 'jupyter-notebook'); // Create an editor to use for our tests
-            await createEmptyPythonNotebook(disposables, undefined, false);
+            await createEmptyPythonNotebook(disposables, undefined, true);
             await commands.executeCommand('notebook.selectKernel', {
                 id: controller!.id,
                 extension: JVSC_EXTENSION_ID

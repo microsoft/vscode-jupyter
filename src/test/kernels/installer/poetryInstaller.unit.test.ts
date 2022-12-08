@@ -53,7 +53,7 @@ suite('Module Installer - Poetry', () => {
                 case 'poetry env list --full-path':
                     return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
                 case 'poetry env info -p':
-                    if (options.cwd && fileUtils.arePathsSame(options.cwd, project1)) {
+                    if (options.cwd && fileUtils.arePathsSame(options.cwd.toString(), project1)) {
                         return Promise.resolve<ExecutionResult<string>>({
                             stdout: `${path.join(project1, '.venv')} \n`
                         });
