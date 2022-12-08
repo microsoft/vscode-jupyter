@@ -126,10 +126,6 @@ type TelemetryEntry = {
     propertyGroups: TelemetryPropertyGroup[];
 };
 
-function writeOutput(line: string) {
-    fs.appendFileSync(`./TELEMETRY.md`, `${line}\n`);
-}
-
 function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeChecker: ts.TypeChecker) {
     const properties: TelemetryProperty[] = [];
 
@@ -379,228 +375,7 @@ function getCommentForUnions(t: ts.TypeNode) {
     return comment.length === 0 ? undefined : comment;
 }
 
-function indent(count: number = 1) {
-    return ''.padEnd(count * 4, ' ');
-}
 type EventProblem = { eventConstantName: string; problems: string[] };
-function writeTelemetryEntry(entry: TelemetryEntry) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const gdprInfo = (GDPRData as any)[entry.name] as IEventData | undefined;
-    const gdprProperties = new Map<string, IPropertyDataNonMeasurement>();
-    const gdprMeasures = new Map<string, IPropertyDataMeasurement>();
-    const eventErrorMessages: string[] = [];
-    if (gdprInfo) {
-        writeOutput(`* ${entry.name}  (${entry.constantName})  `);
-        writeOutput(`${indent()}  Owner: [@${gdprInfo.owner}](https://github.com/${gdprInfo.owner})  `);
-        if (!gdprInfo.feature) {
-            eventErrorMessages.push(`Feature not defined`);
-            writeOutput(`${indent()}   <span style="color:red">Feature not defined.</span>  `);
-        }
-        if (!gdprInfo.source) {
-            eventErrorMessages.push(`Source not defined`);
-            writeOutput(
-                `${indent()}   <span style="color:red">Source not defined (whether its a user action or 'N/A').</span>  `
-            );
-        }
-
-        Object.keys((gdprInfo as any).properties || {}).forEach((key) => {
-            gdprProperties.set(key, (gdprInfo as any).properties[key]);
-        });
-        Object.keys((gdprInfo as any).measures || {}).forEach((key) => {
-            gdprMeasures.set(key, (gdprInfo as any).measures[key]);
-        });
-        const discoveredProperties = new Set<string>();
-        const discoveredMeasures = new Set<string>();
-        const commonProperties = new Set(Object.keys(CommonProperties));
-
-        entry.propertyGroups.forEach((g) =>
-            g.properties
-                .filter((p) => {
-                    if (p.type === 'number') {
-                        return false;
-                    }
-                    if (p.gdpr?.isMeasurement === true) {
-                        return false;
-                    }
-                    return true;
-                })
-                .forEach((p) => discoveredProperties.add(p.name))
-        );
-        entry.propertyGroups.forEach((g) =>
-            g.properties
-                .filter((p) => {
-                    if (p.type === 'number') {
-                        return true;
-                    }
-                    if (p.gdpr?.isMeasurement === true) {
-                        return true;
-                    }
-                    return false;
-                })
-                .forEach((p) => discoveredMeasures.add(p.name))
-        );
-
-        const undocumentedProperties = Array.from(discoveredProperties)
-            .filter((p) => !commonProperties.has(p))
-            .filter((p) => !gdprProperties.has(p));
-        if (undocumentedProperties.length) {
-            eventErrorMessages.push(
-                `Properties not documented in GDPR ${undocumentedProperties.join(
-                    ', '
-                )}. Add jsDoc comments for the properties in telemetry.ts file.`
-            );
-            writeOutput(
-                `${indent()}   <span style="color:red">Properties not documented in GDPR ${undocumentedProperties.join(
-                    ', '
-                )}. Add jsDoc comments for the properties in telemetry.ts file.</span>  `
-            );
-        }
-        const undocumentedMeasures = Array.from(discoveredMeasures)
-            .filter((p) => !commonProperties.has(p))
-            .filter((p) => !gdprMeasures.has(p));
-        if (undocumentedMeasures.length) {
-            eventErrorMessages.push(
-                `Measures not documented in GDPR ${undocumentedMeasures.join(
-                    ', '
-                )}. Add jsDoc comments for the properties in telemetry.ts file.`
-            );
-            writeOutput(
-                `${indent()}   <span style="color:red">Measures not documented in GDPR ${undocumentedMeasures.join(
-                    ', '
-                )}. Add jsDoc comments for the measures in telemetry.ts file.</span>  `
-            );
-        }
-    } else {
-        eventErrorMessages.push(`Missing GDPR Info`);
-        writeOutput(`* <span style="color:red">${entry.name}  (${entry.constantName})</span>  `);
-        writeOutput(`${indent()}  `);
-        writeOutput(`${indent()}<h3><span style="color:red"> Warning: Missing GDPR Info</span></h3>  `);
-        writeOutput(`${indent()}  `);
-    }
-    const eventDescription = [entry.description].filter((item) => item.length).join('\n');
-    if (eventDescription.length) {
-        writeOutput(`${indent()}\`\`\``);
-        eventDescription
-            .trim()
-            .split(/\r?\n/)
-            .forEach((line) => {
-                writeOutput(`${indent()}${line}  `);
-            });
-        writeOutput(`${indent()}\`\`\``);
-        writeOutput(``);
-    } else {
-        eventErrorMessages.push(`Add jsDoc comments to describe this event.`);
-        writeOutput(`${indent()}   <span style="color:red">Add jsDoc comments to describe this event.</span>  `);
-    }
-    if (!entry.propertyGroups || entry.propertyGroups.length === 0) {
-    } else {
-        const hasGroups = entry.propertyGroups.length > 1;
-        entry.propertyGroups.forEach((group, index) => {
-            if (hasGroups) {
-                if (Array.isArray(group.description) && group.description.length) {
-                    let wasPreviousLineEmpty = false;
-                    group.description.forEach((line, i) => {
-                        if (i === 0) {
-                            writeOutput(`${indent()}- \`${line.trim()}\`:  `);
-                        } else {
-                            writeOutput(`${indent(wasPreviousLineEmpty ? 2 : 1)}${line}  `);
-                        }
-                        wasPreviousLineEmpty = line.trim().length === 0;
-                    });
-                } else {
-                    const groupName = hasGroups ? ` Group ${index + 1}` : '';
-                    writeOutput(`${indent()}- ${groupName}:  `);
-                }
-            }
-            const properties = group.properties.filter((p) => p.type !== 'number');
-            if (properties.length) {
-                writeOutput(`${indent(hasGroups ? 2 : 1)}- Properties:  `);
-                writePropertiesOrMeasures(properties, hasGroups ? 3 : 2);
-            }
-            const measures = group.properties.filter((p) => p.type === 'number');
-            if (measures.length) {
-                writeOutput(`${indent(hasGroups ? 2 : 1)}- Measures:  `);
-                writePropertiesOrMeasures(measures, hasGroups ? 3 : 2);
-            }
-            function writePropertiesOrMeasures(items: TelemetryProperty[], startIndent: number) {
-                items
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                    .forEach((p) => {
-                        const description = Array.isArray(p.descriptions)
-                            ? p.descriptions
-                            : p.descriptions
-                            ? p.descriptions.length
-                                ? [p.descriptions]
-                                : []
-                            : [];
-                        const isEmpty = description.join('').trim().length === 0;
-                        if (isEmpty) {
-                            eventErrorMessages.push(`Add jsDoc comments to describe this property = ${p.name}.`);
-                        }
-                        if (description.length || typeof p.type === 'string') {
-                            const type = p.type ? `\`${p.type}\`` : '`<see below>`';
-                            const nullable = p.isNullable ? '?' : '';
-                            writeOutput(`${indent(startIndent)}- \`${p.name.trim()}\`${nullable}: ${type.trim()}  `);
-                            let wasPreviousLineEmpty = false;
-                            description.forEach((item) => {
-                                // Empty lines inside lists messes up formatting and causes blank lines to appear
-                                // in other places (i.e. increases the spacing between the list items).
-                                if (item.trim().length) {
-                                    writeOutput(
-                                        `${indent(
-                                            wasPreviousLineEmpty ? startIndent + 1 : startIndent
-                                        )}${item.trim()}  `
-                                    );
-                                }
-                                wasPreviousLineEmpty = item.trim().length === 0;
-                            });
-                            if (p.possibleValues?.length) {
-                                writeOutput(`${indent(startIndent)}Possible values include:  `);
-                                (p.possibleValues || []).forEach((description) => {
-                                    writeOutput(`${indent(startIndent + 1)}- \`${description.value}\`  `);
-                                    if (description.comment) {
-                                        let wasPreviousLineEmpty = false;
-                                        const comment = Array.isArray(description.comment)
-                                            ? description.comment
-                                            : description.comment.split(/\r?\n/);
-                                        comment.forEach((line) => {
-                                            // Empty lines inside lists messes up formatting and causes blank lines to appear
-                                            // in other places (i.e. increases the spacing between the list items).
-                                            if (line.trim().length) {
-                                                writeOutput(
-                                                    `${indent(
-                                                        wasPreviousLineEmpty ? startIndent + 1 : startIndent
-                                                    )}${line}  `
-                                                );
-                                            }
-                                            wasPreviousLineEmpty = line.trim().length === 0;
-                                        });
-                                    }
-                                });
-                            }
-                        } else {
-                            writeOutput(`${indent(startIndent)}- ${p.name.trim()}  `);
-                        }
-                    });
-            }
-        });
-    }
-    writeOutput(`\n`);
-
-    if (entry.gdpr.owner === 'unknown') {
-        eventErrorMessages.push('No owner specified for this event');
-    }
-    if (eventErrorMessages.length) {
-        const ownerIssues: Record<string, EventProblem> = (errorsByOwners[entry.gdpr.owner] =
-            errorsByOwners[entry.gdpr.owner] || []);
-        const eventProblem = (ownerIssues[entry.name] = ownerIssues[entry.name] || {
-            eventConstantName: entry.constantName,
-            problems: []
-        });
-        eventProblem.eventConstantName = entry.constantName;
-        eventProblem.problems.push(...eventErrorMessages);
-    }
-}
 
 const commonPropertyComments = new Map<string, string>();
 
@@ -811,8 +586,10 @@ function generateDocumentation(fileNames: string[]): void {
     const values = Array.from(entries.values()).sort((a, b) =>
         a.name.localeCompare(b.name, 'en', { sensitivity: 'base' })
     );
-    generateTelemetryMd(values);
-    generateTelemetryCSV(values);
+    // Uncomment if we need the CSV file for searching telemetry events.
+    if (false) {
+        generateTelemetryCSV(values);
+    }
     generateTelemetryGdpr(values);
 
     if (Object.keys(errorsByOwners).length) {
@@ -829,13 +606,6 @@ function generateDocumentation(fileNames: string[]): void {
         });
         throw new Error('Has errors, check the logs');
     }
-}
-
-function generateTelemetryMd(output: TelemetryEntry[]) {
-    fs.writeFileSync(`./TELEMETRY.md`, '');
-    writeOutput('# Telemetry created by Jupyter Extension\n');
-    writeOutput('Expand each section to see more information about that event.\n');
-    output.forEach(writeTelemetryEntry);
 }
 function generateTelemetryCSV(output: TelemetryEntry[]) {
     const entries: {}[] = [];

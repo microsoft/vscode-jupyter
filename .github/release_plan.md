@@ -39,24 +39,12 @@
 -   [ ] Verify the PR Pipeline on Github actions is green against the release branch.
 -   [ ] Manually run the [Stable pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=284) against the `release/release-YYYY.MM.100` branch
 -   [ ] Approve the `Publish` stage
--   [ ] Check if the release was automatically published here, https://github.com/microsoft/vscode-jupyter/releases - If not, publish manually: (This has been required since the move to az pipelines)
-    -   [ ] Add a new release at https://github.com/microsoft/vscode-jupyter/releases
-        - Tag is version number
-        - Branch is release branch
-    -   [ ] Publish
+-   [ ] Push a tag with the released version number on the commit that was released
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
 
 # Day of VS Code releasing the next insider version (Wednesday)
 -   [ ] Bump the engines.vscode version on the `main` branch to point to the next version. For example, from `1.58.0` to `1.59.0`
 -   [ ] Reenable [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283) (`...` menu > Settings > Processing of new requests: Enabled)
-
-## Prep for the _next_ release
-
--   [ ] Create a new [release plan](https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/.github/release_plan.md) (🤖)
-    * Title `<Month> <year> Release Plan`
-    * Add the labels `endgame-plan` to this issue
-    * Pin this issue
--   [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-jupyter/labels/release-plan) (🤖)
 
 # As needed
 
