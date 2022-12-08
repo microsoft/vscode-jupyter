@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { injectable } from 'inversify';
 import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 
 import { IApplicationShell } from '../../platform/common/application/types';
