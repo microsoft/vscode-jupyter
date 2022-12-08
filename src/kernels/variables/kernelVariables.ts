@@ -6,8 +6,7 @@ import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, named } from 'inversify';
 import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
 import { Identifiers, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { Experiments } from '../../platform/common/experiments/groups';
-import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
 import { IKernel, IKernelConnectionSession, IKernelProvider } from '../types';
@@ -54,11 +53,9 @@ export class KernelVariables implements IJupyterVariables {
     private variableRequesters = new Map<string, IKernelVariableRequester>();
     private cachedVariables = new Map<string, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
-    private enhancedTooltipsExperimentPromise: boolean | undefined;
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IKernelVariableRequester)
         @named(Identifiers.PYTHON_VARIABLES_REQUESTER)
         pythonVariableRequester: IKernelVariableRequester,
@@ -268,21 +265,11 @@ export class KernelVariables implements IJupyterVariables {
         cancelToken: CancellationToken | undefined
     ): Promise<{ [attributeName: string]: string }> {
         const matchingVariable = await this.getMatchingVariable(word, kernel, cancelToken);
-        const settings = this.configService.getSettings().variableTooltipFields;
         const languageId = getKernelConnectionLanguage(kernel.kernelConnectionMetadata) || PYTHON_LANGUAGE;
-        const languageSettings = settings[languageId];
-        const inEnhancedTooltipsExperiment = await this.inEnhancedTooltipsExperiment();
 
         const variableRequester = this.variableRequesters.get(languageId);
         if (variableRequester) {
-            return variableRequester.getVariableProperties(
-                word,
-                kernel,
-                cancelToken,
-                matchingVariable,
-                languageSettings,
-                inEnhancedTooltipsExperiment
-            );
+            return variableRequester.getVariableProperties(word, cancelToken, matchingVariable);
         }
 
         return {};
@@ -400,14 +387,5 @@ export class KernelVariables implements IJupyterVariables {
         }
 
         return result;
-    }
-
-    private async inEnhancedTooltipsExperiment() {
-        if (!this.enhancedTooltipsExperimentPromise) {
-            this.enhancedTooltipsExperimentPromise = await this.experimentService.inExperiment(
-                Experiments.EnhancedTooltips
-            );
-        }
-        return this.enhancedTooltipsExperimentPromise;
     }
 }
