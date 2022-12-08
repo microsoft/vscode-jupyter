@@ -208,12 +208,13 @@ function computePropertiesForLiteralType(literalType: ts.TypeLiteralNode, typeCh
             if (gdprEntryOfCurrentlyComputingTelemetryEventName) {
                 if (
                     'properties' in gdprEntryOfCurrentlyComputingTelemetryEventName[1] &&
-                    name in gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties']
+                    gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'] &&
+                    name in (gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'] as any)
                 ) {
                     // Some times we share the properties of two events,
                     // When updating the values, we don't want to be overwriting the values of the other event.
                     gdprEntry = JSON.parse(
-                        JSON.stringify(gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'][name])
+                        JSON.stringify((gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'] as any)[name])
                     ) as IPropertyDataNonMeasurement;
                     (gdprEntryOfCurrentlyComputingTelemetryEventName[1]['properties'] as any)[name] = gdprEntry as any;
                 }
@@ -946,8 +947,9 @@ function generateTelemetryGdpr(output: TelemetryEntry[]) {
         const header = [`//${item.constantName}`, `/* ${gdpr}`, `   "${item.name}" : {`];
         const footer = ['   }', ' */', '', ''];
         const properties: Record<string, IPropertyDataNonMeasurement> =
-            'properties' in item.gdpr ? item.gdpr['properties'] : {};
-        const measures: Record<string, IPropertyDataMeasurement> = 'measures' in item.gdpr ? item.gdpr['measures'] : {};
+            'properties' in item.gdpr ? (item.gdpr['properties'] as Record<string, IPropertyDataNonMeasurement>) : {};
+        const measures: Record<string, IPropertyDataMeasurement> =
+            'measures' in item.gdpr ? (item.gdpr['measures'] as Record<string, IPropertyDataMeasurement>) : {};
         const entries: string[] = [];
         Object.keys(properties).forEach((key) => {
             if (key in CommonProperties) {
