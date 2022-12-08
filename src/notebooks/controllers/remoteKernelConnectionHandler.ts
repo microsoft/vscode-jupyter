@@ -7,7 +7,7 @@ import { IControllerSelection, IVSCodeNotebookController } from './types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { traceInfo } from '../../platform/logging';
+import { traceVerbose } from '../../platform/logging';
 import { IKernel, IKernelProvider, isLocalConnection } from '../../kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { ILiveRemoteKernelConnectionUsageTracker } from '../../kernels/jupyter/types';
@@ -72,7 +72,7 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
             const subscription = kernel.kernelSocket.subscribe((info) => {
                 const kernelId = info?.options.id;
                 if (!kernel.disposed && !kernel.disposing && kernelId) {
-                    traceInfo(`Updating preferred kernel for remote notebook ${kernelId}`);
+                    traceVerbose(`Updating preferred kernel for remote notebook ${kernelId}`);
                     this.preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(resource, kernelId).catch(noop);
                     this.liveKernelTracker.trackKernelIdAsUsed(resource, serverId, kernelId);
                 }

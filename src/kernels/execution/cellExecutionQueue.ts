@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
-import { traceInfo, traceError, traceVerbose } from '../../platform/logging';
+import { traceInfo, traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from './helpers';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
@@ -182,7 +182,7 @@ export class CellExecutionQueue implements Disposable {
             // If the kernel is dead, then no point trying the rest.
             if (kernelConnection.status === 'dead' || kernelConnection.status === 'terminating') {
                 this.cancelledOrCompletedWithErrors = true;
-                traceInfo(`Cancel all remaining cells due to dead kernel`);
+                traceWarning(`Cancel all remaining cells due to dead kernel`);
                 await this.cancel();
                 break;
             }

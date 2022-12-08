@@ -49,7 +49,6 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
                     ? this.controllerRegistration.registered.find((l) => l.id === preferredRemote)
                     : undefined;
                 if (matching && active?.id !== matching.id) {
-                    traceInfo(`Switching remote kernel to ${preferredRemote} for ${n.uri}`);
                     // This controller is the one we want, but it's not currently set.
                     await this.switchKernel(n, matching.connection);
                 }

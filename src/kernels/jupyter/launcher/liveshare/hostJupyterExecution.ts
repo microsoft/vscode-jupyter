@@ -11,7 +11,7 @@ import { JupyterExecutionBase } from '../jupyterExecution';
 import { ServerCache } from './serverCache';
 import { inject, injectable, optional } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
-import { traceInfo } from '../../../../platform/logging';
+import { traceInfo, traceVerbose } from '../../../../platform/logging';
 import {
     IDisposableRegistry,
     IAsyncDisposableRegistry,
@@ -83,16 +83,16 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         traceInfo(`Disposing HostJupyterExecution ${this._id}`);
         if (!this._disposed) {
             this._disposed = true;
-            traceInfo(`Disposing super HostJupyterExecution ${this._id}`);
+            traceVerbose(`Disposing super HostJupyterExecution ${this._id}`);
             await super.dispose();
 
             // Cleanup on dispose. We are going away permanently
             if (this.serverCache) {
-                traceInfo(`Cleaning up server cache ${this._id}`);
+                traceVerbose(`Cleaning up server cache ${this._id}`);
                 await this.serverCache.dispose();
             }
         }
-        traceInfo(`Finished disposing HostJupyterExecution  ${this._id}`);
+        traceVerbose(`Finished disposing HostJupyterExecution  ${this._id}`);
     }
 
     private async hostConnectToNotebookServer(
