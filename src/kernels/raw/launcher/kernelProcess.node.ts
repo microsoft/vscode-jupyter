@@ -131,7 +131,9 @@ export class KernelProcess implements IKernelProcess {
             !this.interrupter
         ) {
             traceInfo('Interrupting kernel via SIGINT');
-            kill(this._process.pid, 'SIGINT');
+            if (this._process.pid) {
+                kill(this._process.pid, 'SIGINT');
+            }
         } else if (
             this._kernelConnectionMetadata.kernelSpec.interrupt_mode !== 'message' &&
             this._process &&

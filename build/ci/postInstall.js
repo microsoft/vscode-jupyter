@@ -145,6 +145,23 @@ exports.javascript = {
     fs.writeFileSync(filePath, contents);
 }
 
+function fixUIFabricForTS49() {
+    [
+        'node_modules/@uifabric/merge-styles/lib/mergeStyleSets.d.ts',
+        'node_modules/@uifabric/utilities/lib/styled.d.ts'
+    ].forEach((file) => {
+        const filePath = path.join(__dirname, '..', '..', file);
+        if (!fs.existsSync(filePath)) {
+            return;
+        }
+        const contents = fs.readFileSync(filePath, 'utf8').toString();
+        if (!contents.includes('// @ts-nocheck')) {
+            fs.writeFileSync(filePath, `// @ts-nocheck${EOL}${contents}`);
+        }
+    });
+}
+
+fixUIFabricForTS49();
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
 createJupyterKernelWithoutSerialization();
