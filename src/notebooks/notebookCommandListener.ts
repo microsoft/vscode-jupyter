@@ -56,12 +56,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
 
     public register(commandManager: ICommandManager): void {
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorUndoCells, () => this.undoCells())
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorRedoCells, () => this.redoCells())
-        );
-        this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells())
         );
         this.disposableRegistry.push(
@@ -113,18 +107,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
     private addCellBelow() {
         if (this.notebooks.activeNotebookEditor) {
             this.commandManager.executeCommand('notebook.cell.insertCodeCellBelow').then(noop, noop);
-        }
-    }
-
-    private undoCells() {
-        if (this.notebooks.activeNotebookEditor) {
-            this.commandManager.executeCommand('notebook.undo').then(noop, noop);
-        }
-    }
-
-    private redoCells() {
-        if (this.notebooks.activeNotebookEditor) {
-            this.commandManager.executeCommand('notebook.redo').then(noop, noop);
         }
     }
 

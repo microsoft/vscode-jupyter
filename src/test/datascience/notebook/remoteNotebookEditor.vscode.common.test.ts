@@ -107,8 +107,6 @@ suite('Remote Execution @kernelCore', function () {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('MRU and encrypted storage should be updated with remote Uri info', async function () {
-        // Entered issue here - test failing: https://github.com/microsoft/vscode-jupyter/issues/7579
-        this.skip();
         const previousList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
         const encryptedStorageSpiedStore = sinon.spy(encryptedStorage, 'store');
         const { editor } = await openNotebook(ipynbFile);

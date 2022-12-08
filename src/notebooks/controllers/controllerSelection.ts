@@ -37,7 +37,7 @@ export class ControllerSelection implements IControllerSelection {
         @inject(IControllerRegistration) readonly registration: IControllerRegistration,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry
     ) {
-        registration.onChanged(({ added }) => added.forEach((e) => this.onCreatedController(e)), this, disposables);
+        registration.onDidChange(({ added }) => added.forEach((e) => this.onCreatedController(e)), this, disposables);
     }
     public getSelected(document: NotebookDocument): IVSCodeNotebookController | undefined {
         return this.selectedControllers.get(document.uri.toString());
