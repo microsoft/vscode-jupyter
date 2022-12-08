@@ -40,7 +40,7 @@ jobs:
     # This is the part that will run a test eventually
     - name: Create local changes
       if: (steps.test_make_change.outputs.shouldMakeChange == 1)
-      uses: jsdaniell/create-json@v1.2.1
+      uses: jsdaniell/create-json@v1.2.2
       with:
         name: 'perf-results.json'
         dir: './build/ci/performance'
