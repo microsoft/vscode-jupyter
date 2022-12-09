@@ -556,11 +556,19 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return this.submitCodeImpl(code, file, line, false);
     }
 
+    private useNewDebugMode(): boolean {
+        const settings = this.configuration.getSettings(this.owner);
+        return !!(
+            settings.forceIPyKernelDebugger ||
+            (this.currentKernelInfo.metadata && !isLocalConnection(this.currentKernelInfo.metadata))
+        );
+    }
+
     public async debugCode(code: string, fileUri: Uri, line: number): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
         const doc = this.documentManager.textDocuments.find((d) => this.fs.arePathsSame(d.uri, fileUri));
-        if (doc && doc.isUntitled) {
+        if (!this.useNewDebugMode() && doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];
 
@@ -680,9 +688,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         let detachKernel = async () => noop();
         try {
             const kernel = await kernelPromise;
-            const settings = this.configuration.getSettings(this.owner);
             await this.generateCodeAndAddMetadata(cell, isDebug, kernel);
-            if (isDebug && (settings.forceIPyKernelDebugger || !isLocalConnection(kernel.kernelConnectionMetadata))) {
+            if (isDebug && this.useNewDebugMode()) {
                 // New ipykernel 7 debugger using the Jupyter protocol.
                 await this.debuggingManager.start(this.notebookEditor, cell);
             } else if (
