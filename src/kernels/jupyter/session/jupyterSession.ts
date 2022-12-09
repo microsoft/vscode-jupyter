@@ -7,7 +7,7 @@ import uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
-import { traceVerbose, traceError, traceInfo } from '../../../platform/logging';
+import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { Resource, IOutputChannel, IDisplayOptions } from '../../../platform/common/types';
 import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -160,7 +160,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
             await this.waitForIdleOnSession(result, this.idleTimeout, cancelToken);
             return result;
         } catch (exc) {
-            traceInfo(`Error waiting for restart session: ${exc}`);
+            traceWarning(`Error waiting for restart session: ${exc}`);
             if (result) {
                 this.shutdownSession(result, undefined, true).ignoreErrors();
             }

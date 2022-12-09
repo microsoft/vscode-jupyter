@@ -11,10 +11,7 @@ import { IDisposable, IFeaturesManager, KernelPickerType } from '../../../platfo
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import {
-    LocalPythonAndRelatedNonPythonKernelSpecFinder,
-    LocalPythonKernelsCacheKey
-} from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { ITrustedKernelPaths } from './types';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
@@ -29,10 +26,12 @@ import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
 import { ResourceMap } from '../../../platform/vscode-path/map';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
 import { uriEquals } from '../../../test/datascience/helpers';
+import { LocalPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 
 (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
     suite(`Local Python and related kernels (Kernel Picker = ${kernelPickerType})`, async () => {
-        let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
+        let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder | LocalPythonAndRelatedNonPythonKernelSpecFinderOld;
         let interpreterService: IInterpreterService;
         let fs: IFileSystemNode;
         let workspaceService: IWorkspaceService;
@@ -46,6 +45,7 @@ import { uriEquals } from '../../../test/datascience/helpers';
         let jupyterPaths: JupyterPaths;
         let onDidChangeKernelsFromKnownLocations: EventEmitter<void>;
         let onDidChangeInterpreters: EventEmitter<void>;
+        let onDidRemoveInterpreter: EventEmitter<{ id: string }>;
         let tempDirForKernelSpecs = Uri.file('/tmp');
         let findKernelSpecsInPathsReturnValue = new ResourceMap<Uri[]>();
         let loadKernelSpecReturnValue = new ResourceMap<IJupyterKernelSpec>();
@@ -150,9 +150,11 @@ import { uriEquals } from '../../../test/datascience/helpers';
             env = mock<IApplicationEnvironment>();
             trustedKernels = mock<ITrustedKernelPaths>();
             onDidChangeKernelsFromKnownLocations = new EventEmitter<void>();
+            onDidRemoveInterpreter = new EventEmitter<{ id: string }>();
             onDidChangeInterpreters = new EventEmitter<void>();
             disposables.push(onDidChangeKernelsFromKnownLocations);
             disposables.push(onDidChangeInterpreters);
+            disposables.push(onDidRemoveInterpreter);
 
             findKernelSpecsInPathsReturnValue.clear();
             loadKernelSpecReturnValue.clear();
@@ -160,6 +162,7 @@ import { uriEquals } from '../../../test/datascience/helpers';
             when(globalState.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
             when(globalState.update(anything(), anything())).thenResolve();
             when(interpreterService.onDidChangeInterpreters).thenReturn(onDidChangeInterpreters.event);
+            when(interpreterService.onDidRemoveInterpreter).thenReturn(onDidRemoveInterpreter.event);
             when(interpreterService.getActiveInterpreter()).thenResolve();
             when(interpreterService.getActiveInterpreter(anything())).thenResolve();
             when(interpreterService.status).thenReturn('refreshing');
@@ -199,19 +202,33 @@ import { uriEquals } from '../../../test/datascience/helpers';
 
             disposables.push(new Disposable(() => clock.uninstall()));
 
-            finder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
-                instance(interpreterService),
-                instance(fs),
-                instance(workspaceService),
-                instance(jupyterPaths),
-                instance(extensionChecker),
-                instance(kernelSpecsFromKnownLocations),
-                instance(globalState),
-                disposables,
-                instance(env),
-                instance(trustedKernels),
-                instance(featuresManager)
-            );
+            if (kernelPickerType === 'Insiders') {
+                finder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+                    instance(interpreterService),
+                    instance(fs),
+                    instance(workspaceService),
+                    instance(jupyterPaths),
+                    instance(extensionChecker),
+                    instance(kernelSpecsFromKnownLocations),
+                    instance(globalState),
+                    disposables,
+                    instance(env),
+                    instance(trustedKernels)
+                );
+            } else {
+                finder = new LocalPythonAndRelatedNonPythonKernelSpecFinderOld(
+                    instance(interpreterService),
+                    instance(fs),
+                    instance(workspaceService),
+                    instance(jupyterPaths),
+                    instance(extensionChecker),
+                    instance(kernelSpecsFromKnownLocations),
+                    instance(globalState),
+                    disposables,
+                    instance(env),
+                    instance(trustedKernels)
+                );
+            }
 
             const findStub = sinon.stub(LocalKernelSpecFinder.prototype, 'findKernelSpecsInPaths');
             findStub.callsFake(async (searchPath) => findKernelSpecsInPathsReturnValue.get(searchPath) || []);
@@ -521,6 +538,35 @@ import { uriEquals } from '../../../test/datascience/helpers';
             onDidChangeInterpreters.fire();
             await clock.runAllAsync();
             await onDidChange.assertFiredAtLeast(numberOfTimesChangeEventTriggered + 1);
+
+            // We should no longer list the venv kernel.
+            assert.deepEqual(finder.kernels, [condaKernel]);
+        });
+        test('Ensure kernels are removed from the list after Python extension triggers a removal of an interpreter (via removed event)', async function () {
+            if (kernelPickerType !== 'Insiders') {
+                return this.skip();
+            }
+            // Python will first give us 2 interpreters.
+            when(interpreterService.resolvedEnvironments).thenReturn([venvInterpreter, condaInterpreter]);
+            when(kernelSpecsFromKnownLocations.kernels).thenReturn([]);
+            when(interpreterService.status).thenReturn('idle');
+
+            const onDidChange = createEventHandler(finder, 'onDidChangeKernels', disposables);
+            finder.onDidChangeKernels(() => clock.runAllAsync().catch(noop));
+            finder.activate();
+            await clock.runAllAsync();
+            await onDidChange.assertFiredAtLeast(2);
+            const numberOfTimesChangeEventTriggered = onDidChange.count;
+
+            // We should have two kernels for both python envs.
+            assert.deepEqual(finder.kernels, [venvPythonKernel, condaKernel]);
+
+            // Now Python will only give us 1 environment.
+            // Ie. the virtual env has been deleted.
+            when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter]);
+            onDidRemoveInterpreter.fire({ id: venvInterpreter.id });
+            await clock.runAllAsync();
+            assert.strictEqual(onDidChange.count, numberOfTimesChangeEventTriggered + 1, 'Event not fired');
 
             // We should no longer list the venv kernel.
             assert.deepEqual(finder.kernels, [condaKernel]);

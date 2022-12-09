@@ -5,7 +5,7 @@
 import '../../../../platform/common/extensions';
 
 import { CancellationToken } from 'vscode';
-import { traceInfo, traceError } from '../../../../platform/logging';
+import { traceError, traceVerbose } from '../../../../platform/logging';
 import { IAsyncDisposable } from '../../../../platform/common/types';
 import { sleep } from '../../../../platform/common/utils/async';
 import { INotebookServerOptions, INotebookServer } from '../../types';
@@ -94,7 +94,7 @@ export class ServerCache implements IAsyncDisposable {
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             await (server as any).dispose();
                         } else {
-                            traceInfo('ServerCache Dispose, no server');
+                            traceVerbose('ServerCache Dispose, no server');
                         }
                     } catch (e) {
                         traceError(`Dispose error in ServerCache: `, e);

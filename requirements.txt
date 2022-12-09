@@ -4,9 +4,3 @@
 #
 #    pip-compile requirements.in
 #
-python-jsonrpc-server==0.4.0
-    # via -r requirements.in
-ujson==5.4.0
-    # via
-    #   -r requirements.in
-    #   python-jsonrpc-server

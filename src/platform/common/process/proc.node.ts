@@ -43,16 +43,22 @@ export class ProcessService extends EventEmitter implements IProcessService {
         super();
         this.decoder = new BufferDecoder();
     }
-    public static isAlive(pid: number): boolean {
+    public static isAlive(pid?: number): boolean {
         try {
+            if (!pid) {
+                return false;
+            }
             process.kill(pid, 0);
             return true;
         } catch {
             return false;
         }
     }
-    public static kill(pid: number): void {
+    public static kill(pid?: number): void {
         try {
+            if (!pid) {
+                return;
+            }
             if (process.platform === 'win32') {
                 // Windows doesn't support SIGTERM, so execute taskkill to kill the process
                 execSync(`taskkill /pid ${pid} /T /F`);

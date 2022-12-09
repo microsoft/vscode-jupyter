@@ -31,7 +31,11 @@ suite('Python Environment Kernel Connection Creator', () => {
     let kernelFinder: IKernelFinder;
     let localPythonEnvFinder: IContributedKernelFinder<PythonKernelConnectionMetadata>;
     let interpreterService: IInterpreterService;
-    let onDidChangePythonKernels: EventEmitter<void>;
+    let onDidChangePythonKernels: EventEmitter<{
+        added?: PythonKernelConnectionMetadata[];
+        removed?: PythonKernelConnectionMetadata[];
+        updated?: PythonKernelConnectionMetadata[];
+    }>;
     const disposables: IDisposable[] = [];
     let notebook: NotebookDocument;
     let controllerSelection: IControllerSelection;
@@ -86,7 +90,11 @@ suite('Python Environment Kernel Connection Creator', () => {
             notebook: NotebookDocument;
             controller: IVSCodeNotebookController;
         }>();
-        onDidChangePythonKernels = new EventEmitter<void>();
+        onDidChangePythonKernels = new EventEmitter<{
+            added?: PythonKernelConnectionMetadata[];
+            removed?: PythonKernelConnectionMetadata[];
+            updated?: PythonKernelConnectionMetadata[];
+        }>();
         disposables.push(onDidChangePythonKernels);
         disposables.push(onControllerSelected);
         when(controllerSelection.onControllerSelected).thenReturn(onControllerSelected.event);

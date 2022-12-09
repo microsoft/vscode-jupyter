@@ -843,6 +843,86 @@ export class IEventNamePropertyMapping {
         source: 'User Action'
     };
     /**
+     * How often we wait to fetch remote kernel specs or how long it takes to fetch them.
+     */
+    [Telemetry.JupyterKernelSpecEnumeration]: TelemetryEventInfo<
+        | {
+              /**
+               * Failure to enumerate kernel specs
+               */
+              failed: true;
+              /**
+               * Whether Jupyter session manager was ready before we started.
+               */
+              sessionManagerReady?: boolean;
+              /**
+               * Whether Jupyter spec manager was ready before we started.
+               */
+              specsManagerReady?: boolean;
+              /**
+               * Reason for the failure
+               */
+              reason:
+                  | 'NoSpecsManager'
+                  | 'SpecsDidNotChangeInTime'
+                  | 'NoSpecsEventAfterRefresh'
+                  | 'SpecManagerIsNotReady'
+                  | 'SessionManagerIsNotReady';
+          }
+        | (DurationMeasurement & {
+              /**
+               * Whether Jupyter session manager was ready before we started.
+               */
+              wasSessionManagerReady: boolean;
+              /**
+               * Whether Jupyter spec manager was ready before we started.
+               */
+              wasSpecsManagerReady: boolean;
+              /**
+               * Whether Jupyter session manager was ready after we started.
+               */
+              sessionManagerReady: boolean;
+              /**
+               * Whether Jupyter spec manager was ready after we started.
+               */
+              specsManagerReady: boolean;
+          })
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        tags: ['KernelStartup'],
+        properties: {
+            ...commonClassificationForErrorProperties(),
+            failed: {
+                classification: 'CallstackOrException',
+                purpose: 'PerformanceAndHealth'
+            },
+            reason: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                comment: 'Reason for failure to fetch kernel specs'
+            },
+            sessionManagerReady: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            specsManagerReady: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            wasSessionManagerReady: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            wasSpecsManagerReady: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        },
+        measures: commonClassificationForDurationProperties()
+    };
+    /**
      * Sent when we fail to update the kernel spec json file.
      */
     [Telemetry.FailedToUpdateKernelSpec]: TelemetryEventInfo<

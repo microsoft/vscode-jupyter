@@ -38,11 +38,10 @@ export class FileConverter implements IFileConverter {
 
     async importIpynb(source: Uri): Promise<void> {
         const reporter = this.progressReporter.createProgressIndicator(localize.DataScience.importingIpynb(), true);
-        let nbDoc;
         try {
             // Open the source as a NotebookDocument, note that this doesn't actually show an editor, and we don't need
             // a specific close action as VS Code owns the lifetime
-            nbDoc = await workspace.openNotebookDocument(source);
+            const nbDoc = await workspace.openNotebookDocument(source);
             await this.exportImpl(ExportFormat.python, nbDoc, undefined, reporter.token);
         } finally {
             reporter.dispose();

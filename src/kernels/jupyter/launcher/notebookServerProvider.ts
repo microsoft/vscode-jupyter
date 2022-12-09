@@ -5,7 +5,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { traceInfo } from '../../../platform/logging';
+import { traceInfo, traceVerbose } from '../../../platform/logging';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -125,18 +125,18 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         // Check to see if we support ipykernel or not
         try {
             await createProgressReporter();
-            traceInfo(`Checking for server usability.`);
+            traceVerbose(`Checking for server usability.`);
 
             const usable = await this.checkUsable(serverOptions);
             if (!usable) {
-                traceInfo('Server not usable (should ask for install now)');
+                traceVerbose('Server not usable (should ask for install now)');
                 // Indicate failing.
                 throw new JupyterInstallError(
                     DataScience.jupyterNotSupported().format(await jupyterExecution.getNotebookError())
                 );
             }
             // Then actually start the server
-            traceInfo(`Starting notebook server.`);
+            traceVerbose(`Starting notebook server.`);
             const result = await jupyterExecution.connectToNotebookServer(serverOptions, options.token);
             traceInfo(`Server started.`);
             return result;

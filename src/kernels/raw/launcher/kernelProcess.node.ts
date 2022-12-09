@@ -131,7 +131,9 @@ export class KernelProcess implements IKernelProcess {
             !this.interrupter
         ) {
             traceInfo('Interrupting kernel via SIGINT');
-            kill(this._process.pid, 'SIGINT');
+            if (this._process.pid) {
+                kill(this._process.pid, 'SIGINT');
+            }
         } else if (
             this._kernelConnectionMetadata.kernelSpec.interrupt_mode !== 'message' &&
             this._process &&
@@ -254,13 +256,13 @@ export class KernelProcess implements IKernelProcess {
                     if (stdout.includes(kernelOutputWithConnectionFile)) {
                         sawKernelConnectionFile = true;
                     }
-                    traceInfo(`Kernel Output: ${stdout}`);
+                    traceVerbose(`Kernel Output: ${stdout}`);
                 }
                 this.sendToOutput(output.out);
             },
             (error) => {
                 if (this.disposed) {
-                    traceInfo('Kernel died', error, stderr);
+                    traceWarning('Kernel died', error, stderr);
                     return;
                 }
                 traceError('Kernel died', error, stderr);
@@ -548,10 +550,20 @@ export class KernelProcess implements IKernelProcess {
             // On windows, in order to support interrupt, we have to set an environment variable pointing to a WIN32 event handle
             if (os.platform() === 'win32') {
                 env = env || process.env;
-                const handle = await this.getWin32InterruptHandle();
+                try {
+                    const handle = await this.getWin32InterruptHandle();
 
-                // See the code ProcessPollingWindows inside of ipykernel for it listening to this event handle.
-                env.JPY_INTERRUPT_EVENT = `${handle}`;
+                    // See the code ProcessPollingWindows inside of ipykernel for it listening to this event handle.
+                    env.JPY_INTERRUPT_EVENT = `${handle}`;
+                    traceInfoIfCI(
+                        `Got interrupt handle kernel id ${handle} for interpreter ${this._kernelConnectionMetadata.interpreter.id}`
+                    );
+                } catch (ex) {
+                    traceError(
+                        `Failed to get interrupt handle kernel id ${this._kernelConnectionMetadata.id} for interpreter ${this._kernelConnectionMetadata.interpreter.id}`,
+                        ex
+                    );
+                }
             }
 
             // The kernelspec argv could be something like [python, main.py, --something, --something-else, -f,{connection_file}]
@@ -568,7 +580,7 @@ export class KernelProcess implements IKernelProcess {
             // If we are not python just use the ProcessExecutionFactory
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
-            traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
+            traceInfo(`Launching Raw Kernel ${this.launchKernelSpec.display_name} # ${executable}`);
             const promiseCancellation = createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' });
             const [executionService, env] = await Promise.all([
                 Promise.race([

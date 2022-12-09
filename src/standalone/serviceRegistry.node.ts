@@ -25,7 +25,7 @@ import { ApiAccessService } from './api/apiAccessService';
 import { WorkspaceActivation } from './activation/workspaceActivation.node';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { DataScienceSurveyBanner, ISurveyBanner } from './survey/dataScienceSurveyBanner.node';
-import { IExtensionContext, IFeaturesManager } from '../platform/common/types';
+import { IExtensionContext } from '../platform/common/types';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
 import { PythonExtensionRestartNotification } from './notification/pythonExtensionRestartNotification';
@@ -87,12 +87,9 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     // Dev Tools
     registerDevToolTypes(context, isDevMode);
 
-    const featureManager = serviceManager.get<IFeaturesManager>(IFeaturesManager);
-    if (featureManager.features.kernelPickerType === 'Insiders') {
-        // User jupyter server url provider
-        serviceManager.addSingleton<IExtensionSyncActivationService>(
-            IExtensionSyncActivationService,
-            UserJupyterServerUrlProvider
-        );
-    }
+    // User jupyter server url provider
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        UserJupyterServerUrlProvider
+    );
 }

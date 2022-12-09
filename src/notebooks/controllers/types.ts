@@ -91,7 +91,8 @@ export interface IControllerRegistration {
     /**
      * Event fired when controllers are added or removed
      */
-    onChanged: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
+    onDidChange: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
+    isFiltered(metadata: KernelConnectionMetadata): boolean;
 }
 
 export const IControllerSelection = Symbol('IControllerSelection');
@@ -163,11 +164,6 @@ export interface IControllerDefaultService {
 export const IControllerLoader = Symbol('IControllerLoader');
 
 export interface IControllerLoader {
-    /**
-     * Event fired when all of the controllers have been refreshed
-     */
-    readonly refreshed: vscode.Event<void>;
-
     /**
      * Promise resolved when controllers are done being loaded (refresh makes this promise update)
      */

@@ -11,17 +11,17 @@ import { IDisposable, IExtensions, IFeaturesManager, KernelPickerType } from '..
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { createEventHandler } from '../../../test/common';
 import { KernelFinder } from '../../kernelFinder';
-import { LocalKernelSpecConnectionMetadata } from '../../types';
+import { LocalKernelConnectionMetadata, LocalKernelSpecConnectionMetadata } from '../../types';
 import { ContributedLocalKernelSpecFinder } from './contributedLocalKernelSpecFinder.node';
+import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 
 (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
     suite(`Contributed Local Kernel Spec Finder (Kernel Picker ${kernelPickerType})`, () => {
         let finder: ContributedLocalKernelSpecFinder;
         const disposables: IDisposable[] = [];
         let nonPythonKernelFinder: LocalKnownPathKernelSpecFinder;
-        let pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
+        let pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>;
         let kernelFinder: KernelFinder;
         let extensionChecker: IPythonExtensionChecker;
         let interpreterService: IInterpreterService;
@@ -54,7 +54,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAnd
         });
         setup(() => {
             nonPythonKernelFinder = mock<LocalKnownPathKernelSpecFinder>();
-            pythonKernelFinder = mock<LocalPythonAndRelatedNonPythonKernelSpecFinder>();
+            pythonKernelFinder = mock<ILocalKernelFinder<LocalKernelConnectionMetadata>>();
             kernelFinder = mock<KernelFinder>();
             extensionChecker = mock<IPythonExtensionChecker>();
             interpreterService = mock<IInterpreterService>();

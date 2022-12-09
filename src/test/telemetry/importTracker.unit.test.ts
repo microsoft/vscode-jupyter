@@ -3,7 +3,7 @@
 
 'use strict';
 /* eslint-disable , , @typescript-eslint/no-explicit-any, no-multi-str, no-trailing-spaces */
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import rewiremock from 'rewiremock';
 import { instance, mock, when } from 'ts-mockito';
 import {
@@ -71,13 +71,29 @@ suite('Import Tracker', async () => {
                     'Hashed package name event not sent'
                 );
                 expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_NAME);
+                await waitForCondition(
+                    async () => {
+                        Reporter.properties.filter((item) => Object.keys(item).length).length === hashes.length;
+                        return true;
+                    },
+                    1_000,
+                    () =>
+                        `Incorrect number of hashed package name events sent. Expected ${hashes.length}, got ${
+                            Reporter.properties.filter((item) => Object.keys(item).length).length
+                        }, with values ${JSON.stringify(
+                            Reporter.properties.filter((item) => Object.keys(item).length)
+                        )}`
+                );
             }
             const properties = Reporter.properties.filter((item) => Object.keys(item).length);
-            if (resourceType) {
-                expect(properties).to.deep.equal(hashes.map((hash) => ({ hashedNamev2: hash, when, resourceType })));
-            } else {
-                expect(properties).to.deep.equal(hashes.map((hash) => ({ hashedNamev2: hash, when })));
-            }
+            const expected = resourceType
+                ? hashes.map((hash) => ({ hashedNamev2: hash, when, resourceType }))
+                : hashes.map((hash) => ({ hashedNamev2: hash, when }));
+            assert.deepEqual(
+                properties.sort((a, b) => a.hashedNamev2.localeCompare(b.hashedNamev2)),
+                expected.sort((a, b) => a.hashedNamev2.localeCompare(b.hashedNamev2)),
+                `Hashes not sent correctly, expected ${JSON.stringify(expected)} but got ${JSON.stringify(properties)}`
+            );
         }
 
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {

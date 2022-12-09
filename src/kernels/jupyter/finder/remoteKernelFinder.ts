@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Memento } from 'vscode';
+import { CancellationToken, CancellationTokenSource, EventEmitter, Memento } from 'vscode';
 import { getKernelId } from '../../helpers';
 import {
     BaseKernelConnectionMetadata,
@@ -32,7 +32,7 @@ import { computeServerId } from '../jupyterUtils';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { DisplayOptions } from '../../displayOptions';
 import { isArray } from '../../../platform/common/utils/sysTypes';
-import { noop } from '../../../platform/common/utils/misc';
+import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
 import { removeOldCachedItems } from '../../common/commonFinder';
@@ -68,8 +68,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     private _cacheUpdateCancelTokenSource: CancellationTokenSource | undefined;
     private cache: RemoteKernelConnectionMetadata[] = [];
 
-    private _onDidChangeKernels = new EventEmitter<void>();
-    onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
+    private _onDidChangeKernels = new EventEmitter<{}>();
+    onDidChangeKernels = this._onDidChangeKernels.event;
 
     private readonly disposables: IDisposable[] = [];
 
@@ -396,6 +396,15 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 `UniversalRemoteKernelFinder: Writing ${values.length} remote kernel connection metadata to cache`
             );
 
+            const oldValues = this.cache;
+            const oldKernels = new Map(oldValues.map((item) => [item.id, item]));
+            const kernels = new Map(values.map((item) => [item.id, item]));
+            const added = values.filter((k) => !oldKernels.has(k.id));
+            const updated = values.filter(
+                (k) => oldKernels.has(k.id) && !areObjectsWithUrisTheSame(k, oldKernels.get(k.id))
+            );
+            const removed = oldValues.filter((k) => !kernels.has(k.id));
+
             const key = this.cacheKey;
             this.cache = values;
             const serialized = values.map((item) => item.toJSON());
@@ -404,7 +413,20 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 this.globalState.update(key, { kernels: serialized, extensionVersion: this.env.extensionVersion })
             ]);
 
-            this._onDidChangeKernels.fire();
+            if (added.length || updated.length || removed.length) {
+                this._onDidChangeKernels.fire({ added, updated, removed });
+            }
+            traceVerbose(
+                `Updating cache with Remote kernels ${values
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}\n, Added = ${added
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}\n, Updated = ${updated
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}\n, Removed = ${removed
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}`
+            );
         } catch (ex) {
             traceError('UniversalRemoteKernelFinder: Failed to write to cache', ex);
         }

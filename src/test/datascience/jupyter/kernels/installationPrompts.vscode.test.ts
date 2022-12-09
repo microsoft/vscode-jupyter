@@ -86,7 +86,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
     let venvKernelPath = Uri.file(
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvkernel', executable)
     );
-    const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} package`;
+    const expectedPromptMessageSuffix = `requires the ${ProductNames.get(Product.ipykernel)!} package`;
 
     let api: IExtensionTestApi;
     let installer: IInstaller;

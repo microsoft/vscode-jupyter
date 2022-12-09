@@ -4,11 +4,10 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
+import { EventEmitter } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { traceInfo, traceDecoratorError, traceError } from '../../../platform/logging';
+import { traceInfo, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
@@ -22,6 +21,8 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getKernelRegistrationInfo } from '../../helpers';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from './localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
+import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -49,17 +50,20 @@ export class ContributedLocalKernelSpecFinder
     id: string = ContributedKernelFinderKind.LocalKernelSpec;
     displayName: string = DataScience.localKernelSpecs();
 
-    private _onDidChangeKernels = new EventEmitter<void>();
-    onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
+    private _onDidChangeKernels = new EventEmitter<{
+        added?: LocalKernelConnectionMetadata[];
+        updated?: LocalKernelConnectionMetadata[];
+        removed?: LocalKernelConnectionMetadata[];
+    }>();
+    onDidChangeKernels = this._onDidChangeKernels.event;
 
     private wasPythonInstalledWhenFetchingControllers = false;
 
     private cache: LocalKernelConnectionMetadata[] = [];
-
     constructor(
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
-        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
-        private readonly pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder,
+        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper)
+        private readonly pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>,
         @inject(IKernelFinder) kernelFinder: KernelFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
@@ -148,6 +152,8 @@ export class ContributedLocalKernelSpecFinder
             let kernels: LocalKernelConnectionMetadata[] = [];
             // Exclude python kernel specs (we'll get that from the pythonKernelFinder)
             const kernelSpecs = this.nonPythonKernelFinder.kernels.filter((item) => {
+                // Remove this condition.
+                // https://github.com/microsoft/vscode-jupyter/issues/12278
                 if (this.extensionChecker.isPythonExtensionInstalled) {
                     return item.kernelSpec.language !== PYTHON_LANGUAGE;
                 }
@@ -166,7 +172,6 @@ export class ContributedLocalKernelSpecFinder
             traceError('Exception Saving loaded kernels', ex);
         }
     }
-
     public get kernels(): LocalKernelConnectionMetadata[] {
         const loadedKernelSpecFiles = new Set<string>();
         const kernels: LocalKernelConnectionMetadata[] = [];
@@ -205,21 +210,42 @@ export class ContributedLocalKernelSpecFinder
 
     private async writeToCache(values: LocalKernelConnectionMetadata[]) {
         try {
-            const oldValues = this.cache;
             const uniqueIds = new Set<string>();
-            const uniqueKernels = values.filter((item) => {
-                if (uniqueIds.has(item.id)) {
-                    return false;
-                }
-                uniqueIds.add(item.id);
-                return true;
-            });
-            this.cache = this.filterKernels(uniqueKernels);
-            if (oldValues.length === this.cache.length && areObjectsWithUrisTheSame(oldValues, this.cache)) {
-                return;
+            values = this.filterKernels(
+                values.filter((item) => {
+                    if (uniqueIds.has(item.id)) {
+                        return false;
+                    }
+                    uniqueIds.add(item.id);
+                    return true;
+                })
+            );
+
+            const oldValues = this.cache;
+            const oldKernels = new Map(oldValues.map((item) => [item.id, item]));
+            const kernels = new Map(values.map((item) => [item.id, item]));
+            const added = values.filter((k) => !oldKernels.has(k.id));
+            const updated = values.filter(
+                (k) => oldKernels.has(k.id) && !areObjectsWithUrisTheSame(k, oldKernels.get(k.id))
+            );
+            const removed = oldValues.filter((k) => !kernels.has(k.id));
+
+            this.cache = values;
+            if (added.length || updated.length || removed.length) {
+                this._onDidChangeKernels.fire({ added, updated, removed });
             }
 
-            this._onDidChangeKernels.fire();
+            traceVerbose(
+                `Updating cache with Local kernels ${values
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}\n, Added = ${added
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}\n, Updated = ${updated
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}\n, Removed = ${removed
+                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                    .join(', ')}`
+            );
         } catch (ex) {
             traceError('LocalKernelFinder: Failed to write to cache', ex);
         }

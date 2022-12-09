@@ -17,12 +17,12 @@ import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/a
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { Commands, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
-import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
+import { IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
 import { sleep } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { traceError, traceInfo } from '../../../platform/logging';
+import { traceError, traceVerbose } from '../../../platform/logging';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getLanguageOfNotebookDocument } from '../../languages/helpers';
@@ -46,7 +46,8 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
     ) {
         // Context keys to control when these commands are shown
         this.showInstallPythonExtensionContext = new ContextKey(
@@ -109,7 +110,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
                 // Python extension is installed, let's wait for interpreters to be detected
                 if (this.interpreterService.environments.length === 0) {
-                    await this.interpreterService.waitForAllInterpretersToLoad();
+                    await this.interpreterService.refreshInterpreters();
                 }
 
                 if (this.interpreterService.environments.length === 0) {
@@ -154,18 +155,17 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         }
     }
 
-    // Called when we select the command to install the python extension via the kernel picker
-    // If new controllers are added before this fully resolves any in progress executions will be
-    // passed on, so we can trigger with the run button, install, get a controller and not have to
-    // click run again
-    private async installPythonExtensionViaKernelPicker(): Promise<void> {
+    /**
+     * Called when we select the command to install the python extension via the kernel picker
+     * If new controllers are added before this fully resolves any in progress executions will be
+     * passed on, so we can trigger with the run button, install, get a controller and not have to
+     * click run again
+     *
+     * @return {*}  {Promise<boolean>} `true` if Python extension was installed, else not installed.
+     */
+    private async installPythonExtensionViaKernelPicker(): Promise<boolean | undefined> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
-
-            if (!(await this.shouldInstallExtensionPrompt())) {
-                // Check with the user before we move forward, if they don't want the install, just bail
-                return;
-            }
 
             // Now start to indicate that we are performing the install and locating kernels
             const reporter = this.progressReporter.createProgressIndicator(DataScience.installingPythonExtension());
@@ -179,14 +179,18 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
                 // Make sure that we didn't timeout waiting for the hook
                 if (this.extensionChecker.isPythonExtensionInstalled && typeof hookResult !== 'number') {
-                    traceInfo('Python Extension installed via Kernel Picker command');
+                    traceVerbose('Python Extension installed via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'success'
                     });
 
-                    // Trigger a load of our notebook controllers, we want to await it here so that any in
-                    // progress executions get passed to the suggested controller
-                    await this.controllerLoader.loaded;
+                    if (this.featureManager.features.kernelPickerType === 'Insiders') {
+                        return true;
+                    } else {
+                        // Trigger a load of our notebook controllers, we want to await it here so that any in
+                        // progress executions get passed to the suggested controller
+                        await this.controllerLoader.loaded;
+                    }
                 } else {
                     traceError('Failed to install Python Extension via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
@@ -201,43 +205,5 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
                 reporter.dispose();
             }
         }
-    }
-
-    // We don't always want to show our modal warning for installing the python extension
-    // this function will choose if this should be shown, and return true if the install should
-    // proceed and false otherwise
-    private async shouldInstallExtensionPrompt(): Promise<boolean> {
-        // We want to show the dialog if the active document is running, in this case, the command
-        // was triggered from the run button and we want to warn the user what we are doing
-        if (this.isActiveNotebookDocumentRunning()) {
-            // First present a simple modal dialog to indicate what we are about to do
-            const selection = await this.appShell.showInformationMessage(
-                DataScience.pythonExtensionRequiredToRunNotebook(),
-                { modal: true },
-                Common.install()
-            );
-            if (selection === Common.install()) {
-                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
-                return true;
-            } else {
-                // If they don't want to install, just bail out at this point
-                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
-                return false;
-            }
-        }
-
-        // If the active notebook is not running, this command was triggered selecting from the kernel picker
-        // in this case, they clicked on "Install Python Extension" so no need for a modal to warn them
-        return true;
-    }
-
-    // Check if any cells of the active notebook are in pending or executing state
-    private isActiveNotebookDocumentRunning(): boolean {
-        if (window.activeNotebookEditor) {
-            return window.activeNotebookEditor.notebook.getCells().some((cell) => {
-                return this.executingCells.has(cell);
-            });
-        }
-        return false;
     }
 }

@@ -4,8 +4,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
-import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
@@ -25,7 +24,7 @@ import {
     IFeaturesManager
 } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { traceError, traceInfoIfCI } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData';
@@ -47,7 +46,7 @@ export class ControllerRegistration implements IControllerRegistration {
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private changeEmitter = new EventEmitter<IVSCodeNotebookControllerUpdateEvent>();
     private registeredMetadatas = new Map<string, KernelConnectionMetadata>();
-    public get onChanged(): Event<IVSCodeNotebookControllerUpdateEvent> {
+    public get onDidChange(): Event<IVSCodeNotebookControllerUpdateEvent> {
         return this.changeEmitter.event;
     }
     public get registered(): IVSCodeNotebookController[] {
@@ -77,12 +76,7 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(ConnectionDisplayDataProvider) private readonly displayDataProvider: ConnectionDisplayDataProvider
-    ) {
-        this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
-        this.serverUriStorage.onDidChangeConnectionType(this.onDidChangeFilter, this, this.disposables);
-        this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
-        this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
-    }
+    ) {}
     batchAdd(metadatas: KernelConnectionMetadata[], types: ('jupyter-notebook' | 'interactive')[]) {
         const addedList: IVSCodeNotebookController[] = [];
         metadatas.forEach((metadata) => {
@@ -94,13 +88,13 @@ export class ControllerRegistration implements IControllerRegistration {
             this.changeEmitter.fire({ added: addedList, removed: [] });
         }
     }
-    private activeInterpreterKernelConnectionId = new Set<string>();
+    private _activeInterpreterControllerIds = new Set<string>();
     trackActiveInterpreterControllers(controllers: IVSCodeNotebookController[]) {
-        controllers.forEach((controller) => this.activeInterpreterKernelConnectionId.add(controller.connection.id));
+        controllers.forEach((controller) => this._activeInterpreterControllerIds.add(controller.id));
     }
     public canControllerBeDisposed(controller: IVSCodeNotebookController) {
         return (
-            !this.activeInterpreterKernelConnectionId.has(controller.connection.id) &&
+            !this._activeInterpreterControllerIds.has(controller.id) &&
             !this.isControllerAttachedToADocument(controller)
         );
     }
@@ -188,17 +182,6 @@ export class ControllerRegistration implements IControllerRegistration {
                         this,
                         this.disposables
                     );
-                    controller.onNotebookControllerSelectionChanged((e) => {
-                        if (
-                            !e.selected &&
-                            this.isFiltered(controller.connection) &&
-                            !this.canControllerBeDisposed(controller)
-                        ) {
-                            // This item was selected but is no longer allowed in the kernel list. Remove it
-                            traceVerbose(`Removing controller ${controller.id} from kernel list`);
-                            controller.dispose();
-                        }
-                    });
                     // We are disposing as documents are closed, but do this as well
                     this.disposables.push(controller);
                     this.registeredControllers.set(controller.id, controller);
@@ -233,14 +216,12 @@ export class ControllerRegistration implements IControllerRegistration {
         return this.registeredControllers.get(id);
     }
 
-    private isFiltered(metadata: KernelConnectionMetadata): boolean {
+    public isFiltered(metadata: KernelConnectionMetadata): boolean {
+        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
+            return false;
+        }
         const userFiltered = this.kernelFilter.isKernelHidden(metadata);
         const urlFiltered = isRemoteConnection(metadata) && this.serverUriStorage.currentServerId !== metadata.serverId;
-
-        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
-            // In the 'Insiders' experiment remove the url filters as we want to register everything.
-            return userFiltered;
-        }
 
         return userFiltered || urlFiltered;
     }
@@ -254,57 +235,5 @@ export class ControllerRegistration implements IControllerRegistration {
 
     private isControllerAttachedToADocument(controller: IVSCodeNotebookController) {
         return this.notebook.notebookDocuments.some((doc) => controller.isAssociatedWithDocument(doc));
-    }
-
-    private onDidChangeUri() {
-        // This logic only applies to old kernel picker which supports local vs remote, not both and not multiple remotes.
-        if (this.featuresManager.features.kernelPickerType === 'Stable') {
-            // Our list of metadata could be out of date. Remove old ones that don't match the uri
-            if (this.serverUriStorage.currentServerId) {
-                [...this.registeredMetadatas.keys()].forEach((k) => {
-                    const m = this.registeredMetadatas.get(k);
-                    if (m && isRemoteConnection(m) && this.serverUriStorage.currentServerId !== m.serverId) {
-                        this.registeredMetadatas.delete(k);
-                    }
-                });
-            }
-        }
-        // Update the list of controllers
-        this.onDidChangeFilter();
-    }
-
-    private async onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
-        // Remove any connections that are no longer available.
-        const serverIds = await Promise.all(uriEntries.map((entry) => entry.uri).map(computeServerId));
-        serverIds.forEach((serverId) => {
-            [...this.registeredMetadatas.keys()].forEach((k) => {
-                const m = this.registeredMetadatas.get(k);
-                if (m && isRemoteConnection(m) && serverId === m.serverId) {
-                    this.registeredMetadatas.delete(k);
-                }
-            });
-        });
-
-        // Update list of controllers
-        this.onDidChangeFilter();
-    }
-
-    private onDidChangeFilter() {
-        // Give our list of metadata should be up to date, just remove the filtered ones
-        const metadatas = this.metadatas.filter((item) => !this.isFiltered(item));
-
-        // Try to re-create the missing controllers.
-        metadatas.forEach((c) => this.addOrUpdate(c, [JupyterNotebookView, InteractiveWindowView]));
-
-        // Go through all controllers that have been created and hide them.
-        // Unless they are attached to an existing document.
-        this.registered.forEach((item) => {
-            // TODO: Don't hide controllers that are already associated with a notebook.
-            // If we have a notebook opened and its using a kernel.
-            // Else we end up killing the execution as well.
-            if (this.isFiltered(item.connection) && !this.isControllerAttachedToADocument(item)) {
-                item.dispose();
-            }
-        });
     }
 }
