@@ -404,6 +404,20 @@
      ]
    }
  */
+//Telemetry.JupyterKernelSpecEnumeration
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_KERNEL_SPEC_FETCH_FAILURE" : {
+     "reason": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Reason for failure to fetch kernel specs. Reason for the failure","owner":"donjayamanne"},
+     "sessionManagerReady": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether Jupyter session manager was ready before we started. Whether Jupyter session manager was ready after we started.","owner":"donjayamanne"},
+     "specsManagerReady": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether Jupyter spec manager was ready before we started. Whether Jupyter spec manager was ready after we started.","owner":"donjayamanne"},
+     "wasSessionManagerReady": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether Jupyter session manager was ready before we started.","owner":"donjayamanne"},
+     "wasSpecsManagerReady": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether Jupyter spec manager was ready before we started.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.JupyterNotInstalledErrorShown
 /* __GDPR__
    "DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN" : {

@@ -11,7 +11,7 @@ import type {
     SessionManager
 } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, Disposable, Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
 import {
@@ -20,7 +20,8 @@ import {
     IOutputChannel,
     IPersistentStateFactory,
     Resource,
-    IDisplayOptions
+    IDisplayOptions,
+    IDisposable
 } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
@@ -28,7 +29,7 @@ import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelActionSource, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
-import { sleep } from '../../../platform/common/utils/async';
+import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import {
     IJupyterSessionManager,
     IJupyterPasswordConnect,
@@ -38,6 +39,10 @@ import {
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator
 } from '../types';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/kernelspec';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
@@ -221,34 +226,103 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             throw new SessionDisposedError();
         }
         try {
-            // Fetch the list the session manager already knows about. Refreshing may not work.
-            const oldKernelSpecs =
-                this.specsManager?.specs && Object.keys(this.specsManager.specs.kernelspecs).length
-                    ? this.specsManager.specs.kernelspecs
-                    : {};
+            const stopWatch = new StopWatch();
+            const specsManager = this.specsManager;
+            if (!specsManager) {
+                traceError(
+                    `No SessionManager to enumerate kernelspecs (no specs manager). Returning a default kernel. Specs ${JSON.stringify(
+                        this.specsManager?.specs?.kernelspecs || {}
+                    )}.`
+                );
+                sendTelemetryEvent(Telemetry.JupyterKernelSpecEnumeration, undefined, {
+                    failed: true,
+                    reason: 'NoSpecsManager'
+                });
+                // If for some reason the session manager refuses to communicate, fall
+                // back to a default. This may not exist, but it's likely.
+                return [await createInterpreterKernelSpec()];
+            }
+            const telemetryProperties = {
+                wasSessionManagerReady: this.sessionManager.isReady,
+                wasSpecsManagerReady: specsManager.isReady,
+                sessionManagerReady: this.sessionManager.isReady,
+                specsManagerReady: specsManager.isReady,
+                waitedForChangeEvent: false
+            };
+            const getKernelSpecs = (defaultValue: Record<string, ISpecModel | undefined> = {}) => {
+                return specsManager.specs && Object.keys(specsManager.specs.kernelspecs).length
+                    ? specsManager.specs.kernelspecs
+                    : defaultValue;
+            };
+
+            // Fetch the list the session manager already knows about. Refreshing may not work or could be very slow.
+            const oldKernelSpecs = getKernelSpecs();
 
             // Wait for the session to be ready
             await Promise.race([sleep(10_000), this.sessionManager.ready]);
-
+            telemetryProperties.sessionManagerReady = this.sessionManager.isReady;
             // Ask the session manager to refresh its list of kernel specs. This might never
             // come back so only wait for ten seconds.
-            await Promise.race([sleep(10_000), this.specsManager?.refreshSpecs()]);
+            await Promise.race([sleep(10_000), specsManager.refreshSpecs()]);
+            telemetryProperties.specsManagerReady = specsManager.isReady;
 
-            // Enumerate all of the kernel specs, turning each into a JupyterKernelSpec
-            const kernelspecs =
-                this.specsManager?.specs && Object.keys(this.specsManager.specs.kernelspecs).length
-                    ? this.specsManager.specs.kernelspecs
-                    : oldKernelSpecs;
-            const keys = Object.keys(kernelspecs);
-            if (keys && keys.length) {
-                return keys.map((k) => {
-                    const spec = kernelspecs[k];
-                    return new JupyterKernelSpec(spec!) as IJupyterKernelSpec;
+            let telemetrySent = false;
+            if (specsManager && Object.keys(specsManager.specs?.kernelspecs || {}).length === 0) {
+                // At this point wait for the specs to change
+                const disposables: IDisposable[] = [];
+                const promise = createDeferred();
+                specsManager.specsChanged.connect(promise.resolve);
+                disposables.push(new Disposable(() => specsManager.specsChanged.disconnect(promise.resolve)));
+                const allPromises = Promise.all([
+                    promise.promise,
+                    specsManager.ready,
+                    specsManager.refreshSpecs(),
+                    this.sessionManager.ready
+                ]);
+                await Promise.race([sleep(10_000), allPromises]);
+                telemetryProperties.waitedForChangeEvent = true;
+                if (!promise.completed) {
+                    telemetrySent = true;
+                    sendTelemetryEvent(Telemetry.JupyterKernelSpecEnumeration, undefined, {
+                        failed: true,
+                        sessionManagerReady: this.sessionManager.isReady,
+                        specsManagerReady: specsManager.isReady,
+                        reason: specsManager.isReady
+                            ? this.sessionManager.isReady
+                                ? 'SpecsDidNotChangeInTime'
+                                : 'SessionManagerIsNotReady'
+                            : 'SpecManagerIsNotReady'
+                    });
+                }
+                disposeAllDisposables(disposables);
+            }
+
+            const kernelspecs = getKernelSpecs(oldKernelSpecs);
+            if (Object.keys(kernelspecs || {}).length) {
+                const specs: IJupyterKernelSpec[] = [];
+                Object.entries(kernelspecs).forEach(([_key, value]) => {
+                    if (value) {
+                        specs.push(new JupyterKernelSpec(value));
+                    }
                 });
+                sendTelemetryEvent(
+                    Telemetry.JupyterKernelSpecEnumeration,
+                    { duration: stopWatch.elapsedTime },
+                    telemetryProperties
+                );
+                return specs;
             } else {
                 traceError(
-                    `SessionManager cannot enumerate kernelspecs. Returning default ${JSON.stringify(kernelspecs)}.`
+                    `SessionManager cannot enumerate kernelspecs. Returning a default kernel. Specs ${JSON.stringify(
+                        kernelspecs
+                    )}.`
                 );
+                if (!telemetrySent) {
+                    sendTelemetryEvent(Telemetry.JupyterKernelSpecEnumeration, undefined, {
+                        failed: true,
+                        reason: 'NoSpecsEventAfterRefresh'
+                    });
+                }
                 // If for some reason the session manager refuses to communicate, fall
                 // back to a default. This may not exist, but it's likely.
                 return [await createInterpreterKernelSpec()];
