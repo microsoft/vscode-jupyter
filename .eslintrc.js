@@ -8,6 +8,7 @@ module.exports = {
     ignorePatterns: [
         '*.js',
         'vscode.*.d.ts',
+        'vscode.d.ts',
         '**/*.test.ts',
         'types',
         // TODO: Does this file need to be linted?
