@@ -99,11 +99,8 @@ export interface IKernelVariableRequester {
     ): Promise<{ data: Record<string, unknown>[] }>;
     getVariableProperties(
         word: string,
-        kernel: IKernel,
         cancelToken: CancellationToken | undefined,
-        matchingVariable: IJupyterVariable | undefined,
-        languageSettings: { [typeNameKey: string]: string[] },
-        inEnhancedTooltipsExperiment: boolean
+        matchingVariable: IJupyterVariable | undefined
     ): Promise<{ [attributeName: string]: string }>;
     getDataFrameInfo(targetVariable: IJupyterVariable, kernel: IKernel, expression: string): Promise<IJupyterVariable>;
 }
