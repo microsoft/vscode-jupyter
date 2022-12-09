@@ -82,6 +82,7 @@ suite(`Interactive window execution @iw`, async function () {
         await settings.update('interactiveWindowMode', 'multiple');
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
+    // TODO: This should be a testMandatory
     test.skip('Execute cell from Python file @mandatory', async () => {
         // #11917
         const source = 'print(42)';

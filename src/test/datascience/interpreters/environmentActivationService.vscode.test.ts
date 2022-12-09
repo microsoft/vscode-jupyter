@@ -7,7 +7,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { traceInfo } from '../../../platform/logging';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
+import { captureScreenShot, IExtensionTestApi, waitForCondition, suiteMandatory } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -29,7 +29,7 @@ import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { ProposedExtensionAPI } from '../../../platform/api/pythonApiTypes';
 import { defaultNotebookTestTimeout } from '../notebook/helper';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('Conda Execution @python @mandatory', function () {
+suiteMandatory('Conda Execution @python', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let envActivationService: EnvironmentActivationService;

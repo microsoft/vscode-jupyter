@@ -91,6 +91,7 @@ export function sharedIWDebuggerTests(
                 await closeNotebooksAndCleanUpAfterTests(disposables);
             });
 
+            // TODO: This should be a testMandatory
             test.skip('Debug a cell from a python file @mandatory', async () => {
                 // #11917
                 // Run a cell to get IW open
