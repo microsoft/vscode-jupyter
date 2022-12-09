@@ -98,7 +98,7 @@ suite('Run By Line @debugger', function () {
     // Cleanup after suite is finished
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    test('Delete temp debugging files', async function () {
+    test('Delete temp debugging files @mandatory', async function () {
         let tempWatcher;
         let folderName;
         try {
