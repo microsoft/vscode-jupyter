@@ -571,7 +571,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             if (saved) {
                 const diff = this.documentManager.textDocuments.filter((f) => beforeSave.indexOf(f) === -1);
                 if (diff && diff.length > 0) {
-                    fileUri = diff[0].uri;
+                    // The interactive window often opens at the same time. Avoid picking that one.
+                    // Another unrelated window could open at the same time too.
+                    const savedFileEditor =
+                        diff.find((doc) => doc.languageId === 'python') ||
+                        diff.find((doc) => !doc.fileName.endsWith('.interactive')) ||
+                        diff[0];
+                    fileUri = savedFileEditor.uri;
 
                     // Open the new document
                     await this.documentManager.openTextDocument(fileUri);
