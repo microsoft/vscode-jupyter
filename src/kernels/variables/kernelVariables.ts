@@ -8,6 +8,7 @@ import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscod
 import { Identifiers, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
+import { stripAnsi } from '../../platform/common/utils/regexp';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
 import { IKernel, IKernelConnectionSession, IKernelProvider } from '../types';
 import {
@@ -22,11 +23,11 @@ import {
 
 // Regexes for parsing data from Python kernel. Not sure yet if other
 // kernels will add the ansi encoding.
-const TypeRegex = /.*?\[.*?;31mType:.*?\[0m\s+(\w+)/;
-const ValueRegex = /.*?\[.*?;31mValue:.*?\[0m\s+(.*)/;
-const StringFormRegex = /.*?\[.*?;31mString form:.*?\[0m\s+?([\s\S]+?)\n(.*\[.*;31m?)/;
-const DocStringRegex = /.*?\[.*?;31mDocstring:.*?\[0m\s+(.*)/;
-const CountRegex = /.*?\[.*?;31mLength:.*?\[0m\s+(.*)/;
+const TypeRegex = /Type:\s*(\w+)/;
+const ValueRegex = /Value:\s*(.*)/;
+const StringFormRegex = /String form:\s*([\s\S]+?)\n/;
+const DocStringRegex = /Docstring:\s*(.*)/;
+const CountRegex = /Length:\s+(.*)/;
 const ShapeRegex = /^\s+\[(\d+) rows x (\d+) columns\]/m;
 
 const DataViewableTypes: Set<string> = new Set<string>([
@@ -335,7 +336,7 @@ export class KernelVariables implements IJupyterVariables {
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const text = (output as any)['text/plain'].toString() as string;
+                const text = stripAnsi((output as any)['text/plain'].toString() as string);
 
                 // Parse into bits
                 const type = TypeRegex.exec(text);
