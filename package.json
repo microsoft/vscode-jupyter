@@ -1473,7 +1473,7 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.showVariableViewWhenDebugging.description%",
-                    "scope": "application"
+                    "scope": "resource"
                 },
                 "jupyter.logging.level": {
                     "type": "string",
@@ -1487,8 +1487,7 @@
                         "verbose",
                         "everything"
                     ],
-                    "description": "%jupyter.configuration.jupyter.logging.level.description%",
-                    "scope": "application"
+                    "description": "%jupyter.configuration.jupyter.logging.level.description%"
                 },
                 "jupyter.experiments.optInto": {
                     "type": "array",
@@ -1550,7 +1549,7 @@
                     "type": "boolean",
                     "default": true,
                     "description": "%jupyter.configuration.jupyter.askForKernelRestart.description%",
-                    "scope": "application"
+                    "scope": "resource"
                 },
                 "jupyter.exportWithOutputEnabled": {
                     "type": "boolean",
@@ -1758,6 +1757,7 @@
                     "type": "number",
                     "default": -1,
                     "description": "%jupyter.configuration.jupyter.remoteDebuggerPort.description%",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.remoteDebuggerPort.deprecationMessage%",
                     "scope": "resource"
                 },
                 "jupyter.disableJupyterAutoStart": {
@@ -1795,6 +1795,7 @@
                 "jupyter.variableQueries": {
                     "type": "array",
                     "markdownDescription": "%jupyter.configuration.jupyter.variableQueries.markdownDescription%",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.variableQueries.deprecationMessage%",
                     "scope": "machine",
                     "examples": [
                         [
@@ -1934,8 +1935,7 @@
                 "jupyter.logKernelOutputSeparately": {
                     "type": "boolean",
                     "default": false,
-                    "description": "%jupyter.configuration.jupyter.logKernelOutputSeparately.description%",
-                    "scope": "machine"
+                    "description": "%jupyter.configuration.jupyter.logKernelOutputSeparately.description%"
                 },
                 "jupyter.excludeUserSitePackages": {
                     "type": "boolean",
