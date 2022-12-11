@@ -335,8 +335,7 @@ export class KernelVariables implements IJupyterVariables {
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const text = stripAnsi((output as any)['text/plain'].toString() as string);
+                const text = stripAnsi(output['text/plain']!.toString());
 
                 // Parse into bits
                 const type = TypeRegex.exec(text);
