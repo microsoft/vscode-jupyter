@@ -151,7 +151,7 @@ export class RunByLineController implements IDebuggingDelegate {
             });
 
             // Open variables view
-            const settings = this.settings.getSettings();
+            const settings = this.settings.getSettings(this.debugCell.notebook.uri);
             if (settings.showVariableViewWhenDebugging) {
                 this.commandManager.executeCommand(Commands.OpenVariableView).then(noop, noop);
             }

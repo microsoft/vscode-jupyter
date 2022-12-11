@@ -901,51 +901,6 @@ export namespace DataScience {
             'DataScience.jupyterDebuggerOutputParseError',
             'Unable to parse {0} output, please log an issue with https://github.com/microsoft/vscode-jupyter'
         );
-    export const jupyterDebuggerPortNotAvailableError = () =>
-        localize(
-            {
-                key: 'DataScience.jupyterDebuggerPortNotAvailableError',
-                comment: ["{Locked='remoteDebuggerPort'}"]
-            },
-            'Port {0} cannot be opened for debugging. Please specify a different port in the remoteDebuggerPort setting.'
-        );
-    export const jupyterDebuggerPortBlockedError = () =>
-        localize(
-            'DataScience.jupyterDebuggerPortBlockedError',
-            'Port {0} cannot be connected to for debugging. Please let port {0} through your firewall.'
-        );
-    export const jupyterDebuggerPortNotAvailableSearchError = () =>
-        localize(
-            'DataScience.jupyterDebuggerPortNotAvailableSearchError',
-            'Ports in the range {0}-{1} cannot be found for debugging. Please specify a port in the remoteDebuggerPort setting.'
-        );
-    export const jupyterDebuggerPortBlockedSearchError = () =>
-        localize(
-            'DataScience.jupyterDebuggerPortBlockedSearchError',
-            'A port cannot be connected to for debugging. Please let ports {0}-{1} through your firewall.'
-        );
-    export const jupyterDebuggerInstallNew = () =>
-        localize(
-            'DataScience.jupyterDebuggerInstallNew',
-            'Pip module {0} is required for debugging cells. Install {0} and continue to debug cell?'
-        );
-    export const jupyterDebuggerInstallNewRunByLine = () =>
-        localize(
-            'DataScience.jupyterDebuggerInstallNewRunByLine',
-            'Pip module {0} is required for running by line. Install {0} and continue to run by line?'
-        );
-    export const jupyterDebuggerInstallUpdate = () =>
-        localize(
-            'DataScience.jupyterDebuggerInstallUpdate',
-            'The version of {0} installed does not support debugging cells. Update {0} to newest version and continue to debug cell?'
-        );
-    export const jupyterDebuggerInstallUpdateRunByLine = () =>
-        localize(
-            'DataScience.jupyterDebuggerInstallUpdateRunByLine',
-            'The version of {0} installed does not support running by line. Update {0} to newest version and continue to run by line?'
-        );
-    export const jupyterDebuggerInstallYes = () => localize('DataScience.jupyterDebuggerInstallYes', 'Yes');
-    export const jupyterDebuggerInstallNo = () => localize('DataScience.jupyterDebuggerInstallNo', 'No');
     export const cellStopOnErrorMessage = () =>
         localize('DataScience.cellStopOnErrorMessage', 'Cell was canceled due to an error in a previous cell.');
     export const scrollToCellTitleFormatMessage = () =>
