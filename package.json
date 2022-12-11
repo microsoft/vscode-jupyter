@@ -1488,7 +1488,7 @@
                         "everything"
                     ],
                     "description": "%jupyter.configuration.jupyter.logging.level.description%",
-                    "scope": "machine"
+                    "scope": "application"
                 },
                 "jupyter.experiments.optInto": {
                     "type": "array",
