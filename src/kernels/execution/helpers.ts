@@ -700,14 +700,17 @@ export async function updateNotebookMetadata(
         const interpreter = isPythonConnection
             ? getInterpreterFromKernelConnectionMetadata(kernelConnection)
             : undefined;
+        const version = interpreter?.version
+            ? `${interpreter.version.major}.${interpreter.version.minor}.${interpreter.version.patch}`
+            : '';
         if (
             interpreter &&
             interpreter.version &&
             metadata &&
             metadata.language_info &&
-            metadata.language_info.version !== interpreter.version.raw
+            metadata.language_info.version !== version
         ) {
-            metadata.language_info.version = interpreter.version.raw;
+            metadata.language_info.version = version;
             changed = true;
         } else if (!interpreter && metadata?.language_info && isPythonConnection) {
             // It's possible, such as with raw kernel and a default kernelspec to not have interpreter info
