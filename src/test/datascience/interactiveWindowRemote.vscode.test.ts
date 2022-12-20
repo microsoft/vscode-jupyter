@@ -7,6 +7,7 @@ import { assert } from 'chai';
 import { workspace, Disposable } from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { traceInfo } from '../../platform/logging';
+import { testMandatory } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
 import { submitFromPythonFile } from './helpers.node';
 import {
@@ -50,7 +51,7 @@ suite('Interactive window (remote) @iw', async () => {
         return { notebookDocument };
     }
 
-    test('Execute cell from Python file @mandatory', async () => {
+    testMandatory('Execute cell from Python file', async () => {
         const source = 'print("Hello World")';
         const { notebookDocument } = await runCellInRemoveInteractiveWindow(source);
 
