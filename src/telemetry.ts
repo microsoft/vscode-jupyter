@@ -2907,6 +2907,17 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
+     * Telemetry sent when we fail to create a Notebook Cell Execution (generally happens when the controller has been disposed).
+     */
+    [Telemetry.FailedToCreateNotebookCellExecution]: TelemetryEventInfo<Partial<TelemetryErrorProperties>> = {
+        owner: 'donjayamanne',
+        feature: [],
+        source: 'N/A',
+        properties: {
+            ...commonClassificationForErrorProperties()
+        }
+    };
+    /**
      * Telemetry sent when we recommend installing an extension.
      */
     [Telemetry.RecommendExtension]: TelemetryEventInfo<{
