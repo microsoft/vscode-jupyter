@@ -387,6 +387,9 @@ export class InterpreterService implements IInterpreterService {
         this.refreshPromises.onStateChange(() => {
             this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
         });
+        disposables.push({
+            dispose: () => Array.from(this.removedInterpreters.values()).forEach((item) => clearTimeout(item))
+        });
     }
     public get onDidChangeInterpreter(): Event<void> {
         this.hookupOnDidChangeInterpreterEvent();
