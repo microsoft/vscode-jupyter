@@ -400,6 +400,7 @@ export class InterpreterService implements IInterpreterService {
         this.hookupOnDidChangeInterpreterEvent();
         return this.didChangeInterpreters.event;
     }
+    private removedInterpreters = new Map<string, number | NodeJS.Timer>();
     private readonly _interpreters = new Map<string, { resolved: PythonEnvironment }>();
     public get resolvedEnvironments(): PythonEnvironment[] {
         this.hookupOnDidChangeInterpreterEvent();
@@ -830,5 +831,4 @@ export class InterpreterService implements IInterpreterService {
             })
             .catch(noop);
     }
-    private removedInterpreters = new Map<string, number | NodeJS.Timer>();
 }
