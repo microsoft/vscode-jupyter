@@ -48,6 +48,17 @@
      ]
    }
  */
+//Telemetry.CreatePythonEnvironment
+/* __GDPR__
+   "DATASCIENCE.CREATE_PYTHON_ENVIRONMENT" : {
+     "reason": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Reason for failure. cancelled - User cancelled the operation (cancellation token cancelled). kernelConnectionNotCreated - Kernel connection not created via the kernel finder.","owner":"IanMatthewHuff"},
+     "dependenciesInstalled": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the kernel dependencies were installed or not.","owner":"IanMatthewHuff"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.DataViewerDataDimensionality
 /* __GDPR__
    "DATASCIENCE.DATA_VIEWER_DATA_DIMENSIONALITY" : {
