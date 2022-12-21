@@ -809,13 +809,27 @@ export class InterpreterService implements IInterpreterService {
                                                 traceWarning(`Env incorrectly removed from Python API '${e.env.id}'`);
                                                 return;
                                             }
-                                            traceWarning(`Env removed due to removal from Python API '${e.env.id}'`);
-                                            // Remove items that are no longer valid.
-                                            this.removedInterpreters.delete(e.env.id);
-                                            this._interpreters.delete(e.env.id);
-                                            this.triggerEventIfAllowed(this.didChangeInterpreter);
-                                            this.triggerEventIfAllowed(this.didChangeInterpreters);
-                                            this._onDidRemoveInterpreter.fire({ id: e.env.id });
+                                            // Double check if we can get the env details.
+                                            this.getInterpreterDetails({ path: e.env.path })
+                                                .catch(() => undefined)
+                                                .then((env) => {
+                                                    if (env) {
+                                                        traceWarning(
+                                                            `Env incorrectly removed from Python API, env exists '${e.env.id}'`
+                                                        );
+                                                        return;
+                                                    }
+                                                    traceWarning(
+                                                        `Env removed due to removal from Python API '${e.env.id}'`
+                                                    );
+                                                    // Remove items that are no longer valid.
+                                                    this.removedInterpreters.delete(e.env.id);
+                                                    this._interpreters.delete(e.env.id);
+                                                    this.triggerEventIfAllowed(this.didChangeInterpreter);
+                                                    this.triggerEventIfAllowed(this.didChangeInterpreters);
+                                                    this._onDidRemoveInterpreter.fire({ id: e.env.id });
+                                                })
+                                                .catch(noop);
                                         });
                                     }, 5_000)
                                 );
