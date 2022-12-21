@@ -163,6 +163,11 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
                 }
                 traceWarning(message);
             }
+            traceVerbose(
+                `Extracted require.config entry for ${widgetFolderName} from ${getDisplayPath(
+                    script
+                )} for ${baseUrl.toString()} is ${JSON.stringify(config)}`
+            );
             return config;
         } catch (ex) {
             traceError(
