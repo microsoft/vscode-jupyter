@@ -7,7 +7,7 @@ import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types.node';
 import { compare, SemVer } from 'semver';
 import type { PythonEnvironment as PyEnv } from '../../pythonEnvironments/info';
-import { getDisplayPath, getFilePath } from '../platform/fs-paths';
+import { getFilePath } from '../platform/fs-paths';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../platform/types';
 import { traceWarning } from '../../logging';
