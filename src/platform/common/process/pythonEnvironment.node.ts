@@ -7,9 +7,10 @@ import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types.node';
 import { compare, SemVer } from 'semver';
 import type { PythonEnvironment as PyEnv } from '../../pythonEnvironments/info';
-import { getFilePath } from '../platform/fs-paths';
+import { getDisplayPath, getFilePath } from '../platform/fs-paths';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../platform/types';
+import { traceWarning } from '../../logging';
 class PythonEnvironment {
     constructor(
         protected readonly interpreter: PyEnv,
@@ -48,7 +49,8 @@ class PythonEnvironment {
         const info = this.getExecutionInfo(args);
         try {
             await this.deps.exec(info.command, info.args);
-        } catch {
+        } catch (ex) {
+            traceWarning(`Module ${moduleName} not installed in environment ${this.interpreter.id}`, ex);
             return false;
         }
         return true;
