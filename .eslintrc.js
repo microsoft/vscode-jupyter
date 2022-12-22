@@ -5,7 +5,15 @@ module.exports = {
         node: true
     },
     extends: ['prettier', 'prettier/@typescript-eslint'],
-    ignorePatterns: ['*.js', 'vscode.*.d.ts', 'vscode.d.ts', 'types'],
+    ignorePatterns: [
+        '*.js',
+        'vscode.*.d.ts',
+        'vscode.d.ts',
+        '**/*.test.ts',
+        'types',
+        // TODO: Does this file need to be linted?
+        'src/test/pythonFiles/formatting/dummy.ts'
+    ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         project: [
