@@ -387,9 +387,6 @@ export class InterpreterService implements IInterpreterService {
         this.refreshPromises.onStateChange(() => {
             this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
         });
-        disposables.push({
-            dispose: () => Array.from(this.removedInterpreters.values()).forEach((item) => clearTimeout(item))
-        });
     }
     public get onDidChangeInterpreter(): Event<void> {
         this.hookupOnDidChangeInterpreterEvent();
@@ -400,7 +397,6 @@ export class InterpreterService implements IInterpreterService {
         this.hookupOnDidChangeInterpreterEvent();
         return this.didChangeInterpreters.event;
     }
-    private removedInterpreters = new Map<string, number | NodeJS.Timer>();
     private readonly _interpreters = new Map<string, { resolved: PythonEnvironment }>();
     public get resolvedEnvironments(): PythonEnvironment[] {
         this.hookupOnDidChangeInterpreterEvent();
@@ -788,55 +784,20 @@ export class InterpreterService implements IInterpreterService {
                     );
                     api.environments.onDidChangeEnvironments(
                         (e) => {
-                            traceVerbose(`Python API env change detected, ${e.type} => '${e.env.id}'`);
-                            // Python Extension API incorrectly reports the environment as removed and then added.
-                            // Even when we ask for list of all interpreters at this point, the same env is is not returned in `known` list.
-                            // Hence wait for around 5s before removing the env from our cache.
-                            // If within those 5s we get an event for the same env, this means python extension has recovered
-                            // and the python env is now found again, hence don't remove it from our cache.
-                            const timer = this.removedInterpreters.get(e.env.id);
-                            if (timer) {
-                                clearTimeout(timer);
-                                this.removedInterpreters.delete(e.env.id);
-                            }
-
+                            // Remove items that are no longer valid.
                             if (e.type === 'remove') {
-                                this.removedInterpreters.set(
-                                    e.env.id,
-                                    setTimeout(() => {
-                                        this.populateCachedListOfInterpreters(true).finally(() => {
-                                            if (!this.removedInterpreters.has(e.env.id)) {
-                                                traceWarning(`Env incorrectly removed from Python API '${e.env.id}'`);
-                                                return;
-                                            }
-                                            // Double check if we can get the env details.
-                                            this.getInterpreterDetails({ path: e.env.path })
-                                                .catch(() => undefined)
-                                                .then((env) => {
-                                                    if (env) {
-                                                        traceWarning(
-                                                            `Env incorrectly removed from Python API, env exists '${e.env.id}'`
-                                                        );
-                                                        return;
-                                                    }
-                                                    traceWarning(
-                                                        `Env removed due to removal from Python API '${e.env.id}'`
-                                                    );
-                                                    // Remove items that are no longer valid.
-                                                    this.removedInterpreters.delete(e.env.id);
-                                                    this._interpreters.delete(e.env.id);
-                                                    this.triggerEventIfAllowed(this.didChangeInterpreter);
-                                                    this.triggerEventIfAllowed(this.didChangeInterpreters);
-                                                    this._onDidRemoveInterpreter.fire({ id: e.env.id });
-                                                })
-                                                .catch(noop);
-                                        });
-                                    }, 5_000)
-                                );
-                                return;
+                                this._interpreters.delete(e.env.id);
                             }
-
-                            this.populateCachedListOfInterpreters(true).catch(noop);
+                            traceVerbose(`Python API env change detected, ${e.type} => '${e.env.id}}'`);
+                            this.populateCachedListOfInterpreters(true).finally(() => {
+                                if (e.type === 'remove') {
+                                    if (this._interpreters.has(e.env.id)) {
+                                        this.triggerEventIfAllowed(this.didChangeInterpreter);
+                                        this.triggerEventIfAllowed(this.didChangeInterpreters);
+                                        this._onDidRemoveInterpreter.fire({ id: e.env.id });
+                                    }
+                                }
+                            });
                         },
                         this,
                         this.disposables
