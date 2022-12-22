@@ -1194,7 +1194,7 @@ export class IEventNamePropertyMapping {
          */
         nbformat_minor: number | undefined;
     }> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
         measures: {
@@ -1447,7 +1447,7 @@ export class IEventNamePropertyMapping {
      * Note: Might not come from a direct user action.
      */
     [Telemetry.SelectJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         source: 'N/A',
         feature: ['KernelPicker'],
         measures: commonClassificationForDurationProperties()
@@ -1456,7 +1456,7 @@ export class IEventNamePropertyMapping {
      * A URI has been selected and is being checked for validity.
      */
     [Telemetry.EnterJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         source: 'N/A',
         feature: ['KernelPicker'],
         measures: commonClassificationForDurationProperties()
@@ -1465,7 +1465,7 @@ export class IEventNamePropertyMapping {
      * Kernel was switched to a local kernel connection.
      */
     [Telemetry.SelectLocalJupyterKernel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         source: 'N/A',
         feature: ['KernelPicker'],
         properties: commonClassificationForResourceSpecificTelemetryProperties().properties
@@ -1474,7 +1474,7 @@ export class IEventNamePropertyMapping {
      * Kernel was switched to a remote kernel connection.
      */
     [Telemetry.SelectRemoteJupyterKernel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         source: 'N/A',
         feature: ['KernelPicker'],
         properties: commonClassificationForResourceSpecificTelemetryProperties().properties
@@ -1557,7 +1557,7 @@ export class IEventNamePropertyMapping {
             | 'dismissed' // user dismissed the message.
             | 'download'; // User chose click the download link.
     }> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: ['KernelPicker'],
         source: 'User Action',
         properties: {
@@ -1578,7 +1578,7 @@ export class IEventNamePropertyMapping {
             | 'success' // Correctly installed and hooked the API
             | 'failed'; // Failed to install correctly
     }> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: ['KernelPicker'],
         source: 'User Action',
         properties: {
@@ -1676,7 +1676,7 @@ export class IEventNamePropertyMapping {
          */
         commandSource: SelectJupyterUriCommandSource;
     }> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: ['KernelPicker'],
         source: 'N/A',
         properties: {
@@ -1690,7 +1690,7 @@ export class IEventNamePropertyMapping {
      * Jupyter URI was set to local.
      */
     [Telemetry.SetJupyterURIToLocal]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: ['KernelPicker'],
         source: 'N/A',
         measures: commonClassificationForDurationProperties()
@@ -1704,7 +1704,7 @@ export class IEventNamePropertyMapping {
          */
         azure: boolean;
     }> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: ['KernelPicker'],
         source: 'N/A',
         properties: {
@@ -1992,7 +1992,7 @@ export class IEventNamePropertyMapping {
      * Time taken to load kernels if needed and rank them all.
      */
     [Telemetry.RankKernelsPerf]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: ['KernelPicker'],
         source: 'N/A',
         measures: commonClassificationForDurationProperties()
@@ -2016,7 +2016,7 @@ export class IEventNamePropertyMapping {
             hasActiveInterpreter?: boolean;
         } & ResourceTypeTelemetryProperty
     > = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: ['InteractiveWindow', 'Notebook', 'KernelPicker'],
         source: 'N/A',
         properties: {
@@ -2442,7 +2442,7 @@ export class IEventNamePropertyMapping {
      * WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.
      */
     [Telemetry.SwitchKernel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: ['Notebook', 'InteractiveWindow'],
         source: 'N/A',
         properties: commonClassificationForResourceSpecificTelemetryProperties().properties
@@ -2719,7 +2719,7 @@ export class IEventNamePropertyMapping {
          */
         count: number;
     }> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: ['KernelPicker'],
         source: 'N/A',
         measures: {
@@ -2918,6 +2918,44 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
+     * Telemetry sent when user attempts to create a Python env via the kernel picker.
+     */
+    [Telemetry.CreatePythonEnvironment]: TelemetryEventInfo<
+        | /* Creation failed */ {
+              /**
+               * Failed to detect Jupyter.
+               */
+              failed: true;
+              /**
+               * Reason for failure.
+               * cancelled - User cancelled the operation (cancellation token cancelled).
+               * kernelConnectionNotCreated - Kernel connection not created via the kernel finder.
+               */
+              reason: 'cancelled' | 'kernelConnectionNotCreated';
+          }
+        | /* Creation succeeded */ {
+              /**
+               * Whether the kernel dependencies were installed or not.
+               */
+              dependenciesInstalled: boolean;
+          }
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            reason: { classification: 'SystemMetaData', purpose: 'PerformanceAndHealth' },
+            dependenciesInstalled: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
      * Telemetry sent when we recommend installing an extension.
      */
     [Telemetry.RecommendExtension]: TelemetryEventInfo<{
@@ -2934,7 +2972,7 @@ export class IEventNamePropertyMapping {
          */
         action: 'displayed' | 'dismissed' | 'ok' | 'cancel' | 'doNotShowAgain';
     }> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
         properties: {
@@ -3129,7 +3167,7 @@ export class IEventNamePropertyMapping {
      * Called when a controller that would have been shown is hidden by a filter.
      */
     [Telemetry.JupyterKernelHiddenViaFilter]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         source: 'N/A',
         feature: ['KernelPicker']
     };
@@ -3137,7 +3175,7 @@ export class IEventNamePropertyMapping {
      * Called when the user clicks accept on the kernel filter UI.
      */
     [Telemetry.JupyterKernelFilterUsed]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         source: 'User Action',
         feature: ['KernelPicker']
     };
@@ -3201,7 +3239,7 @@ export class IEventNamePropertyMapping {
          */
         matchedReason: PreferredKernelExactMatchReason | undefined;
     }> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: ['KernelPicker'],
         source: 'N/A',
         measures: {
@@ -3357,7 +3395,7 @@ export class IEventNamePropertyMapping {
      * Used by the dataViewerDependencyService.
      */
     [Telemetry.NoActiveKernelSession]: TelemetryEventInfo<never | undefined> = {
-        owner: 'IanMatthewHuff',
+        owner: 'donjayamanne',
         feature: ['DataFrameViewer'],
         source: 'N/A'
     };

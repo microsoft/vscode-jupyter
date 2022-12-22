@@ -18,6 +18,7 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { traceVerbose, traceWarning } from '../../platform/logging';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IControllerSelection } from './types';
 
 type CreateEnvironmentResult = {
@@ -65,15 +66,21 @@ export class PythonEnvKernelConnectionCreator {
 
         env = await this.createPythonEnvironment();
         if (this.cancelTokeSource.token.isCancellationRequested || !env) {
+            sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, { failed: true, reason: 'cancelled' });
             return;
         }
         traceVerbose(`Python Environment created ${env.id}`);
 
         const kernelConnection = await this.waitForPythonKernel(env);
         if (this.cancelTokeSource.token.isCancellationRequested) {
+            sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, { failed: true, reason: 'cancelled' });
             return;
         }
         if (!kernelConnection) {
+            sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, {
+                failed: true,
+                reason: 'kernelConnectionNotCreated'
+            });
             traceVerbose(`Python Environment ${env.id} not found as a kernel`);
             return;
         }
@@ -88,7 +95,9 @@ export class PythonEnvKernelConnectionCreator {
             cannotChangeKernels: true,
             installWithoutPrompting: true
         });
+        let dependenciesInstalled = true;
         if (result !== KernelInterpreterDependencyResponse.ok) {
+            dependenciesInstalled = false;
             traceWarning(
                 `Dependencies not installed for new Python Env ${getDisplayPath(env.uri)} for notebook ${getDisplayPath(
                     this.notebook.uri
@@ -96,6 +105,7 @@ export class PythonEnvKernelConnectionCreator {
             );
         }
 
+        sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, { dependenciesInstalled });
         return kernelConnection;
     }
     private async waitForPythonKernel(env: PythonEnvironment) {
