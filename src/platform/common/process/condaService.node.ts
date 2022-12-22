@@ -18,6 +18,22 @@ import { noop } from '../utils/misc';
 
 const CACHEKEY_FOR_CONDA_INFO = 'CONDA_INFORMATION_CACHE';
 const condaEnvironmentsFile = uriPath.joinPath(homePath, '.conda', 'environments.txt');
+
+/**
+ * When returning the file path to conda we sometimes end up with `/conda`,
+ * & that cannot be executed as is, instead it needs to be executed as `conda`.
+ */
+function getFullFilePath(file?: Uri) {
+    if (
+        file &&
+        path.isAbsolute(file.fsPath) &&
+        file.fsPath.startsWith(path.sep) &&
+        `${path.sep}${path.basename(file.fsPath)}` === file.fsPath
+    ) {
+        return path.basename(file.fsPath);
+    }
+    return file?.fsPath;
+}
 /**
  * Provides utilties to query information about conda that's installed on the same machine as the extension. (Note: doesn't work over remote)
  */
@@ -72,10 +88,10 @@ export class CondaService {
     @traceDecoratorVerbose('getCondaFile', TraceOptions.BeforeCall)
     async getCondaFile() {
         if (this._file) {
-            return this._file;
+            return getFullFilePath(this._file);
         }
         if (this._previousFileCall) {
-            return this._previousFileCall;
+            return this._previousFileCall.then(getFullFilePath);
         }
         const promise = async () => {
             const latestInfo = this.pythonApi
@@ -96,7 +112,7 @@ export class CondaService {
             return latestInfo.then((v) => (v ? Uri.file(v) : undefined));
         };
         this._previousFileCall = promise();
-        return this._previousFileCall;
+        return this._previousFileCall.then(getFullFilePath);
     }
 
     @traceDecoratorVerbose('getCondaBatchFile', TraceOptions.BeforeCall)
