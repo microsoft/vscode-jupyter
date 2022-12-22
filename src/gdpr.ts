@@ -317,6 +317,15 @@
      ]
    }
  */
+//Telemetry.FailedToCreateNotebookCellExecution
+/* __GDPR__
+   "DATASCIENCE.FAILED_TO_CREATE_CELL_EXECUTION" : {
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.FailedToCreateNotebookController
 /* __GDPR__
    "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER" : {

@@ -397,6 +397,7 @@ export enum Telemetry {
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
     FailedToCreateNotebookController = 'DATASCIENCE.FAILED_TO_CREATE_CONTROLLER',
+    FailedToCreateNotebookCellExecution = 'DATASCIENCE.FAILED_TO_CREATE_CELL_EXECUTION',
 
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     ConnectRemoteJupyterViaLocalHost = 'DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST',
