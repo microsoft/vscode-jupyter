@@ -115,14 +115,33 @@ suite('Common - Conda Installer', () => {
         const condaPath = Uri.file('some Conda Path');
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
-        when(condaService.getCondaFile()).thenResolve(condaPath);
-        when(condaService.getCondaBatchFile()).thenResolve(condaPath);
+        when(condaService.getCondaFile()).thenResolve(condaPath.fsPath);
 
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
         assert.deepStrictEqual(execInfo, {
             args: ['install', '--name', interpreter.envName, 'abc', '-y'],
             exe: condaPath.fsPath
+        });
+    });
+    test('When conda exec path is conda, then do not use /conda as the executable path', async () => {
+        const interpreter: PythonEnvironment = {
+            envType: EnvironmentType.Conda,
+            uri: Uri.file('foobar'),
+            id: Uri.file('foobar').fsPath,
+            sysPrefix: '0',
+            envName: 'baz'
+        };
+        const settings = mock(JupyterSettings);
+
+        when(configService.getSettings(undefined)).thenReturn(instance(settings));
+        when(condaService.getCondaFile()).thenResolve('conda');
+
+        const execInfo = await installer.getExecutionArgs('abc', interpreter);
+
+        assert.deepStrictEqual(execInfo, {
+            args: ['install', '--name', interpreter.envName, 'abc', '-y'],
+            exe: 'conda'
         });
     });
     test('Include path of environment', async () => {
@@ -136,8 +155,7 @@ suite('Common - Conda Installer', () => {
         const condaPath = Uri.file('some Conda Path');
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
-        when(condaService.getCondaFile()).thenResolve(condaPath);
-        when(condaService.getCondaBatchFile()).thenResolve(condaPath);
+        when(condaService.getCondaFile()).thenResolve(condaPath.fsPath);
 
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
@@ -157,8 +175,7 @@ suite('Common - Conda Installer', () => {
         const condaPath = Uri.file('some Conda Path');
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
-        when(condaService.getCondaFile()).thenResolve(condaPath);
-        when(condaService.getCondaBatchFile()).thenResolve(condaPath);
+        when(condaService.getCondaFile()).thenResolve(condaPath.fsPath);
 
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 

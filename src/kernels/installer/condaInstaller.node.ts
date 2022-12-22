@@ -70,7 +70,7 @@ export class CondaInstaller extends ModuleInstaller {
         flags: ModuleInstallFlags = 0
     ): Promise<ExecutionInstallArgs> {
         const condaService = this.serviceContainer.get<CondaService>(CondaService);
-        const condaFile = await condaService.getCondaBatchFile();
+        const condaFile = await condaService.getCondaFile();
         const name = interpreter.envName;
         const envPath = this.getEnvironmentPath(interpreter);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
@@ -103,7 +103,7 @@ export class CondaInstaller extends ModuleInstaller {
         args.push(moduleName);
         args.push('-y');
         return {
-            exe: condaFile?.fsPath,
+            exe: condaFile,
             args
         };
     }

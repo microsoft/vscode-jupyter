@@ -568,7 +568,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
             const proc = new ProcessService(env);
             const service = createCondaEnv(
-                condaExec.fsPath,
+                condaExec,
                 {
                     name: interpreter.envName || '',
                     path: interpreter.uri.fsPath || '',
