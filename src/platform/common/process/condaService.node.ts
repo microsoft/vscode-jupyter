@@ -56,7 +56,6 @@ export class CondaService {
         this.monitorCondaEnvFile().catch(noop);
     }
 
-    @traceDecoratorVerbose('getCondaVersion', TraceOptions.BeforeCall)
     async getCondaVersion() {
         if (this._version) {
             return this._version;
@@ -82,7 +81,6 @@ export class CondaService {
         this._previousVersionCall = promise();
         return this._previousVersionCall;
     }
-    @traceDecoratorVerbose('getCondaFile', TraceOptions.BeforeCall)
     async getCondaFile() {
         if (this._file) {
             return getFullFilePath(this._file);
@@ -191,7 +189,6 @@ export class CondaService {
             };
         }
     }
-    @traceDecoratorVerbose('getCondaVersionFromPython', TraceOptions.BeforeCall)
     private async getCondaVersionFromPython(): Promise<SemVer | undefined> {
         return this.pythonApi.getApi().then((api) => (api.getCondaVersion ? api.getCondaVersion() : undefined));
     }
