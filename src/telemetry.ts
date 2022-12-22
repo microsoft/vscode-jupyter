@@ -333,6 +333,11 @@ function commonClassificationForResourceSpecificTelemetryProperties(): PropertyM
                 comment: '',
                 purpose: 'PerformanceAndHealth'
             },
+            newKernelPicker: {
+                classification: 'PublicNonPersonalData',
+                comment: '',
+                purpose: 'PerformanceAndHealth'
+            },
             ...commonClassificationForResourceType()
         }
     };
@@ -436,6 +441,11 @@ export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty 
          * Common to most of the events.
          */
         capturedEnvVars?: boolean;
+        /**
+         * Whether using the new kernel picker or not.
+         * This will be obsolete once we ship the new kernel picker.
+         */
+        newKernelPicker?: boolean;
     }>;
 
 export class IEventNamePropertyMapping {
