@@ -127,10 +127,6 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
-      - name: Verify linting is turned on for changed files
-        uses: ./.github/actions/check-ignore-list
-        id: check-ignore-list
-
       - name: Verify Translation files
         run: npm run validateTranslationFiles
 
