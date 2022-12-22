@@ -18,7 +18,7 @@ import { IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../pla
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { createActiveInterpreterController } from './helpers';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
@@ -69,7 +69,9 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                                 this.registration.canControllerBeDisposed(controller)
                             ) {
                                 // This item was selected but is no longer allowed in the kernel list. Remove it
-                                traceVerbose(`Removing controller ${controller.id} from kernel list`);
+                                traceWarning(
+                                    `Removing controller ${controller.id} for ${controller.connection.kind} from kernel list`
+                                );
                                 controller.dispose();
                             }
                         },
@@ -189,7 +191,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         });
         // If we have any out of date connections, dispose of them
         disposedControllers.forEach((controller) => {
-            traceVerbose(
+            traceWarning(
                 `Disposing old controller ${controller.connection.kind}:'${controller.id}' for view = '${controller.viewType}'`
             );
             controller.dispose(); // This should remove it from the registered list
@@ -218,7 +220,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                 this.registration.registered
                     .filter((item) => deletedConnections.has(item.connection.id))
                     .forEach((controller) => {
-                        traceVerbose(
+                        traceWarning(
                             `Deleting controller ${controller.id} as it is associated with a connection that has been deleted ${controller.connection.kind}:${controller.id}`
                         );
                         controller.dispose();
@@ -244,6 +246,9 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                         isRemoteConnection(c.connection) &&
                         this.serverUriStorage.currentServerId !== c.connection.serverId
                     ) {
+                        traceWarning(
+                            `Deleting controller ${c.id} as it is associated with a connection that has been removed`
+                        );
                         c.dispose();
                     }
                 });
@@ -259,6 +264,9 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         serverIds.forEach((serverId) => {
             this.registration.registered.forEach((c) => {
                 if (isRemoteConnection(c.connection) && serverId === c.connection.serverId) {
+                    traceWarning(
+                        `Deleting controller ${c.id} as it is associated with a connection that has been removed`
+                    );
                     c.dispose();
                 }
             });
@@ -282,6 +290,9 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
             // If we have a notebook opened and its using a kernel.
             // Else we end up killing the execution as well.
             if (this.registration.isFiltered(item.connection) && this.registration.canControllerBeDisposed(item)) {
+                traceWarning(
+                    `Deleting controller ${item.id} as it is associated with a connection that has been hidden`
+                );
                 item.dispose();
             }
         });

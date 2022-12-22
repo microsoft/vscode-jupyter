@@ -12,6 +12,7 @@ import { isLocalConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
+import { traceWarning } from '../../platform/logging';
 import { IControllerRegistration } from './types';
 
 /**
@@ -80,6 +81,9 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
             const info = serverJupyterProviderMap.get(connection.serverId);
             if (info && !handles.includes(info.handle)) {
                 // Looks like the 3rd party provider has updated its handles and this server is no longer available.
+                traceWarning(
+                    `Deleting controller ${controller.id} as it is associated with a server Id that has been removed`
+                );
                 controller.dispose();
             }
         });
