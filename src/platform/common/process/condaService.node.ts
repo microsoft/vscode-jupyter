@@ -7,7 +7,7 @@ import { EventEmitter, Memento, RelativePattern, Uri, workspace } from 'vscode';
 import { IPythonApiProvider } from '../../api/types';
 import { TraceOptions } from '../../logging/types';
 import { traceDecoratorVerbose, traceError, traceVerbose } from '../../logging';
-import { IFileSystem, IPlatformService } from '../platform/types';
+import { IFileSystem } from '../platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../types';
 import { createDeferredFromPromise } from '../utils/async';
 import * as path from '../../../platform/vscode-path/path';
@@ -18,6 +18,22 @@ import { noop } from '../utils/misc';
 
 const CACHEKEY_FOR_CONDA_INFO = 'CONDA_INFORMATION_CACHE';
 const condaEnvironmentsFile = uriPath.joinPath(homePath, '.conda', 'environments.txt');
+
+/**
+ * When returning the file path to conda we sometimes end up with `/conda`,
+ * & that cannot be executed as is, instead it needs to be executed as `conda`.
+ */
+function getFullFilePath(file?: Uri) {
+    if (
+        file &&
+        path.isAbsolute(file.fsPath) &&
+        file.fsPath.startsWith(path.sep) &&
+        `${path.sep}${path.basename(file.fsPath)}` === file.fsPath
+    ) {
+        return path.basename(file.fsPath);
+    }
+    return file?.fsPath;
+}
 /**
  * Provides utilties to query information about conda that's installed on the same machine as the extension. (Note: doesn't work over remote)
  */
@@ -25,11 +41,9 @@ const condaEnvironmentsFile = uriPath.joinPath(homePath, '.conda', 'environments
 export class CondaService {
     private isAvailable: boolean | undefined;
     private _file?: Uri;
-    private _batchFile?: Uri;
     private _version?: SemVer;
     private _previousVersionCall?: Promise<SemVer | undefined>;
     private _previousFileCall?: Promise<Uri | undefined>;
-    private _previousBatchFileCall?: Promise<Uri | undefined>;
     private _previousCondaEnvs: string[] = [];
     private readonly _onCondaEnvironmentsChanged = new EventEmitter<void>();
     public readonly onCondaEnvironmentsChanged = this._onCondaEnvironmentsChanged.event;
@@ -37,7 +51,6 @@ export class CondaService {
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IPlatformService) private readonly ps: IPlatformService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposable[]
     ) {
         this.monitorCondaEnvFile().catch(noop);
@@ -72,10 +85,10 @@ export class CondaService {
     @traceDecoratorVerbose('getCondaFile', TraceOptions.BeforeCall)
     async getCondaFile() {
         if (this._file) {
-            return this._file;
+            return getFullFilePath(this._file);
         }
         if (this._previousFileCall) {
-            return this._previousFileCall;
+            return this._previousFileCall.then(getFullFilePath);
         }
         const promise = async () => {
             const latestInfo = this.pythonApi
@@ -96,33 +109,7 @@ export class CondaService {
             return latestInfo.then((v) => (v ? Uri.file(v) : undefined));
         };
         this._previousFileCall = promise();
-        return this._previousFileCall;
-    }
-
-    @traceDecoratorVerbose('getCondaBatchFile', TraceOptions.BeforeCall)
-    async getCondaBatchFile() {
-        if (this._batchFile) {
-            return this._batchFile;
-        }
-        if (this._previousBatchFileCall) {
-            return this._previousBatchFileCall;
-        }
-        const promise = async () => {
-            const file = await this.getCondaFile();
-            if (file) {
-                const fileDir = path.dirname(file.fsPath);
-                // Batch file depends upon OS
-                if (this.ps.isWindows) {
-                    const possibleBatch = Uri.file(path.join(fileDir, '..', 'condabin', 'conda.bat'));
-                    if (await this.fs.exists(possibleBatch)) {
-                        return possibleBatch;
-                    }
-                }
-            }
-            return file;
-        };
-        this._previousBatchFileCall = promise();
-        return this._previousBatchFileCall;
+        return this._previousFileCall.then(getFullFilePath);
     }
 
     /**
