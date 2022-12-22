@@ -77,7 +77,10 @@ export class PythonEnvKernelConnectionCreator {
             return;
         }
         if (!kernelConnection) {
-            sendTelemetryEvent(Telemetry.CreatePythonEnvironment);
+            sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, {
+                failed: true,
+                reason: 'kernelConnectionNotCreated'
+            });
             traceVerbose(`Python Environment ${env.id} not found as a kernel`);
             return;
         }
