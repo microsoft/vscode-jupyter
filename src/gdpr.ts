@@ -261,6 +261,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
@@ -464,6 +465,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
@@ -522,6 +524,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -546,6 +549,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -569,6 +573,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
@@ -856,6 +861,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
@@ -880,6 +886,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
@@ -1450,6 +1457,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
@@ -1551,6 +1559,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "timedout": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether we timedout while waiting for response for Kernel info request.","owner":"donjayamanne"},
      "attempts": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of attempts and sending a request and waiting for response.","owner":"donjayamanne","isMeasurement":true},
@@ -1588,6 +1597,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1613,6 +1623,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "exitCode": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"The kernel process's exit code.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
@@ -1638,6 +1649,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "reason": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Captures the result of the error message, whether user dismissed this or picked a new kernel or the like.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
@@ -1665,6 +1677,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1776,6 +1789,7 @@
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"

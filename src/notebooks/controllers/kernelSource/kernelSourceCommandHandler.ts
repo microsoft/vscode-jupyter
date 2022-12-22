@@ -5,12 +5,15 @@ import { inject, injectable } from 'inversify';
 import { commands, NotebookControllerAffinity, NotebookDocument, notebooks, window } from 'vscode';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
+import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../../kernels/telemetry/helper';
+import { sendKernelTelemetryEvent } from '../../../kernels/telemetry/sendKernelTelemetryEvent';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError, traceWarning } from '../../../platform/logging';
 import { IControllerRegistration, INotebookKernelSourceSelector } from '../types';
@@ -196,6 +199,11 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
             traceWarning(`No controller created for selected kernel connection ${kernel.kind}:${kernel.id}`);
             return;
         }
+        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, kernel)
+            .finally(() =>
+                sendKernelTelemetryEvent(notebook.uri, Telemetry.SwitchKernel, undefined, { newKernelPicker: true })
+            )
+            .catch(noop);
         controllers
             .find((item) => item.viewType === notebook.notebookType)
             ?.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity.Preferred);
