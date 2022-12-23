@@ -17,7 +17,7 @@ import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { assert } from 'chai';
 import { createEventHandler } from '../../../test/common';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -315,11 +315,11 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPython
             await clock.runAllAsync();
 
             // Verify we checked whether its trusted & never attempted to read interpreter details.
-            verify(
-                trustedKernels.isTrusted(
-                    uriEquals(Uri.file(globalPythonKernelSpecUnknownExecutable.kernelSpec.specFile!))
-                )
-            ).atLeast(1);
+            const uri = capture(trustedKernels.isTrusted).first()[0];
+            assert.strictEqual(
+                uri.fsPath,
+                Uri.file(globalPythonKernelSpecUnknownExecutable.kernelSpec.specFile!).fsPath
+            );
             verify(interpreterService.getInterpreterDetails(anything())).never();
         });
         test('Get interpreter information if kernel Spec is trusted', async () => {
