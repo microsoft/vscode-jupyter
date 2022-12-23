@@ -101,7 +101,6 @@ export class InterpreterKernelSpecFinderHelper {
         if (exactMatch) {
             return exactMatch;
         }
-        // 2. Check if we have a fully qualified path in `argv`
         if (
             pathInArgv &&
             path.basename(pathInArgv) === pathInArgv &&
@@ -114,7 +113,9 @@ export class InterpreterKernelSpecFinderHelper {
                 pythonPathDefined: false,
                 language: kernelSpecLanguage
             });
-        } else if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
+        }
+        // 2. Check if we have a fully qualified path in `argv`
+        if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
             const pathInArgVUri = Uri.file(pathInArgv);
             const exactMatchBasedOnArgv = interpreters.find((i) => {
                 if (areInterpreterPathsSame(pathInArgVUri, i.uri)) {
