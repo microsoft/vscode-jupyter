@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { traceVerbose } from '../../../logging';
+
 // "python" contains functions corresponding to the various ways that
 // the extension invokes a Python executable internally.  Each function
 // takes arguments relevant to the specific use case.  However, each
@@ -31,11 +33,15 @@ export function getExecutable(): [string[], (out: string) => string] {
 }
 
 export function isModuleInstalled(name: string): [string[], (out: string) => boolean] {
-    const args = ['-c', `import ${name}`];
+    const args = ['-c', `import ${name};print('6af208d0-cb9c-427f-b937-ff563e17efdf')`];
 
-    function parse(_out: string): boolean {
-        // If the command did not fail then the module is installed.
-        return true;
+    function parse(out: string): boolean {
+        if (out.includes('6af208d0-cb9c-427f-b937-ff563e17efdf')) {
+            return true;
+        } else {
+            traceVerbose(`Module ${name} is not installed. Output ${out}`);
+            return false;
+        }
     }
 
     return [args, parse];
