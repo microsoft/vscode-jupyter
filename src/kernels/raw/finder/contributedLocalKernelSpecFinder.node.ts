@@ -235,17 +235,19 @@ export class ContributedLocalKernelSpecFinder
                 this._onDidChangeKernels.fire({ added, updated, removed });
             }
 
-            traceVerbose(
-                `Updating cache with Local kernels ${values
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Added = ${added
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Updated = ${updated
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Removed = ${removed
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}`
-            );
+            if (values.length) {
+                traceVerbose(
+                    `Updating cache with Local kernels ${values
+                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                        .join(', ')}, Added = ${added
+                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                        .join(', ')}, Updated = ${updated
+                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                        .join(', ')}, Removed = ${removed
+                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                        .join(', ')}`
+                );
+            }
         } catch (ex) {
             traceError('LocalKernelFinder: Failed to write to cache', ex);
         }
