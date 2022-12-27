@@ -127,6 +127,7 @@ export function createRemoteConnectionInfo(
         },
         dispose: noop,
         rootDirectory: Uri.file(''),
+        workingDirectory: serverUri?.workingDirectory,
         getAuthHeader: serverUri ? () => getJupyterServerUri(uri)?.authorizationHeader : undefined,
         url: uri
     };

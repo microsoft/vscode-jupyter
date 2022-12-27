@@ -22,11 +22,12 @@ import {
     IJupyterConnection,
     ISessionWithSocket,
     KernelActionSource,
-    IJupyterKernelConnectionSession
+    IJupyterKernelConnectionSession,
+    isRemoteConnection
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
-import { CancellationError, Uri } from 'vscode';
+import { CancellationError, Uri, workspace } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop } from '../../../platform/common/utils/misc';
 
@@ -240,14 +241,28 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
-        // Create our backing file for the notebook
-        const backingFile = await this.backingFileCreator.createBackingFile(
-            this.resource,
-            this.workingDirectory,
-            this.kernelConnectionMetadata,
-            this.connInfo,
-            this.contentsManager
-        );
+        let backingFile: IBackupFile | undefined;
+        let remoteFilePath: string | undefined;
+
+        if (isRemoteConnection(this.kernelConnectionMetadata) && this.connInfo.workingDirectory && this.resource) {
+            const currentWorkingDirectory = workspace.getWorkspaceFolder(Uri.from(this.resource));
+            if (currentWorkingDirectory) {
+                remoteFilePath = this.resource.path.replace(
+                    currentWorkingDirectory.uri.path,
+                    this.connInfo.workingDirectory
+                );
+            }
+        } else {
+            // Create our backing file for the notebook
+            backingFile = await this.backingFileCreator.createBackingFile(
+                this.resource,
+                this.workingDirectory,
+                this.kernelConnectionMetadata,
+                this.connInfo,
+                this.contentsManager
+            );
+            remoteFilePath = backingFile?.filePath;
+        }
 
         // Make sure the kernel has ipykernel installed if on a local machine.
         if (
@@ -281,7 +296,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
 
         // Create our session options using this temporary notebook and our connection info
         const sessionOptions: Session.ISessionOptions = {
-            path: backingFile?.filePath || generateBackingIPyNbFileName(this.resource), // Name has to be unique
+            path: remoteFilePath ?? generateBackingIPyNbFileName(this.resource), // Name has to be unique
             kernel: {
                 name: kernelName
             },
