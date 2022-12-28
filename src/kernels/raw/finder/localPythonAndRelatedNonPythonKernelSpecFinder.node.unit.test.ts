@@ -29,6 +29,7 @@ import { uriEquals } from '../../../test/datascience/helpers';
 import { LocalPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { traceInfo } from '../../../platform/logging';
+import { sleep } from '../../../test/core';
 
 (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
     suite(`Local Python and related kernels (Kernel Picker = ${kernelPickerType})`, async () => {
@@ -322,6 +323,7 @@ import { traceInfo } from '../../../platform/logging';
             finder.activate();
             console.error('Started Test 12345 - Run All');
             await clock.runAllAsync();
+            await sleep(1);
 
             // Verify we checked whether its trusted & never attempted to read interpreter details.
             const uri = capture(trustedKernels.isTrusted).first()[0];

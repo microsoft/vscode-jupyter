@@ -57,9 +57,10 @@ export class InterpreterKernelSpecFinderHelper {
         kernelSpec: IJupyterKernelSpec,
         isGlobalKernelSpec: boolean
     ): Promise<PythonEnvironment | undefined> {
-        console.error('Step0');
+        const id = Date.now().toString();
+        console.error('Step0', id);
         try {
-            console.error('Step1');
+            console.error('Step1', id);
             const interpreters = this.extensionChecker.isPythonExtensionInstalled
                 ? this.interpreterService.resolvedEnvironments
                 : [];
@@ -68,10 +69,10 @@ export class InterpreterKernelSpecFinderHelper {
                     ? kernelSpec.argv[0]
                     : undefined;
             const kernelSpecLanguage = kernelSpec.language || '';
-            console.error('Step1.0', pathInArgv, kernelSpecLanguage, JSON.stringify(kernelSpec));
+            console.error('Step1.0', id, pathInArgv, kernelSpecLanguage, JSON.stringify(kernelSpec));
             const kernelSpecHash = kernelSpec.specFile ? await getTelemetrySafeHashedString(kernelSpec.specFile) : '';
             const isCreatedByUs = getKernelRegistrationInfo(kernelSpec) ? true : false;
-            console.error('Step1.1', pathInArgv, kernelSpecLanguage, kernelSpecHash, isCreatedByUs);
+            console.error('Step1.1', id, pathInArgv, kernelSpecLanguage, kernelSpecHash, isCreatedByUs);
             // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
             if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
                 traceInfoIfCI(`Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`);
@@ -92,10 +93,10 @@ export class InterpreterKernelSpecFinderHelper {
                         language: kernelSpecLanguage
                     });
                 }
-                console.error('Step2');
+                console.error('Step2', id);
                 return;
             }
-            console.error('Step2.1');
+            console.error('Step2.1', id);
             // 1. Check if current interpreter has the same path
             const exactMatch = interpreters.find((i) => {
                 if (
@@ -108,7 +109,7 @@ export class InterpreterKernelSpecFinderHelper {
                 return false;
             });
             if (exactMatch) {
-                console.error('Step3', exactMatch);
+                console.error('Step3', id, exactMatch);
                 return exactMatch;
             }
             if (
@@ -124,7 +125,7 @@ export class InterpreterKernelSpecFinderHelper {
                     language: kernelSpecLanguage
                 });
             }
-            console.error('Step3.1', pathInArgv, pathInArgv ? path.basename(pathInArgv) : '<Empty>');
+            console.error('Step3.1', id, pathInArgv, pathInArgv ? path.basename(pathInArgv) : '<Empty>');
             // 2. Check if we have a fully qualified path in `argv`
             if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
                 const pathInArgVUri = Uri.file(pathInArgv);
@@ -151,7 +152,7 @@ export class InterpreterKernelSpecFinderHelper {
                 // 3. Sometimes we have path paths such as `/usr/bin/python3.6` in the kernel spec.
                 // & in the list of interpreters we have `/usr/bin/python3`, they are both the same.
                 // Hence we need to ensure we take that into account (just get the interpreter info from Python extension).
-                console.error('Step5', kernelSpec.specFile);
+                console.error('Step5', id, kernelSpec.specFile);
                 if (!kernelSpec.specFile || this.trustedKernels.isTrusted(Uri.file(kernelSpec.specFile))) {
                     console.error('Step6');
                     const interpreterInArgv = await this.interpreterService.getInterpreterDetails(pathInArgVUri);
