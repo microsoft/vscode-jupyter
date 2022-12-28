@@ -32,7 +32,7 @@ import { traceInfo } from '../../../platform/logging';
 import { sleep } from '../../../test/core';
 
 (['Stable'] as KernelPickerType[]).forEach((kernelPickerType) => {
-    suite.only(`Local Python and related kernels (Kernel Picker = ${kernelPickerType})`, async () => {
+    suite(`Local Python and related kernels (Kernel Picker = ${kernelPickerType})`, async () => {
         let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder | LocalPythonAndRelatedNonPythonKernelSpecFinderOld;
         let interpreterService: IInterpreterService;
         let fs: IFileSystemNode;
@@ -303,8 +303,7 @@ import { sleep } from '../../../test/core';
 
             assert.deepEqual(finder.kernels, [venvPythonKernel, condaKernel]);
         });
-        test.only('Do not get interpreter information if kernel Spec is not trusted', async () => {
-            console.error('Started Test 12345');
+        test('Do not get interpreter information if kernel Spec is not trusted', async () => {
             when(kernelSpecsFromKnownLocations.kernels).thenReturn([
                 globalPythonKernelSpec,
                 globalPythonKernelSpecUnknownExecutable,
@@ -319,15 +318,10 @@ import { sleep } from '../../../test/core';
             when(trustedKernels.isTrusted(anything())).thenReturn(false);
             when(interpreterService.getInterpreterDetails(anything())).thenResolve(undefined);
 
-            console.error('Started Test 12345 - Activated');
             finder.activate();
-            console.error('Started Test 12345 - Run All.0');
             await clock.runAllAsync();
             clock.uninstall();
-            console.error('Started Test 12345 - Run All.1');
             await sleep(50);
-            console.error('Started Test 12345 - Run All.2');
-            console.error('Look for test called');
             // Verify we checked whether its trusted & never attempted to read interpreter details.
             const uri = capture(trustedKernels.isTrusted).first()[0];
             assert.strictEqual(
