@@ -57,159 +57,167 @@ export class InterpreterKernelSpecFinderHelper {
         kernelSpec: IJupyterKernelSpec,
         isGlobalKernelSpec: boolean
     ): Promise<PythonEnvironment | undefined> {
-        console.error('Step1');
-        const interpreters = this.extensionChecker.isPythonExtensionInstalled
-            ? this.interpreterService.resolvedEnvironments
-            : [];
-        const pathInArgv =
-            kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0 ? kernelSpec.argv[0] : undefined;
-        const kernelSpecLanguage = kernelSpec.language || '';
-        const kernelSpecHash = kernelSpec.specFile ? await getTelemetrySafeHashedString(kernelSpec.specFile) : '';
-        const isCreatedByUs = getKernelRegistrationInfo(kernelSpec) ? true : false;
-        console.error('Step1.1', pathInArgv, kernelSpecLanguage, kernelSpecHash, isCreatedByUs);
-        // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
-        if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
-            traceInfoIfCI(`Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`);
+        console.error('Step0');
+        try {
+            console.error('Step1');
+            const interpreters = this.extensionChecker.isPythonExtensionInstalled
+                ? this.interpreterService.resolvedEnvironments
+                : [];
+            const pathInArgv =
+                kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0
+                    ? kernelSpec.argv[0]
+                    : undefined;
+            const kernelSpecLanguage = kernelSpec.language || '';
+            const kernelSpecHash = kernelSpec.specFile ? await getTelemetrySafeHashedString(kernelSpec.specFile) : '';
+            const isCreatedByUs = getKernelRegistrationInfo(kernelSpec) ? true : false;
+            console.error('Step1.1', pathInArgv, kernelSpecLanguage, kernelSpecHash, isCreatedByUs);
+            // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
+            if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
+                traceInfoIfCI(`Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`);
 
-            // We could be dealing with a powershell kernel where kernelspec looks like
-            // { "argv": ["python", "-m", "powershell_kernel", "-f", "{connection_file}" ], "display_name": "PowerShell", "language": "powershell" }
-            if (
-                isGlobalKernelSpec &&
-                !isCreatedByUs &&
-                pathInArgv &&
-                kernelSpec.specFile &&
-                (path.basename(pathInArgv).toLocaleLowerCase() === 'python' ||
-                    path.basename(pathInArgv).toLocaleLowerCase() === 'python.exe')
-            ) {
-                sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
-                    kernelSpecHash,
-                    pythonPathDefined: path.basename(pathInArgv) !== pathInArgv,
-                    language: kernelSpecLanguage
-                });
+                // We could be dealing with a powershell kernel where kernelspec looks like
+                // { "argv": ["python", "-m", "powershell_kernel", "-f", "{connection_file}" ], "display_name": "PowerShell", "language": "powershell" }
+                if (
+                    isGlobalKernelSpec &&
+                    !isCreatedByUs &&
+                    pathInArgv &&
+                    kernelSpec.specFile &&
+                    (path.basename(pathInArgv).toLocaleLowerCase() === 'python' ||
+                        path.basename(pathInArgv).toLocaleLowerCase() === 'python.exe')
+                ) {
+                    sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
+                        kernelSpecHash,
+                        pythonPathDefined: path.basename(pathInArgv) !== pathInArgv,
+                        language: kernelSpecLanguage
+                    });
+                }
+                console.error('Step2');
+                return;
             }
-            console.error('Step2');
-            return;
-        }
-        console.error('Step2.1');
-        // 1. Check if current interpreter has the same path
-        const exactMatch = interpreters.find((i) => {
-            if (
-                kernelSpec.metadata?.interpreter?.path &&
-                areInterpreterPathsSame(Uri.file(kernelSpec.metadata.interpreter.path), i.uri)
-            ) {
-                traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
-                return true;
-            }
-            return false;
-        });
-        if (exactMatch) {
-            console.error('Step3', exactMatch);
-            return exactMatch;
-        }
-        if (
-            pathInArgv &&
-            path.basename(pathInArgv) === pathInArgv &&
-            kernelSpec.specFile &&
-            isGlobalKernelSpec &&
-            !isCreatedByUs
-        ) {
-            sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
-                kernelSpecHash,
-                pythonPathDefined: false,
-                language: kernelSpecLanguage
-            });
-        }
-        console.error('Step3.1', pathInArgv, pathInArgv ? path.basename(pathInArgv) : '<Empty>');
-        // 2. Check if we have a fully qualified path in `argv`
-        if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
-            const pathInArgVUri = Uri.file(pathInArgv);
-            const exactMatchBasedOnArgv = interpreters.find((i) => {
-                if (areInterpreterPathsSame(pathInArgVUri, i.uri)) {
-                    traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`);
+            console.error('Step2.1');
+            // 1. Check if current interpreter has the same path
+            const exactMatch = interpreters.find((i) => {
+                if (
+                    kernelSpec.metadata?.interpreter?.path &&
+                    areInterpreterPathsSame(Uri.file(kernelSpec.metadata.interpreter.path), i.uri)
+                ) {
+                    traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
                     return true;
                 }
                 return false;
             });
-            if (exactMatchBasedOnArgv) {
-                if (kernelSpec.specFile && isGlobalKernelSpec && !isCreatedByUs) {
-                    sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
-                        kernelSpecHash,
-                        pythonPathDefined: true,
-                        pythonEnvFound: 'found',
-                        language: kernelSpecLanguage
-                    });
-                }
-                console.error('Step4', exactMatchBasedOnArgv);
-                return exactMatchBasedOnArgv;
+            if (exactMatch) {
+                console.error('Step3', exactMatch);
+                return exactMatch;
             }
-
-            // 3. Sometimes we have path paths such as `/usr/bin/python3.6` in the kernel spec.
-            // & in the list of interpreters we have `/usr/bin/python3`, they are both the same.
-            // Hence we need to ensure we take that into account (just get the interpreter info from Python extension).
-            console.error('Step5', kernelSpec.specFile);
-            if (!kernelSpec.specFile || this.trustedKernels.isTrusted(Uri.file(kernelSpec.specFile))) {
-                console.error('Step6');
-                const interpreterInArgv = await this.interpreterService.getInterpreterDetails(pathInArgVUri);
-                if (interpreterInArgv) {
+            if (
+                pathInArgv &&
+                path.basename(pathInArgv) === pathInArgv &&
+                kernelSpec.specFile &&
+                isGlobalKernelSpec &&
+                !isCreatedByUs
+            ) {
+                sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
+                    kernelSpecHash,
+                    pythonPathDefined: false,
+                    language: kernelSpecLanguage
+                });
+            }
+            console.error('Step3.1', pathInArgv, pathInArgv ? path.basename(pathInArgv) : '<Empty>');
+            // 2. Check if we have a fully qualified path in `argv`
+            if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
+                const pathInArgVUri = Uri.file(pathInArgv);
+                const exactMatchBasedOnArgv = interpreters.find((i) => {
+                    if (areInterpreterPathsSame(pathInArgVUri, i.uri)) {
+                        traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`);
+                        return true;
+                    }
+                    return false;
+                });
+                if (exactMatchBasedOnArgv) {
                     if (kernelSpec.specFile && isGlobalKernelSpec && !isCreatedByUs) {
                         sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
                             kernelSpecHash,
                             pythonPathDefined: true,
-                            pythonEnvFound: 'foundViaGetEnvDetails',
+                            pythonEnvFound: 'found',
                             language: kernelSpecLanguage
                         });
                     }
-                    return interpreterInArgv;
+                    console.error('Step4', exactMatchBasedOnArgv);
+                    return exactMatchBasedOnArgv;
                 }
-                if (kernelSpec.specFile && isGlobalKernelSpec && !isCreatedByUs) {
+
+                // 3. Sometimes we have path paths such as `/usr/bin/python3.6` in the kernel spec.
+                // & in the list of interpreters we have `/usr/bin/python3`, they are both the same.
+                // Hence we need to ensure we take that into account (just get the interpreter info from Python extension).
+                console.error('Step5', kernelSpec.specFile);
+                if (!kernelSpec.specFile || this.trustedKernels.isTrusted(Uri.file(kernelSpec.specFile))) {
+                    console.error('Step6');
+                    const interpreterInArgv = await this.interpreterService.getInterpreterDetails(pathInArgVUri);
+                    if (interpreterInArgv) {
+                        if (kernelSpec.specFile && isGlobalKernelSpec && !isCreatedByUs) {
+                            sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
+                                kernelSpecHash,
+                                pythonPathDefined: true,
+                                pythonEnvFound: 'foundViaGetEnvDetails',
+                                language: kernelSpecLanguage
+                            });
+                        }
+                        return interpreterInArgv;
+                    }
+                    if (kernelSpec.specFile && isGlobalKernelSpec && !isCreatedByUs) {
+                        sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
+                            kernelSpecHash,
+                            pythonPathDefined: true,
+                            pythonEnvFound: 'notFound',
+                            language: kernelSpecLanguage
+                        });
+                    }
+                } else if (kernelSpec.specFile && isGlobalKernelSpec && !isCreatedByUs) {
                     sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
                         kernelSpecHash,
                         pythonPathDefined: true,
-                        pythonEnvFound: 'notFound',
+                        pythonEnvFound: 'notTrusted',
                         language: kernelSpecLanguage
                     });
                 }
-            } else if (kernelSpec.specFile && isGlobalKernelSpec && !isCreatedByUs) {
-                sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
-                    kernelSpecHash,
-                    pythonPathDefined: true,
-                    pythonEnvFound: 'notTrusted',
-                    language: kernelSpecLanguage
-                });
             }
-        }
 
-        // 4. Check if `interpreterPath` is defined in kernel metadata.
-        if (kernelSpec.interpreterPath) {
-            const kernelSpecInterpreterPath = Uri.file(kernelSpec.interpreterPath);
-            const matchBasedOnInterpreterPath = interpreters.find((i) => {
-                if (kernelSpec.interpreterPath && areInterpreterPathsSame(kernelSpecInterpreterPath, i.uri)) {
-                    traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`);
+            // 4. Check if `interpreterPath` is defined in kernel metadata.
+            if (kernelSpec.interpreterPath) {
+                const kernelSpecInterpreterPath = Uri.file(kernelSpec.interpreterPath);
+                const matchBasedOnInterpreterPath = interpreters.find((i) => {
+                    if (kernelSpec.interpreterPath && areInterpreterPathsSame(kernelSpecInterpreterPath, i.uri)) {
+                        traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`);
+                        return true;
+                    }
+                    return false;
+                });
+                if (matchBasedOnInterpreterPath) {
+                    return matchBasedOnInterpreterPath;
+                }
+                // Possible we still haven't discovered this interpreter, hence get the details from the Python extension.
+                if (!kernelSpec.specFile || this.trustedKernels.isTrusted(Uri.file(kernelSpec.specFile))) {
+                    const interpreterInInterpreterPath = await this.interpreterService.getInterpreterDetails(
+                        kernelSpecInterpreterPath
+                    );
+                    if (interpreterInInterpreterPath) {
+                        return interpreterInInterpreterPath;
+                    }
+                }
+            }
+            return interpreters.find((i) => {
+                // 4. Check display name
+                if (kernelSpec.display_name === i.displayName) {
+                    traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on display name.`);
                     return true;
                 }
                 return false;
             });
-            if (matchBasedOnInterpreterPath) {
-                return matchBasedOnInterpreterPath;
-            }
-            // Possible we still haven't discovered this interpreter, hence get the details from the Python extension.
-            if (!kernelSpec.specFile || this.trustedKernels.isTrusted(Uri.file(kernelSpec.specFile))) {
-                const interpreterInInterpreterPath = await this.interpreterService.getInterpreterDetails(
-                    kernelSpecInterpreterPath
-                );
-                if (interpreterInInterpreterPath) {
-                    return interpreterInInterpreterPath;
-                }
-            }
+        } catch (ex) {
+            console.error('failed in step1');
+            throw ex;
         }
-        return interpreters.find((i) => {
-            // 4. Check display name
-            if (kernelSpec.display_name === i.displayName) {
-                traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on display name.`);
-                return true;
-            }
-            return false;
-        });
     }
 
     public async findKernelSpecsInInterpreter(
