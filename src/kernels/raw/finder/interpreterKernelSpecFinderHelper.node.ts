@@ -60,6 +60,7 @@ export class InterpreterKernelSpecFinderHelper {
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? this.interpreterService.resolvedEnvironments
             : [];
+
         const pathInArgv =
             kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0 ? kernelSpec.argv[0] : undefined;
         const kernelSpecLanguage = kernelSpec.language || '';
